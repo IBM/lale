@@ -1,0 +1,15 @@
+$schema: http://json-schema.org/draft-04/schema#
+allOf:
+
+- description: "Some number or other"
+  type: number
+  minimum: 1
+  exclusiveMinimum: True
+  
+- type: integer
+  minimum: 0
+  maximum: 30
+  
+- type: number
+  maximum: 31
+  exclusiveMaximum: True
