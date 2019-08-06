@@ -1,0 +1,42 @@
+dist: xenial
+language: python
+python:
+  - "3.7"
+  - "3.6"
+env:
+ - SETUP_TARGET=.[test] TEST_CASES="test.test_core_operators test.test_pipeline"
+ - SETUP_TARGET=.[full,test] TEST_CASES="test.test_interoperability test.test_optimizers test.test_notebooks"
+addons:
+  apt:
+    sources:
+    - sourceline: 'ppa:mhier/graphviz-latest'
+    - sourceline: deb http://cloud.r-project.org/bin/linux/ubuntu xenial/
+      key_url: http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x51716619E084DAB9
+    packages:
+    - graphviz
+    - r-base
+    - swig
+install:
+  - pip install $SETUP_TARGET
+  - export PYTHONPATH=`pwd`
+script:
+  - echo -e "${ANSI_GREEN}Compiling all...${ANSI_RESET}" && echo -en 'travis_fold:start:compile\\r'
+  - python -m compileall .
+  - echo -en 'travis_fold:end:compile\\r'
+  - echo -e "${ANSI_GREEN}Running flake8...${ANSI_RESET}" && echo -en 'travis_fold:start:flake8\\r'
+  - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
+  - echo -en 'travis_fold:end:flake8\\r'
+  - echo -e "${ANSI_GREEN}Running mypy...${ANSI_RESET}" && echo -en 'travis_fold:start:mypy\\r'
+  - mypy -p lale
+  - echo -en 'travis_fold:end:mypy\\r'
+  - echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
+  - python -m unittest $TEST_CASES
+  - echo -en 'travis_fold:end:tests\\r'
+
+# generate the documentation
+  - echo -e "${ANSI_GREEN}Generate Documentation...${ANSI_RESET}" && echo -en 'travis_fold:start:docs\\r'
+  - make -C docs html
+# This file needs to be in the root to disable jekyll processing and getting
+# confused by our _sources directory and such
+  - touch docs/_build/html/.nojekyll
+  - echo -en 'travis_fold:end:docs\\r'
