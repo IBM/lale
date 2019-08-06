@@ -1,0 +1,27 @@
+$schema: http://json-schema.org/draft-04/schema#
+description: >
+  Hyperparameter schema for the PCA model from scikit-learn.
+  See the official documentation for details:
+  https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
+allOf:
+
+- description: >
+    This first object lists all constructor arguments with their types,
+    but omits constraints for conditional hyperparameters, which are in
+    additional conjuncts at the end of the file.
+  type: object
+  additionalProperties: false
+  relevantToOptimizer: [n_components]
+  properties:
+    n_components:
+      description: Number of components to keep.
+      type: integer
+      minimum: 1
+      forOptimizer: false
+- description: >
+    Fixed Hyperparameters
+  type: object
+  properties:
+    n_components:
+      description: Number of components to keep.
+      enum: [10]

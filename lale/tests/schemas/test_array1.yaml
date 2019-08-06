@@ -1,0 +1,16 @@
+$schema: http://json-schema.org/draft-04/schema#
+allOf:
+- type: object
+  additionalProperties: false
+  properties:
+    hidden_layer_sizes:
+      description: The ith element represents the number of neurons in the ith hidden layer.
+      # TODO: tuple(number)? + dependent type: length = n_layers - 2
+      type: array
+      minItemsForOptimizer: 2
+      maxItemsForOptimizer: 3
+      items:
+        type: integer
+        minimumForOptimizer: 1
+        maximumForOptimizer: 1000
+      default: [100]
