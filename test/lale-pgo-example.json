@@ -1,0 +1,127 @@
+{
+    "LogisticRegression": {
+        "C": {
+            "0.00077426": "1",
+            "0.00135": "1",
+            "0.15": "1",
+            "0.4": "1",
+            "[['logspace', 'numpy']]": "1",
+            "[['parse_args', 'ArgumentParser', 'argparse'], ['parse_args', 'ArgumentParser', 'argparse']]": "1",
+            "0.7": "10",
+            "10000": "10",
+            "1000": "12",
+            "-1": "2",
+            "10000000.0": "2",
+            "3": "2",
+            "8.13e-13": "2",
+            "100": "22",
+            "0.5": "3",
+            "10": "4",
+            "2": "4",
+            "[['KFold', 'cross_validation', 'sklearn'], ['KFold', 'cross_validation', 'sklearn']]": "4",
+            "1000000000.0": "42",
+            "100000": "44",
+            "0.1": "55",
+            "0.001": "6",
+            "1": "67",
+            "0.01": "7",
+            "0.03162": "7",
+            "default": 796
+        },
+        "class_weight": {
+            "balanced": "15",
+            "auto": "16",
+            "{'0': 1}": "4",
+            "{'1': 4}": "8",
+            "default": 1064
+        },
+        "dictionary": {
+            "{'solver': 'saga'}": "1",
+            "{'0': 1}": "4",
+            "{'1': 4}": "8",
+            "default": 1094
+        },
+        "fit_intercept": {
+            "true": "4",
+            "default": 1103
+        },
+        "intercept_scaling": {
+            "1": "11",
+            "100": "2",
+            "default": 1094
+        },
+        "max_iter": {
+            "10": "1",
+            "2000": "1",
+            "500": "2",
+            "[['train_test_split', 'model_selection', 'sklearn'], ['train_test_split', 'model_selection', 'sklearn']]": "2",
+            "100": "3",
+            "10000": "3",
+            "200": "3",
+            "1000": "9",
+            "default": 1083
+        },
+        "multi_class": {
+            "multinomial": "30",
+            "ovr": "5",
+            "default": 1072
+        },
+        "n_jobs": {
+            "4": "1",
+            "8": "1",
+            "[['parse_args', 'ArgumentParser', 'argparse'], ['parse_args', 'ArgumentParser', 'argparse']]": "1",
+            "1": "2",
+            "6": "2",
+            "-1": "9",
+            "default": 1091
+        },
+        "penalty": {
+            "l2": "111",
+            "[['sys']]": "2",
+            "l1": "60",
+            "default": 934
+        },
+        "random_state": {
+            "23": "1",
+            "42": "17",
+            "542": "2",
+            "1126": "3",
+            "1": "36",
+            "10": "4",
+            "0": "43",
+            "123": "54",
+            "93": "6",
+            "default": 941
+        },
+        "scoring": {
+            "neg_log_loss": "1",
+            "default": 1106
+        },
+        "solver": {
+            "lbfgs": "38",
+            "liblinear": "7",
+            "sag": "7",
+            "newton-cg": "8",
+            "default": 1047
+        },
+        "tol": {
+            "0.0001": "11",
+            "1e-06": "12",
+            "0": "2",
+            "0.1": "2",
+            "1": "2",
+            "1e-11": "2",
+            "1e-24": "2",
+            "1e-07": "4",
+            "0.01": "6",
+            "1e-08": "6",
+            "default": 1058
+        },
+        "verbose": {
+            "1": "1",
+            "0": "2",
+            "2": "4",
+            "default": 1100
+        }
+    }
+}
