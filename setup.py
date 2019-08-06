@@ -20,15 +20,15 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name='LALE',
+    name='lale',
     version='0.1.0',
     author="Avraham Shinnar, Guillaume Baudart, Kiran Kate, Martin Hirzel",
     description="Language for Automated Learning Exploration",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.ibm.com/aimodels/lale",
+    url="https://github.com/IBM/lale",
     python_requires='>=3.6',
-    packages=find_packages(exclude=['talks']),
+    packages=find_packages(),
     license='',
     install_requires=[
         'graphviz',

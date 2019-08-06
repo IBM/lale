@@ -62,7 +62,7 @@ more likely to be up-to-date than these instructions here. First, you
 need to clone the github repository. In a command shell, type:
 
 ```bash
-git clone git@github.ibm.com:aimodels/lale.git
+git clone git@github.com:IBM/lale.git
 cd lale
 ```
 
