@@ -1,0 +1,20 @@
+$schema: http://json-schema.org/draft-04/schema#
+allOf:
+- type: object
+  properties:
+    penalty:
+      description: Norm used in the penalization.
+      enum: [l1, l2]
+      default: l2
+    random_state:
+      description: Seed of pseudo-random number generator for shuffling data.
+      anyOf:
+        - description: RandomState used by np.random
+          enum: [null]
+        - description: Explicit seed.
+          type: integer
+- type: object
+  properties:
+    penalty:
+      description: Norm used in the penalization.
+      enum: [l1, l3]

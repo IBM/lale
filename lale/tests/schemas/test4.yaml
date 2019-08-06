@@ -1,0 +1,39 @@
+$schema: http://json-schema.org/draft-04/schema#
+description: >
+  Hyperparameter schema for the LogisticRegression model from
+  scikit-learn.  See the official documentation for details:
+  http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+
+allOf:
+
+- description: >
+    This first object lists all constructor arguments with their types,
+    but omits constraints for conditional hyperparameters, which are in
+    additional conjuncts at the end of the file.
+  type: object
+  additionalProperties: false
+  properties:
+    solver:
+      description: Algorithm for optimization problem.
+      enum: [newton-cg, lbfgs, liblinear, sag, saga]
+      default: liblinear
+- description: The newton-cg, sag, and lbfgs solvers support only l2 penalties.
+  anyOf:
+    - type: object
+      properties: { solver: { not: { enum: [newton-cg, sag, lbgfs] } } }
+    - type: object
+      properties: { penalty: { enum: [l2] } }
+- description: The dual formulation is only implemented for l2 penalty with the liblinear solver.
+  anyOf:
+    - type: object
+      properties: { dual: { enum: [false] } }
+    - type: object
+      properties:
+        penalty: { enum: [l2] }
+        solver: { enum: [liblinear] }
+- description: Setting max_iter is only useful for the newton-cg, sag and lbfgs solvers.
+  anyOf:
+    - type: object
+      properties: { max_iter: { enum: [100] } }
+    - type: object
+      properties: { solver: { enum: [newton-cg, sag, lbfgs] } }
