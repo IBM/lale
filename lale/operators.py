@@ -147,6 +147,17 @@ class Trained(Trainable):
         """
         pass
 
+    @abstractmethod
+    def predict_proba(self, X):
+        """Abstract predict method to be overriden by trained operators as applicable.
+
+        Parameters
+        ----------
+        X :
+            The type of X is as per input_predict schema of the operator.
+        """
+        pass
+	
 class Operator(metaclass=AbstractVisitorMeta):
     """Abstract base class for a LALE operator.
 
@@ -1265,7 +1276,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 if trainable in sink_nodes:
                     output = trained.predict(X = inputs) #We don't support y for predict yet as there is no compelling case
                 else:
-                    if hasattr(trained._impl, 'predict_proba'):
+                    # This is ok because trainable pipelines steps
+	                # must only be individual operators
+                    if hasattr(trained._impl, 'predict_proba'): # type: ignore
                         output = trained.predict_proba(X = inputs)
                     else:
                         output = trained.predict(X = inputs)
