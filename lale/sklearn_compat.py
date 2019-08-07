@@ -71,9 +71,8 @@ def partition_sklearn_params(d:Dict[str, Any])->Dict[str, Dict[str, Any]]:
 def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.Operator:
     """May return a new operator, in which case the old one should be overwritten
     """
-    if isinstance(op, Ops.TrainableIndividualOp):
-        op.set_params(**impl_params)
-        return op
+    if isinstance(op, Ops.PlannedIndividualOp):
+        return op.set_params(**impl_params)
     elif isinstance(op, Ops.Pipeline):
         steps = op.steps()
         partitioned_params:Dict[str,Dict[str, Any]] = partition_sklearn_params(impl_params)
