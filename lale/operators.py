@@ -334,6 +334,22 @@ class IndividualOp(MetaModelOperator):
         # so that their usage looks like LogisticRegression.penalty.l1
         enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
 
+    def get_schema_maybe(self, schema_kind:str, default:Any=None)->Dict[str, Any]:
+        """Return a schema of the operator or a given default if the schema is unspecified
+
+        Parameters
+        ----------
+        schema_kind : string, 'input_fit' or 'input_predict' or 'output' or 'hyperparams'
+                Type of the schema to be returned.
+
+        Returns
+        -------
+        dict
+            The python object containing the json schema of the operator.
+            For all the schemas currently present, this would be a dictionary.
+        """
+        return self._schemas.get('properties',{}).get(schema_kind, default)
+
     def get_schema(self, schema_kind:str)->Dict[str, Any]:
         """Return a schema of the operator.
         
@@ -348,7 +364,7 @@ class IndividualOp(MetaModelOperator):
             The python object containing the json schema of the operator. 
             For all the schemas currently present, this would be a dictionary.
         """
-        return self._schemas.get('properties',{}).get(schema_kind, {})
+        return self.get_schema_maybe(schema_kind, {})
 
     def get_tags(self)->Dict[str, List[str]]:
         """Return the tags of an operator.
@@ -398,6 +414,21 @@ class IndividualOp(MetaModelOperator):
         """
         return self.get_schema('input_predict')
 
+    def input_schema_predict_proba(self):
+        """Returns the schema for predict proba method's input.
+
+        Returns
+        -------
+        dict
+            Logical schema describing input required by this
+            operator's predict proba method.
+        """
+        sch = self.get_schema_maybe('input_predict_proba')
+        if sch is None:
+            return self.input_schema_predict()
+        else:
+            return sch
+
     def input_schema_transform(self):
         """Returns the schema for transform method's input.
         
@@ -419,6 +450,21 @@ class IndividualOp(MetaModelOperator):
             operator's predict/transform method.
         """
         return self.get_schema('output')
+
+    def output_schema_predict_proba(self):
+        """Returns the schema for predict proba method's output.
+
+        Returns
+        -------
+        dict
+            Logical schema describing output of this
+            operator's predict proba method.
+        """
+        sch = self.get_schema_maybe('output_predict_proba')
+        if sch is None:
+            return self.output_schema()
+        else:
+            return sch
 
     def hyperparam_schema(self, name:Optional[str]=None):
         """Returns the hyperparameter schema for the operator.
@@ -935,13 +981,13 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
     def predict_proba(self, X):
         helpers.validate_schema({ 'X': X },
-                                self.input_schema_predict())
+                                self.input_schema_predict_proba())
 
         if hasattr(self._impl, 'predict_proba'):
             result = self._impl.predict_proba(X)
         else:
             raise ValueError("The operator {} does not support predict_proba".format(self.name()))
-        helpers.validate_schema(result, self.output_schema())
+        helpers.validate_schema(result, self.self.output_schema_predict_proba())
         return result
 
     def to_json(self):
