@@ -987,7 +987,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             result = self._impl.predict_proba(X)
         else:
             raise ValueError("The operator {} does not support predict_proba".format(self.name()))
-        helpers.validate_schema(result, self.self.output_schema_predict_proba())
+        helpers.validate_schema(result, self.output_schema_predict_proba())
         return result
 
     def to_json(self):
