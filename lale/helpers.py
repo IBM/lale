@@ -34,6 +34,9 @@ from sklearn.metrics import accuracy_score, log_loss
 from sklearn.utils.metaestimators import _safe_split
 import copy
 import logging
+import importlib
+import inspect
+import pkgutil
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -451,3 +454,27 @@ def validate_method(op, m):
             a = m[len('output_'):]
         if a:
             assert (hasattr(op._impl, a))
+
+def caml_to_snake(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+def get_lib_schema(impl):
+    try:
+        module_name = impl.__module__.split('.')[0]
+        class_name = caml_to_snake(impl.__class__.__name__)
+        lib_name = '.'.join(['lale.lib', module_name, class_name])
+        m = importlib.import_module(lib_name)
+        return m._combined_schemas
+    except (ModuleNotFoundError, AttributeError):
+        return None
+    
+def wrap_imported_operators():
+    import lale.lib
+    from .operators import  make_operator
+    calling_module = inspect.getmodule(inspect.stack()[1][0])
+    classes = inspect.getmembers(calling_module, inspect.isclass)
+    for (name, kls) in classes:
+        m = kls.__module__.split('.')[0]
+        if m in [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]:
+            setattr(calling_module, name, make_operator(impl=kls, name=name))  

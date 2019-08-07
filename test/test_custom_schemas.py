@@ -24,7 +24,7 @@ class TestCustomSchema(unittest.TestCase):
         import sklearn.decomposition
         import lale.lib.sklearn
         from lale.operators import make_operator
-        self.sk_pca = make_operator(sklearn.decomposition.PCA)
+        self.sk_pca = make_operator(sklearn.decomposition.PCA, schemas={})
         self.ll_pca = lale.lib.sklearn.PCA
 
     def test_override_schemas(self):
@@ -238,3 +238,11 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.hyperparam_schema(), expected)
         helpers.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.hyperparam_schema(), init)
+        
+    def test_load_schema(self):
+        from lale.operators import make_operator
+        new_pca = make_operator(sklearn.decomposition.PCA)
+        self.assertEqual(self.ll_pca._schemas, new_pca._schemas)
+        self.assertNotEqual(self.ll_pca._schemas, self.sk_pca._schemas)
+        
+        
