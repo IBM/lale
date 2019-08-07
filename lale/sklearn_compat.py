@@ -18,6 +18,7 @@ import math
 import warnings
 
 import lale.operators as Ops
+from lale.pretty_print import hyperparams_to_string
 from lale.search.PGO import remove_defaults_dict
 
 # This method (and the to_lale() method on the returned value)
@@ -139,6 +140,16 @@ class SKlearnCompatWrapper(object):
             cur = cur._base
         assert isinstance(cur, Ops.Operator)
         return cur
+
+    # sklearn calls __repr__ instead of __str__
+    def __repr__(self):
+        op = self.to_lale()
+        if isinstance(op, Ops.TrainableIndividualOp):
+            name = op.name()
+            hyps = hyperparams_to_string(op.hyperparams())
+            return name + "(" + hyps + ")"
+        else:
+            return super().__repr__()
 
     def __getattr__(self, name):
         # This is needed because in python copy skips calling the __init__ method
