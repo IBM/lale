@@ -46,4 +46,4 @@ The following paper has a technical deep-dive:
 ```
 
 Contributors are expected to submit a `Developer's Certificate of
-Origin', which can be found in [DCO1.1.txt](DCO1.1.txt).
+Origin`, which can be found in [DCO1.1.txt](DCO1.1.txt).
