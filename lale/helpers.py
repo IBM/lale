@@ -94,11 +94,11 @@ def data_to_json(data, subsample_array = True):
         return [data_to_json(elem, subsample_array) for elem in data]
     elif type(data) is dict:
         return {key: data_to_json(data[key], subsample_array) for key in data}
-    elif type(data) is np.ndarray:
+    elif isinstance(data, np.ndarray):
         return ndarray_to_json(data, subsample_array)
     elif type(data) is scipy.sparse.csr_matrix:
         return ndarray_to_json(data.toarray(), subsample_array)
-    elif type(data) is pd.DataFrame or type(data) is pd.Series:
+    elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
     else:
@@ -151,8 +151,8 @@ def ndarray_to_json(arr, subsample_array=True):
 def print_yaml(what, doc, file=sys.stdout):
     print(yaml.dump({what: doc}).strip(), file=file)
 
-def validate_schema(value, schema):
-    json_value = data_to_json(value)
+def validate_schema(value, schema, subsample_array=True):
+    json_value = data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema)
 
 
@@ -160,7 +160,8 @@ JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 JSON_META_SCHEMA = None
 
 def validate_is_schema(value):
-    assert value['$schema'] == JSON_META_SCHEMA_URL
+    if '$schema' in value:
+        assert value['$schema'] == JSON_META_SCHEMA_URL
     global JSON_META_SCHEMA
     if JSON_META_SCHEMA is None:
         url = JSON_META_SCHEMA_URL

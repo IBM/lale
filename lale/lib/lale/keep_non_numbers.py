@@ -12,27 +12,63 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.datasets.data_schemas
 import lale.operators
 import numpy as np
 import pandas as pd
 
-class KeepCategoricalsImpl:
+class KeepNonNumbersImpl:
     def __init__(self):
         pass
 
     def fit(self, X, y=None):
-        assert isinstance(X, pd.DataFrame)
-        def is_numeric(i):
-            return np.issubdtype(X.dtypes[i], np.number)
-        self._keep_cols = [i for i in X.columns if not is_numeric(i)]
+        s_all = lale.datasets.data_schemas.to_schema(X)
+        s_row = s_all['items']
+        n_columns = s_row['minItems']
+        assert n_columns == s_row['maxItems']
+        s_cols = s_row['items']
+        def is_numeric(schema):
+            return 'type' in schema and schema['type'] in ['number', 'integer']
+        if isinstance(s_cols, dict):
+            if is_numeric(s_cols):
+                self._keep_cols = []
+            else:
+                self._keep_cols = [*range(n_columns)]
+        else:
+            assert isinstance(s_cols, list)
+            self._keep_cols = [i for i in range(n_columns)
+                               if not is_numeric(s_cols[i])]
         return self
 
     def transform(self, X, y=None):
-        assert isinstance(X, pd.DataFrame)
-        return X.iloc[:, self._keep_cols]
+        if isinstance(X, np.ndarray):
+            result = X[:, self._keep_cols]
+        elif isinstance(X, pd.DataFrame):
+            result = X.iloc[:, self._keep_cols]
+        else:
+            assert False, f'case for type {type(X)} value {X} not implemented'
+        s_X = lale.datasets.data_schemas.to_schema(X)
+        s_result = self.transform_schema(s_X)
+        return lale.datasets.data_schemas.add_schema(result, s_result)
+
+    def transform_schema(self, s_X):
+        s_row = s_X['items']
+        s_cols = s_row['items']
+        n_columns = len(self._keep_cols)
+        if isinstance(s_cols, dict):
+            s_cols_result = s_cols
+        else:
+            s_cols_result = [s_cols[i] for i in self._keep_cols]
+        s_result = {
+            **s_X,
+            'items': {
+                **s_row,
+                'minItems': n_columns, 'maxItems': n_columns,
+                'items': s_cols_result}}
+        return s_result
 
 _hyperparams_schema = {
-  'description': 'Hyperparameter schema for KeepCategoricals transformer.',
+  'description': 'Hyperparameter schema for KeepNonNumbers transformer.',
   'allOf': [
     { 'description':
         'This first sub-object lists all constructor arguments with their '
@@ -43,7 +79,7 @@ _hyperparams_schema = {
       'properties': {}}]}
 
 _input_fit_schema = {
-  'description': 'Input data schema for training KeepCategoricals.',
+  'description': 'Input data schema for training KeepNonNumbers.',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -59,7 +95,7 @@ _input_fit_schema = {
       'description': 'Target class labels; the array is over samples.'}}}
 
 _input_predict_schema = {
-  'description': 'Input data schema for transformation using KeepCategoricals.',
+  'description': 'Input data schema for transformation using KeepNonNumbers.',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -73,7 +109,7 @@ _input_predict_schema = {
            'anyOf':[{'type': 'number'}, {'type':'string'}]}}}}}
 
 _output_schema = {
-  'description': 'Output data schema for transformed data using KeepCategoricals.',
+  'description': 'Output data schema for transformed data using KeepNonNumbers.',
   'type': 'array',
   'items': {
     'type': 'array',
@@ -83,7 +119,7 @@ _output_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://github.com/IBM/lale',
+    'documentation_url': 'https://github.ibm.com/aimodels/lale',
     'type': 'object',
     'tags': {
         'pre': ['categoricals'],
@@ -98,4 +134,4 @@ _combined_schemas = {
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
 
-KeepCategoricals = lale.operators.make_operator(KeepCategoricalsImpl, _combined_schemas)
+KeepNonNumbers = lale.operators.make_operator(KeepNonNumbersImpl, _combined_schemas)

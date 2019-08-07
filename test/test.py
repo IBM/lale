@@ -1097,5 +1097,172 @@ xgb_classifier = XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylev
 pipeline = ((numpy_column_selector >> compress_strings >> numpy_replace_missing_values >> numpy_replace_unknown_values >> boolean2float_1 >> cat_imputer >> cat_encoder >> float32_transform_1) & (numpy_column_selector_1 >> float_str2float >> numpy_replace_missing_values_2 >> num_imputer >> opt_standard_scaler >> float32_transform_2)) >> numpy_permute_array >> xgb_classifier"""
         self.round_trip(string1)
 
+class TestDatasetSchemas(unittest.TestCase):
+    def test_ndarray(self):
+        from sklearn.datasets import load_iris
+        from lale.datasets.data_schemas import to_schema
+        from lale.helpers import validate_schema
+        iris = load_iris()
+        all_X, all_y = iris.data, iris.target
+        all_X_schema = to_schema(all_X)
+        validate_schema(all_X, all_X_schema, subsample_array=False)
+        all_y_schema = to_schema(all_y)
+        validate_schema(all_y, all_y_schema, subsample_array=False)
+        all_X_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 150, 'maxItems': 150,
+            'items': {
+                'type': 'array', 'minItems': 4, 'maxItems': 4,
+                'items': {'type': 'number'}}}
+        all_y_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 150, 'maxItems': 150,
+            'items': {'type': 'integer'}}
+        self.maxDiff = None
+        self.assertEqual(all_X_schema, all_X_expected)
+        self.assertEqual(all_y_schema, all_y_expected)
+
+    def test_dataframe(self):
+        from lale.datasets import openml
+        from lale.datasets.data_schemas import to_schema
+        from lale.helpers import validate_schema
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        train_X_schema = to_schema(train_X)
+        validate_schema(train_X, train_X_schema, subsample_array=False)
+        train_y_schema = to_schema(train_y)
+        validate_schema(train_y, train_y_schema, subsample_array=False)
+        train_X_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 670, 'maxItems': 670,
+            'items': {
+                'type': 'array', 'minItems': 20, 'maxItems': 20,
+                'items': [
+                    {'description': 'checking_status', 'enum': [
+                        '<0', '0<=X<200', '>=200', 'no checking']},
+                    {'description': 'duration', 'type': 'number'},
+                    {'description': 'credit_history', 'enum': [
+                        'no credits/all paid', 'all paid',
+                        'existing paid', 'delayed previously',
+                        'critical/other existing credit']},
+                    {'description': 'purpose', 'enum': [
+                        'new car', 'used car', 'furniture/equipment',
+                        'radio/tv', 'domestic appliance', 'repairs',
+                        'education', 'vacation', 'retraining', 'business',
+                        'other']},
+                    {'description': 'credit_amount', 'type': 'number'},
+                    {'description': 'savings_status', 'enum': [
+                        '<100', '100<=X<500', '500<=X<1000', '>=1000',
+                        'no known savings']},
+                    {'description': 'employment', 'enum': [
+                        'unemployed', '<1', '1<=X<4', '4<=X<7', '>=7']},
+                    {'description': 'installment_commitment', 'type': 'number'},
+                    {'description': 'personal_status', 'enum': [
+                        'male div/sep', 'female div/dep/mar', 'male single',
+                        'male mar/wid', 'female single']},
+                    {'description': 'other_parties', 'enum': [
+                        'none', 'co applicant', 'guarantor']},
+                    {'description': 'residence_since', 'type': 'number'},
+                    {'description': 'property_magnitude', 'enum': [
+                        'real estate', 'life insurance', 'car',
+                        'no known property']},
+                    {'description': 'age', 'type': 'number'},
+                    {'description': 'other_payment_plans', 'enum': [
+                        'bank', 'stores', 'none']},
+                    {'description': 'housing', 'enum': [
+                        'rent', 'own', 'for free']},
+                    {'description': 'existing_credits', 'type': 'number'},
+                    {'description': 'job', 'enum': [
+                        'unemp/unskilled non res', 'unskilled resident',
+                        'skilled', 'high qualif/self emp/mgmt']},
+                    {'description': 'num_dependents', 'type': 'number'},
+                    {'description': 'own_telephone', 'enum': ['none', 'yes']},
+                    {'description': 'foreign_worker', 'enum': ['yes', 'no']}]}}
+        train_y_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 670, 'maxItems': 670,
+            'items': {'description': 'class', 'enum': [0, 1]}}
+        self.maxDiff = None
+        self.assertEqual(train_X_schema, train_X_expected)
+        self.assertEqual(train_y_schema, train_y_expected)
+
+    def test_keep_numbers(self):
+        from lale.datasets import openml
+        from lale.datasets.data_schemas import to_schema
+        from lale.lib.lale import KeepNumbers
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        trainable = KeepNumbers()
+        trained = trainable.fit(train_X)
+        transformed = trained.transform(test_X)
+        transformed_schema = to_schema(transformed)
+        transformed_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 330, 'maxItems': 330,
+            'items': {
+                'type': 'array', 'minItems': 7, 'maxItems': 7,
+                'items': [
+                    {'description': 'duration', 'type': 'number'},
+                    {'description': 'credit_amount', 'type': 'number'},
+                    {'description': 'installment_commitment', 'type': 'number'},
+                    {'description': 'residence_since', 'type': 'number'},
+                    {'description': 'age', 'type': 'number'},
+                    {'description': 'existing_credits', 'type': 'number'},
+                    {'description': 'num_dependents', 'type': 'number'}]}}
+        self.maxDiff = None
+        self.assertEqual(transformed_schema, transformed_expected)
+
+    def test_keep_non_numbers(self):
+        from lale.datasets import openml
+        from lale.datasets.data_schemas import to_schema
+        from lale.lib.lale import KeepNonNumbers
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        trainable = KeepNonNumbers()
+        trained = trainable.fit(train_X)
+        transformed = trained.transform(test_X)
+        transformed_schema = to_schema(transformed)
+        transformed_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 330, 'maxItems': 330,
+            'items': {
+                'type': 'array', 'minItems': 13, 'maxItems': 13,
+                'items': [
+                    {'description': 'checking_status', 'enum': [
+                        '<0', '0<=X<200', '>=200', 'no checking']},
+                    {'description': 'credit_history', 'enum': [
+                        'no credits/all paid', 'all paid',
+                        'existing paid', 'delayed previously',
+                        'critical/other existing credit']},
+                    {'description': 'purpose', 'enum': [
+                        'new car', 'used car', 'furniture/equipment',
+                        'radio/tv', 'domestic appliance', 'repairs',
+                        'education', 'vacation', 'retraining', 'business',
+                        'other']},
+                    {'description': 'savings_status', 'enum': [
+                        '<100', '100<=X<500', '500<=X<1000', '>=1000',
+                        'no known savings']},
+                    {'description': 'employment', 'enum': [
+                        'unemployed', '<1', '1<=X<4', '4<=X<7', '>=7']},
+                    {'description': 'personal_status', 'enum': [
+                        'male div/sep', 'female div/dep/mar', 'male single',
+                        'male mar/wid', 'female single']},
+                    {'description': 'other_parties', 'enum': [
+                        'none', 'co applicant', 'guarantor']},
+                    {'description': 'property_magnitude', 'enum': [
+                        'real estate', 'life insurance', 'car',
+                        'no known property']},
+                    {'description': 'other_payment_plans', 'enum': [
+                        'bank', 'stores', 'none']},
+                    {'description': 'housing', 'enum': [
+                        'rent', 'own', 'for free']},
+                    {'description': 'job', 'enum': [
+                        'unemp/unskilled non res', 'unskilled resident',
+                        'skilled', 'high qualif/self emp/mgmt']},
+                    {'description': 'own_telephone', 'enum': ['none', 'yes']},
+                    {'description': 'foreign_worker', 'enum': ['yes', 'no']}]}}
+        self.maxDiff = None
+        self.assertEqual(transformed_schema, transformed_expected)
+
 if __name__ == '__main__':
     unittest.main()
