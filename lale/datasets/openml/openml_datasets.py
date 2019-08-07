@@ -285,6 +285,34 @@ experiments_dict['airlines']['download_csv_url'] = 'https://www.openml.org/data/
 experiments_dict['airlines']['task_type'] = 'stream classification'
 experiments_dict['airlines']['target'] = 'class'
 
+def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
+    from lale.datasets.data_schemas import add_schema
+    elems_X = [item_schema for item_schema in schema_orig['items']['items']
+               if item_schema['description'] != target_col]
+    elem_y = [item_schema for item_schema in schema_orig['items']['items']
+              if item_schema['description'] == target_col][0]
+    if 'enum' in elem_y:
+        elem_y['enum'] = [*range(len(elem_y['enum']))]
+    ncols_X = len(elems_X)
+    rows_X = {
+        **schema_orig['items'],
+        'minItems': ncols_X, 'maxItems': ncols_X, 'items': elems_X}
+    if 'json_schema' not in pd.DataFrame._internal_names:
+        pd.DataFrame._internal_names.append('json_schema')
+    nrows_train, nrows_test = len(train_y), len(test_y)
+    train_X = add_schema(train_X, {
+        **schema_orig,
+        'minItems': nrows_train, 'maxItems': nrows_train, 'items': rows_X})
+    test_X = add_schema(test_X, {
+        **schema_orig,
+        'minItems': nrows_test, 'maxItems': nrows_test, 'items': rows_X})
+    train_y = add_schema(train_y, {
+        **schema_orig,
+         'minItems': nrows_train, 'maxItems': nrows_train, 'items': elem_y})
+    test_y = add_schema(test_y, {
+        **schema_orig,
+        'minItems': nrows_test, 'maxItems': nrows_test, 'items': elem_y})
+    return train_X, test_X, train_y, test_y
 
 numeric_data_types_list = ['numeric', 'integer', 'real']
 def fetch(dataset_name, task_type, verbose=False, preprocess=True):
@@ -309,48 +337,51 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True):
             if verbose:
                 print('created directory {}'.format(download_data_dir))
         urllib.request.urlretrieve(experiments_dict[dataset_name]['download_arff_url'], data_file_name)
-    
+
     assert os.path.exists(data_file_name)
     with open(data_file_name) as f:
         dataDictionary = arff.load(f)
         f.close()
 
-    arffData = pd.DataFrame(dataDictionary['data'])
-    #arffData = arffData.fillna(0)
-    attributes = dataDictionary['attributes']
-    
-    if verbose:
-        print(attributes)
-    categorical_cols = []
-    numeric_cols = []
-    X_columns = []
-    for i, item in enumerate(attributes):
-        if (item[0].lower() == experiments_dict[dataset_name]['target']):
-            target_indx = i
-            #remove it from attributes so that the next loop indices are adjusted accordingly.
-            del attributes[i]
-            y = arffData.iloc[:,target_indx]
-            arffData = arffData.drop(i, axis = 1)
-
-    for i, item in enumerate(attributes):
-        X_columns.append(i)
-        if (((isinstance(item[1], str) and item[1].lower() not in numeric_data_types_list) \
-            or isinstance(item[1], list)) and (item[0].lower() != 'class')):
-            categorical_cols.append(i)
-        elif (isinstance(item[1], str) and item[1].lower() in numeric_data_types_list) and (item[0].lower() != 'class'):
-            numeric_cols.append(i)
-    if verbose:
-        print(f'categorical columns: {categorical_cols}')
-        print(f'numeric columns:     {numeric_cols}')
-    X = arffData.iloc[:,X_columns]
-
-    #Check whether there is any error
-    num_classes_from_last_row = len(list(set(y)))
-
-    if verbose:
-        print('num_classes_from_last_row', num_classes_from_last_row)
-
+    from lale.datasets.data_schemas import liac_arff_to_schema
+    schema_orig = liac_arff_to_schema(dataDictionary)
+    target_col = experiments_dict[dataset_name]['target']
     if preprocess:
+        arffData = pd.DataFrame(dataDictionary['data'])
+        #arffData = arffData.fillna(0)
+        attributes = dataDictionary['attributes']
+
+        if verbose:
+            print(attributes)
+        categorical_cols = []
+        numeric_cols = []
+        X_columns = []
+        for i, item in enumerate(attributes):
+            if item[0].lower() == target_col:
+                target_indx = i
+                #remove it from attributes so that the next loop indices are adjusted accordingly.
+                del attributes[i]
+                y = arffData.iloc[:,target_indx]
+                arffData = arffData.drop(i, axis = 1)
+
+        for i, item in enumerate(attributes):
+            X_columns.append(i)
+            if (((isinstance(item[1], str) and item[1].lower() not in numeric_data_types_list) \
+                or isinstance(item[1], list)) and (item[0].lower() != 'class')):
+                categorical_cols.append(i)
+            elif (isinstance(item[1], str) and item[1].lower() in numeric_data_types_list) and (item[0].lower() != 'class'):
+                numeric_cols.append(i)
+        if verbose:
+            print(f'categorical columns: {categorical_cols}')
+            print(f'numeric columns:     {numeric_cols}')
+        X = arffData.iloc[:,X_columns]
+
+        #Check whether there is any error
+        num_classes_from_last_row = len(list(set(y)))
+
+        if verbose:
+            print('num_classes_from_last_row', num_classes_from_last_row)
+
         transformers1 = [
             ( 'imputer_str',
               SimpleImputer(missing_values=None, strategy='most_frequent'),
@@ -370,10 +401,18 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True):
             print("Shape of X before preprocessing", X.shape)
         from lale.operators import make_pipeline
         preprocessing = make_pipeline(txm1, txm2)
-    
+
         X = preprocessing.fit(X).transform(X)
         if verbose:
             print("Shape of X after preprocessing", X.shape)
+
+    else:
+        col_names = [attr[0] for attr in dataDictionary['attributes']]
+        df_all = pd.DataFrame(dataDictionary['data'], columns=col_names)
+        y = df_all[target_col]
+        y = y.squeeze()
+        cols_X = [col for col in col_names if col != target_col]
+        X = df_all[cols_X]
 
     labelencoder = LabelEncoder()
     y = labelencoder.fit_transform(y)
@@ -383,6 +422,8 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True):
     if verbose:
         print(f'training set shapes: X {X_train.shape}, y {y_train.shape}')
         print(f'test set shapes:     X {X_test.shape}, y {y_test.shape}')
+    X_train, X_test, y_train, y_test = add_schemas( \
+        schema_orig, target_col, X_train, X_test, y_train, y_test)
     return (X_train, y_train), (X_test, y_test)
 
 if __name__ == "__main__":
