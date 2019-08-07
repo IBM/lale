@@ -733,6 +733,9 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         obj = {'type':'object', 'properties':props}
         top = {'allOf':[schema, obj]}
         return top
+    # This should *only* ever be called by the sklearn_compat wrapper
+    def set_params(self, **impl_params):
+        return self._configure(**impl_params)
 
 def _mutation_warning(method_name:str)->str:
     msg = str("The `{}` method is deprecated on a trainable "
@@ -860,6 +863,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 output[k] = defaults[k]
         return output
 
+    # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
         #TODO: This mutates the operator, should we mark it deprecated?
         filtered_impl_params = remove_defaults_dict(impl_params)
