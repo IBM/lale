@@ -469,6 +469,8 @@ def get_lib_schema(impl):
     except (ModuleNotFoundError, AttributeError):
         return None
     
+logger = logging.getLogger(__name__)
+
 def wrap_imported_operators():
     import lale.lib
     from .operators import  make_operator
@@ -477,4 +479,5 @@ def wrap_imported_operators():
     for name in (n for n in g if inspect.isclass(g[n])):
         m = g[name].__module__.split('.')[0]
         if m in [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]:
+            logger.info(f'Lale:Wrapped operator:{name}')
             g[name] = make_operator(impl=g[name], name=name)
