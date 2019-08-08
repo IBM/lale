@@ -2,7 +2,7 @@ dist: xenial
 language: python
 os: osx
 python:
-  - "3.7"
+  - "3.6"
 env:
  - SETUP_TARGET=.[test] TEST_CASES="test.test_core_operators test.test_pipeline test.test_custom_schemas"
  - SETUP_TARGET=.[full,test] TEST_CASES="test.test_interoperability test.test_optimizers test.test_notebooks"
