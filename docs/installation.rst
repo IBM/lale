@@ -11,11 +11,11 @@ Install Lale Core
 
     Install as::
 
-        pip install git+ssh://git@github.ibm.com/Lale/lale
+        pip install git+https://git@github.com/IBM/lale.git
 
     or install from source::
 
-        git clone git@github.ibm.com:Lale/lale.git
+        git clone https://github.com/IBM/lale.git
         cd lale
         pip install .
 
@@ -28,11 +28,11 @@ Install Lale Full
 
     Install as::
 
-        pip install numpy && pip install git+ssh://git@github.ibm.com/Lale/lale.git#egg=lale[full]
+        pip install git+https://git@github.com/IBM/lale.git#egg=lale[full]
 
     or install from source::
 
-        git clone git@github.ibm.com:Lale/lale.git
+        git clone https://github.com/IBM/lale.git
         cd lale
         pip install .[full]
 
