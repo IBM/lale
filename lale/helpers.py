@@ -472,9 +472,9 @@ def get_lib_schema(impl):
 def wrap_imported_operators():
     import lale.lib
     from .operators import  make_operator
-    calling_module = inspect.getmodule(inspect.stack()[1][0])
-    classes = inspect.getmembers(calling_module, inspect.isclass)
-    for (name, kls) in classes:
-        m = kls.__module__.split('.')[0]
+    calling_frame = inspect.stack()[1][0]
+    g = calling_frame.f_globals
+    for name in (n for n in g if inspect.isclass(g[n])):
+        m = g[name].__module__.split('.')[0]
         if m in [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]:
-            setattr(calling_module, name, make_operator(impl=kls, name=name))  
+            g[name] = make_operator(impl=g[name], name=name)
