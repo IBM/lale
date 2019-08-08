@@ -46,6 +46,7 @@ from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 
 class TestResNet50(unittest.TestCase):
+    @unittest.skip("travis-ci runs out of memory on this test. But this works on internal travis.")
     def test_init_fit_predict(self):
         import torchvision.datasets as datasets
         import torchvision.transforms as transforms
