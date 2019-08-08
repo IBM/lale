@@ -59,15 +59,19 @@ import sphinx_rtd_theme
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
-    'numpydoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
     'sphinx.ext.imgmath',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'm2r'
+    'm2r',
+    'sphinxcontrib.apidoc'
 ]
+apidoc_module_dir = '../lale'
+apidoc_output_dir = 'modules'
+apidoc_separate_modules = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
