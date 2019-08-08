@@ -17,6 +17,9 @@ import lale
 import sklearn
 import lale.helpers as helpers
 import lale.schemas as schemas
+from sklearn.decomposition import PCA as foo
+from xgboost import XGBClassifier as bar
+from lightgbm import LGBMClassifier as baz
 
 
 class TestCustomSchema(unittest.TestCase):
@@ -244,5 +247,15 @@ class TestCustomSchema(unittest.TestCase):
         new_pca = make_operator(sklearn.decomposition.PCA)
         self.assertEqual(self.ll_pca._schemas, new_pca._schemas)
         self.assertNotEqual(self.ll_pca._schemas, self.sk_pca._schemas)
+        
+    def test_wrap_imported_operators(self):
+        from lale.lib.sklearn import PCA
+        from lale.lib.xgboost import XGBClassifier
+        from lale.lib.lightgbm import LGBMClassifier
+        lale.wrap_imported_operators()
+        self.assertEqual(foo._schemas, PCA._schemas)
+        self.assertEqual(bar._schemas, XGBClassifier._schemas)
+        self.assertEqual(baz._schemas, LGBMClassifier._schemas)
+        
         
         
