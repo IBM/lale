@@ -1,10 +1,9 @@
 dist: xenial
 language: python
 python:
-  - "3.7"
   - "3.6"
 env:
- - SETUP_TARGET=.[test] TEST_CASES="test.test_core_operators test.test_pipeline"
+ - SETUP_TARGET=.[test] TEST_CASES="test.test_core_operators test.test_pipeline test.test_custom_schemas"
  - SETUP_TARGET=.[full,test] TEST_CASES="test.test_interoperability test.test_optimizers test.test_notebooks"
 addons:
   apt:
@@ -32,11 +31,3 @@ script:
   - echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
   - python -m unittest $TEST_CASES
   - echo -en 'travis_fold:end:tests\\r'
-
-# generate the documentation
-  - echo -e "${ANSI_GREEN}Generate Documentation...${ANSI_RESET}" && echo -en 'travis_fold:start:docs\\r'
-  - make -C docs html
-# This file needs to be in the root to disable jekyll processing and getting
-# confused by our _sources directory and such
-  - touch docs/_build/html/.nojekyll
-  - echo -en 'travis_fold:end:docs\\r'
