@@ -14,6 +14,7 @@
 
 import lale.datasets.data_schemas
 import lale.operators
+import jsonsubschema
 import numpy as np
 import pandas as pd
 
@@ -28,7 +29,7 @@ class KeepNumbersImpl:
         assert n_columns == s_row['maxItems']
         s_cols = s_row['items']
         def is_numeric(schema):
-            return 'type' in schema and schema['type'] in ['number', 'integer']
+            return jsonsubschema.isSubschema(schema, {'type': 'number'})
         if isinstance(s_cols, dict):
             if is_numeric(s_cols):
                 self._keep_cols = [*range(n_columns)]
