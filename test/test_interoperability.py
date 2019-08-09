@@ -45,6 +45,7 @@ from lale.search.GridSearchCV import LaleGridSearchCV, get_grid_search_parameter
 from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 
+@unittest.skip("Skipping here because travis-ci fails to allocate memory. This runs on internal travis.")
 class TestResNet50(unittest.TestCase):
     def test_init_fit_predict(self):
         import torchvision.datasets as datasets
