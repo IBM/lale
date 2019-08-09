@@ -312,6 +312,7 @@ class IndividualOp(MetaModelOperator):
         """
         self._impl = impl
         self._name = name
+        schemas = schemas if schemas is not None else helpers.get_lib_schema(impl)
         if schemas:
             self._schemas = schemas
         else:
@@ -998,7 +999,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
 all_available_operators: List[PlannedOperator] = []
 
-def make_operator(impl, schemas={}, name = None) -> PlannedOperator:
+def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
     if name is None:
         name = helpers.assignee_name()
     if inspect.isclass(impl):
