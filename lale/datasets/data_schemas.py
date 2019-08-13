@@ -41,10 +41,21 @@ class DataFrameWithSchema(pd.DataFrame):
     def _constructor(self):
         return DataFrameWithSchema
 
+class SeriesWithSchema(pd.Series):
+    _internal_names = pd.Series._internal_names + ['json_schema']
+    _internal_names_set = set(_internal_names)
+
+    @property
+    def _constructor(self):
+        return SeriesWithSchema
+
 def add_schema(obj, schema):
     lale.helpers.validate_is_schema(schema)
     if isinstance(obj, np.ndarray):
         result = obj.view(NDArrayWithSchema)
+        result.json_schema = schema
+    elif isinstance(obj, pd.Series):
+        result = SeriesWithSchema(obj)
         result.json_schema = schema
     elif isinstance(obj, pd.DataFrame):
         result = DataFrameWithSchema(obj)
