@@ -14,18 +14,26 @@
 
 import lale.helpers
 import lale.operators
+import numpy as np
+import pandas as pd
 import sklearn.feature_extraction.text
 
 class TfidfVectorizerImpl():
     def __init__(self, **hyperparams):
+        if 'dtype' in hyperparams and hyperparams['dtype'] == 'float64':
+            hyperparams = {**hyperparams, 'dtype': np.float64}
         self._hyperparams = hyperparams
 
     def fit(self, X, y=None):
         self._sklearn_model = sklearn.feature_extraction.text.TfidfVectorizer(**self._hyperparams)
+        if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
+            X = X.squeeze()
         self._sklearn_model.fit(X, y)
         return self
 
     def transform(self, X):
+        if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
+            X = X.squeeze()
         return self._sklearn_model.transform(X)
 
 _hyperparams_schema = {
@@ -168,9 +176,13 @@ _input_fit_schema = {
     'properties': {
         'X': {
             'description': 'Features; the outer array is over samples.',
-            'type': 'array',
-            'items': {
-                'type': 'string'}},
+            'anyOf': [
+                {   'type': 'array',
+                    'items': {'type': 'string'}},
+                {   'type': 'array',
+                    'items': {
+                        'type': 'array', 'minItems': 1, 'maxItems': 1,
+                        'items': {'type': 'string'}}}]},
         'y': {
             'description': 'Target class labels; the array is over samples.'}}}
 
@@ -183,9 +195,13 @@ _input_predict_schema = {
     'properties': {
         'X': {
             'description': 'Features; the outer array is over samples.',
-            'type': 'array',
-            'items': {
-                'type': 'string'}}}}
+            'anyOf': [
+                {   'type': 'array',
+                    'items': {'type': 'string'}},
+                {   'type': 'array',
+                    'items': {
+                        'type': 'array', 'minItems': 1, 'maxItems': 1,
+                        'items': {'type': 'string'}}}]}}}
 
 _output_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

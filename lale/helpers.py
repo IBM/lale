@@ -172,6 +172,15 @@ def validate_is_schema(value):
             JSON_META_SCHEMA = json.load(f)
     jsonschema.validate(value, JSON_META_SCHEMA)
 
+def is_schema(value):
+    if isinstance(value, dict):
+        try:
+            jsonschema.validate(value, JSON_META_SCHEMA)
+        except:
+            return False
+        return True
+    return False
+
 def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
