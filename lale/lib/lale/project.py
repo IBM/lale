@@ -33,7 +33,7 @@ class ProjectImpl:
             assert n_columns == s_row['maxItems']
             s_cols = s_row['items']
             if isinstance(s_cols, dict):
-                if jsonschema.isSubschema(s_cols, columns):
+                if jsonsubschema.isSubschema(s_cols, columns):
                     columns = [*range(n_columns)]
                 else:
                     columns = []
