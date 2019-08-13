@@ -16,6 +16,7 @@ import lale.helpers
 import lale.operators
 import numpy as np
 import pandas as pd
+import scipy.sparse
 
 class ConcatFeaturesImpl():
     """Transformer to concatenate input datasets. 
@@ -59,6 +60,8 @@ class ConcatFeaturesImpl():
         for dataset in X:
             if isinstance(dataset, pd.DataFrame) or isinstance(dataset, pd.Series):
                 np_dataset = dataset.values
+            elif isinstance(dataset, scipy.sparse.csr_matrix):
+                np_dataset = dataset.toarray()
             else:
                 np_dataset = dataset
             if hasattr(np_dataset, 'shape'):

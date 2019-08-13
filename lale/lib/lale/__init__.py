@@ -17,6 +17,6 @@ from .no_op import NoOp
 from .hyperopt_classifier import HyperoptClassifier
 from .sample_based_voting import SampleBasedVoting
 from .hyperopt_regressor import HyperoptRegressor
+from .project import Project
 from .keep_non_numbers import KeepNonNumbers
 from .keep_numbers import KeepNumbers
-from .project import Project
