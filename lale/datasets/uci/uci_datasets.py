@@ -91,4 +91,4 @@ def fetch_drugscom():
                  'minimum': 0}]}}
     test_X, test_y = tsv_to_Xy(files[0], target_col, json_schema)
     train_X, train_y = tsv_to_Xy(files[1], target_col, json_schema)
-    return (train_X, train_y), (test_X, test_y)
+    return train_X, train_y, test_X, test_y
