@@ -12,61 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.datasets.data_schemas
+from .project import ProjectImpl
 import lale.operators
-import jsonsubschema
-import numpy as np
-import pandas as pd
 
-class KeepNonNumbersImpl:
+class KeepNonNumbersImpl(ProjectImpl):
     def __init__(self):
-        pass
-
-    def fit(self, X, y=None):
-        s_all = lale.datasets.data_schemas.to_schema(X)
-        s_row = s_all['items']
-        n_columns = s_row['minItems']
-        assert n_columns == s_row['maxItems']
-        s_cols = s_row['items']
-        def is_numeric(schema):
-            return jsonsubschema.isSubschema(schema, {'type': 'number'})
-        if isinstance(s_cols, dict):
-            if is_numeric(s_cols):
-                self._keep_cols = []
-            else:
-                self._keep_cols = [*range(n_columns)]
-        else:
-            assert isinstance(s_cols, list)
-            self._keep_cols = [i for i in range(n_columns)
-                               if not is_numeric(s_cols[i])]
-        return self
-
-    def transform(self, X, y=None):
-        if isinstance(X, np.ndarray):
-            result = X[:, self._keep_cols]
-        elif isinstance(X, pd.DataFrame):
-            result = X.iloc[:, self._keep_cols]
-        else:
-            assert False, f'case for type {type(X)} value {X} not implemented'
-        s_X = lale.datasets.data_schemas.to_schema(X)
-        s_result = self.transform_schema(s_X)
-        return lale.datasets.data_schemas.add_schema(result, s_result)
-
-    def transform_schema(self, s_X):
-        s_row = s_X['items']
-        s_cols = s_row['items']
-        n_columns = len(self._keep_cols)
-        if isinstance(s_cols, dict):
-            s_cols_result = s_cols
-        else:
-            s_cols_result = [s_cols[i] for i in self._keep_cols]
-        s_result = {
-            **s_X,
-            'items': {
-                **s_row,
-                'minItems': n_columns, 'maxItems': n_columns,
-                'items': s_cols_result}}
-        return s_result
+        super(KeepNonNumbersImpl, self).__init__(
+            columns={'not':{'type': 'number'}})
 
 _hyperparams_schema = {
   'description': 'Hyperparameter schema for KeepNonNumbers transformer.',
