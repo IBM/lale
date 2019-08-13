@@ -15,6 +15,7 @@
 import lale.helpers
 import lale.operators
 import numpy as np
+import pandas as pd
 import sklearn.feature_extraction.text
 
 class TfidfVectorizerImpl():
