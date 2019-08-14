@@ -807,6 +807,20 @@ class TestHyperoptClassifier(unittest.TestCase):
         print(accuracy_score(y, predictions))
         warnings.resetwarnings()
 
+    def test_preprocessing_union(self):
+        from lale.datasets import openml
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        from lale.lib.lale import KeepNumbers, KeepNonNumbers
+        from lale.lib.sklearn import Normalizer, OneHotEncoder
+        from lale.lib.lale import ConcatFeatures as Concat
+        from lale.lib.sklearn import RandomForestClassifier as Forest
+        prep_num = KeepNumbers() >> Normalizer
+        prep_cat = KeepNonNumbers() >> OneHotEncoder(sparse=False)
+        planned = (prep_num & prep_cat) >> Concat >> Forest
+        from lale.lib.lale import HyperoptClassifier
+        hyperopt_classifier = HyperoptClassifier(planned, max_evals=1)
+        best_found = hyperopt_classifier.fit(train_X, train_y)
 
 # class TestGetFeatureNames(unittest.TestCase):
 #     def test_gfn_ohe(self):
