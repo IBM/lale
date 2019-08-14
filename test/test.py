@@ -822,6 +822,26 @@ class TestHyperoptClassifier(unittest.TestCase):
         hyperopt_classifier = HyperoptClassifier(planned, max_evals=1)
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
+    @unittest.skip("TODO: debug exception, unhashable type: 'list'")
+    def test_text_and_structured(self):
+        from lale.datasets.uci.uci_datasets import fetch_drugscom
+        from sklearn.model_selection import train_test_split
+        train_X_all, train_y_all, test_X, test_y = fetch_drugscom()
+        #subset to speed up debugging
+        train_X, train_X_ignore, train_y, train_y_ignore = train_test_split(
+            train_X_all, train_y_all, train_size=0.01, random_state=42)
+        from lale.lib.lale import Project
+        from lale.lib.lale import ConcatFeatures as Cat
+        from lale.lib.sklearn import TfidfVectorizer as Tfidf
+        from lale.lib.sklearn import LinearRegression as LinReg
+        from lale.lib.sklearn import RandomForestRegressor as Forest
+        prep_text = Project(columns=['review']) >> Tfidf(max_features=100)
+        prep_nums = Project(columns={'type': 'number'})
+        planned = (prep_text & prep_nums) >> Cat >> (LinReg | Forest)
+        from lale.lib.lale import HyperoptClassifier
+        hyperopt_classifier = HyperoptClassifier(planned, max_evals=3)
+        best_found = hyperopt_classifier.fit(train_X, train_y)
+
 # class TestGetFeatureNames(unittest.TestCase):
 #     def test_gfn_ohe(self):
 #         from sklearn.datasets import load_iris
