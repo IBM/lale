@@ -5,7 +5,7 @@
 <img src="docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
 Lale is a Python library for semi-automated data science.
-Lale is compatible with [scikit learn](https://scikit-learn.org) while
+Lale is compatible with [scikit-learn](https://scikit-learn.org) while
 adding value for automation, correctness checks, and interoperability.
 For *automation*, Lale provides a consistent high-level interface to
 existing pipeline search tools including GridSearchCV, SMAC, and
@@ -14,7 +14,7 @@ For *correctness checks*, Lale uses JSON Schema to catch mistakes when
 there is a mismatch between hyperparameters and their type, or between
 data and operators.
 And for *interoperability*, Lale has a growing library of transformers
-and estimators from popular libraries such as scikit learn, XGBoost,
+and estimators from popular libraries such as scikit-learn, XGBoost,
 PyTorch etc.
 Lale can be installed just like any other Python package and can be
 edited with off-the-shelf Python tools such as Jupyter notebooks.
@@ -31,7 +31,7 @@ without warranties of any kind.
 
 The name Lale, pronounced *laleh*, comes from the Persian word for
 tulip. Similarly to popular machine-learning libraries such as
-Scikit-learn, Lale is also just a Python library, not a new stand-alone
+scikit-learn, Lale is also just a Python library, not a new stand-alone
 programming language. It does not require users to install new tools
 nor learn new syntax.
 
