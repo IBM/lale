@@ -51,7 +51,7 @@ setup(
               'liac-arff>=2.4.0',
               'tensorflow-datasets>=1.0.1',
               'tensorflow>=1.13.1',
-              'smac'
+              'smac<=0.10.0'
           ],
           'test':[
               'jupyter',
