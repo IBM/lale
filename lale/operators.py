@@ -668,6 +668,8 @@ class IndividualOp(MetaModelOperator):
             `output_*` must be an existing method (already defined in the schema for lale operators, exising method for external operators)
         constraint : Schema
             Add a constraint in JSON schema format.
+        relevantToOptimizer : String list
+            update the set parameters that will be optimized.
         param : Schema
             Override the schema of the hyperparameter.
             `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
@@ -693,8 +695,11 @@ class IndividualOp(MetaModelOperator):
                 op._schemas['properties'][arg] = value.schema
             elif arg == 'constraint':
                 op._schemas['properties']['hyperparams']['allOf'].append(value.schema)
+            elif arg == 'relevantToOptimizer':
+                assert isinstance(value, list)
+                op._schemas['properties']['hyperparams']['allOf'][0]['relevantToOptimizer'] = value
             elif arg in helpers.get_hyperparam_names(op):
-                op._schemas['properties']['hyperparams']['allOf'][0]    ['properties'][arg] = value.schema
+                op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
             else:
                 assert False, "Unkown method or parameter."
         return op
