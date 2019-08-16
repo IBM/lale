@@ -257,7 +257,7 @@ _hyperparams_schema = {
             'type': 'object',
             'properties': {
                 'solver': {
-                    'enum': ['sgd', 'adams']},
+                    'enum': ['sgd', 'adam']},
             }}]},
     {   'description':
             'The exponent for inverse scaling learning rate is used in '
@@ -320,7 +320,7 @@ _hyperparams_schema = {
             'type': 'object',
             'properties': {
                 'early_stopping': {
-                    'enum': [True]},
+                    'enum': [False]},
             }}, {
             'type': 'object',
             'properties': {

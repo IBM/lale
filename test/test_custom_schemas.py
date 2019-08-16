@@ -242,6 +242,15 @@ class TestCustomSchema(unittest.TestCase):
         helpers.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.hyperparam_schema(), init)
         
+    def test_override_relevant(self):
+        init = self.ll_pca.hyperparam_schema()['allOf'][0]['relevantToOptimizer']
+        expected = ['svd_solver']
+        foo = self.ll_pca.customize_schema(relevantToOptimizer=['svd_solver'])
+        self.assertEqual(foo.hyperparam_schema()['allOf'][0]['relevantToOptimizer'], expected)
+        helpers.validate_is_schema(foo._schemas)
+        self.assertEqual(self.ll_pca.hyperparam_schema()['allOf'][0]['relevantToOptimizer'], init)
+        self.assertRaises(Exception, self.sk_pca.customize_schema, relevantToOptimizer={})
+        
     def test_load_schema(self):
         from lale.operators import make_operator
         new_pca = make_operator(sklearn.decomposition.PCA)

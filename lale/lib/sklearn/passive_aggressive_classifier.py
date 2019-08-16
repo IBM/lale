@@ -154,7 +154,7 @@ _hyperparams_schema = {
             'type': 'object',
             'properties': {
                 'early_stopping': {
-                    'enum': ['true']},
+                    'enum': [True]},
             }}, {
             'type': 'object',
             'properties': {
