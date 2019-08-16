@@ -16,6 +16,7 @@ from lale.operators import make_operator
 import torch
 from pytorch_pretrained_bert import BertTokenizer, BertModel, BertForMaskedLM
 import numpy as np
+import pandas as pd
 import logging
 import lale.helpers
 logging.basicConfig(level=logging.INFO)
