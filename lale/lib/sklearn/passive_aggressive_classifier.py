@@ -217,6 +217,7 @@ _output_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html',
     'type': 'object',
     'tags': {
         'pre': [],
