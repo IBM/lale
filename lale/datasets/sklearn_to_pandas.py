@@ -32,7 +32,7 @@ def load_iris_df(test_size = 0.2):
     X_test_df = pd.DataFrame(X_test, columns = iris.feature_names)
     y_test_df = pd.Series(y_test, name = target_name)
 
-    return (X_train_df, y_train), (X_test_df, y_test_df)
+    return (X_train_df, y_train_df), (X_test_df, y_test_df)
 
 def load_digits_df(test_size = 0.2):
     from sklearn.datasets import load_digits

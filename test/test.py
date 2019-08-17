@@ -1119,14 +1119,48 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(all_X_schema, all_X_expected)
         self.assertEqual(all_y_schema, all_y_expected)
 
-    def test_dataframe(self):
+    def test_dataframes_and_series(self):
+        from lale.datasets import sklearn_to_pandas
+        from lale.datasets.data_schemas import to_schema
+        from lale.helpers import validate_schema
+        import pandas as pd
+        (train_X, train_y), (test_X, test_y) = sklearn_to_pandas.load_iris_df()
+        assert isinstance(train_X, pd.DataFrame)
+        assert not hasattr(train_X, 'json_schema')
+        train_X_schema = to_schema(train_X)
+        validate_schema(train_X, train_X_schema, subsample_array=False)
+        assert isinstance(train_y, pd.Series)
+        assert not hasattr(train_y, 'json_schema')
+        train_y_schema = to_schema(train_y)
+        validate_schema(train_y, train_y_schema, subsample_array=False)
+        train_X_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 120, 'maxItems': 120,
+            'items': {
+                'type': 'array', 'minItems': 4, 'maxItems': 4,
+                'items': [
+                    {'description': 'sepal length (cm)', 'type': 'number'},
+                    {'description': 'sepal width (cm)', 'type': 'number'},
+                    {'description': 'petal length (cm)', 'type': 'number'},
+                    {'description': 'petal width (cm)', 'type': 'number'}]}}
+        train_y_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 120, 'maxItems': 120,
+            'items': {'description': 'target', 'type': 'integer'}}
+        self.maxDiff = None
+        self.assertEqual(train_X_schema, train_X_expected)
+        self.assertEqual(train_y_schema, train_y_expected)
+
+    def test_liac_arff(self):
         from lale.datasets import openml
         from lale.datasets.data_schemas import to_schema
         from lale.helpers import validate_schema
         (train_X, train_y), (test_X, test_y) = openml.fetch(
             'credit-g', 'classification', preprocess=False)
+        assert hasattr(train_X, 'json_schema')
         train_X_schema = to_schema(train_X)
         validate_schema(train_X, train_X_schema, subsample_array=False)
+        assert hasattr(train_y, 'json_schema')
         train_y_schema = to_schema(train_y)
         validate_schema(train_y, train_y_schema, subsample_array=False)
         train_X_expected = {
