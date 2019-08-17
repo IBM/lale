@@ -130,6 +130,21 @@ def dataframe_to_schema(df):
     lale.helpers.validate_is_schema(result)
     return result
 
+def series_to_schema(series):
+    assert isinstance(series, pd.Series)
+    if isinstance(series, SeriesWithSchema) and hasattr(series, 'json_schema'):
+        return series.json_schema
+    (n_rows, ) = series.shape
+    result = {
+        'type': 'array',
+        'minItems': n_rows,
+        'maxItems': n_rows,
+        'items': {
+            'description': str(series.name),
+            **dtype_to_schema(series.dtype)}}
+    lale.helpers.validate_is_schema(result)
+    return result
+
 def is_liac_arff(obj):
     expected_types = {
         'description': str, 'relation': str, 'attributes': list, 'data': list}
@@ -170,6 +185,8 @@ def to_schema(obj):
         result = ndarray_to_schema(obj)
     elif isinstance(obj, pd.DataFrame):
         result = dataframe_to_schema(obj)
+    elif isinstance(obj, pd.Series):
+        result = series_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
     else:
