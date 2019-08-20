@@ -49,8 +49,8 @@ _hyperparams_schema = {
             'alpha': {
                 'type': 'number',
                 'distribution':'loguniform',
-                'minimumForOptimizer': 1e-2,
-                'maximumForOptimizer': 100.0,
+                'minimumForOptimizer': 1e-10,
+                'maximumForOptimizer': 1.0,
                 'default': 1.0,
                 'description': 'Additive (Laplace/Lidstone) smoothing parameter'},
             'fit_prior': {
