@@ -75,8 +75,8 @@ _hyperparams_schema = {
                 'description': 'learning rate shrinks the contribution of each tree by `learning_rate`.'},
             'n_estimators': {
                 'type': 'integer',
-                'minimumForOptimizer': 50,
-                'maximumForOptimizer': 500,
+                'minimumForOptimizer': 10,
+                'maximumForOptimizer': 100,
                 'distribution': 'uniform',
                 'default': 100,
                 'description': 'The number of boosting stages to perform. Gradient boosting'},
