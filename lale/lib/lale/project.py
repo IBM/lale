@@ -19,6 +19,13 @@ import lale.operators
 import numpy as np
 import pandas as pd
 import sklearn.compose
+import sys
+
+def isSubschema(sub, sup):
+    try:
+        return jsonsubschema.isSubschema(sub, sup)
+    except Exception as e:
+        raise ValueError(f'problem checking ({sub} <: {sup})') from e
 
 class ProjectImpl:
     def __init__(self, columns=None):
@@ -33,7 +40,7 @@ class ProjectImpl:
             assert n_columns == s_row['maxItems']
             s_cols = s_row['items']
             if isinstance(s_cols, dict):
-                if jsonsubschema.isSubschema(s_cols, columns):
+                if isSubschema(s_cols, columns):
                     columns = [*range(n_columns)]
                 else:
                     columns = []
@@ -41,7 +48,7 @@ class ProjectImpl:
                 assert isinstance(s_cols, list)
                 columns = [
                     i for i in range(n_columns)
-                    if jsonsubschema.isSubschema(s_cols[i], columns)]
+                    if isSubschema(s_cols[i], columns)]
         self._col_tfm = sklearn.compose.ColumnTransformer(
             transformers=[('keep', 'passthrough', columns)])
         self._col_tfm.fit(X)
