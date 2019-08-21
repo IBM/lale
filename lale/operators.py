@@ -20,6 +20,7 @@ import os
 import itertools
 from lale import schema2enums as enum_gen
 import numpy as np
+import lale.datasets.data_schemas
 
 from typing import AbstractSet, Any, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union
 import warnings
@@ -703,7 +704,31 @@ class IndividualOp(MetaModelOperator):
             else:
                 assert False, "Unkown method or parameter."
         return op
-    
+
+    def validate(self, X, y=None):
+        if not lale.helpers.is_schema(X):
+            X = lale.datasets.data_schemas.to_schema(X)
+        obj_X = {
+            'type': 'object',
+            'additionalProperties': False,
+            # 'required': ['X'],
+            'properties': {'X': X}}
+        if y is not None:
+            if not lale.helpers.is_schema(y):
+                y = lale.datasets.data_schemas.to_schema(y)
+            obj_Xy = {
+                'type': 'object',
+                'additionalProperties': False,
+                # 'required': ['X', 'y'],
+                'properties': {'X': X, 'y': y}}
+        fit_actual = obj_X if y is None else obj_Xy
+        fit_formal = self.input_schema_fit()
+        lale.helpers.validate_subschema(fit_actual, fit_formal,
+            'to_schema(data)', f'{self.name()}.input_schema_fit()')
+        predict_actual = obj_X
+        predict_formal = self.input_schema_predict()
+        lale.helpers.validate_subschema(predict_actual, predict_formal,
+            'to_schema(data)', f'{self.name()}.input_schema_predict()')
 
 class PlannedIndividualOp(IndividualOp, PlannedOperator):
     """

@@ -16,6 +16,7 @@ import ast
 import contextlib
 import json
 import jsonschema
+import jsonsubschema
 import numpy as np
 import pandas as pd
 import os
@@ -158,7 +159,6 @@ def validate_schema(value, schema, subsample_array=True):
     json_value = data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema)
 
-
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 JSON_META_SCHEMA = None
 
@@ -180,6 +180,25 @@ def is_schema(value):
             return False
         return True
     return False
+
+class SubschemaError(Exception):
+    def __init__(self, sub, sup, sub_name='sub', sup_name='super'):
+        self.sub = sub
+        self.sup = sup
+        self.sub_name = sub_name
+        self.sup_name = sup_name
+
+    def __str__(self):
+        summary = f'expected {self.sub_name} <: {self.sup_name}'
+        import pprint
+        sub = pprint.pformat(self.sub, width=70, compact=True)
+        sup = pprint.pformat(self.sup, width=70, compact=True)
+        details = f'\n{self.sub_name} = \\\n{sub}\n{self.sup_name} = \\\n{sup}'
+        return summary + details
+
+def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
+    if not jsonsubschema.isSubschema(sub, sup):
+        raise SubschemaError(sub, sup, sub_name, sup_name)
 
 def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5):
     """
