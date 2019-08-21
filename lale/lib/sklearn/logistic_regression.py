@@ -195,57 +195,53 @@ _hyperparams_schema = {
               'type': 'integer',
               'minimum': 1}],
             'default': None}}},
-    { 'description':
-        'This second sub-object lists cross-argument constraints, used '
-        'to check or search conditional hyperparameters.',
-      'allOf': [
-        { 'description':
-            'The newton-cg, sag, and lbfgs solvers support only l2 penalties.',
-          'anyOf': [
-            { 'type': 'object',
-              'properties': {
-                'solver': {'not': {'enum': ['newton-cg', 'sag', 'lbfgs']}}}},
-            { 'type': 'object',
-              'properties': {'penalty': {'enum': ['l2']}}}]},
-        { 'description':
-            'The dual formulation is only implemented for l2 '
-            'penalty with the liblinear solver.',
-          'anyOf': [
-            { 'type': 'object',
-              'properties': {'dual': {'enum': [False]}}},
-            { 'type': 'object',
-              'properties': {
-                'penalty': {'enum': ['l2']},
-                'solver': {'enum': ['liblinear']}}}]},
-        { 'description':
-            'Setting intercept_scaling is useful only when the solver is '
-            'liblinear and fit_intercept is true.',
-          'anyOf': [
-            { 'type': 'object',
-              'properties': {'intercept_scaling': {'enum': [1.0]}}},
-            { 'type': 'object',
-              'properties': {
-                'fit_intercept': {'enum': [True]},
-                'solver': {'enum': ['liblinear']}}}]},
-        { 'description':
-            'Setting max_iter is only useful for the newton-cg, sag, '
-            'lbfgs solvers.',
-          'anyOf': [
-            { 'type': 'object',
-              'properties': {'max_iter': {'enum': [100]}}},
-            { 'type': 'object',
-              'properties': {
-                'solver': {'enum': ['newton-cg', 'sag', 'lbfgs']}}}]},
-        { 'description':
-            'The multi_class multinomial option is unavailable when the '
-            'solver is liblinear.',
-          'anyOf': [
-            { 'type': 'object',
-              'properties': {
-                'multi_class': {'not': {'enum': ['multinomial']}}}},
-            { 'type': 'object',
-              'properties': {
-                'solver': {'not': {'enum': ['liblinear']}}}}]}]}]}
+      { 'description':
+          'The newton-cg, sag, and lbfgs solvers support only l2 penalties.',
+        'anyOf': [
+          { 'type': 'object',
+            'properties': {
+              'solver': {'not': {'enum': ['newton-cg', 'sag', 'lbfgs']}}}},
+          { 'type': 'object',
+            'properties': {'penalty': {'enum': ['l2']}}}]},
+      { 'description':
+          'The dual formulation is only implemented for l2 '
+          'penalty with the liblinear solver.',
+        'anyOf': [
+          { 'type': 'object',
+            'properties': {'dual': {'enum': [False]}}},
+          { 'type': 'object',
+            'properties': {
+              'penalty': {'enum': ['l2']},
+              'solver': {'enum': ['liblinear']}}}]},
+      { 'description':
+          'Setting intercept_scaling is useful only when the solver is '
+          'liblinear and fit_intercept is true.',
+        'anyOf': [
+          { 'type': 'object',
+            'properties': {'intercept_scaling': {'enum': [1.0]}}},
+          { 'type': 'object',
+            'properties': {
+              'fit_intercept': {'enum': [True]},
+              'solver': {'enum': ['liblinear']}}}]},
+      { 'description':
+          'Setting max_iter is only useful for the newton-cg, sag, '
+          'lbfgs solvers.',
+        'anyOf': [
+          { 'type': 'object',
+            'properties': {'max_iter': {'enum': [100]}}},
+          { 'type': 'object',
+            'properties': {
+              'solver': {'enum': ['newton-cg', 'sag', 'lbfgs']}}}]},
+      { 'description':
+          'The multi_class multinomial option is unavailable when the '
+          'solver is liblinear.',
+        'anyOf': [
+          { 'type': 'object',
+            'properties': {
+              'multi_class': {'not': {'enum': ['multinomial']}}}},
+          { 'type': 'object',
+            'properties': {
+              'solver': {'not': {'enum': ['liblinear']}}}}]}]}
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
