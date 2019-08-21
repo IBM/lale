@@ -37,6 +37,7 @@ from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 from typing import List
+from lale.helpers import SubschemaError
 
 import sklearn.datasets
 
@@ -1132,12 +1133,33 @@ pipeline = ((numpy_column_selector >> compress_strings >> numpy_replace_missing_
         self.round_trip(string1)
 
 class TestDatasetSchemas(unittest.TestCase):
-    def test_ndarray(self):
+    @classmethod
+    def setUpClass(cls):
         from sklearn.datasets import load_iris
+        irisArr = load_iris()
+        cls._irisArr = {'X': irisArr.data, 'y': irisArr.target}
+        from lale.datasets import sklearn_to_pandas
+        (train_X, train_y), (test_X, test_y) = sklearn_to_pandas.load_iris_df()
+        cls._irisDf = {'X': train_X, 'y': train_y}
+        from lale.datasets import openml
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        cls._creditG = {'X': train_X, 'y': train_y}
+        from lale.datasets.uci.uci_datasets import fetch_drugscom
+        train_X, train_y, test_X, test_y = fetch_drugscom()
+        cls._drugRev = {'X': train_X, 'y': train_y}
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._irisArr = None
+        cls._irisDf = None
+        cls._creditG = None
+        cls._drugRev = None
+    
+    def test_ndarray_to_schema(self):
         from lale.datasets.data_schemas import to_schema
         from lale.helpers import validate_schema
-        iris = load_iris()
-        all_X, all_y = iris.data, iris.target
+        all_X, all_y = self._irisArr['X'], self._irisArr['y']
         all_X_schema = to_schema(all_X)
         validate_schema(all_X, all_X_schema, subsample_array=False)
         all_y_schema = to_schema(all_y)
@@ -1156,12 +1178,11 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(all_X_schema, all_X_expected)
         self.assertEqual(all_y_schema, all_y_expected)
 
-    def test_dataframes_and_series(self):
-        from lale.datasets import sklearn_to_pandas
+    def test_pandas_to_schema(self):
         from lale.datasets.data_schemas import to_schema
         from lale.helpers import validate_schema
         import pandas as pd
-        (train_X, train_y), (test_X, test_y) = sklearn_to_pandas.load_iris_df()
+        train_X, train_y = self._irisDf['X'], self._irisDf['y']
         assert isinstance(train_X, pd.DataFrame)
         assert not hasattr(train_X, 'json_schema')
         train_X_schema = to_schema(train_X)
@@ -1188,12 +1209,10 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(train_X_schema, train_X_expected)
         self.assertEqual(train_y_schema, train_y_expected)
 
-    def test_liac_arff(self):
-        from lale.datasets import openml
+    def test_arff_to_schema(self):
         from lale.datasets.data_schemas import to_schema
         from lale.helpers import validate_schema
-        (train_X, train_y), (test_X, test_y) = openml.fetch(
-            'credit-g', 'classification', preprocess=False)
+        train_X, train_y = self._creditG['X'], self._creditG['y']
         assert hasattr(train_X, 'json_schema')
         train_X_schema = to_schema(train_X)
         validate_schema(train_X, train_X_schema, subsample_array=False)
@@ -1255,18 +1274,16 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(train_y_schema, train_y_expected)
 
     def test_keep_numbers(self):
-        from lale.datasets import openml
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import KeepNumbers
-        (train_X, train_y), (test_X, test_y) = openml.fetch(
-            'credit-g', 'classification', preprocess=False)
+        train_X, train_y = self._creditG['X'], self._creditG['y']
         trainable = KeepNumbers()
         trained = trainable.fit(train_X)
-        transformed = trained.transform(test_X)
+        transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
         transformed_expected = {
             '$schema': 'http://json-schema.org/draft-04/schema#',
-            'type': 'array', 'minItems': 330, 'maxItems': 330,
+            'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {
                 'type': 'array', 'minItems': 7, 'maxItems': 7,
                 'items': [
@@ -1281,18 +1298,16 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(transformed_schema, transformed_expected)
 
     def test_keep_non_numbers(self):
-        from lale.datasets import openml
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import KeepNonNumbers
-        (train_X, train_y), (test_X, test_y) = openml.fetch(
-            'credit-g', 'classification', preprocess=False)
+        train_X, train_y = self._creditG['X'], self._creditG['y']
         trainable = KeepNonNumbers()
         trained = trainable.fit(train_X)
-        transformed = trained.transform(test_X)
+        transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
         transformed_expected = {
             '$schema': 'http://json-schema.org/draft-04/schema#',
-            'type': 'array', 'minItems': 330, 'maxItems': 330,
+            'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {
                 'type': 'array', 'minItems': 13, 'maxItems': 13,
                 'items': [
@@ -1331,6 +1346,58 @@ class TestDatasetSchemas(unittest.TestCase):
                     {'description': 'foreign_worker', 'enum': ['yes', 'no']}]}}
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
+
+    @unittest.skip("TODO: debug subschema-based validation")
+    def test_validate_lr_irisArr(self):
+        LogisticRegression.validate(self._irisArr['X'], self._irisArr['y'])
+
+    @unittest.skip("TODO: debug subschema-based validation")
+    def test_validate_lr_irisDf(self):
+        LogisticRegression.validate(self._irisDf['X'], self._irisDf['y'])
+
+    def test_validate_lr_creditG(self):
+        with self.assertRaises(SubschemaError):
+            LogisticRegression.validate(self._creditG['X'],self._creditG['y'])
+
+    def test_validate_lr_drugRev(self):
+        with self.assertRaises(SubschemaError):
+            LogisticRegression.validate(self._drugRev['X'],self._drugRev['y'])
+
+    @unittest.skip("TODO: debug subschema-based validation")
+    def test_validate_project_irisArr(self):
+        from lale.lib.lale import Project
+        Project.validate(self._irisArr['X'],self._irisArr['y'])
+
+    @unittest.skip("TODO: debug subschema-based validation")
+    def test_validate_project_irisDf(self):
+        from lale.lib.lale import Project
+        Project.validate(self._irisDf['X'],self._irisDf['y'])
+
+    @unittest.skip("TODO: debug subschema-based validation")
+    def test_validate_project_creditG(self):
+        from lale.lib.lale import Project
+        Project.validate(self._creditG['X'], self._creditG['y'])
+
+    @unittest.skip("TODO: debug subschema-based validation")
+    def test_validate_project_drugRev(self):
+        from lale.lib.lale import Project
+        Project.validate(self._drugRev['X'],self._drugRev['y'])
+
+    def test_validate_tfidf_irisArr(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._irisArr['X'],self._irisArr['y'])
+
+    def test_validate_tfidf_irisDf(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._irisDf['X'],self._irisDf['y'])
+
+    def test_validate_tfidf_creditG(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._creditG['X'], self._creditG['y'])
+
+    def test_validate_tfidf_drugRev(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._drugRev['X'],self._drugRev['y'])
 
 if __name__ == '__main__':
     unittest.main()
