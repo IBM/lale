@@ -509,3 +509,20 @@ def wrap_imported_operators():
         if m in [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]:
             logger.info(f'Lale:Wrapped operator:{name}')
             g[name] = make_operator(impl=g[name], name=name)
+
+class val_wrapper():
+    """This is used to wrap values that cause problems for hyper-optimizer backends
+    lale will unwrap these when given them as the value of a hyper-parameter"""
+
+    def __init__(self, base):
+        self._base = base
+
+    def unwrap_self(self):
+        return self._base
+
+    @classmethod
+    def unwrap(cls, obj):
+        if isinstance(obj, cls):
+            return cls.unwrap(obj.unwrap_self())
+        else:
+            return obj
