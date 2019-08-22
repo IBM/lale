@@ -1297,7 +1297,6 @@ class TestDatasetSchemas(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
 
-    @unittest.skip("TODO: debug subschema-based validation")
     def test_keep_non_numbers(self):
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import KeepNonNumbers
@@ -1348,7 +1347,6 @@ class TestDatasetSchemas(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
 
-    @unittest.skip("TODO: debug subschema-based validation")
     def test_validate_lr_irisArr(self):
         LogisticRegression.validate(self._irisArr['X'], self._irisArr['y'])
 
@@ -1364,7 +1362,6 @@ class TestDatasetSchemas(unittest.TestCase):
         with self.assertRaises(SubschemaError):
             LogisticRegression.validate(self._drugRev['X'],self._drugRev['y'])
 
-    @unittest.skip("TODO: debug subschema-based validation")
     def test_validate_project_irisArr(self):
         from lale.lib.lale import Project
         Project.validate(self._irisArr['X'],self._irisArr['y'])
