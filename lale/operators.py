@@ -711,7 +711,7 @@ class IndividualOp(MetaModelOperator):
         obj_X = {
             'type': 'object',
             'additionalProperties': False,
-            # 'required': ['X'],
+            'required': ['X'],
             'properties': {'X': X}}
         if y is not None:
             if not lale.helpers.is_schema(y):
@@ -719,7 +719,7 @@ class IndividualOp(MetaModelOperator):
             obj_Xy = {
                 'type': 'object',
                 'additionalProperties': False,
-                # 'required': ['X', 'y'],
+                'required': ['X', 'y'],
                 'properties': {'X': X, 'y': y}}
         fit_actual = obj_X if y is None else obj_Xy
         fit_formal = self.input_schema_fit()
