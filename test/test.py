@@ -1350,7 +1350,6 @@ class TestDatasetSchemas(unittest.TestCase):
     def test_validate_lr_irisArr(self):
         LogisticRegression.validate(self._irisArr['X'], self._irisArr['y'])
 
-    @unittest.skip("TODO: debug subschema-based validation")
     def test_validate_lr_irisDf(self):
         LogisticRegression.validate(self._irisDf['X'], self._irisDf['y'])
 
@@ -1366,17 +1365,14 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.lib.lale import Project
         Project.validate(self._irisArr['X'],self._irisArr['y'])
 
-    @unittest.skip("TODO: debug subschema-based validation")
     def test_validate_project_irisDf(self):
         from lale.lib.lale import Project
         Project.validate(self._irisDf['X'],self._irisDf['y'])
 
-    @unittest.skip("TODO: debug subschema-based validation")
     def test_validate_project_creditG(self):
         from lale.lib.lale import Project
         Project.validate(self._creditG['X'], self._creditG['y'])
 
-    @unittest.skip("TODO: debug subschema-based validation")
     def test_validate_project_drugRev(self):
         from lale.lib.lale import Project
         Project.validate(self._drugRev['X'],self._drugRev['y'])
