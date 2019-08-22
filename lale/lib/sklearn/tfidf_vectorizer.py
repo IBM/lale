@@ -116,7 +116,7 @@ _hyperparams_schema = {
                 'default': 1},
             'max_features': {
                 'anyOf': [{
-                    'anyof': [{
+                    'anyOf': [{
                         'type': 'number'}, {
                         'enum': [None]}]}],
                 'default': None},
