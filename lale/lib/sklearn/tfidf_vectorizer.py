@@ -83,15 +83,22 @@ _hyperparams_schema = {
                 'type': 'string',
                 'default': '(?u)\\b\\w\\w+\\b'},
             'ngram_range': {
-                'type': 'array',
-                'typeForOptimizer': 'tuple',
-                'minItemsForOptimizer': 2,
-                'maxItemsForOptimizer': 2,
-                'items': {
-                    'type': 'integer',
-                    'minimumForOptimizer': 1,
-                    'maximumForOptimizer': 3},               
-                'default': [1, 1]},
+                'default': [1, 1],
+                'anyOf': [{
+                    'type': 'array',
+                    'typeForOptimizer': 'tuple',
+                    'minItemsForOptimizer': 2,
+                    'maxItemsForOptimizer': 2,
+                    'items': {
+                        'type': 'integer',
+                        'minimumForOptimizer': 1,
+                        'maximumForOptimizer': 3},
+                    'forOptimizer':False
+                    },
+                    {
+                        'enum': [(1,1), (1,2), (1,3), (2,2), (2,3), (3,3)]
+                    }
+                ]},
             'max_df': {
                 'anyOf': [{
                     'description': 'float in range [0.0, 1.0]',
