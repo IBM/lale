@@ -808,6 +808,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             return schema
         props = {k : {'enum' : [v]} for k, v in params.items()}
         obj = {'type':'object', 'properties':props}
+        obj['relevantToOptimizer'] = list(params.keys())
         top = {'allOf':[schema, obj]}
         return top
     # This should *only* ever be called by the sklearn_compat wrapper
