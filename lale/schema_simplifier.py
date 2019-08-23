@@ -659,7 +659,7 @@ def findRelevantFields(schema:Schema) -> Optional[Set[str]]:
         fields_list:List[Optional[Set[str]]] = [findRelevantFields(s) for s in schema['allOf']]
         real_fields_list:List[Set[str]] = [f for f in fields_list if f is not None]
         if real_fields_list:
-            return set.intersection(*real_fields_list)
+            return set.union(*real_fields_list)
         else:
             return None
     else:

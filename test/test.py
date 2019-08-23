@@ -823,7 +823,6 @@ class TestHyperoptClassifier(unittest.TestCase):
         hyperopt_classifier = HyperoptClassifier(planned, max_evals=1)
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
-    @unittest.skip("TODO: debug exception, unhashable type: 'list'")
     def test_text_and_structured(self):
         from lale.datasets.uci.uci_datasets import fetch_drugscom
         from sklearn.model_selection import train_test_split

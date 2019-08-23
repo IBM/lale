@@ -155,7 +155,7 @@ def accumulateDiscoveredEnumsToPythonEnums(de:Optional[DiscoveredEnums], path:Li
         elif isinstance(e, (int, float, complex)):
             return ("num" + str(e), e)
         else:
-            logger.warn(f"Unknown type ({type(e)}) of enumeration constant {e}, not handling very well")
+            logger.warning(f"Unknown type ({type(e)}) of enumeration constant {e}, not handling very well")
             return (str(e), e)
 
 
@@ -184,7 +184,7 @@ def addDictAsFields(obj:Any, d:Dict[str, Any])->None:
         return
     for k, v in d.items():
         if k == "":
-            logger.warn(f"There was a top level enumeration specified, so it is not being added to {obj.__qualname__}")
+            logger.warning(f"There was a top level enumeration specified, so it is not being added to {obj.__qualname__}")
         elif hasattr(obj, k):
             logger.error(f"The object {obj.__qualname__} already has the field {k}.  This conflicts with our attempt at adding that key as an enumeration field")
         else:

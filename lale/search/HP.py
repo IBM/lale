@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Optional
+from typing import Any, Dict, List, Optional
 import os
 import logging
 import math
@@ -21,6 +21,7 @@ import re
 from lale.search.search_space import *
 from lale.util.Visitor import Visitor
 from lale.search import schema2search_space as opt
+from lale import helpers
 
 from hyperopt import hp
 from hyperopt.pyll import scope
@@ -59,10 +60,17 @@ class SearchSpaceHPExprVisitor(Visitor):
         super(SearchSpaceHPExprVisitor, self).__init__()
 
     def visitSearchSpaceEnum(self, space:SearchSpaceEnum, path:str, counter=None):
+        def as_hp_vals(v):
+            # Lists are not "safe" to pass to hyperopt without wrapping
+            if isinstance(v, (list,tuple)):
+                return helpers.val_wrapper(v)
+            else:
+                return v
+
         if len(space.vals) == 1:
-            return space.vals[0]
+            return as_hp_vals(space.vals[0])
         else:
-            return hp.choice(mk_label(path, counter), space.vals)
+            return hp.choice(mk_label(path, counter), [ as_hp_vals(v) for v in space.vals])
 
     visitSearchSpaceConstant = visitSearchSpaceEnum
     visitSearchSpaceBool = visitSearchSpaceEnum
