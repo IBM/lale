@@ -201,16 +201,16 @@ _hyperparams_schema = {
             'description': 'L1 regularization term on weights',
             'default': 0,
             'distribution': 'loguniform',
-            'minimumForOptimizer': 1e-10,
-            'maximumForOptimizer': 1e-1
+            'minimumForOptimizer': 0.0,
+            'maximumForOptimizer': 1.0
         },
         'reg_lambda': {
             'type': 'number',
             'description': 'L2 regularization term on weights',
             'default': 1,
             'distribution': 'loguniform',
-            'minimumForOptimizer': 1e-10,
-            'maximumForOptimizer': 1e-1
+            'minimumForOptimizer': 0.1,
+            'maximumForOptimizer': 1.0
         },
         'scale_pos_weight': {
             'type': 'number',

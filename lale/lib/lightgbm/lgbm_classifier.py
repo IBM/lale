@@ -155,10 +155,14 @@ _hyperparams_schema = {
                 'description': 'Subsample ratio of columns when constructing each tree.'},
             'reg_alpha': {
                 'type': 'number',
+                'minimumForOptimizer': 0.0,
+                'maximumForOptimizer': 1.0,
                 'default': 0.0,
                 'description': 'L1 regularization term on weights.'},
             'reg_lambda': {
                 'type': 'number',
+                'minimumForOptimizer': 0.0,
+                'maximumForOptimizer': 1.0,
                 'default': 0.0,
                 'description': 'L2 regularization term on weights.'},
             'random_state': {
