@@ -73,7 +73,7 @@ _hyperparams_schema = {
                 'distribution': 'uniform',
                 'minimum': 1,
                 'default': 2,
-                'maximumForOptimizer': 2},
+                'maximumForOptimizer': 3},
             'metric': {
                 'description': 'The distance metric to use for the tree.',
                 'enum': ['minkowski'],

@@ -107,7 +107,7 @@ _hyperparams_schema = {
           'type': 'integer',
           'default': 100,
           'minimumForOptimizer': 10,
-          'maximumForOptimizer': 500},
+          'maximumForOptimizer': 1000},
         'verbosity': {
           'description': 'The degree of verbosity.',
           'type': 'integer',

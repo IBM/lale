@@ -97,7 +97,7 @@ _hyperparams_schema = {
             'n_estimators': {
                 'type': 'integer',
                 'minimumForOptimizer': 50,
-                'maximumForOptimizer': 500,
+                'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 100,
                 'description': 'Number of boosted trees to fit.'},
@@ -128,7 +128,7 @@ _hyperparams_schema = {
             'min_child_samples': {
                 'type': 'integer',
                 'minimumForOptimizer': 1,
-                'maximumForOptimizer': 20,
+                'maximumForOptimizer': 30,
                 'distribution': 'uniform',
                 'default': 20,
                 'description': 'Minimum number of data needed in a child (leaf).'},
