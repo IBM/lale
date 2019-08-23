@@ -77,10 +77,14 @@ _hyperparams_schema = {
             'metric': {
                 'description': 'The distance metric to use for the tree.',
 <<<<<<< HEAD
+<<<<<<< HEAD
                 'enum': ['euclidean', 'manhattan', 'minkowski'],
 =======
                 'enum': ['euclidean', 'manhattan', 'minkowski', 'precomputed'],
 >>>>>>> add range knn metric
+=======
+                'enum': ['euclidean', 'manhattan', 'minkowski'],
+>>>>>>> Fix knn
                 'default': 'minkowski'},
             'metric_params': {
                 'description': 'Additional keyword arguments for the metric function.',
