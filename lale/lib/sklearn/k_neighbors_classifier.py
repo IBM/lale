@@ -73,10 +73,10 @@ _hyperparams_schema = {
                 'distribution': 'uniform',
                 'minimum': 1,
                 'default': 2,
-                'maximumForOptimizer': 2},
+                'maximumForOptimizer': 3},
             'metric': {
                 'description': 'The distance metric to use for the tree.',
-                'enum': ['minkowski'],
+                'enum': ['euclidean', 'manhattan', 'minkowski'],
                 'default': 'minkowski'},
             'metric_params': {
                 'description': 'Additional keyword arguments for the metric function.',
