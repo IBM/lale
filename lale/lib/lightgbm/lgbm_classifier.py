@@ -97,7 +97,7 @@ _hyperparams_schema = {
             'n_estimators': {
                 'type': 'integer',
                 'minimumForOptimizer': 50,
-                'maximumForOptimizer': 500,
+                'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 100,
                 'description': 'Number of boosted trees to fit.'},
@@ -128,7 +128,7 @@ _hyperparams_schema = {
             'min_child_samples': {
                 'type': 'integer',
                 'minimumForOptimizer': 1,
-                'maximumForOptimizer': 20,
+                'maximumForOptimizer': 30,
                 'distribution': 'uniform',
                 'default': 20,
                 'description': 'Minimum number of data needed in a child (leaf).'},
@@ -155,10 +155,14 @@ _hyperparams_schema = {
                 'description': 'Subsample ratio of columns when constructing each tree.'},
             'reg_alpha': {
                 'type': 'number',
+                'minimumForOptimizer': 0.0,
+                'maximumForOptimizer': 1.0,
                 'default': 0.0,
                 'description': 'L1 regularization term on weights.'},
             'reg_lambda': {
                 'type': 'number',
+                'minimumForOptimizer': 0.0,
+                'maximumForOptimizer': 1.0,
                 'default': 0.0,
                 'description': 'L2 regularization term on weights.'},
             'random_state': {
