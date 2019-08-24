@@ -83,7 +83,7 @@ _hyperparams_schema = {
                 'minimum': 1,
                 'distribution': 'loguniform',
                 'minimumForOptimizer': 10,
-                'maximumForOptimizer': 250},
+                'maximumForOptimizer': 256},
             'random_state': {
                 'description': 'Seed of pseudo-random number generator.',
                 'anyOf': [{

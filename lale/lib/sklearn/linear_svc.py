@@ -90,7 +90,7 @@ _hyperparams_schema = {
                 'description':
                     'Append a constant feature with constant value '
                     'intercept_scaling to the instance vector.',
-                'minimumForOptimizer': 1.0,
+                'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
                 'default': 1},
             'class_weight': {
