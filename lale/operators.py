@@ -730,6 +730,9 @@ class IndividualOp(MetaModelOperator):
         lale.helpers.validate_subschema(predict_actual, predict_formal,
             'to_schema(data)', f'{self.name()}.input_schema_predict()')
 
+    def transform_schema(self, s_X):
+        return self.output_schema()
+
 class PlannedIndividualOp(IndividualOp, PlannedOperator):
     """
     This is a concrete class that returns a trainable individual
@@ -965,6 +968,11 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             return 'y' in self.input_schema_fit().get('properties', [])
         return True #Always assume supervised if the schema is missing
 
+    def transform_schema(self, s_X):
+        if hasattr(self._impl, 'transform_schema'):
+            return self._impl.transform_schema(s_X)
+        else:
+            return super(TrainableIndividualOp, self).transform_schema(s_X)
 
 class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
