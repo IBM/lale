@@ -31,7 +31,10 @@ class NoOpImpl():
 
     def transform(self, X, y = None):
         return X, y
-    
+
+    def transform_schema(self, s_X):
+        return s_X
+
     # def get_feature_names(self, input_features=None):
     #     if input_features is not None:
     #         return list(input_features)

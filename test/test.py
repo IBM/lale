@@ -17,6 +17,11 @@ import warnings
 import random
 import jsonschema
 import sys
+
+import lale.schema2enums
+import logging
+lale.schema2enums.logger.setLevel(logging.ERROR)
+
 import lale.operators as Ops
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
@@ -1308,6 +1313,57 @@ class TestDatasetSchemas(unittest.TestCase):
                     {'description': 'foreign_worker', 'enum': ['yes', 'no']}]}}
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
+
+    def test_transform_schema_NoOp(self):
+        from lale.datasets.data_schemas import to_schema
+        for ds in [self._irisArr, self._irisDf, self._creditG, self._drugRev]:
+            s_input = to_schema(ds['X'])
+            s_output = NoOp.transform_schema(s_input)
+            self.assertIs(s_input, s_output)
+
+    def test_transform_schema_Concat_irisArr(self):
+        from lale.datasets.data_schemas import to_schema
+        data_X, data_y = self._irisArr['X'], self._irisArr['y']
+        s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
+        def check(s_actual, n_expected, s_expected):
+            assert s_actual['items']['minItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['maxItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['items'] == s_expected, str(s_actual)
+        s_out_X = ConcatFeatures.transform_schema({'items': [s_in_X]})
+        check(s_out_X, 4, {'type': 'number'})
+        s_out_y = ConcatFeatures.transform_schema({'items': [s_in_y]})
+        check(s_out_y, 1, {'type': 'integer'})
+        s_out_XX = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_X]})
+        check(s_out_XX, 8, {'type': 'number'})
+        s_out_yy = ConcatFeatures.transform_schema({'items': [s_in_y, s_in_y]})
+        check(s_out_yy, 2, {'type': 'integer'})
+        s_out_Xy = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_y]})
+        check(s_out_Xy, 5, {'type': 'number'})
+        s_out_XXX = ConcatFeatures.transform_schema({
+            'items': [s_in_X, s_in_X, s_in_X]})
+        check(s_out_XXX, 12, {'type': 'number'})
+
+    def test_transform_schema_Concat_irisDf(self):
+        from lale.datasets.data_schemas import to_schema
+        data_X, data_y = self._irisDf['X'], self._irisDf['y']
+        s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
+        def check(s_actual, n_expected, s_expected):
+            assert s_actual['items']['minItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['maxItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['items'] == s_expected, str(s_actual)
+        s_out_X = ConcatFeatures.transform_schema({'items': [s_in_X]})
+        check(s_out_X, 4, {'type': 'number'})
+        s_out_y = ConcatFeatures.transform_schema({'items': [s_in_y]})
+        check(s_out_y, 1, {'description': 'target', 'type': 'integer'})
+        s_out_XX = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_X]})
+        check(s_out_XX, 8, {'type': 'number'})
+        s_out_yy = ConcatFeatures.transform_schema({'items': [s_in_y, s_in_y]})
+        check(s_out_yy, 2, {'type': 'integer'})
+        s_out_Xy = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_y]})
+        check(s_out_Xy, 5, {'type': 'number'})
+        s_out_XXX = ConcatFeatures.transform_schema({
+            'items': [s_in_X, s_in_X, s_in_X]})
+        check(s_out_XXX, 12, {'type': 'number'})
 
     def test_validate_lr_irisArr(self):
         LogisticRegression.validate(self._irisArr['X'], self._irisArr['y'])
