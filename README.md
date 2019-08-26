@@ -25,7 +25,7 @@ without warranties of any kind.
 
 * Technical overview [slides](talks/2019-0529-lale.pdf)
 * [Installation instructions](docs/installation.md)
-* Python [API documentation](https://pages.github.ibm.com/Lale/lale/)
+* Python [API documentation](https://lale.readthedocs.io/en/latest/)
 * Guide for wrapping [new operators](docs/new_operators.md)
 * arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
 
