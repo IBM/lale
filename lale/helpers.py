@@ -16,6 +16,7 @@ import ast
 import contextlib
 import json
 import jsonschema
+import jsonsubschema
 import numpy as np
 import pandas as pd
 import os
@@ -34,6 +35,9 @@ from sklearn.metrics import accuracy_score, log_loss
 from sklearn.utils.metaestimators import _safe_split
 import copy
 import logging
+import importlib
+import inspect
+import pkgutil
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -155,7 +159,6 @@ def validate_schema(value, schema, subsample_array=True):
     json_value = data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema)
 
-
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 JSON_META_SCHEMA = None
 
@@ -168,6 +171,34 @@ def validate_is_schema(value):
         with contextlib.closing(urllib.request.urlopen(url)) as f:
             JSON_META_SCHEMA = json.load(f)
     jsonschema.validate(value, JSON_META_SCHEMA)
+
+def is_schema(value):
+    if isinstance(value, dict):
+        try:
+            jsonschema.validate(value, JSON_META_SCHEMA)
+        except:
+            return False
+        return True
+    return False
+
+class SubschemaError(Exception):
+    def __init__(self, sub, sup, sub_name='sub', sup_name='super'):
+        self.sub = sub
+        self.sup = sup
+        self.sub_name = sub_name
+        self.sup_name = sup_name
+
+    def __str__(self):
+        summary = f'expected {self.sub_name} <: {self.sup_name}'
+        import pprint
+        sub = pprint.pformat(self.sub, width=70, compact=True)
+        sup = pprint.pformat(self.sup, width=70, compact=True)
+        details = f'\n{self.sub_name} = \\\n{sub}\n{self.sup_name} = \\\n{sup}'
+        return summary + details
+
+def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
+    if not jsonsubschema.isSubschema(sub, sup):
+        raise SubschemaError(sub, sup, sub_name, sup_name)
 
 def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5):
     """
@@ -451,3 +482,47 @@ def validate_method(op, m):
             a = m[len('output_'):]
         if a:
             assert (hasattr(op._impl, a))
+
+def caml_to_snake(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
+def get_lib_schema(impl):
+    try:
+        module_name = impl.__module__.split('.')[0]
+        class_name = caml_to_snake(impl.__class__.__name__)
+        lib_name = '.'.join(['lale.lib', module_name, class_name])
+        m = importlib.import_module(lib_name)
+        return m._combined_schemas
+    except (ModuleNotFoundError, AttributeError):
+        return None
+    
+logger = logging.getLogger(__name__)
+
+def wrap_imported_operators():
+    import lale.lib
+    from .operators import  make_operator
+    calling_frame = inspect.stack()[1][0]
+    g = calling_frame.f_globals
+    for name in (n for n in g if inspect.isclass(g[n])):
+        m = g[name].__module__.split('.')[0]
+        if m in [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]:
+            logger.info(f'Lale:Wrapped operator:{name}')
+            g[name] = make_operator(impl=g[name], name=name)
+
+class val_wrapper():
+    """This is used to wrap values that cause problems for hyper-optimizer backends
+    lale will unwrap these when given them as the value of a hyper-parameter"""
+
+    def __init__(self, base):
+        self._base = base
+
+    def unwrap_self(self):
+        return self._base
+
+    @classmethod
+    def unwrap(cls, obj):
+        if isinstance(obj, cls):
+            return cls.unwrap(obj.unwrap_self())
+        else:
+            return obj

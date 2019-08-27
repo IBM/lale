@@ -49,8 +49,8 @@ _hyperparams_schema = {
             'alpha': {
                 'type': 'number',
                 'distribution':'loguniform',
-                'minimumForOptimizer': 1e-2,
-                'maximumForOptimizer': 100.0,
+                'minimumForOptimizer': 1e-10,
+                'maximumForOptimizer': 1.0,
                 'default': 1.0,
                 'description': 'Additive (Laplace/Lidstone) smoothing parameter'},
             'fit_prior': {
@@ -128,6 +128,7 @@ _output_predict_proba_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html',
     'type': 'object',
     'tags': {
         'pre': [],

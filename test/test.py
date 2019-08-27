@@ -17,6 +17,11 @@ import warnings
 import random
 import jsonschema
 import sys
+
+import lale.schema2enums
+import logging
+lale.schema2enums.logger.setLevel(logging.ERROR)
+
 import lale.operators as Ops
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
@@ -37,6 +42,7 @@ from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 from typing import List
+from lale.helpers import SubschemaError
 
 import sklearn.datasets
 
@@ -807,6 +813,39 @@ class TestHyperoptClassifier(unittest.TestCase):
         print(accuracy_score(y, predictions))
         warnings.resetwarnings()
 
+    def test_preprocessing_union(self):
+        from lale.datasets import openml
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        from lale.lib.lale import KeepNumbers, KeepNonNumbers
+        from lale.lib.sklearn import Normalizer, OneHotEncoder
+        from lale.lib.lale import ConcatFeatures as Concat
+        from lale.lib.sklearn import RandomForestClassifier as Forest
+        prep_num = KeepNumbers() >> Normalizer
+        prep_cat = KeepNonNumbers() >> OneHotEncoder(sparse=False)
+        planned = (prep_num & prep_cat) >> Concat >> Forest
+        from lale.lib.lale import HyperoptClassifier
+        hyperopt_classifier = HyperoptClassifier(planned, max_evals=1)
+        best_found = hyperopt_classifier.fit(train_X, train_y)
+
+    def test_text_and_structured(self):
+        from lale.datasets.uci.uci_datasets import fetch_drugscom
+        from sklearn.model_selection import train_test_split
+        train_X_all, train_y_all, test_X, test_y = fetch_drugscom()
+        #subset to speed up debugging
+        train_X, train_X_ignore, train_y, train_y_ignore = train_test_split(
+            train_X_all, train_y_all, train_size=0.01, random_state=42)
+        from lale.lib.lale import Project
+        from lale.lib.lale import ConcatFeatures as Cat
+        from lale.lib.sklearn import TfidfVectorizer as Tfidf
+        from lale.lib.sklearn import LinearRegression as LinReg
+        from lale.lib.sklearn import RandomForestRegressor as Forest
+        prep_text = Project(columns=['review']) >> Tfidf(max_features=100)
+        prep_nums = Project(columns={'type': 'number'})
+        planned = (prep_text & prep_nums) >> Cat >> (LinReg | Forest)
+        from lale.lib.lale import HyperoptClassifier
+        hyperopt_classifier = HyperoptClassifier(planned, max_evals=3)
+        best_found = hyperopt_classifier.fit(train_X, train_y)
 
 # class TestGetFeatureNames(unittest.TestCase):
 #     def test_gfn_ohe(self):
@@ -1098,12 +1137,33 @@ pipeline = ((numpy_column_selector >> compress_strings >> numpy_replace_missing_
         self.round_trip(string1)
 
 class TestDatasetSchemas(unittest.TestCase):
-    def test_ndarray(self):
+    @classmethod
+    def setUpClass(cls):
         from sklearn.datasets import load_iris
+        irisArr = load_iris()
+        cls._irisArr = {'X': irisArr.data, 'y': irisArr.target}
+        from lale.datasets import sklearn_to_pandas
+        (train_X, train_y), (test_X, test_y) = sklearn_to_pandas.load_iris_df()
+        cls._irisDf = {'X': train_X, 'y': train_y}
+        from lale.datasets import openml
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        cls._creditG = {'X': train_X, 'y': train_y}
+        from lale.datasets.uci.uci_datasets import fetch_drugscom
+        train_X, train_y, test_X, test_y = fetch_drugscom()
+        cls._drugRev = {'X': train_X, 'y': train_y}
+
+    @classmethod
+    def tearDownClass(cls):
+        cls._irisArr = None
+        cls._irisDf = None
+        cls._creditG = None
+        cls._drugRev = None
+    
+    def test_ndarray_to_schema(self):
         from lale.datasets.data_schemas import to_schema
         from lale.helpers import validate_schema
-        iris = load_iris()
-        all_X, all_y = iris.data, iris.target
+        all_X, all_y = self._irisArr['X'], self._irisArr['y']
         all_X_schema = to_schema(all_X)
         validate_schema(all_X, all_X_schema, subsample_array=False)
         all_y_schema = to_schema(all_y)
@@ -1122,14 +1182,45 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(all_X_schema, all_X_expected)
         self.assertEqual(all_y_schema, all_y_expected)
 
-    def test_dataframe(self):
-        from lale.datasets import openml
+    def test_pandas_to_schema(self):
         from lale.datasets.data_schemas import to_schema
         from lale.helpers import validate_schema
-        (train_X, train_y), (test_X, test_y) = openml.fetch(
-            'credit-g', 'classification', preprocess=False)
+        import pandas as pd
+        train_X, train_y = self._irisDf['X'], self._irisDf['y']
+        assert isinstance(train_X, pd.DataFrame)
+        assert not hasattr(train_X, 'json_schema')
         train_X_schema = to_schema(train_X)
         validate_schema(train_X, train_X_schema, subsample_array=False)
+        assert isinstance(train_y, pd.Series)
+        assert not hasattr(train_y, 'json_schema')
+        train_y_schema = to_schema(train_y)
+        validate_schema(train_y, train_y_schema, subsample_array=False)
+        train_X_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 120, 'maxItems': 120,
+            'items': {
+                'type': 'array', 'minItems': 4, 'maxItems': 4,
+                'items': [
+                    {'description': 'sepal length (cm)', 'type': 'number'},
+                    {'description': 'sepal width (cm)', 'type': 'number'},
+                    {'description': 'petal length (cm)', 'type': 'number'},
+                    {'description': 'petal width (cm)', 'type': 'number'}]}}
+        train_y_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array', 'minItems': 120, 'maxItems': 120,
+            'items': {'description': 'target', 'type': 'integer'}}
+        self.maxDiff = None
+        self.assertEqual(train_X_schema, train_X_expected)
+        self.assertEqual(train_y_schema, train_y_expected)
+
+    def test_arff_to_schema(self):
+        from lale.datasets.data_schemas import to_schema
+        from lale.helpers import validate_schema
+        train_X, train_y = self._creditG['X'], self._creditG['y']
+        assert hasattr(train_X, 'json_schema')
+        train_X_schema = to_schema(train_X)
+        validate_schema(train_X, train_X_schema, subsample_array=False)
+        assert hasattr(train_y, 'json_schema')
         train_y_schema = to_schema(train_y)
         validate_schema(train_y, train_y_schema, subsample_array=False)
         train_X_expected = {
@@ -1187,18 +1278,16 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(train_y_schema, train_y_expected)
 
     def test_keep_numbers(self):
-        from lale.datasets import openml
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import KeepNumbers
-        (train_X, train_y), (test_X, test_y) = openml.fetch(
-            'credit-g', 'classification', preprocess=False)
+        train_X, train_y = self._creditG['X'], self._creditG['y']
         trainable = KeepNumbers()
         trained = trainable.fit(train_X)
-        transformed = trained.transform(test_X)
+        transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
         transformed_expected = {
             '$schema': 'http://json-schema.org/draft-04/schema#',
-            'type': 'array', 'minItems': 330, 'maxItems': 330,
+            'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {
                 'type': 'array', 'minItems': 7, 'maxItems': 7,
                 'items': [
@@ -1213,18 +1302,16 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(transformed_schema, transformed_expected)
 
     def test_keep_non_numbers(self):
-        from lale.datasets import openml
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import KeepNonNumbers
-        (train_X, train_y), (test_X, test_y) = openml.fetch(
-            'credit-g', 'classification', preprocess=False)
+        train_X, train_y = self._creditG['X'], self._creditG['y']
         trainable = KeepNonNumbers()
         trained = trainable.fit(train_X)
-        transformed = trained.transform(test_X)
+        transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
         transformed_expected = {
             '$schema': 'http://json-schema.org/draft-04/schema#',
-            'type': 'array', 'minItems': 330, 'maxItems': 330,
+            'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {
                 'type': 'array', 'minItems': 13, 'maxItems': 13,
                 'items': [
@@ -1263,6 +1350,103 @@ class TestDatasetSchemas(unittest.TestCase):
                     {'description': 'foreign_worker', 'enum': ['yes', 'no']}]}}
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
+
+    def test_transform_schema_NoOp(self):
+        from lale.datasets.data_schemas import to_schema
+        for ds in [self._irisArr, self._irisDf, self._creditG, self._drugRev]:
+            s_input = to_schema(ds['X'])
+            s_output = NoOp.transform_schema(s_input)
+            self.assertIs(s_input, s_output)
+
+    def test_transform_schema_Concat_irisArr(self):
+        from lale.datasets.data_schemas import to_schema
+        data_X, data_y = self._irisArr['X'], self._irisArr['y']
+        s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
+        def check(s_actual, n_expected, s_expected):
+            assert s_actual['items']['minItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['maxItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['items'] == s_expected, str(s_actual)
+        s_out_X = ConcatFeatures.transform_schema({'items': [s_in_X]})
+        check(s_out_X, 4, {'type': 'number'})
+        s_out_y = ConcatFeatures.transform_schema({'items': [s_in_y]})
+        check(s_out_y, 1, {'type': 'integer'})
+        s_out_XX = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_X]})
+        check(s_out_XX, 8, {'type': 'number'})
+        s_out_yy = ConcatFeatures.transform_schema({'items': [s_in_y, s_in_y]})
+        check(s_out_yy, 2, {'type': 'integer'})
+        s_out_Xy = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_y]})
+        check(s_out_Xy, 5, {'type': 'number'})
+        s_out_XXX = ConcatFeatures.transform_schema({
+            'items': [s_in_X, s_in_X, s_in_X]})
+        check(s_out_XXX, 12, {'type': 'number'})
+
+    def test_transform_schema_Concat_irisDf(self):
+        from lale.datasets.data_schemas import to_schema
+        data_X, data_y = self._irisDf['X'], self._irisDf['y']
+        s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
+        def check(s_actual, n_expected, s_expected):
+            assert s_actual['items']['minItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['maxItems'] == n_expected, str(s_actual)
+            assert s_actual['items']['items'] == s_expected, str(s_actual)
+        s_out_X = ConcatFeatures.transform_schema({'items': [s_in_X]})
+        check(s_out_X, 4, {'type': 'number'})
+        s_out_y = ConcatFeatures.transform_schema({'items': [s_in_y]})
+        check(s_out_y, 1, {'description': 'target', 'type': 'integer'})
+        s_out_XX = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_X]})
+        check(s_out_XX, 8, {'type': 'number'})
+        s_out_yy = ConcatFeatures.transform_schema({'items': [s_in_y, s_in_y]})
+        check(s_out_yy, 2, {'type': 'integer'})
+        s_out_Xy = ConcatFeatures.transform_schema({'items': [s_in_X, s_in_y]})
+        check(s_out_Xy, 5, {'type': 'number'})
+        s_out_XXX = ConcatFeatures.transform_schema({
+            'items': [s_in_X, s_in_X, s_in_X]})
+        check(s_out_XXX, 12, {'type': 'number'})
+
+    def test_validate_lr_irisArr(self):
+        LogisticRegression.validate(self._irisArr['X'], self._irisArr['y'])
+
+    def test_validate_lr_irisDf(self):
+        LogisticRegression.validate(self._irisDf['X'], self._irisDf['y'])
+
+    def test_validate_lr_creditG(self):
+        with self.assertRaises(SubschemaError):
+            LogisticRegression.validate(self._creditG['X'],self._creditG['y'])
+
+    def test_validate_lr_drugRev(self):
+        with self.assertRaises(SubschemaError):
+            LogisticRegression.validate(self._drugRev['X'],self._drugRev['y'])
+
+    def test_validate_project_irisArr(self):
+        from lale.lib.lale import Project
+        Project.validate(self._irisArr['X'],self._irisArr['y'])
+
+    def test_validate_project_irisDf(self):
+        from lale.lib.lale import Project
+        Project.validate(self._irisDf['X'],self._irisDf['y'])
+
+    def test_validate_project_creditG(self):
+        from lale.lib.lale import Project
+        Project.validate(self._creditG['X'], self._creditG['y'])
+
+    def test_validate_project_drugRev(self):
+        from lale.lib.lale import Project
+        Project.validate(self._drugRev['X'],self._drugRev['y'])
+
+    def test_validate_tfidf_irisArr(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._irisArr['X'],self._irisArr['y'])
+
+    def test_validate_tfidf_irisDf(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._irisDf['X'],self._irisDf['y'])
+
+    def test_validate_tfidf_creditG(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._creditG['X'], self._creditG['y'])
+
+    def test_validate_tfidf_drugRev(self):
+        with self.assertRaises(SubschemaError):
+            TfidfVectorizer.validate(self._drugRev['X'],self._drugRev['y'])
 
 if __name__ == '__main__':
     unittest.main()

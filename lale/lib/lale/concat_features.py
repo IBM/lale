@@ -16,6 +16,8 @@ import lale.helpers
 import lale.operators
 import numpy as np
 import pandas as pd
+import scipy.sparse
+import jsonsubschema
 
 class ConcatFeaturesImpl():
     """Transformer to concatenate input datasets. 
@@ -59,6 +61,8 @@ class ConcatFeaturesImpl():
         for dataset in X:
             if isinstance(dataset, pd.DataFrame) or isinstance(dataset, pd.Series):
                 np_dataset = dataset.values
+            elif isinstance(dataset, scipy.sparse.csr_matrix):
+                np_dataset = dataset.toarray()
             else:
                 np_dataset = dataset
             if hasattr(np_dataset, 'shape'):
@@ -69,6 +73,53 @@ class ConcatFeaturesImpl():
         result = np.concatenate(np_datasets, axis=1)
         return result
 
+    def transform_schema(self, s_X):
+        min_cols, max_cols, elem_schema = 0, 0, None
+        def join_schemas(s_a, s_b):
+            if s_a is None:
+                return s_b
+            s_a = lale.helpers.dict_without(s_a, 'description')
+            s_b = lale.helpers.dict_without(s_b, 'description')
+            if jsonsubschema.isSubschema(s_a, s_b):
+                return s_b
+            if jsonsubschema.isSubschema(s_b, s_a):
+                return s_a
+            return jsonsubschema.joinSchemas(s_a, s_b)
+        def add_ranges(min_a, max_a, min_b, max_b):
+            min_ab = min_a + min_b
+            if max_a == 'unbounded' or max_b == 'unbounded':
+                max_ab = 'unbounded'
+            else:
+                max_ab = max_a + max_b
+            return min_ab, max_ab
+        for s_dataset in s_X['items']:
+            s_rows = s_dataset['items']
+            if 'type' in s_rows and 'array' == s_rows['type']:
+                s_cols = s_rows['items']
+                if isinstance(s_cols, dict):
+                    min_c = s_rows['minItems'] if 'minItems' in s_rows else 1
+                    max_c = s_rows['maxItems'] if 'maxItems' in s_rows else 'unbounded'
+                    elem_schema = join_schemas(elem_schema, s_cols)
+                else:
+                    min_c, max_c = len(s_cols), len(s_cols)
+                    for s_col in s_cols:
+                        elem_schema = join_schemas(elem_schema, s_col)
+                min_cols, max_cols = add_ranges(min_cols,max_cols,min_c,max_c)
+            else:
+                elem_schema = join_schemas(elem_schema, s_rows)
+                min_cols, max_cols = add_ranges(min_cols, max_cols, 1, 1)
+        s_result = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'minItems': min_cols,
+                'items': elem_schema}}
+        if max_cols != 'unbounded':
+            s_result['items']['maxItems'] = max_cols
+        lale.helpers.validate_is_schema(s_result)
+        return s_result
+    
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the ConcatFeatures operator.\n',

@@ -109,7 +109,7 @@ _hyperparams_schema = {
           'type': 'integer',
           'default': 100,
           'minimumForOptimizer': 10,
-          'maximumForOptimizer': 500},
+          'maximumForOptimizer': 1500},
         'verbosity': {
           'description': 'The degree of verbosity.',
           'type': 'integer',
@@ -133,13 +133,13 @@ _hyperparams_schema = {
           'default': 'gbtree'
         },
         'n_jobs': {
-            'type': 'number',
+            'type': 'integer',
             'description': 'Number of parallel threads used to run xgboost.  (replaces ``nthread``)',
             'default': 1
         },
         'nthread': {
             'anyOf': [
-            {'type':'number'},
+            {'type':'integer'},
             {'enum':[None]}],
             'default': None,
             'description': 'Number of parallel threads used to run xgboost.  Deprecated, please use n_jobs'},
@@ -150,7 +150,7 @@ _hyperparams_schema = {
             'minimum': 0
         },
         'min_child_weight': {
-            'type': 'number',
+            'type': 'integer',
             'description': 'Minimum sum of instance weight(hessian) needed in a child.',
             'default': 1,
             'distribution': 'uniform',
@@ -158,7 +158,7 @@ _hyperparams_schema = {
             'maximumForOptimizer': 20
         },
         'max_delta_step': {
-            'type': 'number',
+            'type': 'integer',
             'description': "Maximum delta step we allow each tree's weight estimation to be.",
             'default': 0
         },
@@ -229,7 +229,7 @@ _hyperparams_schema = {
             'default': 0.5
         },
         'random_state': {
-            'type': 'number',
+            'type': 'integer',
             'description': 'Random number seed.  (replaces seed)',
             'default': 0
         },

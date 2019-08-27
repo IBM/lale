@@ -41,10 +41,21 @@ class DataFrameWithSchema(pd.DataFrame):
     def _constructor(self):
         return DataFrameWithSchema
 
+class SeriesWithSchema(pd.Series):
+    _internal_names = pd.Series._internal_names + ['json_schema']
+    _internal_names_set = set(_internal_names)
+
+    @property
+    def _constructor(self):
+        return SeriesWithSchema
+
 def add_schema(obj, schema):
     lale.helpers.validate_is_schema(schema)
     if isinstance(obj, np.ndarray):
         result = obj.view(NDArrayWithSchema)
+        result.json_schema = schema
+    elif isinstance(obj, pd.Series):
+        result = SeriesWithSchema(obj)
         result.json_schema = schema
     elif isinstance(obj, pd.DataFrame):
         result = DataFrameWithSchema(obj)
@@ -119,6 +130,21 @@ def dataframe_to_schema(df):
     lale.helpers.validate_is_schema(result)
     return result
 
+def series_to_schema(series):
+    assert isinstance(series, pd.Series)
+    if isinstance(series, SeriesWithSchema) and hasattr(series, 'json_schema'):
+        return series.json_schema
+    (n_rows, ) = series.shape
+    result = {
+        'type': 'array',
+        'minItems': n_rows,
+        'maxItems': n_rows,
+        'items': {
+            'description': str(series.name),
+            **dtype_to_schema(series.dtype)}}
+    lale.helpers.validate_is_schema(result)
+    return result
+
 def is_liac_arff(obj):
     expected_types = {
         'description': str, 'relation': str, 'attributes': list, 'data': list}
@@ -159,6 +185,8 @@ def to_schema(obj):
         result = ndarray_to_schema(obj)
     elif isinstance(obj, pd.DataFrame):
         result = dataframe_to_schema(obj)
+    elif isinstance(obj, pd.Series):
+        result = series_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
     else:

@@ -18,7 +18,7 @@ import jsonschema
 
 from .schema_ranges import SchemaRange
 
-from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple
+from typing import Any, Dict, Generic, List, Set, Iterable, Iterator, Optional, Tuple, TypeVar, Union
 from .schema_utils import Schema, getMinimum, getMaximum, forOptimizer
 
 logging.basicConfig(level=logging.WARNING)
@@ -36,6 +36,52 @@ logger = logging.getLogger(__name__)
 
 # Given a schema, if it is an anyof, return the list of choices.
 # Otherwise, return a singleton choice -- the schema
+
+# enumerations should logically be sets.
+# However, the keys are not hashable
+VV = TypeVar("VV")
+class set_with_str_for_keys(Generic[VV]):
+    """ This mimicks a set, but uses the string representation
+        of the elements for comparison tests.
+        It can be used for unhashable elements, as long 
+        as the str function is injective
+    """
+    _elems:Dict[str,VV]
+    def __init__(self, elems:Union[Dict[str,VV], Iterator[VV]]):
+        if isinstance(elems, dict):
+            self._elems = elems
+        else:
+            self._elems = {str(v):v for v in elems}
+
+    def __iter__(self):
+        return iter(self._elems.values())
+
+    def __bool__(self):
+        return bool(self._elems)
+
+    def __str__(self):
+        return str(list(self._elems.values()))
+
+    def union(self, *others):
+        return set_with_str_for_keys([elem for subl in [self]+list(others) for elem in subl])
+
+    def intersection(self, *others):
+        d:Dict[str,VV] = dict(self._elems)
+        for ssk in others:
+            for k in list(d.keys()):
+                if k not in ssk._elems:
+                    del d[k]
+        return set_with_str_for_keys(d)
+
+    def difference(self, *others):
+        d:Dict[str,VV] = dict(self._elems)
+        for ssk in others:
+            for k in list(d.keys()):
+                if k in ssk._elems:
+                    del d[k]
+        return set_with_str_for_keys(d)
+    
+
 def toAnyOfList(schema:Schema)->List[Schema]:
     if 'anyOf' in schema:
         return schema['anyOf']
@@ -86,18 +132,18 @@ def makeOneOf(schemas:List[Schema])->Schema:
 def impossible():
     return False
 
-def enumValues(es:Set[Any], s:Schema)->Set[Any]:
+def enumValues(es:set_with_str_for_keys[Any], s:Schema)->set_with_str_for_keys[Any]:
     """Given an enumeration set and a schema, return all the consistent values of the enumeration."""
     # TODO: actually check.  This should call the json schema validator
-    ret = set()
+    ret = list()
     try:
         for e in es:
             try:
                 jsonschema.validate(e, s)
-                ret.add(e)
+                ret.append(e)
             except:
                 logger.debug(f"enumValues: {e} removed from {es} because it does not validate according to {s}")
-        return ret
+        return set_with_str_for_keys(iter(ret))
     except jsonschema.ValidationError as error:
         logger.warning(f"enumValues: Schema {s} does not validate: {error}")
         # Let us be conservative
@@ -122,8 +168,8 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     s_not:List[Schema] = []
     s_not_number_list:List[Schema] = [] # a list of schemas that are a top level 'not' with a type='integer' or 'number' under it
 
-    s_not_enum_list:List[Set[Any]] = []
-    s_enum_list:List[Set[Any]] = []
+    s_not_enum_list:List[set_with_str_for_keys[Any]] = []
+    s_enum_list:List[set_with_str_for_keys[Any]] = []
 
 
     s_type = None
@@ -159,7 +205,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 if snot is None:
                     continue
                 elif 'enum' in snot:
-                    ev = enumValues(set(snot['enum']), {'not':combined_original_schema})
+                    ev = enumValues(set_with_str_for_keys(snot['enum']), {'not':combined_original_schema})
                     s_not_enum_list.append(ev)
                 elif 'type' in snot and (snot['type'] == 'number' or snot['type'] == 'integer'):
                     s_not_number_list.append(s)
@@ -167,7 +213,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                     s_not.append(s)
             elif 'enum' in s:
                 # TODO: copy over extra fields (description...)
-                ev = enumValues(set(s['enum']), combined_original_schema)
+                ev = enumValues(set_with_str_for_keys(s['enum']), combined_original_schema)
                 if ev:
                     s_enum_list.append(ev)
                 else:
@@ -211,22 +257,22 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
 
     # first, we simplify enumerations
 
-    s_enum:Optional[Set[Any]] = None
-    s_not_enum:Optional[Set[Any]] = None
+    s_enum:Optional[set_with_str_for_keys[Any]] = None
+    s_not_enum:Optional[set_with_str_for_keys[Any]] = None
 
     if s_enum_list:
         # if there are enumeration constraints, we want their intersection
-        s_enum = set.intersection(*s_enum_list)
+        s_enum = set_with_str_for_keys.intersection(*s_enum_list)
         if not s_enum:
             # This means that enumeration values where specified
             # but none are possible, so this schema is impossible to satisfy
             logger.info(f"simplifyAll: {schemas} is not a satisfiable list of conjoined schemas because the conjugation of these enumerations {list(s_enum_list)} is unsatisfiable (the intersection is empty)")
             return impossible()
     if s_not_enum_list:
-        s_not_enum = set.union(*s_not_enum_list)
+        s_not_enum = set_with_str_for_keys.union(*s_not_enum_list)
     
     if s_enum and s_not_enum:
-        s_enum_diff = set.difference(s_enum, s_not_enum)
+        s_enum_diff = set_with_str_for_keys.difference(s_enum, s_not_enum)
         if not s_enum_diff:
             # This means that enumeration values where specified
             # but none are possible, so this schema is impossible to satisfy
@@ -288,8 +334,9 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         # for now, we will not handle cases that would require splitting ranges
         # TODO: 42 is about handling more reasoning
         if s_not_enum:
-            s_cur_not_enum_list:Set[Any] = s_not_enum
-            s_not_enum = set()
+            s_cur_not_enum_list:set_with_str_for_keys[Any] = s_not_enum
+            s_not_enum_l:List[Any] = []
+
             for s in s_cur_not_enum_list:
                 if isinstance(s, (int,float)):
                     success = s_range.remove_point(s)
@@ -302,7 +349,9 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                         return impossible()
                     
                     elif success is False or success2 is False:
-                        s_not_enum.add(s)
+                        s_not_enum_l.append(s)
+            s_not_enum = set_with_str_for_keys(iter(s_not_enum_l))
+
 
 
         # now let us put everything back together
@@ -453,8 +502,8 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
 def simplifyAny(schema:List[Schema], floatAny:bool)->Schema:
     s_any = schema
 
-    s_enum_list:List[Set[Any]] = []
-    s_not_enum_list:List[Set[Any]] = []
+    s_enum_list:List[set_with_str_for_keys[Any]] = []
+    s_not_enum_list:List[set_with_str_for_keys[Any]] = []
 
     s_other:List[Schema] = []
     s_not_for_optimizer:List[Schema] = []
@@ -479,30 +528,30 @@ def simplifyAny(schema:List[Schema], floatAny:bool)->Schema:
             if 'anyOf' in s:
                 s_any.extend(s['anyOf'])
             elif 'enum' in s:
-                ev = enumValues(set(s['enum']), s)
+                ev = enumValues(set_with_str_for_keys(s['enum']), s)
                 if ev:
                     s_enum_list.append(ev)
             elif 'not' in s:
                 snot = s['not']
                 if 'enum' in s['not']:
-                    ev = enumValues(set(snot['enum']), snot)
+                    ev = enumValues(set_with_str_for_keys(snot['enum']), snot)
                     if ev:
                         s_not_enum_list.append(ev)
             else:
                 s_other.append(s)
 
-    s_enum:Optional[Set[Any]] = None
-    s_not_enum:Optional[Set[Any]] = None
+    s_enum:Optional[set_with_str_for_keys[Any]] = None
+    s_not_enum:Optional[set_with_str_for_keys[Any]] = None
 
     if s_enum_list:
         # if there are enumeration constraints, we want their intersection
-        s_enum = set.union(*s_enum_list)
+        s_enum = set_with_str_for_keys.union(*s_enum_list)
 
     if s_not_enum_list:
-        s_not_enum = set.intersection(*s_not_enum_list)
+        s_not_enum = set_with_str_for_keys.intersection(*s_not_enum_list)
     
     if s_enum and s_not_enum:
-        s_not_enum = set.difference(s_not_enum, s_enum)
+        s_not_enum = set_with_str_for_keys.difference(s_not_enum, s_enum)
         s_enum = None
 
     
@@ -610,7 +659,7 @@ def findRelevantFields(schema:Schema) -> Optional[Set[str]]:
         fields_list:List[Optional[Set[str]]] = [findRelevantFields(s) for s in schema['allOf']]
         real_fields_list:List[Set[str]] = [f for f in fields_list if f is not None]
         if real_fields_list:
-            return set.intersection(*real_fields_list)
+            return set.union(*real_fields_list)
         else:
             return None
     else:

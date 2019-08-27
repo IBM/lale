@@ -90,7 +90,7 @@ _hyperparams_schema = {
                 'description':
                     'Append a constant feature with constant value '
                     'intercept_scaling to the instance vector.',
-                'minimumForOptimizer': 1.0,
+                'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
                 'default': 1},
             'class_weight': {
@@ -225,6 +225,7 @@ _output_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC.html',
     'type': 'object',
     'tags': {
         'pre': [],

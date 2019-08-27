@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .xgboost_classifier import XGBClassifier
-from .xgboost_regressor import XGBRegressor
+from .xgb_classifier import XGBClassifier
+from .xgb_regressor import XGBRegressor
