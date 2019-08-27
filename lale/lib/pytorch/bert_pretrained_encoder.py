@@ -16,6 +16,7 @@ from lale.operators import make_operator
 import torch
 from pytorch_pretrained_bert import BertTokenizer, BertModel, BertForMaskedLM
 import numpy as np
+import pandas as pd
 import logging
 import lale.helpers
 logging.basicConfig(level=logging.INFO)
@@ -34,6 +35,8 @@ class BertPretrainedEncoderImpl():
     #     return BertPretrainedEncoderImpl()
 
     def transform(self, X):
+        if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
+            X = X.squeeze()
         self.model.eval()
         self.model.to(self.device)
         transformed_X = None
@@ -94,8 +97,13 @@ _input_schema_fit = {
   'properties': {
     'X': {
       'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'string'}},
+      'anyOf': [
+        { 'type': 'array',
+          'items': {'type': 'string'}},
+        { 'type': 'array',
+          'items': {
+            'type': 'array', 'minItems': 1, 'maxItems': 1,
+            'items': {'type': 'string'}}}]},
     'y': {
       'description': 'Labels, optional.'
     }
@@ -110,8 +118,13 @@ _input_schema_predict = {
   'properties': {
     'X': {
       'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'string'}}}}
+      'anyOf': [
+        { 'type': 'array',
+          'items': {'type': 'string'}},
+        { 'type': 'array',
+          'items': {
+            'type': 'array', 'minItems': 1, 'maxItems': 1,
+            'items': {'type': 'string'}}}]}}}
 
 _output_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',

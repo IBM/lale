@@ -12,5 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .lightgbm_classifier import LGBMClassifier
-from .lightgbm_regressor import LGBMRegressor
+from .lgbm_classifier import LGBMClassifier
+from .lgbm_regressor import LGBMRegressor

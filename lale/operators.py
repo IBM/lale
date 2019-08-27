@@ -20,12 +20,13 @@ import os
 import itertools
 from lale import schema2enums as enum_gen
 import numpy as np
+import lale.datasets.data_schemas
 
 from typing import AbstractSet, Any, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union
 import warnings
 import copy
 from lale.util.VisitorMeta import AbstractVisitorMeta
-from lale.search.PGO import remove_defaults, remove_defaults_dict
+from lale.search.PGO import remove_defaults_dict
 import inspect
 import copy
 from lale.schemas import Schema 
@@ -312,6 +313,7 @@ class IndividualOp(MetaModelOperator):
         """
         self._impl = impl
         self._name = name
+        schemas = schemas if schemas is not None else helpers.get_lib_schema(impl)
         if schemas:
             self._schemas = schemas
         else:
@@ -667,6 +669,8 @@ class IndividualOp(MetaModelOperator):
             `output_*` must be an existing method (already defined in the schema for lale operators, exising method for external operators)
         constraint : Schema
             Add a constraint in JSON schema format.
+        relevantToOptimizer : String list
+            update the set parameters that will be optimized.
         param : Schema
             Override the schema of the hyperparameter.
             `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
@@ -692,12 +696,42 @@ class IndividualOp(MetaModelOperator):
                 op._schemas['properties'][arg] = value.schema
             elif arg == 'constraint':
                 op._schemas['properties']['hyperparams']['allOf'].append(value.schema)
+            elif arg == 'relevantToOptimizer':
+                assert isinstance(value, list)
+                op._schemas['properties']['hyperparams']['allOf'][0]['relevantToOptimizer'] = value
             elif arg in helpers.get_hyperparam_names(op):
-                op._schemas['properties']['hyperparams']['allOf'][0]    ['properties'][arg] = value.schema
+                op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
             else:
                 assert False, "Unkown method or parameter."
         return op
-    
+
+    def validate(self, X, y=None):
+        if not lale.helpers.is_schema(X):
+            X = lale.datasets.data_schemas.to_schema(X)
+        obj_X = {
+            'type': 'object',
+            'additionalProperties': False,
+            'required': ['X'],
+            'properties': {'X': X}}
+        if y is not None:
+            if not lale.helpers.is_schema(y):
+                y = lale.datasets.data_schemas.to_schema(y)
+            obj_Xy = {
+                'type': 'object',
+                'additionalProperties': False,
+                'required': ['X', 'y'],
+                'properties': {'X': X, 'y': y}}
+        fit_actual = obj_X if y is None else obj_Xy
+        fit_formal = self.input_schema_fit()
+        lale.helpers.validate_subschema(fit_actual, fit_formal,
+            'to_schema(data)', f'{self.name()}.input_schema_fit()')
+        predict_actual = obj_X
+        predict_formal = self.input_schema_predict()
+        lale.helpers.validate_subschema(predict_actual, predict_formal,
+            'to_schema(data)', f'{self.name()}.input_schema_predict()')
+
+    def transform_schema(self, s_X):
+        return self.output_schema()
 
 class PlannedIndividualOp(IndividualOp, PlannedOperator):
     """
@@ -721,9 +755,11 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         for arg in args:
             k, v = self._enum_to_strings(arg)
             hyperparams[k] = v
-        for k, v in remove_defaults(kwargs.items()):
+        for k, v in fixup_hyperparams_dict(kwargs).items():
+            
             if k in hyperparams:
                 raise ValueError('Duplicate argument {}.'.format(k))
+            v = helpers.val_wrapper.unwrap(v)
             if isinstance(v, enum.Enum):
                 k2, v2 = self._enum_to_strings(v)
                 if k != k2:
@@ -777,6 +813,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             return schema
         props = {k : {'enum' : [v]} for k, v in params.items()}
         obj = {'type':'object', 'properties':props}
+        obj['relevantToOptimizer'] = list(params.keys())
         top = {'allOf':[schema, obj]}
         return top
     # This should *only* ever be called by the sklearn_compat wrapper
@@ -805,7 +842,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except jsonschema.exceptions.ValidationError as e:
             raise jsonschema.exceptions.ValidationError("Failed validating input_schema_fit for {} due to {}".format(self.name(), e))                                    
 
-        filtered_fit_params = remove_defaults_dict(fit_params)
+        filtered_fit_params = fixup_hyperparams_dict(fit_params)
         if filtered_fit_params is None:
             trained_impl = self._impl.fit(X, y)
         else:
@@ -912,7 +949,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
         #TODO: This mutates the operator, should we mark it deprecated?
-        filtered_impl_params = remove_defaults_dict(impl_params)
+        filtered_impl_params = fixup_hyperparams_dict(impl_params)
         self._impl = helpers.create_individual_op_using_reflection(".".join([self._impl.__class__.__module__, 
         self._impl.__class__.__name__]), self._name, filtered_impl_params)
         self._hyperparams = filtered_impl_params
@@ -931,6 +968,11 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             return 'y' in self.input_schema_fit().get('properties', [])
         return True #Always assume supervised if the schema is missing
 
+    def transform_schema(self, s_X):
+        if hasattr(self._impl, 'transform_schema'):
+            return self._impl.transform_schema(s_X)
+        else:
+            return super(TrainableIndividualOp, self).transform_schema(s_X)
 
 class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
@@ -938,7 +980,8 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         super(TrainedIndividualOp, self).__init__(_name, _impl, _schemas)
 
     def __call__(self, *args, **kwargs)->TrainedOperator:
-        filtered_kwargs_params = remove_defaults_dict(kwargs)
+        filtered_kwargs_params = fixup_hyperparams_dict(kwargs)
+
         trainable = self._configure(*args, **filtered_kwargs_params)
         instance = TrainedIndividualOp(trainable._name, trainable._impl, trainable._schemas)
         instance._hyperparams = trainable._hyperparams
@@ -951,7 +994,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
     def fit(self, X, y = None, **fit_params)->TrainedOperator:
         if hasattr(self._impl, "fit"):
-            filtered_fit_params = remove_defaults_dict(fit_params)
+            filtered_fit_params = fixup_hyperparams_dict(fit_params)
             return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
         else:
             return self 
@@ -998,7 +1041,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
 all_available_operators: List[PlannedOperator] = []
 
-def make_operator(impl, schemas={}, name = None) -> PlannedOperator:
+def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
     if name is None:
         name = helpers.assignee_name()
     if inspect.isclass(impl):
@@ -1720,3 +1763,9 @@ def make_choice(*orig_steps:Union[Operator,Any], name:Optional[str]=None)->Opera
             steps.append(operator)
         name_ = name_ + " | " + operator.name()
     return OperatorChoice(steps, name_[3:])
+
+def fixup_hyperparams_dict(d):
+    d1 = remove_defaults_dict(d)
+    d2 = {k:helpers.val_wrapper.unwrap(v) for k,v in d1.items()}
+    return d2
+

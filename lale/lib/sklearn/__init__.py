@@ -21,9 +21,9 @@ from .nystroem import Nystroem
 from .one_hot_encoder import OneHotEncoder
 from .pca import PCA
 from .tfidf_vectorizer import TfidfVectorizer
-from .multinomial_nb_estimator import MultinomialNB
-from .simple_imputer_transformer import SimpleImputer
-from .svc_estimator import SVC
+from .multinomial_nb import MultinomialNB
+from .simple_imputer import SimpleImputer
+from .svc import SVC
 from .passive_aggressive_classifier import PassiveAggressiveClassifier
 from .random_forest_classifier import RandomForestClassifier
 from .random_forest_regressor import RandomForestRegressor

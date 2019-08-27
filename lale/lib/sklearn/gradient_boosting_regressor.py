@@ -75,8 +75,8 @@ _hyperparams_schema = {
                 'description': 'learning rate shrinks the contribution of each tree by `learning_rate`.'},
             'n_estimators': {
                 'type': 'integer',
-                'minimumForOptimizer': 50,
-                'maximumForOptimizer': 500,
+                'minimumForOptimizer': 10,
+                'maximumForOptimizer': 100,
                 'distribution': 'uniform',
                 'default': 100,
                 'description': 'The number of boosting stages to perform. Gradient boosting'},
@@ -286,6 +286,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html',
     'type': 'object',
     'tags': {
         'pre': [],

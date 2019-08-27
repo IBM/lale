@@ -34,6 +34,7 @@ setup(
         'graphviz',
         'hyperopt>=0.1.1',
         'jsonschema==2.6.0',
+        'jsonsubschema @ git+https://github.com/ibm/json-subschema',
         'numpy',
         'PyYAML',
         'scikit-learn==0.20.3',
@@ -50,7 +51,7 @@ setup(
               'liac-arff>=2.4.0',
               'tensorflow-datasets>=1.0.1',
               'tensorflow>=1.13.1',
-              'smac'
+              'smac<=0.10.0'
           ],
           'test':[
               'jupyter',
