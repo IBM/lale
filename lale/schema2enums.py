@@ -155,7 +155,7 @@ def accumulateDiscoveredEnumsToPythonEnums(de:Optional[DiscoveredEnums], path:Li
         elif isinstance(e, (int, float, complex)):
             return ("num" + str(e), e)
         else:
-            logger.warning(f"Unknown type ({type(e)}) of enumeration constant {e}, not handling very well")
+            logger.info(f"Unknown type ({type(e)}) of enumeration constant {e}, not handling very well")
             return (str(e), e)
 
 
