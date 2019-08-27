@@ -34,7 +34,7 @@ setup(
         'graphviz',
         'hyperopt>=0.1.1',
         'jsonschema==2.6.0',
-        'jsonsubschema @ git+https://github.com/ibm/json-subschema@master#egg=jsonsubschema',
+        'jsonsubschema @ git+https://github.com/ibm/json-subschema',
         'numpy',
         'PyYAML',
         'scikit-learn==0.20.3',
