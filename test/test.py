@@ -18,10 +18,6 @@ import random
 import jsonschema
 import sys
 
-import lale.schema2enums
-import logging
-lale.schema2enums.logger.setLevel(logging.ERROR)
-
 import lale.operators as Ops
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
