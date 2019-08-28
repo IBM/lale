@@ -68,7 +68,7 @@ def partition_sklearn_params(d:Dict[str, Any])->Dict[str, Dict[str, Any]]:
     return ret
 
 # TODO: we should be able enrich this type to Ops.TrainableOperator
-def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.Operator:
+def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.TrainableOperator:
     """May return a new operator, in which case the old one should be overwritten
     """
     if isinstance(op, Ops.PlannedIndividualOp):
@@ -77,15 +77,16 @@ def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.Operator:
         steps = op.steps()
         partitioned_params:Dict[str,Dict[str, Any]] = partition_sklearn_params(impl_params)
         found_names:Set[str] = set()
-        step_map:Dict[Ops.Operator, Ops.Operator] = {}
+        step_map:Dict[Ops.Operator, Ops.TrainableOperator] = {}
         for s in steps:
             name = s.name()
             found_names.add(name)
+            params:Dict[str, Any] = {}
             if name in partitioned_params:
                 params = partitioned_params[name]
-                new_s = set_operator_params(s, **params)
-                if s != new_s:
-                    step_map[s] = new_s
+            new_s = set_operator_params(s, **params)
+            if s != new_s:
+                step_map[s] = new_s
         # make sure that no parameters were passed in for operations
         # that are not actually part of this pipeline
         assert set(partitioned_params.keys()).issubset(found_names)
@@ -93,10 +94,14 @@ def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.Operator:
             op.subst_steps(step_map)
             if not isinstance(op, Ops.TrainablePipeline):
                 # As a result of choices made, we may now be a TrainableIndividualOp
-                return Ops.get_pipeline_of_applicable_type(op.steps(), op.edges(), ordered=True)
+                ret = Ops.get_pipeline_of_applicable_type(op.steps(), op.edges(), ordered=True)
+                if not isinstance(ret, Ops.TrainableOperator):
+                    assert False
+                return ret
             else:
                 return op
         else:
+            assert isinstance(op, Ops.TrainableOperator)
             return op
     elif isinstance(op, Ops.OperatorChoice):
         discriminant_name:str = "_lale_discriminant"
@@ -190,6 +195,8 @@ class SKlearnCompatWrapper(object):
                 assert False
             assert isinstance(cur, Ops.Operator)
             new_s = set_operator_params(cur, **impl_params)
+            if not isinstance(new_s, Ops.TrainableOperator):
+                assert False
             if new_s != cur:
                 prev._base = new_s                
         return self
