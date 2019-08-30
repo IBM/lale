@@ -1026,8 +1026,8 @@ class TestPrettyPrint(unittest.TestCase):
         globals1 = {}
         exec(string1, globals1)
         pipeline1 = globals1['pipeline']
-        from lale.pretty_print import pipeline_to_string
-        string2 = pipeline_to_string(pipeline1)
+        from lale.pretty_print import to_string
+        string2 = to_string(pipeline1)
         self.maxDiff = None
         self.assertEqual(string1, string2)
         globals2 = {}
@@ -1073,8 +1073,8 @@ pca = PCA(copy=False)
 lr = LR(solver='saga', C=0.9)
 pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
         #testing harness
-        from lale.pretty_print import pipeline_to_string
-        string2 = pipeline_to_string(pipeline)
+        from lale.pretty_print import to_string
+        string2 = to_string(pipeline)
         self.maxDiff = None
         self.assertEqual(string1, string2)
         globals2 = {}
