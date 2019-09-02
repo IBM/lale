@@ -223,8 +223,7 @@ users.
 
 
 ```python
-_hyperparams_constraints = {
-  'allOf': [
+_hyperparams_constraints = [
     { 'description':
         'The newton-cg, sag, and lbfgs solvers support only l2 penalties.',
       'anyOf': [
@@ -232,7 +231,7 @@ _hyperparams_constraints = {
           'properties': {
             'solver': {'not': {'enum': ['newton-cg', 'sag', 'lbfgs']}}}},
         { 'type': 'object',
-          'properties': {'penalty': {'enum': ['l2']}}}]}]}
+          'properties': {'penalty': {'enum': ['l2']}}}]}]
 ```
 
 In JSON schema, `allOf` is a logical "and", `anyOf` is a logical "or", and
@@ -261,7 +260,7 @@ constraints:
 
 ```python
 _hyperparams_schema = {
-  'allOf': [_hyperparams_ranges, _hyperparams_constraints]}
+  'allOf': [_hyperparams_ranges, *_hyperparams_constraints]}
 ```
 
 Finally, combining all schemas together and adding tags for discovery
@@ -398,18 +397,20 @@ hyperparameter caught by JSON schema validation.
 
 
 ```python
-from lale.helpers import assert_raises_validation_error
-with assert_raises_validation_error():
+import jsonschema, sys
+try:
     MyLR(solver='adam')
+except jsonschema.ValidationError as e:
+    print(e.message, file=sys.stderr)
 ```
 
-    error:
-      message: "Failed validating hyperparameters for MyLR due to 'adam' is not one of\
-        \ ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga']\n\nFailed validating 'enum'\
-        \ in schema['allOf'][0]['properties']['solver']:\n    {'default': 'liblinear',\n\
-        \     'description': 'Algorithm for optimization problem.',\n     'enum': ['newton-cg',\
-        \ 'lbfgs', 'liblinear', 'sag', 'saga']}\n\nOn instance['solver']:\n    'adam'"
-      schema: !!python/object:jsonschema._utils.Unset {}
+    Invalid configuration for MyLR(solver='adam') due to invalid value solver=adam.
+    Schema of argument solver: {
+        'description': 'Algorithm for optimization problem.',
+        'enum': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
+        'default': 'liblinear',
+    }
+    Value: adam
 
 
 Finally, to illustrate hyperparameter optimization, the following code uses
@@ -442,8 +443,8 @@ best_hyperparams = space_eval(search_space, trials.argmin)
 print('best hyperparameter combination {}'.format(best_hyperparams))
 ```
 
-    100%|█████████████████████████| 10/10 [00:00<00:00, 24.47it/s, best loss: -1.0]
-    best hyperparameter combination {'C': 12866.556345415156, 'name': '__main__.MyLR', 'penalty': 'l2', 'solver': 'liblinear'}
+    100%|█████████████████████████| 10/10 [00:00<00:00, 35.74it/s, best loss: -1.0]
+    best hyperparameter combination {'C': 18522.689939955522, 'name': '__main__.MyLR', 'penalty': 'l2', 'solver': 'liblinear'}
 
 
 This concludes the running example. To

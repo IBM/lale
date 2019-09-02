@@ -66,19 +66,6 @@ class assert_warns:
         print_yaml('error', str(exc_value), file=sys.stderr)
         return True
 
-class assert_raises_validation_error:
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        assert exc_type is jsonschema.ValidationError
-        print_yaml('error', {
-            'message': exc_value.message,
-#            'path': [str(elem) for elem in exc_value.path],
-#            'value': exc_value.instance,
-            'schema': exc_value.schema }, file=sys.stderr)
-        return True
-
 def assignee_name(level=1):
     tb = traceback.extract_stack()
     file_name, line_number, function_name, text = tb[-(level+2)]

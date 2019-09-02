@@ -31,6 +31,7 @@ setup(
     packages=find_packages(),
     license='',
     install_requires=[
+        'astunparse',
         'graphviz',
         'hyperopt>=0.1.1',
         'jsonschema==2.6.0',
