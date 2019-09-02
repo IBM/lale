@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lale.helpers import println_pos
-from lale.operators import IndividualOp
-from lale.operators import OperatorChoice
-from lale.operators import Pipeline
-from lale.operators import TrainableIndividualOp
+import ast
+import astunparse
 import importlib
 import inspect
+import json
 import pprint
 import re
+
+import lale.helpers
+import lale.operators
 
 def hyperparams_to_string(hps, op=None):
     if op:
@@ -36,7 +37,7 @@ def to_camel_case(name):
     return s1.lower()
 
 def indiv_op_to_string(op, name=None, module_name=None):
-    assert isinstance(op, IndividualOp)
+    assert isinstance(op, lale.operators.IndividualOp)
     if name is None:
         name = op.name()
     if module_name is None:
@@ -45,7 +46,7 @@ def indiv_op_to_string(op, name=None, module_name=None):
         import_stmt = f'from {module_name} import {op.name()}'
     else:
         import_stmt = f'from {module_name} import {op.name()} as {name}'
-    if hasattr(op._impl, "fit") and isinstance(op, TrainableIndividualOp):
+    if hasattr(op._impl, "fit") and isinstance(op, lale.operators.TrainableIndividualOp):
         hps = hyperparams_to_string(op.hyperparams(), op)
         op_expr = f'{name}({hps})'
     else:
@@ -56,9 +57,9 @@ def indiv_op_to_string(op, name=None, module_name=None):
         return (import_stmt, op_expr)
 
 def pipeline_to_string(pipeline, cls2name):
-    assert isinstance(pipeline, Pipeline)
+    assert isinstance(pipeline, lale.operators.Pipeline)
     def shallow_copy_graph(pipeline):
-        if isinstance(pipeline, OperatorChoice):
+        if isinstance(pipeline, lale.operators.OperatorChoice):
             return [pipeline], {pipeline:[]}, {pipeline:[]}
         steps = [*pipeline.steps()]
         preds = { step: [] for step in steps }
@@ -158,7 +159,7 @@ def pipeline_to_string(pipeline, cls2name):
             module = importlib.import_module(module_name)
             if hasattr(module, op_name):
                 op = getattr(module, op_name)
-                if isinstance(op, IndividualOp):
+                if isinstance(op, lale.operators.IndividualOp):
                     return op.class_name() == class_name
             return False
         mod_name_1 = class_name[:class_name.rfind('.')]
@@ -193,7 +194,7 @@ def pipeline_to_string(pipeline, cls2name):
             dummy = gen.gensym('step')
             step2name = {}
             for step in steps:
-                if isinstance(step, IndividualOp):
+                if isinstance(step, lale.operators.IndividualOp):
                     step2name[step] = code_gen_rec(step)
                 else:
                     name = gen.gensym('step')
@@ -211,18 +212,18 @@ def pipeline_to_string(pipeline, cls2name):
         elif isinstance(graph, Seq):
             def parens(op):
                 result = code_gen_rec(op)
-                if isinstance(op, Par) or isinstance(op, OperatorChoice):
+                if isinstance(op, Par) or isinstance(op, lale.operators.OperatorChoice):
                     return f'({result})'
                 return result
             return f'{parens(graph.src())} >> {parens(graph.dst())}'
         elif isinstance(graph, Par):
             def parens(op):
                 result = code_gen_rec(op)
-                if isinstance(op, Seq) or isinstance(op, OperatorChoice):
+                if isinstance(op, Seq) or isinstance(op, lale.operators.OperatorChoice):
                     return f'({result})'
                 return result
             return f'{parens(graph.s0())} & {parens(graph.s1())}'
-        elif isinstance(graph, OperatorChoice):
+        elif isinstance(graph, lale.operators.OperatorChoice):
             def parens(op):
                 result = code_gen_rec(op)
                 if isinstance(op, Seq) or isinstance(op, Par):
@@ -230,7 +231,7 @@ def pipeline_to_string(pipeline, cls2name):
                 return result
             printed_steps = [parens(step) for step in graph.steps()]
             return ' | '.join(printed_steps)
-        elif isinstance(graph, IndividualOp):
+        elif isinstance(graph, lale.operators.IndividualOp):
             name = gen.gensym(cls2name[graph.class_name()])
             module_name = get_module(graph)
             import_stmt, op_expr = indiv_op_to_string(graph, name, module_name)
@@ -254,17 +255,36 @@ def pipeline_to_string(pipeline, cls2name):
     graph = introduce_structure(steps, preds, succs)
     return code_gen_top(graph)
 
-def to_string(op):
+def schema_to_string(schema):
+    s1 = json.dumps(schema)
+    s2 = ast.parse(s1)
+    s3 = astunparse.unparse(s2)
+    s4 = s3.strip()
+    s5 = s4
+    while True:
+        s6 = re.sub(r',\n\s+([\]}][^ ])', r'\1', s5)
+        if s5 == s6:
+            break
+        s5 = s6
+    return s6
+
+def to_string(arg):
     def get_cls2name():
         frame = inspect.stack()[2][0]
         result = {}
         all_items = [*frame.f_locals.items(), *frame.f_globals.items()]
         for nm, op in all_items:
-            if isinstance(op, IndividualOp) and nm[0].isupper():
+            if isinstance(op, lale.operators.IndividualOp) and nm[0].isupper():
                 cls = op.class_name()
                 if cls not in result:
                     result[cls] = nm
         return result
-    if isinstance(op, IndividualOp):
-        return indiv_op_to_string(op)
-    return pipeline_to_string(op, get_cls2name())
+    if lale.helpers.is_schema(arg):
+        return schema_to_string(arg)
+    elif isinstance(arg, lale.operators.IndividualOp):
+        return indiv_op_to_string(arg)
+    elif isinstance(arg, lale.operators.Pipeline):
+        return pipeline_to_string(arg, get_cls2name())
+    else:
+        raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
+

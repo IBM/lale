@@ -31,6 +31,7 @@ import inspect
 import copy
 from lale.schemas import Schema 
 import jsonschema
+import lale.pretty_print
 
 class MetaModel(ABC):
     """Abstract base class for LALE operators states: MetaModel, Planned, Trainable, and Trained.
@@ -774,8 +775,35 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         params_all = trainable_to_get_params.get_params_all()
         try:
             helpers.validate_schema(params_all, self.hyperparam_schema())
-        except jsonschema.exceptions.ValidationError as e:
-            raise jsonschema.exceptions.ValidationError("Failed validating hyperparameters for {} due to {}".format(self.name(), e))
+        except jsonschema.ValidationError as e:
+            lale.helpers.validate_is_schema(e.schema)
+            schema = lale.pretty_print.to_string(e.schema)
+            if [*e.schema_path][:3] == ['allOf', 0, 'properties']:
+                arg = e.schema_path[3]
+                reason = f'invalid value {arg}={e.instance}'
+                schema_path = f'argument {arg}'
+            elif [*e.schema_path][:3] == ['allOf', 0, 'additionalProperties']:
+                pref, suff = 'Additional properties are not allowed (', ')'
+                assert e.message.startswith(pref) and e.message.endswith(suff)
+                reason = 'argument ' + e.message[len(pref):-len(suff)]
+                schema_path = 'arguments and their defaults'
+                schema = self.hyperparam_defaults()
+            elif e.schema_path[0] == 'allOf' and int(e.schema_path[1]) != 0:
+                assert e.schema_path[2] == 'anyOf'
+                descr = e.schema['description']
+                if descr.endswith('.'):
+                    descr = descr[:-1]
+                reason = f'constraint {descr[0].lower()}{descr[1:]}'
+                schema_path = f'constraint {e.schema_path[1]}'
+            else:
+                reason = e.message
+                schema_path = e.schema_path
+            msg = f'Invalid configuration for {self.name()}(' \
+                + f'{lale.pretty_print.hyperparams_to_string(hyperparams)}) ' \
+                + f'due to {reason}.\n' \
+                + f'Schema of {schema_path}: {schema}\n' \
+                + f'Value: {e.instance}'
+            raise jsonschema.ValidationError(msg) from e
 
         if len(params_all) == 0:
             impl = class_()
