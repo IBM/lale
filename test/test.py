@@ -1026,8 +1026,8 @@ class TestPrettyPrint(unittest.TestCase):
         globals1 = {}
         exec(string1, globals1)
         pipeline1 = globals1['pipeline']
-        from lale.pretty_print import pipeline_to_string
-        string2 = pipeline_to_string(pipeline1)
+        from lale.pretty_print import to_string
+        string2 = to_string(pipeline1)
         self.maxDiff = None
         self.assertEqual(string1, string2)
         globals2 = {}
@@ -1073,8 +1073,8 @@ pca = PCA(copy=False)
 lr = LR(solver='saga', C=0.9)
 pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
         #testing harness
-        from lale.pretty_print import pipeline_to_string
-        string2 = pipeline_to_string(pipeline)
+        from lale.pretty_print import to_string
+        string2 = to_string(pipeline)
         self.maxDiff = None
         self.assertEqual(string1, string2)
         globals2 = {}
@@ -1443,6 +1443,31 @@ class TestDatasetSchemas(unittest.TestCase):
     def test_validate_tfidf_drugRev(self):
         with self.assertRaises(SubschemaError):
             TfidfVectorizer.validate(self._drugRev['X'],self._drugRev['y'])
+
+class TestErrorMessages(unittest.TestCase):
+    def test_wrong_cont(self):
+        with self.assertRaises(jsonschema.ValidationError) as cm:
+            LogisticRegression(C=-1)
+        summary = cm.exception.message.split('\n')[0]
+        self.assertEqual(summary, "Invalid configuration for LogisticRegression(C=-1) due to invalid value C=-1.")
+
+    def test_wrong_cat(self):
+        with self.assertRaises(jsonschema.ValidationError) as cm:
+            LogisticRegression(solver='adam')
+        summary = cm.exception.message.split('\n')[0]
+        self.assertEqual(summary, "Invalid configuration for LogisticRegression(solver='adam') due to invalid value solver=adam.")
+
+    def test_unknown_arg(self):
+        with self.assertRaises(jsonschema.ValidationError) as cm:
+            LogisticRegression(activation='relu')
+        summary = cm.exception.message.split('\n')[0]
+        self.assertEqual(summary, "Invalid configuration for LogisticRegression(activation='relu') due to argument 'activation' was unexpected.")
+
+    def test_constraint(self):
+        with self.assertRaises(jsonschema.ValidationError) as cm:
+            LogisticRegression(solver='sag', penalty='l1')
+        summary = cm.exception.message.split('\n')[0]
+        self.assertEqual(summary, "Invalid configuration for LogisticRegression(solver='sag', penalty='l1') due to constraint the newton-cg, sag, and lbfgs solvers support only l2 penalties.")
 
 if __name__ == '__main__':
     unittest.main()
