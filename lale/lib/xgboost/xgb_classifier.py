@@ -107,15 +107,7 @@ _hyperparams_schema = {
           'type': 'integer',
           'default': 100,
           'minimumForOptimizer': 10,
-<<<<<<< HEAD
-<<<<<<< HEAD
           'maximumForOptimizer': 1500},
-=======
-          'maximumForOptimizer': 1000},
->>>>>>> Fix more ranges
-=======
-          'maximumForOptimizer': 1500},
->>>>>>> Fix xgb schemas
         'verbosity': {
           'description': 'The degree of verbosity.',
           'type': 'integer',
