@@ -67,7 +67,7 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 10},
             'fit_intercept': {
                 'type': 'boolean',
-                'default': False,
+                'default': True,
                 'description': 'Whether the intercept should be estimated or not. If False, the'
                 'the data is assumed to be already centered.'},
             'max_iter': {

@@ -74,7 +74,7 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'description':
                         'Determine categories automatically from training data.',
-                    'enum': ['auto']},
+                    'enum': ['auto', None]},
                 {   'description': 'The ith list element holds the categories expected in the ith column.',
                     'type': 'array',
                     'items': {
@@ -87,7 +87,7 @@ _hyperparams_schema = {
                             'items': {
                                 'type': 'number'},
                             'description': 'Should be sorted.'}]}}],
-                'default': 'auto'},
+                'default': None},
             'sparse': {
                 'description':
                     'Will return sparse matrix if set true, else array.',

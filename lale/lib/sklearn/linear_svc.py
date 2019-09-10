@@ -105,7 +105,7 @@ _hyperparams_schema = {
                       'forOptimizer': False}],
                 'default': None},
             'verbose': {
-                'type': 'number',
+                'type': 'integer',
                 'default': 0,
                 'description': 'Enable verbose output.'},
             'random_state': {
@@ -118,7 +118,7 @@ _hyperparams_schema = {
                       'type': 'integer'}],
                 'default': None},
             'max_iter': {
-                'type': 'number',
+                'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
                 'default': 1000,
