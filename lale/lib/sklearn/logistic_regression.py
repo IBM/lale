@@ -170,7 +170,7 @@ _hyperparams_schema = {
           'description':
             'Approach for more than two classes (not binary classifier).',
           'enum': ['ovr', 'multinomial', 'auto'],
-          'default': 'auto'},
+          'default': 'ovr'},
         'verbose': {
           'description':
             'For the liblinear and lbfgs solvers set verbose to any positive '
