@@ -64,10 +64,8 @@ _hyperparams_schema = {
                 'default': [0.25, 0.75],
                 'description': 'Default: (25.0, 75.0) = (1st quantile, 3rd quantile) = IQR'},
             'copy': {
-                'anyOf':[{
-                'type': 'boolean'},{
-                'enum': [None]}],
-                'default': None,
+                'type': 'boolean',
+                'default': True,
                 'description': 'If False, try to avoid a copy and do inplace scaling instead.'},
         }}]
 }
