@@ -23,6 +23,7 @@ from lale.util.Visitor import Visitor
 from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum
 from lale.search.schema2search_space import schemaToSearchSpace
 from lale.search.PGO import PGO
+from lale.sklearn_compat import nest_all_HPparams
 
 # To avoid import cycle, since we only realy on lale.operators for types
 from typing import TYPE_CHECKING
@@ -162,18 +163,3 @@ class SearchSpaceGridVisitor(Visitor):
             ret.extend(discriminated_grids)
         return ret
 
-# Auxiliary functions
-def nest_HPparam(name:str, key:str):
-    return name + "__" + key
-
-def nest_HPparams(name:str, grid:SearchSpaceGrid)->SearchSpaceGrid:
-    return {(nest_HPparam(name, k)):v for k, v in grid.items()}
-
-def nest_all_HPparams(name:str, grids:List[SearchSpaceGrid])->List[SearchSpaceGrid]:
-    """ Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
-        to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
-    """
-    return [nest_HPparams(name, grid) for grid in grids]
-
-def unnest_HPparams(k:str)->List[str]:
-    return k.split("__")
