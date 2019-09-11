@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from typing import Any, Dict, Iterable, Optional, List, Set, Tuple, Union
-from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGrid, unnest_HPparams
-from lale.sklearn_compat import make_sklearn_compat
+from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGrid
+from lale.sklearn_compat import make_sklearn_compat, unnest_HPparams
 import lale.operators as Ops
 from lale.schema_utils import Schema, getMinimum, getMaximum
 from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray
