@@ -18,6 +18,15 @@ from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Un
 Schema = Any
 SchemaEnum = Set[Any]
 
+STrue:Schema = {}
+SFalse:Schema = {"not":STrue}
+
+def is_true_schema(s:Schema)->bool:
+    return s is True or s == STrue
+
+def is_false_schema(s:Schema)->bool:
+    return s is False or s == SFalse
+
 def getForOptimizer(obj, prop:str):
     return obj.get(prop + 'ForOptimizer', None)
 
