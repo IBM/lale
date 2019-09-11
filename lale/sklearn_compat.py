@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Optional, List, Set
+from typing import Any, Dict, Iterable, Optional, List, Set, TypeVar
 import random
 import math
 import warnings
@@ -20,6 +20,7 @@ import warnings
 import lale.operators as Ops
 from lale.pretty_print import hyperparams_to_string
 from lale.search.PGO import remove_defaults_dict
+from lale.util.Visitor import Visitor
 
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
@@ -67,7 +68,6 @@ def partition_sklearn_params(d:Dict[str, Any])->Dict[str, Dict[str, Any]]:
         bucket[param] = v
     return ret
 
-# TODO: we should be able enrich this type to Ops.TrainableOperator
 def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.TrainableOperator:
     """May return a new operator, in which case the old one should be overwritten
     """
@@ -201,3 +201,66 @@ class SKlearnCompatWrapper(object):
                 prev._base = new_s                
         return self
 
+    def hyperparam_defaults(self)->Dict[str,Any]:
+        return DefaultsVisitor.run(self.to_lale())
+
+class DefaultsVisitor(Visitor):
+    @classmethod
+    def run(cls, op:Ops.Operator)->Dict[str,Any]:
+        visitor = cls()
+        accepting_op:Any = op
+        return accepting_op.accept(visitor)
+
+    def __init__(self):
+        super(DefaultsVisitor, self).__init__()
+
+    def visitIndividualOp(self, op:Ops.IndividualOp)->Dict[str,Any]:
+        return op.hyperparam_defaults()
+
+    visitPlannedIndividualOp = visitIndividualOp
+    visitTrainableIndividualOp = visitIndividualOp
+    visitTrainedIndividualOp = visitIndividualOp
+
+    def visitPipeline(self, op:Ops.PlannedPipeline)->Dict[str,Any]:
+
+        defaults_list:Iterable[Dict[str,Any]] = (
+            nest_HPparams(s.name(), s.accept(self)) for s in op.steps())
+
+        defaults:Dict[str,Any] = {}
+        for d in defaults_list:
+            defaults.update(d)
+
+        return defaults
+
+    visitPlannedPipeline = visitPipeline
+    visitTrainablePipeline = visitPipeline
+    visitTrainedPipeline = visitPipeline
+
+    def visitOperatorChoice(self, op:Ops.OperatorChoice)->Dict[str,Any]:
+
+        defaults_list:Iterable[Dict[str,Any]] = (
+            s.accept(self) for s in op.steps())
+
+        defaults : Dict[str,Any] = {}
+        for d in defaults_list:
+            defaults.update(d)
+
+        return defaults
+
+# Auxiliary functions
+V = TypeVar('V')
+
+def nest_HPparam(name:str, key:str):
+    return name + "__" + key
+
+def nest_HPparams(name:str, grid:Dict[str,V])->Dict[str,V]:
+    return {(nest_HPparam(name, k)):v for k, v in grid.items()}
+
+def nest_all_HPparams(name:str, grids:List[Dict[str,V]])->List[Dict[str,V]]:
+    """ Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
+        to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """
+    return [nest_HPparams(name, grid) for grid in grids]
+
+def unnest_HPparams(k:str)->List[str]:
+    return k.split("__")
