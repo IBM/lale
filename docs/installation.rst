@@ -8,11 +8,11 @@ environment, all you need is the following:
 
     pip install git+https://git@github.com/IBM/lale.git
 
-This will install the **Lale Core** setup target, which includes
+This will install the **Lale Core** setup target, which includes many
 operators, pipelines, and search space generation targeting hyperopt
 and scikit-learn's GridSearchCV.  It has a smaller set of dependencies
 than the **Lale Full** setup target, which also includes search space
-generation for SMAC, and some deep-learning operators. You can install
+generation for SMAC and some deep-learning operators. You can install
 it as follows:
 
 .. code:: Bash
@@ -42,7 +42,8 @@ For the **Lale Full** and **Lale Test** setup targets:
     cd lale
     pip install .[full,test]
 
-Now, you are ready to run some tests. For a quick check, start with:
+Now, you are ready to run some tests. For a quick check, do the
+following in the ``lale`` directory:
 
 .. code:: Bash
 
@@ -54,7 +55,8 @@ This should say something like::
     Ran 20 tests in 105.201s
     OK
 
-To run the full test suite, use:
+To run the full test suite, do the following in the ``lale``
+directory:
 
 .. code:: Bash
 
