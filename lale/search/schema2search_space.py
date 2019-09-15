@@ -19,7 +19,7 @@ import numpy
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
 
-from lale.schema_utils import Schema, getMinimum, getMaximum
+from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema
 from lale.search.search_space import *
 from lale.search.HP import search_space_to_str_for_comparison
 from lale.search.PGO import PGO, FrequencyDistribution, Freqs
@@ -97,7 +97,7 @@ def schemaToSearchSpaceHelper_( longName,
     # TODO: handle degenerate cases
     # right now, this handles only a very fixed form
 
-    if schema is False:
+    if is_false_schema(schema):
         return None
 
     if 'enum' in schema:
@@ -261,7 +261,7 @@ def schemaToSearchSpaceHelper(longName,
                               schema:Schema, 
                               relevantFields:Optional[Set[str]],
                               pgo_freqs:pgo_part=None)->Optional[SearchSpace]:
-    if schema is not False and not schema:
+    if not is_false_schema(schema) and not schema:
         return None
     else:
         return schemaToSearchSpaceHelper_(longName, longName, schema, relevantFields, pgo_freqs=pgo_freqs)
