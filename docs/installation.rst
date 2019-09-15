@@ -1,38 +1,61 @@
 Installation
 ============
 
-Lale supports Python 3.6+.  
+Lale is easy to install. Assuming you already have a Python 3.6+
+environment, all you need is the following:
 
-Install Lale Core
--------------------
+.. code:: Bash
 
-    Lale's core functionality such as core Lale operators, pipelines, lifecycle stages etc. is packaged into Lale Core and 
-    has a smaller set of dependencies than Lale full.
+    pip install git+https://git@github.com/IBM/lale.git
 
-    Install as::
+This will install the **Lale Core** setup target, which includes
+operators, pipelines, and search space generation targeting hyperopt
+and scikit-learn's GridSearchCV.  It has a smaller set of dependencies
+than the **Lale Full** setup target, which also includes search space
+generation for SMAC, and some deep-learning operators. You can install
+it as follows:
 
-        pip install git+https://git@github.com/IBM/lale.git
+.. code:: Bash
 
-    or install from source::
+    pip install git+https://git@github.com/IBM/lale.git#egg=lale[full]
 
-        git clone https://github.com/IBM/lale.git
-        cd lale
-        pip install .
+Now you should be ready to start using Lale.
 
+Installing from Source
+----------------------
 
-Install Lale Full
--------------------
+As an alternative to installing Lale directly from the online github
+repository, you can also first clone the repository and then install
+Lale from your local clone. For the **Lale Core** setup target:
 
-    The full set of functionality also includes Lale wrappers to some deep learning models, 
-    support for SMAC etc. 
+.. code:: Bash
 
-    Install as::
+    git clone https://github.com/IBM/lale.git
+    cd lale
+    pip install .
 
-        pip install git+https://git@github.com/IBM/lale.git#egg=lale[full]
+For the **Lale Full** and **Lale Test** setup targets:
 
-    or install from source::
+.. code:: Bash
 
-        git clone https://github.com/IBM/lale.git
-        cd lale
-        pip install .[full]
+    git clone https://github.com/IBM/lale.git
+    cd lale
+    pip install .[full,test]
 
+Now, you are ready to run some tests. For a quick check, start with:
+
+.. code:: Bash
+
+    export PYTHONPATH=`pwd`
+    python -m unittest test.test.TestLogisticRegression
+
+This should say something like::
+
+    Ran 20 tests in 105.201s
+    OK
+
+To run the full test suite, use:
+
+.. code:: Bash
+
+    make run_tests
