@@ -1,6 +1,7 @@
 # Lale
 
 [![Build Status](https://travis-ci.com/IBM/lale.svg?branch=master)](https://travis-ci.com/IBM/lale)
+[![Docs Status](https://readthedocs.org/projects/pip/badge/)](https://readthedocs.org/projects/pip/badge/)
 <br />
 <img src="docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
