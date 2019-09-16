@@ -19,7 +19,7 @@ import jsonschema
 from .schema_ranges import SchemaRange
 
 from typing import Any, Dict, Generic, List, Set, Iterable, Iterator, Optional, Tuple, TypeVar, Union
-from .schema_utils import Schema, getMinimum, getMaximum, forOptimizer
+from .schema_utils import Schema, getMinimum, getMaximum, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -129,8 +129,8 @@ def makeOneOf(schemas:List[Schema])->Schema:
     return makeSingleton_('oneOf', schemas)
 
 # This is a great function for a breakpoint :-)
-def impossible():
-    return False
+def impossible()->Schema:
+    return SFalse
 
 def enumValues(es:set_with_str_for_keys[Any], s:Schema)->set_with_str_for_keys[Any]:
     """Given an enumeration set and a schema, return all the consistent values of the enumeration."""
@@ -190,10 +190,10 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 logger.info(f"simplifyAll: skipping not for optimizer {s} (after simplification)")
                 s_not_for_optimizer.append(s)
                 continue
-            if s == {} or s is True:
+            if is_true_schema(s):
                 continue
-            if s is False:
-                return False
+            if is_false_schema(s):
+                return SFalse
             if 'allOf' in s:
                 s_all.extend(s['allOf'])
             elif 'anyOf' in s:
@@ -362,14 +362,14 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
             # if the actual range is empty, the entire schema is invalid
             return impossible()
         elif SchemaRange.is_empty2(s_range_for_optimizer, s_range):
-            number_schema['forOptimizer'] = False
+            number_schema['forOptimizer'] = SFalse
             logger.info(f"simplifyAll: [range]: range simplification determined that the required minimum for the optimizer is greater than the required maximum, so the range is being marked as not for the optimizer: {number_schema}")
         elif SchemaRange.is_empty2(s_range, s_range_for_optimizer):
-            number_schema['forOptimizer'] = False
+            number_schema['forOptimizer'] = SFalse
             logger.info(f"simplifyAll: [range]: range simplification determined that the required minimum is greater than the required maximum for the optimizer, so the range is being marked as not for the optimizer: {number_schema}")
         elif SchemaRange.is_empty2(s_range_for_optimizer, s_range_for_optimizer):
             logger.info(f"simplifyAll: [range]: range simplification determined that the required minimum for the optimizer is greater than the required maximum for the optimizer, so the range is being marked as not for the optimizer: {number_schema}")
-            number_schema['forOptimizer'] = False
+            number_schema['forOptimizer'] = SFalse
 
         s_typed = [number_schema]
 
@@ -427,7 +427,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         merged_props = {p:simplifyAll(s_props[p], False) for p in s_props}
         if s_required:
             for k in s_required:
-                if merged_props.get(k, False) == False:
+                if is_false_schema(merged_props.get(k, False)):
                     logger.info(f"simplifyAll: required key {k} is False, so the entire conjugation of schemas {schemas} is False")
                     return impossible()
 
@@ -521,9 +521,9 @@ def simplifyAny(schema:List[Schema], floatAny:bool)->Schema:
                 logger.info(f"simplifyAny: skipping not for optimizer {s} (after simplification)")
                 s_not_for_optimizer.append(s)
                 continue
-            if s == {} or s is True:
-                return True
-            if s is False:
+            if is_true_schema(s):
+                return STrue
+            if is_false_schema(s):
                 continue
             if 'anyOf' in s:
                 s_any.extend(s['anyOf'])
@@ -601,10 +601,10 @@ def simplify(schema:Schema, floatAny:bool)->Schema:
         Using this option may cause a combinatorial blowup in the size 
         of the schema
         """
-    if schema is False:
-        return False
-    if schema is True:
-        return True
+    if is_true_schema(schema):
+        return STrue
+    if is_false_schema(schema):
+        return SFalse
     if 'enum' in schema:
         # TODO: simplify the schemas by removing anything that does not validate
         # against the rest of the schema
@@ -629,16 +629,16 @@ def simplify(schema:Schema, floatAny:bool)->Schema:
         ## them out of the list
         for k,v in schema['properties'].items():
             s = simplify(v, floatAny)
-            if s is False and 'required' in schema and s in schema['required']:
+            if is_false_schema(s) and 'required' in schema and s in schema['required']:
                 logger.info(f"simplify: required key {k} is False, so the entire schema {schema} is False")
                 return impossible()
 
-            if s is not True and floatAny and 'anyOf' in s:
+            if (not is_true_schema(s)) and floatAny and 'anyOf' in s:
                 all_objs.append({'anyOf':[{'type':'object', 'properties':{k:vv}} for vv in s['anyOf']]})
                 # If we are disallowing additionalProperties, then we can't remove this property entirely
 
                 if not schema.get('additionalProperties', True):
-                    props[k] = True
+                    props[k] = STrue
             else:
                 props[k] = s
         schema2['properties'] = props
@@ -700,7 +700,7 @@ def narrowToRelevantFields(schema:Schema)->Schema:
 # Given a json schema, removes any elements marked as 'forOptimizer:false'
 # also does some basic simplifications
 def filterForOptimizer(schema:Schema)->Optional[Schema]:
-    if schema is None or schema is True or schema is False:
+    if schema is None or is_true_schema(schema) or is_false_schema(schema):
         return schema
     if not forOptimizer(schema):
         return None
