@@ -1,3 +1,7 @@
+View these notebooks with the
+[nbviewer](https://nbviewer.jupyter.org/github/IBM/lale/tree/master/examples/)
+web application.
+
 All notebooks in this folder are automatically tested by Travis.
 
 File naming conventions:
