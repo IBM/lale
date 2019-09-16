@@ -1,7 +1,7 @@
 # Lale
 
 [![Build Status](https://travis-ci.com/IBM/lale.svg?branch=master)](https://travis-ci.com/IBM/lale)
-[![Docs Status](https://readthedocs.org/projects/pip/badge/)](https://readthedocs.org/projects/pip/badge/)
+[![Documentation Status](https://readthedocs.org/projects/lale/badge/?version=latest)](https://lale.readthedocs.io/en/latest/?badge=latest)
 <br />
 <img src="docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
@@ -25,7 +25,7 @@ Lale is distributed under the terms of the Apache 2.0 License, see
 without warranties of any kind.
 
 * Technical overview [slides](talks/2019-0529-lale.pdf)
-* [Installation instructions](docs/installation.md)
+* [Installation instructions](docs/installation.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
 * Guide for wrapping [new operators](docs/new_operators.md)
 * arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
