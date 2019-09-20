@@ -326,6 +326,15 @@ def to_graphviz(lale_operator):
             if cls in cls2sym:
                 return cls2sym[cls]
         return name
+    def name2label(name):
+        sym = name2sym(name)
+        if sym.find('|') == -1:
+            l1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\n\2', sym)
+            l2 = re.sub('([a-z0-9])([A-Z])', r'\1-\n\2', l1)
+            label = re.sub('([^_\n-]_)([^_\n-])', r'\1-\n\2', l2)
+        else:
+            label = sym
+        return label
     #do the actual visualizations
     try:
         edges = jsn['edges']
@@ -349,7 +358,7 @@ def to_graphviz(lale_operator):
             'tooltip': make_tooltip(node)}
         if 'documentation_url' in node:
             attrs = {**attrs, 'URL': node['documentation_url']}
-        dot.node(str(i), name2sym(node['operator']), **attrs)
+        dot.node(str(i), name2label(node['operator']), **attrs)
     for edge in edges:
         dot.edge(str(edge[0]), str(edge[1]))
     return dot
