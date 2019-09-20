@@ -125,6 +125,8 @@ def ndarray_to_json(arr, subsample_array=True):
                 return float(arr[indices])
             elif arr.dtype == np.int64:
                 return int(arr[indices])
+            elif arr.dtype == np.bool:
+                return bool(arr[indices])
             elif arr.dtype.kind == 'U':
                 return str(arr[indices])
             elif arr.dtype.kind == 'O':
