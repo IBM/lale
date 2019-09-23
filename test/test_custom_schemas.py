@@ -214,8 +214,19 @@ class TestCustomSchema(unittest.TestCase):
         
     def test_add_constraint(self):
         init = self.sk_pca.hyperparam_schema()
+        init_expected = {'allOf': [
+            {   'type': 'object',
+                'properties': {
+                    'n_components': {'default': None},
+                    'copy': {'default': True},
+                    'whiten': {'default': False},
+                    'svd_solver': {'default': 'auto'},
+                    'tol': {'default': 0.0},
+                    'iterated_power': {'default': 'auto'},
+                    'random_state': {'default': None}}}]}
+        self.assertEqual(init, init_expected)
         expected = {'allOf': [
-            {'type': 'object', 'properties': {}},
+            init_expected['allOf'][0],
             {'anyOf': [
                 {'type': 'object',
                  'properties': {
@@ -266,5 +277,37 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(bar._schemas, XGBClassifier._schemas)
         self.assertEqual(baz._schemas, LGBMClassifier._schemas)
         
-        
-        
+
+class UnknownOp:
+    def __init__(self, n_neighbors=5, algorithm='auto'):
+        self._hyperparams = {
+            'n_neighbors': n_neighbors, 'algorithm': algorithm}
+    def fit(self, X, y):
+        self._sklearn_model = sklearn.neighbors.KNeighborsClassifier(
+            **self._hyperparams)
+    def predict(self, X):
+        return self._sklearn_model.predict(X)
+
+class TestWrapUnknownOps(unittest.TestCase):
+    def test_wrap_from_class(self):
+        from lale.operators import make_operator, PlannedIndividualOp
+        self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
+        Wrapped = make_operator(UnknownOp)
+        self.assertTrue(isinstance(Wrapped, PlannedIndividualOp))
+        expected_schema = {
+            'allOf': [{
+                'type': 'object',
+                'properties': {
+                    'n_neighbors': {'default': 5},
+                    'algorithm': {'default': 'auto'}}}]}
+        self.assertEqual(Wrapped.hyperparam_schema(), expected_schema)
+        instance = Wrapped(n_neighbors=3)
+        self.assertEqual(instance.hyperparams(), {'n_neighbors': 3})
+
+    def test_wrap_from_instance(self):
+        from lale.operators import make_operator, TrainableIndividualOp
+        self.assertFalse(isinstance(UnknownOp, TrainableIndividualOp))
+        instance = UnknownOp(n_neighbors=3)
+        self.assertFalse(isinstance(instance, TrainableIndividualOp))
+        wrapped = make_operator(instance)
+        self.assertTrue(isinstance(wrapped, TrainableIndividualOp))
