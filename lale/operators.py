@@ -314,25 +314,13 @@ class IndividualOp(MetaModelOperator):
         """
         self._impl = impl
         self._name = name
-        schemas = schemas if schemas is not None else helpers.get_lib_schema(impl)
+        if schemas is None:
+            schemas = helpers.get_lib_schema(impl)
         if schemas:
             self._schemas = schemas
         else:
-            self._schemas = {
-                '$schema': 'http://json-schema.org/draft-04/schema#',
-                'description':
-                'Combined schema for expected data and hyperparameters.',
-                'type': 'object',
-                'properties': {
-                    'input_fit': {},
-                    'input_predict': {},
-                    'output': {},
-                    'hyperparams': {
-                        'allOf': [
-                            {'type': 'object',
-                             'properties': {}}]
-                    }
-                }}
+            self._schemas = helpers.get_default_schema(impl)
+
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1
         enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
