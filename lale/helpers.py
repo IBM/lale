@@ -492,6 +492,36 @@ def get_lib_schema(impl):
         return m._combined_schemas
     except (ModuleNotFoundError, AttributeError):
         return None
+
+def signature_to_schema(sig):
+    sig_schema = {'type': 'object', 'properties': {}}
+    for name, param in sig.parameters.items():
+        ignored_kinds = [inspect.Parameter.VAR_POSITIONAL,
+                         inspect.Parameter.VAR_KEYWORD]
+        if param.kind not in ignored_kinds:
+            param_schema = {}
+            if param.default != inspect.Parameter.empty:
+                param_schema['default'] = param.default
+            sig_schema['properties'][name] = param_schema
+    return sig_schema
+
+def get_default_schema(impl):
+    if hasattr(impl, '__init__'):
+        sig = inspect.signature(impl.__init__)
+        arg_schemas = signature_to_schema(sig)
+    else:
+        arg_schemas = {'type': 'object', 'properties': {}}
+    return {
+        '$schema': 'http://json-schema.org/draft-04/schema#',
+        'description':
+        'Combined schema for expected data and hyperparameters.',
+        'type': 'object',
+        'properties': {
+            'input_fit': {},
+            'input_predict': {},
+            'output': {},
+            'hyperparams': {
+                'allOf': [arg_schemas]}}}
     
 logger = logging.getLogger(__name__)
 
