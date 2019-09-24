@@ -32,6 +32,9 @@ import copy
 from lale.schemas import Schema 
 import jsonschema
 import lale.pretty_print
+import logging
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 class MetaModel(ABC):
     """Abstract base class for LALE operators states: MetaModel, Planned, Trainable, and Trained.
@@ -1065,7 +1068,12 @@ def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
         class_name = impl.__name__
         module = importlib.import_module(module_name)
         class_ = getattr(module, class_name)
-        impl = class_() #This is always with the default values of hyper-parameters.
+        try:
+            impl = class_() #always with the default values of hyperparameters
+        except TypeError as e:
+            logger.debug(f'Constructor for {module_name}.{class_name} '
+                         f'threw exception {e}')
+            impl = class_.__new__(class_)
         if hasattr(impl, "fit"):
             operatorObj = PlannedIndividualOp(_name=name, _impl=impl, _schemas=schemas)
         else:
@@ -1076,6 +1084,8 @@ def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
             operatorObj = TrainableIndividualOp(_name=name, _impl=impl, _schemas=schemas)
         else:
             operatorObj = TrainedIndividualOp(_name=name, _impl=impl, _schemas=schemas)
+        if hasattr(impl, 'get_params'):
+            operatorObj._hyperparams = {**impl.get_params()}
     all_available_operators.append(operatorObj)
     return operatorObj
 

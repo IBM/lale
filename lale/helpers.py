@@ -297,6 +297,7 @@ def to_graphviz(lale_operator):
     jsn = lale_operator.to_json()
     dot = graphviz.Digraph()
     dot.attr('graph', rankdir='LR')
+    dot.attr('node', fontsize='11', margin='0.06,0.03')
     if isinstance(lale_operator, Pipeline):
         nodes = jsn['steps']
     else:
@@ -331,7 +332,7 @@ def to_graphviz(lale_operator):
         if sym.find('|') == -1:
             l1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\n\2', sym)
             l2 = re.sub('([a-z0-9])([A-Z])', r'\1-\n\2', l1)
-            label = re.sub('([^_\n-]_)([^_\n-])', r'\1-\n\2', l2)
+            label = re.sub(r'([^_\n-]_)([^_\n-])', r'\1-\n\2', l2)
         else:
             label = sym
         return label
@@ -345,7 +346,10 @@ def to_graphviz(lale_operator):
         if 'hyperparams' in node:
             hps = node['hyperparams']
             if hps:
-                return f'{sym}({hyperparams_to_string(hps)})'
+                result = f'{sym}({hyperparams_to_string(hps)})'
+                if len(result) > 255: #too long for graphviz
+                    result = result[:252] + '...'
+                return result
         return sym
     for i, node in enumerate(nodes):
         state2color = {
@@ -527,14 +531,18 @@ logger = logging.getLogger(__name__)
 
 def wrap_imported_operators():
     import lale.lib
-    from .operators import  make_operator
+    from lale.operators import Operator, make_operator
     calling_frame = inspect.stack()[1][0]
-    g = calling_frame.f_globals
-    for name in (n for n in g if inspect.isclass(g[n])):
-        m = g[name].__module__.split('.')[0]
-        if m in [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]:
-            logger.info(f'Lale:Wrapped operator:{name}')
-            g[name] = make_operator(impl=g[name], name=name)
+    symtab = calling_frame.f_globals
+    lib_modules = [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]
+    for name, impl in symtab.items():
+        if inspect.isclass(impl) and not isinstance(impl, Operator):
+            module = impl.__module__.split('.')[0]
+            looks_like_op = hasattr(impl, 'fit') and (
+                hasattr(impl, 'predict') or hasattr(impl, 'transform'))
+            if module in lib_modules or looks_like_op:
+                logger.info(f'Lale:Wrapped operator:{name}')
+                symtab[name] = make_operator(impl=impl, name=name)
 
 class val_wrapper():
     """This is used to wrap values that cause problems for hyper-optimizer backends
