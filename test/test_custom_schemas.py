@@ -20,6 +20,7 @@ import lale.schemas as schemas
 from sklearn.decomposition import PCA as foo
 from xgboost import XGBClassifier as bar
 from lightgbm import LGBMClassifier as baz
+from test.util import UnknownOp
 
 
 class TestCustomSchema(unittest.TestCase):
@@ -269,45 +270,62 @@ class TestCustomSchema(unittest.TestCase):
         self.assertNotEqual(self.ll_pca._schemas, self.sk_pca._schemas)
         
     def test_wrap_imported_operators(self):
-        from lale.lib.sklearn import PCA
-        from lale.lib.xgboost import XGBClassifier
-        from lale.lib.lightgbm import LGBMClassifier
-        lale.wrap_imported_operators()
-        self.assertEqual(foo._schemas, PCA._schemas)
-        self.assertEqual(bar._schemas, XGBClassifier._schemas)
-        self.assertEqual(baz._schemas, LGBMClassifier._schemas)
+        old_globals = {**globals()}
+        try:
+            from lale.lib.sklearn import PCA
+            from lale.lib.xgboost import XGBClassifier
+            from lale.lib.lightgbm import LGBMClassifier
+            lale.wrap_imported_operators()
+            self.assertEqual(foo._schemas, PCA._schemas)
+            self.assertEqual(bar._schemas, XGBClassifier._schemas)
+            self.assertEqual(baz._schemas, LGBMClassifier._schemas)
+        finally:
+            for sym, obj in old_globals.items():
+                globals()[sym] = obj
         
 
-class UnknownOp:
-    def __init__(self, n_neighbors=5, algorithm='auto'):
-        self._hyperparams = {
-            'n_neighbors': n_neighbors, 'algorithm': algorithm}
-    def fit(self, X, y):
-        self._sklearn_model = sklearn.neighbors.KNeighborsClassifier(
-            **self._hyperparams)
-    def predict(self, X):
-        return self._sklearn_model.predict(X)
-
 class TestWrapUnknownOps(unittest.TestCase):
+    expected_schema = {
+        'allOf': [{
+            'type': 'object',
+            'properties': {
+                'n_neighbors': {'default': 5},
+                'algorithm': {'default': 'auto'}}}]}
+
     def test_wrap_from_class(self):
         from lale.operators import make_operator, PlannedIndividualOp
         self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
         Wrapped = make_operator(UnknownOp)
         self.assertTrue(isinstance(Wrapped, PlannedIndividualOp))
-        expected_schema = {
-            'allOf': [{
-                'type': 'object',
-                'properties': {
-                    'n_neighbors': {'default': 5},
-                    'algorithm': {'default': 'auto'}}}]}
-        self.assertEqual(Wrapped.hyperparam_schema(), expected_schema)
+        self.assertEqual(Wrapped.hyperparam_schema(), self.expected_schema)
         instance = Wrapped(n_neighbors=3)
         self.assertEqual(instance.hyperparams(), {'n_neighbors': 3})
 
+    def test_wrapped_from_import(self):
+        old_globals = {**globals()}
+        try:
+            from lale.operators import make_operator, PlannedIndividualOp
+            self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
+            helpers.wrap_imported_operators()
+            self.assertTrue(isinstance(UnknownOp, PlannedIndividualOp))
+            self.assertEqual(UnknownOp.hyperparam_schema(),
+                             self.expected_schema)
+            instance = UnknownOp(n_neighbors=3)
+            self.assertEqual(instance.hyperparams(), {'n_neighbors': 3})
+        finally:
+            for sym, obj in old_globals.items():
+                globals()[sym] = obj
+
     def test_wrap_from_instance(self):
         from lale.operators import make_operator, TrainableIndividualOp
+        from lale.sklearn_compat import make_sklearn_compat
+        from sklearn.base import clone
         self.assertFalse(isinstance(UnknownOp, TrainableIndividualOp))
         instance = UnknownOp(n_neighbors=3)
         self.assertFalse(isinstance(instance, TrainableIndividualOp))
         wrapped = make_operator(instance)
         self.assertTrue(isinstance(wrapped, TrainableIndividualOp))
+        self.assertEqual(wrapped.hyperparams(), {'n_neighbors': 3})
+        cloned = clone(make_sklearn_compat(wrapped)).to_lale()
+        self.assertTrue(isinstance(cloned, TrainableIndividualOp))
+        self.assertEqual(cloned.hyperparams(), {'n_neighbors': 3})
