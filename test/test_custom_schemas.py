@@ -20,7 +20,7 @@ import lale.schemas as schemas
 from sklearn.decomposition import PCA as foo
 from xgboost import XGBClassifier as bar
 from lightgbm import LGBMClassifier as baz
-from test.util import UnknownOp
+from test.mock_module import UnknownOp
 
 
 class TestCustomSchema(unittest.TestCase):
