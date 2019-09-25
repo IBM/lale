@@ -11,15 +11,17 @@ import lale.helpers
 logging.basicConfig(level=logging.INFO)
 
 
-class UsePretrainedEncoderImpl(object):
+class USEPretrainedEncoderImpl(object):
     def __init__(self,
-                 url='/tmp/tfhub/1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47',
+                 model_path=None,
                  batch_size=32):
-
-        if os.path.exists(url):
-            self.url = url
-        else:
-            os.environ['TFHUB_CACHE_DIR'] = '/tmp/tfhub'
+        self.resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
+        if model_path is None:
+            model_path = os.path.join('pretrained_USE', '1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47')
+        if os.path.exists(os.path.join(self.resources_dir, model_path)):
+            self.url = os.path.join(self.resources_dir, model_path)
+        else:            
+            os.environ['TFHUB_CACHE_DIR'] = os.path.join(self.resources_dir, 'pretrained_USE')
             self.url = "https://tfhub.dev/google/universal-sentence-encoder/2"
 
         # load the use model from saved location or tensorflow hub
@@ -31,19 +33,19 @@ class UsePretrainedEncoderImpl(object):
         self.sess.run([tf.global_variables_initializer(),
                        tf.tables_initializer()])
 
-    def fit(self, X, Y, model_dir='./fine_tuned_use'):
+    def fit(self, X, y, model_dir=None):
         """
-        method for fine-tune the universal sentence encoder using text classification task;
+        method for fine-tuning the universal sentence encoder using text classification task;
         fine-tune the current model and save the fine_tuned model for later application
         Parameters
         ----------
         X : list of strings, input corpus for fine-tune use
-        Y : list of integers, input label for fine-tune use
+        y : list of integers, input label for fine-tune use
         model_dir: directory to save the fine_tuned model for later use
         Returns
         -------
         """
-        Y = np.array(Y).reshape(-1)
+        Y = np.array(y).reshape(-1)
         num_classes = len(np.unique(Y))
         Y = np.eye(num_classes)[Y]
 
@@ -89,22 +91,26 @@ class UsePretrainedEncoderImpl(object):
                 self.sess.run(train_opt, feed_dict={X_batch: x_batch, Y_batch: y_batch})
 
         # save model
+        if model_dir is None:
+            model_dir = os.path.join(self.resources_dir, 'fine_tuned_USE')
+        
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
         self.embed.export(model_dir, session=self.sess)
 
-    def transform(self, x):
+        return self
+
+    def transform(self, X):
         """
         method for encoding strings into floating point arrays using universal sentence encoder
         Parameters
         ----------
         X : list of strings, input corpus for fine-tune use
-        Y : list of integers, input label for fine-tune use
-        model_dir: directory to save the fine_tuned model for later use
         Returns
         -------
+
         """
-        sentence_embedding = self.embed(x)
+        sentence_embedding = self.embed(X)
         transformed_x = self.sess.run(sentence_embedding)
         return transformed_x
 
@@ -113,11 +119,11 @@ _input_schema_fit = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training.',
     'type': 'object',
-    'required': ['X'],
+    'required': ['X', 'y'],
     'additionalProperties': False,
     'properties': {
         'X': {
-            'description': 'Features',
+            'description': 'Input Text',
             'anyOf': [
                 {'type': 'array',
                  'items': {'type': 'string'}},
@@ -132,6 +138,24 @@ _input_schema_fit = {
                  'items': {'type': 'number'}}
             ]
         }
+    }}
+
+_input_schema_predict = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Input data schema for training.',
+    'type': 'object',
+    'required': ['X'],
+    'additionalProperties': False,
+    'properties': {
+        'X': {
+            'description': 'Input Text',
+            'anyOf': [
+                {'type': 'array',
+                 'items': {'type': 'string'}},
+                {'type': 'array',
+                 'items': {
+                     'type': 'array', 'minItems': 1, 'maxItems': 1,
+                     'items': {'type': 'string'}}}]}
     }}
 
 _output_schema = {
@@ -172,10 +196,11 @@ _combined_schemas = {
         'post': ['embedding']},
     'properties': {
         'input_fit': _input_schema_fit,
+        'input_predict': _input_schema_predict,
         'output': _output_schema,
         'hyperparams': _hyperparams_schema}}
 
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(_combined_schemas)
 
-UsePretrainedEncoder = make_operator(UsePretrainedEncoderImpl, _combined_schemas)
+USEPretrainedEncoder = make_operator(USEPretrainedEncoderImpl, _combined_schemas)
