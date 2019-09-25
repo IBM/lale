@@ -169,6 +169,14 @@ class Trained(Trainable):
             The type of X is as per input_predict schema of the operator.
         """
         pass
+
+    @abstractmethod
+    def is_frozen_trained(self):
+        pass
+
+    @abstractmethod
+    def freeze_trained(self):
+        pass
 	
 class Operator(metaclass=AbstractVisitorMeta):
     """Abstract base class for a LALE operator.
@@ -1045,7 +1053,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return hasattr(self._impl, 'transform')
 
     def fit(self, X, y = None, **fit_params)->TrainedOperator:
-        if hasattr(self._impl, "fit"):
+        if hasattr(self._impl, "fit") and not self.is_frozen_trained():
             filtered_fit_params = fixup_hyperparams_dict(fit_params)
             return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
         else:
@@ -1083,6 +1091,17 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         else:
             raise ValueError("The operator {} does not support predict_proba".format(self.name()))
         helpers.validate_schema(result, self.output_schema_predict_proba())
+        return result
+
+    def is_frozen_trained(self):
+        return hasattr(self, '_frozen_trained')
+
+    def freeze_trained(self):
+        if self.is_frozen_trained():
+            return self
+        result = copy.deepcopy(self)
+        result._frozen_trained = True
+        assert result.is_frozen_trained()
         return result
 
     def to_json(self):
@@ -1500,7 +1519,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             frozen_steps.append(frozen)
         frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
         result = TrainablePipeline(frozen_steps, frozen_edges, ordered=True)
-        assert result.is_frozen_trainable(), str(result.free_hyperparams())
+        assert result.is_frozen_trainable()
         return result
 
     def to_json(self):
@@ -1643,6 +1662,24 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         output = operator.predict(X = inputs)
             outputs[operator] = output
         return outputs[self._steps[-1]]
+
+    def is_frozen_trained(self):
+        for step in self.steps():
+            if not step.is_frozen_trained():
+                return False
+        return True
+
+    def freeze_trained(self):
+        frozen_steps = []
+        frozen_map = {}
+        for liquid in self._steps:
+            frozen = liquid.freeze_trained()
+            frozen_map[liquid] = frozen
+            frozen_steps.append(frozen)
+        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
+        result = TrainedPipeline(frozen_steps, frozen_edges, ordered=True)
+        assert result.is_frozen_trained()
+        return result
 
     def to_json(self):
         super_json = super(TrainablePipeline, self).to_json()

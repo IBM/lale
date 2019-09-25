@@ -1454,7 +1454,29 @@ class TestFreeze(unittest.TestCase):
         self.assertTrue(frozen.is_frozen_trainable())
         frozen_grid = get_grid_search_parameter_grids(frozen)
         self.assertEqual(len(frozen_grid), 1)
-        
+
+    def test_individual_op_freeze_trained(self):
+        trainable = KNeighborsClassifier(n_neighbors=1)
+        X = [[0], [1], [2]]
+        y_old = [0, 0, 1]
+        y_new = [1, 0, 0]
+        liquid_old = trainable.fit(X, y_old)
+        self.assertEqual(list(liquid_old.predict(X)), y_old)
+        liquid_new = liquid_old.fit(X, y_new)
+        self.assertEqual(list(liquid_new.predict(X)), y_new)
+        frozen_old = trainable.fit(X, y_old).freeze_trained()
+        self.assertFalse(liquid_old.is_frozen_trained())
+        self.assertTrue(frozen_old.is_frozen_trained())
+        self.assertEqual(list(frozen_old.predict(X)), y_old)
+        frozen_new = frozen_old.fit(X, y_new)
+        self.assertEqual(list(frozen_new.predict(X)), y_old)
+
+    def test_pipeline_freeze_trained(self):
+        trainable = MinMaxScaler() >> LogisticRegression()
+        liquid = trainable.fit([[0], [1], [2]], [0, 0, 1])
+        frozen = liquid.freeze_trained()
+        self.assertFalse(liquid.is_frozen_trained())
+        self.assertTrue(frozen.is_frozen_trained())
 
 if __name__ == '__main__':
     unittest.main()
