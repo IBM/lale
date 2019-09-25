@@ -125,6 +125,8 @@ def ndarray_to_json(arr, subsample_array=True):
                 return float(arr[indices])
             elif arr.dtype == np.int64:
                 return int(arr[indices])
+            elif arr.dtype == np.bool:
+                return bool(arr[indices])
             elif arr.dtype.kind == 'U':
                 return str(arr[indices])
             elif arr.dtype.kind == 'O':
@@ -488,14 +490,19 @@ def caml_to_snake(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 def get_lib_schema(impl):
+    module_name = impl.__module__.split('.')[0]
+    class_name = caml_to_snake(impl.__class__.__name__)
     try:
-        module_name = impl.__module__.split('.')[0]
-        class_name = caml_to_snake(impl.__class__.__name__)
         lib_name = '.'.join(['lale.lib', module_name, class_name])
         m = importlib.import_module(lib_name)
         return m._combined_schemas
     except (ModuleNotFoundError, AttributeError):
-        return None
+        try:
+            lib_name = '.'.join(['lale.lib.autogen', class_name])
+            m = importlib.import_module(lib_name)
+            return m._combined_schemas
+        except:
+            return None
 
 def signature_to_schema(sig):
     sig_schema = {'type': 'object', 'properties': {}}
