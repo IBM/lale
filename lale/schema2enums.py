@@ -184,9 +184,9 @@ def addDictAsFields(obj:Any, d:Dict[str, Any])->None:
         return
     for k, v in d.items():
         if k == "":
-            logger.warning(f"There was a top level enumeration specified, so it is not being added to {obj.__qualname__}")
+            logger.warning(f"There was a top level enumeration specified, so it is not being added to {obj._name}")
         elif hasattr(obj, k):
-            logger.error(f"The object {obj.__qualname__} already has the field {k}.  This conflicts with our attempt at adding that key as an enumeration field")
+            logger.error(f"The object {obj._name} already has the field {k}.  This conflicts with our attempt at adding that key as an enumeration field")
         else:
             setattr(obj, k, v) 
 
