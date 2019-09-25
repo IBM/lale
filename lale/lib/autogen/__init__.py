@@ -73,7 +73,6 @@ from .additive_chi2_sampler import AdditiveChi2Sampler
 from .bernoulli_rbm import BernoulliRBM
 from .binarizer import Binarizer
 from .birch import Birch
-from .cca import CCA
 from .dictionary_learning import DictionaryLearning
 from .factor_analysis import FactorAnalysis
 from .fast_ica import FastICA
@@ -87,7 +86,6 @@ from .kernel_pca import KernelPCA
 from .label_binarizer import LabelBinarizer
 from .label_encoder import LabelEncoder
 from .latent_dirichlet_allocation import LatentDirichletAllocation
-from .linear_discriminant_analysis import LinearDiscriminantAnalysis
 from .locally_linear_embedding import LocallyLinearEmbedding
 from .max_abs_scaler import MaxAbsScaler
 from .min_max_scaler import MinMaxScaler
@@ -102,8 +100,6 @@ from .nystroem import Nystroem
 from .one_hot_encoder import OneHotEncoder
 from .ordinal_encoder import OrdinalEncoder
 from .pca import PCA
-from .pls_canonical import PLSCanonical
-from .pls_regression import PLSRegression
 from .plssvd import PLSSVD
 from .polynomial_features import PolynomialFeatures
 from .power_transformer import PowerTransformer
