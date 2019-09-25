@@ -20,6 +20,7 @@ import lale.schemas as schemas
 from sklearn.decomposition import PCA as foo
 from xgboost import XGBClassifier as bar
 from lightgbm import LGBMClassifier as baz
+from sklearn.linear_model.least_angle import Lars as foobar
 from test.mock_module import UnknownOp
 
 
@@ -275,10 +276,12 @@ class TestCustomSchema(unittest.TestCase):
             from lale.lib.sklearn import PCA
             from lale.lib.xgboost import XGBClassifier
             from lale.lib.lightgbm import LGBMClassifier
+            from lale.lib.autogen import Lars
             lale.wrap_imported_operators()
             self.assertEqual(foo._schemas, PCA._schemas)
             self.assertEqual(bar._schemas, XGBClassifier._schemas)
             self.assertEqual(baz._schemas, LGBMClassifier._schemas)
+            self.assertEqual(foobar._schemas, Lars._schemas)
         finally:
             for sym, obj in old_globals.items():
                 globals()[sym] = obj
