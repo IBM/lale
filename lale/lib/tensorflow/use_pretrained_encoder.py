@@ -1,26 +1,55 @@
+# Copyright 2019 IBM Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import os
 import shutil
 import logging
 import random
-from lale.operators import make_operator
 import tensorflow_hub as hub
 import tensorflow as tf
 import numpy as np
+from lale.operators import make_operator
 import lale.helpers
 
 logging.basicConfig(level=logging.INFO)
 
 
 class USEPretrainedEncoderImpl(object):
+    """
+    USEPretrainedEncoderImpl is a module that allows simple consumption and fine-tuning of the
+    DAN version of Universal Sentence Encoder: https://tfhub.dev/google/universal-sentence-encoder/2
+
+    Parameters
+    ----------
+    model_path: string, (default=None), path to save the model
+
+    batch_size: int, (default=32), batch size of fine-tuning the model
+
+    References
+    ----------
+    Daniel Cer, et al. Universal Sentence Encoder. arXiv:1803.11175, 2018
+    """
     def __init__(self,
                  model_path=None,
                  batch_size=32):
         self.resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
+
         if model_path is None:
             model_path = os.path.join('pretrained_USE', '1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47')
         if os.path.exists(os.path.join(self.resources_dir, model_path)):
             self.url = os.path.join(self.resources_dir, model_path)
-        else:            
+        else:
             os.environ['TFHUB_CACHE_DIR'] = os.path.join(self.resources_dir, 'pretrained_USE')
             self.url = "https://tfhub.dev/google/universal-sentence-encoder/2"
 
@@ -37,13 +66,18 @@ class USEPretrainedEncoderImpl(object):
         """
         method for fine-tuning the universal sentence encoder using text classification task;
         fine-tune the current model and save the fine_tuned model for later application
+
         Parameters
         ----------
-        X : list of strings, input corpus for fine-tune use
-        y : list of integers, input label for fine-tune use
-        model_dir: directory to save the fine_tuned model for later use
+        X : list of str, input corpus for fine-tune use
+
+        y : list of int, input label for fine-tune use
+
+        model_dir: str, (default = None), directory to save the fine_tuned model for later use
+
         Returns
         -------
+
         """
         Y = np.array(y).reshape(-1)
         num_classes = len(np.unique(Y))
@@ -93,22 +127,23 @@ class USEPretrainedEncoderImpl(object):
         # save model
         if model_dir is None:
             model_dir = os.path.join(self.resources_dir, 'fine_tuned_USE')
-        
+
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
         self.embed.export(model_dir, session=self.sess)
 
         return self
 
-    def transform(self, X):
+    def transform(self, X: [str]):
         """
         method for encoding strings into floating point arrays using universal sentence encoder
         Parameters
         ----------
         X : list of strings, input corpus for fine-tune use
+
         Returns
         -------
-
+        transformed_x: 2d-array, shape [n_samples, 512], sentence embedding for downstream task
         """
         sentence_embedding = self.embed(X)
         transformed_x = self.sess.run(sentence_embedding)
