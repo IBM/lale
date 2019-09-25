@@ -123,6 +123,13 @@ class Trainable(Planned):
         """
         pass
 
+    @abstractmethod
+    def is_frozen_trainable(self):
+        pass
+
+    @abstractmethod
+    def freeze_trainable(self):
+        pass
 
 class Trained(Trainable):
     """Base class to tag an operator's state as Trained.
@@ -913,6 +920,32 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
 
+    def free_hyperparams(self):
+        hyperparam_schema = self.hyperparam_schema()
+        if 'allOf' in hyperparam_schema and \
+           'relevantToOptimizer' in hyperparam_schema['allOf'][0]:
+            to_bind = hyperparam_schema['allOf'][0]['relevantToOptimizer']
+        else:
+            to_bind = []
+        if self._hyperparams:
+            bound = self._hyperparams.keys()
+        else:
+            bound = []
+        return set(to_bind) - set(bound)
+
+    def is_frozen_trainable(self):
+        free = self.free_hyperparams()
+        return len(free) == 0
+
+    def freeze_trainable(self):
+        old_bindings = self._hyperparams if self._hyperparams else {}
+        free = self.free_hyperparams()
+        defaults = self.hyperparam_defaults()
+        new_bindings = {name: defaults[name] for name in free}
+        bindings = {**old_bindings, **new_bindings}
+        result = self._configure(**bindings)
+        assert result.is_frozen_trainable(), str(result.free_hyperparams())
+        return result
 
     def get_params(self, deep:bool=True)->Dict[str,Any]:
         """Get parameters for this operator. 
@@ -1451,6 +1484,24 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             return self.__trained.predict_proba(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
+
+    def is_frozen_trainable(self):
+        for step in self.steps():
+            if not step.is_frozen_trainable():
+                return False
+        return True
+
+    def freeze_trainable(self):
+        frozen_steps = []
+        frozen_map = {}
+        for liquid in self._steps:
+            frozen = liquid.freeze_trainable()
+            frozen_map[liquid] = frozen
+            frozen_steps.append(frozen)
+        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
+        result = TrainablePipeline(frozen_steps, frozen_edges, ordered=True)
+        assert result.is_frozen_trainable(), str(result.free_hyperparams())
+        return result
 
     def to_json(self):
         super_json = super(PlannedPipeline, self).to_json()
