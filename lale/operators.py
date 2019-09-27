@@ -712,7 +712,7 @@ class IndividualOp(MetaModelOperator):
                 assert False, "Unkown method or parameter."
         return op
 
-    def validate(self, X, y=None):
+    def validate_schema(self, X, y=None):
         if not lale.helpers.is_schema(X):
             X = lale.datasets.data_schemas.to_schema(X)
         obj_X = {

@@ -1399,50 +1399,50 @@ class TestDatasetSchemas(unittest.TestCase):
         check(s_out_XXX, 12, {'type': 'number'})
 
     def test_validate_lr_irisArr(self):
-        LogisticRegression.validate(self._irisArr['X'], self._irisArr['y'])
+        LogisticRegression.validate_schema(self._irisArr['X'], self._irisArr['y'])
 
     def test_validate_lr_irisDf(self):
-        LogisticRegression.validate(self._irisDf['X'], self._irisDf['y'])
+        LogisticRegression.validate_schema(self._irisDf['X'], self._irisDf['y'])
 
     def test_validate_lr_creditG(self):
         with self.assertRaises(SubschemaError):
-            LogisticRegression.validate(self._creditG['X'],self._creditG['y'])
+            LogisticRegression.validate_schema(self._creditG['X'],self._creditG['y'])
 
     def test_validate_lr_drugRev(self):
         with self.assertRaises(SubschemaError):
-            LogisticRegression.validate(self._drugRev['X'],self._drugRev['y'])
+            LogisticRegression.validate_schema(self._drugRev['X'],self._drugRev['y'])
 
     def test_validate_project_irisArr(self):
         from lale.lib.lale import Project
-        Project.validate(self._irisArr['X'],self._irisArr['y'])
+        Project.validate_schema(self._irisArr['X'],self._irisArr['y'])
 
     def test_validate_project_irisDf(self):
         from lale.lib.lale import Project
-        Project.validate(self._irisDf['X'],self._irisDf['y'])
+        Project.validate_schema(self._irisDf['X'],self._irisDf['y'])
 
     def test_validate_project_creditG(self):
         from lale.lib.lale import Project
-        Project.validate(self._creditG['X'], self._creditG['y'])
+        Project.validate_schema(self._creditG['X'], self._creditG['y'])
 
     def test_validate_project_drugRev(self):
         from lale.lib.lale import Project
-        Project.validate(self._drugRev['X'],self._drugRev['y'])
+        Project.validate_schema(self._drugRev['X'],self._drugRev['y'])
 
     def test_validate_tfidf_irisArr(self):
         with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate(self._irisArr['X'],self._irisArr['y'])
+            TfidfVectorizer.validate_schema(self._irisArr['X'],self._irisArr['y'])
 
     def test_validate_tfidf_irisDf(self):
         with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate(self._irisDf['X'],self._irisDf['y'])
+            TfidfVectorizer.validate_schema(self._irisDf['X'],self._irisDf['y'])
 
     def test_validate_tfidf_creditG(self):
         with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate(self._creditG['X'], self._creditG['y'])
+            TfidfVectorizer.validate_schema(self._creditG['X'], self._creditG['y'])
 
     def test_validate_tfidf_drugRev(self):
         with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate(self._drugRev['X'],self._drugRev['y'])
+            TfidfVectorizer.validate_schema(self._drugRev['X'],self._drugRev['y'])
 
 class TestErrorMessages(unittest.TestCase):
     def test_wrong_cont(self):
