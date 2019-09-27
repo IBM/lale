@@ -291,14 +291,14 @@ def create_individual_op_using_reflection(class_name, operator_name, param_dict)
             instance = class_(**param_dict)
     return instance
 
-def to_graphviz(lale_operator):
+def to_graphviz(lale_operator, **dot_graph_attr):
     from lale.operators import Operator, Pipeline
     from lale.pretty_print import hyperparams_to_string
     if not isinstance(lale_operator, Operator):
         raise ValueError("The input to to_graphviz needs to be a valid LALE operator.")
     jsn = lale_operator.to_json()
     dot = graphviz.Digraph()
-    dot.attr('graph', rankdir='LR')
+    dot.attr('graph', {**dot_graph_attr, 'rankdir': 'LR'})
     dot.attr('node', fontsize='11', margin='0.06,0.03')
     if isinstance(lale_operator, Pipeline):
         nodes = jsn['steps']
