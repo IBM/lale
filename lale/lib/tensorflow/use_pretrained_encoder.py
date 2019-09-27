@@ -134,7 +134,7 @@ class USEPretrainedEncoderImpl(object):
 
         return self
 
-    def transform(self, X: [str]):
+    def transform(self, X):
         """
         method for encoding strings into floating point arrays using universal sentence encoder
         Parameters
