@@ -125,6 +125,8 @@ def ndarray_to_json(arr, subsample_array=True):
                 return float(arr[indices])
             elif arr.dtype == np.int64:
                 return int(arr[indices])
+            elif arr.dtype == np.bool:
+                return bool(arr[indices])
             elif arr.dtype.kind == 'U':
                 return str(arr[indices])
             elif arr.dtype.kind == 'O':
@@ -297,6 +299,7 @@ def to_graphviz(lale_operator):
     jsn = lale_operator.to_json()
     dot = graphviz.Digraph()
     dot.attr('graph', rankdir='LR')
+    dot.attr('node', fontsize='11', margin='0.06,0.03')
     if isinstance(lale_operator, Pipeline):
         nodes = jsn['steps']
     else:
@@ -331,7 +334,7 @@ def to_graphviz(lale_operator):
         if sym.find('|') == -1:
             l1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\n\2', sym)
             l2 = re.sub('([a-z0-9])([A-Z])', r'\1-\n\2', l1)
-            label = re.sub('([^_\n-]_)([^_\n-])', r'\1-\n\2', l2)
+            label = re.sub(r'([^_\n-]_)([^_\n-])', r'\1-\n\2', l2)
         else:
             label = sym
         return label
@@ -345,7 +348,10 @@ def to_graphviz(lale_operator):
         if 'hyperparams' in node:
             hps = node['hyperparams']
             if hps:
-                return f'{sym}({hyperparams_to_string(hps)})'
+                result = f'{sym}({hyperparams_to_string(hps)})'
+                if len(result) > 255: #too long for graphviz
+                    result = result[:252] + '...'
+                return result
         return sym
     for i, node in enumerate(nodes):
         state2color = {
@@ -484,27 +490,66 @@ def caml_to_snake(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 def get_lib_schema(impl):
+    module_name = impl.__module__.split('.')[0]
+    class_name = caml_to_snake(impl.__class__.__name__)
     try:
-        module_name = impl.__module__.split('.')[0]
-        class_name = caml_to_snake(impl.__class__.__name__)
         lib_name = '.'.join(['lale.lib', module_name, class_name])
         m = importlib.import_module(lib_name)
         return m._combined_schemas
     except (ModuleNotFoundError, AttributeError):
-        return None
+        try:
+            lib_name = '.'.join(['lale.lib.autogen', class_name])
+            m = importlib.import_module(lib_name)
+            return m._combined_schemas
+        except:
+            return None
+
+def signature_to_schema(sig):
+    sig_schema = {'type': 'object', 'properties': {}}
+    for name, param in sig.parameters.items():
+        ignored_kinds = [inspect.Parameter.VAR_POSITIONAL,
+                         inspect.Parameter.VAR_KEYWORD]
+        if param.kind not in ignored_kinds:
+            param_schema = {}
+            if param.default != inspect.Parameter.empty:
+                param_schema['default'] = param.default
+            sig_schema['properties'][name] = param_schema
+    return sig_schema
+
+def get_default_schema(impl):
+    if hasattr(impl, '__init__'):
+        sig = inspect.signature(impl.__init__)
+        arg_schemas = signature_to_schema(sig)
+    else:
+        arg_schemas = {'type': 'object', 'properties': {}}
+    return {
+        '$schema': 'http://json-schema.org/draft-04/schema#',
+        'description':
+        'Combined schema for expected data and hyperparameters.',
+        'type': 'object',
+        'properties': {
+            'input_fit': {},
+            'input_predict': {},
+            'output': {},
+            'hyperparams': {
+                'allOf': [arg_schemas]}}}
     
 logger = logging.getLogger(__name__)
 
 def wrap_imported_operators():
     import lale.lib
-    from .operators import  make_operator
+    from lale.operators import Operator, make_operator
     calling_frame = inspect.stack()[1][0]
-    g = calling_frame.f_globals
-    for name in (n for n in g if inspect.isclass(g[n])):
-        m = g[name].__module__.split('.')[0]
-        if m in [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]:
-            logger.info(f'Lale:Wrapped operator:{name}')
-            g[name] = make_operator(impl=g[name], name=name)
+    symtab = calling_frame.f_globals
+    lib_modules = [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]
+    for name, impl in symtab.items():
+        if inspect.isclass(impl) and not isinstance(impl, Operator):
+            module = impl.__module__.split('.')[0]
+            looks_like_op = hasattr(impl, 'fit') and (
+                hasattr(impl, 'predict') or hasattr(impl, 'transform'))
+            if module in lib_modules or looks_like_op:
+                logger.info(f'Lale:Wrapped operator:{name}')
+                symtab[name] = make_operator(impl=impl, name=name)
 
 class val_wrapper():
     """This is used to wrap values that cause problems for hyper-optimizer backends

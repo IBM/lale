@@ -32,6 +32,9 @@ import copy
 from lale.schemas import Schema 
 import jsonschema
 import lale.pretty_print
+import logging
+logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 class MetaModel(ABC):
     """Abstract base class for LALE operators states: MetaModel, Planned, Trainable, and Trained.
@@ -120,6 +123,13 @@ class Trainable(Planned):
         """
         pass
 
+    @abstractmethod
+    def is_frozen_trainable(self):
+        pass
+
+    @abstractmethod
+    def freeze_trainable(self):
+        pass
 
 class Trained(Trainable):
     """Base class to tag an operator's state as Trained.
@@ -158,6 +168,14 @@ class Trained(Trainable):
         X :
             The type of X is as per input_predict schema of the operator.
         """
+        pass
+
+    @abstractmethod
+    def is_frozen_trained(self):
+        pass
+
+    @abstractmethod
+    def freeze_trained(self):
         pass
 	
 class Operator(metaclass=AbstractVisitorMeta):
@@ -314,25 +332,13 @@ class IndividualOp(MetaModelOperator):
         """
         self._impl = impl
         self._name = name
-        schemas = schemas if schemas is not None else helpers.get_lib_schema(impl)
+        if schemas is None:
+            schemas = helpers.get_lib_schema(impl)
         if schemas:
             self._schemas = schemas
         else:
-            self._schemas = {
-                '$schema': 'http://json-schema.org/draft-04/schema#',
-                'description':
-                'Combined schema for expected data and hyperparameters.',
-                'type': 'object',
-                'properties': {
-                    'input_fit': {},
-                    'input_predict': {},
-                    'output': {},
-                    'hyperparams': {
-                        'allOf': [
-                            {'type': 'object',
-                             'properties': {}}]
-                    }
-                }}
+            self._schemas = helpers.get_default_schema(impl)
+
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1
         enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
@@ -922,6 +928,32 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
 
+    def free_hyperparams(self):
+        hyperparam_schema = self.hyperparam_schema()
+        if 'allOf' in hyperparam_schema and \
+           'relevantToOptimizer' in hyperparam_schema['allOf'][0]:
+            to_bind = hyperparam_schema['allOf'][0]['relevantToOptimizer']
+        else:
+            to_bind = []
+        if self._hyperparams:
+            bound = self._hyperparams.keys()
+        else:
+            bound = []
+        return set(to_bind) - set(bound)
+
+    def is_frozen_trainable(self):
+        free = self.free_hyperparams()
+        return len(free) == 0
+
+    def freeze_trainable(self):
+        old_bindings = self._hyperparams if self._hyperparams else {}
+        free = self.free_hyperparams()
+        defaults = self.hyperparam_defaults()
+        new_bindings = {name: defaults[name] for name in free}
+        bindings = {**old_bindings, **new_bindings}
+        result = self._configure(**bindings)
+        assert result.is_frozen_trainable(), str(result.free_hyperparams())
+        return result
 
     def get_params(self, deep:bool=True)->Dict[str,Any]:
         """Get parameters for this operator. 
@@ -1021,7 +1053,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return hasattr(self._impl, 'transform')
 
     def fit(self, X, y = None, **fit_params)->TrainedOperator:
-        if hasattr(self._impl, "fit"):
+        if hasattr(self._impl, "fit") and not self.is_frozen_trained():
             filtered_fit_params = fixup_hyperparams_dict(fit_params)
             return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
         else:
@@ -1061,6 +1093,17 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         helpers.validate_schema(result, self.output_schema_predict_proba())
         return result
 
+    def is_frozen_trained(self):
+        return hasattr(self, '_frozen_trained')
+
+    def freeze_trained(self):
+        if self.is_frozen_trained():
+            return self
+        result = copy.deepcopy(self)
+        result._frozen_trained = True
+        assert result.is_frozen_trained()
+        return result
+
     def to_json(self):
         super_json = super(TrainableIndividualOp, self).to_json()
         return {**super_json,
@@ -1077,7 +1120,12 @@ def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
         class_name = impl.__name__
         module = importlib.import_module(module_name)
         class_ = getattr(module, class_name)
-        impl = class_() #This is always with the default values of hyper-parameters.
+        try:
+            impl = class_() #always with the default values of hyperparameters
+        except TypeError as e:
+            logger.debug(f'Constructor for {module_name}.{class_name} '
+                         f'threw exception {e}')
+            impl = class_.__new__(class_)
         if hasattr(impl, "fit"):
             operatorObj = PlannedIndividualOp(_name=name, _impl=impl, _schemas=schemas)
         else:
@@ -1088,6 +1136,8 @@ def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
             operatorObj = TrainableIndividualOp(_name=name, _impl=impl, _schemas=schemas)
         else:
             operatorObj = TrainedIndividualOp(_name=name, _impl=impl, _schemas=schemas)
+        if hasattr(impl, 'get_params'):
+            operatorObj._hyperparams = {**impl.get_params()}
     all_available_operators.append(operatorObj)
     return operatorObj
 
@@ -1454,6 +1504,24 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
 
+    def is_frozen_trainable(self):
+        for step in self.steps():
+            if not step.is_frozen_trainable():
+                return False
+        return True
+
+    def freeze_trainable(self):
+        frozen_steps = []
+        frozen_map = {}
+        for liquid in self._steps:
+            frozen = liquid.freeze_trainable()
+            frozen_map[liquid] = frozen
+            frozen_steps.append(frozen)
+        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
+        result = TrainablePipeline(frozen_steps, frozen_edges, ordered=True)
+        assert result.is_frozen_trainable()
+        return result
+
     def to_json(self):
         super_json = super(PlannedPipeline, self).to_json()
         return {**super_json, 'state': 'trainable'}
@@ -1594,6 +1662,24 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         output = operator.predict(X = inputs)
             outputs[operator] = output
         return outputs[self._steps[-1]]
+
+    def is_frozen_trained(self):
+        for step in self.steps():
+            if not step.is_frozen_trained():
+                return False
+        return True
+
+    def freeze_trained(self):
+        frozen_steps = []
+        frozen_map = {}
+        for liquid in self._steps:
+            frozen = liquid.freeze_trained()
+            frozen_map[liquid] = frozen
+            frozen_steps.append(frozen)
+        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
+        result = TrainedPipeline(frozen_steps, frozen_edges, ordered=True)
+        assert result.is_frozen_trained()
+        return result
 
     def to_json(self):
         super_json = super(TrainablePipeline, self).to_json()
