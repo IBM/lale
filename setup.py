@@ -53,7 +53,10 @@ setup(
               'tensorflow-datasets>=1.0.1',
               'tensorflow>=1.13.1',
               'tensorflow_hub',
-              'smac<=0.10.0'
+              'smac<=0.10.0',
+              'aif360',
+              'numba',
+              'BlackBoxAuditing'
           ],
           'test':[
               'jupyter',
