@@ -19,28 +19,30 @@ import lale.operators
 import numpy as np
 import pandas as pd
 
-class MockAIF360Dataset:
-    def __init__(self, X, sensitive_attribute):
-        self.feature_names = list(X.columns)
-        self.features = X.to_numpy().copy()
-        self.protected_attributes = self.features[:, [self.feature_names.index(sensitive_attribute)]].copy()
-
-    def copy(self):
-        return self
-
 class DisparateImpactRemoverImpl:
+    """Scikit-learn compatibility wrapper for the DisparateImpactRemover
+    from AIF360."""
+
     def __init__(self, repair_level=1.0, sensitive_attribute=None):
         self._hyperparams = {
             'repair_level': repair_level,
             'sensitive_attribute': sensitive_attribute}
 
-    def transform(self, X):
+    def fit(self, X, y=None):
+        repair_level = self._hyperparams['repair_level']
+        sensitive_attribute = self._hyperparams['sensitive_attribute']
         dimpr = aif360.algorithms.preprocessing.DisparateImpactRemover(
-            repair_level=self._hyperparams['repair_level'],
-            sensitive_attribute=self._hyperparams['sensitive_attribute'])
-        ds_in = MockAIF360Dataset(X, self._hyperparams['sensitive_attribute'])
-        ds_out = dimpr.fit_transform(ds_in)
-        result = pd.DataFrame(ds_out.features, columns=X.columns)
+            repair_level=repair_level, sensitive_attribute=sensitive_attribute)
+        features = X.to_numpy().tolist()
+        index = X.columns.to_list().index(sensitive_attribute)
+        #since DisparateImpactRemover does not have separate fit and transform
+        self._repairer = dimpr.Repairer(features, index, repair_level, False)
+        return self
+
+    def transform(self, X):
+        features = X.to_numpy().tolist()
+        repaired = self._repairer.repair(features)
+        result = pd.DataFrame(features, columns=X.columns)
         return result
 
 _input_schema_fit = {
@@ -52,7 +54,9 @@ _input_schema_fit = {
     'X': {
       'description': 'Features; the outer array is over samples.',
       'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+      'items': {'type': 'array', 'items': {'type': 'number'}}},
+    'y': {
+      'description': 'Target class labels; the array is over samples.'}}}
 
 _input_schema_predict = {
   'description': 'Input data schema for transform.',
@@ -92,12 +96,12 @@ _hyperparams_schema = {
 
 _combined_schemas = {
   'description': 'Combined schema for expected data and hyperparameters.',
-  'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
+  'documentation_url': 'https://aif360.readthedocs.io/en/latest/modules/preprocessing.html#disparate-impact-remover',
   'type': 'object',
   'tags': {
     'pre': ['~categoricals'],
-    'op': ['estimator', 'classifier', 'interpretable'],
-    'post': ['probabilities']},
+    'op': ['transformer'],
+    'post': []},
   'properties': {
     'input_fit': _input_schema_fit,
     'input_predict': _input_schema_predict,
