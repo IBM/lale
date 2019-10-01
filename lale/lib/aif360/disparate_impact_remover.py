@@ -43,10 +43,18 @@ class DisparateImpactRemoverImpl:
         result = pd.DataFrame(ds_out.features, columns=X.columns)
         return result
 
-_input_schema_fit = {}
+_input_schema_fit = {
+  'description': 'Input data schema for training.',
+  'type': 'object',
+  'required': ['X'],
+  'additionalProperties': False,
+  'properties': {
+    'X': {
+      'description': 'Features; the outer array is over samples.',
+      'type': 'array',
+      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
 _input_schema_predict = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for transform.',
   'type': 'object',
   'required': ['X'],
@@ -58,7 +66,6 @@ _input_schema_predict = {
       'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
 _output_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for predictions (reweighed features).',
     'type': 'array',
     'items': {
@@ -66,7 +73,6 @@ _output_schema = {
         'items': {'type': 'number'}}}
 
 _hyperparams_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Hyperparameter schema.',
   'allOf': [
     { 'type': 'object',
@@ -85,7 +91,6 @@ _hyperparams_schema = {
           'type': 'string' }}}]}
 
 _combined_schemas = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Combined schema for expected data and hyperparameters.',
   'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
   'type': 'object',
