@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/IBM/lale.svg?branch=master)](https://travis-ci.com/IBM/lale)
 [![Documentation Status](https://readthedocs.org/projects/lale/badge/?version=latest)](https://lale.readthedocs.io/en/latest/?badge=latest)
 <br />
-<img src="docs/img/lale_logo.jpg" alt="logo" width="55px"/>
+<img src="https://github.com/IBM/lale/blob/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
 Lale is a Python library for semi-automated data science.
 Lale is compatible with [scikit-learn](https://scikit-learn.org) while
@@ -21,13 +21,13 @@ Lale can be installed just like any other Python package and can be
 edited with off-the-shelf Python tools such as Jupyter notebooks.
 
 Lale is distributed under the terms of the Apache 2.0 License, see
-[LICENSE.txt](LICENSE.txt). It is currently in an **Alpha release**,
+[LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt). It is currently in an **Alpha release**,
 without warranties of any kind.
 
-* Technical overview [slides](talks/2019-0529-lale.pdf)
-* [Installation instructions](docs/installation.rst)
+* Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-0529-lale.pdf)
+* [Installation instructions](https://github.com/IBM/lale/blob/master/docs/installation.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
-* Guide for wrapping [new operators](docs/new_operators.md)
+* Guide for wrapping [new operators](https://github.com/IBM/lale/blob/master/docs/new_operators.md)
 * arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
 
 The name Lale, pronounced *laleh*, comes from the Persian word for
@@ -49,4 +49,4 @@ The following paper has a technical deep-dive:
 ```
 
 Contributors are expected to submit a "Developer's Certificate of
-Origin", which can be found in [DCO1.1.txt](DCO1.1.txt).
+Origin", which can be found in [DCO1.1.txt](https://github.com/IBM/lale/blob/master/DCO1.1.txt).
