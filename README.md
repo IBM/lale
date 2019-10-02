@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.com/IBM/lale.svg?branch=master)](https://travis-ci.com/IBM/lale)
 [![Documentation Status](https://readthedocs.org/projects/lale/badge/?version=latest)](https://lale.readthedocs.io/en/latest/?badge=latest)
 <br />
-<img src="https://github.com/IBM/lale/blob/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
+<img src="https://github.com/IBM/lale/raw/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
 Lale is a Python library for semi-automated data science.
 Lale is compatible with [scikit-learn](https://scikit-learn.org) while
