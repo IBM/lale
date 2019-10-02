@@ -1,12 +1,15 @@
 Installation
 ============
 
+Installing from PyPI
+----------------------
+
 Lale is easy to install. Assuming you already have a Python 3.6+
 environment, all you need is the following:
 
 .. code:: Bash
 
-    pip install git+https://git@github.com/IBM/lale.git
+    pip install lale
 
 This will install the **Lale Core** setup target, which includes many
 operators, pipelines, and search space generation targeting hyperopt
@@ -17,7 +20,7 @@ it as follows:
 
 .. code:: Bash
 
-    pip install git+https://git@github.com/IBM/lale.git#egg=lale[full]
+    pip install lale[full]
 
 Now you should be ready to start using Lale, for instance, in a
 Jupyter notebook.
