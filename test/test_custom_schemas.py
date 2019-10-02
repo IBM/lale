@@ -187,8 +187,8 @@ class TestCustomSchema(unittest.TestCase):
     def test_override_array_param(self):
         init = self.sk_pca.hyperparam_schema('copy')
         expected = {'type': 'array',
-                    'minItemsForOptimizer': 1,
-                    'maxItemsForOptimizer': 20,
+                    'minItems': 1,
+                    'maxItems': 20,
                     'items': {'type': 'integer'}}
         foo = self.sk_pca.customize_schema(
             copy=schemas.Array(minItems=1, maxItems=20, items=schemas.Int()))
@@ -209,7 +209,7 @@ class TestCustomSchema(unittest.TestCase):
         foo = self.sk_pca.customize_schema(
             input_fit=schemas.Object(required=['X'],
                                      additionalProperties=False,
-                                     properties={'X': schemas.Array(schemas.Float())}))
+                                     X=schemas.Array(schemas.Float())))
         self.assertEqual(foo.get_schema('input_fit'), expected)
         helpers.validate_is_schema(foo.get_schema('input_fit'))
         self.assertEqual(self.sk_pca.get_schema('input_fit'), init)
@@ -244,12 +244,8 @@ class TestCustomSchema(unittest.TestCase):
                  }}]}]}
         foo = self.sk_pca.customize_schema(
             constraint=schemas.AnyOf([
-                schemas.Object({
-                    'n_components': schemas.Not(schemas.Enum(['mle']))
-                }),
-                schemas.Object({
-                    'svd_solver': schemas.Enum(['full', 'auto'])
-                })
+                schemas.Object(n_components=schemas.Not(schemas.Enum(['mle']))),
+                schemas.Object(svd_solver=schemas.Enum(['full', 'auto']))
             ]))
         self.assertEqual(foo.hyperparam_schema(), expected)
         helpers.validate_is_schema(foo._schemas)

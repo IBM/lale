@@ -710,6 +710,7 @@ class IndividualOp(MetaModelOperator):
                 op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
             else:
                 assert False, "Unkown method or parameter."
+            enum_gen.addSchemaEnumsAsFields(op, op.hyperparam_schema(), verbose=False)
         return op
 
     def validate_schema(self, X, y=None):

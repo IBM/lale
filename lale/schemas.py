@@ -68,15 +68,19 @@ class Float(Schema):
                  default: Option[str] = undefined,
                  min: Option[float] = undefined,
                  exclusiveMin: Option[bool] = undefined,
+                 minForOptimizer: Option[bool] = undefined,
                  max: Option[float] = undefined,
                  exclusiveMax: Option[bool] = undefined,
+                 maxForOptimizer: Option[bool] = undefined,
                  distribution: Option[str] = undefined):
         super().__init__(desc, default)
         self.set('type', 'number')
         self.set('minimum', min)
         self.set('exclusiveMinimum', exclusiveMin)
+        self.set('minimumForOptimizer', minForOptimizer)
         self.set('maximum', max)
         self.set('exclusiveMaximum', exclusiveMax)
+        self.set('maximumForOptimizer', maxForOptimizer)
         self.set('distribution', distribution)
 
 
@@ -103,8 +107,8 @@ class Null(Schema):
                  desc: Option[str] = undefined):
         super().__init__(desc)
         self.set('enum', [None])
-     
-        
+
+
 class Not(Schema):
     def __init__(self,
                  body: Schema):
@@ -134,24 +138,28 @@ class Array(Schema):
     def __init__(self,
                  items: Schema,
                  minItems: Option[int] = undefined,
+                 minItemsForOptimizer: Option[int] = undefined,
                  maxItems: Option[int] = undefined,
+                 maxItemsForOptimizer: Option[int] = undefined,
                  desc: Option[str] = undefined,
                  default: Option[List[Any]] = undefined):
         super().__init__(desc, default)
         self.set('type', 'array')
         self.set('items', items.schema)
-        self.set('minItemsForOptimizer', minItems)
-        self.set('maxItemsForOptimizer', maxItems)
+        self.set('minItems', minItems)
+        self.set('minItemsForOptimizer', minItemsForOptimizer)
+        self.set('maxItems', maxItems)
+        self.set('maxItemsForOptimizer', maxItemsForOptimizer)
 
 
 class Object(Schema):
     def __init__(self,
-                 properties: Dict[str, Schema],
                  required: Option[List[str]] = undefined,
                  additionalProperties: Option[bool] = undefined,
-                 desc: Option[str] = undefined):
+                 desc: Option[str] = undefined,
+                 **kwargs: Schema):
         super().__init__(desc)
         self.set('type', 'object')
         self.set('required', required)
         self.set('additionalProperties', additionalProperties)
-        self.set('properties', {k: p.schema for (k, p) in properties.items()})
+        self.set('properties', {k: p.schema for (k, p) in kwargs.items()})
