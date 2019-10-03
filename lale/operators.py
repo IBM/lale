@@ -22,7 +22,7 @@ from lale import schema2enums as enum_gen
 import numpy as np
 import lale.datasets.data_schemas
 
-from typing import AbstractSet, Any, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union
+from typing import AbstractSet, Any, Callable, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union
 import warnings
 import copy
 from lale.util.VisitorMeta import AbstractVisitorMeta
@@ -262,6 +262,12 @@ class Operator(metaclass=AbstractVisitorMeta):
     @abstractmethod
     def has_same_impl(self, other:'Operator')->bool:
         """Checks if the type of the operator imnplementations are compatible
+        """
+        pass
+    
+    @abstractmethod
+    def _lale_clone(self, cloner:Callable[[Any],Any]):
+        """ Method for cloning a lale operator, currently intended for internal use
         """
         pass
     
@@ -655,13 +661,19 @@ class IndividualOp(MetaModelOperator):
         return self.name()
 
     def has_same_impl(self, other:Operator)->bool:
-        """Checks if the type of the operator imnplementations are compatible
+        """Checks if the type of the operator implementations are compatible
         """
         if not isinstance(other, IndividualOp):
             return False
         return type(self._impl) == type(other._impl)
         
-        
+    def _lale_clone(self, cloner:Callable[[Any],Any]):
+        impl = self._impl
+        if impl is not None:
+            impl = cloner(impl)
+        cp = self.__class__(self._name, impl, self._schemas)
+        return cp
+
     def customize_schema(self, **kwargs: Schema) -> 'IndividualOp':
         """Return a new operator with a customized schema
         
@@ -858,6 +870,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         return top
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
+        self.impl = self.impl
         return self._configure(**impl_params)
 
 def _mutation_warning(method_name:str)->str:
@@ -1064,6 +1077,15 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         else:
             return super(TrainableIndividualOp, self).transform_schema(s_X)
 
+    def _lale_clone(self, cloner:Callable[[Any],Any]):
+        impl = self._impl
+        if impl is not None:
+            impl = cloner(impl)
+        cp = make_operator(impl, schemas=self._schemas, name=self._name)
+        if isinstance(cp, PlannedIndividualOp):
+            cp._hyperparams = self._hyperparams
+        return cp
+
 class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
     def __init__(self, _name, _impl, _schemas):
@@ -1140,6 +1162,19 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
                 'state': 'trained',
                 'hyperparams': self.hyperparams()}
 
+    def _lale_clone(self, cloner:Callable[[Any],Any]):
+        """ This is really used for sklearn clone compatibility.
+            Which mandates that clone returns something that has not been fit.
+            So we enforce that here as well.
+        """
+        impl = self._impl
+        if impl is not None:
+            impl = cloner(impl)
+        cp = make_operator(impl, schemas=self._schemas, name=self._name)
+        if isinstance(cp, PlannedIndividualOp):
+            cp._hyperparams = self._hyperparams
+        return cp
+
 all_available_operators: List[PlannedOperator] = []
 
 def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
@@ -1196,6 +1231,16 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
     _steps:List[OpType]
     _preds:Dict[OpType, List[OpType]]
 
+    def _lale_clone(self, cloner:Callable[[Any], Any]):
+        steps = self._steps
+        new_steps:List[OpType] = [s._lale_clone(cloner) for s in steps]
+        if self._preds is None:
+            return self.__class__(new_steps, None, True)
+
+        step_map:Dict[OpType, OpType] = {steps[i]:new_steps[i] for i in range(len(steps))}
+        new_edges = ((step_map[s],step_map[d]) for s,d in self.edges())
+        return self.__class__(new_steps, new_edges, True)
+        
     def __init__(self, 
                 steps:List[OpType], 
                 edges:Optional[Iterable[Tuple[OpType, OpType]]], 
@@ -1444,7 +1489,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
     def __init__(self, 
                  steps:List[TrainableOpType],
-                 edges:List[Tuple[TrainableOpType, TrainableOpType]], 
+                 edges:Optional[Iterable[Tuple[TrainableOpType, TrainableOpType]]], 
                  ordered:bool=False) -> None:
         super(TrainablePipeline, self).__init__(steps, edges, ordered=ordered)
 
@@ -1929,6 +1974,14 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         super_json = super(TrainablePipeline, self).to_json()
         return {**super_json, 'state': 'trained'}
     
+    def _lale_clone(self, cloner:Callable[[Any],Any]):
+        """ This is really used for sklearn clone compatibility.
+            Which mandates that clone returns something that has not been fit.
+            So we enforce that here as well.
+        """
+        op = super()._lale_clone(cloner)
+        return TrainedPipeline(op._steps, op._preds, True)
+
     def is_transformer(self)->bool:
         """ Checks if the operator is a transformer
         """
@@ -2018,6 +2071,11 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
             'operator': self.name(),
             'steps': [op.to_json() for op in self._steps ] }
 
+    def _lale_clone(self, cloner:Callable[[Any], Any]):
+        steps = self._steps
+        new_steps:List[OperatorChoiceType] = [s._lale_clone(cloner) for s in steps]
+        return self.__class__(new_steps, self._name)
+       
     def auto_arrange(self):
         return self
 

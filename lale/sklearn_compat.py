@@ -36,6 +36,17 @@ def make_sklearn_compat(op:'Ops.Operator')->'SKlearnCompatWrapper':
     """
     return SKlearnCompatWrapper.make_wrapper(op)
 
+def sklearn_compat_clone(impl:Any)->Any:
+    if impl is None:
+        return None
+    
+    from sklearn.base import clone
+    cp = clone(impl, safe=False)
+    return cp
+
+def clone_lale(op:Ops.Operator)->Ops.Operator:
+    return op._lale_clone(sklearn_compat_clone)
+
 class WithoutGetParams(object):
     """ This wrapper forwards everything except "get_attr" to what it is wrapping
     """
@@ -51,6 +62,14 @@ class WithoutGetParams(object):
             raise AttributeError
         else:
             return getattr(self._base, name)
+    
+    @classmethod
+    def clone_wgp(cls, obj:'WithoutGetParams')->'WithoutGetParams':
+        while isinstance(obj, WithoutGetParams):
+            obj = obj._base
+        assert isinstance(obj, Ops.Operator)
+        return WithoutGetParams(clone_lale(obj))
+
 
 def partition_sklearn_params(d:Dict[str, Any])->Dict[str, Dict[str, Any]]:
     ret:Dict[str, Dict[str, Any]] = {}
@@ -121,6 +140,8 @@ def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.TrainableOperator
 
 class SKlearnCompatWrapper(object):
     _base:WithoutGetParams
+    # This is used to trick clone into leaving us alone
+    _old_params_for_clone:Optional[WithoutGetParams]
 
     @classmethod
     def make_wrapper(cls, base:'Ops.Operator'):
@@ -129,10 +150,21 @@ class SKlearnCompatWrapper(object):
             return base
         elif not isinstance(base, WithoutGetParams):
             b = WithoutGetParams(base)
-        return cls(__lale_wrapper_base=b)
+        return cls(__lale_wrapper_init_base=b)
 
     def __init__(self, **kwargs):
-        self._base = kwargs['__lale_wrapper_base']
+        if '__lale_wrapper_init_base' in kwargs:
+            # if we are being called by make_wrapper
+            # then we don't need to make a copy
+            self._base = kwargs['__lale_wrapper_init_base']
+            self._old_params_for_clone = None
+
+        else:
+            # otherwise, we are part of a get_params/init clone
+            # and we need to make a copy
+            op = kwargs['__lale_wrapper_base']
+            self._base = WithoutGetParams.clone_wgp(op)
+            self._old_params_for_clone = op
         assert self._base != self
 
     def to_lale(self)->Ops.Operator:
@@ -165,7 +197,13 @@ class SKlearnCompatWrapper(object):
     def get_params(self, deep:bool = True)->Dict[str,Any]:
         out:Dict[str,Any] = {}
         if not deep:
-            out['__lale_wrapper_base'] = self._base
+            if self._old_params_for_clone is not None:
+                # lie to clone to make it happy
+                p = self._old_params_for_clone
+                self._old_params_for_clone = None
+            else:
+                p = self._base
+            out['__lale_wrapper_base'] = p
         else:
             pass #TODO
         return out
