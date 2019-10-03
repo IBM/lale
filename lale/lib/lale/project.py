@@ -63,8 +63,7 @@ class ProjectImpl:
     def transform_schema(self, s_X):
         s_row = s_X['items']
         s_cols = s_row['items']
-        name2idx = {s_cols[i]['description']: i for i in range(len(s_cols))}
-        keep_cols = [name2idx[col] if isinstance(col, str) else col
+        keep_cols = [col
                      for name, tfm, cols in self._col_tfm.transformers_
                      if tfm == 'passthrough'
                      for col in cols]
@@ -72,7 +71,10 @@ class ProjectImpl:
         if isinstance(s_cols, dict):
             s_cols_result = s_cols
         else:
-            s_cols_result = [s_cols[i] for i in keep_cols]
+            name2i = {s_cols[i]['description']: i for i in range(len(s_cols))}
+            keep_cols_i = [name2i[col] if isinstance(col, str) else col
+                           for col in keep_cols]
+            s_cols_result = [s_cols[i] for i in keep_cols_i]
         s_result = {
             **s_X,
             'items': {
