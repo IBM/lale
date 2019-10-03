@@ -681,6 +681,8 @@ class IndividualOp(MetaModelOperator):
         param : Schema
             Override the schema of the hyperparameter.
             `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
+        tags : Dict
+            Override the tags of the operator.
         
         Returns
         -------
@@ -697,7 +699,6 @@ class IndividualOp(MetaModelOperator):
                 break
             elif arg.startswith('input') or arg.startswith('output'):
             # multiple input types (e.g., fit, predict)
-                value.schema['$schema'] = 'http://json-schema.org/draft-04/schema#'
                 helpers.validate_method(op, arg)
                 helpers.validate_is_schema(value.schema)
                 op._schemas['properties'][arg] = value.schema
@@ -708,6 +709,9 @@ class IndividualOp(MetaModelOperator):
                 op._schemas['properties']['hyperparams']['allOf'][0]['relevantToOptimizer'] = value
             elif arg in helpers.get_hyperparam_names(op):
                 op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
+            elif arg == 'tags':
+                assert isinstance(value, dict)
+                op._schemas['tags'] = value
             else:
                 assert False, "Unkown method or parameter."
             enum_gen.addSchemaEnumsAsFields(op, op.hyperparam_schema(), verbose=False)

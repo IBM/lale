@@ -72,8 +72,7 @@ class TestCustomSchema(unittest.TestCase):
                     schemas.Float())),
             schemas.Array(
                 schemas.Float())])
-        expected = {'$schema': 'http://json-schema.org/draft-04/schema#',
-                    'anyOf': [
+        expected = {'anyOf': [
                         {'type': 'array',
                          'items': {
                              'type': 'array',
@@ -198,8 +197,7 @@ class TestCustomSchema(unittest.TestCase):
 
     def test_override_object_param(self):
         init = self.sk_pca.get_schema('input_fit')
-        expected = {'$schema': 'http://json-schema.org/draft-04/schema#',
-                    'type': 'object',
+        expected = {'type': 'object',
                     'required': ['X'],
                     'additionalProperties': False,
                     'properties': {
@@ -260,6 +258,17 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(self.ll_pca.hyperparam_schema()['allOf'][0]['relevantToOptimizer'], init)
         self.assertRaises(Exception, self.sk_pca.customize_schema, relevantToOptimizer={})
         
+    def test_override_tags(self):
+        init = self.ll_pca._schemas['tags']
+        tags = {'pre': ['~categoricals'],
+                    'op': ['estimator', 'classifier', 'interpretable'],
+                    'post': ['probabilities']}
+        foo = self.ll_pca.customize_schema(tags=tags)
+        self.assertEqual(foo._schemas['tags'], tags)
+        helpers.validate_is_schema(foo._schemas)
+        self.assertEqual(self.ll_pca._schemas['tags'], init)
+        self.assertRaises(Exception, self.sk_pca.customize_schema, tags=42)
+             
     def test_load_schema(self):
         from lale.operators import make_operator
         new_pca = make_operator(sklearn.decomposition.PCA)
