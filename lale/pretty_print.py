@@ -279,7 +279,8 @@ def schema_to_string(schema):
         if s5 == s6:
             break
         s5 = s6
-    return s6
+    s7 = re.sub(r'{\s+}', r'{}', s6)
+    return s7
 
 def to_string(arg, call_depth=2):
     def get_cls2name():
