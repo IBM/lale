@@ -6,8 +6,13 @@
 <img src="https://github.com/IBM/lale/raw/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
 Lale is a Python library for semi-automated data science.
-Lale is compatible with [scikit-learn](https://scikit-learn.org) while
-adding value for automation, correctness checks, and interoperability.
+Lale makes it easy to automatically select algorithms and tune
+hyperparameters of pipelines that are compatible with
+[scikit-learn](https://scikit-learn.org), in a type-safe fashion.  If
+you are a data scientist who wants to experiment with automated
+machine learning, this library is for you!
+Lale adds value beyond scikit-learn along three dimensions:
+automation, correctness checks, and interoperability.
 For *automation*, Lale provides a consistent high-level interface to
 existing pipeline search tools including GridSearchCV, SMAC, and
 Hyperopt.
