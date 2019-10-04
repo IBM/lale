@@ -155,30 +155,31 @@ _hyperparams_schema = {
             'The combination of penalty=`l1` and loss=`hinge` is not supported',
         'anyOf': [
             { 'type': 'object',
-              'properties': {'penalty': {'not': {'enum': ['l1']}}}},
+              'properties': {'loss': {'not': {'enum': ['hing']}}}},
             { 'type': 'object',
-              'properties': {'loss': {'not': {'enum': ['hinge']}}}}]},
-    {   'description':
-            'The combination of penalty=`l2` and loss=`hinge` are not supported when dual=False',
+              'properties': {'penalty': {'enum': ['l2']}}}]},
+    {   'description': 'The combination of penalty=`l2` and loss=`hinge` '
+                       'is not supported when dual=False.',
         'anyOf': [
             { 'type': 'object',
-              'properties': {'dual': {'not': {'enum': [False]}}}},
-            { 'anyOf':[
+              'properties': {
+                  'dual':    {'enum': [False]}}},
             { 'type': 'object',
-              'properties': {'loss': {'not': {'enum': ['hinge']}}}},
-            { 'type': 'object',
-              'properties': {'penalty': {'not': {'enum': ['l2']}}}}]}]},
-    {   'description':
-            'The combination of penalty=`l1` and loss=`squared_hinge` are not supported when dual=True',
+              'properties': {
+                  'dual':    {'enum': [True]},
+                  'penalty': {'enum': ['l2']},
+                  'loss':    {'enum': ['hinge']}}}]},
+    {   'description': 'The combination of penalty=`l1` and '
+                       'loss=`squared_hinge` is not supported when dual=True.',
         'anyOf': [
             { 'type': 'object',
-              'properties': {'dual': {'not': {'enum': [True]}}}},
-            { 'anyOf':[
+              'properties':  {
+                  'dual':    {'enum': [True]}}},
             { 'type': 'object',
-              'properties': {'loss': {'not': {'enum': ['squared_hinge']}}}},
-            { 'type': 'object',
-              'properties': {'penalty': {'not': {'enum': ['l1']}}}}]}]}
-              
+              'properties': {
+                  'dual':    {'enum': [False]},
+                  'penalty': {'enum': ['l1']},
+                  'loss':    {'enum': ['squared_hinge']}}}]}
     ]}
 
 _input_fit_schema = {
