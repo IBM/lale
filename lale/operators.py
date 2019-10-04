@@ -714,7 +714,7 @@ class IndividualOp(MetaModelOperator):
                 op._schemas['tags'] = value
             else:
                 assert False, "Unkown method or parameter."
-            enum_gen.addSchemaEnumsAsFields(op, op.hyperparam_schema(), verbose=False)
+        enum_gen.addSchemaEnumsAsFields(op, op.hyperparam_schema(), force=True)
         return op
 
     def validate_schema(self, X, y=None):

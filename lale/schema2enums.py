@@ -179,17 +179,17 @@ def schemaToPythonEnums(schema:Schema)->Dict[str, enum.Enum]:
     enums = discoveredEnumsToPythonEnums(de)
     return enums
 
-def addDictAsFields(obj:Any, d:Dict[str, Any], verbose=True)->None:
+def addDictAsFields(obj:Any, d:Dict[str, Any], force=False)->None:
     if d is None:
         return
     for k, v in d.items():
-        if k == "" and verbose:
+        if k == "":
             logger.warning(f"There was a top level enumeration specified, so it is not being added to {obj._name}")
-        elif hasattr(obj, k) and verbose:
+        elif hasattr(obj, k) and not force:
             logger.error(f"The object {obj._name} already has the field {k}.  This conflicts with our attempt at adding that key as an enumeration field")
         else:
             setattr(obj, k, v) 
 
-def addSchemaEnumsAsFields(obj:Any, schema:Schema, verbose=True)->None:
+def addSchemaEnumsAsFields(obj:Any, schema:Schema, force=False)->None:
     enums = schemaToPythonEnums(schema)
-    addDictAsFields(obj, enums, verbose)
+    addDictAsFields(obj, enums, force)
