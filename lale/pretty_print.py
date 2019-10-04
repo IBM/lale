@@ -42,10 +42,15 @@ def indiv_op_to_string(op, name=None, module_name=None):
         name = op.name()
     if module_name is None:
         import_stmt = ''
-    elif name == op.name():
-        import_stmt = f'from {module_name} import {op.name()}'
     else:
-        import_stmt = f'from {module_name} import {op.name()} as {name}'
+        if module_name.startswith('lale.'):
+            op_name = op.name()
+        else:
+            op_name = op.class_name().split('.')[-1]
+        if name == op_name:
+            import_stmt = f'from {module_name} import {op_name}'
+        else:
+            import_stmt = f'from {module_name} import {op_name} as {name}'
     if hasattr(op._impl, "fit") and isinstance(op, lale.operators.TrainableIndividualOp):
         hps = hyperparams_to_string(op.hyperparams(), op)
         op_expr = f'{name}({hps})'
@@ -161,12 +166,20 @@ def pipeline_to_string(pipeline, cls2name):
                 op = getattr(module, op_name)
                 if isinstance(op, lale.operators.IndividualOp):
                     return op.class_name() == class_name
+                else:
+                    return hasattr(op, '__init__') and hasattr(op, 'fit') and (
+                        hasattr(op, 'predict') or hasattr(op, 'transform'))
             return False
         mod_name_1 = class_name[:class_name.rfind('.')]
         mod_name_2 = mod_name_1[:mod_name_1.rfind('.')]
         if has_op(mod_name_2, op.name()):
             return mod_name_2
-        assert has_op(mod_name_1, op.name())
+        elif has_op(mod_name_1, op.name()):
+            return mod_name_1
+        op_name = class_name[class_name.rfind('.')+1:]
+        if has_op(mod_name_2, op_name):
+            return mod_name_2
+        assert has_op(mod_name_1, op_name)
         return mod_name_1
     class CodeGenState:
         def __init__(self):
@@ -266,11 +279,12 @@ def schema_to_string(schema):
         if s5 == s6:
             break
         s5 = s6
-    return s6
+    s7 = re.sub(r'{\s+}', r'{}', s6)
+    return s7
 
-def to_string(arg):
+def to_string(arg, call_depth=2):
     def get_cls2name():
-        frame = inspect.stack()[2][0]
+        frame = inspect.stack()[call_depth][0]
         result = {}
         all_items = [*frame.f_locals.items(), *frame.f_globals.items()]
         for nm, op in all_items:
@@ -288,3 +302,8 @@ def to_string(arg):
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
 
+def ipython_display(arg):
+    import IPython.display
+    pretty_printed = to_string(arg, call_depth=3)
+    markdown = IPython.display.Markdown(f'```python\n{pretty_printed}\n```')
+    IPython.display.display(markdown)
