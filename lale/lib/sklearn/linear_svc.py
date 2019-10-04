@@ -155,31 +155,27 @@ _hyperparams_schema = {
             'The combination of penalty=`l1` and loss=`hinge` is not supported',
         'anyOf': [
             { 'type': 'object',
-              'properties': {'loss': {'not': {'enum': ['hing']}}}},
+              'properties': {'penalty': {'enum': ['l2']}}},
             { 'type': 'object',
-              'properties': {'penalty': {'enum': ['l2']}}}]},
+              'properties': {'loss': {'enum': ['squared_hinge']}}}]},
     {   'description': 'The combination of penalty=`l2` and loss=`hinge` '
                        'is not supported when dual=False.',
         'anyOf': [
             { 'type': 'object',
-              'properties': {
-                  'dual':    {'enum': [False]}}},
+              'properties': {'penalty': {'enum': ['l1']}}},
             { 'type': 'object',
-              'properties': {
-                  'dual':    {'enum': [True]},
-                  'penalty': {'enum': ['l2']},
-                  'loss':    {'enum': ['hinge']}}}]},
+              'properties': {'loss': {'enum': ['squared_hinge']}}},
+            { 'type': 'object',
+              'properties': {'dual': {'enum': [True]}}}]},
     {   'description': 'The combination of penalty=`l1` and '
                        'loss=`squared_hinge` is not supported when dual=True.',
         'anyOf': [
             { 'type': 'object',
-              'properties':  {
-                  'dual':    {'enum': [True]}}},
+              'properties': {'penalty': {'enum': ['l2']}}},
             { 'type': 'object',
-              'properties': {
-                  'dual':    {'enum': [False]},
-                  'penalty': {'enum': ['l1']},
-                  'loss':    {'enum': ['squared_hinge']}}}]}
+              'properties': {'loss': {'enum': ['hinge']}}},
+            { 'type': 'object',
+              'properties': {'dual': {'enum': [False]}}}]}
     ]}
 
 _input_fit_schema = {
