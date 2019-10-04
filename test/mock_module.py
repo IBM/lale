@@ -22,7 +22,7 @@ class UnknownOp:
         self._hyperparams = {
             'n_neighbors': n_neighbors, 'algorithm': algorithm}
 
-    def get_params(self):
+    def get_params(self, deep:bool=False):
         return self._hyperparams
 
     def fit(self, X, y):
