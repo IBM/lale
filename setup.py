@@ -21,7 +21,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name='lale',
-    version='0.1.0',
+    version='0.2.0',
     author="Avraham Shinnar, Guillaume Baudart, Kiran Kate, Martin Hirzel",
     description="Language for Automated Learning Exploration",
     long_description=long_description,
