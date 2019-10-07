@@ -399,9 +399,7 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
     from lale.operators import TrainablePipeline
     from lale.operators import OperatorChoice
     if isinstance(lale_object, IndividualOp):
-        if hyperparams:
-            hyperparams.pop('name', None)
-        return lale_object(**hyperparams)
+        return lale_object(**dict_without(hyperparams, 'name'))
     elif isinstance(lale_object, Pipeline):
         if len(hyperparams) != len(lale_object.steps()):
             raise ValueError('The number of steps in the hyper-parameter space does not match the number of steps in the pipeline.')
@@ -428,7 +426,7 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         #Hyperopt search space for an OperatorChoice is generated as a dictionary with a single element
         #corresponding to the choice made, the only key is the index of the step and the value is 
         #the params corresponding to that step.
-        step_index, hyperparams = hyperparams.popitem()
+        step_index, hyperparams = list(hyperparams.items())[0]
         step_object = lale_object.steps()[step_index]
         return create_instance_from_hyperopt_search_space(step_object, hyperparams)
         
