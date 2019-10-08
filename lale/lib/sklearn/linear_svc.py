@@ -51,7 +51,7 @@ _hyperparams_schema = {
             'fit_intercept', 'intercept_scaling', 'class_weight',
             'verbose', 'random_state', 'max_iter'],
         'relevantToOptimizer': [
-            'penalty', 'loss', 'dual', 'tol', 'multi_class',
+            'penalty', 'loss', 'dual', 'tol', 'C', 'multi_class',
             'fit_intercept'],
         'properties': {
             'penalty': {
@@ -74,9 +74,14 @@ _hyperparams_schema = {
                 'default': 0.0001,
                 'description': 'Tolerance for stopping criteria.'},
             'C': {
+                'description': 'Penalty parameter C of the error term.',
                 'type': 'number',
+                'distribution': 'loguniform',
+                'minimum': 0.0,
+                'exclusiveMinimum': True,
                 'default': 1.0,
-                'description': 'Penalty parameter C of the error term.'},
+                'minimumForOptimizer': 0.03125,
+                'maximumForOptimizer': 32768},
             'multi_class': {
                 'description': 'Determines the multi-class strategy if `y` contains more than two classes.',
                 'enum': ['ovr', 'crammer_singer'],
