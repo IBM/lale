@@ -61,7 +61,7 @@ def indiv_op_to_string(op, name=None, module_name=None):
     else:
         return (import_stmt, op_expr)
 
-def pipeline_to_string(pipeline, cls2name):
+def pipeline_to_string(pipeline, cls2name, show_imports):
     assert isinstance(pipeline, lale.operators.Pipeline)
     def shallow_copy_graph(pipeline):
         if isinstance(pipeline, lale.operators.OperatorChoice):
@@ -261,7 +261,8 @@ def pipeline_to_string(pipeline, cls2name):
         expr = code_gen_rec(graph)
         if expr:
             gen.pipeline = f'pipeline = {expr}'
-        code = gen.imports + gen.assigns + gen.irreducibles + [gen.pipeline]
+        code = gen.imports if show_imports else []
+        code = code + gen.assigns + gen.irreducibles + [gen.pipeline]
         result = '\n'.join(code)
         return result
     steps, preds, succs = shallow_copy_graph(pipeline)
@@ -282,7 +283,7 @@ def schema_to_string(schema):
     s7 = re.sub(r'{\s+}', r'{}', s6)
     return s7
 
-def to_string(arg, call_depth=2):
+def to_string(arg, show_imports=True, call_depth=2):
     def get_cls2name():
         frame = inspect.stack()[call_depth][0]
         result = {}
@@ -298,12 +299,12 @@ def to_string(arg, call_depth=2):
     elif isinstance(arg, lale.operators.IndividualOp):
         return indiv_op_to_string(arg)
     elif isinstance(arg, lale.operators.Pipeline):
-        return pipeline_to_string(arg, get_cls2name())
+        return pipeline_to_string(arg, get_cls2name(), show_imports)
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
 
-def ipython_display(arg):
+def ipython_display(arg, show_imports=True):
     import IPython.display
-    pretty_printed = to_string(arg, call_depth=3)
+    pretty_printed = to_string(arg, show_imports, call_depth=3)
     markdown = IPython.display.Markdown(f'```python\n{pretty_printed}\n```')
     IPython.display.display(markdown)
