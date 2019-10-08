@@ -145,7 +145,7 @@ _output_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://github.ibm.com/aimodels/lale',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.project.html',
     'type': 'object',
     'tags': {
         'pre': ['categoricals'],
