@@ -870,7 +870,6 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         return top
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
-        self.impl = self.impl
         return self._configure(**impl_params)
 
 def _mutation_warning(method_name:str)->str:
