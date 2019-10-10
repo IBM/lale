@@ -153,8 +153,9 @@ def print_yaml(what, doc, file=sys.stdout):
     print(yaml.dump({what: doc}).strip(), file=file)
 
 def validate_schema(value, schema, subsample_array=True):
-    json_value = data_to_json(value, subsample_array)
-    jsonschema.validate(json_value, schema)
+    pass
+    # json_value = data_to_json(value, subsample_array)
+    # jsonschema.validate(json_value, schema)
 
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 _JSON_META_SCHEMA = None
@@ -596,10 +597,6 @@ def append_batch(data, batch_data):
     elif isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
-    elif isinstance(data, h5py.File):
-        if isinstance(batch_data, tuple):
-            batch_X, batch_y = batch_data
-            
     #TODO:Handle dataframes
 
 def create_data_loader(X, y = None, batch_size = 1):

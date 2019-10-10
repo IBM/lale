@@ -1666,11 +1666,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         [type]
             [description]
         """        
-        trained_steps:List[TrainedOperator] = [ ]
         outputs:Dict[Operator, Any] = { }
-        edges:List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
-        trained_map:Dict[TrainableOpType, TrainedOperator] = {}
-
         if serialize:
             serialization_out_dir = os.path.join(os.path.dirname(__file__), 'temp_serialized')
             if not os.path.exists(serialization_out_dir):
