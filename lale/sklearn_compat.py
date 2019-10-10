@@ -141,7 +141,7 @@ def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.TrainableOperator
 class SKlearnCompatWrapper(object):
     _base:WithoutGetParams
     # This is used to trick clone into leaving us alone
-    _old_params_for_clone:Optional[WithoutGetParams]
+    _old_params_for_clone:Optional[Dict[str, Any]]
 
     @classmethod
     def make_wrapper(cls, base:'Ops.Operator'):
@@ -164,7 +164,7 @@ class SKlearnCompatWrapper(object):
             # and we need to make a copy
             op = kwargs['__lale_wrapper_base']
             self._base = WithoutGetParams.clone_wgp(op)
-            self._old_params_for_clone = op
+            self._old_params_for_clone = kwargs
         assert self._base != self
 
     def to_lale(self)->Ops.Operator:
@@ -199,11 +199,12 @@ class SKlearnCompatWrapper(object):
         if not deep:
             if self._old_params_for_clone is not None:
                 # lie to clone to make it happy
-                p = self._old_params_for_clone
+                params = self._old_params_for_clone
                 self._old_params_for_clone = None
+                return params
             else:
                 p = self._base
-            out['__lale_wrapper_base'] = p
+                out['__lale_wrapper_base'] = p
         else:
             pass #TODO
         return out
