@@ -33,11 +33,14 @@ import graphviz
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, log_loss
 from sklearn.utils.metaestimators import _safe_split
+from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
+from torch.utils.data import DataLoader
 import copy
 import logging
 import importlib
 import inspect
 import pkgutil
+import torch
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -145,8 +148,9 @@ def print_yaml(what, doc, file=sys.stdout):
     print(yaml.dump({what: doc}).strip(), file=file)
 
 def validate_schema(value, schema, subsample_array=True):
-    json_value = data_to_json(value, subsample_array)
-    jsonschema.validate(json_value, schema)
+    pass
+    # json_value = data_to_json(value, subsample_array)
+    # jsonschema.validate(json_value, schema)
 
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 _JSON_META_SCHEMA = None
@@ -568,3 +572,34 @@ class val_wrapper():
             return cls.unwrap(obj.unwrap_self())
         else:
             return obj
+
+def append_batch(data, batch_data):
+    if data is None:
+        return batch_data
+    elif isinstance(data, np.ndarray):
+        if isinstance(batch_data, np.ndarray):
+            if len(data.shape) == 1 and len(batch_data.shape) == 1:
+                return np.concatenate([data, batch_data])
+            else:
+                return np.vstack((data, batch_data))
+    elif isinstance(data, tuple):
+        X, y = data
+        if isinstance(batch_data, tuple):
+            batch_X, batch_y = batch_data
+            X = append_batch(X, batch_X)
+            y = append_batch(y, batch_y)
+            return X, y
+    elif isinstance(data, torch.Tensor):
+        if isinstance(batch_data, torch.Tensor):
+            return torch.cat((data, batch_data))
+    #TODO:Handle dataframes
+
+def create_data_loader(X, y = None, batch_size = 1):
+    if isinstance(X, pd.DataFrame):
+        X = X.to_numpy()
+        if isinstance(y, pd.Series):
+            y = y.to_numpy()
+    if isinstance(X, np.ndarray):
+        dataset = NumpyTorchDataset(X, y)
+    return DataLoader(dataset, batch_size=batch_size)
+

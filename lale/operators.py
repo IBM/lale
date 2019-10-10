@@ -28,7 +28,6 @@ import copy
 from lale.util.VisitorMeta import AbstractVisitorMeta
 from lale.search.PGO import remove_defaults_dict
 import inspect
-import copy
 from lale.schemas import Schema 
 import jsonschema
 import lale.pretty_print
@@ -891,6 +890,30 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self.__trained = result
         return result
 
+    def partial_fit(self, X, y = None, **fit_params)->TrainedOperator:
+        if hasattr(self._impl, "partial_fit"):
+            try:
+                if y is None:
+                    helpers.validate_schema({'X': X},
+                                            self.input_schema_fit())
+                else:
+                    helpers.validate_schema({'X': X, 'y': y},
+                                            self.input_schema_fit())
+            except jsonschema.exceptions.ValidationError as e:
+                raise jsonschema.exceptions.ValidationError("Failed validating input_schema_fit for {} due to {}".format(self.name(), e))                                    
+
+            filtered_fit_params = fixup_hyperparams_dict(fit_params)
+            if filtered_fit_params is None:
+                trained_impl = self._impl.partial_fit(X, y)
+            else:
+                trained_impl = self._impl.partial_fit(X, y, **filtered_fit_params)
+            result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
+            result._hyperparams = self._hyperparams
+            self.__trained = result
+            return result
+        else:
+            raise AttributeError("{} has no partial_fit implemented.".format(self.name()))
+
     def predict(self, X):
         """
         .. deprecated:: 0.0.0
@@ -1581,6 +1604,114 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         else:
             lale_op_obj = get_equivalent_lale_op(sklearn_pipeline)
         return lale_op_obj
+    
+    # def is_batchable(self):
+    #     """Identify if the pipeline has a batch operator and if it is valid to perform batching.
+    #     """
+    #     from lale.lib.lale import BatchTransformer
+    #     batchable = False
+    #     for operator in self._steps:
+    #         if isinstance(operator, IndividualOp) and isinstance(operator._impl, BatchTransformer):
+    #             batchable = True
+    #         elif isinstance(operator, Pipeline):
+    #             batchable = operator.is_batchable()
+    #     return batchable
+
+    def fit_with_batches(self, X, y=None, **fit_params):
+        """[summary]
+        
+        Parameters
+        ----------
+        X : [type]
+            [description]
+        y : [type], optional
+            For a supervised pipeline, this is an array with the unique class labels 
+            in the entire dataset, by default None
+        Returns
+        -------
+        [type]
+            [description]
+        """
+        
+        from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
+        trained_steps:List[TrainedOperator] = [ ]
+        outputs:Dict[Operator, Any] = { }
+        edges:List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
+        trained_map:Dict[TrainableOpType, TrainedOperator] = {}
+
+        sink_nodes = self.find_sink_nodes()
+
+        for operator in self._steps:
+            preds = self._preds[operator]
+            if len(preds) == 0:
+                inputs = [X]
+            else:
+                inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
+            trainable = operator
+            if len(inputs) == 1:
+                inputs = inputs[0]
+            trained:TrainedOperator
+            try:
+                if hasattr(trainable._impl, "partial_fit"):
+                    num_epochs = trainable._impl.num_epochs
+            except AttributeError:
+                warnings.warn("Operator {} does not have num_epochs, using 1 as a default".format(trainable.name()))
+                num_epochs = 1
+            inputs_for_transform = copy.deepcopy(inputs)
+            for epoch in range(num_epochs):
+                training_loss = 0
+                nb_tr_examples, nb_tr_steps = 0, 0                
+                for _, batch_data in enumerate(inputs):#batching_transformer will output only one obj
+                    batch_X, batch_y = batch_data
+                    if trainable.is_supervised():
+                        try:
+                            loss = trainable.partial_fit(batch_X, batch_y, classes = y)
+                        except TypeError:
+                            loss = trainable.partial_fit(batch_X, batch_y)
+                    else:
+                        loss = trainable.partial_fit(batch_X)
+                    if type(loss) == float:#This is very brittle, but it is a practice to report loss per epoch or 
+                        #per few epochs in DL, how to achieve it better?
+                        training_loss +=loss
+                        nb_tr_examples += len(batch_data)
+                        nb_tr_steps += 1
+                        print("Train loss of {} at epoch {}: {}".format(trainable.name(), epoch, (training_loss/nb_tr_steps)))
+            try:
+                trained = copy.deepcopy(trainable)
+            except BaseException: #Deepcopy fails for models implemented in tensorflow/keras.
+                trained = trainable
+            trained = TrainedIndividualOp(trained.name(), trained._impl, trained._schemas)                
+            trained_map[operator] = trained
+            trained_steps.append(trained)
+
+            output = None
+            for _, batch_data in enumerate(inputs_for_transform):#batching_transformer will output only one obj
+                batch_X, batch_y = batch_data
+                if trained.is_transformer():
+                    batch_output = trained.transform(batch_X, batch_y)
+                else:
+                    if trainable in sink_nodes:
+                        batch_output = trained.predict(X = batch_X) #We don't support y for predict yet as there is no compelling case
+                    else:
+                        # This is ok because trainable pipelines steps
+                        # must only be individual operators
+                        if hasattr(trained._impl, 'predict_proba'): # type: ignore
+                            batch_output = trained.predict_proba(X = batch_X)
+                        else:
+                            batch_output = trained.predict(X = batch_X)
+                if not isinstance(batch_output, tuple):
+                    output = helpers.append_batch(output, (batch_output, batch_y)) 
+                else:
+                    output = helpers.append_batch(output, batch_output) 
+            output = helpers.create_data_loader(*output, batch_size=inputs_for_transform.batch_size)   
+            outputs[operator] = output
+
+        trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
+
+        trained_steps2:Any = trained_steps
+        result:TrainedPipeline[TrainedOperator] = TrainedPipeline(trained_steps2, trained_edges, ordered=True)
+        self.__trained = result
+        return result
 
 TrainedOpType = TypeVar('TrainedOpType', bound=TrainedOperator)
 
@@ -1604,7 +1735,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 meta_data_inputs = {}
             else:
                 inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
-                #we create meta_data_inputs as a dictionary with metadata from all previoud steps
+                #we create meta_data_inputs as a dictionary with metadata from all previous steps
                 #Note that if multiple previous steps generate the same key, it will retain only one of those.
                 
                 meta_data_inputs = {key: meta_outputs[pred][key] for pred in preds 
@@ -1666,6 +1797,59 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     else:
                         output = operator.predict(X = inputs)
             outputs[operator] = output
+        return outputs[self._steps[-1]]
+
+    def transform_with_batches(self, X, y=None, **fit_params):
+        """[summary]
+        
+        Parameters
+        ----------
+        X : [type]
+            [description]
+        y : [type], optional
+            by default None
+        Returns
+        -------
+        [type]
+            [description]
+        """
+        outputs = { }
+        sink_nodes = self.find_sink_nodes()
+        for operator in self._steps:
+            preds = self._preds[operator]
+            if len(preds) == 0:
+                inputs = [X]
+            else:
+                inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
+            if len(inputs) == 1:
+                inputs = inputs[0]
+            trained = operator
+            output = None
+            for _, batch_data in enumerate(inputs):#batching_transformer will output only one obj
+                if isinstance(batch_data, Tuple):
+                    batch_X, batch_y = batch_data
+                else:
+                    batch_X = batch_data
+                    batch_y = None
+                if trained.is_transformer():
+                    batch_output = trained.transform(batch_X, batch_y)
+                else:
+                    if trained in sink_nodes:
+                        batch_output = trained.predict(X = batch_X) #We don't support y for predict yet as there is no compelling case
+                    else:
+                        # This is ok because trainable pipelines steps
+                        # must only be individual operators
+                        if hasattr(trained._impl, 'predict_proba'): # type: ignore
+                            batch_output = trained.predict_proba(X = batch_X)
+                        else:
+                            batch_output = trained.predict(X = batch_X)
+                if not isinstance(batch_output, tuple):
+                    output = helpers.append_batch(output, (batch_output, batch_y)) 
+                else:
+                    output = helpers.append_batch(output, batch_output) 
+            output = helpers.create_data_loader(*output, batch_size=inputs.batch_size)   
+            outputs[operator] = output
+
         return outputs[self._steps[-1]]
 
     def is_frozen_trained(self):

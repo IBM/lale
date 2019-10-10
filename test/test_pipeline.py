@@ -16,10 +16,12 @@ import unittest
 from lale.operators import make_pipeline
 from lale.operators import TrainablePipeline, TrainedPipeline
 from lale.helpers import import_from_sklearn_pipeline
+
 import pickle
 
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
+from lale.lib.lale import BatchTransformer
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LinearSVC
 from lale.lib.sklearn import LogisticRegression
@@ -36,7 +38,9 @@ from lale.lib.xgboost import XGBClassifier
 from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
+from lale.lib.autogen import SGDClassifier
 from lale.search.GridSearchCV import LaleGridSearchCV, get_grid_search_parameter_grids
+from sklearn.metrics import accuracy_score
 
 class TestImportExport(unittest.TestCase):
     def setUp(self):
@@ -309,3 +313,77 @@ class TestComposition(unittest.TestCase):
         pipeline.fit(self.X_train, self.y_train)
         tmp = pipeline.predict_proba(self.X_test)
         tmp = pipeline.predict(self.X_test)
+
+class TestBatching(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)
+           
+
+    def test_fit(self):
+        import warnings
+        warnings.filterwarnings(action="always")
+        from lale.lib.sklearn import MinMaxScaler, MLPClassifier
+        pipeline = NoOp() >> BatchingTransformer(pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
+        trained = pipeline.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+        print("**********************************************************************")
+        print(self.X_train.shape)
+        print("Using partial fit from Lale", accuracy_score(self.y_test, predictions))
+
+        pipeline = NoOp() >> MinMaxScaler() >> MLPClassifier(random_state=42)
+        trained = pipeline.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+        print("Using pipeline's fit from Lale", accuracy_score(self.y_test, predictions))
+
+        from sklearn.preprocessing import MinMaxScaler
+        from sklearn.neural_network import MLPClassifier
+        prep = MinMaxScaler()
+        trained_prep = prep.partial_fit(self.X_train, self.y_train)
+        X_transformed = trained_prep.transform(self.X_train)
+
+        clf = MLPClassifier(random_state=42)
+        import numpy as np
+        trained_clf = clf.partial_fit(X_transformed, self.y_train, classes = np.unique(self.y_train))
+        predictions = trained_clf.predict(trained_prep.transform(self.X_test))
+        print("Using partial fit from scikit learn", accuracy_score(self.y_test, predictions))
+
+        compare1 = predictions
+
+        prep = MinMaxScaler()
+        trained_prep = prep.fit(self.X_train, self.y_train)
+        X_transformed = trained_prep.transform(self.X_train)
+
+        X_transformed = prep.fit_transform(self.X_train, self.y_train)
+
+        clf = MLPClassifier(random_state=42)
+        import numpy as np
+        trained_clf = clf.fit(X_transformed, self.y_train)
+        predictions = trained_clf.predict(prep.transform(self.X_test))
+        print("Using fit from sklearn", accuracy_score(self.y_test, predictions))
+        compare2 = predictions
+
+        from sklearn.pipeline import make_pipeline
+        sklearn_pipeline = make_pipeline(MinMaxScaler(), MLPClassifier(random_state=42))
+        trained_pipeline = sklearn_pipeline.fit(self.X_train, self.y_train)
+        predictions = trained_pipeline.predict(self.X_test)
+        print("Using pipeline's fit from sklearn", accuracy_score(self.y_test, predictions))
+
+
+        X = self.X_train
+        y = self.y_train
+        mlp = MLPClassifier(max_iter=100, random_state=1,
+                            tol=0, alpha=1e-5, learning_rate_init=0.2)
+
+        mlp.fit(X, y)
+        pred1 = mlp.predict(X)
+        mlp = MLPClassifier(random_state=1, alpha=1e-5,
+                            learning_rate_init=0.2)
+        mlp.partial_fit(X, y, classes=np.unique(y))
+        pred2 = mlp.predict(X)
+
+        print("pred1:{}".format(pred1[0:10]))
+        print("pred2:{}".format(pred2[0:10]))
