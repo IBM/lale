@@ -34,6 +34,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, log_loss
 from sklearn.utils.metaestimators import _safe_split
 from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
+from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
 from torch.utils.data import DataLoader
 import copy
 import logging
@@ -41,6 +42,7 @@ import importlib
 import inspect
 import pkgutil
 import torch
+import h5py
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -592,6 +594,10 @@ def append_batch(data, batch_data):
     elif isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
+    elif isinstance(data, h5py.File):
+        if isinstance(batch_data, tuple):
+            batch_X, batch_y = batch_data
+            
     #TODO:Handle dataframes
 
 def create_data_loader(X, y = None, batch_size = 1):
@@ -601,5 +607,7 @@ def create_data_loader(X, y = None, batch_size = 1):
             y = y.to_numpy()
     if isinstance(X, np.ndarray):
         dataset = NumpyTorchDataset(X, y)
+    if isinstance(X, str):#Assume that this is path to hdf5 file
+        dataset = HDF5TorchDataset(X)
     return DataLoader(dataset, batch_size=batch_size)
 

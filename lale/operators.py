@@ -32,6 +32,7 @@ from lale.schemas import Schema
 import jsonschema
 import lale.pretty_print
 import logging
+import h5py
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -1617,7 +1618,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
     #             batchable = operator.is_batchable()
     #     return batchable
 
-    def fit_with_batches(self, X, y=None, **fit_params):
+    def fit_with_batches(self, X, y=None, serialize=True):
         """[summary]
         
         Parameters
@@ -1639,6 +1640,11 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         edges:List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
         trained_map:Dict[TrainableOpType, TrainedOperator] = {}
 
+        if serialize:
+            serialization_out_dir = os.path.join(os.path.dirname(__file__), 'temp_serialized')
+            if not os.path.exists(serialization_out_dir):
+                os.mkdir(serialization_out_dir)
+
         sink_nodes = self.find_sink_nodes()
 
         for operator in self._steps:
@@ -1657,12 +1663,19 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             except AttributeError:
                 warnings.warn("Operator {} does not have num_epochs, using 1 as a default".format(trainable.name()))
                 num_epochs = 1
-            inputs_for_transform = copy.deepcopy(inputs)
+            inputs_for_transform = inputs
             for epoch in range(num_epochs):
                 training_loss = 0
-                nb_tr_examples, nb_tr_steps = 0, 0                
+                nb_tr_examples, nb_tr_steps = 0, 0  
                 for _, batch_data in enumerate(inputs):#batching_transformer will output only one obj
-                    batch_X, batch_y = batch_data
+                    if isinstance(batch_data, tuple):
+                        batch_X, batch_y = batch_data
+                    elif isinstance(batch_data, list):
+                        batch_X = batch_data[0]
+                        batch_y = batch_data[1]
+                    else:
+                        batch_X = batch_data
+                        batch_y = None
                     if trainable.is_supervised():
                         try:
                             loss = trainable.partial_fit(batch_X, batch_y, classes = y)
@@ -1685,8 +1698,15 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             trained_steps.append(trained)
 
             output = None
-            for _, batch_data in enumerate(inputs_for_transform):#batching_transformer will output only one obj
-                batch_X, batch_y = batch_data
+            for batch_idx, batch_data in enumerate(inputs_for_transform):#batching_transformer will output only one obj
+                if isinstance(batch_data, tuple):
+                    batch_X, batch_y = batch_data
+                elif isinstance(batch_data, list):
+                    batch_X = batch_data[0]
+                    batch_y = batch_data[1]
+                else:
+                    batch_X = batch_data
+                    batch_y = None
                 if trained.is_transformer():
                     batch_output = trained.transform(batch_X, batch_y)
                 else:
@@ -1699,13 +1719,51 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                             batch_output = trained.predict_proba(X = batch_X)
                         else:
                             batch_output = trained.predict(X = batch_X)
-                if not isinstance(batch_output, tuple):
-                    output = helpers.append_batch(output, (batch_output, batch_y)) 
+                if isinstance(batch_output, tuple):
+                    batch_out_X, batch_out_y = batch_output
                 else:
-                    output = helpers.append_batch(output, batch_output) 
-            output = helpers.create_data_loader(*output, batch_size=inputs_for_transform.batch_size)   
+                    batch_out_X = batch_output
+                    batch_out_y = None
+                if serialize:
+                    if output is None:
+                        output = h5py.File(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), 'w')
+                        #estimate the size of the dataset based on the first batch output size
+                        transform_ratio = int(len(batch_out_X)/len(batch_X))
+                        if len(batch_out_X.shape) == 1:
+                            h5_data_shape = (transform_ratio*len(inputs_for_transform.dataset), )
+                        if len(batch_out_X.shape) == 2:
+                            h5_data_shape = (transform_ratio*len(inputs_for_transform.dataset), batch_out_X.shape[1])
+                        elif len(batch_out_X.shape) == 3:
+                            h5_data_shape = (transform_ratio*len(inputs_for_transform.dataset), batch_out_X.shape[1], batch_out_X.shape[2])
+                        dataset = output.create_dataset(name='X', shape=h5_data_shape, chunks=True, compression="gzip")
+                        if batch_out_y is None:
+                            batch_out_y = batch_y
+                        if len(batch_out_y.shape) == 1:
+                            h5_labels_shape = (transform_ratio*len(inputs_for_transform.dataset), )
+                        elif len(batch_out_y.shape) == 2:
+                            h5_labels_shape = (transform_ratio*len(inputs_for_transform.dataset), batch_out_y.shape[1])
+                        print("h5_labels_shape", h5_labels_shape)
+                        dataset = output.create_dataset(name='y', shape=h5_labels_shape, chunks=True, compression="gzip")
+                    dataset = output['X']
+                    dataset[batch_idx*len(batch_out_X):(batch_idx+1)*len(batch_out_X)] = batch_out_X
+                    labels = output['y']
+                    if batch_out_y is not None:
+                        labels[batch_idx*len(batch_out_y):(batch_idx+1)*len(batch_out_y)] = batch_out_y
+                    else:
+                        labels[batch_idx*len(batch_y):(batch_idx+1)*len(batch_y)] = batch_y
+                else:
+                    if batch_out_y is not None:
+                        output = helpers.append_batch(output, (batch_output, batch_y)) 
+                    else:
+                        output = helpers.append_batch(output, batch_output) 
+            if serialize:
+                output.close()
+            output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), batch_size=inputs_for_transform.batch_size)   
             outputs[operator] = output
 
+        if serialize:
+            os.remove(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'))
+            os.rmdir(serialization_out_dir)
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
         trained_steps2:Any = trained_steps
