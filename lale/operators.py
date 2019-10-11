@@ -1672,6 +1672,11 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             if not os.path.exists(serialization_out_dir):
                 os.mkdir(serialization_out_dir)
 
+        if serialize:
+            serialization_out_dir = os.path.join(os.path.dirname(__file__), 'temp_serialized')
+            if not os.path.exists(serialization_out_dir):
+                os.mkdir(serialization_out_dir)
+
         sink_nodes = self.find_sink_nodes()
 
         operator_idx = 0
