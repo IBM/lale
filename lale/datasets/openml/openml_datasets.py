@@ -143,7 +143,7 @@ experiments_dict['bank-marketing'] = {}
 experiments_dict['bank-marketing']['download_arff_url'] = 'https://www.openml.org/data/download/1586218/phpkIxskf'
 experiments_dict['bank-marketing']['download_csv_url'] = 'https://www.openml.org/data/get_csv/1586218/phpkIxskf'
 experiments_dict['bank-marketing']['task_type'] = 'classification'
-experiments_dict['bank-marketing']['target'] = 'class'
+experiments_dict['bank-marketing']['target'] = 'Class'
 
 # 407
 experiments_dict['nomao'] = {}
