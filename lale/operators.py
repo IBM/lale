@@ -1632,9 +1632,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         -------
         [type]
             [description]
-        """
-        
-        from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
+        """        
         trained_steps:List[TrainedOperator] = [ ]
         outputs:Dict[Operator, Any] = { }
         edges:List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
@@ -1725,40 +1723,20 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     batch_out_X = batch_output
                     batch_out_y = None
                 if serialize:
-                    if output is None:
-                        output = h5py.File(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), 'w')
-                        #estimate the size of the dataset based on the first batch output size
-                        transform_ratio = int(len(batch_out_X)/len(batch_X))
-                        if len(batch_out_X.shape) == 1:
-                            h5_data_shape = (transform_ratio*len(inputs_for_transform.dataset), )
-                        if len(batch_out_X.shape) == 2:
-                            h5_data_shape = (transform_ratio*len(inputs_for_transform.dataset), batch_out_X.shape[1])
-                        elif len(batch_out_X.shape) == 3:
-                            h5_data_shape = (transform_ratio*len(inputs_for_transform.dataset), batch_out_X.shape[1], batch_out_X.shape[2])
-                        dataset = output.create_dataset(name='X', shape=h5_data_shape, chunks=True, compression="gzip")
-                        if batch_out_y is None:
-                            batch_out_y = batch_y
-                        if len(batch_out_y.shape) == 1:
-                            h5_labels_shape = (transform_ratio*len(inputs_for_transform.dataset), )
-                        elif len(batch_out_y.shape) == 2:
-                            h5_labels_shape = (transform_ratio*len(inputs_for_transform.dataset), batch_out_y.shape[1])
-                        print("h5_labels_shape", h5_labels_shape)
-                        dataset = output.create_dataset(name='y', shape=h5_labels_shape, chunks=True, compression="gzip")
-                    dataset = output['X']
-                    dataset[batch_idx*len(batch_out_X):(batch_idx+1)*len(batch_out_X)] = batch_out_X
-                    labels = output['y']
-                    if batch_out_y is not None:
-                        labels[batch_idx*len(batch_out_y):(batch_idx+1)*len(batch_out_y)] = batch_out_y
-                    else:
-                        labels[batch_idx*len(batch_y):(batch_idx+1)*len(batch_y)] = batch_y
+                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), len(inputs_for_transform.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)
                 else:
-                    if batch_out_y is not None:
+                    if batch_out_y is None:
                         output = helpers.append_batch(output, (batch_output, batch_y)) 
                     else:
                         output = helpers.append_batch(output, batch_output) 
             if serialize:
                 output.close()
-            output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), batch_size=inputs_for_transform.batch_size)   
+                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), batch_size=inputs_for_transform.batch_size)
+            else: 
+                if isinstance(output, tuple):
+                    output = helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs_for_transform.batch_size)
+                else:
+                    output = helpers.create_data_loader(X = output, y = None, batch_size=inputs_for_transform.batch_size)
             outputs[operator] = output
 
         if serialize:
@@ -1857,7 +1835,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             outputs[operator] = output
         return outputs[self._steps[-1]]
 
-    def transform_with_batches(self, X, y=None, **fit_params):
+    def transform_with_batches(self, X, y=None, serialize = True):
         """[summary]
         
         Parameters
@@ -1872,6 +1850,12 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             [description]
         """
         outputs = { }
+
+        if serialize:
+            serialization_out_dir = os.path.join(os.path.dirname(__file__), 'temp_serialized')
+            if not os.path.exists(serialization_out_dir):
+                os.mkdir(serialization_out_dir)
+
         sink_nodes = self.find_sink_nodes()
         for operator in self._steps:
             preds = self._preds[operator]
@@ -1883,7 +1867,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 inputs = inputs[0]
             trained = operator
             output = None
-            for _, batch_data in enumerate(inputs):#batching_transformer will output only one obj
+            for batch_idx, batch_data in enumerate(inputs):#batching_transformer will output only one obj
                 if isinstance(batch_data, Tuple):
                     batch_X, batch_y = batch_data
                 else:
@@ -1901,14 +1885,34 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                             batch_output = trained.predict_proba(X = batch_X)
                         else:
                             batch_output = trained.predict(X = batch_X)
-                if not isinstance(batch_output, tuple):
-                    output = helpers.append_batch(output, (batch_output, batch_y)) 
+                if isinstance(batch_output, tuple):
+                    batch_out_X, batch_out_y = batch_output
                 else:
-                    output = helpers.append_batch(output, batch_output) 
-            output = helpers.create_data_loader(*output, batch_size=inputs.batch_size)   
+                    batch_out_X = batch_output
+                    batch_out_y = None
+                if serialize:
+                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), len(inputs.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)
+                else:
+                    if batch_out_y is not None:
+                        output = helpers.append_batch(output, (batch_output, batch_out_y)) 
+                    else:
+                        output = helpers.append_batch(output, batch_output)
+            if serialize:
+                output.close()
+                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), batch_size=inputs.batch_size)
+            else: 
+                if isinstance(output, tuple):
+                    output = helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs.batch_size)
+                else:
+                    output = helpers.create_data_loader(X = output, y = None, batch_size=inputs.batch_size)            
             outputs[operator] = output
 
-        return outputs[self._steps[-1]]
+        return_data = outputs[self._steps[-1]].dataset.get_data()
+        if serialize: 
+            os.remove(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'))
+            os.rmdir(serialization_out_dir)
+
+        return return_data
 
     def is_frozen_trained(self):
         for step in self.steps():

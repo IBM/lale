@@ -56,7 +56,8 @@ setup(
               'smac<=0.10.0',
               'aif360',
               'numba',
-              'BlackBoxAuditing'
+              'BlackBoxAuditing',
+              'h5py'
           ],
           'test':[
               'jupyter',

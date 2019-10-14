@@ -30,3 +30,15 @@ class HDF5TorchDataset(Dataset):
             else:
                 element = X[idx], y[idx]
         return element
+
+    def get_data(self):
+        with h5py.File(self.file_path) as h5_file:
+            X = h5_file['X'].value
+            try:
+                y = h5_file['y'].value
+            except KeyError:
+                y = None
+            if y is None:
+                return X
+            else:
+                return X, y

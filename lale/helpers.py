@@ -611,3 +611,34 @@ def create_data_loader(X, y = None, batch_size = 1):
         dataset = HDF5TorchDataset(X)
     return DataLoader(dataset, batch_size=batch_size)
 
+def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_X, batch_y, batch_out_X, batch_out_y):
+    if file_obj is None and file_path is None:
+        raise ValueError("Only one of the file object or file path can be None.")
+    if file_obj is None:
+        file_obj = h5py.File(file_path, 'w')
+        #estimate the size of the dataset based on the first batch output size
+        transform_ratio = int(len(batch_out_X)/len(batch_X))
+        if len(batch_out_X.shape) == 1:
+            h5_data_shape = (transform_ratio*total_len, )
+        if len(batch_out_X.shape) == 2:
+            h5_data_shape = (transform_ratio*total_len, batch_out_X.shape[1])
+        elif len(batch_out_X.shape) == 3:
+            h5_data_shape = (transform_ratio*total_len, batch_out_X.shape[1], batch_out_X.shape[2])
+        dataset = file_obj.create_dataset(name='X', shape=h5_data_shape, chunks=True, compression="gzip")
+        if batch_out_y is None and batch_y is not None:
+            batch_out_y = batch_y
+        if batch_out_y is not None:
+            if len(batch_out_y.shape) == 1:
+                h5_labels_shape = (transform_ratio*total_len, )
+            elif len(batch_out_y.shape) == 2:
+                h5_labels_shape = (transform_ratio*total_len, batch_out_y.shape[1])
+            dataset = file_obj.create_dataset(name='y', shape=h5_labels_shape, chunks=True, compression="gzip")
+    dataset = file_obj['X']
+    dataset[batch_idx*len(batch_out_X):(batch_idx+1)*len(batch_out_X)] = batch_out_X
+    if batch_out_y is not None or batch_y is not None:
+        labels = file_obj['y']
+        if batch_out_y is not None:
+            labels[batch_idx*len(batch_out_y):(batch_idx+1)*len(batch_out_y)] = batch_out_y
+        else:
+            labels[batch_idx*len(batch_y):(batch_idx+1)*len(batch_y)] = batch_y
+    return file_obj

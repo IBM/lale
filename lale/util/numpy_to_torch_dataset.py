@@ -26,3 +26,8 @@ class NumpyTorchDataset(Dataset):
         else:
             return self.X[idx]
 
+    def get_data(self):
+        if self.y is None:
+            return self.X
+        else:
+            return self.X, self.y                

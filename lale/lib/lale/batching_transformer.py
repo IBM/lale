@@ -30,16 +30,13 @@ class BatchingTransformerImpl():
     def fit(self, X, y = None):
         data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
         classes = np.unique(y)
-        self.pipeline = self.pipeline.fit_with_batches(data_loader, y = classes)
+        self.pipeline = self.pipeline.fit_with_batches(data_loader, y = classes, serialize = True)
         return self
 
     def transform(self, X, y = None):
         data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
-        transformed_data_loader = self.pipeline.transform_with_batches(data_loader)
-        # if hasattr(transformed_data_loader.dataset, 'y'):
-        #     return transformed_data_loader.dataset.X, transformed_data_loader.dataset.y
-        # else:
-        return transformed_data_loader.dataset.X
+        transformed_data = self.pipeline.transform_with_batches(data_loader, serialize = True)
+        return transformed_data
 
 _input_schema_predict = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
