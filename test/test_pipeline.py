@@ -330,14 +330,7 @@ class TestBatching(unittest.TestCase):
         pipeline = NoOp() >> BatchingTransformer(pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
-        print("**********************************************************************")
-        print(self.X_train.shape)
-        print("Using partial fit from Lale", accuracy_score(self.y_test, predictions))
-
-        pipeline = NoOp() >> MinMaxScaler() >> MLPClassifier(random_state=42)
-        trained = pipeline.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
-        print("Using pipeline's fit from Lale", accuracy_score(self.y_test, predictions))
+        lale_accuracy = accuracy_score(self.y_test, predictions)
 
         from sklearn.preprocessing import MinMaxScaler
         from sklearn.neural_network import MLPClassifier
@@ -349,41 +342,56 @@ class TestBatching(unittest.TestCase):
         import numpy as np
         trained_clf = clf.partial_fit(X_transformed, self.y_train, classes = np.unique(self.y_train))
         predictions = trained_clf.predict(trained_prep.transform(self.X_test))
-        print("Using partial fit from scikit learn", accuracy_score(self.y_test, predictions))
+        sklearn_accuracy = accuracy_score(self.y_test, predictions)
 
-        compare1 = predictions
+        self.assertEqual(lale_accuracy, sklearn_accuracy)
 
+    def test_fit1(self):
+        import warnings
+        warnings.filterwarnings(action="always")
+        from lale.lib.sklearn import MinMaxScaler, MLPClassifier
+        pipeline = BatchingTransformer(pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
+        trained = pipeline.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+        lale_accuracy = accuracy_score(self.y_test, predictions)
+
+        from sklearn.preprocessing import MinMaxScaler
+        from sklearn.neural_network import MLPClassifier
         prep = MinMaxScaler()
-        trained_prep = prep.fit(self.X_train, self.y_train)
+        trained_prep = prep.partial_fit(self.X_train, self.y_train)
         X_transformed = trained_prep.transform(self.X_train)
-
-        X_transformed = prep.fit_transform(self.X_train, self.y_train)
 
         clf = MLPClassifier(random_state=42)
         import numpy as np
-        trained_clf = clf.fit(X_transformed, self.y_train)
-        predictions = trained_clf.predict(prep.transform(self.X_test))
-        print("Using fit from sklearn", accuracy_score(self.y_test, predictions))
-        compare2 = predictions
+        trained_clf = clf.partial_fit(X_transformed, self.y_train, classes = np.unique(self.y_train))
+        predictions = trained_clf.predict(trained_prep.transform(self.X_test))
+        sklearn_accuracy = accuracy_score(self.y_test, predictions)
 
-        from sklearn.pipeline import make_pipeline
-        sklearn_pipeline = make_pipeline(MinMaxScaler(), MLPClassifier(random_state=42))
-        trained_pipeline = sklearn_pipeline.fit(self.X_train, self.y_train)
-        predictions = trained_pipeline.predict(self.X_test)
-        print("Using pipeline's fit from sklearn", accuracy_score(self.y_test, predictions))
+        self.assertEqual(lale_accuracy, sklearn_accuracy)        
 
+    def test_fit2(self):
+        import warnings
+        warnings.filterwarnings(action="always")
+        from lale.lib.sklearn import MinMaxScaler, MLPClassifier
+        pipeline = BatchingTransformer(pipeline = MinMaxScaler() >> MinMaxScaler(), batch_size = 112)
+        trained = pipeline.fit(self.X_train, self.y_train)
+        lale_transforms = trained.transform(self.X_test)
 
-        X = self.X_train
-        y = self.y_train
-        mlp = MLPClassifier(max_iter=100, random_state=1,
-                            tol=0, alpha=1e-5, learning_rate_init=0.2)
+        from sklearn.preprocessing import MinMaxScaler
+        prep = MinMaxScaler()
+        trained_prep = prep.partial_fit(self.X_train, self.y_train)
+        X_transformed = trained_prep.transform(self.X_train)
 
-        mlp.fit(X, y)
-        pred1 = mlp.predict(X)
-        mlp = MLPClassifier(random_state=1, alpha=1e-5,
-                            learning_rate_init=0.2)
-        mlp.partial_fit(X, y, classes=np.unique(y))
-        pred2 = mlp.predict(X)
+        clf = MinMaxScaler()
+        import numpy as np
+        trained_clf = clf.partial_fit(X_transformed, self.y_train)
+        sklearn_transforms = trained_clf.transform(trained_prep.transform(self.X_test))
 
-        print("pred1:{}".format(pred1[0:10]))
-        print("pred2:{}".format(pred2[0:10]))
+        for i in range(5):
+            for j in range(2):
+                self.assertAlmostEqual(lale_transforms[i, j], sklearn_transforms[i, j])                
+    
+    def test_no_partial_fit(self):
+        pipeline = BatchingTransformer(pipeline = NoOp() >> LogisticRegression())
+        with self.assertRaises(AttributeError):
+            trained = pipeline.fit(self.X_train, self.y_train)

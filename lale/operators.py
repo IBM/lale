@@ -1606,24 +1606,12 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             lale_op_obj = get_equivalent_lale_op(sklearn_pipeline)
         return lale_op_obj
     
-    # def is_batchable(self):
-    #     """Identify if the pipeline has a batch operator and if it is valid to perform batching.
-    #     """
-    #     from lale.lib.lale import BatchTransformer
-    #     batchable = False
-    #     for operator in self._steps:
-    #         if isinstance(operator, IndividualOp) and isinstance(operator._impl, BatchTransformer):
-    #             batchable = True
-    #         elif isinstance(operator, Pipeline):
-    #             batchable = operator.is_batchable()
-    #     return batchable
-
     def fit_with_batches(self, X, y=None, serialize=True):
         """[summary]
         
         Parameters
         ----------
-        X : [type]
+        X : 
             [description]
         y : [type], optional
             For a supervised pipeline, this is an array with the unique class labels 
@@ -1655,12 +1643,14 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             if len(inputs) == 1:
                 inputs = inputs[0]
             trained:TrainedOperator
-            try:
-                if hasattr(trainable._impl, "partial_fit"):
+            if hasattr(trainable._impl, "partial_fit"):
+                try:
                     num_epochs = trainable._impl.num_epochs
-            except AttributeError:
-                warnings.warn("Operator {} does not have num_epochs, using 1 as a default".format(trainable.name()))
-                num_epochs = 1
+                except AttributeError:
+                    warnings.warn("Operator {} does not have num_epochs, using 1 as a default".format(trainable.name()))
+                    num_epochs = 1
+            else:
+                raise AttributeError("All operators to be trained with batching need to implement partial_fit. {} doesn't.".format(operator.name()))
             inputs_for_transform = inputs
             for epoch in range(num_epochs):
                 training_loss = 0

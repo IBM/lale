@@ -21,22 +21,78 @@ import lale.helpers as helpers
 logging.basicConfig(level=logging.INFO)
 
 class BatchingTransformerImpl():
-    def __init__(self, pipeline = None, batch_size = 32, shuffle = True, num_workers = 0):
-        self.pipeline = pipeline
-        self.batch_size = batch_size
-        self.shuffle = shuffle
-        self.num_workers = num_workers
+  """BatchingTransformer trains the given pipeline using batches.
+  The batch_size is used across all steps of the pipeline, serializing
+  the intermediate outputs if specified.
 
-    def fit(self, X, y = None):
-        data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
-        classes = np.unique(y)
-        self.pipeline = self.pipeline.fit_with_batches(data_loader, y = classes, serialize = True)
-        return self
+  Parameters
+  ----------
+  pipeline : lale.operators.Pipeline
+      A Lale pipeline object that needs to be trained/used for transform or predictions,
+      by default None
+  batch_size : int, optional
+      Batch size to be used for all steps in the pipeline, by default 32
+  shuffle : bool, optional
+      Shuffle dataset before batching or not, by default True
+  num_workers : int, optional
+      Number of workers for pytorch dataloader, by default 0
+  serialize_intermediate : bool, optional
+      Serialize the intermediate transform outputs or not, by default True
 
-    def transform(self, X, y = None):
-        data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
-        transformed_data = self.pipeline.transform_with_batches(data_loader, serialize = True)
-        return transformed_data
+  Examples
+  --------
+  >>> from lale.lib.sklearn import MinMaxScaler, MLPClassifier
+  >>> pipeline = NoOp() >> BatchingTransformer(
+    pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
+  >>> trained = pipeline.fit(X_train, y_train)
+  >>> predictions = trained.predict(X_test)
+
+  """
+  def __init__(self, pipeline = None, batch_size = 32, shuffle = True, num_workers = 0, serialize_intermediate=True):    
+    self.pipeline = pipeline
+    self.batch_size = batch_size
+    self.shuffle = shuffle
+    self.num_workers = num_workers
+    self.serialize_intermediate = serialize_intermediate
+
+  def fit(self, X, y = None):
+    if self.pipeline is None:
+      raise ValueError("The pipeline object can't be None at the time of fit.")
+    data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
+    classes = np.unique(y)
+    self.pipeline = self.pipeline.fit_with_batches(data_loader, y = classes, serialize = self.serialize_intermediate)
+    return self
+
+  def transform(self, X, y = None):
+    data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
+    transformed_data = self.pipeline.transform_with_batches(data_loader, serialize = self.serialize_intermediate)
+    return transformed_data
+
+  def predict(self, X, y = None):
+    return self.transform(X, y)
+
+_input_schema_fit = {
+  '$schema': 'http://json-schema.org/draft-04/schema#',
+  'description': 'Input data schema for fit.',
+  'type': 'object',
+  'required': ['X'],
+  'additionalProperties': False,
+  'properties': {
+    'X': {
+      'description': 'Features; the outer array is over samples.',
+      'anyOf': [
+        { 'type': 'array',
+          'items': {'type': 'number'}},
+        { 'type': 'array',
+          'items': {
+            'type': 'array', 'minItems': 1,
+            'items': {'type': 'number'}}}]},
+        'y': {
+            'type': 'array',
+            'items': {'anyOf':[{'type': 'integer'}, {'type':'number'}]}
+        }
+  }
+}
 
 _input_schema_predict = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -49,14 +105,14 @@ _input_schema_predict = {
       'description': 'Features; the outer array is over samples.',
       'anyOf': [
         { 'type': 'array',
-          'items': {'type': 'string'}},
+          'items': {'type': 'number'}},
         { 'type': 'array',
           'items': {
-            'type': 'array', 'minItems': 1, 'maxItems': 1,
-            'items': {'type': 'string'}}}]},
+            'type': 'array', 'minItems': 1,
+            'items': {'type': 'number'}}}]},
         'y': {
             'type': 'array',
-            'items': {'anyOf':[{'type': 'integer'}, {'type':'string'}]}
+            'items': {'anyOf':[{'type': 'integer'}, {'type':'number'}]}
         }
   }
 }
@@ -77,6 +133,9 @@ _hyperparams_schema = {
       'additionalProperties': False,
       'relevantToOptimizer': ['batch_size'],
       'properties': {
+        'pipeline':{
+          'description':'A lale pipeline object to be used inside of batching',
+        },
         'batch_size':{
           'description': 'Batch size used for transform.',
           'type': 'integer',
@@ -86,8 +145,20 @@ _hyperparams_schema = {
           'minimumForOptimizer': 32,
           'maximumForOptimizer': 128},
         'shuffle':{
-
-        }  
+          'type':'boolean',
+          'default': False,
+          'description': 'Shuffle dataset before batching or not.'
+          },
+        'num_workers':{
+          'type':'integer',
+          'default':0,
+          'description': 'Number of workers for pytorch dataloader.'
+          },
+        'serialize_intermediate':{
+          'type':'boolean',
+          'default': True,
+          'description': 'Serialize the intermediate transform outputs or not.'
+          }
           }}]}
 
 _combined_schemas = {
@@ -101,11 +172,12 @@ _combined_schemas = {
     'op': ['transformer'],
     'post': []},
   'properties': {
+    'input_fit': _input_schema_fit,
     'input_predict': _input_schema_predict,
     'output': _output_schema,
     'hyperparams': _hyperparams_schema } }
 
 if __name__ == "__main__":
-    lale.helpers.validate_is_schema(_combined_schemas)
+    helpers.validate_is_schema(_combined_schemas)
 
 BatchingTransformer = make_operator(BatchingTransformerImpl, _combined_schemas)
