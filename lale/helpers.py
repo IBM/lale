@@ -153,9 +153,8 @@ def print_yaml(what, doc, file=sys.stdout):
     print(yaml.dump({what: doc}).strip(), file=file)
 
 def validate_schema(value, schema, subsample_array=True):
-    pass
-    # json_value = data_to_json(value, subsample_array)
-    # jsonschema.validate(json_value, schema)
+    json_value = data_to_json(value, subsample_array)
+    jsonschema.validate(json_value, schema)
 
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 _JSON_META_SCHEMA = None
