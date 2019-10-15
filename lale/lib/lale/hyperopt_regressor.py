@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 class HyperoptRegressor():
 
-    def __init__(self, model = None, max_evals=50, handle_cv_failure = False, pgo:Optional[PGO]=None):
+    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure = False, pgo:Optional[PGO]=None):
         self.max_evals = max_evals
         if model is None:
             self.model = RandomForestRegressor
@@ -40,6 +40,7 @@ class HyperoptRegressor():
             self.model = model
         self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.model, pgo=pgo)])
         self.handle_cv_failure = handle_cv_failure
+        self.cv = cv
         self.trials = Trials()
 
 
@@ -50,7 +51,7 @@ class HyperoptRegressor():
 
             reg = create_instance_from_hyperopt_search_space(self.model, params)
             try:
-                cv_score, logloss, execution_time = cross_val_score_track_trials(reg, X_train, y_train, cv=KFold(10), scoring = r2_score)
+                cv_score, logloss, execution_time = cross_val_score_track_trials(reg, X_train, y_train, cv=KFold(self.cv), scoring = r2_score)
                 logger.debug("Successful trial of hyperopt")
             except BaseException as e:
                 #If there is any error in cross validation, use the accuracy based on a random train-test split as the evaluation criterion
