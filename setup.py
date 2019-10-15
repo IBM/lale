@@ -44,7 +44,8 @@ setup(
         'xgboost',
         'lightgbm',
         'decorator',
-        'torch>=1.0'],
+        'torch>=1.0',
+        'h5py'],
       extras_require={
           'full': [
               'pytorch-pretrained-bert>=0.6.1',
@@ -56,9 +57,7 @@ setup(
               'smac<=0.10.0',
               'aif360',
               'numba',
-              'BlackBoxAuditing',
-              'h5py'
-          ],
+              'BlackBoxAuditing'],
           'test':[
               'jupyter',
               'mypy',
