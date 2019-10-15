@@ -43,11 +43,11 @@ setup(
         'pandas',
         'xgboost',
         'lightgbm',
-        'decorator'],
+        'decorator',
+        'torch>=1.0'],
       extras_require={
           'full': [
               'pytorch-pretrained-bert>=0.6.1',
-              'torch>=1.0',
               'torchvision>=0.2.2',
               'liac-arff>=2.4.0',
               'tensorflow-datasets>=1.0.1',
