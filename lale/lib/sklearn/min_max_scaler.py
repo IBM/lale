@@ -29,6 +29,13 @@ class MinMaxScalerImpl:
     def transform(self, X):
         return self._sklearn_model.transform(X)
 
+    def partial_fit(self, X, y=None):
+      if not hasattr(self, "_sklearn_model"):
+        self._sklearn_model = sklearn.preprocessing.MinMaxScaler(
+            **self._hyperparams)
+      self._sklearn_model.partial_fit(X)
+      return self
+
 _input_schema_fit = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for training.',

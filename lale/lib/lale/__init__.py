@@ -20,3 +20,4 @@ from .hyperopt_regressor import HyperoptRegressor
 from .keep_non_numbers import KeepNonNumbers
 from .keep_numbers import KeepNumbers
 from .project import Project
+from .batching_transformer import BatchingTransformer

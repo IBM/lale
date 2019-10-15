@@ -33,11 +33,16 @@ import graphviz
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, log_loss
 from sklearn.utils.metaestimators import _safe_split
+from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
+from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
+from torch.utils.data import DataLoader
 import copy
 import logging
 import importlib
 import inspect
 import pkgutil
+import torch
+import h5py
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -91,6 +96,9 @@ def data_to_json(data, subsample_array = True):
         return ndarray_to_json(data.toarray(), subsample_array)
     elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
         np_array = data.values
+        return ndarray_to_json(np_array, subsample_array)
+    elif isinstance(data, torch.Tensor):
+        np_array = data.numpy()
         return ndarray_to_json(np_array, subsample_array)
     else:
         return data
@@ -568,3 +576,71 @@ class val_wrapper():
             return cls.unwrap(obj.unwrap_self())
         else:
             return obj
+
+def append_batch(data, batch_data):
+    if data is None:
+        return batch_data
+    elif isinstance(data, np.ndarray):
+        if isinstance(batch_data, np.ndarray):
+            if len(data.shape) == 1 and len(batch_data.shape) == 1:
+                return np.concatenate([data, batch_data])
+            else:
+                return np.vstack((data, batch_data))
+    elif isinstance(data, tuple):
+        X, y = data
+        if isinstance(batch_data, tuple):
+            batch_X, batch_y = batch_data
+            X = append_batch(X, batch_X)
+            y = append_batch(y, batch_y)
+            return X, y
+    elif isinstance(data, torch.Tensor):
+        if isinstance(batch_data, torch.Tensor):
+            return torch.cat((data, batch_data))
+    elif isinstance(data, h5py.File):
+        if isinstance(batch_data, tuple):
+            batch_X, batch_y = batch_data
+            
+    #TODO:Handle dataframes
+
+def create_data_loader(X, y = None, batch_size = 1):
+    if isinstance(X, pd.DataFrame):
+        X = X.to_numpy()
+        if isinstance(y, pd.Series):
+            y = y.to_numpy()
+    if isinstance(X, np.ndarray):
+        dataset = NumpyTorchDataset(X, y)
+    if isinstance(X, str):#Assume that this is path to hdf5 file
+        dataset = HDF5TorchDataset(X)
+    return DataLoader(dataset, batch_size=batch_size)
+
+def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_X, batch_y, batch_out_X, batch_out_y):
+    if file_obj is None and file_path is None:
+        raise ValueError("Only one of the file object or file path can be None.")
+    if file_obj is None:
+        file_obj = h5py.File(file_path, 'w')
+        #estimate the size of the dataset based on the first batch output size
+        transform_ratio = int(len(batch_out_X)/len(batch_X))
+        if len(batch_out_X.shape) == 1:
+            h5_data_shape = (transform_ratio*total_len, )
+        if len(batch_out_X.shape) == 2:
+            h5_data_shape = (transform_ratio*total_len, batch_out_X.shape[1])
+        elif len(batch_out_X.shape) == 3:
+            h5_data_shape = (transform_ratio*total_len, batch_out_X.shape[1], batch_out_X.shape[2])
+        dataset = file_obj.create_dataset(name='X', shape=h5_data_shape, chunks=True, compression="gzip")
+        if batch_out_y is None and batch_y is not None:
+            batch_out_y = batch_y
+        if batch_out_y is not None:
+            if len(batch_out_y.shape) == 1:
+                h5_labels_shape = (transform_ratio*total_len, )
+            elif len(batch_out_y.shape) == 2:
+                h5_labels_shape = (transform_ratio*total_len, batch_out_y.shape[1])
+            dataset = file_obj.create_dataset(name='y', shape=h5_labels_shape, chunks=True, compression="gzip")
+    dataset = file_obj['X']
+    dataset[batch_idx*len(batch_out_X):(batch_idx+1)*len(batch_out_X)] = batch_out_X
+    if batch_out_y is not None or batch_y is not None:
+        labels = file_obj['y']
+        if batch_out_y is not None:
+            labels[batch_idx*len(batch_out_y):(batch_idx+1)*len(batch_out_y)] = batch_out_y
+        else:
+            labels[batch_idx*len(batch_y):(batch_idx+1)*len(batch_y)] = batch_y
+    return file_obj
