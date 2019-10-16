@@ -54,6 +54,7 @@ setup(
               'tensorflow-datasets>=1.0.1',
               'tensorflow>=1.13.1',
               'tensorflow_hub',
+              'spacy',
               'smac<=0.10.0',
               'aif360',
               'numba',
@@ -67,5 +68,5 @@ setup(
               'm2r',
               'sphinx_rtd_theme',
               'sphinxcontrib.apidoc'
-          ]}        
+          ]}
 )
