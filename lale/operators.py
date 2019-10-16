@@ -33,6 +33,7 @@ import jsonschema
 import lale.pretty_print
 import logging
 import h5py
+import shutil
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -1633,6 +1634,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
         sink_nodes = self.find_sink_nodes()
 
+        operator_idx = 0
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -1713,7 +1715,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     batch_out_X = batch_output
                     batch_out_y = None
                 if serialize:
-                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), len(inputs_for_transform.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)
+                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), 
+                    len(inputs_for_transform.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)
                 else:
                     if batch_out_y is None:
                         output = helpers.append_batch(output, (batch_output, batch_y)) 
@@ -1721,17 +1724,16 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         output = helpers.append_batch(output, batch_output) 
             if serialize:
                 output.close()
-                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), batch_size=inputs_for_transform.batch_size)
+                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), batch_size=inputs_for_transform.batch_size)
             else: 
                 if isinstance(output, tuple):
                     output = helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs_for_transform.batch_size)
                 else:
                     output = helpers.create_data_loader(X = output, y = None, batch_size=inputs_for_transform.batch_size)
             outputs[operator] = output
-
+            operator_idx += 1
         if serialize:
-            os.remove(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'))
-            os.rmdir(serialization_out_dir)
+            shutil.rmtree(serialization_out_dir)
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
         trained_steps2:Any = trained_steps
@@ -1847,6 +1849,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 os.mkdir(serialization_out_dir)
 
         sink_nodes = self.find_sink_nodes()
+        operator_idx = 0
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -1881,7 +1884,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     batch_out_X = batch_output
                     batch_out_y = None
                 if serialize:
-                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), len(inputs.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)
+                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), len(inputs.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)
                 else:
                     if batch_out_y is not None:
                         output = helpers.append_batch(output, (batch_output, batch_out_y)) 
@@ -1889,18 +1892,18 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         output = helpers.append_batch(output, batch_output)
             if serialize:
                 output.close()
-                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'), batch_size=inputs.batch_size)
+                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), batch_size=inputs.batch_size)
             else: 
                 if isinstance(output, tuple):
                     output = helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs.batch_size)
                 else:
                     output = helpers.create_data_loader(X = output, y = None, batch_size=inputs.batch_size)            
             outputs[operator] = output
+            operator_idx += 1
 
         return_data = outputs[self._steps[-1]].dataset.get_data()
         if serialize: 
-            os.remove(os.path.join(serialization_out_dir, 'fit_with_batches.hdf5'))
-            os.rmdir(serialization_out_dir)
+            shutil.rmtree(serialization_out_dir)
 
         return return_data
 
