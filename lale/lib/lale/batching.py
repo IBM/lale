@@ -20,14 +20,14 @@ import logging
 import lale.helpers as helpers
 logging.basicConfig(level=logging.INFO)
 
-class BatchingTransformerImpl():
-  """BatchingTransformer trains the given pipeline using batches.
+class BatchingImpl():
+  """Batching trains the given pipeline using batches.
   The batch_size is used across all steps of the pipeline, serializing
   the intermediate outputs if specified.
 
   Parameters
   ----------
-  pipeline : lale.operators.Pipeline
+  operator : lale.operators.Pipeline
       A Lale pipeline object that needs to be trained/used for transform or predictions,
       by default None
   batch_size : int, optional
@@ -36,36 +36,36 @@ class BatchingTransformerImpl():
       Shuffle dataset before batching or not, by default True
   num_workers : int, optional
       Number of workers for pytorch dataloader, by default 0
-  serialize_intermediate : bool, optional
-      Serialize the intermediate transform outputs or not, by default True
+  inmemory : bool, optional
+      Whether all the computations are done in memory or intermediate outputs are serialized.
 
   Examples
   --------
   >>> from lale.lib.sklearn import MinMaxScaler, MLPClassifier
-  >>> pipeline = NoOp() >> BatchingTransformer(
+  >>> pipeline = NoOp() >> Batching(
     pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
   >>> trained = pipeline.fit(X_train, y_train)
   >>> predictions = trained.predict(X_test)
 
   """
-  def __init__(self, pipeline = None, batch_size = 32, shuffle = True, num_workers = 0, serialize_intermediate=True):    
-    self.pipeline = pipeline
+  def __init__(self, operator = None, batch_size = 32, shuffle = True, num_workers = 0, inmemory=False):    
+    self.operator = operator
     self.batch_size = batch_size
     self.shuffle = shuffle
     self.num_workers = num_workers
-    self.serialize_intermediate = serialize_intermediate
+    self.inmemory = inmemory
 
   def fit(self, X, y = None):
-    if self.pipeline is None:
+    if self.operator is None:
       raise ValueError("The pipeline object can't be None at the time of fit.")
     data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
     classes = np.unique(y)
-    self.pipeline = self.pipeline.fit_with_batches(data_loader, y = classes, serialize = self.serialize_intermediate)
+    self.operator = self.operator.fit_with_batches(data_loader, y = classes, serialize = self.inmemory)
     return self
 
   def transform(self, X, y = None):
     data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
-    transformed_data = self.pipeline.transform_with_batches(data_loader, serialize = self.serialize_intermediate)
+    transformed_data = self.operator.transform_with_batches(data_loader, serialize = self.inmemory)
     return transformed_data
 
   def predict(self, X, y = None):
@@ -133,7 +133,7 @@ _hyperparams_schema = {
       'additionalProperties': False,
       'relevantToOptimizer': ['batch_size'],
       'properties': {
-        'pipeline':{
+        'operator':{
           'description':'A lale pipeline object to be used inside of batching',
         },
         'batch_size':{
@@ -154,10 +154,10 @@ _hyperparams_schema = {
           'default':0,
           'description': 'Number of workers for pytorch dataloader.'
           },
-        'serialize_intermediate':{
+        'inmemory':{
           'type':'boolean',
-          'default': True,
-          'description': 'Serialize the intermediate transform outputs or not.'
+          'default': False,
+          'description': 'Whether all the computations are done in memory or intermediate outputs are serialized.'
           }
           }}]}
 
@@ -169,7 +169,7 @@ _combined_schemas = {
   'type': 'object',
   'tags': {
     'pre': [],
-    'op': ['transformer'],
+    'op': [],
     'post': []},
   'properties': {
     'input_fit': _input_schema_fit,
@@ -180,4 +180,4 @@ _combined_schemas = {
 if __name__ == "__main__":
     helpers.validate_is_schema(_combined_schemas)
 
-BatchingTransformer = make_operator(BatchingTransformerImpl, _combined_schemas)
+Batching = make_operator(BatchingImpl, _combined_schemas)
