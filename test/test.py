@@ -757,8 +757,8 @@ class TestHyperoptClassifier(unittest.TestCase):
         from sklearn.metrics import accuracy_score
         data = load_iris()
         X, y = data.data, data.target
-        #pipeline = KNeighborsClassifier() | (OneHotEncoder(handle_unknown = 'ignore') >> LogisticRegression())
-        pipeline = KNeighborsClassifier() | (SimpleImputer() >> LogisticRegression())
+        pipeline = KNeighborsClassifier() | (OneHotEncoder(handle_unknown = 'ignore') >> LogisticRegression())
+        #pipeline = KNeighborsClassifier() | (SimpleImputer() >> LogisticRegression())
         clf = HyperoptClassifier(model = pipeline, max_evals=1)
         trained = clf.fit(X, y)
         predictions = trained.predict(X)
