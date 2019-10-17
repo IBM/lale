@@ -29,7 +29,7 @@ class TestBatching(unittest.TestCase):
 
     def test_fit(self):
         import warnings
-        warnings.filterwarnings(action="always")
+        warnings.filterwarnings(action="ignore")
         from lale.lib.sklearn import MinMaxScaler, MLPClassifier
         pipeline = NoOp() >> BatchingTransformer(pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -52,7 +52,7 @@ class TestBatching(unittest.TestCase):
 
     def test_fit1(self):
         import warnings
-        warnings.filterwarnings(action="always")
+        warnings.filterwarnings(action="ignore")
         from lale.lib.sklearn import MinMaxScaler, MLPClassifier
         pipeline = BatchingTransformer(pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -75,7 +75,7 @@ class TestBatching(unittest.TestCase):
 
     def test_fit2(self):
         import warnings
-        warnings.filterwarnings(action="always")
+        warnings.filterwarnings(action="ignore")
         from lale.lib.sklearn import MinMaxScaler, MLPClassifier
         pipeline = BatchingTransformer(pipeline = MinMaxScaler() >> MinMaxScaler(), batch_size = 112)
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -94,8 +94,23 @@ class TestBatching(unittest.TestCase):
         for i in range(5):
             for j in range(2):
                 self.assertAlmostEqual(lale_transforms[i, j], sklearn_transforms[i, j])                
-    
+
+    def test_fit3(self):
+        from lale.lib.sklearn import MinMaxScaler, MLPClassifier, PCA
+        pipeline = PCA() >> BatchingTransformer(pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), 
+                                                 batch_size = 10)        
+        trained = pipeline.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+
     def test_no_partial_fit(self):
         pipeline = BatchingTransformer(pipeline = NoOp() >> LogisticRegression())
         with self.assertRaises(AttributeError):
             trained = pipeline.fit(self.X_train, self.y_train)
+
+    # TODO: Nesting doesn't work yet
+    # def test_nested_pipeline(self):
+    #     from lale.lib.sklearn import MinMaxScaler, MLPClassifier
+    #     pipeline = BatchingTransformer(pipeline = MinMaxScaler() >> BatchingTransformer(pipeline = NoOp() >> MLPClassifier(random_state=42)), batch_size = 112)
+    #     trained = pipeline.fit(self.X_train, self.y_train)
+    #     predictions = trained.predict(self.X_test)
+    #     lale_accuracy = accuracy_score(self.y_test, predictions)
