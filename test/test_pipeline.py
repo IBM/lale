@@ -133,7 +133,7 @@ class TestBatching(unittest.TestCase):
     # TODO: Nesting doesn't work yet
     # def test_nested_pipeline(self):
     #     from lale.lib.sklearn import MinMaxScaler, MLPClassifier
-    #     pipeline = BatchingTransformer(pipeline = MinMaxScaler() >> BatchingTransformer(pipeline = NoOp() >> MLPClassifier(random_state=42)), batch_size = 112)
+    #     pipeline = Batching(operator = MinMaxScaler() >> Batching(operator = NoOp() >> MLPClassifier(random_state=42)), batch_size = 112)
     #     trained = pipeline.fit(self.X_train, self.y_train)
     #     predictions = trained.predict(self.X_test)
     #     lale_accuracy = accuracy_score(self.y_test, predictions)
