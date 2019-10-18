@@ -33,7 +33,7 @@ setup(
     install_requires=[
         'astunparse',
         'graphviz',
-        'hyperopt>=0.1.1',
+        'hyperopt==0.1.2',
         'jsonschema==2.6.0',
         'jsonsubschema',
         'numpy',
