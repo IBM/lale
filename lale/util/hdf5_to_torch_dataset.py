@@ -33,9 +33,9 @@ class HDF5TorchDataset(Dataset):
 
     def get_data(self):
         with h5py.File(self.file_path) as h5_file:
-            X = h5_file['X'].value
+            X = h5_file['X'][:]
             try:
-                y = h5_file['y'].value
+                y = h5_file['y'][:]
             except KeyError:
                 y = None
             if y is None:
