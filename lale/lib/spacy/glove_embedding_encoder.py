@@ -13,11 +13,14 @@
 # limitations under the License.
 
 import logging
-import spacy
+from spacy.lang.en import English
 import numpy as np
 from lale.operators import make_operator
 import lale.helpers
 from sklearn.utils.validation import _is_arraylike
+import urllib.request
+import os
+import zipfile
 
 logging.basicConfig(level=logging.INFO)
 
@@ -29,6 +32,7 @@ class GloveEmbeddingEncoderImpl(object):
 
     Parameters
     ----------
+    dim: int, (default=300), dimension of word embeddings to use
     combiner: string, (default=mean), apply mean pooling or max pooling on word embeddings to generate
         sentence embedding
 
@@ -37,47 +41,64 @@ class GloveEmbeddingEncoderImpl(object):
     R. JeffreyPennington and C. Manning. Glove: Global vectors for word representation. 2014
 
     """
-    def __init__(self, combiner='mean'):
-        self.nlp = spacy.load("en_vectors_web_lg")
+    def __init__(self, dim=300, combiner='mean'):
+
         self.combiner = combiner
+        self.dim = dim
+
         if self.combiner not in ["mean", "max"]:
             raise ValueError("Combiner must be either mean or max")
+
+        if self.dim not in [50, 100, 200, 300]:
+            raise ValueError("dim must be in 50, 100, 200, or 300")
+
+        glove_path = os.path.join(os.path.dirname(__file__),
+                                  "resources",
+                                  "glove.6B.{}d.txt".format(dim))
+
+        if not os.path.exists(glove_path):
+            download_url = 'http://nlp.stanford.edu/data/glove.6B.zip'
+            download_dir = os.path.join(os.path.dirname(__file__), 'resources', 'glove.6B.zip')
+            if not os.path.exists(os.path.join(os.path.dirname(__file__), "resources")):
+                os.mkdir(os.path.join(os.path.dirname(__file__), "resources"))
+            urllib.request.urlretrieve(download_url, download_dir)
+            with zipfile.ZipFile(download_dir, 'r') as zip_ref:
+                zip_ref.extractall(os.path.join(os.path.dirname(__file__), "resources"))
+            os.remove(download_dir)
+
+        self.glove_dict = self._load_glove(glove_path)
+        nlp = English()
+        self.tokenizer = nlp.Defaults.create_tokenizer(nlp)
+        print('finish initialization')
 
     def fit(self, X, y=None):
         return self
 
-    def transform(self, X):
+    def _load_glove(self, glove_path):
+        glove_dict = dict()
+        with open(glove_path, 'r', encoding='utf-8') as file_handle:
+            for line in file_handle:
+                line = line.split()
+                glove_dict[line[0]] = np.array(line[1:], dtype=np.float32)
+        return glove_dict
 
+    def transform(self, X):
         if not _is_arraylike(X):
             raise TypeError("X is not iterable")
 
-        if self.combiner == 'mean':
-            transformed_x = self._mean(X)
-        else:
-            transformed_x = self._max(X)
-
-        return transformed_x
-
-    def _mean(self, X):
         transformed_X = list()
         for text in X:
-            doc = self.nlp(text)
-            transformed_X.append(doc.vector)
-
-        return transformed_X
-
-    def _max(self, X):
-        transformed_X = list()
-        for text in X:
-            doc = self.nlp(text)
             temp_vec = list()
-            for token in doc:
-                temp_vec.append(token.vector)
-            temp_vec = np.amax(temp_vec, axis=0)
-            transformed_X.append(temp_vec)
+            for token in self.tokenizer(text.lower()):
+                temp_vec.append(self.glove_dict.get(token, self.glove_dict['unk']))
 
+            if self.combiner == 'mean':
+                sentence_vec = np.mean(temp_vec, axis=0)
+            else:
+                sentence_vec = np.amax(temp_vec, axis=0)
+
+            transformed_X.append(sentence_vec)
         return transformed_X
-
 
 _input_schema_fit = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -134,7 +155,10 @@ _hyperparams_schema = {
          'properties': {
              'combiner': {
                 'enum': ['mean', 'max'],
-                'default': 'mean'}}}]}
+                'default': 'mean'},
+                'dim':{'enum': [50, 100, 200, 300],
+                       'default': 300}
+         }}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
