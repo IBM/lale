@@ -39,14 +39,6 @@ class BatchingImpl():
   inmemory : bool, optional
       Whether all the computations are done in memory or intermediate outputs are serialized.
 
-  Examples
-  --------
-  >>> from lale.lib.sklearn import MinMaxScaler, MLPClassifier
-  >>> pipeline = NoOp() >> Batching(
-    pipeline = MinMaxScaler() >> MLPClassifier(random_state=42), batch_size = 112)
-  >>> trained = pipeline.fit(X_train, y_train)
-  >>> predictions = trained.predict(X_test)
-
   """
   def __init__(self, operator = None, batch_size = 32, shuffle = True, num_workers = 0, inmemory=False):    
     self.operator = operator
