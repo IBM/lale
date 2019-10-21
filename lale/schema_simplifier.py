@@ -230,8 +230,11 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 else:
                     s_type = t
                 s_typed.append(s)
+            elif 'XXX TODO XXX' in s and len(s) == 1:
+                # Ignore missing constraints
+                pass
             else:
-                logger.error(f"simplifyAll: '{s}' has unknown type")
+                logger.warning(f"simplifyAll: '{s}' has unknown type")
                 s_other.append(s)
     # Now that we have partitioned things 
     # Note: I am sure some of our assumptions here are not correct :-(, but this should do for now :-)
