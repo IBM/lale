@@ -37,6 +37,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MultiTaskLassoCV    Multi-task Lasso model trained with L1/L2 mixed-norm as regularizer.',
     'allOf': [{
         'type': 'object',
+        'required': ['eps', 'n_alphas', 'alphas', 'fit_intercept', 'normalize', 'max_iter', 'tol', 'copy_X', 'cv', 'verbose', 'n_jobs', 'random_state', 'selection'],
         'relevantToOptimizer': ['eps', 'n_alphas', 'fit_intercept', 'normalize', 'max_iter', 'tol', 'copy_X', 'cv'],
         'additionalProperties': False,
         'properties': {
@@ -121,7 +122,7 @@ _hyperparams_schema = {
                 'default': 'cyclic',
                 'description': "If set to 'random', a random coefficient is updated every iteration"},
         }}, {
-        'description': 'n_jobs, XXX TODO XXX, only if multiple values for l1_ratio are given'}],
+        'XXX TODO XXX': 'Parameter: n_jobs > only if multiple values for l1_ratio are given'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

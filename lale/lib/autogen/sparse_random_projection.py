@@ -29,6 +29,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for SparseRandomProjection    Reduce dimensionality through sparse random projection',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'density', 'eps', 'dense_output', 'random_state'],
         'relevantToOptimizer': ['n_components', 'eps', 'dense_output'],
         'additionalProperties': False,
         'properties': {
@@ -53,7 +54,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.1},
             'dense_output': {
                 'type': 'boolean',

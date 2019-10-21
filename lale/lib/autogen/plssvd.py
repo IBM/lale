@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for PLSSVD    Partial Least Square SVD',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'scale', 'copy'],
         'relevantToOptimizer': ['n_components', 'scale', 'copy'],
         'additionalProperties': False,
         'properties': {

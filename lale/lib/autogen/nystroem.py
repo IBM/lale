@@ -31,6 +31,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Nystroem    Approximate a kernel map using a subset of the training data.',
     'allOf': [{
         'type': 'object',
+        'required': ['kernel', 'gamma', 'coef0', 'degree', 'kernel_params', 'n_components', 'random_state'],
         'relevantToOptimizer': ['kernel', 'n_components'],
         'additionalProperties': False,
         'properties': {

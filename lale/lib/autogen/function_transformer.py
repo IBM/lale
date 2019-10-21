@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for FunctionTransformer    Constructs a transformer from an arbitrary callable.',
     'allOf': [{
         'type': 'object',
+        'required': ['func', 'inverse_func', 'validate', 'accept_sparse', 'pass_y', 'check_inverse', 'kw_args', 'inv_kw_args'],
         'relevantToOptimizer': ['accept_sparse', 'pass_y'],
         'additionalProperties': False,
         'properties': {

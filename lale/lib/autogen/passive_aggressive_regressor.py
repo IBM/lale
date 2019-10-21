@@ -39,6 +39,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for PassiveAggressiveRegressor    Passive Aggressive Regressor',
     'allOf': [{
         'type': 'object',
+        'required': ['C', 'fit_intercept', 'max_iter', 'tol', 'early_stopping', 'validation_fraction', 'n_iter_no_change', 'shuffle', 'verbose', 'loss', 'epsilon', 'random_state', 'warm_start', 'average', 'n_iter'],
         'relevantToOptimizer': ['fit_intercept', 'max_iter', 'tol', 'shuffle', 'loss', 'epsilon', 'n_iter'],
         'additionalProperties': False,
         'properties': {
@@ -126,7 +127,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of passes over the training data (aka epochs).'},
         }}, {
-        'description': 'max_iter, XXX TODO XXX, only impacts the behavior in the fit method'}, {
+        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
         'description': 'validation_fraction, only used if early_stopping is true',
         'anyOf': [{
             'type': 'object',

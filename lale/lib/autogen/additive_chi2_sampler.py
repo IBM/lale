@@ -26,6 +26,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for AdditiveChi2Sampler    Approximate feature map for additive chi2 kernel.',
     'allOf': [{
         'type': 'object',
+        'required': ['sample_steps', 'sample_interval'],
         'relevantToOptimizer': ['sample_steps'],
         'additionalProperties': False,
         'properties': {

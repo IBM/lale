@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LinearSVC    Linear Support Vector Classification.',
     'allOf': [{
         'type': 'object',
+        'required': ['penalty', 'loss', 'dual', 'tol', 'C', 'multi_class', 'fit_intercept', 'intercept_scaling', 'class_weight', 'verbose', 'random_state', 'max_iter'],
         'relevantToOptimizer': ['penalty', 'loss', 'dual', 'tol', 'multi_class', 'fit_intercept', 'intercept_scaling', 'max_iter'],
         'additionalProperties': False,
         'properties': {

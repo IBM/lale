@@ -31,6 +31,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for GaussianProcessRegressor    Gaussian process regression (GPR).',
     'allOf': [{
         'type': 'object',
+        'required': ['kernel', 'alpha', 'optimizer', 'n_restarts_optimizer', 'normalize_y', 'copy_X_train', 'random_state'],
         'relevantToOptimizer': ['alpha', 'optimizer', 'n_restarts_optimizer', 'normalize_y'],
         'additionalProperties': False,
         'properties': {

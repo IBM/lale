@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for QuadraticDiscriminantAnalysis    Quadratic Discriminant Analysis',
     'allOf': [{
         'type': 'object',
+        'required': ['priors', 'reg_param', 'store_covariance', 'tol', 'store_covariances'],
         'relevantToOptimizer': ['tol'],
         'additionalProperties': False,
         'properties': {

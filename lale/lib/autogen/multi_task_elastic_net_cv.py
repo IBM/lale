@@ -38,6 +38,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MultiTaskElasticNetCV    Multi-task L1/L2 ElasticNet with built-in cross-validation.',
     'allOf': [{
         'type': 'object',
+        'required': ['l1_ratio', 'eps', 'n_alphas', 'alphas', 'fit_intercept', 'normalize', 'max_iter', 'tol', 'cv', 'copy_X', 'verbose', 'n_jobs', 'random_state', 'selection'],
         'relevantToOptimizer': ['eps', 'n_alphas', 'fit_intercept', 'normalize', 'max_iter', 'tol', 'cv', 'copy_X'],
         'additionalProperties': False,
         'properties': {
@@ -50,7 +51,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.001,
                 'description': 'Length of the path. ``eps=1e-3`` means that'},
             'n_alphas': {
@@ -127,7 +128,7 @@ _hyperparams_schema = {
                 'default': 'cyclic',
                 'description': "If set to 'random', a random coefficient is updated every iteration"},
         }}, {
-        'description': 'n_jobs, XXX TODO XXX, only if multiple values for l1_ratio are given'}],
+        'XXX TODO XXX': 'Parameter: n_jobs > only if multiple values for l1_ratio are given'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

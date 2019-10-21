@@ -26,6 +26,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Normalizer    Normalize samples individually to unit norm.',
     'allOf': [{
         'type': 'object',
+        'required': ['norm', 'copy'],
         'relevantToOptimizer': ['norm', 'copy'],
         'additionalProperties': False,
         'properties': {

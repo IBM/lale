@@ -39,6 +39,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LassoCV    Lasso linear model with iterative fitting along a regularization path.',
     'allOf': [{
         'type': 'object',
+        'required': ['eps', 'n_alphas', 'alphas', 'fit_intercept', 'normalize', 'precompute', 'max_iter', 'tol', 'copy_X', 'cv', 'verbose', 'n_jobs', 'positive', 'random_state', 'selection'],
         'relevantToOptimizer': ['eps', 'n_alphas', 'fit_intercept', 'normalize', 'precompute', 'max_iter', 'tol', 'copy_X', 'cv', 'positive', 'selection'],
         'additionalProperties': False,
         'properties': {

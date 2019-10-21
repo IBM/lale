@@ -25,6 +25,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MaxAbsScaler    Scale each feature by its maximum absolute value.',
     'allOf': [{
         'type': 'object',
+        'required': ['copy'],
         'relevantToOptimizer': ['copy'],
         'additionalProperties': False,
         'properties': {

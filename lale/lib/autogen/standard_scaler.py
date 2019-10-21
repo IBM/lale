@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for StandardScaler    Standardize features by removing the mean and scaling to unit variance',
     'allOf': [{
         'type': 'object',
+        'required': ['copy', 'with_mean', 'with_std'],
         'relevantToOptimizer': ['copy', 'with_mean', 'with_std'],
         'additionalProperties': False,
         'properties': {

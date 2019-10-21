@@ -26,7 +26,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for OrdinalEncoder    Encode categorical features as an integer array.',
     'allOf': [{
         'type': 'object',
-        'required': ['dtype'],
+        'required': ['categories', 'dtype'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {

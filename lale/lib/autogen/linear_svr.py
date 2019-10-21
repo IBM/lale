@@ -34,6 +34,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LinearSVR    Linear Support Vector Regression.',
     'allOf': [{
         'type': 'object',
+        'required': ['epsilon', 'tol', 'C', 'loss', 'fit_intercept', 'intercept_scaling', 'dual', 'verbose', 'random_state', 'max_iter'],
         'relevantToOptimizer': ['epsilon', 'tol', 'loss', 'fit_intercept', 'dual', 'max_iter'],
         'additionalProperties': False,
         'properties': {

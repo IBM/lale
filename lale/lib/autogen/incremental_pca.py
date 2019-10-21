@@ -28,6 +28,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for IncrementalPCA    Incremental principal components analysis (IPCA).',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'whiten', 'copy', 'batch_size'],
         'relevantToOptimizer': ['n_components', 'whiten', 'copy', 'batch_size'],
         'additionalProperties': False,
         'properties': {
@@ -58,7 +59,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of samples to use for each batch. Only used when calling'},
         }}, {
-        'description': 'batch_size, XXX TODO XXX, only used when calling fit'}],
+        'XXX TODO XXX': 'Parameter: batch_size > only used when calling fit'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

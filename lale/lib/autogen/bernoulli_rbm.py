@@ -30,6 +30,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for BernoulliRBM    Bernoulli Restricted Boltzmann Machine (RBM).',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'learning_rate', 'batch_size', 'n_iter', 'verbose', 'random_state'],
         'relevantToOptimizer': ['n_components', 'batch_size', 'n_iter'],
         'additionalProperties': False,
         'properties': {

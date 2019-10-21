@@ -30,6 +30,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MultinomialNB    Naive Bayes classifier for multinomial models',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'fit_prior', 'class_prior'],
         'relevantToOptimizer': ['alpha', 'fit_prior'],
         'additionalProperties': False,
         'properties': {

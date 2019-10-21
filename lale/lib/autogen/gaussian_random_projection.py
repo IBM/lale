@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for GaussianRandomProjection    Reduce dimensionality through Gaussian random projection',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'eps', 'random_state'],
         'relevantToOptimizer': ['n_components', 'eps'],
         'additionalProperties': False,
         'properties': {

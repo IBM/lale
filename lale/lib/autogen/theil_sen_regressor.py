@@ -33,6 +33,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for TheilSenRegressor    Theil-Sen Estimator: robust multivariate regression model.',
     'allOf': [{
         'type': 'object',
+        'required': ['fit_intercept', 'copy_X', 'max_subpopulation', 'n_subsamples', 'max_iter', 'tol', 'random_state', 'n_jobs', 'verbose'],
         'relevantToOptimizer': ['fit_intercept', 'copy_X', 'max_subpopulation', 'max_iter', 'tol'],
         'additionalProperties': False,
         'properties': {
@@ -89,7 +90,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Verbose mode when fitting the model.'},
         }}, {
-        'description': "max_subpopulation, XXX TODO XXX, only a stochastic subpopulation of a given maximal size if 'n choose k' is larger than max_subpopulation"}],
+        'XXX TODO XXX': "Parameter: max_subpopulation > only a stochastic subpopulation of a given maximal size if 'n choose k' is larger than max_subpopulation"}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

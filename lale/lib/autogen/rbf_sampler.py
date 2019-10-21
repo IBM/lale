@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for RBFSampler    Approximates feature map of an RBF kernel by Monte Carlo approximation',
     'allOf': [{
         'type': 'object',
+        'required': ['gamma', 'n_components', 'random_state'],
         'relevantToOptimizer': ['n_components'],
         'additionalProperties': False,
         'properties': {

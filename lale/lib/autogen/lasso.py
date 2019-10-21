@@ -35,6 +35,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Lasso    Linear Model trained with L1 prior as regularizer (aka the Lasso)',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'fit_intercept', 'normalize', 'precompute', 'copy_X', 'max_iter', 'tol', 'warm_start', 'positive', 'random_state', 'selection'],
         'relevantToOptimizer': ['alpha', 'fit_intercept', 'normalize', 'copy_X', 'max_iter', 'tol', 'positive', 'selection'],
         'additionalProperties': False,
         'properties': {

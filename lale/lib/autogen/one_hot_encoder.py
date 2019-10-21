@@ -30,7 +30,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for OneHotEncoder    Encode categorical integer features as a one-hot numeric array.',
     'allOf': [{
         'type': 'object',
-        'required': ['dtype'],
+        'required': ['categories', 'sparse', 'dtype', 'handle_unknown', 'n_values', 'categorical_features'],
         'relevantToOptimizer': ['sparse'],
         'additionalProperties': False,
         'properties': {
