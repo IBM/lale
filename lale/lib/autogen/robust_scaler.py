@@ -28,6 +28,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for RobustScaler    Scale features using statistics that are robust to outliers.',
     'allOf': [{
         'type': 'object',
+        'required': ['with_centering', 'with_scaling', 'quantile_range', 'copy'],
         'relevantToOptimizer': ['with_centering', 'with_scaling', 'copy'],
         'additionalProperties': False,
         'properties': {

@@ -30,6 +30,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for HuberRegressor    Linear regression model that is robust to outliers.',
     'allOf': [{
         'type': 'object',
+        'required': ['epsilon', 'max_iter', 'alpha', 'warm_start', 'fit_intercept', 'tol'],
         'relevantToOptimizer': ['epsilon', 'max_iter', 'alpha', 'fit_intercept', 'tol'],
         'additionalProperties': False,
         'properties': {

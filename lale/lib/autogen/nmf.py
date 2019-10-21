@@ -35,6 +35,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for NMF    Non-Negative Matrix Factorization (NMF)',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'init', 'solver', 'beta_loss', 'tol', 'max_iter', 'random_state', 'alpha', 'l1_ratio', 'verbose', 'shuffle'],
         'relevantToOptimizer': ['n_components', 'tol', 'max_iter', 'alpha', 'shuffle'],
         'additionalProperties': False,
         'properties': {

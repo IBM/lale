@@ -40,6 +40,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MiniBatchDictionaryLearning    Mini-batch dictionary learning',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'alpha', 'n_iter', 'fit_algorithm', 'n_jobs', 'batch_size', 'shuffle', 'dict_init', 'transform_algorithm', 'transform_n_nonzero_coefs', 'transform_alpha', 'verbose', 'split_sign', 'random_state', 'positive_code', 'positive_dict'],
         'relevantToOptimizer': ['n_components', 'alpha', 'n_iter', 'fit_algorithm', 'batch_size', 'shuffle', 'transform_algorithm'],
         'additionalProperties': False,
         'properties': {
@@ -137,7 +138,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Whether to enforce positivity when finding the dictionary.'},
         }}, {
-        'description': "transform_n_nonzero_coefs, XXX TODO XXX, only used by algorithm='lars' and algorithm='omp' and is overridden by alpha in the omp case"}],
+        'XXX TODO XXX': "Parameter: transform_n_nonzero_coefs > only used by algorithm='lars' and algorithm='omp' and is overridden by alpha in the omp case"}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

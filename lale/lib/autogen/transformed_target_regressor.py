@@ -29,6 +29,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for TransformedTargetRegressor    Meta-estimator to regress on a transformed target.',
     'allOf': [{
         'type': 'object',
+        'required': ['regressor', 'transformer', 'func', 'inverse_func', 'check_inverse'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {

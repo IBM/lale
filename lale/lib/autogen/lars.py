@@ -33,6 +33,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Lars    Least Angle Regression model a.k.a. LAR',
     'allOf': [{
         'type': 'object',
+        'required': ['fit_intercept', 'verbose', 'normalize', 'precompute', 'n_nonzero_coefs', 'eps', 'copy_X', 'fit_path', 'positive'],
         'relevantToOptimizer': ['fit_intercept', 'normalize', 'precompute', 'n_nonzero_coefs', 'eps', 'copy_X', 'positive'],
         'additionalProperties': False,
         'properties': {

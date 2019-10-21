@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for AdaBoostClassifier    An AdaBoost classifier.',
     'allOf': [{
         'type': 'object',
+        'required': ['base_estimator', 'n_estimators', 'learning_rate', 'algorithm', 'random_state'],
         'relevantToOptimizer': ['n_estimators', 'algorithm'],
         'additionalProperties': False,
         'properties': {

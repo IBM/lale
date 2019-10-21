@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for KBinsDiscretizer    Bin continuous data into intervals.',
     'allOf': [{
         'type': 'object',
+        'required': ['n_bins', 'encode', 'strategy'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {

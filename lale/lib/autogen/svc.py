@@ -41,6 +41,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for SVC    C-Support Vector Classification.',
     'allOf': [{
         'type': 'object',
+        'required': ['C', 'kernel', 'degree', 'gamma', 'coef0', 'shrinking', 'probability', 'tol', 'cache_size', 'class_weight', 'verbose', 'max_iter', 'decision_function_shape', 'random_state'],
         'relevantToOptimizer': ['kernel', 'degree', 'gamma', 'shrinking', 'probability', 'tol', 'cache_size', 'max_iter', 'decision_function_shape'],
         'additionalProperties': False,
         'properties': {
@@ -121,7 +122,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The seed of the pseudo random number generator used when shuffling'},
         }}, {
-        'description': "coef0, XXX TODO XXX, only significant in 'poly' and 'sigmoid'"}],
+        'XXX TODO XXX': "Parameter: coef0 > only significant in 'poly' and 'sigmoid'"}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

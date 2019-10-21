@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for CCA    CCA Canonical Correlation Analysis.',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'scale', 'max_iter', 'tol', 'copy'],
         'relevantToOptimizer': ['n_components', 'scale', 'max_iter', 'tol', 'copy'],
         'additionalProperties': False,
         'properties': {
@@ -60,7 +61,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-06},
             'copy': {
                 'type': 'boolean',

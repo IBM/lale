@@ -33,6 +33,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for RadiusNeighborsClassifier    Classifier implementing a vote among neighbors within a given radius',
     'allOf': [{
         'type': 'object',
+        'required': ['radius', 'weights', 'algorithm', 'leaf_size', 'p', 'metric', 'outlier_label', 'metric_params', 'n_jobs'],
         'relevantToOptimizer': ['weights', 'algorithm', 'leaf_size', 'p', 'metric'],
         'additionalProperties': False,
         'properties': {

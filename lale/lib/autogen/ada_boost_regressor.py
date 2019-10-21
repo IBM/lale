@@ -29,6 +29,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for AdaBoostRegressor    An AdaBoost regressor.',
     'allOf': [{
         'type': 'object',
+        'required': ['base_estimator', 'n_estimators', 'learning_rate', 'loss', 'random_state'],
         'relevantToOptimizer': ['n_estimators', 'loss'],
         'additionalProperties': False,
         'properties': {

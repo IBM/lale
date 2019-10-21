@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for ARDRegression    Bayesian ARD regression.',
     'allOf': [{
         'type': 'object',
+        'required': ['n_iter', 'tol', 'alpha_1', 'alpha_2', 'lambda_1', 'lambda_2', 'compute_score', 'threshold_lambda', 'fit_intercept', 'normalize', 'copy_X', 'verbose'],
         'relevantToOptimizer': ['n_iter', 'tol', 'compute_score', 'fit_intercept', 'normalize', 'copy_X'],
         'additionalProperties': False,
         'properties': {

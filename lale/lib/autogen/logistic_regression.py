@@ -41,6 +41,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LogisticRegression    Logistic Regression (aka logit, MaxEnt) classifier.',
     'allOf': [{
         'type': 'object',
+        'required': ['penalty', 'dual', 'tol', 'C', 'fit_intercept', 'intercept_scaling', 'class_weight', 'random_state', 'solver', 'max_iter', 'multi_class', 'verbose', 'warm_start', 'n_jobs'],
         'relevantToOptimizer': ['penalty', 'dual', 'tol', 'fit_intercept', 'intercept_scaling', 'solver', 'max_iter', 'multi_class'],
         'additionalProperties': False,
         'properties': {
@@ -117,10 +118,10 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'Number of CPU cores used when parallelizing over classes if'},
         }}, {
-        'description': 'penalty, XXX TODO XXX, only l2 penalties'}, {
-        'description': 'dual, XXX TODO XXX, only implemented for l2 penalty with liblinear solver'}, {
-        'description': "intercept_scaling, XXX TODO XXX, only when the solver 'liblinear' is used and self"}, {
-        'description': "solver, XXX TODO XXX, only 'newton-cg'"}, {
+        'XXX TODO XXX': 'Parameter: penalty > only l2 penalties'}, {
+        'XXX TODO XXX': 'Parameter: dual > only implemented for l2 penalty with liblinear solver'}, {
+        'XXX TODO XXX': "Parameter: intercept_scaling > only when the solver 'liblinear' is used and self"}, {
+        'XXX TODO XXX': "Parameter: solver > only 'newton-cg'"}, {
         'description': 'max_iter, only for the newton-cg',
         'anyOf': [{
             'type': 'object',

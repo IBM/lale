@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for SkewedChi2Sampler    Approximates feature map of the "skewed chi-squared" kernel by Monte',
     'allOf': [{
         'type': 'object',
+        'required': ['skewedness', 'n_components', 'random_state'],
         'relevantToOptimizer': ['n_components'],
         'additionalProperties': False,
         'properties': {

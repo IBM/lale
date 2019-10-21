@@ -34,6 +34,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LabelPropagation    Label Propagation classifier',
     'allOf': [{
         'type': 'object',
+        'required': ['kernel', 'gamma', 'n_neighbors', 'alpha', 'max_iter', 'tol', 'n_jobs'],
         'relevantToOptimizer': ['kernel', 'gamma', 'n_neighbors', 'max_iter', 'tol'],
         'additionalProperties': False,
         'properties': {
@@ -81,7 +82,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of parallel jobs to run.'},
         }}, {
-        'description': "kernel, XXX TODO XXX, only 'rbf' and 'knn' strings are valid inputs"}],
+        'XXX TODO XXX': "Parameter: kernel > only 'rbf' and 'knn' strings are valid inputs"}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

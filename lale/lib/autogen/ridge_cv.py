@@ -31,6 +31,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for RidgeCV    Ridge regression with built-in cross-validation.',
     'allOf': [{
         'type': 'object',
+        'required': ['alphas', 'fit_intercept', 'normalize', 'scoring', 'cv', 'gcv_mode', 'store_cv_values'],
         'relevantToOptimizer': ['fit_intercept', 'normalize', 'cv', 'gcv_mode', 'store_cv_values'],
         'additionalProperties': False,
         'properties': {
@@ -74,7 +75,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Flag indicating if the cross-validation values corresponding to'},
         }}, {
-        'description': 'store_cv_values, XXX TODO XXX, only compatible with cv=none (i'}],
+        'XXX TODO XXX': 'Parameter: store_cv_values > only compatible with cv=none (i'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

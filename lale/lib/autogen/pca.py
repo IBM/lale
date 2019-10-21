@@ -31,6 +31,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for PCA    Principal component analysis (PCA)',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'copy', 'whiten', 'svd_solver', 'tol', 'iterated_power', 'random_state'],
         'relevantToOptimizer': ['n_components', 'copy', 'whiten', 'svd_solver', 'tol', 'iterated_power'],
         'additionalProperties': False,
         'properties': {

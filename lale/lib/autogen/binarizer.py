@@ -26,6 +26,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Binarizer    Binarize data (set feature values to 0 or 1) according to a threshold',
     'allOf': [{
         'type': 'object',
+        'required': ['threshold', 'copy'],
         'relevantToOptimizer': ['copy'],
         'additionalProperties': False,
         'properties': {

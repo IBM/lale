@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LinearDiscriminantAnalysis    Linear Discriminant Analysis',
     'allOf': [{
         'type': 'object',
+        'required': ['solver', 'shrinkage', 'priors', 'n_components', 'store_covariance', 'tol'],
         'relevantToOptimizer': ['solver', 'n_components', 'tol'],
         'additionalProperties': False,
         'properties': {

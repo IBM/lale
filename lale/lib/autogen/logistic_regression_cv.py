@@ -43,6 +43,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LogisticRegressionCV    Logistic Regression CV (aka logit, MaxEnt) classifier.',
     'allOf': [{
         'type': 'object',
+        'required': ['Cs', 'fit_intercept', 'cv', 'dual', 'penalty', 'scoring', 'solver', 'tol', 'max_iter', 'class_weight', 'n_jobs', 'verbose', 'refit', 'intercept_scaling', 'multi_class', 'random_state'],
         'relevantToOptimizer': ['Cs', 'fit_intercept', 'cv', 'dual', 'penalty', 'scoring', 'solver', 'tol', 'max_iter', 'multi_class'],
         'additionalProperties': False,
         'properties': {
@@ -90,7 +91,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0001,
                 'description': 'Tolerance for stopping criteria.'},
             'max_iter': {
@@ -135,10 +136,10 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'If int, random_state is the seed used by the random number generator;'},
         }}, {
-        'description': 'dual, XXX TODO XXX, only implemented for l2 penalty with liblinear solver'}, {
-        'description': 'penalty, XXX TODO XXX, only l2 penalties'}, {
-        'description': "solver, XXX TODO XXX, only 'newton-cg'"}, {
-        'description': "intercept_scaling, XXX TODO XXX, only when the solver 'liblinear' is used and self"}],
+        'XXX TODO XXX': 'Parameter: dual > only implemented for l2 penalty with liblinear solver'}, {
+        'XXX TODO XXX': 'Parameter: penalty > only l2 penalties'}, {
+        'XXX TODO XXX': "Parameter: solver > only 'newton-cg'"}, {
+        'XXX TODO XXX': "Parameter: intercept_scaling > only when the solver 'liblinear' is used and self"}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

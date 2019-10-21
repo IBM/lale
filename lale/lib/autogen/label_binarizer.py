@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LabelBinarizer    Binarize labels in a one-vs-all fashion',
     'allOf': [{
         'type': 'object',
+        'required': ['neg_label', 'pos_label', 'sparse_output'],
         'relevantToOptimizer': ['neg_label', 'pos_label', 'sparse_output'],
         'additionalProperties': False,
         'properties': {

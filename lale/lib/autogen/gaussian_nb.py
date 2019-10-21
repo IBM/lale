@@ -29,6 +29,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for GaussianNB    Gaussian Naive Bayes (GaussianNB)',
     'allOf': [{
         'type': 'object',
+        'required': ['priors', 'var_smoothing'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {

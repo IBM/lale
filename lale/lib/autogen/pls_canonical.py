@@ -33,6 +33,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for PLSCanonical    PLSCanonical implements the 2 blocks canonical PLS of the original Wold',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'scale', 'algorithm', 'max_iter', 'tol', 'copy'],
         'relevantToOptimizer': ['n_components', 'scale', 'algorithm', 'max_iter', 'tol', 'copy'],
         'additionalProperties': False,
         'properties': {
@@ -73,7 +74,7 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'Whether the deflation should be done on a copy. Let the default'},
         }}, {
-        'description': 'max_iter, XXX TODO XXX, only if algorithm="nipals")'}],
+        'XXX TODO XXX': 'Parameter: max_iter > only if algorithm="nipals")'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
