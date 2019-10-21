@@ -60,13 +60,7 @@ _input_fit_schema = {
     'required': ['X'],
     'additionalProperties': False,
     'properties': {
-        'X': {
-            'description': 'Features; the outer array is over samples.',
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'}}}}}
+        'X': {}}}
 
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -75,18 +69,8 @@ _input_predict_schema = {
     'required': ['X', 'y'],
     'additionalProperties': False,
     'properties': {
-        'X': {
-            'description': 'Features; the outer array is over samples.',
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'}}},
-        'y': {
-            'anyOf':[
-            {'enum': [None]},
-            {'type': 'array',
-            'items': {'anyOf':[{'type': 'number'}, {'type':'string'}]}}]}}}
+        'X': {},
+        'y': {}}}
 
 _output_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
