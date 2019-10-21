@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for ElasticNet    Linear regression with combined L1 and L2 priors as regularizer.',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'l1_ratio', 'fit_intercept', 'normalize', 'precompute', 'max_iter', 'copy_X', 'tol', 'warm_start', 'positive', 'random_state', 'selection'],
         'relevantToOptimizer': ['alpha', 'fit_intercept', 'normalize', 'max_iter', 'copy_X', 'tol', 'positive', 'selection'],
         'additionalProperties': False,
         'properties': {

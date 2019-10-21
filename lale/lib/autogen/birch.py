@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Birch    Implements the Birch clustering algorithm.',
     'allOf': [{
         'type': 'object',
+        'required': ['threshold', 'branching_factor', 'n_clusters', 'compute_labels', 'copy'],
         'relevantToOptimizer': ['branching_factor', 'n_clusters', 'compute_labels', 'copy'],
         'additionalProperties': False,
         'properties': {

@@ -26,8 +26,6 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LabelEncoder    Encode labels with value between 0 and n_classes-1.',
     'allOf': [{
         'type': 'object',
-        'relevantToOptimizer': [],
-        'additionalProperties': False,
         'properties': {
             
         }}],

@@ -35,6 +35,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for NuSVR    Nu Support Vector Regression.',
     'allOf': [{
         'type': 'object',
+        'required': ['nu', 'C', 'kernel', 'degree', 'gamma', 'coef0', 'shrinking', 'tol', 'cache_size', 'verbose', 'max_iter'],
         'relevantToOptimizer': ['kernel', 'degree', 'gamma', 'shrinking', 'tol', 'cache_size', 'max_iter'],
         'additionalProperties': False,
         'properties': {
@@ -99,7 +100,7 @@ _hyperparams_schema = {
                 'distribution': 'uniform',
                 'default': (- 1)},
         }}, {
-        'description': "coef0, XXX TODO XXX, only significant in 'poly' and 'sigmoid'"}],
+        'XXX TODO XXX': "Parameter: coef0 > only significant in 'poly' and 'sigmoid'"}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

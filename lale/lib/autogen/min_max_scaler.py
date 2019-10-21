@@ -26,6 +26,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MinMaxScaler    Transforms features by scaling each feature to a given range.',
     'allOf': [{
         'type': 'object',
+        'required': ['feature_range', 'copy'],
         'relevantToOptimizer': ['copy'],
         'additionalProperties': False,
         'properties': {

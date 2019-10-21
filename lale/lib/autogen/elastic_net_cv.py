@@ -40,6 +40,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for ElasticNetCV    Elastic Net model with iterative fitting along a regularization path.',
     'allOf': [{
         'type': 'object',
+        'required': ['l1_ratio', 'eps', 'n_alphas', 'alphas', 'fit_intercept', 'normalize', 'precompute', 'max_iter', 'tol', 'cv', 'copy_X', 'verbose', 'n_jobs', 'positive', 'random_state', 'selection'],
         'relevantToOptimizer': ['eps', 'n_alphas', 'fit_intercept', 'normalize', 'precompute', 'max_iter', 'tol', 'cv', 'copy_X', 'positive', 'selection'],
         'additionalProperties': False,
         'properties': {

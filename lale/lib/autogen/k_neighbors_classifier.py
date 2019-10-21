@@ -35,6 +35,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for KNeighborsClassifier    Classifier implementing the k-nearest neighbors vote.',
     'allOf': [{
         'type': 'object',
+        'required': ['n_neighbors', 'weights', 'algorithm', 'leaf_size', 'p', 'metric', 'metric_params', 'n_jobs'],
         'relevantToOptimizer': ['n_neighbors', 'weights', 'algorithm', 'leaf_size', 'p', 'metric'],
         'additionalProperties': False,
         'properties': {

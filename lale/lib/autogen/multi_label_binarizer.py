@@ -26,6 +26,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MultiLabelBinarizer    Transform between iterable of iterables and a multilabel format',
     'allOf': [{
         'type': 'object',
+        'required': ['classes', 'sparse_output'],
         'relevantToOptimizer': ['sparse_output'],
         'additionalProperties': False,
         'properties': {

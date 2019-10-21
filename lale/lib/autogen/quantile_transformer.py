@@ -30,6 +30,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for QuantileTransformer    Transform features using quantiles information.',
     'allOf': [{
         'type': 'object',
+        'required': ['n_quantiles', 'output_distribution', 'ignore_implicit_zeros', 'subsample', 'random_state', 'copy'],
         'relevantToOptimizer': ['n_quantiles', 'output_distribution', 'subsample', 'copy'],
         'additionalProperties': False,
         'properties': {
@@ -67,7 +68,7 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'Set to False to perform inplace transformation and avoid a copy (if the'},
         }}, {
-        'description': 'ignore_implicit_zeros, XXX TODO XXX, only applies to sparse matrices'}],
+        'XXX TODO XXX': 'Parameter: ignore_implicit_zeros > only applies to sparse matrices'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

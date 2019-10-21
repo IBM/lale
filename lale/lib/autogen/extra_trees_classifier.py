@@ -44,6 +44,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for ExtraTreesClassifier    An extra-trees classifier.',
     'allOf': [{
         'type': 'object',
+        'required': ['n_estimators', 'criterion', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'min_weight_fraction_leaf', 'max_features', 'max_leaf_nodes', 'min_impurity_decrease', 'min_impurity_split', 'bootstrap', 'oob_score', 'n_jobs', 'random_state', 'verbose', 'warm_start', 'class_weight'],
         'relevantToOptimizer': ['n_estimators', 'criterion', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features', 'bootstrap'],
         'additionalProperties': False,
         'properties': {
@@ -155,7 +156,7 @@ _hyperparams_schema = {
                 'enum': ['balanced'],
                 'default': 'balanced'},
         }}, {
-        'description': 'min_samples_leaf, XXX TODO XXX, only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}],
+        'XXX TODO XXX': 'Parameter: min_samples_leaf > only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

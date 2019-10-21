@@ -31,6 +31,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for ComplementNB    The Complement Naive Bayes classifier described in Rennie et al. (2003).',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'fit_prior', 'class_prior', 'norm'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {
@@ -56,7 +57,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Whether or not a second normalization of the weights is performed. The'},
         }}, {
-        'description': 'fit_prior, XXX TODO XXX, only used in edge case with a single class in the training set'}],
+        'XXX TODO XXX': 'Parameter: fit_prior > only used in edge case with a single class in the training set'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

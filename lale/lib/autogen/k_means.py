@@ -38,6 +38,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for KMeans    K-Means clustering',
     'allOf': [{
         'type': 'object',
+        'required': ['n_clusters', 'init', 'n_init', 'max_iter', 'tol', 'precompute_distances', 'verbose', 'random_state', 'copy_x', 'n_jobs', 'algorithm'],
         'relevantToOptimizer': ['n_clusters', 'init', 'n_init', 'max_iter', 'tol', 'precompute_distances', 'copy_x', 'algorithm'],
         'additionalProperties': False,
         'properties': {

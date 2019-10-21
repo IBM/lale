@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for PolynomialFeatures    Generate polynomial and interaction features.',
     'allOf': [{
         'type': 'object',
+        'required': ['degree', 'interaction_only', 'include_bias'],
         'relevantToOptimizer': ['degree', 'interaction_only'],
         'additionalProperties': False,
         'properties': {
@@ -46,7 +47,7 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'If True (default), then include a bias column, the feature in which'},
         }}, {
-        'description': 'interaction_only, XXX TODO XXX, only interaction features are produced: features that are products of at most degree *distinct* input features (so not x[1] ** 2'}],
+        'XXX TODO XXX': 'Parameter: interaction_only > only interaction features are produced: features that are products of at most degree *distinct* input features (so not x[1] ** 2'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

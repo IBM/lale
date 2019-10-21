@@ -31,6 +31,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for OrthogonalMatchingPursuitCV    Cross-validated Orthogonal Matching Pursuit model (OMP).',
     'allOf': [{
         'type': 'object',
+        'required': ['copy', 'fit_intercept', 'normalize', 'max_iter', 'cv', 'n_jobs', 'verbose'],
         'relevantToOptimizer': ['copy', 'fit_intercept', 'normalize', 'max_iter', 'cv'],
         'additionalProperties': False,
         'properties': {
@@ -76,7 +77,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Sets the verbosity amount'},
         }}, {
-        'description': 'copy, XXX TODO XXX, only helpful if x is already fortran-ordered'}],
+        'XXX TODO XXX': 'Parameter: copy > only helpful if x is already fortran-ordered'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

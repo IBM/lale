@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for GaussianProcessClassifier    Gaussian process classification (GPC) based on Laplace approximation.',
     'allOf': [{
         'type': 'object',
+        'required': ['kernel', 'optimizer', 'n_restarts_optimizer', 'max_iter_predict', 'warm_start', 'copy_X_train', 'random_state', 'multi_class', 'n_jobs'],
         'relevantToOptimizer': ['optimizer', 'n_restarts_optimizer', 'max_iter_predict', 'multi_class'],
         'additionalProperties': False,
         'properties': {

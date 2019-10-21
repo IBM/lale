@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for SparsePCA    Sparse Principal Components Analysis (SparsePCA)',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'alpha', 'ridge_alpha', 'max_iter', 'tol', 'method', 'n_jobs', 'U_init', 'V_init', 'verbose', 'random_state', 'normalize_components'],
         'relevantToOptimizer': ['n_components', 'alpha', 'max_iter', 'tol', 'method'],
         'additionalProperties': False,
         'properties': {

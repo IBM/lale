@@ -35,6 +35,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LarsCV    Cross-validated Least Angle Regression model.',
     'allOf': [{
         'type': 'object',
+        'required': ['fit_intercept', 'verbose', 'max_iter', 'normalize', 'precompute', 'cv', 'max_n_alphas', 'n_jobs', 'eps', 'copy_X', 'positive'],
         'relevantToOptimizer': ['fit_intercept', 'max_iter', 'normalize', 'precompute', 'cv', 'max_n_alphas', 'eps', 'copy_X', 'positive'],
         'additionalProperties': False,
         'properties': {
@@ -106,7 +107,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Restrict coefficients to be >= 0. Be aware that you might want to'},
         }}, {
-        'description': 'precompute, XXX TODO XXX, only subsets of x'}],
+        'XXX TODO XXX': 'Parameter: precompute > only subsets of x'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

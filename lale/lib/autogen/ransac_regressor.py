@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for RANSACRegressor    RANSAC (RANdom SAmple Consensus) algorithm.',
     'allOf': [{
         'type': 'object',
+        'required': ['base_estimator', 'min_samples', 'residual_threshold', 'is_data_valid', 'is_model_valid', 'max_trials', 'max_skips', 'stop_n_inliers', 'stop_score', 'stop_probability', 'loss', 'random_state'],
         'relevantToOptimizer': ['min_samples', 'max_trials', 'max_skips', 'stop_n_inliers', 'loss'],
         'additionalProperties': False,
         'properties': {
@@ -124,8 +125,8 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The generator used to initialize the centers.  If int, random_state is'},
         }}, {
-        'description': 'base_estimator, XXX TODO XXX, only supports regression estimators'}, {
-        'description': 'is_model_valid, XXX TODO XXX, only be used if the estimated model is needed for making the rejection decision'}],
+        'XXX TODO XXX': 'Parameter: base_estimator > only supports regression estimators'}, {
+        'XXX TODO XXX': 'Parameter: is_model_valid > only be used if the estimated model is needed for making the rejection decision'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for FactorAnalysis    Factor Analysis (FA)',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'tol', 'copy', 'max_iter', 'noise_variance_init', 'svd_method', 'iterated_power', 'random_state'],
         'relevantToOptimizer': ['n_components', 'tol', 'copy', 'max_iter', 'svd_method', 'iterated_power'],
         'additionalProperties': False,
         'properties': {
@@ -81,8 +82,8 @@ _hyperparams_schema = {
                 'default': 0,
                 'description': 'If int, random_state is the seed used by the random number generator;'},
         }}, {
-        'description': "iterated_power, XXX TODO XXX, only used if svd_method equals 'randomized'"}, {
-        'description': "random_state, XXX TODO XXX, only used when svd_method equals 'randomized'"}],
+        'XXX TODO XXX': "Parameter: iterated_power > only used if svd_method equals 'randomized'"}, {
+        'XXX TODO XXX': "Parameter: random_state > only used when svd_method equals 'randomized'"}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

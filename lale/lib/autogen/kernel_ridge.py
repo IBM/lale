@@ -30,6 +30,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for KernelRidge    Kernel ridge regression.',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'kernel', 'gamma', 'degree', 'coef0', 'kernel_params'],
         'relevantToOptimizer': ['alpha', 'kernel', 'degree', 'coef0'],
         'additionalProperties': False,
         'properties': {

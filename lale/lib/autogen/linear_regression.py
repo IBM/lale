@@ -28,6 +28,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LinearRegression    Ordinary least squares Linear Regression.',
     'allOf': [{
         'type': 'object',
+        'required': ['fit_intercept', 'normalize', 'copy_X', 'n_jobs'],
         'relevantToOptimizer': ['fit_intercept', 'normalize', 'copy_X'],
         'additionalProperties': False,
         'properties': {
@@ -50,7 +51,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of jobs to use for the computation. This will only provide'},
         }}, {
-        'description': 'n_jobs, XXX TODO XXX, only provide speedup for n_targets > 1 and sufficient large problems'}],
+        'XXX TODO XXX': 'Parameter: n_jobs > only provide speedup for n_targets > 1 and sufficient large problems'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

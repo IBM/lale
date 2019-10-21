@@ -27,6 +27,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for PowerTransformer    Apply a power transform featurewise to make data more Gaussian-like.',
     'allOf': [{
         'type': 'object',
+        'required': ['method', 'standardize', 'copy'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {
@@ -43,7 +44,7 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'Set to False to perform inplace computation during transformation.'},
         }}, {
-        'description': 'method, XXX TODO XXX, only works with strictly positive values'}],
+        'XXX TODO XXX': 'Parameter: method > only works with strictly positive values'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

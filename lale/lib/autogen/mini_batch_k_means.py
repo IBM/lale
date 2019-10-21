@@ -39,6 +39,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MiniBatchKMeans    Mini-Batch K-Means clustering',
     'allOf': [{
         'type': 'object',
+        'required': ['n_clusters', 'init', 'max_iter', 'batch_size', 'verbose', 'compute_labels', 'random_state', 'tol', 'max_no_improvement', 'init_size', 'n_init', 'reassignment_ratio'],
         'relevantToOptimizer': ['n_clusters', 'init', 'max_iter', 'batch_size', 'compute_labels', 'tol', 'max_no_improvement', 'n_init'],
         'additionalProperties': False,
         'properties': {
@@ -115,8 +116,8 @@ _hyperparams_schema = {
                 'default': 0.01,
                 'description': 'Control the fraction of the maximum number of counts for a'},
         }}, {
-        'description': 'init_size, XXX TODO XXX, only algorithm is initialized by running a batch kmeans on a random subset of the data'}, {
-        'description': 'n_init, XXX TODO XXX, only run once'}],
+        'XXX TODO XXX': 'Parameter: init_size > only algorithm is initialized by running a batch kmeans on a random subset of the data'}, {
+        'XXX TODO XXX': 'Parameter: n_init > only run once'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
