@@ -30,6 +30,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for CalibratedClassifierCV    Probability calibration with isotonic regression or sigmoid.',
     'allOf': [{
         'type': 'object',
+        'required': ['base_estimator', 'method', 'cv'],
         'relevantToOptimizer': ['method', 'cv'],
         'additionalProperties': False,
         'properties': {

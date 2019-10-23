@@ -29,6 +29,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for OrthogonalMatchingPursuit    Orthogonal Matching Pursuit model (OMP)',
     'allOf': [{
         'type': 'object',
+        'required': ['n_nonzero_coefs', 'tol', 'fit_intercept', 'normalize', 'precompute'],
         'relevantToOptimizer': ['n_nonzero_coefs', 'tol', 'fit_intercept', 'normalize', 'precompute'],
         'additionalProperties': False,
         'properties': {

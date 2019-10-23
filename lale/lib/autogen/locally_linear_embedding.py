@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LocallyLinearEmbedding    Locally Linear Embedding',
     'allOf': [{
         'type': 'object',
+        'required': ['n_neighbors', 'n_components', 'reg', 'eigen_solver', 'tol', 'max_iter', 'method', 'hessian_tol', 'modified_tol', 'neighbors_algorithm', 'random_state', 'n_jobs'],
         'relevantToOptimizer': ['n_neighbors', 'n_components', 'eigen_solver', 'tol', 'max_iter', 'method', 'neighbors_algorithm'],
         'additionalProperties': False,
         'properties': {

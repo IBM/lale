@@ -29,6 +29,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for SimpleImputer    Imputation transformer for completing missing values.',
     'allOf': [{
         'type': 'object',
+        'required': ['missing_values', 'strategy', 'fill_value', 'verbose', 'copy'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {
@@ -55,7 +56,7 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'If True, a copy of X will be created. If False, imputation will'},
         }}, {
-        'description': 'strategy, XXX TODO XXX, only be used with numeric data'}],
+        'XXX TODO XXX': 'Parameter: strategy > only be used with numeric data'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

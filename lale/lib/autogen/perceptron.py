@@ -40,6 +40,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Perceptron    Perceptron',
     'allOf': [{
         'type': 'object',
+        'required': ['penalty', 'alpha', 'fit_intercept', 'max_iter', 'tol', 'shuffle', 'verbose', 'eta0', 'n_jobs', 'random_state', 'early_stopping', 'validation_fraction', 'n_iter_no_change', 'class_weight', 'warm_start', 'n_iter'],
         'relevantToOptimizer': ['alpha', 'fit_intercept', 'max_iter', 'tol', 'shuffle', 'eta0', 'n_iter'],
         'additionalProperties': False,
         'properties': {
@@ -136,7 +137,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of passes over the training data (aka epochs).'},
         }}, {
-        'description': 'max_iter, XXX TODO XXX, only impacts the behavior in the fit method'}, {
+        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
         'description': 'validation_fraction, only used if early_stopping is true',
         'anyOf': [{
             'type': 'object',

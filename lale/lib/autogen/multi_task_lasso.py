@@ -33,6 +33,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MultiTaskLasso    Multi-task Lasso model trained with L1/L2 mixed-norm as regularizer.',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'fit_intercept', 'normalize', 'copy_X', 'max_iter', 'tol', 'warm_start', 'random_state', 'selection'],
         'relevantToOptimizer': ['alpha', 'fit_intercept', 'normalize', 'copy_X', 'max_iter', 'tol'],
         'additionalProperties': False,
         'properties': {

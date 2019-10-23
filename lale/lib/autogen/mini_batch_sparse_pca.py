@@ -36,6 +36,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MiniBatchSparsePCA    Mini-batch Sparse Principal Components Analysis',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'alpha', 'ridge_alpha', 'n_iter', 'callback', 'batch_size', 'verbose', 'shuffle', 'n_jobs', 'method', 'random_state', 'normalize_components'],
         'relevantToOptimizer': ['n_components', 'alpha', 'n_iter', 'batch_size', 'shuffle', 'method'],
         'additionalProperties': False,
         'properties': {

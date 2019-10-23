@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for RadiusNeighborsRegressor    Regression based on neighbors within a fixed radius.',
     'allOf': [{
         'type': 'object',
+        'required': ['radius', 'weights', 'algorithm', 'leaf_size', 'p', 'metric', 'metric_params', 'n_jobs'],
         'relevantToOptimizer': ['weights', 'algorithm', 'leaf_size', 'p', 'metric'],
         'additionalProperties': False,
         'properties': {

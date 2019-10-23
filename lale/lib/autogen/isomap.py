@@ -32,6 +32,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for Isomap    Isomap Embedding',
     'allOf': [{
         'type': 'object',
+        'required': ['n_neighbors', 'n_components', 'eigen_solver', 'tol', 'max_iter', 'path_method', 'neighbors_algorithm', 'n_jobs'],
         'relevantToOptimizer': ['n_neighbors', 'n_components', 'eigen_solver', 'tol', 'path_method', 'neighbors_algorithm'],
         'additionalProperties': False,
         'properties': {

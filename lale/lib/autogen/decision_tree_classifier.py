@@ -40,6 +40,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for DecisionTreeClassifier    A decision tree classifier.',
     'allOf': [{
         'type': 'object',
+        'required': ['criterion', 'splitter', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'min_weight_fraction_leaf', 'max_features', 'random_state', 'max_leaf_nodes', 'min_impurity_decrease', 'min_impurity_split', 'class_weight', 'presort'],
         'relevantToOptimizer': ['criterion', 'splitter', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features'],
         'additionalProperties': False,
         'properties': {
@@ -130,7 +131,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Whether to presort the data to speed up the finding of best splits in'},
         }}, {
-        'description': 'min_samples_leaf, XXX TODO XXX, only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}],
+        'XXX TODO XXX': 'Parameter: min_samples_leaf > only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

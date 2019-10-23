@@ -44,6 +44,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for SGDRegressor    Linear model fitted by minimizing a regularized empirical loss with SGD',
     'allOf': [{
         'type': 'object',
+        'required': ['loss', 'penalty', 'alpha', 'l1_ratio', 'fit_intercept', 'max_iter', 'tol', 'shuffle', 'verbose', 'epsilon', 'random_state', 'learning_rate', 'eta0', 'power_t', 'early_stopping', 'validation_fraction', 'n_iter_no_change', 'warm_start', 'average', 'n_iter'],
         'relevantToOptimizer': ['loss', 'penalty', 'alpha', 'fit_intercept', 'max_iter', 'tol', 'shuffle', 'epsilon', 'learning_rate', 'eta0', 'n_iter'],
         'additionalProperties': False,
         'properties': {
@@ -158,7 +159,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of passes over the training data (aka epochs).'},
         }}, {
-        'description': 'max_iter, XXX TODO XXX, only impacts the behavior in the fit method'}, {
+        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
         'description': "epsilon, only if loss is 'huber'",
         'anyOf': [{
             'type': 'object',

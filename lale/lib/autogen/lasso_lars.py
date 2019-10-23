@@ -34,6 +34,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LassoLars    Lasso model fit with Least Angle Regression a.k.a. Lars',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'fit_intercept', 'verbose', 'normalize', 'precompute', 'max_iter', 'eps', 'copy_X', 'fit_path', 'positive'],
         'relevantToOptimizer': ['alpha', 'fit_intercept', 'normalize', 'precompute', 'max_iter', 'eps', 'copy_X', 'positive'],
         'additionalProperties': False,
         'properties': {
@@ -79,7 +80,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 2.220446049250313e-16,
                 'description': 'The machine-precision regularization in the computation of the'},
             'copy_X': {
@@ -95,7 +96,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Restrict coefficients to be >= 0. Be aware that you might want to'},
         }}, {
-        'description': 'positive, XXX TODO XXX, only coefficients up to the smallest alpha value (alphas_[alphas_ > 0'}],
+        'XXX TODO XXX': 'Parameter: positive > only coefficients up to the smallest alpha value (alphas_[alphas_ > 0'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

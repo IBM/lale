@@ -49,6 +49,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MLPClassifier    Multi-layer Perceptron classifier.',
     'allOf': [{
         'type': 'object',
+        'required': ['hidden_layer_sizes', 'activation', 'solver', 'alpha', 'batch_size', 'learning_rate', 'learning_rate_init', 'power_t', 'max_iter', 'shuffle', 'random_state', 'tol', 'verbose', 'warm_start', 'momentum', 'nesterovs_momentum', 'early_stopping', 'validation_fraction', 'beta_1', 'beta_2', 'epsilon', 'n_iter_no_change'],
         'relevantToOptimizer': ['activation', 'solver', 'alpha', 'batch_size', 'learning_rate', 'max_iter', 'shuffle', 'tol', 'nesterovs_momentum', 'epsilon'],
         'additionalProperties': False,
         'properties': {
@@ -116,7 +117,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0001,
                 'description': 'Tolerance for the optimization. When the loss or score is not improving'},
             'verbose': {
@@ -223,7 +224,7 @@ _hyperparams_schema = {
                 'solver': {
                     'enum': ['sgd']},
             }}]}, {
-        'description': "nesterovs_momentum, XXX TODO XXX, only used when solver='sgd' and momentum > 0"}, {
+        'XXX TODO XXX': "Parameter: nesterovs_momentum > only used when solver='sgd' and momentum > 0"}, {
         'description': "early_stopping, only effective when solver='sgd' or 'adam'",
         'anyOf': [{
             'type': 'object',

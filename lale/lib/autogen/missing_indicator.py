@@ -28,6 +28,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for MissingIndicator    Binary indicators for missing values.',
     'allOf': [{
         'type': 'object',
+        'required': ['missing_values', 'features', 'sparse', 'error_on_new'],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {
@@ -50,7 +51,7 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'If True (default), transform will raise an error when there are'},
         }}, {
-        'description': 'features, XXX TODO XXX, only represent features containing missing values during fit time'}, {
+        'XXX TODO XXX': 'Parameter: features > only represent features containing missing values during fit time'}, {
         'description': 'error_on_new, only when features="missing-only"',
         'anyOf': [{
             'type': 'object',

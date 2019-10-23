@@ -26,6 +26,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for NearestCentroid    Nearest centroid classifier.',
     'allOf': [{
         'type': 'object',
+        'required': ['metric', 'shrink_threshold'],
         'relevantToOptimizer': ['metric'],
         'additionalProperties': False,
         'properties': {

@@ -33,6 +33,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for RidgeClassifier    Classifier using Ridge regression.',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'fit_intercept', 'normalize', 'copy_X', 'max_iter', 'tol', 'class_weight', 'solver', 'random_state'],
         'relevantToOptimizer': ['alpha', 'fit_intercept', 'normalize', 'copy_X', 'max_iter', 'tol', 'solver'],
         'additionalProperties': False,
         'properties': {
@@ -88,7 +89,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The seed of the pseudo random number generator to use when shuffling'},
         }}, {
-        'description': 'solver, XXX TODO XXX, only guaranteed on features with approximately the same scale'}],
+        'XXX TODO XXX': 'Parameter: solver > only guaranteed on features with approximately the same scale'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

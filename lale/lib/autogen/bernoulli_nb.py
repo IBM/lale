@@ -31,6 +31,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for BernoulliNB    Naive Bayes classifier for multivariate Bernoulli models.',
     'allOf': [{
         'type': 'object',
+        'required': ['alpha', 'binarize', 'fit_prior', 'class_prior'],
         'relevantToOptimizer': ['alpha', 'fit_prior'],
         'additionalProperties': False,
         'properties': {

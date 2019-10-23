@@ -41,6 +41,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LatentDirichletAllocation    Latent Dirichlet Allocation with online variational Bayes algorithm',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'doc_topic_prior', 'topic_word_prior', 'learning_method', 'learning_decay', 'learning_offset', 'max_iter', 'batch_size', 'evaluate_every', 'total_samples', 'perp_tol', 'mean_change_tol', 'max_doc_update_iter', 'n_jobs', 'verbose', 'random_state', 'n_topics'],
         'relevantToOptimizer': ['n_components', 'learning_method', 'max_iter', 'batch_size', 'evaluate_every', 'total_samples', 'max_doc_update_iter'],
         'additionalProperties': False,
         'properties': {
@@ -193,7 +194,7 @@ _hyperparams_schema = {
                 'method': {
                     'enum': ['partial_fit']},
             }}]}, {
-        'description': 'perp_tol, XXX TODO XXX, only used when evaluate_every is greater than 0'}],
+        'XXX TODO XXX': 'Parameter: perp_tol > only used when evaluate_every is greater than 0'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

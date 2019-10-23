@@ -33,6 +33,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for FastICA    FastICA: a fast algorithm for Independent Component Analysis.',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'algorithm', 'whiten', 'fun', 'fun_args', 'max_iter', 'tol', 'w_init', 'random_state'],
         'relevantToOptimizer': ['n_components', 'algorithm', 'whiten', 'fun', 'max_iter', 'tol'],
         'additionalProperties': False,
         'properties': {

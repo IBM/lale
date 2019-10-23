@@ -39,6 +39,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for KernelPCA    Kernel Principal component analysis (KPCA)',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'kernel', 'gamma', 'degree', 'coef0', 'kernel_params', 'alpha', 'fit_inverse_transform', 'eigen_solver', 'tol', 'max_iter', 'remove_zero_eig', 'random_state', 'copy_X', 'n_jobs'],
         'relevantToOptimizer': ['n_components', 'kernel', 'degree', 'coef0', 'alpha', 'eigen_solver', 'tol', 'max_iter', 'remove_zero_eig', 'copy_X'],
         'additionalProperties': False,
         'properties': {

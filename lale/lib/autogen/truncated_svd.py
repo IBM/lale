@@ -29,6 +29,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for TruncatedSVD    Dimensionality reduction using truncated SVD (aka LSA).',
     'allOf': [{
         'type': 'object',
+        'required': ['n_components', 'algorithm', 'n_iter', 'random_state', 'tol'],
         'relevantToOptimizer': ['n_components', 'algorithm', 'n_iter', 'tol'],
         'additionalProperties': False,
         'properties': {

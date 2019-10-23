@@ -48,6 +48,7 @@ _hyperparams_schema = {
     'description': 'inherited docstring for GradientBoostingClassifier    Gradient Boosting for classification.',
     'allOf': [{
         'type': 'object',
+        'required': ['loss', 'learning_rate', 'n_estimators', 'subsample', 'criterion', 'min_samples_split', 'min_samples_leaf', 'min_weight_fraction_leaf', 'max_depth', 'min_impurity_decrease', 'min_impurity_split', 'init', 'random_state', 'max_features', 'verbose', 'max_leaf_nodes', 'warm_start', 'presort', 'validation_fraction', 'n_iter_no_change', 'tol'],
         'relevantToOptimizer': ['loss', 'n_estimators', 'min_samples_split', 'min_samples_leaf', 'max_depth', 'max_features', 'presort'],
         'additionalProperties': False,
         'properties': {
@@ -81,7 +82,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
-                    'distribution': 'loguniform'}],
+                    'distribution': 'uniform'}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node:'},
             'min_samples_leaf': {
@@ -174,8 +175,8 @@ _hyperparams_schema = {
                 'default': 0.0001,
                 'description': 'Tolerance for the early stopping. When the loss is not improving'},
         }}, {
-        'description': 'min_samples_leaf, XXX TODO XXX, only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}, {
-        'description': 'validation_fraction, XXX TODO XXX, only used if n_iter_no_change is set to an integer'}],
+        'XXX TODO XXX': 'Parameter: min_samples_leaf > only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}, {
+        'XXX TODO XXX': 'Parameter: validation_fraction > only used if n_iter_no_change is set to an integer'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
