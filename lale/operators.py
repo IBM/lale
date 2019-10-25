@@ -1196,7 +1196,6 @@ def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
         else:
             operatorObj = TrainedIndividualOp(_name=name, _impl=impl, _schemas=schemas)
     else:
-        impl = copy.deepcopy(impl)
         if hasattr(impl, "fit"):
             operatorObj = TrainableIndividualOp(_name=name, _impl=impl, _schemas=schemas)
         else:
