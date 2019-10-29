@@ -98,7 +98,7 @@ def data_to_json(data, subsample_array = True):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
     elif isinstance(data, torch.Tensor):
-        np_array = data.numpy()
+        np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
     else:
         return data
