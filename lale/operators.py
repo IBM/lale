@@ -1440,26 +1440,26 @@ class PlannedPipeline(Pipeline[PlannedOpType], PlannedOperator):
         like make_pipeline so, need to check that it is consistent
         with the steps and edges already present
         """
-        steps:List[TrainableOperator] = args[0]
+        steps:List[TrainableIndividualOp] = args[0]
         if len(steps) != len(self._steps):
             raise ValueError("Please make sure that you pass a list of trainable individual operators with the same length as the operator instances in the current pipeline")
 
         num_steps:int = len(steps)
         edges:List[Tuple[PlannedOpType, PlannedOpType]] = self.edges()
         
-        op_map:Dict[PlannedOpType, TrainableOperator] = {}
+        op_map:Dict[PlannedOpType, TrainableIndividualOp] = {}
         #for (i, orig_op, op) in enumerate(zip(self.steps(), steps))
         for i in range(num_steps):
             orig_op = self.steps()[i]
             op = steps[i]
-            if not isinstance(op, TrainableOperator):
+            if not isinstance(op, TrainableIndividualOp):
                 raise ValueError(f"Please make sure that you pass a list of trainable individual operators ({i}th element is incompatible)")
             if not orig_op.has_same_impl(op):
                 raise ValueError(f"Please make sure that you pass a list of trainable individual operators with the same type as operator instances in the current pipeline ({i}th element is incompatible)")
 
             op_map[orig_op] = op
 
-        trainable_edges:List[Tuple[TrainableOperator, TrainableOperator]]
+        trainable_edges:List[Tuple[TrainableIndividualOp, TrainableIndividualOp]]
         try:
             trainable_edges = [(op_map[x], op_map[y]) for (x, y) in edges]
         except KeyError as e:
@@ -1482,7 +1482,7 @@ class PlannedPipeline(Pipeline[PlannedOpType], PlannedOperator):
             'steps': [op.to_json() for op in self._steps ] }
 
 
-TrainableOpType = TypeVar('TrainableOpType', bound=TrainableOperator)
+TrainableOpType = TypeVar('TrainableOpType', bound=TrainableIndividualOp)
 
 class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
@@ -1532,7 +1532,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
         trained_steps2:Any = trained_steps
-        result:TrainedPipeline[TrainedOperator] = TrainedPipeline(trained_steps2, trained_edges, ordered=True)
+        result:TrainedPipeline = TrainedPipeline(trained_steps2, trained_edges, ordered=True)
         self.__trained = result
         return result
 
@@ -1781,11 +1781,11 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
         trained_steps2:Any = trained_steps
-        result:TrainedPipeline[TrainedOperator] = TrainedPipeline(trained_steps2, trained_edges, ordered=True)
+        result:TrainedPipeline = TrainedPipeline(trained_steps2, trained_edges, ordered=True)
         self.__trained = result
         return result
 
-TrainedOpType = TypeVar('TrainedOpType', bound=TrainedOperator)
+TrainedOpType = TypeVar('TrainedOpType', bound=TrainedIndividualOp)
 
 class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
 
