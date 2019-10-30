@@ -1495,6 +1495,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
     def fit(self, X, y=None, **fit_params)->TrainedOperator:
         trained_steps:List[TrainedOperator] = [ ]
         outputs:Dict[Operator, Any] = { }
+        meta_outputs:Dict[Operator, Any] = {}
         edges:List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
         trained_map:Dict[TrainableOpType, TrainedOperator] = {}
 
@@ -1503,11 +1504,20 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             preds = self._preds[operator]
             if len(preds) == 0:
                 inputs = [X]
+                meta_data_inputs:Dict[Operator, Any] = {}
             else:
                 inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
+                #we create meta_data_inputs as a dictionary with metadata from all previous steps
+                #Note that if multiple previous steps generate the same key, it will retain only one of those.
+                
+                meta_data_inputs = {key: meta_outputs[pred][key] for pred in preds 
+                        if meta_outputs[pred] is not None for key in meta_outputs[pred]}
             trainable = operator
             if len(inputs) == 1:
                 inputs = inputs[0]
+            if hasattr(operator._impl, "set_meta_data"):
+                operator._impl.set_meta_data(meta_data_inputs)
+            meta_output:Dict[Operator, Any] = {}
             trained:TrainedOperator
             if trainable.is_supervised():
                 trained = trainable.fit(X = inputs, y = y)
@@ -1517,6 +1527,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             trained_steps.append(trained)
             if trained.is_transformer():
                 output = trained.transform(X = inputs, y = y)
+                if hasattr(operator._impl, "get_transform_meta_output"):
+                    meta_output = operator._impl.get_transform_meta_output()
             else:
                 if trainable in sink_nodes:
                     output = trained.predict(X = inputs) #We don't support y for predict yet as there is no compelling case
@@ -1527,7 +1539,12 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         output = trained.predict_proba(X = inputs)
                     else:
                         output = trained.predict(X = inputs)
+                if hasattr(operator._impl, "get_predict_meta_output"):
+                    meta_output = operator._impl.get_predict_meta_output()
             outputs[operator] = output
+            meta_output.update({key:meta_outputs[pred][key] for pred in preds 
+                    if meta_outputs[pred] is not None for key in meta_outputs[pred]})
+            meta_outputs[operator] = meta_output
 
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
