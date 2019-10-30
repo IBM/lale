@@ -1504,7 +1504,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             preds = self._preds[operator]
             if len(preds) == 0:
                 inputs = [X]
-                meta_data_inputs = {}
+                meta_data_inputs:Dict[Operator, Any] = {}
             else:
                 inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
                 #we create meta_data_inputs as a dictionary with metadata from all previous steps
@@ -1517,7 +1517,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 inputs = inputs[0]
             if hasattr(operator._impl, "set_meta_data"):
                 operator._impl.set_meta_data(meta_data_inputs)
-            meta_output = {}
+            meta_output:Dict[Operator, Any] = {}
             trained:TrainedOperator
             if trainable.is_supervised():
                 trained = trainable.fit(X = inputs, y = y)
