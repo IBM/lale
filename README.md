@@ -29,7 +29,7 @@ Lale is distributed under the terms of the Apache 2.0 License, see
 [LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt). It is currently in an **Alpha release**,
 without warranties of any kind.
 
-* Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-0529-lale.pdf)
+* Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf) and [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb)
 * [Installation instructions](https://github.com/IBM/lale/blob/master/docs/installation.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
 * Guide for wrapping [new operators](https://github.com/IBM/lale/blob/master/docs/new_operators.md)
