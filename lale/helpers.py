@@ -189,11 +189,11 @@ class SubschemaError(Exception):
         self.sup_name = sup_name
 
     def __str__(self):
-        summary = f'expected {self.sub_name} <: {self.sup_name}'
-        import pprint
-        sub = pprint.pformat(self.sub, width=70, compact=True)
-        sup = pprint.pformat(self.sup, width=70, compact=True)
-        details = f'\n{self.sub_name} = \\\n{sub}\n{self.sup_name} = \\\n{sup}'
+        summary = f'Expected {self.sub_name} to be a subschema of {self.sup_name}.'
+        import lale.pretty_print
+        sub = lale.pretty_print.schema_to_string(self.sub)
+        sup = lale.pretty_print.schema_to_string(self.sup)
+        details = f'\n{self.sub_name} = {sub}\n{self.sup_name} = {sup}'
         return summary + details
 
 def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
