@@ -148,8 +148,7 @@ _input_fit_schema = {
                 'type': 'array',
                 'items': {
                     'type': 'number', 'minimum': 0.0},
-            },
-            'description': 'Data matrix to be decomposed.'},
+            }},
         'y': {}}}
 
 _input_transform_schema = {
@@ -162,11 +161,7 @@ _input_transform_schema = {
             'items': {
                 'type': 'array',
                 'items': {
-                    'type': 'number', 'minimum': 0.0},
-            },
-            'description': 'Data matrix to be transformed by the model'},
-    },
-}
+                    'type': 'number', 'minimum': 0.0}}}}}
 
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
