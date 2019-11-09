@@ -126,18 +126,18 @@ def ndarray_to_json(arr, subsample_array=True):
         num_subsamples = [np.iinfo(np.int).max, np.iinfo(np.int).max, np.iinfo(np.int).max]
     def subarray_to_json(indices):
         if len(indices) == len(arr.shape):
-            if isinstance(arr[indices], float) or isinstance(arr[indices], int)\
-                or isinstance(arr[indices], str):
+            if isinstance(arr[indices], bool) or \
+               isinstance(arr[indices], int) or \
+               isinstance(arr[indices], float) or \
+               isinstance(arr[indices], str):
                 return arr[indices]
-            elif arr.dtype == np.float64 or arr.dtype == np.float32:
-                return float(arr[indices])
-            elif arr.dtype == np.int64:
-                return int(arr[indices])
-            elif arr.dtype == np.bool:
+            elif np.issubdtype(arr.dtype, np.bool_):
                 return bool(arr[indices])
-            elif arr.dtype.kind == 'U':
-                return str(arr[indices])
-            elif arr.dtype.kind == 'O':
+            elif np.issubdtype(arr.dtype, np.integer):
+                return int(arr[indices])
+            elif np.issubdtype(arr.dtype, np.number):
+                return float(arr[indices])
+            elif arr.dtype.kind in ['U', 'S', 'O']:
                 return str(arr[indices])
             else:
                 raise ValueError(f'Unexpected dtype {arr.dtype}, '

@@ -31,19 +31,19 @@ def load_movie_review():
         
     X = []
     y = []
-    data_file = tarfile.open(data_file_path)
-    data_file.extractall(path = download_data_dir)
+    with tarfile.open(data_file_path) as data_file:
+        data_file.extractall(path = download_data_dir)
 
-    neg_data_file = open(os.path.join(download_data_dir, 'rt-polaritydata', 'rt-polarity.neg'), 'rb')
-    for line in neg_data_file.readlines():
-        X.append(str(line))
-        y.append(-1)
-    pos_data_file = open(os.path.join(download_data_dir, 'rt-polaritydata', 'rt-polarity.pos'), "rb")
-    for line in pos_data_file.readlines():
-        X.append(str(line))
-        y.append(1)        
+    with open(os.path.join(download_data_dir, 'rt-polaritydata', 'rt-polarity.neg'), 'rb') as neg_data_file:
+        for line in neg_data_file.readlines():
+            X.append(str(line))
+            y.append(-1)
+    with open(os.path.join(download_data_dir, 'rt-polaritydata', 'rt-polarity.pos'), "rb") as pos_data_file:
+        for line in pos_data_file.readlines():
+            X.append(str(line))
+            y.append(1)        
     
-    X = np.asarray(X)
+    X = np.asarray(X, dtype=np.string_)
     y = np.asarray(y)
 
     from sklearn.utils import shuffle
