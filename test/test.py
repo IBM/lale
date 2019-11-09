@@ -37,6 +37,7 @@ from lale.lib.xgboost import XGBClassifier
 from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
+from lale.lib.sklearn import NMF
 from typing import List
 from lale.helpers import SubschemaError
 
@@ -1104,10 +1105,19 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.datasets import sklearn_to_pandas
         (train_X, train_y), (test_X, test_y) = sklearn_to_pandas.load_iris_df()
         cls._irisDf = {'X': train_X, 'y': train_y}
+        (train_X, train_y), (test_X, test_y) = \
+            sklearn_to_pandas.load_digits_df()
+        cls._digits = {'X': train_X, 'y': train_y}
+        (train_X, train_y), (test_X, test_y) = \
+            sklearn_to_pandas.california_housing_df()
+        cls._housing = {'X': train_X, 'y': train_y}
         from lale.datasets import openml
         (train_X, train_y), (test_X, test_y) = openml.fetch(
             'credit-g', 'classification', preprocess=False)
         cls._creditG = {'X': train_X, 'y': train_y}
+        from lale.datasets import load_movie_review
+        train_X, train_y = load_movie_review()
+        cls._movies = {'X': train_X, 'y': train_y}
         from lale.datasets.uci.uci_datasets import fetch_drugscom
         train_X, train_y, test_X, test_y = fetch_drugscom()
         cls._drugRev = {'X': train_X, 'y': train_y}
@@ -1116,15 +1126,30 @@ class TestDatasetSchemas(unittest.TestCase):
     def tearDownClass(cls):
         cls._irisArr = None
         cls._irisDf = None
+        cls._digits = None
+        cls._housing = None
         cls._creditG = None
+        cls._movies = None
         cls._drugRev = None
-    
+
+    def test_datasets_with_own_schemas(self):
+        from lale.datasets.data_schemas import to_schema
+        from lale.helpers import validate_schema
+        for name in ['irisArr', 'irisDf', 'digits', 'housing', 'creditG', 'movies', 'drugRev']:
+            dataset = getattr(self, f'_{name}')
+            data_X, data_y = dataset['X'], dataset['y']
+            schema_X, schema_y = to_schema(data_X), to_schema(data_y)
+            validate_schema(data_X, schema_X, subsample_array=False)
+            validate_schema(data_y, schema_y, subsample_array=False)
+
     def test_ndarray_to_schema(self):
         from lale.datasets.data_schemas import to_schema
         from lale.helpers import validate_schema
         all_X, all_y = self._irisArr['X'], self._irisArr['y']
+        assert not hasattr(all_X, 'json_schema')
         all_X_schema = to_schema(all_X)
         validate_schema(all_X, all_X_schema, subsample_array=False)
+        assert not hasattr(all_y, 'json_schema')
         all_y_schema = to_schema(all_y)
         validate_schema(all_y, all_y_schema, subsample_array=False)
         all_X_expected = {
@@ -1312,7 +1337,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_transform_schema_NoOp(self):
         from lale.datasets.data_schemas import to_schema
-        for ds in [self._irisArr, self._irisDf, self._creditG, self._drugRev]:
+        for ds in [self._irisArr, self._irisDf, self._digits, self._housing, self._creditG, self._movies, self._drugRev]:
             s_input = to_schema(ds['X'])
             s_output = NoOp.transform_schema(s_input)
             self.assertIs(s_input, s_output)
@@ -1361,51 +1386,50 @@ class TestDatasetSchemas(unittest.TestCase):
             'items': [s_in_X, s_in_X, s_in_X]})
         check(s_out_XXX, 12, {'type': 'number'})
 
-    def test_validate_lr_irisArr(self):
-        LogisticRegression.validate_schema(self._irisArr['X'], self._irisArr['y'])
+    def test_lr_with_all_datasets(self):
+        should_succeed = ['irisArr', 'irisDf', 'digits', 'housing']
+        should_fail = ['creditG', 'movies', 'drugRev']
+        for name in should_succeed:
+            dataset = getattr(self, f'_{name}')
+            LogisticRegression.validate_schema(**dataset)
+        for name in should_fail:
+            dataset = getattr(self, f'_{name}')
+            with self.assertRaises(SubschemaError):
+                LogisticRegression.validate_schema(**dataset)
 
-    def test_validate_lr_irisDf(self):
-        LogisticRegression.validate_schema(self._irisDf['X'], self._irisDf['y'])
+    def test_project_with_all_datasets(self):
+        import lale.lib.lale
+        should_succeed = ['irisArr', 'irisDf', 'digits', 'housing', 'creditG', 'drugRev']
+        should_fail = ['movies']
+        for name in should_succeed:
+            dataset = getattr(self, f'_{name}')
+            lale.lib.lale.Project.validate_schema(**dataset)
+        for name in should_fail:
+            dataset = getattr(self, f'_{name}')
+            with self.assertRaises(SubschemaError):
+                lale.lib.lale.Project.validate_schema(**dataset)
 
-    def test_validate_lr_creditG(self):
-        with self.assertRaises(SubschemaError):
-            LogisticRegression.validate_schema(self._creditG['X'],self._creditG['y'])
+    def test_nmf_with_all_datasets(self):
+        should_succeed = ['digits']
+        should_fail = ['irisArr', 'irisDf', 'housing', 'creditG', 'movies', 'drugRev']
+        for name in should_succeed:
+            dataset = getattr(self, f'_{name}')
+            NMF.validate_schema(**dataset)
+        for name in should_fail:
+            dataset = getattr(self, f'_{name}')
+            with self.assertRaises(SubschemaError):
+                NMF.validate_schema(**dataset)
 
-    def test_validate_lr_drugRev(self):
-        with self.assertRaises(SubschemaError):
-            LogisticRegression.validate_schema(self._drugRev['X'],self._drugRev['y'])
-
-    def test_validate_project_irisArr(self):
-        from lale.lib.lale import Project
-        Project.validate_schema(self._irisArr['X'],self._irisArr['y'])
-
-    def test_validate_project_irisDf(self):
-        from lale.lib.lale import Project
-        Project.validate_schema(self._irisDf['X'],self._irisDf['y'])
-
-    def test_validate_project_creditG(self):
-        from lale.lib.lale import Project
-        Project.validate_schema(self._creditG['X'], self._creditG['y'])
-
-    def test_validate_project_drugRev(self):
-        from lale.lib.lale import Project
-        Project.validate_schema(self._drugRev['X'],self._drugRev['y'])
-
-    def test_validate_tfidf_irisArr(self):
-        with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate_schema(self._irisArr['X'],self._irisArr['y'])
-
-    def test_validate_tfidf_irisDf(self):
-        with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate_schema(self._irisDf['X'],self._irisDf['y'])
-
-    def test_validate_tfidf_creditG(self):
-        with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate_schema(self._creditG['X'], self._creditG['y'])
-
-    def test_validate_tfidf_drugRev(self):
-        with self.assertRaises(SubschemaError):
-            TfidfVectorizer.validate_schema(self._drugRev['X'],self._drugRev['y'])
+    def test_tfidf_with_all_datasets(self):
+        should_succeed = ['movies']
+        should_fail = ['irisArr', 'irisDf', 'digits', 'housing', 'creditG', 'drugRev']
+        for name in should_succeed:
+            dataset = getattr(self, f'_{name}')
+            TfidfVectorizer.validate_schema(**dataset)
+        for name in should_fail:
+            dataset = getattr(self, f'_{name}')
+            with self.assertRaises(SubschemaError):
+                TfidfVectorizer.validate_schema(**dataset)
 
 class TestErrorMessages(unittest.TestCase):
     def test_wrong_cont(self):
