@@ -42,3 +42,5 @@ from .quadratic_discriminant_analysis import QuadraticDiscriminantAnalysis
 from .polynomial_features import PolynomialFeatures
 from .normalizer import Normalizer
 from .robust_scaler import RobustScaler
+from .nmf import NMF
+from .rfe import RFE

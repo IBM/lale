@@ -466,7 +466,7 @@ class IndividualOp(MetaModelOperator):
             Logical schema describing output of this 
             operator's predict/transform method.
         """
-        return self.get_schema('output')
+        return self.get_schema('output_transform')
 
     def output_schema_predict_proba(self):
         """Returns the schema for predict proba method's output.
@@ -1423,6 +1423,19 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
         #         sink_nodes.append(node)
         return sink_nodes
 
+    def validate_schema(self, X, y=None):
+        outputs = { }
+        for operator in self._steps:
+            preds = self._preds[operator]
+            if len(preds) == 0:
+                inputs = [X]
+            else:
+                inputs = [outputs[pred] for pred in preds]
+            if len(inputs) == 1:
+                inputs = inputs[0]
+            operator.validate_schema(X=inputs, y=y)
+            output = operator.transform_schema(inputs)
+            outputs[operator] = output
 
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
