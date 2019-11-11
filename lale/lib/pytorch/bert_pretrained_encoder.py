@@ -53,7 +53,7 @@ class BertPretrainedEncoderImpl():
           segments_ids = []
           # Convert token to vocabulary indices
           for line in batch_data:
-              tokenized_text = self.tokenizer.tokenize('[CLS] '+ line + ' [SEP]')
+              tokenized_text = self.tokenizer.tokenize(f'[CLS] {line} [SEP]')
               tokenized_ids = self.tokenizer.convert_tokens_to_ids(tokenized_text)
               if len(tokenized_ids) > self.max_seq_length - 2:
                   tokenized_ids = tokenized_ids[:(self.max_seq_length)]            
