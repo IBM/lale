@@ -14,4 +14,5 @@
 
 from .sklearn_to_pandas import load_iris_df
 from .sklearn_to_pandas import load_digits_df
+from .sklearn_to_pandas import california_housing_df
 from .movie_review import load_movie_review
