@@ -39,7 +39,7 @@ SCHEMA = {
             { 'type': 'object',
               'patternProperties': {'^[A-Za-z_][A-Za-z_0-9]*$': {}}}]},
         'coefs': {
-          'enum': ['coefs_not_available']}}},
+          'enum': [None, 'coefs_not_available']}}},
     'planned_individual_op': {
       'allOf': [
         { '$ref': '#/definitions/individual_op'},
@@ -146,6 +146,11 @@ def to_json(op):
             result['documentation_url'] = documentation_url
         if isinstance(op, lale.operators.TrainableIndividualOp):
             result['hyperparams'] = op.hyperparams()
+        if isinstance(op, lale.operators.TrainedIndividualOp):
+            if hasattr(op._impl, 'fit'):
+                result['coefs'] = 'coefs_not_available'
+            else:
+                result['coefs'] = None
     elif isinstance(op, lale.operators.Pipeline):
         node2id = {s: i for (i, s) in enumerate(op.steps())}
         result['edges'] = [[node2id[x], node2id[y]] for (x, y) in op.edges()]
@@ -174,7 +179,7 @@ def from_json(json):
         planned = lale.operators.PlannedIndividualOp(name, impl, schemas)
         if json['state'] == 'planned':
             return planned
-        if json['state'] == 'trained':
+        if json['state']=='trained' and json['coefs']=='coefs_not_available':
             logger.warning(f'Since the JSON representation of trained operator {name} lacks coefficients, from_json returns a trainable operator instead.')
         if json['state'] in ['trainable', 'trained']:
             if json['hyperparams'] is None:
