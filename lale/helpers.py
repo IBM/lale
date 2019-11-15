@@ -611,6 +611,9 @@ def create_data_loader(X, y = None, batch_size = 1):
         dataset = NumpyTorchDataset(X, y)
     if isinstance(X, str):#Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)
+    if isinstance(X, dict): #Assumed that it is data indexed by batch number
+        #dataset = BatchDataDictDataset(X)
+        return X.values()
     return DataLoader(dataset, batch_size=batch_size)
 
 def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_X, batch_y, batch_out_X, batch_out_y):
