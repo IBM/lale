@@ -7,8 +7,12 @@ SCHEMA = {
   'definitions': {
     'operator': {
       'anyOf': [
-        {'$ref': '#/definitions/individual_op'},
-        {'$ref': '#/definitions/pipeline'},
+        {'$ref': '#/definitions/planned_individual_op'},
+        {'$ref': '#/definitions/trainable_individual_op'},
+        {'$ref': '#/definitions/trained_individual_op'},
+        {'$ref': '#/definitions/planned_pipeline'},
+        {'$ref': '#/definitions/trainable_pipeline'},
+        {'$ref': '#/definitions/trained_pipeline'},
         {'$ref': '#/definitions/operator_choice'}]},
     'individual_op': {
       'type': 'object',
@@ -18,7 +22,7 @@ SCHEMA = {
           'type': 'string',
           'pattern': '^([A-Za-z_][A-Za-z_0-9]*[.])*[A-Za-z_][A-Za-z_0-9]*$'},
         'state': {
-          'enum': ['planned', 'trainable', 'trained']},
+          'enum': ['metamodel', 'planned', 'trainable', 'trained'] },
         'operator': {
           'type': 'string',
           'pattern': '^[A-Za-z_][A-Za-z_0-9]*$'},
@@ -29,6 +33,23 @@ SCHEMA = {
             { 'enum': [None]},
             { 'type': 'object',
                 'patternProperties': {'^[A-Za-z_][A-Za-z_0-9]*$': {}}}]}}},
+    'planned_individual_op': {
+      'allOf': [
+        { '$ref': '#/definitions/individual_op'},
+        { 'type': 'object',
+          'properties': { 'state': { 'enum': ['planned']}}}]},
+    'trainable_individual_op': {
+      'allOf': [
+        { '$ref': '#/definitions/individual_op'},
+        { 'type': 'object',
+          'required': ['hyperparams'],
+          'properties': { 'state': { 'enum': ['trainable']}}}]},
+    'trained_individual_op': {
+      'allOf': [
+        { '$ref': '#/definitions/individual_op'},
+        { 'type': 'object',
+          'required': ['hyperparams'],
+          'properties': { 'state': { 'enum': ['trained']}}}]},
     'pipeline': {
       'type': 'object',
       'required': ['class', 'state', 'edges', 'steps'],
@@ -49,6 +70,39 @@ SCHEMA = {
         'steps': {
           'type': 'array',
           'items': {'$ref': '#/definitions/operator'}}}},
+    'planned_pipeline': {
+      'allOf': [
+        { '$ref': '#/definitions/pipeline'},
+        { 'type': 'object',
+          'properties': {
+            'state': { 'enum': ['planned']},
+            'class': { 'enum': ['lale.operators.PlannedPipeline']}}}]},
+    'trainable_pipeline': {
+      'allOf': [
+        { '$ref': '#/definitions/pipeline'},
+        { 'type': 'object',
+          'properties': {
+            'state': { 'enum': ['trainable']},
+            'class': { 'enum': ['lale.operators.TrainablePipeline']},
+            'steps': {
+              'type': 'array',
+              'items': {
+                'type': 'object',
+                'properties': {
+                  'state': { 'enum': ['trainable', 'trained']}}}}}}]},
+    'trained_pipeline': {
+      'allOf': [
+        { '$ref': '#/definitions/pipeline'},
+        { 'type': 'object',
+          'properties': {
+            'state': { 'enum': ['trained']},
+            'class': { 'enum': ['lale.operators.TrainedPipeline']},
+            'steps': {
+              'type': 'array',
+              'items': {
+                'type': 'object',
+                'properties': {
+                  'state': { 'enum': ['trained']}}}}}}]},
     'operator_choice': {
       'type': 'object',
       'required': ['class', 'state', 'operator', 'steps'],
