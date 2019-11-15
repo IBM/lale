@@ -34,6 +34,7 @@ import lale.pretty_print
 import logging
 import h5py
 import shutil
+import lale.json_operator
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -254,11 +255,10 @@ class Operator(metaclass=AbstractVisitorMeta):
 
         pass
 
-    @abstractmethod
     def to_json(self):
         """Returns the json representation of the operator.
         """
-        pass
+        return lale.json_operator.to_json(self)
     
     @abstractmethod
     def has_same_impl(self, other:'Operator')->bool:
@@ -382,6 +382,11 @@ class IndividualOp(MetaModelOperator):
             For all the schemas currently present, this would be a dictionary.
         """
         return self.get_schema_maybe(schema_kind, {})
+
+    def documentation_url(self):
+        if 'documentation_url' in self._schemas:
+            return self._schemas['documentation_url']
+        return None
 
     def get_tags(self)->Dict[str, List[str]]:
         """Return the tags of an operator.
@@ -648,15 +653,6 @@ class IndividualOp(MetaModelOperator):
 
     def arrange(self, *args, **kwargs):
         return PlannedIndividualOp(self._name, self._impl, self._schemas)
-
-    def to_json(self):
-        json = { 'class': self.class_name(),
-                 'state': 'planned',
-                 'operator': self.name()}
-        if 'documentation_url' in self._schemas:
-            json = {**json,
-                    'documentation_url': self._schemas['documentation_url']}
-        return json
 
     def __str__(self)->str:
         return self.name()
@@ -1058,12 +1054,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self._hyperparams = filtered_impl_params
         return self
 
-    def to_json(self):
-        super_json = super(PlannedIndividualOp, self).to_json()
-        return {**super_json,
-                'state': 'trainable',
-                'hyperparams': self.hyperparams()}
-
     def is_supervised(self)->bool:
         """Checks if the this operator needs labeled data for learning (the `y' parameter for fit)
         """
@@ -1155,12 +1145,6 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result._frozen_trained = True
         assert result.is_frozen_trained()
         return result
-
-    def to_json(self):
-        super_json = super(TrainableIndividualOp, self).to_json()
-        return {**super_json,
-                'state': 'trained',
-                'hyperparams': self.hyperparams()}
 
     def _lale_clone(self, cloner:Callable[[Any],Any]):
         """ This is really used for sklearn clone compatibility.
@@ -1373,15 +1357,6 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
                 dfs(operator)
         self._steps = result
 
-    def to_json(self):
-        node2id = {op: i for (i, op) in enumerate(self._steps)}
-        return {
-            'class': self.class_name(),
-            'state': 'metamodel',
-            #TODO: pipeline at metamodel state should never have edges
-            'edges': [[node2id[x], node2id[y]] for (x, y) in self.edges()],
-            'steps': [op.to_json() for op in self._steps ] }
-
     def auto_arrange(self, planner):
         pass#TODO
 
@@ -1485,15 +1460,6 @@ class PlannedPipeline(Pipeline[PlannedOpType], PlannedOperator):
 
     def auto_configure(self, X, y = None, optimizer = None):
         pass#TODO
-
-    def to_json(self):
-        node2id = {op: i for (i, op) in enumerate(self._steps)}
-        return {
-            'class': self.class_name(),
-            'state': 'planned',
-            'edges': [[node2id[x], node2id[y]] for (x, y) in self.edges()],
-            'steps': [op.to_json() for op in self._steps ] }
-
 
 TrainableOpType = TypeVar('TrainableOpType', bound=TrainableIndividualOp)
 
@@ -1625,10 +1591,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         result = TrainablePipeline(frozen_steps, frozen_edges, ordered=True)
         assert result.is_frozen_trainable()
         return result
-
-    def to_json(self):
-        super_json = super(PlannedPipeline, self).to_json()
-        return {**super_json, 'state': 'trainable'}
 
     def get_params(self, deep:bool = True)->Dict[str,Any]:
         out:Dict[str,Any] = {}
@@ -2000,10 +1962,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         assert result.is_frozen_trained()
         return result
 
-    def to_json(self):
-        super_json = super(TrainablePipeline, self).to_json()
-        return {**super_json, 'state': 'trained'}
-    
     def _lale_clone(self, cloner:Callable[[Any],Any]):
         """ This is really used for sklearn clone compatibility.
             Which mandates that clone returns something that has not been fit.
@@ -2093,13 +2051,6 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
 
     def name(self)->str:
         return self._name
-
-    def to_json(self)->Dict[str, Any]:
-        return {
-            'class': self.class_name(),
-            'state': 'planned',
-            'operator': self.name(),
-            'steps': [op.to_json() for op in self._steps ] }
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps

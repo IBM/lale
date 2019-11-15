@@ -1539,5 +1539,51 @@ class TestFreeze(unittest.TestCase):
         self.assertFalse(liquid.is_frozen_trained())
         self.assertTrue(frozen.is_frozen_trained())
 
+class TestToAndFromJSON(unittest.TestCase):
+    def test_trainable_individual_op(self):
+        from lale.json_operator import to_json, from_json
+        operator = PCA(PCA.svd_solver.full, n_components=0.5)
+        json_expected = {
+            'class': 'lale.lib.sklearn.pca.PCAImpl',
+            'state': 'trainable',
+            'operator': 'PCA',
+            'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+            'hyperparams': {'svd_solver': 'full', 'n_components': 0.5}}
+        json = to_json(operator)
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json_2, json_expected)
+
+    def test_operator_choice(self):
+        from lale.json_operator import to_json, from_json
+        operator = PCA | NMF
+        json_expected = {
+            'class': 'lale.operators.OperatorChoice',
+            'operator': 'PCA | NMF',
+            'state': 'planned',
+            'steps': [
+                {   'class': 'lale.lib.sklearn.pca.PCAImpl',
+                    'state': 'planned',
+                    'operator': 'PCA',
+                    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+                {   'class': 'lale.lib.sklearn.nmf.NMFImpl',
+                    'state': 'planned',
+                    'operator': 'NMF',
+                    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.NMF.html'}]}
+        json = to_json(operator)
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json_2, json_expected)
+
+    def test_pipeline(self):
+        from lale.json_operator import to_json, from_json
+        operator = (PCA & NoOp) >> ConcatFeatures >> LogisticRegression
+        json = to_json(operator)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json, json_2)
+
 if __name__ == '__main__':
     unittest.main()
