@@ -1553,7 +1553,37 @@ class TestToAndFromJSON(unittest.TestCase):
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
         json_2 = to_json(operator_2)
-        self.assertEqual(json_2, json_expected)        
+        self.assertEqual(json_2, json_expected)
+
+    def test_operator_choice(self):
+        from lale.json_operator import to_json, from_json
+        operator = PCA | NMF
+        json_expected = {
+            'class': 'lale.operators.OperatorChoice',
+            'operator': 'PCA | NMF',
+            'state': 'planned',
+            'steps': [
+                {   'class': 'lale.lib.sklearn.pca.PCAImpl',
+                    'state': 'planned',
+                    'operator': 'PCA',
+                    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+                {   'class': 'lale.lib.sklearn.nmf.NMFImpl',
+                    'state': 'planned',
+                    'operator': 'NMF',
+                    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.NMF.html'}]}
+        json = to_json(operator)
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json_2, json_expected)
+
+    def test_pipeline(self):
+        from lale.json_operator import to_json, from_json
+        operator = (PCA & NoOp) >> ConcatFeatures >> LogisticRegression
+        json = to_json(operator)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json, json_2)
 
 if __name__ == '__main__':
     unittest.main()

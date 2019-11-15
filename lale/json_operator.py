@@ -165,9 +165,13 @@ def to_json(op):
 def from_json(json):
     jsonschema.validate(json, SCHEMA)
     if 'steps' in json and 'edges' in json:
-        assert False, 'pipeline case not yet implemented'
-    elif json['operator'] == 'lale.operators.OperatorChoice':
-        assert False, 'choice case not yet implemented'
+        steps = [from_json(s) for s in json['steps']]
+        edges = [(steps[e[0]], steps[e[1]]) for e in json['edges']]
+        return lale.operators.get_pipeline_of_applicable_type(steps, edges)
+    elif 'steps' in json:
+        steps = [from_json(s) for s in json['steps']]
+        name = json['operator']
+        return lale.operators.OperatorChoice(steps, name)
     else:
         name = json['operator']
         full_class_name = json['class']
@@ -179,12 +183,18 @@ def from_json(json):
         planned = lale.operators.PlannedIndividualOp(name, impl, schemas)
         if json['state'] == 'planned':
             return planned
-        if json['state']=='trained' and json['coefs']=='coefs_not_available':
-            logger.warning(f'Since the JSON representation of trained operator {name} lacks coefficients, from_json returns a trainable operator instead.')
-        if json['state'] in ['trainable', 'trained']:
-            if json['hyperparams'] is None:
-                trainable = planned()
+        assert json['state'] in ['trainable', 'trained'], json["state"]
+        if json['hyperparams'] is None:
+            trainable = planned()
+        else:
+            trainable = planned(**json['hyperparams'])
+        if json['state'] == 'trained':
+            if json['coefs']=='coefs_not_available':
+                logger.warning(f'Since the JSON representation of trained operator {name} lacks coefficients, from_json returns a trainable operator instead.')
             else:
-                trainable = planned(**json['hyperparams'])
-            return trainable
+                assert json['coefs'] is None, json['coefs']
+                trained = lale.operators.TrainedIndividualOp(
+                    name, trainable._impl, schemas)
+                return trained
+        return trainable
     assert False, f'unexpected JSON {json}'
