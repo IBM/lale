@@ -1539,5 +1539,21 @@ class TestFreeze(unittest.TestCase):
         self.assertFalse(liquid.is_frozen_trained())
         self.assertTrue(frozen.is_frozen_trained())
 
+class TestToAndFromJSON(unittest.TestCase):
+    def test_trainable_individual_op(self):
+        from lale.json_operator import to_json, from_json
+        operator = PCA(PCA.svd_solver.full, n_components=0.5)
+        json_expected = {
+            'class': 'lale.lib.sklearn.pca.PCAImpl',
+            'state': 'trainable',
+            'operator': 'PCA',
+            'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+            'hyperparams': {'svd_solver': 'full', 'n_components': 0.5}}
+        json = to_json(operator)
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json_2, json_expected)        
+
 if __name__ == '__main__':
     unittest.main()

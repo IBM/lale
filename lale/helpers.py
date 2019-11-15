@@ -499,6 +499,9 @@ def caml_to_snake(name):
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
 def get_lib_schema(impl):
+    if impl.__module__.startswith('lale.lib'):
+        m = importlib.import_module(impl.__module__)
+        return m._combined_schemas
     module_name = impl.__module__.split('.')[0]
     class_name = caml_to_snake(impl.__class__.__name__)
     try:

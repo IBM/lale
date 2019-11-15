@@ -1,6 +1,11 @@
+import importlib
 import jsonschema
 import lale.helpers
 import lale.operators
+import lale.pretty_print
+import logging
+
+logger = logging.getLogger(__name__)
 
 SCHEMA = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -32,7 +37,9 @@ SCHEMA = {
           'anyOf': [
             { 'enum': [None]},
             { 'type': 'object',
-                'patternProperties': {'^[A-Za-z_][A-Za-z_0-9]*$': {}}}]}}},
+              'patternProperties': {'^[A-Za-z_][A-Za-z_0-9]*$': {}}}]},
+        'coefs': {
+          'enum': ['coefs_not_available']}}},
     'planned_individual_op': {
       'allOf': [
         { '$ref': '#/definitions/individual_op'},
@@ -48,7 +55,7 @@ SCHEMA = {
       'allOf': [
         { '$ref': '#/definitions/individual_op'},
         { 'type': 'object',
-          'required': ['hyperparams'],
+          'required': ['hyperparams', 'coefs'],
           'properties': { 'state': { 'enum': ['trained']}}}]},
     'pipeline': {
       'type': 'object',
@@ -149,3 +156,30 @@ def to_json(op):
         result['steps'] = [s.to_json() for s in op.steps()]
     jsonschema.validate(result, SCHEMA)
     return result
+
+def from_json(json):
+    jsonschema.validate(json, SCHEMA)
+    if 'steps' in json and 'edges' in json:
+        assert False, 'pipeline case not yet implemented'
+    elif json['operator'] == 'lale.operators.OperatorChoice':
+        assert False, 'choice case not yet implemented'
+    else:
+        name = json['operator']
+        full_class_name = json['class']
+        last_period = full_class_name.rfind('.')
+        module = importlib.import_module(full_class_name[:last_period])
+        impl_class = getattr(module, full_class_name[last_period+1:])
+        impl = impl_class()
+        schemas = None #IndividualOp.__init__ should look up the schemas
+        planned = lale.operators.PlannedIndividualOp(name, impl, schemas)
+        if json['state'] == 'planned':
+            return planned
+        if json['state'] == 'trained':
+            logger.warning(f'Since the JSON representation of trained operator {name} lacks coefficients, from_json returns a trainable operator instead.')
+        if json['state'] in ['trainable', 'trained']:
+            if json['hyperparams'] is None:
+                trainable = planned()
+            else:
+                trainable = planned(**json['hyperparams'])
+            return trainable
+    assert False, f'unexpected JSON {json}'
