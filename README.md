@@ -32,7 +32,7 @@ without warranties of any kind.
 * Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf) and [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb)
 * [Installation instructions](https://github.com/IBM/lale/blob/master/docs/installation.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
-* Guide for wrapping [new operators](https://github.com/IBM/lale/blob/master/docs/new_operators.md)
+* Guide for wrapping [new operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/new_operators.ipynb)
 * arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
 
 The name Lale, pronounced *laleh*, comes from the Persian word for

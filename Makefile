@@ -29,10 +29,6 @@ launch_notebook:
 	export PYTHONPATH=`pwd`; \
 	jupyter notebook
 
-docs/new_operators.md: examples/docs_new_operators.ipynb
-	export PYTHONPATH=`pwd`; \
-	jupyter nbconvert --to markdown --execute --output ../$@ $<
-
 clean:
 	-rm -rf lale/__pycache__
 	-rm -rf lale/*.pyc
