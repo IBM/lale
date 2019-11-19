@@ -618,7 +618,7 @@ def create_data_loader(X, y = None, batch_size = 1):
         #dataset = BatchDataDictDataset(X)
         return X.values()
     elif isinstance(X, torch.Tensor):
-	    dataset = TensorDataset(X, y)
+        dataset = TensorDataset(X, y)
     else:
         raise TypeError("Can not create a data loader for a dataset with type {}".format(type(X)))
     return DataLoader(dataset, batch_size=batch_size)
