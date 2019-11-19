@@ -135,6 +135,8 @@ need to install swig using brew before you can install Lale.
 
 If you encounter any issues in installing SMAC:
 
+MacOS 10.14
+
 .. code:: Bash
 
     open /Library/Developer/CommandLineTools/Packages/macOS_SDK_headers_for_macOS_10.14.pkg
@@ -144,6 +146,13 @@ Then
 .. code:: Bash
 
     export CPATH=/Library/Developer/CommandLineTools/usr/include/c++/v1
+
+MacOS 10.15 Catalina:
+
+.. code:: Bash
+
+    CFLAGS=-stdlib=libc++  pip install smac
+
 
 For Developers
 --------------
