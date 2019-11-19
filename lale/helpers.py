@@ -35,7 +35,7 @@ from sklearn.metrics import accuracy_score, log_loss
 from sklearn.utils.metaestimators import _safe_split
 from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
 from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 import copy
 import logging
 import importlib
@@ -610,13 +610,17 @@ def create_data_loader(X, y = None, batch_size = 1):
         X = X.to_numpy()
         if isinstance(y, pd.Series):
             y = y.to_numpy()
-    if isinstance(X, np.ndarray):
+    elif isinstance(X, np.ndarray):
         dataset = NumpyTorchDataset(X, y)
-    if isinstance(X, str):#Assume that this is path to hdf5 file
+    elif isinstance(X, str):#Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)
-    if isinstance(X, dict): #Assumed that it is data indexed by batch number
+    elif isinstance(X, dict): #Assumed that it is data indexed by batch number
         #dataset = BatchDataDictDataset(X)
         return X.values()
+    elif isinstance(X, torch.Tensor):
+	    dataset = TensorDataset(X, y)
+    else:
+        raise TypeError("Can not create a data loader for a dataset with type {}".format(type(X)))
     return DataLoader(dataset, batch_size=batch_size)
 
 def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_X, batch_y, batch_out_X, batch_out_y):
