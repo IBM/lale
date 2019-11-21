@@ -195,5 +195,6 @@ if __name__ == '__main__':
 
     hp_n_trained = hp_n.fit(X, y)
     predictions = hp_n_trained.predict(X)
+    from sklearn.metrics import accuracy_score
     accuracy = accuracy_score(y, [round(pred) for pred in predictions])
     print(accuracy)
