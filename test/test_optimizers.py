@@ -198,17 +198,9 @@ class TestHyperoptClassifier(unittest.TestCase):
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
-    def test_failures(self):
-        from sklearn.metrics import hinge_loss, make_scorer, f1_score, accuracy_score
+    def test_custom_scoring(self):
+        from sklearn.metrics import f1_score, make_scorer
         lr = LogisticRegression()
-        clf = HyperoptClassifier(lr, scoring='accuracy', cv = 5, max_evals = 20)
+        clf = HyperoptClassifier(lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
-
-    # def test_custom_scoring_avg(self):
-    #     from sklearn.metrics import f1_score
-    #     lr = LogisticRegression()
-    #     clf = HyperoptClassifier(lr, scoring=make_scorer(f1_score, average='macro'), cv = 5)
-    #     trained = clf.fit(self.X_train, self.y_train)
-    #     predictions = trained.predict(self.X_test)
-    #     print(confusion_matrix(self.y_test, predictions))
