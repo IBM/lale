@@ -31,11 +31,12 @@ import scipy.sparse
 import importlib
 import graphviz
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, log_loss
+from sklearn.metrics import accuracy_score, log_loss, make_scorer
+from sklearn.metrics.scorer import check_scoring
 from sklearn.utils.metaestimators import _safe_split
 from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
 from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, TensorDataset
 import copy
 import logging
 import importlib
@@ -43,6 +44,7 @@ import inspect
 import pkgutil
 import torch
 import h5py
+from typing import List
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -205,11 +207,19 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
     each of the splits.
 
-    :param estimator: A valid sklearn_wrapper estimator
-    :param X, y: Valid data and target values that work with the estimator
-    :param scoring: a scorer object from sklearn.metrics (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics)
-             Default value is accuracy_score.
-    :param cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
+    Parameters
+    ----------
+
+    estimator: A valid sklearn_wrapper estimator
+    X, y: Valid data and target values that work with the estimator
+    scoring: string or a scorer object created using 
+        https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
+        A string from sklearn.metrics.SCORERS.keys() can be used or a scorer created from one of 
+        sklearn.metrics (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics).
+        A completely custom scorer object can be created from a python function following the example at 
+        https://scikit-learn.org/stable/modules/model_evaluation.html
+        The metric has to return a scalar value,
+    cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
         Integer value is used as number of folds in sklearn.model_selection.StratifiedKFold, default is 5.
         Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
 
@@ -217,27 +227,27 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     """
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)
-    
-    cv_results = []
+
+    scorer = check_scoring(estimator, scoring=scoring)
+    cv_results:List[float] = []
     log_loss_results = []
     time_results = []
     for train, test in cv.split(X, y):
         X_train, y_train = _safe_split(estimator, X, y, train)
         X_test, y_test = _safe_split(estimator, X, y, test, train)
         start = time.time()
-        trained_estimator = estimator.fit(X_train, y_train)
-        predicted_values = trained_estimator.predict(X_test)
+        trained = estimator.fit(X_train, y_train)
+        score_value  = scorer(trained, X_test, y_test)
         execution_time = time.time() - start
         # not all estimators have predict probability
         try:
-            y_pred_proba = trained_estimator.predict_proba(X_test)
+            y_pred_proba = trained.predict_proba(X_test)
             logloss = log_loss(y_true=y_test, y_pred=y_pred_proba)
             log_loss_results.append(logloss)
         except BaseException:
             logger.debug("Warning, log loss cannot be computed")
-        cv_results.append(scoring(y_test, predicted_values))
+        cv_results.append(score_value)
         time_results.append(execution_time)
-
     return np.array(cv_results).mean(), np.array(log_loss_results).mean(), np.array(execution_time).mean()
 
 
@@ -610,13 +620,17 @@ def create_data_loader(X, y = None, batch_size = 1):
         X = X.to_numpy()
         if isinstance(y, pd.Series):
             y = y.to_numpy()
-    if isinstance(X, np.ndarray):
+    elif isinstance(X, np.ndarray):
         dataset = NumpyTorchDataset(X, y)
-    if isinstance(X, str):#Assume that this is path to hdf5 file
+    elif isinstance(X, str):#Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)
-    if isinstance(X, dict): #Assumed that it is data indexed by batch number
+    elif isinstance(X, dict): #Assumed that it is data indexed by batch number
         #dataset = BatchDataDictDataset(X)
         return X.values()
+    elif isinstance(X, torch.Tensor):
+        dataset = TensorDataset(X, y)
+    else:
+        raise TypeError("Can not create a data loader for a dataset with type {}".format(type(X)))
     return DataLoader(dataset, batch_size=batch_size)
 
 def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_X, batch_y, batch_out_X, batch_out_y):

@@ -36,6 +36,7 @@ from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 
 from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
+from lale.lib.lale import HyperoptClassifier, HyperoptRegressor
 
 import numpy as np
 from typing import List
@@ -181,3 +182,25 @@ class TestHyperoptOperatorDuplication(unittest.TestCase) :
             ( LogisticRegression | KNeighborsClassifier )
         )
         run_hyperopt_on_planned_pipeline(plan)
+
+class TestHyperoptClassifier(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_using_scoring(self):
+        from sklearn.metrics import hinge_loss, make_scorer, f1_score, accuracy_score
+        lr = LogisticRegression()
+        clf = HyperoptClassifier(lr, scoring='accuracy', cv = 5, max_evals = 2)
+        trained = clf.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+
+    def test_custom_scoring(self):
+        from sklearn.metrics import f1_score, make_scorer
+        lr = LogisticRegression()
+        clf = HyperoptClassifier(lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
+        trained = clf.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
