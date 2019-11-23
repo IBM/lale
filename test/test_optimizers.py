@@ -204,3 +204,40 @@ class TestHyperoptClassifier(unittest.TestCase):
         clf = HyperoptClassifier(lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
+
+    def test_runtime_limit(self):
+        import time
+        planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
+        from sklearn.datasets import load_iris
+        X, y = load_iris(return_X_y=True)
+        
+        max_opt_time = 2.0
+        hoc = HyperoptClassifier(
+            model=planned_pipeline,
+            max_evals=100,
+            cv=3,
+            scoring='accuracy',
+            max_opt_time=max_opt_time
+        )
+        start = time.time()
+        best_trained = hoc.fit(X, y)
+        end = time.time()
+        opt_time = end - start
+        rel_diff = (opt_time - max_opt_time) / max_opt_time
+        assert rel_diff < 0.2
+        
+    def test_runtime_limit_zero_time(self):
+        planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
+        from sklearn.datasets import load_iris
+        X, y = load_iris(return_X_y=True)
+        
+        hoc = HyperoptClassifier(
+            model=planned_pipeline,
+            max_evals=100,
+            cv=3,
+            scoring='accuracy',
+            max_opt_time=0.0
+        )
+        best_trained = hoc.fit(X, y)
+        assert best_trained is None
+
