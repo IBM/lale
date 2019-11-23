@@ -28,6 +28,7 @@ from typing import Optional
 import json
 import datetime
 import copy
+import sys
 
 SEED=42
 logging.basicConfig(level=logging.WARNING)
@@ -36,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 class HyperoptClassifier():
 
-    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure = False, scoring='accuracy', pgo:Optional[PGO]=None):
+    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure = False, scoring='accuracy', max_opt_time=None, pgo:Optional[PGO]=None):
         """ Instantiate the HyperoptClassifier that will use the given model and other parameters to select the 
         best performing trainable instantiation of the model. This optimizer uses negation of accuracy_score 
         as the performance metric to be minimized by Hyperopt.
@@ -68,6 +69,9 @@ class HyperoptClassifier():
             The metric has to return a scalar value, and note that scikit-learns's scorer object always returns values such that
             higher score is better. Since Hyperopt solves a minimization problem, we negate the score value to pass to Hyperopt.
             by default 'accuracy'.
+        max_opt_time : float, optional
+            Maximum amout of time in seconds for the optimization. By default, None, implying no runtime
+            bound.
         pgo : Optional[PGO], optional
             [description], by default None
         
@@ -103,9 +107,11 @@ class HyperoptClassifier():
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
         self.trials = Trials()
+        self.max_opt_time = max_opt_time
 
 
     def fit(self, X_train, y_train):
+        opt_start_time = time.time()
 
         def hyperopt_train_test(params, X_train, y_train):
             warnings.filterwarnings("ignore")
@@ -142,6 +148,11 @@ class HyperoptClassifier():
             return clf
 
         def f(params):
+            current_time = time.time()
+            if (self.max_opt_time is not None) and ((current_time - opt_start_time) > self.max_opt_time) :
+                # if max optimization time set, and we have crossed it, exit optimization completely
+                sys.exit(0)
+
             params_to_save = copy.deepcopy(params)
             return_dict = {}
             try:
@@ -152,17 +163,26 @@ class HyperoptClassifier():
                 return_dict = {'status': STATUS_FAIL}
             return return_dict
 
-        fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
-        best_params = space_eval(self.search_space, self.trials.argmin)
-        logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
-        trained_clf = get_final_trained_clf(best_params, X_train, y_train)
+        try :
+            fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
+        except SystemExit :
+            logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
+
+        try :
+            best_params = space_eval(self.search_space, self.trials.argmin)
+            logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
+            trained_clf = get_final_trained_clf(best_params, X_train, y_train)
+            self.best_model = trained_clf
+        except BaseException as e :
+            logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
+            trained_clf = None
 
         return trained_clf
 
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
-        clf = self.model
+        clf = self.best_model
         try:
             predictions = clf.predict(X_eval)
         except ValueError as e:
