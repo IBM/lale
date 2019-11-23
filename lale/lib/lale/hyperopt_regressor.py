@@ -18,10 +18,11 @@ from lale.helpers import cross_val_score_track_trials, create_instance_from_hype
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.PGO import PGO
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score, log_loss
+from sklearn.metrics import r2_score
 from sklearn.model_selection import KFold
 import warnings
 import numpy as np
+import sys
 import time
 import logging
 from typing import Optional
@@ -32,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 class HyperoptRegressor():
 
-    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure = False, pgo:Optional[PGO]=None):
+    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure = False, max_opt_time=None, pgo:Optional[PGO]=None):
         self.max_evals = max_evals
         if model is None:
             self.model = RandomForestRegressor
@@ -42,9 +43,11 @@ class HyperoptRegressor():
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
         self.trials = Trials()
+        self.max_opt_time = max_opt_time
 
 
     def fit(self, X_train, y_train):
+        opt_start_time = time.time()
 
         def hyperopt_train_test(params, X_train, y_train):
             warnings.filterwarnings("ignore")
@@ -76,6 +79,11 @@ class HyperoptRegressor():
             return reg
 
         def f(params):
+            current_time = time.time()
+            if (self.max_opt_time is not None) and ((current_time - opt_start_time) > self.max_opt_time) :
+                # if max optimization time set, and we have crossed it, exit optimization completely
+                sys.exit(0)
+
             try:
                 r_squared, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
             except BaseException as e:
@@ -85,10 +93,19 @@ class HyperoptRegressor():
             return {'loss': -r_squared, 'time': execution_time, 'status': STATUS_OK}
 
 
-        fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
-        best_params = space_eval(self.search_space, self.trials.argmin)
-        logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
-        trained_reg = get_final_trained_reg(best_params, X_train, y_train)
+        try :
+            fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
+        except SystemExit :
+            logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
+
+        try :
+            best_params = space_eval(self.search_space, self.trials.argmin)
+            logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
+            trained_reg = get_final_trained_reg(best_params, X_train, y_train)
+        except BaseException as e :
+            logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
+            trained_reg = None
+
 
         return trained_reg
 
