@@ -37,7 +37,7 @@ logger = logging.getLogger(__name__)
 
 class HyperoptClassifier():
 
-    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure = False, scoring='accuracy', max_opt_time=None, pgo:Optional[PGO]=None):
+    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, pgo:Optional[PGO]=None):
         """ Instantiate the HyperoptClassifier that will use the given model and other parameters to select the 
         best performing trainable instantiation of the model. This optimizer uses negation of accuracy_score 
         as the performance metric to be minimized by Hyperopt.
@@ -69,6 +69,10 @@ class HyperoptClassifier():
             The metric has to return a scalar value, and note that scikit-learns's scorer object always returns values such that
             higher score is better. Since Hyperopt solves a minimization problem, we negate the score value to pass to Hyperopt.
             by default 'accuracy'.
+        best_score : float, optional
+            The best score for the specified scorer. This allows us to return a loss to hyperopt that is
+            greater than equal to zero, where zero is the best loss. By default, this is set to zero to
+            follow current behavior.
         max_opt_time : float, optional
             Maximum amout of time in seconds for the optimization. By default, None, implying no runtime
             bound.
@@ -104,6 +108,7 @@ class HyperoptClassifier():
             self.model = model
         self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.model, pgo=pgo)])
         self.scoring = scoring
+        self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
         self.trials = Trials()
@@ -121,7 +126,7 @@ class HyperoptClassifier():
                 cv_score, logloss, execution_time = cross_val_score_track_trials(clf, X_train, y_train, cv=self.cv, scoring=self.scoring)
                 logger.debug("Successful trial of hyperopt")
             except BaseException as e:
-                #If there is any error in cross validation, use the accuracy based on a random train-test split as the evaluation criterion
+                #If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
                 if self.handle_cv_failure:
                     X_train_part, X_validation, y_train_part, y_validation = train_test_split(X_train, y_train, test_size=0.20)
                     start = time.time()
@@ -156,8 +161,14 @@ class HyperoptClassifier():
             params_to_save = copy.deepcopy(params)
             return_dict = {}
             try:
-                acc, logloss, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
-                return_dict = {'loss': -acc, 'time': execution_time, 'log_loss': logloss, 'status': STATUS_OK, 'params': params_to_save}
+                score, logloss, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
+                return_dict = {
+                    'loss': self.best_score - score,
+                    'time': execution_time,
+                    'log_loss': logloss,
+                    'status': STATUS_OK,
+                    'params': params_to_save
+                }
             except BaseException as e:
                 logger.warning("Exception caught in HyperoptClassifer:{}, setting status to FAIL".format(e))
                 return_dict = {'status': STATUS_FAIL}
@@ -170,7 +181,11 @@ class HyperoptClassifier():
 
         try :
             best_params = space_eval(self.search_space, self.trials.argmin)
-            logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
+            logger.info(
+                'best score: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(
+                    self.best_score - self.trials.average_best_error(), self.max_evals, best_params
+                )
+            )
             trained_clf = get_final_trained_clf(best_params, X_train, y_train)
             self.best_model = trained_clf
         except BaseException as e :
