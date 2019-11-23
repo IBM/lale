@@ -51,7 +51,7 @@ class HyperoptRegressor():
 
             reg = create_instance_from_hyperopt_search_space(self.model, params)
             try:
-                cv_score, logloss, execution_time = cross_val_score_track_trials(reg, X_train, y_train, cv=KFold(self.cv), scoring = r2_score)
+                cv_score, _, execution_time = cross_val_score_track_trials(reg, X_train, y_train, cv=KFold(self.cv), scoring = 'r2')
                 logger.debug("Successful trial of hyperopt")
             except BaseException as e:
                 #If there is any error in cross validation, use the accuracy based on a random train-test split as the evaluation criterion
@@ -67,7 +67,7 @@ class HyperoptRegressor():
                     logger.debug("Error {} with pipeline:{}".format(e, reg.to_json()))
                     raise e
 
-            return cv_score, logloss, execution_time
+            return cv_score, execution_time
 
         def get_final_trained_reg(params, X_train, y_train):
             warnings.filterwarnings("ignore")
@@ -77,13 +77,12 @@ class HyperoptRegressor():
 
         def f(params):
             try:
-                r_squared, logloss, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
+                r_squared, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
             except BaseException as e:
                 logger.warning("Exception caught in HyperoptClassifer:{} with hyperparams:{}, setting accuracy to zero".format(e, params))
                 r_squared = 0
                 execution_time = 0
-                logloss = 0
-            return {'loss': -r_squared, 'time': execution_time, 'log_loss': logloss, 'status': STATUS_OK}
+            return {'loss': -r_squared, 'time': execution_time, 'status': STATUS_OK}
 
 
         fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
