@@ -20,6 +20,8 @@ from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LinearSVC
 from lale.lib.sklearn import LogisticRegression
+from lale.lib.sklearn import LinearRegression
+from lale.lib.sklearn import RandomForestRegressor
 from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import Normalizer
 from lale.lib.sklearn import MLPClassifier
@@ -205,7 +207,7 @@ class TestHyperoptClassifier(unittest.TestCase):
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
-    def test_runtime_limit(self):
+    def test_runtime_limit_hoc(self):
         import time
         planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
         from sklearn.datasets import load_iris
@@ -224,9 +226,11 @@ class TestHyperoptClassifier(unittest.TestCase):
         end = time.time()
         opt_time = end - start
         rel_diff = (opt_time - max_opt_time) / max_opt_time
-        assert rel_diff < 0.2
+        assert rel_diff < 0.2, (
+            'Max time: {}, Actual time: {}, relative diff: {}'.format(max_opt_time, opt_time, rel_diff)
+        )
         
-    def test_runtime_limit_zero_time(self):
+    def test_runtime_limit_zero_time_hoc(self):
         planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
         from sklearn.datasets import load_iris
         X, y = load_iris(return_X_y=True)
@@ -239,5 +243,41 @@ class TestHyperoptClassifier(unittest.TestCase):
             max_opt_time=0.0
         )
         best_trained = hoc.fit(X, y)
+        assert best_trained is None
+
+    def test_runtime_limit_hor(self):
+        import time
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        from sklearn.datasets import load_boston
+        X, y = load_boston(return_X_y=True)
+        
+        max_opt_time = 3.0
+        hor = HyperoptRegressor(
+            model=planned_pipeline,
+            max_evals=100,
+            cv=3,
+            max_opt_time=max_opt_time
+        )
+        start = time.time()
+        best_trained = hor.fit(X[:500,:], y[:500])
+        end = time.time()
+        opt_time = end - start
+        rel_diff = (opt_time - max_opt_time) / max_opt_time
+        assert rel_diff < 0.2, (
+            'Max time: {}, Actual time: {}, relative diff: {}'.format(max_opt_time, opt_time, rel_diff)
+        )
+        
+    def test_runtime_limit_zero_time_hor(self):
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        from sklearn.datasets import load_boston
+        X, y = load_boston(return_X_y=True)
+        
+        hor = HyperoptRegressor(
+            model=planned_pipeline,
+            max_evals=100,
+            cv=3,
+            max_opt_time=0.0
+        )
+        best_trained = hor.fit(X, y)
         assert best_trained is None
 
