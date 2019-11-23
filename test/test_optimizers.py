@@ -199,6 +199,8 @@ class TestHyperoptClassifier(unittest.TestCase):
         clf = HyperoptClassifier(lr, scoring='accuracy', cv = 5, max_evals = 2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
+        predictions_1 = clf.predict(self.X_test)
+        assert np.array_equal(predictions_1, predictions)
 
     def test_custom_scoring(self):
         from sklearn.metrics import f1_score, make_scorer
@@ -206,6 +208,8 @@ class TestHyperoptClassifier(unittest.TestCase):
         clf = HyperoptClassifier(lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
+        predictions_1 = clf.predict(self.X_test)
+        assert np.array_equal(predictions_1, predictions)
 
     def test_runtime_limit_hoc(self):
         import time

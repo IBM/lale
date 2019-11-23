@@ -102,6 +102,7 @@ class HyperoptRegressor():
             best_params = space_eval(self.search_space, self.trials.argmin)
             logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
             trained_reg = get_final_trained_reg(best_params, X_train, y_train)
+            self.best_model = trained_reg
         except BaseException as e :
             logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
             trained_reg = None
@@ -112,11 +113,11 @@ class HyperoptRegressor():
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
-        reg = self.model
+        reg = self.best_model
         try:
             predictions = reg.predict(X_eval)
         except ValueError as e:
-            logger.warning("ValueError in predicting using classifier:{}, the error is:{}".format(reg, e))
+            logger.warning("ValueError in predicting using regressor:{}, the error is:{}".format(reg, e))
             predictions = None
 
         return predictions

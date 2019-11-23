@@ -172,7 +172,7 @@ class HyperoptClassifier():
             best_params = space_eval(self.search_space, self.trials.argmin)
             logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
             trained_clf = get_final_trained_clf(best_params, X_train, y_train)
-
+            self.best_model = trained_clf
         except BaseException as e :
             logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
             trained_clf = None
@@ -182,7 +182,7 @@ class HyperoptClassifier():
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
-        clf = self.model
+        clf = self.best_model
         try:
             predictions = clf.predict(X_eval)
         except ValueError as e:
