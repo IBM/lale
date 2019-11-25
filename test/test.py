@@ -1096,43 +1096,6 @@ pipeline = get_pipeline_of_applicable_type(
     edges=[(step_1,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])"""
         self.round_trip(string1)
 
-    @unittest.skip("TODO: didn't yet implement what's needed for this to work")
-    def test_preprocessing(self):
-        string1 = \
-"""from ai4ml.transformers.small_data_preprocessing_transformers import CatEncoder
-from ai4ml.transformers.small_data_preprocessing_transformers import CatImputer
-from ai4ml.transformers.small_data_preprocessing_transformers import CompressStrings
-from ai4ml.transformers.small_data_preprocessing_transformers import FloatStr2Float
-from ai4ml.transformers.small_data_preprocessing_transformers import NumImputer
-from ai4ml.transformers.small_data_preprocessing_transformers import NumpyColumnSelector
-from ai4ml.transformers.small_data_preprocessing_transformers import NumpyPermuteArray
-from ai4ml.transformers.small_data_preprocessing_transformers import NumpyReplaceMissingValues
-from ai4ml.transformers.small_data_preprocessing_transformers import NumpyReplaceUnknownValues
-from ai4ml.transformers.small_data_preprocessing_transformers import OptStandardScaler
-from ai4ml.transformers.small_data_preprocessing_transformers import boolean2float
-from ai4ml.transformers.small_data_preprocessing_transformers import float32_transform
-from lale.lib.lale import ConcatFeatures
-from lale.lib.xgboost import XGBClassifier
-import numpy as np
-numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3])
-compress_strings = CompressStrings(activate_flag=True, dtypes_list=['char_str', 'char_str', 'char_str'], missing_values_reference_list=['', np.nan, '-', '?'], misslist_list: [[], [], []])
-numpy_replace_missing_values = NumpyReplaceMissingValues(filling_values=np.nan, missing_values=[])
-numpy_replace_unknown_values = NumpyReplaceUnknownValues(filling_values=np.nan, filling_values_list=[np.nan, np.nan, np.nan], known_values_list=[['CampingEquipment', 'GolfEquipment', 'MountaineeringEquipment', 'OutdoorProtection', 'PersonalAccessories'], ['Married', 'Single', 'Unspecified'], ['Executive', 'Hospitality', 'Other', 'Professional', 'Retail', 'Retired', 'Sales', 'Student', 'Trades']], missing_values_reference_list=['', np.nan, '-', '?'])
-boolean2float_1 = boolean2float(activate_flag=True)
-cat_imputer = CatImputer(activate_flag=True, missing_values=np.nan, sklearn_version_family=20, strategy='most_frequent')
-cat_encoder = CatEncoder(activate_flag=True, categories='auto', dtype=np.float64, encoding='ordinal', handle_unknown='error', sklearn_version_family=20)
-float32_transform_1 = float32_transform(activate_flag=True)
-numpy_column_selector_1 = NumpyColumnSelector(columns=[1])
-float_str2float = FloatStr2Float(activate_flag=True, dtypes_list=['int_num'], missing_values_reference_list=[])
-numpy_replace_missing_values_2 = NumpyReplaceMissingValues(filling_values=np.nan, missing_values=[])
-num_imputer = NumImputer(activate_flag=True, missing_values=np.nan, strategy='median')
-opt_standard_scaler = OptStandardScaler(num_scaler_copy=None, num_scaler_with_mean=None, num_scaler_with_std=None, use_scaler_flag=False)
-float32_transform_2 = float32_transform(activate_flag=True)
-numpy_permute_array = NumpyPermuteArray(axis=0, permutation_indices=[0, 2, 3, 1])
-xgb_classifier = XGBClassifier(base_score=0.5, booster='gbtree', colsample_bylevel=1, colsample_bytree=1, gamma=0, learning_rate=0.1, max_delta_step=0, max_depth=3, min_child_weight=1, missing: None, n_estimators=100, n_jobs=1, nthread=None, objective='binary:logistic', random_state=33, reg_alpha=0, reg_lambda=1, scale_pos_weight=1.0834726777719228, seed=None, silent=True, subsample=1, kwargs={})
-pipeline = ((numpy_column_selector >> compress_strings >> numpy_replace_missing_values >> numpy_replace_unknown_values >> boolean2float_1 >> cat_imputer >> cat_encoder >> float32_transform_1) & (numpy_column_selector_1 >> float_str2float >> numpy_replace_missing_values_2 >> num_imputer >> opt_standard_scaler >> float32_transform_2)) >> numpy_permute_array >> xgb_classifier"""
-        self.round_trip(string1)
-
 class TestDatasetSchemas(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
