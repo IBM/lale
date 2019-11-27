@@ -159,16 +159,9 @@ def validate_schema(value, schema, subsample_array=True):
     jsonschema.validate(json_value, schema)
 
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
-# _JSON_META_SCHEMA = None
 
 def json_meta_schema():
     return jsonschema.Draft4Validator.META_SCHEMA
-    # global _JSON_META_SCHEMA
-    # if _JSON_META_SCHEMA is None:
-    #     url = JSON_META_SCHEMA_URL
-    #     with contextlib.closing(urllib.request.urlopen(url)) as f:
-    #         _JSON_META_SCHEMA = json.load(f)
-    # return _JSON_META_SCHEMA
 
 def validate_is_schema(value):
     if '$schema' in value:
