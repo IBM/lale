@@ -36,6 +36,7 @@ setup(
         'hyperopt==0.1.2',
         'jsonschema==2.6.0',
         'jsonsubschema',
+        'liac-arff>=2.4.0',
         'numpy',
         'PyYAML',
         'scikit-learn==0.20.3',
@@ -50,7 +51,6 @@ setup(
           'full': [
               'pytorch-pretrained-bert>=0.6.1',
               'torchvision>=0.2.2',
-              'liac-arff>=2.4.0',
               'tensorflow-datasets>=1.0.1',
               'tensorflow>=1.13.1',
               'tensorflow_hub',
