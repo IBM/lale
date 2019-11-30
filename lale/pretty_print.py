@@ -272,16 +272,17 @@ def pipeline_to_string(pipeline, cls2name, show_imports):
 def schema_to_string(schema):
     s1 = json.dumps(schema)
     s2 = ast.parse(s1)
-    s3 = astunparse.unparse(s2)
-    s4 = s3.strip()
-    s5 = s4
+    s3 = astunparse.unparse(s2).strip()
+    s4 = re.sub(r'}, {\n    (\s+)', r'},\n\1{   ', s3)
+    s5 = re.sub(r'\[{\n    (\s+)', r'[\n\1{   ', s4)
+    s6 = re.sub(r"[^\n]+'\$schema':[^\n]+\n", "", s5)
     while True:
-        s6 = re.sub(r',\n\s+([\]}][^ ])', r'\1', s5)
-        if s5 == s6:
+        s7 = re.sub(r',\n\s*([\]}])', r'\1', s6)
+        if s6 == s7:
             break
-        s5 = s6
-    s7 = re.sub(r'{\s+}', r'{}', s6)
-    return s7
+        s6 = s7
+    s8 = re.sub(r'{\s+}', r'{}', s7)
+    return s8
 
 def to_string(arg, show_imports=True, call_depth=2):
     def get_cls2name():

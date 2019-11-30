@@ -180,7 +180,7 @@ def create_function_test_regressor(clf_name):
         from lale.lib.sklearn.ridge import RidgeImpl
         if not isinstance(regr._impl, RidgeImpl):
             from lale.lib.lale import HyperoptRegressor
-            hyperopt = HyperoptRegressor(model = pipeline, max_evals=1)
+            hyperopt = HyperoptRegressor(estimator=pipeline, max_evals=1)
             trained = hyperopt.fit(self.X_train, self.y_train)
             predictions = trained.predict(self.X_test)
 

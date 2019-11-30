@@ -61,13 +61,14 @@ _hyperparams_schema = {
                 'default': 'best',
                 'description': 'The strategy used to choose the split at each node. Supported'},
             'max_depth': {
-                'anyOf': [{
-                    'type': 'integer',
+                'description': 'The maximum depth of the tree.',
+                'anyOf': [
+                {   'type': 'integer',
                     'minimumForOptimizer': 3,
-                    'maximumForOptimizer': 5}, {
+                    'maximumForOptimizer': 5},
+                {   'description': 'Nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_split samples.',
                     'enum': [None]}],
-                'default': None,
-                'description': 'The maximum depth of the tree. If None, then nodes are expanded until'},
+                'default': None},
             'min_samples_split': {
                 'anyOf': [{
                     'type': 'integer',

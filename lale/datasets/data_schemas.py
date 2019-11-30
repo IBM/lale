@@ -156,7 +156,7 @@ def is_liac_arff(obj):
     return True
 
 def liac_arff_to_schema(larff):
-    assert is_liac_arff(larff)
+    assert is_liac_arff(larff), 'Your Python environment might contain the wrong arff library, this code requires liac-arff.'
     n_rows, n_columns = len(larff['data']), len(larff['attributes'])
     def larff_type_to_schema(larff_type):
         if isinstance(larff_type, str):

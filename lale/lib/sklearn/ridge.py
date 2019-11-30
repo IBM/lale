@@ -39,6 +39,7 @@ class RidgeImpl():
 
     def predict(self, X):
         return self._sklearn_model.predict(X)
+
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Linear least squares with l2 regularization.',
@@ -49,24 +50,26 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'alpha': {
-                'anyOf': [{
-                    'type': 'number',
+                'description': 'Regularization strength; larger values specify stronger regularization.',
+                'anyOf': [
+                {   'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
                     'minimumForOptimizer': 1e-05,
                     'maximumForOptimizer': 10.0,
-                    'distribution': 'loguniform'                   
-                    }, {
-                    'type': 'array',
+                    'distribution': 'loguniform'},
+                {   'type': 'array',
+                    'description': 'Penalties specific to the targets.',
                     'items': {
-                        'type': 'number'},
+                        'type': 'number',
+                        'minimum': 0.0,
+                        'exclusiveMinimum': True},
                     'forOptimizer': False}],
-                'default': 1.0,
-                'description': 'Regularization strength; must be a positive float. Regularization'},
+                'default': 1.0},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to calculate the intercept for this model. If set'},
+                'description': 'Whether to calculate the intercept for this model.'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
@@ -93,7 +96,7 @@ _hyperparams_schema = {
             'solver': {
                 'enum': ['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg', 'sag', 'saga'],
                 'default': 'auto',
-                'description': 'Solver to use in the computational routines:'},
+                'description': 'Solver to use in the computational routines.'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
