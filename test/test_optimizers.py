@@ -257,7 +257,7 @@ class TestHyperoptClassifier(unittest.TestCase):
         
         max_opt_time = 3.0
         hor = HyperoptRegressor(
-            model=planned_pipeline,
+            estimator=planned_pipeline,
             max_evals=100,
             cv=3,
             max_opt_time=max_opt_time
@@ -277,7 +277,7 @@ class TestHyperoptClassifier(unittest.TestCase):
         X, y = load_boston(return_X_y=True)
         
         hor = HyperoptRegressor(
-            model=planned_pipeline,
+            estimator=planned_pipeline,
             max_evals=100,
             cv=3,
             max_opt_time=0.0

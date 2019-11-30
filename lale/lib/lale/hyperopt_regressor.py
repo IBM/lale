@@ -33,13 +33,13 @@ logger = logging.getLogger(__name__)
 
 class HyperoptRegressor():
 
-    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure = False, max_opt_time=None, pgo:Optional[PGO]=None):
+    def __init__(self, estimator = None, max_evals=50, cv=5, handle_cv_failure = False, max_opt_time=None, pgo:Optional[PGO]=None):
         self.max_evals = max_evals
-        if model is None:
-            self.model = RandomForestRegressor
+        if estimator is None:
+            self.estimator = RandomForestRegressor
         else:
-            self.model = model
-        self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.model, pgo=pgo)])
+            self.estimator = estimator
+        self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
         self.trials = Trials()
@@ -52,7 +52,7 @@ class HyperoptRegressor():
         def hyperopt_train_test(params, X_train, y_train):
             warnings.filterwarnings("ignore")
 
-            reg = create_instance_from_hyperopt_search_space(self.model, params)
+            reg = create_instance_from_hyperopt_search_space(self.estimator, params)
             try:
                 cv_score, _, execution_time = cross_val_score_track_trials(reg, X_train, y_train, cv=KFold(self.cv), scoring = 'r2')
                 logger.debug("Successful trial of hyperopt")
@@ -74,7 +74,7 @@ class HyperoptRegressor():
 
         def get_final_trained_reg(params, X_train, y_train):
             warnings.filterwarnings("ignore")
-            reg = create_instance_from_hyperopt_search_space(self.model, params)
+            reg = create_instance_from_hyperopt_search_space(self.estimator, params)
             reg = reg.fit(X_train, y_train)
             return reg
 
@@ -102,7 +102,7 @@ class HyperoptRegressor():
             best_params = space_eval(self.search_space, self.trials.argmin)
             logger.info('best accuracy: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(-1*self.trials.average_best_error(), self.max_evals, best_params))
             trained_reg = get_final_trained_reg(best_params, X_train, y_train)
-            self.best_model = trained_reg
+            self.best_estimator = trained_reg
         except BaseException as e :
             logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
             trained_reg = None
@@ -113,7 +113,7 @@ class HyperoptRegressor():
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
-        reg = self.best_model
+        reg = self.best_estimator
         try:
             predictions = reg.predict(X_eval)
         except ValueError as e:
@@ -125,6 +125,79 @@ class HyperoptRegressor():
     def get_trials(self):
         return self.trials
 
+_hyperparams_schema = {
+    'allOf': [
+    {   'type': 'object',
+        'required': [
+            'estimator', 'max_evals', 'cv', 'handle_cv_failure',
+            'max_opt_time', 'pgo'],
+        'relevantToOptimizer': ['estimator'],
+        'additionalProperties': False,
+        'properties': {
+            'estimator': {
+                'anyOf': [
+                {   'typeForOptimizer': 'operator'},
+                {   'enum': [None],
+                    'description':
+                        'lale.lib.sklearn.RandomForestRegressor'}],
+                'default': None},
+            'max_evals': {
+                'type': 'integer',
+                'minimum': 1,
+                'default': 50},
+            'cv': {
+                'type': 'integer',
+                'minimum': 1,
+                'default': 5},
+            'handle_cv_failure': {
+                'type': 'boolean',
+                'default': False},
+            'max_opt_time': {
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0,
+                    'exclusiveMinimum': True},
+                {   'enum': [None]}],
+                'default': None},
+            'pgo': {
+                'anyOf': [
+                {   'description': 'lale.search.PGO'},
+                {   'enum': [None]}],
+                'default': None}}}]}
+
+_input_fit_schema = {
+    'type': 'object',
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array', 'items': {'type': 'number'}}},
+        'y': {
+            'type': 'array', 'items': {'type': 'number'}}}}
+
+_input_predict_schema = {
+    'type': 'object',
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array', 'items': {'type': 'number'}}}}}
+
+_output_predict_schema = {
+    'type': 'array', 'items': {'type': 'number'}}
+
+_combined_schemas = {
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_regressor.html',
+    'type': 'object',
+    'tags': {
+        'pre': [],
+        'op': ['estimator'],
+        'post': []},
+    'properties': {
+        'hyperparams': _hyperparams_schema,
+        'input_fit': _input_fit_schema,
+        'input_predict': _input_predict_schema,
+        'output': _output_predict_schema}}
 
 if __name__ == '__main__':
     from lale.lib.lale import ConcatFeatures
@@ -142,7 +215,7 @@ if __name__ == '__main__':
     diabetes = sklearn.datasets.load_diabetes()
     X, y = sklearn.utils.shuffle(diabetes.data, diabetes.target, random_state=42)
 
-    hp_n = HyperoptRegressor(model=trainable, max_evals=20)
+    hp_n = HyperoptRegressor(estimator=trainable, max_evals=20)
 
     hp_n_trained = hp_n.fit(X, y)
     predictions = hp_n_trained.predict(X)
