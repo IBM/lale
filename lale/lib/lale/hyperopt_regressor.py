@@ -25,13 +25,15 @@ import numpy as np
 import sys
 import time
 import logging
+import traceback
 from typing import Optional
+import lale.operators
 
 SEED=42
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-class HyperoptRegressor():
+class HyperoptRegressorImpl:
 
     def __init__(self, estimator = None, max_evals=50, cv=5, handle_cv_failure = False, max_opt_time=None, pgo:Optional[PGO]=None):
         self.max_evals = max_evals
@@ -87,7 +89,7 @@ class HyperoptRegressor():
             try:
                 r_squared, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
             except BaseException as e:
-                logger.warning("Exception caught in HyperoptClassifer:{} with hyperparams:{}, setting accuracy to zero".format(e, params))
+                logger.warning(f'Exception caught in HyperoptRegressor: {type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting loss to zero')
                 r_squared = 0
                 execution_time = 0
             return {'loss': -r_squared, 'time': execution_time, 'status': STATUS_OK}
@@ -171,7 +173,8 @@ _input_fit_schema = {
         'X': {
             'type': 'array',
             'items': {
-                'type': 'array', 'items': {'type': 'number'}}},
+                'type': 'array',
+                'items': {'type': ['number', 'string']}}},
         'y': {
             'type': 'array', 'items': {'type': 'number'}}}}
 
@@ -181,7 +184,8 @@ _input_predict_schema = {
         'X': {
             'type': 'array',
             'items': {
-                'type': 'array', 'items': {'type': 'number'}}}}}
+                'type': 'array',
+                'items': {'type': ['number', 'string']}}}}}
 
 _output_predict_schema = {
     'type': 'array', 'items': {'type': 'number'}}
@@ -221,3 +225,5 @@ if __name__ == '__main__':
     predictions = hp_n_trained.predict(X)
     mse = r2_score(y, [round(pred) for pred in predictions])
     print(mse)
+
+HyperoptRegressor = lale.operators.make_operator(HyperoptRegressorImpl, _combined_schemas)

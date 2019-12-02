@@ -87,7 +87,7 @@ _hyperparams_schema = {
                     'type': 'integer'}],
                 'default': None},
         }},
-    {   'description': 'Option n_components mle can be set for svd_solver full or auto.',
+    {   'description': 'Option n_components mle can only be set for svd_solver full or auto.',
         'anyOf': [
         {   'type': 'object',
             'properties': {
