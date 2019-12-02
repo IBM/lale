@@ -157,8 +157,7 @@ _hyperparams_schema = {
             'max_opt_time': {
                 'anyOf': [
                 {   'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True},
+                    'minimum': 0.0},
                 {   'enum': [None]}],
                 'default': None},
             'pgo': {

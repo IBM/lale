@@ -283,5 +283,5 @@ class TestHyperoptClassifier(unittest.TestCase):
             max_opt_time=0.0
         )
         best_trained = hor.fit(X, y)
-        assert best_trained is None
+        assert best_trained._impl is None
 
