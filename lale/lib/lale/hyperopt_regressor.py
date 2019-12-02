@@ -203,6 +203,8 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output': _output_predict_schema}}
 
+HyperoptRegressor = lale.operators.make_operator(HyperoptRegressorImpl, _combined_schemas)
+
 if __name__ == '__main__':
     from lale.lib.lale import ConcatFeatures
     from lale.lib.sklearn import Nystroem, PCA, RandomForestRegressor
@@ -225,5 +227,3 @@ if __name__ == '__main__':
     predictions = hp_n_trained.predict(X)
     mse = r2_score(y, [round(pred) for pred in predictions])
     print(mse)
-
-HyperoptRegressor = lale.operators.make_operator(HyperoptRegressorImpl, _combined_schemas)
