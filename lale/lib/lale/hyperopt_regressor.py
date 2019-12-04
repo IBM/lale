@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from lale.lib.sklearn import RandomForestRegressor
-from hyperopt import fmin, tpe, hp, STATUS_OK, Trials, space_eval
+from hyperopt import fmin, tpe, hp, STATUS_OK, STATUS_FAIL, Trials, space_eval
 from lale.helpers import cross_val_score_track_trials, create_instance_from_hyperopt_search_space
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.PGO import PGO
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import r2_score
+from sklearn.metrics import check_scoring
 from sklearn.model_selection import KFold
 import warnings
 import numpy as np
@@ -35,13 +35,15 @@ logger = logging.getLogger(__name__)
 
 class HyperoptRegressorImpl:
 
-    def __init__(self, estimator = None, max_evals=50, cv=5, handle_cv_failure = False, max_opt_time=None, pgo:Optional[PGO]=None):
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='r2', best_score=1.0, max_opt_time=None, pgo:Optional[PGO]=None):
         self.max_evals = max_evals
         if estimator is None:
             self.estimator = RandomForestRegressor
         else:
             self.estimator = estimator
         self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
+        self.scoring = scoring
+        self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
         self.trials = Trials()
@@ -56,7 +58,7 @@ class HyperoptRegressorImpl:
 
             reg = create_instance_from_hyperopt_search_space(self.estimator, params)
             try:
-                cv_score, _, execution_time = cross_val_score_track_trials(reg, X_train, y_train, cv=KFold(self.cv), scoring = 'r2')
+                cv_score, _, execution_time = cross_val_score_track_trials(reg, X_train, y_train, cv=KFold(self.cv), scoring=self.scoring)
                 logger.debug("Successful trial of hyperopt")
             except BaseException as e:
                 #If there is any error in cross validation, use the accuracy based on a random train-test split as the evaluation criterion
@@ -64,9 +66,9 @@ class HyperoptRegressorImpl:
                     X_train_part, X_validation, y_train_part, y_validation = train_test_split(X_train, y_train, test_size=0.20)
                     start = time.time()
                     reg_trained = reg.fit(X_train_part, y_train_part)
-                    predictions = reg_trained.predict(X_validation)
+                    scorer = check_scoring(reg, scoring=self.scoring)
+                    cv_score = scorer(reg_trained, X_validation, y_validation)
                     execution_time = time.time() - start
-                    cv_score = r2_score(y_validation, predictions)
                 else:
                     logger.debug(e)
                     logger.debug("Error {} with pipeline:{}".format(e, reg.to_json()))
@@ -86,14 +88,24 @@ class HyperoptRegressorImpl:
                 # if max optimization time set, and we have crossed it, exit optimization completely
                 sys.exit(0)
 
+            return_dict = {}
             try:
-                r_squared, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
+                score, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
+                return_dict = {
+                    'loss': self.best_score - score, 'time': execution_time, 'status': STATUS_OK
+                }
             except BaseException as e:
+<<<<<<< HEAD
                 logger.warning(f'Exception caught in HyperoptRegressor: {type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting loss to zero')
                 r_squared = 0
                 execution_time = 0
             return {'loss': -r_squared, 'time': execution_time, 'status': STATUS_OK}
+=======
+>>>>>>> 3c2d9d96c10380e7b6e811a86fb66b2d52e721c3
 
+                logger.warning(f'Exception caught in HyperoptRegressor: {type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting loss to zero')
+                return_dict = {'status': STATUS_FAIL}
+            return return_dict
 
         try :
             fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
@@ -154,6 +166,14 @@ _hyperparams_schema = {
             'handle_cv_failure': {
                 'type': 'boolean',
                 'default': False},
+            'scoring': {
+                'enum': ['r2', 'neg_mean_squared_error', 'neg_mean_absolute_error',
+                         'neg_root_mean_squared_error', 'neg_mean_squared_log_error',
+                         'neg_median_absolute_error'],
+                'default': 'r2'},
+            'best_score': {
+                'type': 'number',
+                'default': 1.0},
             'max_opt_time': {
                 'anyOf': [
                 {   'type': 'number',
