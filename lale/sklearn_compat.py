@@ -162,10 +162,23 @@ class SKlearnCompatWrapper(object):
         else:
             # otherwise, we are part of a get_params/init clone
             # and we need to make a copy
-            op = kwargs['__lale_wrapper_base']
-            self._base = WithoutGetParams.clone_wgp(op)
-            self._old_params_for_clone = kwargs
+            self.init_params_internal(**kwargs)
         assert self._base != self
+
+    def init_params_internal(self, **kwargs):
+        op = kwargs['__lale_wrapper_base']
+        self._base = WithoutGetParams.clone_wgp(op)
+        self._old_params_for_clone = kwargs
+
+    def get_params_internal(self, out:Dict[str,Any]):
+        out['__lale_wrapper_base'] = self._base
+
+    def set_params_internal(self, **impl_params):
+        self._base = impl_params['__lale_wrapper_base']
+        assert self._base != self
+
+    def fixup_params_internal(self, **params):
+        return params
 
     def to_lale(self)->Ops.Operator:
         cur:Any = self
@@ -182,7 +195,10 @@ class SKlearnCompatWrapper(object):
         op = self.to_lale()
         if isinstance(op, Ops.TrainableIndividualOp):
             name = op.name()
-            hyps = hyperparams_to_string(op.hyperparams())
+            hyps = ""
+            hps = op.hyperparams()
+            if hps is not None:
+                hyps = hyperparams_to_string(hps)
             return name + "(" + hyps + ")"
         else:
             return super().__repr__()
@@ -193,7 +209,6 @@ class SKlearnCompatWrapper(object):
             raise AttributeError
         return getattr(self._base, name)
 
-
     def get_params(self, deep:bool = True)->Dict[str,Any]:
         out:Dict[str,Any] = {}
         if not deep:
@@ -203,8 +218,7 @@ class SKlearnCompatWrapper(object):
                 self._old_params_for_clone = None
                 return params
             else:
-                p = self._base
-                out['__lale_wrapper_base'] = p
+                self.get_params_internal(out)
         else:
             pass #TODO
         return out
@@ -219,8 +233,7 @@ class SKlearnCompatWrapper(object):
     def set_params(self, **impl_params):
 
         if '__lale_wrapper_base' in impl_params:
-            self._base = impl_params['__lale_wrapper_base']
-            assert self._base != self
+            self.set_params_internal(**impl_params)
         else:
             prev = self
             cur = self._base
@@ -233,7 +246,8 @@ class SKlearnCompatWrapper(object):
             if not isinstance(cur, Ops.Operator):
                 assert False
             assert isinstance(cur, Ops.Operator)
-            new_s = set_operator_params(cur, **impl_params)
+            fixed_params = self.fixup_params_internal(**impl_params)
+            new_s = set_operator_params(cur, **fixed_params)
             if not isinstance(new_s, Ops.TrainableOperator):
                 assert False
             if new_s != cur:
