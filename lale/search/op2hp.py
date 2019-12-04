@@ -18,7 +18,7 @@ import logging
 
 from lale.search.search_space import *
 from lale.util.Visitor import Visitor
-from lale.search import schema2search_space as opt
+from lale.search.schema2search_space import op_to_search_space
 from lale.search.lale_hyperopt import search_space_to_hp_expr, search_space_to_hp_str
 from lale.search.PGO import PGO
 
@@ -34,67 +34,13 @@ if TYPE_CHECKING:
 def hyperopt_search_space(op:'PlannedOperator', 
                           schema=None,
                           pgo:Optional[PGO]=None):
-    return HPOperatorVisitor.run(op, schema=schema, pgo=pgo)
 
-class HPOperatorVisitor(Visitor):
-    pgo:Optional[PGO]
-    names:Dict[str,int]
-
-    @classmethod
-    def run(cls, 
-            op:'PlannedOperator',
-            schema=None,
-            pgo:Optional[PGO]=None):
-        visitor = cls(pgo=pgo)
-        accepting_op:Any = op
-        return accepting_op.accept(visitor, schema=schema)
-
-    def __init__(self, pgo:Optional[PGO]=None):
-        super(HPOperatorVisitor, self).__init__()
-        self.pgo = pgo
-        self.names = {}
-
-    def get_unique_name(self, name:str)->str:
-        if name in self.names:
-            counter = self.names[name] + 1
-            self.names[name] = counter
-            return name + "@" + str(counter)
-        else:
-            self.names[name] = 0
-            return name
-
-    def visitPlannedIndividualOp(self, op:'PlannedIndividualOp', schema=None):
-        if schema is None:
-            schema = op.hyperparam_schema_with_hyperparams()
-        module = op._impl.__module__
-        if module is None or module == str.__class__.__module__:
-            long_name = op.name()
-        else:
-            long_name = module + '.' + op.name()
+    search_space = op_to_search_space(op, pgo=pgo)
+    if search_space:
         name = op.name()
 
-        (simp, hp_s) = opt.schemaToSimplifiedAndSearchSpace(long_name, name, schema, pgo=self.pgo)
-        if hp_s:
-            unique_name = self.get_unique_name(name)
-
-            if os.environ.get("LALE_PRINT_SEARCH_SPACE", "false") == "true":
-                print(f"hyperopt search space for {unique_name}: {search_space_to_hp_str(hp_s, unique_name)}")
-            return search_space_to_hp_expr(hp_s, unique_name)
-        else:
-            return None
-
-    visitTrainableIndividualOp = visitPlannedIndividualOp
-    visitTrainedIndividualOp = visitPlannedIndividualOp
-
-    def visitPlannedPipeline(self, op:'PlannedPipeline', schema=None):
-        search_spaces = [m.accept(self) for m in op.steps()]
-        return search_spaces
-
-    visitTrainablePipeline = visitPlannedPipeline
-    visitTrainedPipeline = visitPlannedPipeline
-
-    def visitOperatorChoice(self, op:'OperatorChoice', schema=None):
-        unique_name:str = self.get_unique_name(op.name())
-        search_spaces = hp.choice(unique_name, [{i : m.accept(self)} for i, m in enumerate(op.steps())])
-        return search_spaces
-
+        if os.environ.get("LALE_PRINT_SEARCH_SPACE", "false") == "true":
+            print(f"hyperopt search space for {name}: {search_space_to_hp_str(search_space, name)}")
+        return search_space_to_hp_expr(search_space, name)
+    else:
+        return None

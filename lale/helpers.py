@@ -46,6 +46,11 @@ from lale.sklearn_compat import clone_op
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+class NestedHyperoptSpace():
+    sub_space:Any
+    def __init__(self, sub_space):
+        self.sub_space = sub_space        
+
 class assert_raises:
     def __init__(self, expected_exc_type):
         self.__expected_exc_type = expected_exc_type
@@ -357,23 +362,53 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
     from lale.operators import IndividualOp
     from lale.operators import BasePipeline
     from lale.operators import TrainablePipeline
+    from lale.operators import Operator
     from lale.operators import OperatorChoice
     if isinstance(lale_object, IndividualOp):
-        return lale_object(**dict_without(hyperparams, 'name'))
+        new_hyperparams:Dict[str,Any] = dict_without(hyperparams, 'name')
+        if lale_object._hyperparams is not None:
+            obj_hyperparams = dict(lale_object._hyperparams)
+        else:
+            obj_hyperparams = {}
+        updated_keys:List[str] = []
+
+        for k,sub_params in new_hyperparams.items():
+            if isinstance(sub_params, NestedHyperoptSpace):
+                sub_params = sub_params.sub_space
+
+                sub_op = obj_hyperparams[k]
+                if isinstance(sub_op, list):
+                    if len(sub_op)==1:
+                        sub_op = sub_op[0]
+                    else:
+                        step_index, step_params = list(sub_params)[0]
+                        if step_index < len(sub_op):
+                            sub_op = sub_op[step_index]
+                            sub_params = step_params
+
+                updated_sub_op = create_instance_from_hyperopt_search_space(sub_op, sub_params)
+                obj_hyperparams[k] = updated_sub_op
+                updated_keys.append(k)
+        if updated_keys:
+            for k in updated_keys:
+                del new_hyperparams[k]
+            lale_object._hyperparams = obj_hyperparams
+        all_hyperparams = {**obj_hyperparams, **new_hyperparams}
+        return lale_object(**all_hyperparams)
     elif isinstance(lale_object, BasePipeline):
-        if len(hyperparams) != len(lale_object.steps()):
+        steps = lale_object.steps()
+        if len(hyperparams) != len(steps):
             raise ValueError('The number of steps in the hyper-parameter space does not match the number of steps in the pipeline.')
         op_instances = []
         edges = lale_object.edges()
         #op_map:Dict[PlannedOpType, TrainableOperator] = {}
         op_map = {}
-        for op_index in range(len(hyperparams)):
-            state_params = hyperparams[op_index]
+        for op_index, sub_params in enumerate(hyperparams):
             #TODO: Should ideally check if the class_name is the same as the class name of the op from self.operators() at op_index
-            op_instance = create_instance_from_hyperopt_search_space(lale_object.steps()[op_index], state_params)
+            sub_op = steps[op_index]
+            op_instance = create_instance_from_hyperopt_search_space(sub_op, sub_params)
             op_instances.append(op_instance)
-            orig_op = lale_object._steps[op_index]
-            op_map[orig_op] = op_instance
+            op_map[sub_op] = op_instance
 
         #trainable_edges:List[Tuple[TrainableOperator, TrainableOperator]]
         try:
@@ -386,8 +421,14 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         #Hyperopt search space for an OperatorChoice is generated as a dictionary with a single element
         #corresponding to the choice made, the only key is the index of the step and the value is 
         #the params corresponding to that step.
-        step_index, hyperparams = list(hyperparams.items())[0]
-        step_object = lale_object.steps()[step_index]
+        step_index:int
+        choices = lale_object.steps()
+
+        if len(choices)==1:
+            step_index = 0
+        else:
+            step_index, hyperparams = list(hyperparams.items())[0]
+        step_object = choices[step_index]
         return create_instance_from_hyperopt_search_space(step_object, hyperparams)
         
 def import_from_sklearn_pipeline(sklearn_pipeline):

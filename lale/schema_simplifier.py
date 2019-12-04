@@ -158,6 +158,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
 
 
     s_type = None
+    s_type_for_optimizer = None
     s_typed = []
     s_other = []
     s_not_for_optimizer:List[Schema] = []
@@ -219,8 +220,16 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 # Ignore missing constraints
                 pass
             else:
-                logger.warning(f"simplifyAll: '{s}' has unknown type")
+                to = s.get('typeForOptimizer', None)
+                if to is None:
+                    logger.warning(f"simplifyAll: '{s}' has unknown type")
                 s_other.append(s)
+            to = s.get('typeForOptimizer', None)
+            if to == 'operator':
+                if s_type_for_optimizer is not None and s_type_for_optimizer != 'operator':
+                    logger.error(f"simplifyAll: '{s}' has operator type for optimizer, but we also have another type for optimizer saved")
+                s_type_for_optimizer = to
+
     # Now that we have partitioned things 
     # Note: I am sure some of our assumptions here are not correct :-(, but this should do for now :-)
 
@@ -434,6 +443,8 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     ret_all = []
     ret_main = s_extra if s_extra else {}
 
+    if s_type_for_optimizer is not None:
+        ret_main["typeForOptimizer"] = s_type_for_optimizer
     if s_enum:
         # we should simplify these as for s_not_enum
         ret_main['enum']=list(s_enum)

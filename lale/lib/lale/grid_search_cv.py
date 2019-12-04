@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any, Dict
+
 import lale.lib.sklearn
 import lale.search.lale_grid_search_cv
 import lale.operators
@@ -46,14 +48,18 @@ class GridSearchCVImpl:
         if not hp_grid and isinstance(op, lale.operators.IndividualOp):
             hp_grid = [
                 lale.search.lale_grid_search_cv.get_defaults_as_param_grid(op)]
-        self.grid = lale.search.lale_grid_search_cv.get_lale_gridsearchcv_op(
-            lale.sklearn_compat.make_sklearn_compat(op),
-            hp_grid,
-            cv=self._hyperparams['cv'],
-            scoring=self._hyperparams['scoring'],
-            n_jobs=self._hyperparams['n_jobs'])
-        self.grid.fit(X, y)
-        self.best_estimator = self.grid.best_estimator_.to_lale()
+        if hp_grid:
+            self.grid = lale.search.lale_grid_search_cv.get_lale_gridsearchcv_op(
+                lale.sklearn_compat.make_sklearn_compat(op),
+                hp_grid,
+                cv=self._hyperparams['cv'],
+                scoring=self._hyperparams['scoring'],
+                n_jobs=self._hyperparams['n_jobs'])
+            self.grid.fit(X, y)
+            self.best_estimator = self.grid.best_estimator_.to_lale()
+        else:
+            assert isinstance(op, lale.operators.TrainableOperator)
+            self.best_estimator = op
         return self
 
     def predict(self, X):

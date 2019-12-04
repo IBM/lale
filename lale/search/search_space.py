@@ -39,7 +39,14 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
         """
         return self._default
 
-class SearchSpaceEnum(SearchSpace):
+class SearchSpaceEmpty(SearchSpace):
+    pass
+
+class SearchSpacePrimitive(SearchSpace):
+    def __init__(self, default:Optional[Any]=None):
+        super(SearchSpacePrimitive, self).__init__(default=default)
+
+class SearchSpaceEnum(SearchSpacePrimitive):
     pgo:Optional[FrequencyDistribution]
     vals:List[Any]
     def __init__(self, vals:Iterable[Any], 
@@ -61,7 +68,7 @@ class SearchSpaceBool(SearchSpaceEnum):
     def __init__(self, pgo:PGO_input_type=None, default:Optional[Any]=None):
         super(SearchSpaceBool, self).__init__([True, False], pgo=pgo, default=default)
 
-class SearchSpaceNumber(SearchSpace):
+class SearchSpaceNumber(SearchSpacePrimitive):
     minimum:Optional[float]
     exclusiveMinumum:bool
     maximum:Optional[float]
@@ -137,3 +144,42 @@ class SearchSpaceObject(SearchSpace):
         self.longName = longName
         self.keys = keys
         self.choices = choices
+
+class SearchSpaceSum(SearchSpace):
+    sub_spaces:List[SearchSpace]
+    def __init__(self, 
+                 sub_spaces:List[SearchSpace], 
+                 default:Optional[Any]=None):
+        super(SearchSpaceSum, self).__init__(default=default)
+        self.sub_spaces = sub_spaces
+
+class SearchSpaceOperator(SearchSpace):
+    sub_space:SearchSpace
+    def __init__(self,
+                 sub_space:SearchSpace,
+                 default:Optional[Any]=None):
+        super(SearchSpaceOperator, self).__init__(default=default)
+        self.sub_space = sub_space
+
+class SearchSpaceProduct(SearchSpace):
+    sub_spaces:List[Tuple[str, SearchSpace]]
+    def __init__(self, 
+                 sub_spaces:List[Tuple[str,SearchSpace]],
+                 default:Optional[Any]=None):
+        super(SearchSpaceProduct, self).__init__(default=default)
+        self.sub_spaces = sub_spaces
+    
+    def get_indexed_spaces(self)->Iterable[Tuple[str, int, SearchSpace]]:
+        indices:Dict[str,int]={}
+        def make_indexed(name:str)->Tuple[str,int]:
+            idx = 0
+            if name in indices:
+                idx = indices[name] + 1
+                indices[name] = idx
+            else:
+                indices[name] = 0
+            return (name, idx)
+        def enhance_tuple(x:Tuple[str,int], space:SearchSpace)->Tuple[str,int,SearchSpace]:
+            return (x[0], x[1], space)
+        
+        return [enhance_tuple(make_indexed(name), space) for name,space in self.sub_spaces]
