@@ -70,8 +70,7 @@ import lale.operators
 
 _hyperparams_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': 'Hyperparameter schema for a Lale wrapper for '
-  ' https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn',
+  'description': 'Hyperparameter schema for a Lale wrapper for XGBoost.',
   'allOf': [
     { 'description':
         'This first sub-object lists all constructor arguments with their '
@@ -372,6 +371,7 @@ _output_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn',
     'properties': {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
