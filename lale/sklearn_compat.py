@@ -182,7 +182,10 @@ class SKlearnCompatWrapper(object):
         op = self.to_lale()
         if isinstance(op, Ops.TrainableIndividualOp):
             name = op.name()
-            hyps = hyperparams_to_string(op.hyperparams())
+            hyps = ""
+            hps = op.hyperparams()
+            if hps is not None:
+                hyps = hyperparams_to_string(hps)
             return name + "(" + hyps + ")"
         else:
             return super().__repr__()
