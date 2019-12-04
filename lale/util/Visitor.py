@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any
+
 class Visitor(object):
     def defaultVisit(self, node, *args, **kwargs):
         raise NotImplementedError
@@ -24,3 +26,8 @@ class Visitor(object):
     def _visitAll(self, iterable, *args, **kwargs):
         filter = lambda x: (x is not None) or None
         return [filter(x) and x.accept(self, *args, **kwargs) for x in iterable ]
+
+# Because of the magic way we add accept methods, mypy does not know they exist
+# so this method is important for accept calls to typecheck
+def accept(obj:Any, v:Visitor, *args, **kwargs):
+    return obj.accept(v, *args, **kwargs)

@@ -12,26 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import itertools
 import warnings
 import random
 import math
 from collections import ChainMap
 
-from lale.util.Visitor import Visitor
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum
-from lale.search.schema2search_space import schemaToSearchSpace
+from lale.util.Visitor import Visitor, accept
+from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceList, SearchSpaceOperator
+from lale.search.schema2search_space import op_to_search_space
 from lale.search.PGO import PGO
-from lale.sklearn_compat import nest_all_HPparams
+from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUMMY_SEARCH_SPACE_GRID_PARAM_NAME, discriminant_name, make_indexed_name
 
-# To avoid import cycle, since we only realy on lale.operators for types
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from lale.operators import PlannedOperator, OperatorChoice, PlannedIndividualOp, PlannedPipeline
+from lale.operators import PlannedOperator, OperatorChoice, PlannedIndividualOp, PlannedPipeline, Operator
 
-
-SearchSpaceGrid = Dict[str,SearchSpace]
+SearchSpaceGrid = Dict[str,SearchSpacePrimitive]
 
 def get_search_space_grids( op:'PlannedOperator', 
                             num_grids:Optional[float]=None, 
@@ -45,7 +41,7 @@ def get_search_space_grids( op:'PlannedOperator',
         if set to an float between 0 and 1, it will determine what fraction should be returned
         note that setting it to 1 is treated as in integer.  To return all results, use None
     """
-    all_parameters = SearchSpaceGridVisitor.run(op, pgo=pgo)
+    all_parameters = op_to_search_space_grids(op, pgo=pgo)
     if num_grids is None:
         return all_parameters
     else:
@@ -64,102 +60,134 @@ def get_search_space_grids( op:'PlannedOperator',
             warnings.warn(f"get_search_space_grids(num_grids={num_grids}) sampling {samples}/{len(all_parameters)}")
             return random.sample(all_parameters, samples)
 
+def search_space_to_grids(hp:SearchSpace)->List[SearchSpaceGrid]:
+    return SearchSpaceToGridVisitor.run(hp)
 
-def SearchSpaceObjectChoiceToGrid(keys:List[str], values:Tuple)->SearchSpaceGrid:
-    assert len(keys) == len(values)
-    return dict(zip(keys, values))
-
-
-def SearchSpaceObjectectToGrid(hp:SearchSpaceObject)->List[SearchSpaceGrid]:
-    return [SearchSpaceObjectChoiceToGrid(hp.keys, c) for c in hp.choices]
-
-def searchSpaceToGrids(hp:SearchSpace)->List[SearchSpaceGrid]:
-    if isinstance(hp, SearchSpaceObject):
-        return SearchSpaceObjectectToGrid(hp)
-    else:
-        raise ValueError("Can only convert SearchSpaceObject into a GridSearchCV schema")
-
-def schemaToSearchSpaceGrids(longName:str, 
-                             name:str, 
-                             schema,
+def op_to_search_space_grids(op:PlannedOperator,
                              pgo:Optional[PGO]=None)->List[SearchSpaceGrid]:
-    h = schemaToSearchSpace(longName, name, schema, pgo=pgo)
-    if h is None:
-        return []
-    grids = searchSpaceToGrids(h)
+    search_space = op_to_search_space(op, pgo=pgo)
+    grids = search_space_to_grids(search_space)
     return grids
 
-class SearchSpaceGridVisitor(Visitor):
-    pgo:Optional[PGO]
+# lets handle the general case
+SearchSpaceGridInternalType = Union[List[SearchSpaceGrid], SearchSpacePrimitive]
+
+class SearchSpaceToGridVisitor(Visitor):
+    @classmethod
+    def run(cls, space:SearchSpace)->List[SearchSpaceGrid]:
+        visitor = cls()
+        space_:Any = space
+        grids:SearchSpaceGridInternalType = space_.accept(visitor)
+        fixed_grids = cls.fixupDegenerateSearchSpaces(grids)
+        return fixed_grids
 
     @classmethod
-    def run(cls, op:'PlannedOperator', pgo:Optional[PGO]=None):
-        visitor = cls(pgo=pgo)
-        accepting_op:Any = op
-        return accepting_op.accept(visitor)
-
-    def __init__(self, pgo:Optional[PGO]=None):
-        super(SearchSpaceGridVisitor, self).__init__()
-        self.pgo = pgo
-    
-    def augment_grid(self, grid:SearchSpaceGrid, hyperparams)->SearchSpaceGrid:
-        if not hyperparams:
-            return grid
-        ret = dict(grid)
-        for (k,v) in hyperparams.items():
-            if k not in ret:
-                ret[k] = SearchSpaceEnum([v])
-        return ret
-
-    def visitPlannedIndividualOp(self, op:'PlannedIndividualOp')->List[SearchSpaceGrid]:
-        schema = op.hyperparam_schema_with_hyperparams()
-        module = op._impl.__module__
-        if module is None or module == str.__class__.__module__:
-            long_name = op.name()
+    def fixupDegenerateSearchSpaces(cls, space:SearchSpaceGridInternalType)->List[SearchSpaceGrid]:
+        if isinstance(space, SearchSpacePrimitive):
+            return [{DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:space}]
         else:
-            long_name = module + '.' + op.name()
-        name = op.name()
-        grids = schemaToSearchSpaceGrids(long_name, name, schema, pgo=self.pgo)
-        if hasattr(op, '_hyperparams'):
-            hyperparams = op._hyperparams
-            if hyperparams and not grids:
-                grids = [{}]
-            augmented_grids = [self.augment_grid(g, hyperparams) for g in grids]
-            return augmented_grids
-        else:
-            return grids
+            return space
 
-    visitTrainableIndividualOp = visitPlannedIndividualOp
-    visitTrainedIndividualOp = visitPlannedIndividualOp
+    def __init__(self):
+        super(SearchSpaceToGridVisitor, self).__init__()
+
+    def visitSearchSpacePrimitive(self, space:SearchSpacePrimitive)->SearchSpacePrimitive:
+        return space
     
-    def visitPlannedPipeline(self, op:'PlannedPipeline')->List[SearchSpaceGrid]:
+    visitSearchSpaceEnum = visitSearchSpacePrimitive
 
-        param_grids:List[List[SearchSpaceGrid]] = [
-            nest_all_HPparams(s.name(), s.accept(self)) for s in op.steps()]
+    visitSearchSpaceConstant = visitSearchSpaceEnum
+    visitSearchSpaceBool = visitSearchSpaceEnum
+
+    visitSearchSpaceNumber = visitSearchSpacePrimitive
+
+    # def array_single_expr_(self, space:SearchSpaceArray, path:str, num):
+    #     p = mk_label(path, num) + "_"
+    #     # mypy does not know about the accept method, since it was
+    #     # added via the VisitorMeta class
+    #     contents:Any = space.contents
+    #     ret = [contents.accept(self, p, counter=x) for x in range(num)]
+    #     return tuple(ret) if space.is_tuple else ret
+
+    def visitSearchSpaceArray(self, space:SearchSpaceArray):
+        raise ValueError("Array search spaces not yet supported for search grid based backends")
+        # assert space.maximum >= space.minimum
+        # p = mk_label(path, counter)
+        # cp = p + "_"
+
+        # if space.minimum == space.maximum:
+        #     return self.array_single_expr_(space, cp, space.minimum)
+        # else:
+        #     exprs = [self.array_single_expr_(space, cp, x) for x in range(space.minimum, space.maximum+1)]
+        #     res = hp.choice(p, exprs)
+        #     return res
+
+    def visitSearchSpaceList(self, space:SearchSpaceList):
+        raise ValueError("List(Array) search spaces not yet supported for search grid based backends")
+
+    def visitSearchSpaceObject(self, space:SearchSpaceObject)->List[SearchSpaceGrid]:
+        keys = space.keys
+        keys_len = len(keys)
+        final_choices:List[SearchSpaceGrid] = []
+        for c in space.choices:
+            assert keys_len == len(c)
+            kvs_complex:List[List[SearchSpaceGrid]] = []
+            kvs_simple:SearchSpaceGrid = {}
+            for k,v in zip(keys, c):
+                vspace:Union[List[SearchSpaceGrid],SearchSpacePrimitive] = v.accept(self)
+                if isinstance(vspace, SearchSpacePrimitive):
+                    kvs_simple[k] = vspace
+                else:
+                    nested_vspace:List[SearchSpaceGrid] = nest_all_HPparams(k, vspace)
+                    if nested_vspace:
+                        kvs_complex.append(nested_vspace)
+            nested_space_choices:Iterable[Iterable[SearchSpaceGrid]] = itertools.product(*kvs_complex)
+            nested_space_choices_lists:List[List[SearchSpaceGrid]] = list(map((lambda x: list(x)),nested_space_choices))
+            nested_space_choices_filtered:List[List[SearchSpaceGrid]] = [
+                l for l in nested_space_choices_lists if l]
+            if nested_space_choices_filtered:
+                chained_grids:Iterable[SearchSpaceGrid] = [
+                  dict(ChainMap(*nested_choice, kvs_simple)) for nested_choice in nested_space_choices_filtered]
+                final_choices.extend(chained_grids)
+            else:
+                final_choices.append(kvs_simple)
+        return final_choices
+
+    def visitSearchSpaceSum(self, op:SearchSpaceSum)->SearchSpaceGridInternalType:
+        sub_spaces:List[SearchSpace] = op.sub_spaces
+
+        sub_grids:Iterable[SearchSpaceGridInternalType] = [
+            accept(cur_space, self) for cur_space in sub_spaces]
+
+        if len(sub_spaces) == 1:
+            return list(sub_grids)[0]
+        else:
+            fixed_grids:Iterable[List[SearchSpaceGrid]] = (SearchSpaceToGridVisitor.fixupDegenerateSearchSpaces(grid) for grid in sub_grids)
+            final_grids:List[SearchSpaceGrid] = []
+            for i, grids in enumerate(fixed_grids):
+                if not grids:
+                    grids = [{}]
+                else:
+                    # we need to add in this nesting
+                    # in case a higher order operator directly contains
+                    # another
+                    grids = nest_choice_all_HPparams(grids)
+
+                discriminated_grids:List[SearchSpaceGrid]=[{**d, discriminant_name:SearchSpaceConstant(i)} for d in grids]
+                final_grids.extend(discriminated_grids)
+            return final_grids
+
+    def visitSearchSpaceProduct(self, op:SearchSpaceProduct)->SearchSpaceGridInternalType:
+        
+        sub_spaces = op.get_indexed_spaces()
+
+        param_grids:List[List[SearchSpaceGrid]] = [nest_all_HPparams(make_indexed_name(name, index), self.fixupDegenerateSearchSpaces(accept(space,self))) for name,index,space in sub_spaces]
 
         param_grids_product:Iterable[Iterable[SearchSpaceGrid]] = itertools.product(*param_grids)
         chained_grids:List[SearchSpaceGrid] = [
             dict(ChainMap(*gridline)) for gridline in param_grids_product]
 
         return chained_grids
-    
-    visitTrainablePipeline = visitPlannedPipeline
-    visitTrainedPipeline = visitPlannedPipeline
 
-    def visitOperatorChoice(self, op:'OperatorChoice')->List[SearchSpaceGrid]:
-
-        choice_name:str = "_lale_discriminant"
-        ret:List[SearchSpaceGrid] = []
-        for s in op.steps():
-            # if not isinstance(s, PlannedOperator):
-            #     raise ValueError("This method should really be defined on PlannedOperatorChoice")
-            # else:
-            grids:List[SearchSpaceGrid] = s.accept(self)
-            # If there are no parameters, we still need to add a choice for the discriminant
-            if not grids:
-                grids = [{}]
-            op_name:str = s.name()
-            discriminated_grids:List[SearchSpaceGrid]=[{**d, choice_name:SearchSpaceEnum([op_name])} for d in grids]
-            ret.extend(discriminated_grids)
-        return ret
-
+    def visitSearchSpaceOperator(self, op:SearchSpaceOperator)->SearchSpaceGridInternalType:
+        return accept(op.sub_space, self)

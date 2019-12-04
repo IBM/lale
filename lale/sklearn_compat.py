@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, Optional, List, Set, TypeVar
+from typing import Any, Dict, Iterable, Optional, List, Set, Tuple, TypeVar
 import random
 import math
 import warnings
@@ -22,9 +22,36 @@ from lale.pretty_print import hyperparams_to_string
 from lale.search.PGO import remove_defaults_dict
 from lale.util.Visitor import Visitor
 
+# We support an argument encoding schema intended to be a 
+# conservative extension to sklearn's encoding schema
+# sklearn uses __ to separate elements in a hierarchy
+# (pipeline's have operators that have keys)
+
+# Since we support richer computation graphs, we need to extend this encoding
+# to support it. Graphs that could be represented in sklearn
+# should be encoded identically
+
+# our encoding scheme:
+## __ separates nested components
+## ? is the discriminant (choice made) for a choice
+### ? is also a prefix for the nested parts of the chosen branch
+## x@n In a pipeline, if multiple components have identical names,
+## everything but the first are suffixed with a number (starting with 1)
+## indicating which one we are talking about.
+## For example, given (x >> y >> x), we would treat this much the same as
+## (x >> y >> x@1)
+## $ is used in the rare case that sklearn would expect the key of an object,
+## but we allow (and have) a non-object schema.  In that case,
+## $ is used as the key
+
+
+# TODO: we don't correctly support $ yet
+# TODO: when we add support for lists using #, document it here
+
+
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
-def make_sklearn_compat(op:'Ops.Operator')->'SKlearnCompatWrapper':
+def make_sklearn_compat(op:Ops.Operator)->'SKlearnCompatWrapper':
     """Top level function for providing compatibiltiy with sklearn operations
        This returns a wrapper around the provided sklearn operator graph which can be passed
        to sklearn methods such as clone and GridSearchCV
@@ -70,45 +97,130 @@ class WithoutGetParams(object):
         assert isinstance(obj, Ops.Operator)
         return WithoutGetParams(clone_lale(obj))
 
-
-def partition_sklearn_params(d:Dict[str, Any])->Dict[str, Dict[str, Any]]:
-    ret:Dict[str, Dict[str, Any]] = {}
+def partition_sklearn_params(d:Dict[str, Any])->Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    sub_parts:Dict[str, Dict[str, Any]] = {}
+    main_parts:Dict[str,Any] = {}
+    
     for k, v in d.items():
         ks = k.split("__", 1)
-        assert len(ks) == 2
-        bucket:Dict[str, Any] = {}
-        group:str = ks[0]
-        param:str = ks[1]
-        if group in ret:
-            bucket = ret[group]
+        if len(ks) == 1:
+            assert k not in main_parts
+            main_parts[k] = v
         else:
-            ret[group] = bucket
-        assert param not in bucket
-        bucket[param] = v
-    return ret
+            assert len(ks) == 2
+            bucket:Dict[str, Any] = {}
+            group:str = ks[0]
+            param:str = ks[1]
+            if group in sub_parts:
+                bucket = sub_parts[group]
+            else:
+                sub_parts[group] = bucket
+            assert param not in bucket
+            bucket[param] = v
+    return (main_parts, sub_parts)
 
-def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.TrainableOperator:
+def partition_sklearn_choice_params(d:Dict[str, Any])->Tuple[int, Dict[str, Any]]:
+    discriminant_value:int = -1
+    choice_parts:Dict[str,Any] = {}
+
+    for k, v in d.items():
+        if k == discriminant_name:
+            assert discriminant_value == -1
+            discriminant_value = int(v)
+        else:
+            k_rest = unnest_choice(k)
+            choice_parts[k_rest] = v
+    assert discriminant_value != -1
+    return (discriminant_value, choice_parts)
+
+DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:str = "$"
+discriminant_name:str = "?"
+choice_prefix:str = "?"
+
+def get_name_and_index(name:str)->Tuple[str,int]:
+    """ given a name of the form "name@i", returns (name, i)
+        if given a name of the form "name", returns (name, 0)
+    """
+    splits = name.split("@",1)
+    if len(splits) == 1:
+        return splits[0], 0
+    else:
+        return splits[0], int(splits[1])
+
+def make_degen_indexed_name(name, index):
+    return f"{name}@{index}"
+
+def make_indexed_name(name, index):
+    if index == 0:
+        return name
+    else:
+        return f"{name}@{index}"
+
+def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
     """May return a new operator, in which case the old one should be overwritten
     """
     if isinstance(op, Ops.PlannedIndividualOp):
-        return op.set_params(**impl_params)
+        main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
+        hyper = op._hyperparams
+        if hyper is None:
+            hyper = {}
+        # we set the sub params first
+        for sub_key, sub_params in partitioned_sub_params.items():
+            # need to handle the different encoding schemes used
+            sub_op = hyper[sub_key]
+            if isinstance(sub_op, list):
+                if len(sub_op) == 1:
+                    sub_op = sub_op[0]
+                else:
+                    (disc, chosen_params) = partition_sklearn_choice_params(sub_params)
+                    assert 0 <= disc and disc < len(sub_op)
+                    sub_op = sub_op[disc]
+                    sub_params = chosen_params
+                hyper[sub_key] = sub_op  
+            # sub_op and sub_params are now set correctly
+            # hyper[sub_key] is updated if needed to make the 
+            # appropriate choice
+
+            trainable_sub_op = set_operator_params(sub_op, **sub_params)
+            hyper[sub_key] = trainable_sub_op
+
+         # we have now updated any nested operators
+         # (if this is a higher order operator)
+         # and can work on the main operator
+        all_params = {**main_params, **hyper}
+        return op.set_params(**all_params)
     elif isinstance(op, Ops.BasePipeline):
         steps = op.steps()
-        partitioned_params:Dict[str,Dict[str, Any]] = partition_sklearn_params(impl_params)
-        found_names:Set[str] = set()
+        main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
+        assert not main_params, f"Unexpected non-nested arguments {main_params}"
+        found_names:Dict[str, int] = {}
         step_map:Dict[Ops.Operator, Ops.TrainableOperator] = {}
         for s in steps:
             name = s.name()
-            found_names.add(name)
+            name_index = 0
             params:Dict[str, Any] = {}
-            if name in partitioned_params:
-                params = partitioned_params[name]
+            if name in found_names:
+                name_index = found_names[name] + 1
+                found_names[name] = name_index
+                uname = make_indexed_name(name, name_index)
+                if uname  in partitioned_sub_params:
+                    params = partitioned_sub_params[uname]
+            else:
+                found_names[name] = 0
+                uname = make_degen_indexed_name(name, 0)
+                if uname in partitioned_sub_params:
+                    params = partitioned_sub_params[uname]
+                    assert name not in partitioned_sub_params
+                elif name in partitioned_sub_params:
+                    params = partitioned_sub_params[name]
             new_s = set_operator_params(s, **params)
             if s != new_s:
                 step_map[s] = new_s
         # make sure that no parameters were passed in for operations
         # that are not actually part of this pipeline
-        assert set(partitioned_params.keys()).issubset(found_names)
+        for k in partitioned_sub_params.keys():
+            n,i = get_name_and_index(k)
+            assert n in found_names and i <= found_names[n]
         if step_map:
             op.subst_steps(step_map)
             if not isinstance(op, Ops.TrainablePipeline):
@@ -123,14 +235,17 @@ def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.TrainableOperator
             assert isinstance(op, Ops.TrainableOperator)
             return op
     elif isinstance(op, Ops.OperatorChoice):
-        discriminant_name:str = "_lale_discriminant"
-        assert discriminant_name in impl_params
-        choice_name = impl_params[discriminant_name]
-        choices:List[Ops.Operator] = [step for step in op.steps() if step.name() == choice_name]
-        assert len(choices)==1, f"found {len(choices)} operators with the same name: {choice_name}"
-        choice:Ops.Operator = choices[0]
-        chosen_params = dict(impl_params)
-        del chosen_params[discriminant_name]
+        choices = op.steps()
+        choice_index:int
+        choice_params:Dict[str, Any]
+        if len(choices)==1:
+            choice_index = 0
+            chosen_params = impl_params
+        else:
+            (choice_index, chosen_params) = partition_sklearn_choice_params(impl_params)
+
+        assert 0 <= choice_index and choice_index < len(choices)
+        choice:Ops.Operator = choices[choice_index]
 
         new_step = set_operator_params(choice, **chosen_params)
         # we remove the OperatorChoice, replacing it with the branch that was taken
@@ -144,7 +259,7 @@ class SKlearnCompatWrapper(object):
     _old_params_for_clone:Optional[Dict[str, Any]]
 
     @classmethod
-    def make_wrapper(cls, base:'Ops.Operator'):
+    def make_wrapper(cls, base:Ops.Operator):
         b:Any = base
         if isinstance(base, SKlearnCompatWrapper):
             return base
@@ -315,9 +430,25 @@ def nest_all_HPparams(name:str, grids:List[Dict[str,V]])->List[Dict[str,V]]:
     """
     return [nest_HPparams(name, grid) for grid in grids]
 
+def nest_choice_HPparam(key:str):
+    return choice_prefix + key
+
+def nest_choice_HPparams(grid:Dict[str,V])->Dict[str,V]:
+    return {(nest_choice_HPparam(k)):v for k, v in grid.items()}
+
+def nest_choice_all_HPparams(grids:List[Dict[str,V]])->List[Dict[str,V]]:
+    """ this transforms every key(parameter name) in the grids
+        to be nested under a choice, using a ? as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """
+    return [nest_choice_HPparams(grid) for grid in grids]
+
+def unnest_choice(k:str)->str:
+    assert k.startswith(choice_prefix)
+    return k[len(choice_prefix):]
+
 def unnest_HPparams(k:str)->List[str]:
-    return k.split("__")
-    
+    return k.split("__")    
+
 def clone_op(op: Ops.Operator, name:str=None) -> Ops.Operator:
     """ Clone any operator.
     """

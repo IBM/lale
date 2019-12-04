@@ -29,7 +29,6 @@ from lale.sklearn_compat import make_sklearn_compat
 
 from lale.schema_utils import Schema, getMinimum, getMaximum
 from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray
-from lale.search.schema2search_space import schemaToSearchSpace
 from lale.search.PGO import PGO
 import numpy as np
 
