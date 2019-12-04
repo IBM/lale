@@ -21,9 +21,9 @@ with open("README.md", "r") as fh:
 
 setup(
     name='lale',
-    version='0.3.0',
-    author="Avraham Shinnar, Guillaume Baudart, Kiran Kate, Martin Hirzel",
-    description="Language for Automated Learning Exploration",
+    version='0.3.1',
+    author="Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar",
+    description="Library for Semi-Automated Data Science",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/IBM/lale",
