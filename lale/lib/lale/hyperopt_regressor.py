@@ -95,13 +95,6 @@ class HyperoptRegressorImpl:
                     'loss': self.best_score - score, 'time': execution_time, 'status': STATUS_OK
                 }
             except BaseException as e:
-<<<<<<< HEAD
-                logger.warning(f'Exception caught in HyperoptRegressor: {type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting loss to zero')
-                r_squared = 0
-                execution_time = 0
-            return {'loss': -r_squared, 'time': execution_time, 'status': STATUS_OK}
-=======
->>>>>>> 3c2d9d96c10380e7b6e811a86fb66b2d52e721c3
 
                 logger.warning(f'Exception caught in HyperoptRegressor: {type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting loss to zero')
                 return_dict = {'status': STATUS_FAIL}
