@@ -159,6 +159,14 @@ _hyperparams_schema = {
             'handle_cv_failure': {
                 'type': 'boolean',
                 'default': False},
+            'scoring': {
+                'enum': ['r2', 'neg_mean_squared_error', 'neg_mean_absolute_error',
+                         'neg_root_mean_squared_error', 'neg_mean_squared_log_error',
+                         'neg_median_absolute_error'],
+                'default': 'r2'},
+            'best_score': {
+                'type': 'number',
+                'default': 1.0},
             'max_opt_time': {
                 'anyOf': [
                 {   'type': 'number',
