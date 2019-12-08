@@ -29,10 +29,12 @@ Lale is distributed under the terms of the Apache 2.0 License, see
 [LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt). It is currently in an **Alpha release**,
 without warranties of any kind.
 
-* Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf) and [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb)
+* [Introductory guide](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) for scikit-learn users
 * [Installation instructions](https://github.com/IBM/lale/blob/master/docs/installation.rst)
-* Python [API documentation](https://lale.readthedocs.io/en/latest/)
+* Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf) and [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb)
 * Guide for wrapping [new operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/new_operators.ipynb)
+* [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)
+* Python [API documentation](https://lale.readthedocs.io/en/latest/)
 * arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
 
 The name Lale, pronounced *laleh*, comes from the Persian word for
