@@ -282,6 +282,7 @@ class TestHyperoptClassifier(unittest.TestCase):
             cv=3,
             max_opt_time=0.0
         )
-        best_trained = hor.fit(X, y)
-        assert best_trained._impl is None
+        hor_fitted = hor.fit(X, y)
+        from lale.helpers import best_estimator
+        assert best_estimator(hor_fitted) is None
 

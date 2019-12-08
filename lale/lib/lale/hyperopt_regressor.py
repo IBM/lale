@@ -114,8 +114,7 @@ class HyperoptRegressorImpl:
             logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
             trained_reg = None
 
-
-        return trained_reg
+        return self
 
     def predict(self, X_eval):
         import warnings

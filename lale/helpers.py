@@ -658,3 +658,14 @@ def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_
         else:
             labels[batch_idx*len(batch_y):(batch_idx+1)*len(batch_y)] = batch_y
     return file_obj
+
+def best_estimator(obj):
+    if hasattr(obj, '_impl'): #TrainedIndividualOp
+        if hasattr(obj._impl, 'best_estimator'): #HyperoptRegressorImpl
+            return obj._impl.best_estimator
+        return None
+    if hasattr(obj, 'best_estimator_'): #GridSearchCV
+        if hasattr(obj.best_estimator_, 'to_lale'): #SKlearnCompatWrapper
+            return obj.best_estimator_.to_lale()
+        return obj.best_estimator_
+    return obj
