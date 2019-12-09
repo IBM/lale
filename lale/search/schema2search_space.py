@@ -27,6 +27,9 @@ from lale.search.PGO import PGO, FrequencyDistribution, Freqs
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+def get_default(schema)->Optional[Any]:
+    return schema.get('default', None)
+
 class FreqsWrapper(object):
     base:Optional[Dict[str,Freqs]]
 
@@ -102,12 +105,12 @@ def schemaToSearchSpaceHelper_( longName,
 
     if 'enum' in schema:
         vals = schema['enum']
-        return SearchSpaceEnum(vals, pgo=asFreqs(pgo_freqs))
+        return SearchSpaceEnum(vals, pgo=asFreqs(pgo_freqs), default=get_default(schema))
 
     if 'type' in schema:
         typ = schema['type']
         if typ == "boolean":
-            return SearchSpaceBool(pgo=asFreqs(pgo_freqs))
+            return SearchSpaceBool(pgo=asFreqs(pgo_freqs), default=get_default(schema))
         elif typ == "number" or typ == "integer":
             exclusive_minimum = False
             minimum=schema.get('minimumForOptimizer', None)
@@ -148,7 +151,8 @@ def schemaToSearchSpaceHelper_( longName,
                             exclusiveMaximum=exclusive_maximum, 
                             discrete=discrete, 
                             distribution=distribution,
-                            pgo=asFreqs(pgo_freqs))
+                            pgo=asFreqs(pgo_freqs),
+                            default=get_default(schema))
         elif typ == "array" or typ =="tuple":
             typeForOptimizer = schema.get('typeForOptimizer', None)
             if typeForOptimizer is None:
