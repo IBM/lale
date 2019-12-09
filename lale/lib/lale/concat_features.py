@@ -18,6 +18,7 @@ import numpy as np
 import pandas as pd
 import scipy.sparse
 import jsonsubschema
+import torch
 
 class ConcatFeaturesImpl():
     """Transformer to concatenate input datasets. 
@@ -63,6 +64,8 @@ class ConcatFeaturesImpl():
                 np_dataset = dataset.values
             elif isinstance(dataset, scipy.sparse.csr_matrix):
                 np_dataset = dataset.toarray()
+            elif isinstance(dataset, torch.Tensor):
+                np_dataset = dataset.detach().cpu().numpy()
             else:
                 np_dataset = dataset
             if hasattr(np_dataset, 'shape'):
