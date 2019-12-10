@@ -19,17 +19,10 @@ import sys
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup(
-    name='lale',
-    version='0.3.1',
-    author="Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar",
-    description="Library for Semi-Automated Data Science",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/IBM/lale",
-    python_requires='>=3.6',
-    packages=find_packages(),
-    license='',
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+if on_rtd:
+    install_requires = []
+else:
     install_requires=[
         'astunparse',
         'graphviz',
@@ -46,27 +39,40 @@ setup(
         'lightgbm',
         'decorator',
         'torch>=1.0',
-        'h5py'],
-      extras_require={
-          'full': [
-              'pytorch-pretrained-bert>=0.6.1',
-              'torchvision>=0.2.2',
-              'tensorflow-datasets>=1.0.1',
-              'tensorflow>=1.13.1',
-              'tensorflow_hub',
-              'spacy',
-              'smac<=0.10.0',
-              'aif360',
-              'numba',
-              'BlackBoxAuditing'],
-          'test':[
-              'jupyter',
-              'mypy<=0.740',
-              'flake8',
-              'numpydoc',
-              'sphinx',
-              'm2r',
-              'sphinx_rtd_theme',
-              'sphinxcontrib.apidoc'
-          ]}
+        'h5py']
+
+setup(
+    name='lale',
+    version='0.3.1',
+    author="Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar",
+    description="Library for Semi-Automated Data Science",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    url="https://github.com/IBM/lale",
+    python_requires='>=3.6',
+    packages=find_packages(),
+    license='',
+    install_requires = install_requires,
+    extras_require={
+        'full': [
+            'pytorch-pretrained-bert>=0.6.1',
+            'torchvision>=0.2.2',
+            'tensorflow-datasets>=1.0.1',
+            'tensorflow>=1.13.1',
+            'tensorflow_hub',
+            'spacy',
+            'smac<=0.10.0',
+            'aif360',
+            'numba',
+            'BlackBoxAuditing'],
+        'test':[
+            'jupyter',
+            'mypy<=0.740',
+            'flake8',
+            'numpydoc',
+            'sphinx',
+            'm2r',
+            'sphinx_rtd_theme',
+            'sphinxcontrib.apidoc'
+        ]}
 )
