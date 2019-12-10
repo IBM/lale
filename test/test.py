@@ -751,7 +751,7 @@ class TestTfidfVectorizer(unittest.TestCase):
                                     tokenizer = my_tokenizer,
                                     analyzer = 'char')
 
-class TestHyperoptClassifier(unittest.TestCase):
+class TestHyperopt(unittest.TestCase):
     def test_nested_pipeline1(self):
         from sklearn.datasets import load_iris
         from lale.lib.lale import HyperoptClassifier
@@ -840,8 +840,8 @@ class TestHyperoptClassifier(unittest.TestCase):
         prep_text = Project(columns=['review']) >> Tfidf(max_features=100)
         prep_nums = Project(columns={'type': 'number'})
         planned = (prep_text & prep_nums) >> Cat >> (LinReg | Forest)
-        from lale.lib.lale import HyperoptClassifier
-        hyperopt_classifier = HyperoptClassifier(planned, max_evals=3)
+        from lale.lib.lale import HyperoptRegressor
+        hyperopt_classifier = HyperoptRegressor(estimator=planned, max_evals=3)
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
 # class TestGetFeatureNames(unittest.TestCase):
