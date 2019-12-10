@@ -73,6 +73,11 @@ apidoc_module_dir = '../lale'
 apidoc_output_dir = 'modules'
 apidoc_separate_modules = True
 
+# Mock requirements to save resources during doc build machine setup
+autodoc_mock_imports = [
+    'torch'
+]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
