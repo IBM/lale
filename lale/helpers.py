@@ -621,8 +621,10 @@ def create_data_loader(X, y = None, batch_size = 1):
     elif isinstance(X, dict): #Assumed that it is data indexed by batch number
         #dataset = BatchDataDictDataset(X)
         return X.values()
-    elif isinstance(X, torch.Tensor):
+    elif isinstance(X, torch.Tensor) and y is not None:
         dataset = TensorDataset(X, y)
+    elif isinstance(X, torch.Tensor):
+        dataset = TensorDataset(X)
     else:
         raise TypeError("Can not create a data loader for a dataset with type {}".format(type(X)))
     return DataLoader(dataset, batch_size=batch_size)

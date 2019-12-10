@@ -1504,26 +1504,27 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 trained = trainable.fit(X = inputs)
             trained_map[operator] = trained
             trained_steps.append(trained)
-            if trained.is_transformer():
-                output = trained.transform(X = inputs, y = y)
-                if hasattr(operator._impl, "get_transform_meta_output"):
-                    meta_output = operator._impl.get_transform_meta_output()
-            else:
-                if trainable in sink_nodes:
-                    output = trained.predict(X = inputs) #We don't support y for predict yet as there is no compelling case
+            if trainable not in sink_nodes:#There is no need to transform/predict on the last node during fit
+                if trained.is_transformer():
+                    output = trained.transform(X = inputs, y = y)
+                    if hasattr(operator._impl, "get_transform_meta_output"):
+                        meta_output = operator._impl.get_transform_meta_output()
                 else:
-                    # This is ok because trainable pipelines steps
-	                # must only be individual operators
-                    if hasattr(trained._impl, 'predict_proba'): # type: ignore
-                        output = trained.predict_proba(X = inputs)
+                    if trainable in sink_nodes:
+                        output = trained.predict(X = inputs) #We don't support y for predict yet as there is no compelling case
                     else:
-                        output = trained.predict(X = inputs)
-                if hasattr(operator._impl, "get_predict_meta_output"):
-                    meta_output = operator._impl.get_predict_meta_output()
-            outputs[operator] = output
-            meta_output.update({key:meta_outputs[pred][key] for pred in preds 
-                    if meta_outputs[pred] is not None for key in meta_outputs[pred]})
-            meta_outputs[operator] = meta_output
+                        # This is ok because trainable pipelines steps
+                        # must only be individual operators
+                        if hasattr(trained._impl, 'predict_proba'): # type: ignore
+                            output = trained.predict_proba(X = inputs)
+                        else:
+                            output = trained.predict(X = inputs)
+                    if hasattr(operator._impl, "get_predict_meta_output"):
+                        meta_output = operator._impl.get_predict_meta_output()
+                outputs[operator] = output
+                meta_output.update({key:meta_outputs[pred][key] for pred in preds 
+                        if meta_outputs[pred] is not None for key in meta_outputs[pred]})
+                meta_outputs[operator] = meta_output
 
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
