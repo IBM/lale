@@ -269,8 +269,9 @@ _input_fit_schema = {
         'X': {
             'type': 'array',
             'items': {
-                'type': 'array',
-                'items': {'type': ['number', 'string']}}},
+                'anyOf': [
+                {   'type': 'array', 'items': {'type': ['number', 'string']}},
+                {   'type': 'string'}]}},
         'y': {
             'type': 'array', 'items': {'type': 'number'}}}}
 
@@ -280,8 +281,9 @@ _input_predict_schema = {
         'X': {
             'type': 'array',
             'items': {
-                'type': 'array',
-                'items': {'type': ['number', 'string']}}}}}
+                'anyOf': [
+                {   'type': 'array', 'items': {'type': ['number', 'string']}},
+                {   'type': 'string'}]}}}}
 
 _output_predict_schema = {
     'type': 'array', 'items': {'type': 'number'}}
