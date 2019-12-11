@@ -28,30 +28,6 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from lale.operators import PlannedOperator
 
-
-def LaleGridSearchCV(
-        op:'PlannedOperator', 
-        lale_num_samples:Optional[int]=None, 
-        lale_num_grids:Optional[float]=None, 
-        lale_pgo:Optional[PGO]=None,
-        **kwargs):
-    """
-    Parameters
-    ----------
-    op : The lale PlannedOperator
-    lale_num_samples : integer, optional
-        If set, will limit the number of samples for each distribution
-    lale_num_grids: integer or float, optional
-        if set to an integer => 1, it will determine how many parameter grids will be returned (at most)
-        if set to an float between 0 and 1, it will determine what fraction should be returned
-        note that setting it to 1 is treated as in integer.  To return all results, use None
-    """
-
-    params = get_parameter_grids(op, num_samples=lale_num_samples, num_grids=lale_num_grids, pgo=lale_pgo)
-    if not params and isinstance(op, Ops.IndividualOp):
-        params = [get_defaults_as_param_grid(op)]
-    return get_lale_gridsearchcv_op(make_sklearn_compat(op), params, **kwargs)
-
 def get_defaults_as_param_grid(op:'Ops.IndividualOp'):
     defaults = op.hyperparam_defaults()
     return {k : [v] for k,v in defaults.items()}

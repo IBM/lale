@@ -15,6 +15,7 @@
 import unittest
 import jsonschema
 import warnings
+import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
@@ -33,7 +34,6 @@ from lale.lib.xgboost import XGBClassifier
 from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
-from lale.search.GridSearchCV import LaleGridSearchCV, get_grid_search_parameter_grids
 
 class TestClassification(unittest.TestCase):
 
@@ -90,8 +90,9 @@ def create_function_test_classifier(clf_name):
                 clf = clf.customize_schema(loss=schemas.Enum(default='deviance', values=['deviance']))
             if not isinstance(clf._impl, MLPClassifierImpl):
                 #mlp fails due to issue #164.
-                grid_search = LaleGridSearchCV(clf, lale_num_samples=1, lale_num_grids=1, cv=2,
-                                scoring=make_scorer(accuracy_score))
+                grid_search = lale.lib.lale.GridSearchCV(
+                    estimator=clf, lale_num_samples=1, lale_num_grids=1,
+                    cv=2, scoring=make_scorer(accuracy_score))
                 grid_search.fit(X_train, y_train)
 
         #test_predict_on_trainable

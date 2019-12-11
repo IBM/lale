@@ -21,3 +21,4 @@ from .keep_non_numbers import KeepNonNumbers
 from .keep_numbers import KeepNumbers
 from .project import Project
 from .batching import Batching
+from .grid_search_cv import GridSearchCV

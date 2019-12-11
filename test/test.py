@@ -19,6 +19,7 @@ import jsonschema
 import sys
 
 import lale.operators as Ops
+import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
@@ -44,7 +45,7 @@ from lale.helpers import SubschemaError
 import sklearn.datasets
 
 from lale.sklearn_compat import make_sklearn_compat
-from lale.search.GridSearchCV import LaleGridSearchCV, get_grid_search_parameter_grids
+from lale.search.GridSearchCV import get_grid_search_parameter_grids
 from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 
@@ -256,8 +257,9 @@ class TestLogisticRegression(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = LaleGridSearchCV(trainable, lale_num_samples=2, lale_num_grids=3, cv=5,
-                               scoring=make_scorer(accuracy_score))
+            clf = lale.lib.lale.GridSearchCV(
+                estimator=trainable, lale_num_samples=2, lale_num_grids=3,
+                cv=5, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
     
@@ -274,8 +276,9 @@ class TestLogisticRegression(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = LaleGridSearchCV(trainable, lale_num_samples=1, lale_num_grids=3, cv=5,
-                               scoring=make_scorer(accuracy_score))
+            clf = lale.lib.lale.GridSearchCV(
+                estimator=trainable, lale_num_samples=1, lale_num_grids=3,
+                cv=5, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
 
@@ -698,7 +701,9 @@ class TestPipeline(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             
-            clf = LaleGridSearchCV(pipeline, lale_num_samples=1, lale_num_grids=10, cv=3, scoring=make_scorer(accuracy_score))
+            clf = lale.lib.lale.GridSearchCV(
+                estimator=pipeline, lale_num_samples=1, lale_num_grids=10,
+                cv=3, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
             predicted = clf.predict(iris.data)
@@ -714,7 +719,7 @@ class TestPipeline(unittest.TestCase):
         # with warnings.catch_warnings():
         #     warnings.simplefilter("ignore")
 
-        #     param_search = LaleGridSearchCV(planned_pipeline1, lale_num_samples=1, lale_num_grids=3, scoring=make_scorer(accuracy_score))
+        #     param_search = lale.lib.lale.GridSearchCV(estimator=planned_pipeline1, lale_num_samples=1, lale_num_grids=3, scoring=make_scorer(accuracy_score))
         #     best_pipeline = param_search.fit(X, y)
         #     print(accuracy_score(y, best_pipeline.predict(X)))
 
