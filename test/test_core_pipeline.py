@@ -39,7 +39,6 @@ from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 from lale.lib.autogen import SGDClassifier
-from lale.search.GridSearchCV import LaleGridSearchCV, get_grid_search_parameter_grids
 from sklearn.metrics import accuracy_score
 
 class TestImportExport(unittest.TestCase):

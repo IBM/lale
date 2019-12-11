@@ -18,8 +18,9 @@ from typing import List
 
 import lale.search.PGO as PGO
 
+import lale.lib.lale
 from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
-from lale.search.GridSearchCV import LaleGridSearchCV, get_grid_search_parameter_grids
+from lale.search.GridSearchCV import get_grid_search_parameter_grids
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.search_space import SearchSpace
 
@@ -59,9 +60,9 @@ class TestPGOGridSearchCV(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = LaleGridSearchCV(lr, lale_num_samples=2, lale_num_grids=5, cv=5,
-                            lale_pgo=pgo,
-                            scoring=make_scorer(accuracy_score))
+            clf = lale.lib.lale.GridSearchCV(
+                estimator=lr, lale_num_samples=2, lale_num_grids=5,
+                cv=5, pgo=pgo, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
 
