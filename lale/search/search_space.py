@@ -27,15 +27,21 @@ logger = logging.getLogger(__name__)
 
 PGO_input_type = Union[FrequencyDistribution, Iterable[Tuple[Any, int]], None]
 class SearchSpace(metaclass=AbstractVisitorMeta):
-    def __init__(self):
-        pass
+    def __init__(self, default:Optional[Any]=None):
+        self._default = default
+
+    _default:Optional[Any]
+
+    def default(self):
+        return self._default
 
 class SearchSpaceEnum(SearchSpace):
     pgo:Optional[FrequencyDistribution]
     vals:List[Any]
-
-    def __init__(self, vals:Iterable[Any], pgo:PGO_input_type=None):
-        super(SearchSpaceEnum, self).__init__()
+    def __init__(self, vals:Iterable[Any], 
+                 pgo:PGO_input_type=None, 
+                 default:Optional[Any]=None):
+        super(SearchSpaceEnum, self).__init__(default=default)
         self.vals = sorted(vals, key=str)
 
         if pgo is None or isinstance(pgo, FrequencyDistribution):
@@ -45,11 +51,11 @@ class SearchSpaceEnum(SearchSpace):
 
 class SearchSpaceConstant(SearchSpaceEnum):
     def __init__(self, v, pgo:PGO_input_type=None):
-        super(SearchSpaceConstant, self).__init__([v], pgo=pgo)
+        super(SearchSpaceConstant, self).__init__([v], pgo=pgo, default=v)
 
 class SearchSpaceBool(SearchSpaceEnum):
-    def __init__(self, pgo:PGO_input_type=None):
-        super(SearchSpaceBool, self).__init__([True, False], pgo=pgo)
+    def __init__(self, pgo:PGO_input_type=None, default:Optional[Any]=None):
+        super(SearchSpaceBool, self).__init__([True, False], pgo=pgo, default=default)
 
 class SearchSpaceNumber(SearchSpace):
     minimum:Optional[float]
@@ -67,8 +73,9 @@ class SearchSpaceNumber(SearchSpace):
                  exclusiveMaximum:bool=False, 
                  discrete:bool=False, 
                  distribution="uniform",
-                 pgo:PGO_input_type=None) -> None:
-        super(SearchSpaceNumber, self).__init__()
+                 pgo:PGO_input_type=None,
+                 default:Optional[Any]=None) -> None:
+        super(SearchSpaceNumber, self).__init__(default=default)
         self.minimum = minimum
         self.exclusiveMinimum = exclusiveMinimum
         self.maximum = maximum

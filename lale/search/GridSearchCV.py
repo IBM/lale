@@ -110,13 +110,21 @@ def SearchSpaceNumberToGSValues( key:str,
     else:
         dt = np.dtype(float)
 
-    
+    default = hp.default()
+    if default is not None:
+        # always use the default as one of the samples
+        # TODO: ensure that the default is valid according to the schema
+        if samples <= 1:
+            return [default]
+        samples = samples - 1
     if dist == "uniform" or dist == "integer":
         ret = np.linspace(min, max, num=samples, dtype=dt).tolist()
     elif dist == "loguniform":
         ret = np.logspace(min, max, num=samples, dtype=dt).tolist()
     else:
         raise ValueError(f"unknown/unsupported distribution {dist} for {key}")
+    if default is not None:
+        ret.append(default)
     return ret
 
 def HPValuetoGSValue(key:str, 
