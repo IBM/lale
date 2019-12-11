@@ -29,22 +29,23 @@ import json
 import datetime
 import copy
 import sys
+import lale.operators
 
 SEED=42
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-class HyperoptClassifier():
+class HyperoptClassifierImpl:
 
-    def __init__(self, model = None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, pgo:Optional[PGO]=None):
-        """ Instantiate the HyperoptClassifier that will use the given model and other parameters to select the 
-        best performing trainable instantiation of the model. This optimizer uses negation of accuracy_score 
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, pgo:Optional[PGO]=None):
+        """ Instantiate the HyperoptClassifier that will use the given estimator and other parameters to select the 
+        best performing trainable instantiation of the estimator. This optimizer uses negation of accuracy_score 
         as the performance metric to be minimized by Hyperopt.
 
         Parameters
         ----------
-        model : lale.operators.IndividualOp or lale.operators.Pipeline, optional
+        estimator : lale.operators.IndividualOp or lale.operators.Pipeline, optional
             A valid Lale individual operator or pipeline, by default None
         max_evals : int, optional
             Number of trials of Hyperopt search, by default 50
@@ -88,7 +89,7 @@ class HyperoptClassifier():
         --------
         >>> from sklearn.metrics import make_scorer, f1_score, accuracy_score
         >>> lr = LogisticRegression()
-        >>> clf = HyperoptClassifier(lr, scoring='accuracy', cv = 5, max_evals = 2)
+        >>> clf = HyperoptClassifier(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
         >>> from sklearn import datasets
         >>> diabetes = datasets.load_diabetes()
         >>> X = diabetes.data[:150]
@@ -98,15 +99,15 @@ class HyperoptClassifier():
 
         Other scoring metrics:
 
-        >>> clf = HyperoptClassifier(lr, scoring=make_scorer(f1_score, average='macro'), cv = 3, max_evals = 2)
+        >>> clf = HyperoptClassifier(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
 
         """
         self.max_evals = max_evals
-        if model is None:
-            self.model = LogisticRegression
+        if estimator is None:
+            self.estimator = LogisticRegression
         else:
-            self.model = model
-        self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.model, pgo=pgo)])
+            self.estimator = estimator
+        self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
         self.scoring = scoring
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
@@ -121,7 +122,7 @@ class HyperoptClassifier():
         def hyperopt_train_test(params, X_train, y_train):
             warnings.filterwarnings("ignore")
 
-            clf = create_instance_from_hyperopt_search_space(self.model, params)
+            clf = create_instance_from_hyperopt_search_space(self.estimator, params)
             try:
                 cv_score, logloss, execution_time = cross_val_score_track_trials(clf, X_train, y_train, cv=self.cv, scoring=self.scoring)
                 logger.debug("Successful trial of hyperopt")
@@ -148,7 +149,7 @@ class HyperoptClassifier():
             return cv_score, logloss, execution_time
         def get_final_trained_clf(params, X_train, y_train):
             warnings.filterwarnings("ignore")
-            clf = create_instance_from_hyperopt_search_space(self.model, params)
+            clf = create_instance_from_hyperopt_search_space(self.estimator, params)
             clf = clf.fit(X_train, y_train)
             return clf
 
@@ -170,7 +171,7 @@ class HyperoptClassifier():
                     'params': params_to_save
                 }
             except BaseException as e:
-                logger.warning("Exception caught in HyperoptClassifer:{}, setting status to FAIL".format(e))
+                logger.warning("Exception caught in HyperoptClassifier:{}, setting status to FAIL".format(e))
                 return_dict = {'status': STATUS_FAIL}
             return return_dict
 
@@ -187,17 +188,17 @@ class HyperoptClassifier():
                 )
             )
             trained_clf = get_final_trained_clf(best_params, X_train, y_train)
-            self.best_model = trained_clf
+            self.best_estimator = trained_clf
         except BaseException as e :
             logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
             trained_clf = None
 
-        return trained_clf
+        return self
 
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
-        clf = self.best_model
+        clf = self.best_estimator
         try:
             predictions = clf.predict(X_eval)
         except ValueError as e:
@@ -209,6 +210,96 @@ class HyperoptClassifier():
     def get_trials(self):
         return self.trials
 
+_hyperparams_schema = {
+    'allOf': [
+    {   'type': 'object',
+        'required': [
+            'estimator', 'max_evals', 'cv', 'handle_cv_failure',
+            'max_opt_time', 'pgo'],
+        'relevantToOptimizer': ['estimator'],
+        'additionalProperties': False,
+        'properties': {
+            'estimator': {
+                'anyOf': [
+                {   'typeForOptimizer': 'operator',
+                    'not': {'enum': [None]}},
+                {   'enum': [None],
+                    'description': 'lale.lib.sklearn.LogisticRegression'}],
+                'default': None},
+            'max_evals': {
+                'type': 'integer',
+                'minimum': 1,
+                'default': 50},
+            'cv': {
+                'type': 'integer',
+                'minimum': 1,
+                'default': 5},
+            'handle_cv_failure': {
+                'type': 'boolean',
+                'default': False},
+            'scoring': {
+                'anyOf': [
+                {    'description': 'Custom scorer object, see https://scikit-learn.org/stable/modules/model_evaluation.html',
+                     'not': {'type': 'string'}},
+                {    'enum': [
+                        'accuracy', 'explained_variance', 'max_error',
+                        'roc_auc', 'roc_auc_ovr', 'roc_auc_ovo',
+                        'roc_auc_ovr_weighted', 'roc_auc_ovo_weighted',
+                        'balanced_accuracy', 'average_precision',
+                        'neg_log_loss', 'neg_brier_score']}],
+                'default': 'accuracy'},
+            'best_score': {
+                'type': 'number',
+                'default': 0.0},
+            'max_opt_time': {
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0},
+                {   'enum': [None]}],
+                'default': None},
+            'pgo': {
+                'anyOf': [
+                {   'description': 'lale.search.PGO'},
+                {   'enum': [None]}],
+                'default': None}}}]}
+
+_input_fit_schema = {
+    'type': 'object',
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {'type': ['number', 'string']}}},
+        'y': {
+            'type': 'array', 'items': {'type': 'number'}}}}
+
+_input_predict_schema = {
+    'type': 'object',
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {'type': ['number', 'string']}}}}}
+
+_output_predict_schema = {
+    'type': 'array', 'items': {'type': 'number'}}
+
+_combined_schemas = {
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_classifier.html',
+    'type': 'object',
+    'tags': {
+        'pre': [],
+        'op': ['estimator'],
+        'post': []},
+    'properties': {
+        'hyperparams': _hyperparams_schema,
+        'input_fit': _input_fit_schema,
+        'input_predict': _input_predict_schema,
+        'output': _output_predict_schema}}
+
+HyperoptClassifier = lale.operators.make_operator(HyperoptClassifierImpl, _combined_schemas)
 
 if __name__ == '__main__':
     from lale.lib.lale import ConcatFeatures
@@ -226,7 +317,7 @@ if __name__ == '__main__':
     digits = sklearn.datasets.load_iris()
     X, y = sklearn.utils.shuffle(digits.data, digits.target, random_state=42)
 
-    hp_n = HyperoptClassifier(model=trainable, max_evals=2)
+    hp_n = HyperoptClassifier(estimator=trainable, max_evals=2)
 
     hp_n_trained = hp_n.fit(X, y)
     predictions = hp_n_trained.predict(X)

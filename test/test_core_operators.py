@@ -69,7 +69,7 @@ def create_function_test_classifier(clf_name):
 
         #test_with_hyperopt
         from lale.lib.lale import HyperoptClassifier
-        hyperopt = HyperoptClassifier(model = clf, max_evals=1)
+        hyperopt = HyperoptClassifier(estimator=clf, max_evals=1)
         trained = hyperopt.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
@@ -255,7 +255,7 @@ def create_function_test_feature_preprocessor(fproc_name):
 
         #Tune the pipeline with LR using HyperoptClassifier
         from lale.lib.lale import HyperoptClassifier
-        hyperopt = HyperoptClassifier(model = pipeline, max_evals=1)
+        hyperopt = HyperoptClassifier(estimator=pipeline, max_evals=1)
         trained = hyperopt.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
