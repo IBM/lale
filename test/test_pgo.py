@@ -86,7 +86,7 @@ class TestPGOHyperopt(unittest.TestCase):
         from sklearn.datasets import load_iris
 
         lr = LogisticRegression()
-        clf = HyperoptClassifier(model=lr, max_evals = 5, pgo=pgo)
+        clf = HyperoptClassifier(estimator=lr, max_evals=5, pgo=pgo)
         iris = load_iris()
         clf.fit(iris.data, iris.target)
  

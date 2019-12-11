@@ -156,7 +156,7 @@ def run_hyperopt_on_planned_pipeline(planned_pipeline, max_iters=1) :
     features, labels = load_iris(return_X_y=True)
     # set up optimizer
     from lale.lib.lale.hyperopt_classifier import HyperoptClassifier
-    opt = HyperoptClassifier(model=planned_pipeline, max_evals=max_iters)
+    opt = HyperoptClassifier(estimator=planned_pipeline, max_evals=max_iters)
     # run optimizer
     res = opt.fit(features, labels)    
 
@@ -196,7 +196,7 @@ class TestHyperoptClassifier(unittest.TestCase):
     def test_using_scoring(self):
         from sklearn.metrics import hinge_loss, make_scorer, f1_score, accuracy_score
         lr = LogisticRegression()
-        clf = HyperoptClassifier(lr, scoring='accuracy', cv = 5, max_evals = 2)
+        clf = HyperoptClassifier(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         predictions_1 = clf.predict(self.X_test)
@@ -205,7 +205,7 @@ class TestHyperoptClassifier(unittest.TestCase):
     def test_custom_scoring(self):
         from sklearn.metrics import f1_score, make_scorer
         lr = LogisticRegression()
-        clf = HyperoptClassifier(lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
+        clf = HyperoptClassifier(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         predictions_1 = clf.predict(self.X_test)
@@ -219,7 +219,7 @@ class TestHyperoptClassifier(unittest.TestCase):
         
         max_opt_time = 2.0
         hoc = HyperoptClassifier(
-            model=planned_pipeline,
+            estimator=planned_pipeline,
             max_evals=100,
             cv=3,
             scoring='accuracy',
@@ -240,14 +240,15 @@ class TestHyperoptClassifier(unittest.TestCase):
         X, y = load_iris(return_X_y=True)
         
         hoc = HyperoptClassifier(
-            model=planned_pipeline,
+            estimator=planned_pipeline,
             max_evals=100,
             cv=3,
             scoring='accuracy',
             max_opt_time=0.0
         )
-        best_trained = hoc.fit(X, y)
-        assert best_trained is None
+        hoc_fitted = hoc.fit(X, y)
+        from lale.helpers import best_estimator
+        assert best_estimator(hoc_fitted) is None
 
     def test_runtime_limit_hor(self):
         import time
