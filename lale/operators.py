@@ -1207,7 +1207,7 @@ def get_available_transformers(tags: AbstractSet[str] = None) -> List[PlannedOpe
     return get_available_operators('transformer', tags)
 
 OpType = TypeVar('OpType', bound=Operator)
-class Pipeline(MetaModelOperator, Generic[OpType]):
+class BasePipeline(MetaModelOperator, Generic[OpType]):
     """
     This is a concrete class that can instantiate a new pipeline operator and provide access to its meta data.
     """
@@ -1225,43 +1225,46 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
         return self.__class__(new_steps, new_edges, True)
         
     def __init__(self, 
-                steps:List[OpType], 
-                edges:Optional[Iterable[Tuple[OpType, OpType]]], 
+                steps:List[Union[OpType, Tuple[str, OpType]]]=None, 
+                edges:Optional[Iterable[Tuple[OpType, OpType]]]=None, 
                 ordered:bool=False) -> None:
-        for step in steps:
-            assert isinstance(step, Operator)
-        if edges is None: 
-            #Which means there is a linear pipeline #TODO:Test extensively with clone and get_params
-            #This constructor is mostly called due to cloning. Make sure the objects are kept the same.
-            self.constructor_for_cloning(steps)
-        else:
-            self._steps = []
-            
-            for step in steps:
-                if step in self._steps:
-                    raise ValueError('Same instance of {} already exists in the pipeline. '\
-                    'This is not allowed.'.format(step.name()))
-                if isinstance(step, Pipeline):
-                    #Flatten out the steps and edges
-                    self._steps.extend(step.steps())
-                    #from step's edges, find out all the source and sink nodes
-                    source_nodes = [dst for dst in step.steps() if (step._preds[dst] is None or step._preds[dst] == [])]
-                    sink_nodes = self.find_sink_nodes()                  
-                    #Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
-                    new_edges = step.edges()
-                    #list comprehension at the cost of iterating edges thrice
-                    new_edges.extend([(node, edge[1]) for edge in edges if edge[0] == step for node in sink_nodes])
-                    new_edges.extend([(edge[0], node) for edge in edges if edge[1] == step for node in source_nodes])
-                    new_edges.extend([edge for edge in edges if (edge[1] != step and edge[0] != step)])
-                    edges = new_edges
-                else:
-                    self._steps.append(step)
-            self._preds = { step: [] for step in self._steps }
-            for (src, dst) in edges:
-                self._preds[dst].append(src)
-            if not ordered:
-                self.sort_topologically()
-            assert self.is_in_topological_order()
+        if steps is not None:
+            for i in range(len(steps)):
+                op = steps[i]
+                assert isinstance(op, Operator) or isinstance(op, tuple)
+
+            if edges is None: 
+                #Which means there is a linear pipeline #TODO:Test extensively with clone and get_params
+                #This constructor is mostly called due to cloning. Make sure the objects are kept the same.
+                self.constructor_for_cloning(steps)
+            else:
+                self._steps = []
+                
+                for step in steps:
+                    if step in self._steps:
+                        raise ValueError('Same instance of {} already exists in the pipeline. '\
+                        'This is not allowed.'.format(step.name()))
+                    if isinstance(step, BasePipeline):
+                        #Flatten out the steps and edges
+                        self._steps.extend(step.steps())
+                        #from step's edges, find out all the source and sink nodes
+                        source_nodes = [dst for dst in step.steps() if (step._preds[dst] is None or step._preds[dst] == [])]
+                        sink_nodes = self.find_sink_nodes()                  
+                        #Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
+                        new_edges = step.edges()
+                        #list comprehension at the cost of iterating edges thrice
+                        new_edges.extend([(node, edge[1]) for edge in edges if edge[0] == step for node in sink_nodes])
+                        new_edges.extend([(edge[0], node) for edge in edges if edge[1] == step for node in source_nodes])
+                        new_edges.extend([edge for edge in edges if (edge[1] != step and edge[0] != step)])
+                        edges = new_edges
+                    else:
+                        self._steps.append(step)
+                self._preds = { step: [] for step in self._steps }
+                for (src, dst) in edges:
+                    self._preds[dst].append(src)
+                if not ordered:
+                    self.sort_topologically()
+                assert self.is_in_topological_order()
 
     def constructor_for_cloning(self, steps:List[OpType]):
         edges:List[Tuple[OpType, OpType]] = []
@@ -1272,11 +1275,11 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
         curr_roots:List[OpType]
 
         for curr_op in self._steps:
-            if isinstance(prev_op, Pipeline):
+            if isinstance(prev_op, BasePipeline):
                 prev_leaves = prev_op.get_leaves()
             else:
                 prev_leaves = [] if prev_op is None else [prev_op]
-            if isinstance(curr_op, Pipeline):
+            if isinstance(curr_op, BasePipeline):
                 curr_roots = curr_op.get_roots()
                 self._steps.extend(curr_op.steps())
                 edges.extend(curr_op.edges())
@@ -1297,6 +1300,16 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
         #Since this case is only allowed for linear pipelines, it is always
         #expected to be in topological order
         assert self.is_in_topological_order()
+
+    def __call__(self, steps:List[Union[OpType, Tuple[str, OpType]]]):
+        for i in range(len(steps)):
+            op = steps[i]
+            if isinstance(op, tuple):
+                assert isinstance(op[1], Operator)
+                op[1]._name = op[0]
+                op = op[1]
+                steps[i] = op
+        return make_pipeline(*steps)
 
     def edges(self)->List[Tuple[OpType, OpType]]:
         return [(src, dst) for dst in self._steps for src in self._preds[dst]]
@@ -1373,7 +1386,7 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
     def has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
         """
-        if not isinstance(other, Pipeline):
+        if not isinstance(other, BasePipeline):
             return False
         my_steps = self.steps()
         other_steps = other.steps()
@@ -1412,9 +1425,11 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
             output = operator.transform_schema(inputs)
             outputs[operator] = output
 
+Pipeline = BasePipeline()
+
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
-class PlannedPipeline(Pipeline[PlannedOpType], PlannedOperator):
+class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
     def __init__(self, 
                  steps:List[PlannedOpType],
                  edges:Optional[Iterable[Tuple[PlannedOpType, PlannedOpType]]], 
@@ -2114,11 +2129,11 @@ def make_pipeline(*orig_steps:Union[Operator,Any])->PlannedPipeline:
     steps, edges = [], []
     prev_op = None
     for curr_op in orig_steps:
-        if isinstance(prev_op, Pipeline):
+        if isinstance(prev_op, BasePipeline):
             prev_leaves: Any = prev_op.get_leaves()
         else:
             prev_leaves = [] if prev_op is None else [prev_op]
-        if isinstance(curr_op, Pipeline):
+        if isinstance(curr_op, BasePipeline):
             curr_roots = curr_op.get_roots()
             steps.extend(curr_op.steps())
             edges.extend(curr_op.edges())
@@ -2134,7 +2149,7 @@ def make_pipeline(*orig_steps:Union[Operator,Any])->PlannedPipeline:
 def make_union_no_concat(*orig_steps:Union[Operator,Any])->Operator:
     steps, edges = [], []
     for curr_op in orig_steps:
-        if isinstance(curr_op, Pipeline):
+        if isinstance(curr_op, BasePipeline):
             steps.extend(curr_op._steps)
             edges.extend(curr_op.edges())
         else:
