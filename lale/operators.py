@@ -252,7 +252,12 @@ class Operator(metaclass=AbstractVisitorMeta):
     def name(self)->str:
         """Returns the name of the operator.        
         """
+        pass
 
+    @abstractmethod
+    def set_name(self, str):
+        """Sets the name of the operator.        
+        """
         pass
 
     def to_json(self):
@@ -639,6 +644,9 @@ class IndividualOp(MetaModelOperator):
         """
 
         return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def class_name(self)->str:
         module = self._impl.__module__
@@ -1213,6 +1221,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
     """
     _steps:List[OpType]
     _preds:Dict[OpType, List[OpType]]
+    _name:str
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
@@ -1225,7 +1234,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
         return self.__class__(new_steps, new_edges, True)
         
     def __init__(self, 
-                steps:List[Union[OpType, Tuple[str, OpType]]]=None, 
+                steps:List[OpType]=None, 
                 edges:Optional[Iterable[Tuple[OpType, OpType]]]=None, 
                 ordered:bool=False) -> None:
         if steps is not None:
@@ -1301,16 +1310,6 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
         #expected to be in topological order
         assert self.is_in_topological_order()
 
-    def __call__(self, steps:List[Union[OpType, Tuple[str, OpType]]]):
-        for i in range(len(steps)):
-            op = steps[i]
-            if isinstance(op, tuple):
-                assert isinstance(op[1], Operator)
-                op[1]._name = op[0]
-                op = op[1]
-                steps[i] = op
-        return make_pipeline(*steps)
-
     def edges(self)->List[Tuple[OpType, OpType]]:
         return [(src, dst) for dst in self._steps for src in self._preds[dst]]
 
@@ -1381,7 +1380,12 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
         return cls.__module__ + '.' + cls.__name__
 
     def name(self)->str:
-        return "pipeline_" + str(id(self))
+        if self._name is not None:
+            self._name = "pipeline_" + str(id(self))
+        return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
@@ -1425,7 +1429,20 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
             output = operator.transform_schema(inputs)
             outputs[operator] = output
 
-Pipeline = BasePipeline()
+class PipelineFactory():
+    def __init__(self):
+        pass
+
+    def __call__(self, steps:List[Any]):
+        for i in range(len(steps)):
+            op = steps[i]
+            if isinstance(op, tuple):
+                assert isinstance(op[1], Operator)
+                op[1].set_name(op[0])
+                steps[i] = op[1]
+        return make_pipeline(*steps)
+
+Pipeline = PipelineFactory()
 
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
@@ -2067,6 +2084,9 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
 
     def name(self)->str:
         return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps

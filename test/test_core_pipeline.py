@@ -52,7 +52,7 @@ class TestCreation(unittest.TestCase):
     def test_pipeline_create(self):
         from lale.lib.sklearn import PCA, LogisticRegression
         from lale.operators import Pipeline
-        pipeline = PipelineTry(([('pca1', PCA()), ('lr1', LogisticRegression())]))
+        pipeline = Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         from sklearn.metrics import accuracy_score
@@ -62,7 +62,7 @@ class TestCreation(unittest.TestCase):
         from sklearn.base import clone
         from lale.lib.sklearn import PCA, LogisticRegression
         from lale.operators import Pipeline
-        pipeline = PipelineTry(([('pca1', PCA()), ('lr1', LogisticRegression())]))
+        pipeline = Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         from sklearn.metrics import accuracy_score

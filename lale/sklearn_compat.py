@@ -92,7 +92,7 @@ def set_operator_params(op:'Ops.Operator', **impl_params)->Ops.TrainableOperator
     """
     if isinstance(op, Ops.PlannedIndividualOp):
         return op.set_params(**impl_params)
-    elif isinstance(op, Ops.Pipeline):
+    elif isinstance(op, Ops.BasePipeline):
         steps = op.steps()
         partitioned_params:Dict[str,Dict[str, Any]] = partition_sklearn_params(impl_params)
         found_names:Set[str] = set()
