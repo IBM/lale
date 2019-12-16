@@ -252,7 +252,12 @@ class Operator(metaclass=AbstractVisitorMeta):
     def name(self)->str:
         """Returns the name of the operator.        
         """
+        pass
 
+    @abstractmethod
+    def set_name(self, name:str):
+        """Sets the name of the operator.        
+        """
         pass
 
     def to_json(self):
@@ -639,6 +644,9 @@ class IndividualOp(MetaModelOperator):
         """
 
         return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def class_name(self)->str:
         module = self._impl.__module__
@@ -1213,6 +1221,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
     """
     _steps:List[OpType]
     _preds:Dict[OpType, List[OpType]]
+    _name:str
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
@@ -1368,7 +1377,12 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
         return cls.__module__ + '.' + cls.__name__
 
     def name(self)->str:
-        return "pipeline_" + str(id(self))
+        if self._name is None:
+            self._name = "pipeline_" + str(id(self))
+        return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
@@ -2052,6 +2066,9 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
 
     def name(self)->str:
         return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps

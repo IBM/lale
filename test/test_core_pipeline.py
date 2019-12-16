@@ -41,39 +41,40 @@ from lale.lib.sklearn import FeatureAgglomeration
 from lale.lib.autogen import SGDClassifier
 from sklearn.metrics import accuracy_score
 
-class TestCreation(unittest.TestCase):
-    def setUp(self):
-        from sklearn.datasets import load_iris
-        from sklearn.model_selection import train_test_split
-        data = load_iris()
-        X, y = data.data, data.target
-        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+class TestCreation(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)    
 
-    def test_pipeline_create(self):
-        from lale.lib.sklearn import PCA, LogisticRegression
-        from lale.operators import Pipeline
-        pipeline = Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
-        trained = pipeline.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
-        from sklearn.metrics import accuracy_score
-        accuracy_score(self.y_test, predictions)
+    def test_pipeline_create(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.operators import Pipeline
+        pipeline = Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
+        trained = pipeline.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+        accuracy_score(self.y_test, predictions)
+        
+    def test_pipeline_clone(self):
+        from sklearn.base import clone
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.operators import Pipeline
+        pipeline=Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
+        trained=pipeline.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+        orig_acc = accuracy_score(self.y_test, predictions)
 
-    def test_pipeline_clone(self):
-        from sklearn.base import clone
-        from lale.lib.sklearn import PCA, LogisticRegression
-        from lale.operators import Pipeline
-        pipeline = Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
-        trained = pipeline.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
-        from sklearn.metrics import accuracy_score
-        orig_acc = accuracy_score(self.y_test, predictions)
+        cloned_pipeline = clone(pipeline)
+        trained = cloned_pipeline.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+        cloned_acc = accuracy_score(self.y_test, predictions)
+        self.assertEqual(orig_acc, cloned_acc)
 
-        cloned_pipeline = clone(pipeline)
-        trained = cloned_pipeline.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
-        from sklearn.metrics import accuracy_score
-        cloned_acc = accuracy_score(self.y_test, predictions)
-        self.assertEqual(orig_acc, cloned_acc)
 class TestImportExport(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
