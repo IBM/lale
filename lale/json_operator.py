@@ -151,7 +151,7 @@ def to_json(op):
                 result['coefs'] = 'coefs_not_available'
             else:
                 result['coefs'] = None
-    elif isinstance(op, lale.operators.Pipeline):
+    elif isinstance(op, lale.operators.BasePipeline):
         node2id = {s: i for (i, s) in enumerate(op.steps())}
         result['edges'] = [[node2id[x], node2id[y]] for (x, y) in op.edges()]
         result['steps'] = [s.to_json() for s in op.steps()]

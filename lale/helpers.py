@@ -307,7 +307,7 @@ def create_individual_op_using_reflection(class_name, operator_name, param_dict)
     return instance
 
 def to_graphviz(lale_operator, **dot_graph_attr):
-    from lale.operators import Operator, Pipeline
+    from lale.operators import Operator, BasePipeline
     from lale.pretty_print import hyperparams_to_string
     if not isinstance(lale_operator, Operator):
         raise ValueError("The input to to_graphviz needs to be a valid LALE operator.")
@@ -315,7 +315,7 @@ def to_graphviz(lale_operator, **dot_graph_attr):
     dot = graphviz.Digraph()
     dot.attr('graph', {**dot_graph_attr, 'rankdir': 'LR'})
     dot.attr('node', fontsize='11', margin='0.06,0.03')
-    if isinstance(lale_operator, Pipeline):
+    if isinstance(lale_operator, BasePipeline):
         nodes = jsn['steps']
     else:
         nodes = [jsn]
@@ -407,12 +407,12 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
     #as the number of steps in the current pipeline
 
     from lale.operators import IndividualOp
-    from lale.operators import Pipeline
+    from lale.operators import BasePipeline
     from lale.operators import TrainablePipeline
     from lale.operators import OperatorChoice
     if isinstance(lale_object, IndividualOp):
         return lale_object(**dict_without(hyperparams, 'name'))
-    elif isinstance(lale_object, Pipeline):
+    elif isinstance(lale_object, BasePipeline):
         if len(hyperparams) != len(lale_object.steps()):
             raise ValueError('The number of steps in the hyper-parameter space does not match the number of steps in the pipeline.')
         op_instances = []
