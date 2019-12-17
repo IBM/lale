@@ -47,7 +47,7 @@ class TestCreation(unittest.TestCase):
         from sklearn.model_selection import train_test_split
         data = load_iris()
         X, y = data.data, data.target
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)    
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_pipeline_create(self):
         from lale.lib.sklearn import PCA, LogisticRegression
@@ -58,11 +58,11 @@ class TestCreation(unittest.TestCase):
         from sklearn.metrics import accuracy_score
         accuracy_score(self.y_test, predictions)
         
-    def test_pipeline_clone(self):
+    def test_pipeline_clone(self):
         from sklearn.base import clone
         from lale.lib.sklearn import PCA, LogisticRegression
         from lale.operators import Pipeline
-        pipeline=Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
+        pipeline=Pipeline(([('pca1', PCA()), ('lr1', LogisticRegression())]))
         trained=pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         from sklearn.metrics import accuracy_score
