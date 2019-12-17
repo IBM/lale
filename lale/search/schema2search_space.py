@@ -15,11 +15,13 @@
 import math
 import logging
 import numpy
+import jsonschema
+
 
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
 
-from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema
+from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer
 from lale.search.search_space import *
 from lale.search.HP import search_space_to_str_for_comparison
 from lale.search.PGO import PGO, FrequencyDistribution, Freqs
@@ -28,7 +30,16 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 def get_default(schema)->Optional[Any]:
-    return schema.get('default', None)
+    d = schema.get('default', None)
+    if d is not None:
+        try:
+            s = forOptimizer(schema)
+            jsonschema.validate(d, s)
+            return d
+        except:
+            logger.debug(f"get_default: default {d} not used because it is not valid for the schema {schema}")
+            return None
+    return None
 
 class FreqsWrapper(object):
     base:Optional[Dict[str,Freqs]]
