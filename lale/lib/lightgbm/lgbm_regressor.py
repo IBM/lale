@@ -48,11 +48,14 @@ class LGBMRegressorImpl():
         }
 
     def fit(self, X, y=None, **fit_params):
-        self._sklearn_model = lightgbm.sklearn.LGBMRegressor(**self._hyperparams)
-        if fit_params is None:
-            self._sklearn_model.fit(X, y)
-        else:
-            self._sklearn_model.fit(X, y, **fit_params)
+        try:
+            self._sklearn_model = lightgbm.sklearn.LGBMRegressor(**self._hyperparams)
+            if fit_params is None:
+                self._sklearn_model.fit(X, y)
+            else:
+                self._sklearn_model.fit(X, y, **fit_params)
+        except Exception as e:
+            raise RuntimeError(str(self._hyperparams)) from e
         return self
 
     def predict(self, X):
