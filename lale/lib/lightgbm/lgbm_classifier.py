@@ -46,8 +46,6 @@ class LGBMClassifierImpl():
             'silent': silent,
             'importance_type': importance_type
         }
-        if boosting_type == 'rf':
-            assert subsample != 1.0
 
     def fit(self, X, y=None, **fit_params):
         try:
