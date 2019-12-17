@@ -46,13 +46,18 @@ class LGBMClassifierImpl():
             'silent': silent,
             'importance_type': importance_type
         }
+        if boosting_type == 'rf':
+            assert subsample != 1.0
 
     def fit(self, X, y=None, **fit_params):
-        self._sklearn_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
-        if fit_params is None:
-            self._sklearn_model.fit(X, y)
-        else:
-            self._sklearn_model.fit(X, y, **fit_params)
+        try:
+            self._sklearn_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
+            if fit_params is None:
+                self._sklearn_model.fit(X, y)
+            else:
+                self._sklearn_model.fit(X, y, **fit_params)
+        except Exception as e:
+            raise RuntimeError(str(self._hyperparams)) from e
         return self
 
     def predict(self, X):
@@ -68,8 +73,9 @@ _hyperparams_schema = {
         'type': 'object',
         'required':['boosting_type', 'max_depth', 'learning_rate', 'n_estimators',
             'min_child_samples', 'subsample', 'subsample_freq'], 
-        'relevantToOptimizer': ['boosting_type', 'max_depth', 'learning_rate', 'n_estimators',
+        'relevantToOptimizer': ['max_depth', 'learning_rate', 'n_estimators',
             'min_child_samples', 'subsample', 'subsample_freq'],
+        #TODO: add 'boosting_type' back to 'relevantToOptimizer'
         'additionalProperties': False,
         'properties': {
             'boosting_type': {
@@ -187,30 +193,36 @@ _hyperparams_schema = {
         { 'description':
             'This second sub-object lists cross-argument constraints, used '
             'to check or search conditional hyperparameters.',
-        'allOf': [
-            { 'description':
-                'boosting_type `rf` needs bagging (which means subsample_freq > 0 and subsample < 1.0)',
+          'allOf': [
+          { 'description':
+              'boosting_type rf needs bagging (which means subsample_freq > 0)',
             'anyOf': [
-                { 'type': 'object',
-                'properties': {
-                    'boosting_type': {'not': {'enum': ['rf']}}}},
-                {'allOf':[ {'type': 'object',
-                    'properties': {'subsample_freq': {'not': {'enum': [0]}}}},
-                     {'type': 'object',
-                    'properties': {'subsample': {'not': {'enum': [1.0]}}}}]}]},
-            { 'description':
-                'boosting_type `goss` can not use bagging (which means subsample_freq = 0 and subsample = 1.0)',
+            { 'type': 'object',
+              'properties': {'boosting_type': {'not': {'enum': ['rf']}}}},
+            { 'type': 'object',
+              'properties': {'subsample_freq': {'not': {'enum': [0]}}}}]},
+          { 'description':
+              'boosting_type goss cannot use bagging (which means subsample_freq = 0)',
             'anyOf': [
-                { 'type': 'object',
-                'properties': {
-                    'boosting_type': {'not': {'enum': ['goss']}}}},
-                {'allOf':[ {'type': 'object',
-                    'properties': {'subsample_freq': {'enum': [0]}}},
-                     {'type': 'object',
-                    'properties': {'subsample': {'enum': [1.0]}}}]}]}                    
-                    ]
-        }]
-}
+            { 'type': 'object',
+              'properties': {'boosting_type': {'not': {'enum': ['goss']}}}},
+            { 'type': 'object',
+              'properties': {'subsample_freq': {'enum': [0]}}}]},
+          { 'description':
+              'boosting_type rf needs bagging (which means subsample < 1.0)',
+            'anyOf': [
+            { 'type': 'object',
+              'properties': {'boosting_type': {'not': {'enum': ['rf']}}}},
+            { 'type': 'object',
+              'properties': {'subsample': {'not': {'enum': [1.0]}}}}]},
+          { 'description':
+              'boosting_type goss cannot use bagging (which means subsample = 1.0)',
+            'anyOf': [
+            { 'type': 'object',
+              'properties': {'boosting_type': {'not': {'enum': ['goss']}}}},
+            { 'type': 'object',
+              'properties': {'subsample': {'enum': [1.0]}}}]}]}]}
+
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a lightgbm model from the training set (X, y).',
