@@ -252,7 +252,12 @@ class Operator(metaclass=AbstractVisitorMeta):
     def name(self)->str:
         """Returns the name of the operator.        
         """
+        pass
 
+    @abstractmethod
+    def set_name(self, name:str):
+        """Sets the name of the operator.        
+        """
         pass
 
     def to_json(self):
@@ -639,6 +644,9 @@ class IndividualOp(MetaModelOperator):
         """
 
         return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def class_name(self)->str:
         module = self._impl.__module__
@@ -1207,12 +1215,13 @@ def get_available_transformers(tags: AbstractSet[str] = None) -> List[PlannedOpe
     return get_available_operators('transformer', tags)
 
 OpType = TypeVar('OpType', bound=Operator)
-class Pipeline(MetaModelOperator, Generic[OpType]):
+class BasePipeline(MetaModelOperator, Generic[OpType]):
     """
     This is a concrete class that can instantiate a new pipeline operator and provide access to its meta data.
     """
     _steps:List[OpType]
     _preds:Dict[OpType, List[OpType]]
+    _name:str
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
@@ -1241,7 +1250,7 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
                 if step in self._steps:
                     raise ValueError('Same instance of {} already exists in the pipeline. '\
                     'This is not allowed.'.format(step.name()))
-                if isinstance(step, Pipeline):
+                if isinstance(step, BasePipeline):
                     #Flatten out the steps and edges
                     self._steps.extend(step.steps())
                     #from step's edges, find out all the source and sink nodes
@@ -1272,11 +1281,11 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
         curr_roots:List[OpType]
 
         for curr_op in self._steps:
-            if isinstance(prev_op, Pipeline):
+            if isinstance(prev_op, BasePipeline):
                 prev_leaves = prev_op.get_leaves()
             else:
                 prev_leaves = [] if prev_op is None else [prev_op]
-            if isinstance(curr_op, Pipeline):
+            if isinstance(curr_op, BasePipeline):
                 curr_roots = curr_op.get_roots()
                 self._steps.extend(curr_op.steps())
                 edges.extend(curr_op.edges())
@@ -1368,12 +1377,17 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
         return cls.__module__ + '.' + cls.__name__
 
     def name(self)->str:
-        return "pipeline_" + str(id(self))
+        if self._name is None:
+            self._name = "pipeline_" + str(id(self))
+        return self._name
+
+    def set_name(self, name):
+        self._name = name
 
     def has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
         """
-        if not isinstance(other, Pipeline):
+        if not isinstance(other, BasePipeline):
             return False
         my_steps = self.steps()
         other_steps = other.steps()
@@ -1414,7 +1428,7 @@ class Pipeline(MetaModelOperator, Generic[OpType]):
 
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
-class PlannedPipeline(Pipeline[PlannedOpType], PlannedOperator):
+class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
     def __init__(self, 
                  steps:List[PlannedOpType],
                  edges:Optional[Iterable[Tuple[PlannedOpType, PlannedOpType]]], 
@@ -2053,6 +2067,9 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
     def name(self)->str:
         return self._name
 
+    def set_name(self, name):
+        self._name = name
+
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
         new_steps:List[OperatorChoiceType] = [s._lale_clone(cloner) for s in steps]
@@ -2091,6 +2108,20 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
                 return False
         return True
 
+class PipelineFactory():
+    def __init__(self):
+        pass
+
+    def __call__(self, steps:List[Any]):
+        for i in range(len(steps)):
+            op = steps[i]
+            if isinstance(op, tuple):
+                assert isinstance(op[1], Operator)
+                op[1].set_name(op[0])
+                steps[i] = op[1]
+        return make_pipeline(*steps)
+
+Pipeline = PipelineFactory()
 
 def get_pipeline_of_applicable_type(steps, edges, ordered=False)->PlannedPipeline:
     """
@@ -2114,11 +2145,11 @@ def make_pipeline(*orig_steps:Union[Operator,Any])->PlannedPipeline:
     steps, edges = [], []
     prev_op = None
     for curr_op in orig_steps:
-        if isinstance(prev_op, Pipeline):
+        if isinstance(prev_op, BasePipeline):
             prev_leaves: Any = prev_op.get_leaves()
         else:
             prev_leaves = [] if prev_op is None else [prev_op]
-        if isinstance(curr_op, Pipeline):
+        if isinstance(curr_op, BasePipeline):
             curr_roots = curr_op.get_roots()
             steps.extend(curr_op.steps())
             edges.extend(curr_op.edges())
@@ -2134,7 +2165,7 @@ def make_pipeline(*orig_steps:Union[Operator,Any])->PlannedPipeline:
 def make_union_no_concat(*orig_steps:Union[Operator,Any])->Operator:
     steps, edges = [], []
     for curr_op in orig_steps:
-        if isinstance(curr_op, Pipeline):
+        if isinstance(curr_op, BasePipeline):
             steps.extend(curr_op._steps)
             edges.extend(curr_op.edges())
         else:

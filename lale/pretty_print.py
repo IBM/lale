@@ -62,7 +62,7 @@ def indiv_op_to_string(op, name=None, module_name=None):
         return (import_stmt, op_expr)
 
 def pipeline_to_string(pipeline, cls2name, show_imports):
-    assert isinstance(pipeline, lale.operators.Pipeline)
+    assert isinstance(pipeline, lale.operators.BasePipeline)
     def shallow_copy_graph(pipeline):
         if isinstance(pipeline, lale.operators.OperatorChoice):
             return [pipeline], {pipeline:[]}, {pipeline:[]}
@@ -299,7 +299,7 @@ def to_string(arg, show_imports=True, call_depth=2):
         return schema_to_string(arg)
     elif isinstance(arg, lale.operators.IndividualOp):
         return indiv_op_to_string(arg)
-    elif isinstance(arg, lale.operators.Pipeline):
+    elif isinstance(arg, lale.operators.BasePipeline):
         return pipeline_to_string(arg, get_cls2name(), show_imports)
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
