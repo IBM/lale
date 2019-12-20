@@ -19,7 +19,7 @@ import jsonschema
 from .schema_ranges import SchemaRange
 
 from typing import Any, Dict, Generic, List, Set, Iterable, Iterator, Optional, Tuple, TypeVar, Union
-from .schema_utils import Schema, getMinimum, getMaximum, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema
+from .schema_utils import Schema, getMinimum, getMaximum, isForOptimizer, makeAllOf, makeAnyOf, makeOneOf, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -113,21 +113,6 @@ def liftAnyOf(schemas:List[Schema])->Iterator[Schema]:
         for s in schs2:
             yield s
 
-def makeSingleton_(k:str, schemas:List[Schema])->Schema:
-    if len(schemas) == 0:
-        return {}
-    if len(schemas) == 1:
-        return schemas[0]
-    else:
-        return {k:schemas}
-
-def makeAllOf(schemas:List[Schema])->Schema:
-    return makeSingleton_('allOf', schemas)
-def makeAnyOf(schemas:List[Schema])->Schema:
-    return makeSingleton_('anyOf', schemas)
-def makeOneOf(schemas:List[Schema])->Schema:
-    return makeSingleton_('oneOf', schemas)
-
 # This is a great function for a breakpoint :-)
 def impossible()->Schema:
     return SFalse
@@ -186,7 +171,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
             s = simplify(s, floatAny)
             if s is None:
                 continue
-            if not forOptimizer(s):
+            if not isForOptimizer(s):
                 logger.info(f"simplifyAll: skipping not for optimizer {s} (after simplification)")
                 s_not_for_optimizer.append(s)
                 continue
@@ -520,7 +505,7 @@ def simplifyAny(schema:List[Schema], floatAny:bool)->Schema:
             s = simplify(s, floatAny)
             if s is None:
                 continue
-            if not forOptimizer(s):
+            if not isForOptimizer(s):
                 logger.info(f"simplifyAny: skipping not for optimizer {s} (after simplification)")
                 s_not_for_optimizer.append(s)
                 continue
@@ -705,7 +690,7 @@ def narrowToRelevantFields(schema:Schema)->Schema:
 def filterForOptimizer(schema:Schema)->Optional[Schema]:
     if schema is None or is_true_schema(schema) or is_false_schema(schema):
         return schema
-    if not forOptimizer(schema):
+    if not isForOptimizer(schema):
         return None
     if 'anyOf' in schema:
         subs = schema['anyOf']

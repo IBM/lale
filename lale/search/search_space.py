@@ -32,7 +32,11 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
 
     _default:Optional[Any]
 
-    def default(self):
+    def default(self)->Optional[Any]:
+        """Return an optional default value, if None.
+            if not None, the default value should be in the
+            search space
+        """
         return self._default
 
 class SearchSpaceEnum(SearchSpace):
