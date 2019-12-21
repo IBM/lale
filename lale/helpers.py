@@ -45,6 +45,7 @@ import pkgutil
 import torch
 import h5py
 from typing import List
+import lale.datasets.data_schemas
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,19 @@ def print_yaml(what, doc, file=sys.stdout):
 def validate_schema(value, schema, subsample_array=True):
     json_value = data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema)
+
+def validate_schema_or_subschema(part, super_schema):
+    if is_schema(part):
+        sub_schema = part
+    else:
+        try:
+            sub_schema = lale.datasets.data_schemas.to_schema(part)
+        except ValueError as e:
+            sub_schema = None
+        if sub_schema is None:
+            validate_schema(part, super_schema)
+        else:
+            validate_subschema(sub_schema, super_schema)
 
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 

@@ -736,29 +736,28 @@ class IndividualOp(MetaModelOperator):
         return op
 
     def validate_schema(self, X, y=None):
-        if not lale.helpers.is_schema(X):
-            X = lale.datasets.data_schemas.to_schema(X)
-        obj_X = {
-            'type': 'object',
-            'additionalProperties': False,
-            'required': ['X'],
-            'properties': {'X': X}}
-        if y is not None:
-            if not lale.helpers.is_schema(y):
-                y = lale.datasets.data_schemas.to_schema(y)
-            obj_Xy = {
-                'type': 'object',
-                'additionalProperties': False,
-                'required': ['X', 'y'],
-                'properties': {'X': X, 'y': y}}
-        fit_actual = obj_X if y is None else obj_Xy
-        fit_formal = self.input_schema_fit()
-        lale.helpers.validate_subschema(fit_actual, fit_formal,
-            'to_schema(data)', f'{self.name()}.input_schema_fit()')
-        predict_actual = obj_X
-        predict_formal = self.input_schema_predict()
-        lale.helpers.validate_subschema(predict_actual, predict_formal,
-            'to_schema(data)', f'{self.name()}.input_schema_predict()')
+        self.validate_schema_fit(X, y)
+        self.validate_schema_predict(X)
+
+    def validate_schema_fit(self, X, y=None):
+        try:
+            sup = self.input_schema_fit()['properties']['X']
+            lale.helpers.validate_schema_or_subschema(X, sup)
+        except Exception as e:
+            raise ValueError(f'{self.name()}.fit() schema error for X') from e
+        try:
+            sup = self.input_schema_fit()['properties']['y']
+            lale.helpers.validate_schema_or_subschema(y, sup)
+        except Exception as e:
+            raise ValueError(f'{self.name()}.fit() schema error for y') from e
+
+    def validate_schema_predict(self, X):
+        try:
+            sup = self.input_schema_predict()['properties']['X']
+            lale.helpers.validate_schema_or_subschema(X, sup)
+        except Exception as e:
+            m = 'transform' if self.is_transformer() else 'predict'
+            raise ValueError(f'{self.name()}.{m}() schema error for X') from e
 
     def transform_schema(self, s_X):
         return self.output_schema()
@@ -849,6 +848,10 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     def configure(self, *args, **kwargs)->TrainableOperator:
         return self.__call__(*args, **kwargs)
 
+    def is_transformer(self)->bool:
+        """ Checks if the operator is a transformer
+        """
+        return hasattr(self._impl, 'transform')
 
     def auto_configure(self, X, y = None, optimizer = None):
         #TODO: Configure the best hyper-parameter configuration for self._impl using the
@@ -889,16 +892,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         super(TrainableIndividualOp, self).__init__(_name, _impl, _schemas)
 
     def fit(self, X, y = None, **fit_params)->TrainedOperator:
-        try:
-            if y is None:
-                helpers.validate_schema({'X': X},
-                                        self.input_schema_fit())
-            else:
-                helpers.validate_schema({'X': X, 'y': y},
-                                        self.input_schema_fit())
-        except jsonschema.exceptions.ValidationError as e:
-            raise jsonschema.exceptions.ValidationError("Failed validating input_schema_fit for {} due to {}".format(self.name(), e))                                    
-
+        self.validate_schema_fit(X, y)
         filtered_fit_params = fixup_hyperparams_dict(fit_params)
         if filtered_fit_params is None:
             trained_impl = self._impl.fit(X, y)
@@ -1096,11 +1090,6 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         instance = TrainedIndividualOp(trainable._name, trainable._impl, trainable._schemas)
         instance._hyperparams = trainable._hyperparams
         return instance
-
-    def is_transformer(self)->bool:
-        """ Checks if the operator is a transformer
-        """
-        return hasattr(self._impl, 'transform')
 
     def fit(self, X, y = None, **fit_params)->TrainedOperator:
         if hasattr(self._impl, "fit") and not self.is_frozen_trained():
@@ -1377,7 +1366,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
         return cls.__module__ + '.' + cls.__name__
 
     def name(self)->str:
-        if self._name is None:
+        if not hasattr(self, '_name') or self._name is None:
             self._name = "pipeline_" + str(id(self))
         return self._name
 

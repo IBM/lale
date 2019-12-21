@@ -15,6 +15,7 @@
 import lale.helpers
 import numpy as np
 import pandas as pd
+import scipy.sparse
 
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
@@ -109,6 +110,10 @@ def ndarray_to_schema(array):
         return array.json_schema
     return shape_and_dtype_to_schema(array.shape, array.dtype)
 
+def csr_matrix_to_schema(matrix):
+    assert isinstance(matrix, scipy.sparse.csr_matrix)
+    return shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
+
 def dataframe_to_schema(df):
     assert isinstance(df, pd.DataFrame)
     if isinstance(df, DataFrameWithSchema) and hasattr(df, 'json_schema'):
@@ -181,14 +186,20 @@ def liac_arff_to_schema(larff):
     return result
 
 def to_schema(obj):
+    if obj is None:
+        result = {'enum': [None]}
     if isinstance(obj, np.ndarray):
         result = ndarray_to_schema(obj)
+    elif isinstance(obj, scipy.sparse.csr_matrix):
+        result = csr_matrix_to_schema(obj)
     elif isinstance(obj, pd.DataFrame):
         result = dataframe_to_schema(obj)
     elif isinstance(obj, pd.Series):
         result = series_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
+    elif isinstance(obj, list):
+        raise ValueError('to_schema(list)')
     else:
         result = dtype_to_schema(obj)
     result = {'$schema': lale.helpers.JSON_META_SCHEMA_URL, **result}
