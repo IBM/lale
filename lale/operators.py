@@ -907,15 +907,16 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 
     def partial_fit(self, X, y = None, **fit_params)->TrainedOperator:
         if hasattr(self._impl, "partial_fit"):
-            try:
-                if y is None:
-                    helpers.validate_schema({'X': X},
-                                            self.input_schema_fit())
-                else:
-                    helpers.validate_schema({'X': X, 'y': y},
-                                            self.input_schema_fit())
-            except jsonschema.exceptions.ValidationError as e:
-                raise jsonschema.exceptions.ValidationError("Failed validating input_schema_fit for {} due to {}".format(self.name(), e))                                    
+            self.validate_schema_fit(X, y)
+            # try:
+            #     if y is None:
+            #         helpers.validate_schema({'X': X},
+            #                                 self.input_schema_fit())
+            #     else:
+            #         helpers.validate_schema({'X': X, 'y': y},
+            #                                 self.input_schema_fit())
+            # except jsonschema.exceptions.ValidationError as e:
+            #     raise jsonschema.exceptions.ValidationError("Failed validating input_schema_fit for {} due to {}".format(self.name(), e))                                    
 
             filtered_fit_params = fixup_hyperparams_dict(fit_params)
             if filtered_fit_params is None:

@@ -16,6 +16,7 @@ import lale.helpers
 import numpy as np
 import pandas as pd
 import scipy.sparse
+import torch
 
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
@@ -150,6 +151,24 @@ def series_to_schema(series):
     lale.helpers.validate_is_schema(result)
     return result
 
+def torch_tensor_to_schema(tensor):
+    assert isinstance(tensor, torch.Tensor)
+    #https://pytorch.org/docs/stable/tensor_attributes.html#torch-dtype
+    if tensor.dtype == torch.bool:
+        result = {'type': 'boolean'}
+    elif tensor.dtype == torch.uint8:
+        result = {'type': 'integer', 'minimum': 0, 'maximum': 255}
+    elif torch.is_floating_point(tensor):
+        result = {'type': 'number'}
+    else:
+        result = {'type': 'integer'}
+    for dim in reversed(tensor.shape):
+        result = {
+            'type': 'array',
+            'minItems': dim, 'maxItems': dim,
+            'items': result}
+    return result
+
 def is_liac_arff(obj):
     expected_types = {
         'description': str, 'relation': str, 'attributes': list, 'data': list}
@@ -196,11 +215,14 @@ def to_schema(obj):
         result = dataframe_to_schema(obj)
     elif isinstance(obj, pd.Series):
         result = series_to_schema(obj)
+    elif isinstance(obj, torch.Tensor):
+        result = torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
     elif isinstance(obj, list):
         raise ValueError('to_schema(list)')
     else:
+        lale.helpers.println_pos(f'to_schema, type(obj) {type(obj)}')
         result = dtype_to_schema(obj)
     result = {'$schema': lale.helpers.JSON_META_SCHEMA_URL, **result}
     lale.helpers.validate_is_schema(result)
