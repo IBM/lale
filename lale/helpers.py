@@ -167,10 +167,10 @@ def validate_schema_or_subschema(part, super_schema):
             sub_schema = lale.datasets.data_schemas.to_schema(part)
         except ValueError as e:
             sub_schema = None
-        if sub_schema is None:
-            validate_schema(part, super_schema)
-        else:
-            validate_subschema(sub_schema, super_schema)
+    if sub_schema is None:
+        validate_schema(part, super_schema)
+    else:
+        validate_subschema(sub_schema, super_schema)
 
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 

@@ -75,8 +75,7 @@ _input_fit_schema = {
                     'type': 'number'},
             },
             'description': 'The data.'},
-    },
-}
+        'y': {}}}
 _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform data to polynomial features',

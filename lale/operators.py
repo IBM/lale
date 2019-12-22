@@ -740,24 +740,26 @@ class IndividualOp(MetaModelOperator):
         self.validate_schema_predict(X)
 
     def validate_schema_fit(self, X, y=None):
+        schema = self.input_schema_fit()
         try:
-            sup = self.input_schema_fit()['properties']['X']
+            sup = schema['properties']['X'] if schema else {}
             lale.helpers.validate_schema_or_subschema(X, sup)
         except Exception as e:
-            raise ValueError(f'{self.name()}.fit() schema error for X') from e
+            raise ValueError(f'{self.name()}.fit() invalid X: {e}') from e
         try:
-            sup = self.input_schema_fit()['properties']['y']
+            sup = schema['properties']['y'] if schema else {}
             lale.helpers.validate_schema_or_subschema(y, sup)
         except Exception as e:
-            raise ValueError(f'{self.name()}.fit() schema error for y') from e
+            raise ValueError(f'{self.name()}.fit() invalid y: {e}') from e
 
     def validate_schema_predict(self, X):
+        schema = self.input_schema_predict()
         try:
-            sup = self.input_schema_predict()['properties']['X']
+            sup = schema['properties']['X'] if schema else {}
             lale.helpers.validate_schema_or_subschema(X, sup)
         except Exception as e:
             m = 'transform' if self.is_transformer() else 'predict'
-            raise ValueError(f'{self.name()}.{m}() schema error for X') from e
+            raise ValueError(f'{self.name()}.{m}() invalid X: {e}') from e
 
     def transform_schema(self, s_X):
         return self.output_schema()
