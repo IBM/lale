@@ -222,7 +222,6 @@ def to_schema(obj):
     elif isinstance(obj, list):
         raise ValueError('to_schema(list)')
     else:
-        lale.helpers.println_pos(f'to_schema, type(obj) {type(obj)}')
         result = dtype_to_schema(obj)
     result = {'$schema': lale.helpers.JSON_META_SCHEMA_URL, **result}
     lale.helpers.validate_is_schema(result)

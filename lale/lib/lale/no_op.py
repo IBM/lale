@@ -30,7 +30,7 @@ class NoOpImpl():
     #     return result
 
     def transform(self, X, y = None):
-        return X, y
+        return X
 
     def transform_schema(self, s_X):
         return s_X

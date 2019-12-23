@@ -757,6 +757,17 @@ class IndividualOp(MetaModelOperator):
                 except Exception as e:
                     raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {e}') from e
 
+    def _validate_output_schema(self, result, method):
+        if method == 'predict' or method == 'transform':
+            schema = self.output_schema()
+        elif method == 'predict_proba':
+            schema = self.output_schema_predict_proba()
+        try:
+            lale.helpers.validate_schema_or_subschema(result, schema)
+        except Exception as e:
+            print(f'_validate_output_schema, type(result) {type(result)}, result {result}')
+            raise ValueError(f'{self.name()}.{method}() invalid result: {e}') from e
+
     def transform_schema(self, s_X):
         return self.output_schema()
 
@@ -1091,7 +1102,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
     def predict(self, X):
         self._validate_input_schema('X', X, 'predict')
         result = self._impl.predict(X)
-        helpers.validate_schema(result, self.output_schema())
+        self._validate_output_schema(result, 'predict')
         return result
 
     def transform(self, X, y = None):
@@ -1102,7 +1113,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             result = self._impl.transform(X, y)
         else:
             result = self._impl.transform(X)
-        helpers.validate_schema(result, self.output_schema())
+        self._validate_output_schema(result, 'transform')
         return result
 
     def predict_proba(self, X):
@@ -1111,7 +1122,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             result = self._impl.predict_proba(X)
         else:
             raise ValueError("The operator {} does not support predict_proba".format(self.name()))
-        helpers.validate_schema(result, self.output_schema_predict_proba())
+        self._validate_output_schema(result, 'predict_proba')
         return result
 
     def is_frozen_trained(self):
