@@ -906,29 +906,18 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return result
 
     def partial_fit(self, X, y = None, **fit_params)->TrainedOperator:
-        if hasattr(self._impl, "partial_fit"):
-            self.validate_schema_fit(X, y)
-            # try:
-            #     if y is None:
-            #         helpers.validate_schema({'X': X},
-            #                                 self.input_schema_fit())
-            #     else:
-            #         helpers.validate_schema({'X': X, 'y': y},
-            #                                 self.input_schema_fit())
-            # except jsonschema.exceptions.ValidationError as e:
-            #     raise jsonschema.exceptions.ValidationError("Failed validating input_schema_fit for {} due to {}".format(self.name(), e))                                    
-
-            filtered_fit_params = fixup_hyperparams_dict(fit_params)
-            if filtered_fit_params is None:
-                trained_impl = self._impl.partial_fit(X, y)
-            else:
-                trained_impl = self._impl.partial_fit(X, y, **filtered_fit_params)
-            result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
-            result._hyperparams = self._hyperparams
-            self.__trained = result
-            return result
+        if not hasattr(self._impl, "partial_fit"):
+            raise AttributeError(f'{self.name()} has no partial_fit implemented.')
+        self.validate_schema_fit(X, y)
+        filtered_fit_params = fixup_hyperparams_dict(fit_params)
+        if filtered_fit_params is None:
+            trained_impl = self._impl.partial_fit(X, y)
         else:
-            raise AttributeError("{} has no partial_fit implemented.".format(self.name()))
+            trained_impl = self._impl.partial_fit(X, y, **filtered_fit_params)
+        result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
+        result._hyperparams = self._hyperparams
+        self.__trained = result
+        return result
 
     def predict(self, X):
         """
@@ -1102,9 +1091,11 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             return self 
 
     def predict(self, X):
-        helpers.validate_schema({ 'X': X },
-                                self.input_schema_predict())
-
+        if True:
+            self.validate_schema_predict(X)
+        else:
+            helpers.validate_schema({ 'X': X },
+                                    self.input_schema_predict())
         result = self._impl.predict(X)
         helpers.validate_schema(result, self.output_schema())
         return result
