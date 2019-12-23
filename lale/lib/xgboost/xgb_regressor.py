@@ -342,38 +342,30 @@ _input_fit_schema = {
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict with `data`.',
-    'allOf': [{
-        'type': 'object',
-        'required': ['X'],
-        'properties': {
-            'X': {
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
                 'type': 'array',
                 'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'},
-                },
-                'description': 'The dmatrix storing the input.',
+                    'type': 'number'},
             },
-            'output_margin': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'Whether to output the raw untransformed margin value.',
-            },
-            'ntree_limit': {
-                'anyOf':[
-                {'type': 'integer'},
-                {'enum': [None]}],
-                'description': 'Limit number of trees in the prediction; defaults to best_ntree_limit if defined',
-            },
-            'validate_features': {
-                'type': 'boolean',
-                'default': True,
-                'description': "When this is True, validate that the Booster's and data's feature_names are identical.",
-            }
-        }
-    }]
-}
+            'description': 'The dmatrix storing the input.'},
+        'output_margin': {
+            'type': 'boolean',
+            'default': False,
+            'description': 'Whether to output the raw untransformed margin value.'},
+        'ntree_limit': {
+            'anyOf':[
+            {'type': 'integer'},
+            {'enum': [None]}],
+            'description': 'Limit number of trees in the prediction; defaults to best_ntree_limit if defined'},
+        'validate_features': {
+            'type': 'boolean',
+            'default': True,
+            'description': "When this is True, validate that the Booster's and data's feature_names are identical."}}}
 _output_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for predictions (target class labels).',
