@@ -1221,7 +1221,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
     """
     _steps:List[OpType]
     _preds:Dict[OpType, List[OpType]]
-    _name:str
+    _name:str=None
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps

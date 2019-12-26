@@ -68,8 +68,8 @@ def create_function_test_classifier(clf_name):
         predictions = trained.predict(self.X_test)
 
         #test_with_hyperopt
-        from lale.lib.lale import HyperoptClassifier
-        hyperopt = HyperoptClassifier(estimator=clf, max_evals=1)
+        from lale.lib.lale import HyperoptCV
+        hyperopt = HyperoptCV(estimator=clf, max_evals=1)
         trained = hyperopt.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
@@ -180,8 +180,8 @@ def create_function_test_regressor(clf_name):
         #test_with_hyperopt
         from lale.lib.sklearn.ridge import RidgeImpl
         if not isinstance(regr._impl, RidgeImpl):
-            from lale.lib.lale import HyperoptRegressor
-            hyperopt = HyperoptRegressor(estimator=pipeline, max_evals=1)
+            from lale.lib.lale import HyperoptCV
+            hyperopt = HyperoptCV(estimator=pipeline, max_evals=1, scoring='r2')
             trained = hyperopt.fit(self.X_train, self.y_train)
             predictions = trained.predict(self.X_test)
 
@@ -255,8 +255,8 @@ def create_function_test_feature_preprocessor(fproc_name):
         predictions = trained.predict(self.X_test)
 
         #Tune the pipeline with LR using HyperoptClassifier
-        from lale.lib.lale import HyperoptClassifier
-        hyperopt = HyperoptClassifier(estimator=pipeline, max_evals=1)
+        from lale.lib.lale import HyperoptCV
+        hyperopt = HyperoptCV(estimator=pipeline, max_evals=1)
         trained = hyperopt.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
