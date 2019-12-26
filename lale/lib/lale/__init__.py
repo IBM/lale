@@ -14,9 +14,8 @@
 
 from .concat_features import ConcatFeatures
 from .no_op import NoOp
-from .hyperopt_classifier import HyperoptClassifier
+from .hyperopt_cv import HyperoptCV
 from .sample_based_voting import SampleBasedVoting
-from .hyperopt_regressor import HyperoptRegressor
 from .keep_non_numbers import KeepNonNumbers
 from .keep_numbers import KeepNumbers
 from .project import Project

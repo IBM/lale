@@ -154,8 +154,8 @@ class TestKNeighborsClassifier(unittest.TestCase):
         trainable = KNeighborsClassifier()
         iris = sklearn.datasets.load_iris()
         trained = trainable.fit(iris.data, iris.target)
-        with self.assertWarns(DeprecationWarning):
-            predicted = trainable.predict_proba(iris.data)
+        #with self.assertWarns(DeprecationWarning):
+        predicted = trainable.predict_proba(iris.data)
         predicted = trained.predict_proba(iris.data)
 
 class TestLogisticRegression(unittest.TestCase):
@@ -181,8 +181,8 @@ class TestLogisticRegression(unittest.TestCase):
         trainable_lr = LogisticRegression(n_jobs=1)
         iris = sklearn.datasets.load_iris()
         trained_lr = trainable_lr.fit(iris.data, iris.target, sample_weight = np.arange(len(iris.target)))
-        with self.assertWarns(DeprecationWarning):
-            predicted = trainable_lr.predict_proba(iris.data)
+        #with self.assertWarns(DeprecationWarning):
+        predicted = trainable_lr.predict_proba(iris.data)
         predicted = trained_lr.predict_proba(iris.data)
     def test_clone_with_scikit(self):
         lr = LogisticRegression()
@@ -422,14 +422,14 @@ class TestMetaModel(unittest.TestCase):
         pipeline1_trained.predict(digits.data)
 
     def test_concat_with_hyperopt(self):
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         pca = PCA(n_components=3)
         nys = Nystroem(n_components=10)
         concat = ConcatFeatures()
         lr = LogisticRegression(random_state=42, C=0.1)
 
         trainable = (pca & nys) >> concat >> lr
-        clf = HyperoptClassifier(estimator=trainable, max_evals=2)
+        clf = HyperoptCV(estimator=trainable, max_evals=2)
         from sklearn.datasets import load_iris
         iris_data = load_iris()
         clf.fit(iris_data.data, iris_data.target)
@@ -437,14 +437,14 @@ class TestMetaModel(unittest.TestCase):
 
     def test_concat_with_hyperopt2(self):
         from lale.operators import make_pipeline, make_union
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         pca = PCA(n_components=3)
         nys = Nystroem(n_components=10)
         concat = ConcatFeatures()
         lr = LogisticRegression(random_state=42, C=0.1)
 
         trainable = make_pipeline(make_union(pca, nys), lr)
-        clf = HyperoptClassifier(estimator=trainable, max_evals=2)
+        clf = HyperoptCV(estimator=trainable, max_evals=2)
         from sklearn.datasets import load_iris
         iris_data = load_iris()
         clf.fit(iris_data.data, iris_data.target)
@@ -520,8 +520,8 @@ class TestMLPClassifier(unittest.TestCase):
         trainable = MLPClassifier()
         iris = sklearn.datasets.load_iris()
         trained = trainable.fit(iris.data, iris.target)
-        with self.assertWarns(DeprecationWarning):
-            predicted = trainable.predict_proba(iris.data)
+#        with self.assertWarns(DeprecationWarning):
+        predicted = trainable.predict_proba(iris.data)
         predicted = trained.predict_proba(iris.data)
 
 class TestPCA(unittest.TestCase):
@@ -759,13 +759,13 @@ class TestTfidfVectorizer(unittest.TestCase):
 class TestHyperopt(unittest.TestCase):
     def test_nested_pipeline1(self):
         from sklearn.datasets import load_iris
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         from sklearn.metrics import accuracy_score
         data = load_iris()
         X, y = data.data, data.target
         #pipeline = KNeighborsClassifier() | (OneHotEncoder(handle_unknown = 'ignore') >> LogisticRegression())
         pipeline = KNeighborsClassifier() | (SimpleImputer() >> LogisticRegression())
-        clf = HyperoptClassifier(estimator=pipeline, max_evals=1)
+        clf = HyperoptCV(estimator=pipeline, max_evals=1)
         trained = clf.fit(X, y)
         predictions = trained.predict(X)
         print(accuracy_score(y, predictions))
@@ -777,7 +777,7 @@ class TestHyperopt(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
 
         from sklearn.datasets import load_iris
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         from sklearn.metrics import accuracy_score
         data = load_iris()
         X, y = data.data, data.target
@@ -786,7 +786,7 @@ class TestHyperopt(unittest.TestCase):
         concat = ConcatFeatures()
         lr = LogisticRegression(random_state=42, C=0.1)
         pipeline = ((pca & nys) >> concat >> lr) | KNeighborsClassifier()
-        clf = HyperoptClassifier(estimator=pipeline, max_evals=1)
+        clf = HyperoptCV(estimator=pipeline, max_evals=1)
         trained = clf.fit(X, y)
         predictions = trained.predict(X)
         print(accuracy_score(y, predictions))
@@ -799,7 +799,7 @@ class TestHyperopt(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
 
         from sklearn.datasets import load_iris
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         from sklearn.metrics import accuracy_score
         data = load_iris()
         X, y = data.data, data.target
@@ -809,7 +809,7 @@ class TestHyperopt(unittest.TestCase):
         lr = LogisticRegression(random_state=42, C=0.1)
         from lale.operators import make_pipeline
         pipeline = make_pipeline(((((SimpleImputer() | NoOp()) >> pca) & nys) >> concat >> lr) | KNeighborsClassifier())
-        clf = HyperoptClassifier(estimator=pipeline, max_evals=100, handle_cv_failure=True)
+        clf = HyperoptCV(estimator=pipeline, max_evals=100, handle_cv_failure=True)
         trained = clf.fit(X, y)
         predictions = trained.predict(X)
         print(accuracy_score(y, predictions))
@@ -826,8 +826,8 @@ class TestHyperopt(unittest.TestCase):
         prep_num = KeepNumbers() >> Normalizer
         prep_cat = KeepNonNumbers() >> OneHotEncoder(sparse=False)
         planned = (prep_num & prep_cat) >> Concat >> Forest
-        from lale.lib.lale import HyperoptClassifier
-        hyperopt_classifier = HyperoptClassifier(estimator=planned, max_evals=1)
+        from lale.lib.lale import HyperoptCV
+        hyperopt_classifier = HyperoptCV(estimator=planned, max_evals=1)
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
     def test_text_and_structured(self):
@@ -845,8 +845,8 @@ class TestHyperopt(unittest.TestCase):
         prep_text = Project(columns=['review']) >> Tfidf(max_features=100)
         prep_nums = Project(columns={'type': 'number'})
         planned = (prep_text & prep_nums) >> Cat >> (LinReg | Forest)
-        from lale.lib.lale import HyperoptRegressor
-        hyperopt_classifier = HyperoptRegressor(estimator=planned, max_evals=3)
+        from lale.lib.lale import HyperoptCV
+        hyperopt_classifier = HyperoptCV(estimator=planned, max_evals=3, scoring='r2')
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
 # class TestGetFeatureNames(unittest.TestCase):
@@ -1011,20 +1011,20 @@ class TestOperatorWithoutSchema(unittest.TestCase):
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression
         from sklearn.decomposition import PCA
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         iris = sklearn.datasets.load_iris()
         pipeline = NoOp() >> PCA >> LogisticRegression
-        clf = HyperoptClassifier(estimator=pipeline, max_evals=1)
+        clf = HyperoptCV(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
         
     def test_planned_pipe_right(self):
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression
         from sklearn.decomposition import PCA
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         iris = sklearn.datasets.load_iris()
         pipeline = PCA >> LogisticRegression
-        clf = HyperoptClassifier(estimator=pipeline, max_evals=1)
+        clf = HyperoptCV(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
 
 class TestPrettyPrint(unittest.TestCase):
