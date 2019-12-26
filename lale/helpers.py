@@ -646,6 +646,11 @@ def create_data_loader(X, y = None, batch_size = 1):
         if isinstance(y, pd.Series):
             y = y.to_numpy()
     elif isinstance(X, np.ndarray):
+        #unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
+        if isinstance(X, lale.datasets.data_schemas.NDArrayWithSchema):
+            X = X.view(np.ndarray)
+        if isinstance(y, lale.datasets.data_schemas.NDArrayWithSchema):
+            y = y.view(np.ndarray)
         dataset = NumpyTorchDataset(X, y)
     elif isinstance(X, str):#Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)
