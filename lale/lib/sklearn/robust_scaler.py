@@ -83,8 +83,7 @@ _input_fit_schema = {
                     'type': 'number'},
             },
             'description': 'The data used to compute the median and quantiles'},
-    },
-}
+        'y': {}}}
 _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Center and scale the data.',

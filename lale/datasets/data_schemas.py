@@ -15,6 +15,8 @@
 import lale.helpers
 import numpy as np
 import pandas as pd
+import scipy.sparse
+import torch
 
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
@@ -49,20 +51,31 @@ class SeriesWithSchema(pd.Series):
     def _constructor(self):
         return SeriesWithSchema
 
-def add_schema(obj, schema):
-    lale.helpers.validate_is_schema(schema)
-    if isinstance(obj, np.ndarray):
+def add_schema(obj, schema=None, raise_on_failure=False):
+    if obj is None:
+        return None
+    if isinstance(obj, NDArrayWithSchema):
+        result = obj
+    elif isinstance(obj, np.ndarray):
         result = obj.view(NDArrayWithSchema)
-        result.json_schema = schema
+    elif isinstance(obj, SeriesWithSchema):
+        result = obj
     elif isinstance(obj, pd.Series):
         result = SeriesWithSchema(obj)
-        result.json_schema = schema
+    elif isinstance(obj, DataFrameWithSchema):
+        result = obj
     elif isinstance(obj, pd.DataFrame):
         result = DataFrameWithSchema(obj)
-        result.json_schema = schema
+    elif raise_on_failure:
+        raise ValueError(f'unexpected type(obj) {type(obj)}')
     else:
-        assert False, f'unexpected type(obj) {type(obj)}'
-    assert result.json_schema == schema
+        return obj
+    if not hasattr(result, 'json_schema') or result.json_schema is None:
+        if schema is None:
+            result.json_schema = to_schema(obj)
+        else:
+            lale.helpers.validate_is_schema(schema)
+            result.json_schema = schema
     return result
 
 def dtype_to_schema(typ):
@@ -109,6 +122,10 @@ def ndarray_to_schema(array):
         return array.json_schema
     return shape_and_dtype_to_schema(array.shape, array.dtype)
 
+def csr_matrix_to_schema(matrix):
+    assert isinstance(matrix, scipy.sparse.csr_matrix)
+    return shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
+
 def dataframe_to_schema(df):
     assert isinstance(df, pd.DataFrame)
     if isinstance(df, DataFrameWithSchema) and hasattr(df, 'json_schema'):
@@ -143,6 +160,24 @@ def series_to_schema(series):
             'description': str(series.name),
             **dtype_to_schema(series.dtype)}}
     lale.helpers.validate_is_schema(result)
+    return result
+
+def torch_tensor_to_schema(tensor):
+    assert isinstance(tensor, torch.Tensor)
+    #https://pytorch.org/docs/stable/tensor_attributes.html#torch-dtype
+    if tensor.dtype == torch.bool:
+        result = {'type': 'boolean'}
+    elif tensor.dtype == torch.uint8:
+        result = {'type': 'integer', 'minimum': 0, 'maximum': 255}
+    elif torch.is_floating_point(tensor):
+        result = {'type': 'number'}
+    else:
+        result = {'type': 'integer'}
+    for dim in reversed(tensor.shape):
+        result = {
+            'type': 'array',
+            'minItems': dim, 'maxItems': dim,
+            'items': result}
     return result
 
 def is_liac_arff(obj):
@@ -181,14 +216,22 @@ def liac_arff_to_schema(larff):
     return result
 
 def to_schema(obj):
-    if isinstance(obj, np.ndarray):
+    if obj is None:
+        result = {'enum': [None]}
+    elif isinstance(obj, np.ndarray):
         result = ndarray_to_schema(obj)
+    elif isinstance(obj, scipy.sparse.csr_matrix):
+        result = csr_matrix_to_schema(obj)
     elif isinstance(obj, pd.DataFrame):
         result = dataframe_to_schema(obj)
     elif isinstance(obj, pd.Series):
         result = series_to_schema(obj)
+    elif isinstance(obj, torch.Tensor):
+        result = torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
+    elif isinstance(obj, list) or isinstance(obj, tuple):
+        raise ValueError(f'to_schema(obj), type {type(obj)}, value {obj}')
     else:
         result = dtype_to_schema(obj)
     result = {'$schema': lale.helpers.JSON_META_SCHEMA_URL, **result}

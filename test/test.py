@@ -1399,7 +1399,7 @@ class TestDatasetSchemas(unittest.TestCase):
             LogisticRegression.validate_schema(**dataset)
         for name in should_fail:
             dataset = getattr(self, f'_{name}')
-            with self.assertRaises(SubschemaError):
+            with self.assertRaises(ValueError):
                 LogisticRegression.validate_schema(**dataset)
 
     def test_project_with_all_datasets(self):
@@ -1411,7 +1411,7 @@ class TestDatasetSchemas(unittest.TestCase):
             lale.lib.lale.Project.validate_schema(**dataset)
         for name in should_fail:
             dataset = getattr(self, f'_{name}')
-            with self.assertRaises(SubschemaError):
+            with self.assertRaises(ValueError):
                 lale.lib.lale.Project.validate_schema(**dataset)
 
     def test_nmf_with_all_datasets(self):
@@ -1422,7 +1422,7 @@ class TestDatasetSchemas(unittest.TestCase):
             NMF.validate_schema(**dataset)
         for name in should_fail:
             dataset = getattr(self, f'_{name}')
-            with self.assertRaises(SubschemaError):
+            with self.assertRaises(ValueError):
                 NMF.validate_schema(**dataset)
 
     def test_tfidf_with_all_datasets(self):
@@ -1433,7 +1433,7 @@ class TestDatasetSchemas(unittest.TestCase):
             TfidfVectorizer.validate_schema(**dataset)
         for name in should_fail:
             dataset = getattr(self, f'_{name}')
-            with self.assertRaises(SubschemaError):
+            with self.assertRaises(ValueError):
                 TfidfVectorizer.validate_schema(**dataset)
 
 class TestErrorMessages(unittest.TestCase):

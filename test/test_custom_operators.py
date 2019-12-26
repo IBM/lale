@@ -119,7 +119,7 @@ _input_schema_fit = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {
       'type': 'array',
-      'items': {'type': 'number', 'minimum': 0}}}}
+      'items': {'type': 'number'}}}}
 
 _input_schema_predict = {
   'type': 'object',
@@ -132,7 +132,7 @@ _input_schema_predict = {
 
 _output_schema = {
   'type': 'array',
-  'items': {'type': 'number', 'minimum': 0}}
+  'items': {'type': 'number'}}
 
 _hyperparams_ranges = {
   'type': 'object',

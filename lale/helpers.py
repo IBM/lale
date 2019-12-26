@@ -45,6 +45,7 @@ import pkgutil
 import torch
 import h5py
 from typing import List
+import lale.datasets.data_schemas
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -158,6 +159,19 @@ def validate_schema(value, schema, subsample_array=True):
     json_value = data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema)
 
+def validate_schema_or_subschema(part, super_schema):
+    if is_schema(part):
+        sub_schema = part
+    else:
+        try:
+            sub_schema = lale.datasets.data_schemas.to_schema(part)
+        except ValueError as e:
+            sub_schema = None
+    if sub_schema is None:
+        validate_schema(part, super_schema)
+    else:
+        validate_subschema(sub_schema, super_schema)
+
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 
 def json_meta_schema():
@@ -196,6 +210,23 @@ def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
     if not jsonsubschema.isSubschema(sub, sup):
         raise SubschemaError(sub, sup, sub_name, sup_name)
 
+def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
+    subset_X, subset_y = _safe_split(
+        estimator, all_X, all_y, indices, train_indices)
+    if hasattr(all_X, 'json_schema'):
+        n_rows = subset_X.shape[0]
+        schema = {
+            'type': 'array', 'minItems': n_rows, 'maxItems': n_rows,
+            'items': all_X.json_schema['items']}
+        lale.datasets.data_schemas.add_schema(subset_X, schema)
+    if hasattr(all_y, 'json_schema'):
+        n_rows = subset_y.shape[0]
+        schema = {
+            'type': 'array', 'minItems': n_rows, 'maxItems': n_rows,
+            'items': all_y.json_schema['items']}
+        lale.datasets.data_schemas.add_schema(subset_y, schema)
+    return subset_X, subset_y
+
 def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
@@ -227,8 +258,8 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     log_loss_results = []
     time_results = []
     for train, test in cv.split(X, y):
-        X_train, y_train = _safe_split(estimator, X, y, train)
-        X_test, y_test = _safe_split(estimator, X, y, test, train)
+        X_train, y_train = split_with_schemas(estimator, X, y, train)
+        X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         start = time.time()
         trained = estimator.fit(X_train, y_train)
         score_value  = scorer(trained, X_test, y_test)
@@ -263,8 +294,8 @@ def cross_val_score(estimator, X, y=None, scoring=accuracy_score, cv=5):
 
     cv_results = []
     for train, test in cv.split(X, y):
-        X_train, y_train = _safe_split(estimator, X, y, train)
-        X_test, y_test = _safe_split(estimator, X, y, test, train)
+        X_train, y_train = split_with_schemas(estimator, X, y, train)
+        X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         trained_estimator = estimator.fit(X_train, y_train)
         predicted_values = trained_estimator.predict(X_test)
         cv_results.append(scoring(y_test, predicted_values))
@@ -615,6 +646,11 @@ def create_data_loader(X, y = None, batch_size = 1):
         if isinstance(y, pd.Series):
             y = y.to_numpy()
     elif isinstance(X, np.ndarray):
+        #unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
+        if isinstance(X, lale.datasets.data_schemas.NDArrayWithSchema):
+            X = X.view(np.ndarray)
+        if isinstance(y, lale.datasets.data_schemas.NDArrayWithSchema):
+            y = y.view(np.ndarray)
         dataset = NumpyTorchDataset(X, y)
     elif isinstance(X, str):#Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)

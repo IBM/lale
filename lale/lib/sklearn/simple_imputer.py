@@ -93,6 +93,7 @@ _input_fit_schema = {
     'description': 'Fit the imputer on X.',
     'type': 'object',
     'required': ['X'],
+    'additionalProperties': False,
     'properties': {
         'X': {
             'type': 'array',
@@ -103,8 +104,7 @@ _input_fit_schema = {
                     {'type': 'number'},
                     {'type': 'string'}]}},
             'description': 'Input data, where ``n_samples`` is the number of samples and  ``n_features`` is the number of features.'},
-    },
-}
+        'y': {}}}
 _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Impute all missing values in X.',

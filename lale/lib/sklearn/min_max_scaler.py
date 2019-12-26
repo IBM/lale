@@ -47,10 +47,7 @@ _input_schema_fit = {
       'description': 'Features; the outer array is over samples.',
       'type': 'array',
       'items': {'type': 'array', 'items': {'type': 'number'}}},
-    'y': {
-      'description': 'Target class labels (ignored).',
-      'type': 'array',
-      'items': {'type': 'number', 'minimum': 0}}}}
+    'y': {}}}
 
 _input_schema_predict = {
   '$schema': 'http://json-schema.org/draft-04/schema#',

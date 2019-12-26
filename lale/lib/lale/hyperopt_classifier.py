@@ -24,6 +24,7 @@ import warnings
 import numpy as np
 import time
 import logging
+import traceback
 from typing import Optional
 import json
 import datetime
@@ -171,7 +172,7 @@ class HyperoptClassifierImpl:
                     'params': params_to_save
                 }
             except BaseException as e:
-                logger.warning("Exception caught in HyperoptClassifier:{}, setting status to FAIL".format(e))
+                logger.warning(f'Exception caught in HyperoptClassifier: {type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL')
                 return_dict = {'status': STATUS_FAIL}
             return return_dict
 
