@@ -51,20 +51,31 @@ class SeriesWithSchema(pd.Series):
     def _constructor(self):
         return SeriesWithSchema
 
-def add_schema(obj, schema):
-    lale.helpers.validate_is_schema(schema)
-    if isinstance(obj, np.ndarray):
+def add_schema(obj, schema=None, raise_on_failure=False):
+    if obj is None:
+        return None
+    if isinstance(obj, NDArrayWithSchema):
+        result = obj
+    elif isinstance(obj, np.ndarray):
         result = obj.view(NDArrayWithSchema)
-        result.json_schema = schema
+    elif isinstance(obj, SeriesWithSchema):
+        result = obj
     elif isinstance(obj, pd.Series):
         result = SeriesWithSchema(obj)
-        result.json_schema = schema
+    elif isinstance(obj, DataFrameWithSchema):
+        result = obj
     elif isinstance(obj, pd.DataFrame):
         result = DataFrameWithSchema(obj)
-        result.json_schema = schema
+    elif raise_on_failure:
+        raise ValueError(f'unexpected type(obj) {type(obj)}')
     else:
-        assert False, f'unexpected type(obj) {type(obj)}'
-    assert result.json_schema == schema
+        return obj
+    if not hasattr(result, 'json_schema') or result.json_schema is None:
+        if schema is None:
+            result.json_schema = to_schema(obj)
+        else:
+            lale.helpers.validate_is_schema(schema)
+            result.json_schema = schema
     return result
 
 def dtype_to_schema(typ):
@@ -207,7 +218,7 @@ def liac_arff_to_schema(larff):
 def to_schema(obj):
     if obj is None:
         result = {'enum': [None]}
-    if isinstance(obj, np.ndarray):
+    elif isinstance(obj, np.ndarray):
         result = ndarray_to_schema(obj)
     elif isinstance(obj, scipy.sparse.csr_matrix):
         result = csr_matrix_to_schema(obj)
@@ -219,8 +230,8 @@ def to_schema(obj):
         result = torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
-    elif isinstance(obj, list):
-        raise ValueError('to_schema(list)')
+    elif isinstance(obj, list) or isinstance(obj, tuple):
+        raise ValueError(f'to_schema(obj), type {type(obj)}, value {obj}')
     else:
         result = dtype_to_schema(obj)
     result = {'$schema': lale.helpers.JSON_META_SCHEMA_URL, **result}

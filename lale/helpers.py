@@ -210,6 +210,23 @@ def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
     if not jsonsubschema.isSubschema(sub, sup):
         raise SubschemaError(sub, sup, sub_name, sup_name)
 
+def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
+    subset_X, subset_y = _safe_split(
+        estimator, all_X, all_y, indices, train_indices)
+    if hasattr(all_X, 'json_schema'):
+        n_rows = subset_X.shape[0]
+        schema = {
+            'type': 'array', 'minItems': n_rows, 'maxItems': n_rows,
+            'items': all_X.json_schema['items']}
+        lale.datasets.data_schemas.add_schema(subset_X, schema)
+    if hasattr(all_y, 'json_schema'):
+        n_rows = subset_y.shape[0]
+        schema = {
+            'type': 'array', 'minItems': n_rows, 'maxItems': n_rows,
+            'items': all_y.json_schema['items']}
+        lale.datasets.data_schemas.add_schema(subset_y, schema)
+    return subset_X, subset_y
+
 def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
@@ -241,8 +258,8 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     log_loss_results = []
     time_results = []
     for train, test in cv.split(X, y):
-        X_train, y_train = _safe_split(estimator, X, y, train)
-        X_test, y_test = _safe_split(estimator, X, y, test, train)
+        X_train, y_train = split_with_schemas(estimator, X, y, train)
+        X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         start = time.time()
         trained = estimator.fit(X_train, y_train)
         score_value  = scorer(trained, X_test, y_test)
@@ -277,8 +294,8 @@ def cross_val_score(estimator, X, y=None, scoring=accuracy_score, cv=5):
 
     cv_results = []
     for train, test in cv.split(X, y):
-        X_train, y_train = _safe_split(estimator, X, y, train)
-        X_test, y_test = _safe_split(estimator, X, y, test, train)
+        X_train, y_train = split_with_schemas(estimator, X, y, train)
+        X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         trained_estimator = estimator.fit(X_train, y_train)
         predicted_values = trained_estimator.predict(X_test)
         cv_results.append(scoring(y_test, predicted_values))

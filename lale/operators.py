@@ -736,8 +736,8 @@ class IndividualOp(MetaModelOperator):
         return op
 
     def validate_schema(self, X, y=None):
-        self._validate_input_schema('X', X, 'fit')
-        self._validate_input_schema('y', y, 'fit')
+        X = self._validate_input_schema('X', X, 'fit')
+        y = self._validate_input_schema('y', y, 'fit')
         method = 'transform' if self.is_transformer() else 'predict'
         self._validate_input_schema('X', X, method)
         self._validate_input_schema('y', y, method)
@@ -751,22 +751,26 @@ class IndividualOp(MetaModelOperator):
             elif method == 'predict_proba':
                 schema = self.input_schema_predict_proba()
             if schema != {} and arg_name in schema['properties']:
+                arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
                     sup = schema['properties'][arg_name]
                     lale.helpers.validate_schema_or_subschema(arg, sup)
                 except Exception as e:
                     raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {e}') from e
+        return arg
 
     def _validate_output_schema(self, result, method):
         if method == 'predict' or method == 'transform':
             schema = self.output_schema()
         elif method == 'predict_proba':
             schema = self.output_schema_predict_proba()
+        result = lale.datasets.data_schemas.add_schema(result)
         try:
             lale.helpers.validate_schema_or_subschema(result, schema)
         except Exception as e:
             print(f'_validate_output_schema, type(result) {type(result)}, result {result}')
             raise ValueError(f'{self.name()}.{method}() invalid result: {e}') from e
+        return result
 
     def transform_schema(self, s_X):
         return self.output_schema()
@@ -901,8 +905,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         super(TrainableIndividualOp, self).__init__(_name, _impl, _schemas)
 
     def fit(self, X, y = None, **fit_params)->TrainedOperator:
-        self._validate_input_schema('X', X, 'fit')
-        self._validate_input_schema('y', y, 'fit')
+        X = self._validate_input_schema('X', X, 'fit')
+        y = self._validate_input_schema('y', y, 'fit')
         filtered_fit_params = fixup_hyperparams_dict(fit_params)
         if filtered_fit_params is None:
             trained_impl = self._impl.fit(X, y)
@@ -916,8 +920,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def partial_fit(self, X, y = None, **fit_params)->TrainedOperator:
         if not hasattr(self._impl, "partial_fit"):
             raise AttributeError(f'{self.name()} has no partial_fit implemented.')
-        self._validate_input_schema('X', X, 'partial_fit')
-        self._validate_input_schema('y', y, 'partial_fit')
+        X = self._validate_input_schema('X', X, 'partial_fit')
+        y = self._validate_input_schema('y', y, 'partial_fit')
         filtered_fit_params = fixup_hyperparams_dict(fit_params)
         if filtered_fit_params is None:
             trained_impl = self._impl.partial_fit(X, y)
@@ -1100,29 +1104,29 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             return self 
 
     def predict(self, X):
-        self._validate_input_schema('X', X, 'predict')
+        X = self._validate_input_schema('X', X, 'predict')
         result = self._impl.predict(X)
         self._validate_output_schema(result, 'predict')
         return result
 
     def transform(self, X, y = None):
-        self._validate_input_schema('X', X, 'transform')
+        X = self._validate_input_schema('X', X, 'transform')
         if ('y' in [required_property.lower() for required_property 
                     in self.input_schema_transform().get('required',[])]):
-            self._validate_input_schema('y', y, 'transform')
+            y = self._validate_input_schema('y', y, 'transform')
             result = self._impl.transform(X, y)
         else:
             result = self._impl.transform(X)
-        self._validate_output_schema(result, 'transform')
+        result = self._validate_output_schema(result, 'transform')
         return result
 
     def predict_proba(self, X):
-        self._validate_input_schema('X', X, 'predict_proba')
+        X = self._validate_input_schema('X', X, 'predict_proba')
         if hasattr(self._impl, 'predict_proba'):
             result = self._impl.predict_proba(X)
         else:
             raise ValueError("The operator {} does not support predict_proba".format(self.name()))
-        self._validate_output_schema(result, 'predict_proba')
+        result = self._validate_output_schema(result, 'predict_proba')
         return result
 
     def is_frozen_trained(self):
