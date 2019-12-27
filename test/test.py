@@ -1516,7 +1516,8 @@ class TestToAndFromJSON(unittest.TestCase):
             'state': 'trainable',
             'operator': 'PCA',
             'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
-            'hyperparams': {'svd_solver': 'full', 'n_components': 0.5}}
+            'hyperparams': {'svd_solver': 'full', 'n_components': 0.5},
+            'is_frozen_trainable': False}
         json = to_json(operator)
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
