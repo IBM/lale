@@ -185,7 +185,7 @@ class TestHyperoptOperatorDuplication(unittest.TestCase) :
         )
         run_hyperopt_on_planned_pipeline(plan)
 
-class TestHyperoptClassifier(unittest.TestCase):
+class TestHyperoptCV(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
