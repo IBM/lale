@@ -66,13 +66,36 @@ class Planned(MetaModel):
 
     @abstractmethod
     def configure(self, *args, **kwargs)->'Trainable':
-        """Abstract method to configure an operator to make it Trainable.
+        """Bind hyperparameters (for individual operators) and operator choices (for pipelines).
+
+        Usually, this will be invoked via `__call__`, to conform to
+        the look-and-feel of scikit-learn's `__init__` convention.
+        Not all hyperparameters need to be explicitly specified. If
+        some of the hyperparameters are not specified, then a
+        subsequent `fit` invocation will bind them to their default
+        values.  On the other hand, if some hyperparameters are still
+        free and the operator is not marked as `is_frozen_trainable`,
+        then a subsequent `auto_configure` search will include those
+        free hyperparameters in its search space, to be tuned and then
+        bound to the best found values.
 
         Parameters
         ----------
-        args, kwargs: 
-            The parameters are used to configure an operator in a Planned
-            state to bind hyper-parameter values such that it becomes Trainable.
+        args:
+            The non-keyword arguments must be valid enumeration constants
+            for hyperparameters of this operator that accepts categoricals,
+            according to the `hyperparam_schema` of this operator.
+        kwargs:
+            Keyword arguments must be valid according to the
+            `hyperparam_schema` of this operator, and can be categorical
+            or continuous.
+
+        Returns
+        -------
+        Trainable
+            A new copy of this operator that is the same except that some
+            of its hyperparameters are bound to the specified values.
+
         """
         pass
 
@@ -113,25 +136,45 @@ class Trainable(Planned):
 
     @abstractmethod
     def fit(self, X, y=None, **fit_params)->'Trained':
-        """Abstract fit method to be overriden by all trainable operators.
-        
+        """Train the learnable coefficients of this operator, if any.
+
+        Return a trained version of this operator.  If this operator
+        has free learnable coefficients, bind them to values that fit
+        the data according to the operator's algorithm.  Do nothing if
+        the operator implementation lacks a `fit` method or if the
+        operator has been marked as `is_frozen_trained`.
+
         Parameters
         ----------
-        X : 
-            The type of X is as per input_fit schema of the operator.
-        y : optional
-            The type of y is as per input_fit schema of the operator. Default is None.
+        X:
+            Features that conform to the X property of input_schema_fit.
+        y: optional
+            Labels that conform to the y property of input_schema_fit.
+            Default is None.
         fit_params: Dictionary, optional
-            A dictionary of keyword parameters to be used during training.        
+            A dictionary of keyword parameters to be used during training.
+
+        Returns
+        -------
+        Trained
+            A new copy of this operators that is the same except that its
+            learnable coefficients are bound to their trained values.
+
         """
         pass
 
     @abstractmethod
-    def is_frozen_trainable(self):
+    def is_frozen_trainable(self)->bool:
+        """Return true if all hyperparameters are bound, in other words,
+           search spaces contain no free hyperparameters to be tuned.
+        """
         pass
 
     @abstractmethod
-    def freeze_trainable(self):
+    def freeze_trainable(self)->'Trainable':
+        """Return a copy of this trainable operator that is the same except
+           that all hyperparameters are bound and none are free to be tuned.
+        """
         pass
 
 class Trained(Trainable):
@@ -174,11 +217,17 @@ class Trained(Trainable):
         pass
 
     @abstractmethod
-    def is_frozen_trained(self):
+    def is_frozen_trained(self)->bool:
+        """Return true if all learnable coefficients are bound, in other
+           words, there are no free parameters to be learned by fit.
+        """
         pass
 
     @abstractmethod
-    def freeze_trained(self):
+    def freeze_trained(self)->'Trained':
+        """Return a copy of this trainable operator that is the same except
+           that all learnable coefficients are bound and thus fit is a no-op.
+        """
         pass
 	
 class Operator(metaclass=AbstractVisitorMeta):
@@ -291,22 +340,11 @@ class TrainableOperator(PlannedOperator, Trainable):
 
     @abstractmethod
     def fit(self, X, y=None, **fit_params)->'TrainedOperator':
-        """Abstract fit method to be overriden by all trainable operators.
-        
-        Parameters
-        ----------
-        X : 
-            The type of X is as per input_fit schema of the operator.
-        y : optional
-            The type of y is as per input_fit schema of the operator. Default is None.
-        fit_params: Dictionary, optional
-            A dictionary of keyword parameters to be used during training.        
-        """
         pass
 
     @abstractmethod
     def is_supervised(self)->bool:
-        """Checks if the this operator needs labeled data for learning (the `y' parameter for fit)
+        """Checks if this operator needs labeled data for learning (the `y' argument for fit)
         """
         pass
 
@@ -855,10 +893,10 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         result._hyperparams = hyperparams
         return result
 
-    def __call__(self, *args, **kwargs)->TrainableOperator:
+    def __call__(self, *args, **kwargs)->'TrainableIndividualOp':
         return self._configure(*args, **kwargs)
 
-    def configure(self, *args, **kwargs)->TrainableOperator:
+    def configure(self, *args, **kwargs)->'TrainableIndividualOp':
         return self.__call__(*args, **kwargs)
 
     def is_transformer(self)->bool:
@@ -904,7 +942,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def __init__(self, _name, _impl, _schemas):
         super(TrainableIndividualOp, self).__init__(_name, _impl, _schemas)
 
-    def fit(self, X, y = None, **fit_params)->TrainedOperator:
+    def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
         filtered_fit_params = fixup_hyperparams_dict(fit_params)
@@ -987,11 +1025,11 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             bound = []
         return set(to_bind) - set(bound)
 
-    def is_frozen_trainable(self):
+    def is_frozen_trainable(self)->bool:
         free = self.free_hyperparams()
         return len(free) == 0
 
-    def freeze_trainable(self):
+    def freeze_trainable(self)->'TrainableIndividualOp':
         old_bindings = self._hyperparams if self._hyperparams else {}
         free = self.free_hyperparams()
         defaults = self.hyperparam_defaults()
@@ -1084,11 +1122,13 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return cp
 
 class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
+    _frozen_trained:bool
 
     def __init__(self, _name, _impl, _schemas):
         super(TrainedIndividualOp, self).__init__(_name, _impl, _schemas)
+        self._frozen_trained = not hasattr(self._impl, 'fit')
 
-    def __call__(self, *args, **kwargs)->TrainedOperator:
+    def __call__(self, *args, **kwargs)->'TrainedIndividualOp':
         filtered_kwargs_params = fixup_hyperparams_dict(kwargs)
 
         trainable = self._configure(*args, **filtered_kwargs_params)
@@ -1096,7 +1136,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         instance._hyperparams = trainable._hyperparams
         return instance
 
-    def fit(self, X, y = None, **fit_params)->TrainedOperator:
+    def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
         if hasattr(self._impl, "fit") and not self.is_frozen_trained():
             filtered_fit_params = fixup_hyperparams_dict(fit_params)
             return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
@@ -1129,10 +1169,10 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result = self._validate_output_schema(result, 'predict_proba')
         return result
 
-    def is_frozen_trained(self):
-        return hasattr(self, '_frozen_trained')
+    def is_frozen_trained(self)->bool:
+        return self._frozen_trained
 
-    def freeze_trained(self):
+    def freeze_trained(self)->'TrainedIndividualOp':
         if self.is_frozen_trained():
             return self
         result = copy.deepcopy(self)
@@ -1421,7 +1461,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
                  ordered:bool=False) -> None:
         super(PlannedPipeline, self).__init__(steps, edges, ordered=ordered)
 
-    def configure(self, *args, **kwargs)->TrainableOperator:
+    def configure(self, *args, **kwargs)->'TrainablePipeline':
         """
         Make sure the args i.e. operators form a trainable pipeline and
         return it. It takes only one argument which is a list of steps
@@ -1471,7 +1511,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                  ordered:bool=False) -> None:
         super(TrainablePipeline, self).__init__(steps, edges, ordered=ordered)
 
-    def fit(self, X, y=None, **fit_params)->TrainedOperator:
+    def fit(self, X, y=None, **fit_params)->'TrainedPipeline':
         trained_steps:List[TrainedOperator] = [ ]
         outputs:Dict[Operator, Any] = { }
         meta_outputs:Dict[Operator, Any] = {}
@@ -1575,13 +1615,13 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
 
-    def is_frozen_trainable(self):
+    def is_frozen_trainable(self)->bool:
         for step in self.steps():
             if not step.is_frozen_trainable():
                 return False
         return True
 
-    def freeze_trainable(self):
+    def freeze_trainable(self)->'TrainablePipeline':
         frozen_steps = []
         frozen_map = {}
         for liquid in self._steps:
@@ -1945,13 +1985,13 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             
         return return_data
 
-    def is_frozen_trained(self):
+    def is_frozen_trained(self)->bool:
         for step in self.steps():
             if not step.is_frozen_trained():
                 return False
         return True
 
-    def freeze_trained(self):
+    def freeze_trained(self)->'TrainedPipeline':
         frozen_steps = []
         frozen_map = {}
         for liquid in self._steps:

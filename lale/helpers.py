@@ -248,7 +248,9 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
         Integer value is used as number of folds in sklearn.model_selection.StratifiedKFold, default is 5.
         Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
 
-    :return: cv_results: a list of scores corresponding to each cross validation fold
+    Returns
+    -------
+        cv_results: a list of scores corresponding to each cross validation fold
     """
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)

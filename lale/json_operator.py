@@ -38,6 +38,10 @@ SCHEMA = {
             { 'enum': [None]},
             { 'type': 'object',
               'patternProperties': {'^[A-Za-z_][A-Za-z_0-9]*$': {}}}]},
+        'is_frozen_trainable': {
+          'type': 'boolean'},
+        'is_frozen_trained': {
+          'type': 'boolean'},
         'coefs': {
           'enum': [None, 'coefs_not_available']}}},
     'planned_individual_op': {
@@ -49,13 +53,13 @@ SCHEMA = {
       'allOf': [
         { '$ref': '#/definitions/individual_op'},
         { 'type': 'object',
-          'required': ['hyperparams'],
+          'required': ['hyperparams', 'is_frozen_trainable'],
           'properties': { 'state': { 'enum': ['trainable']}}}]},
     'trained_individual_op': {
       'allOf': [
         { '$ref': '#/definitions/individual_op'},
         { 'type': 'object',
-          'required': ['hyperparams', 'coefs'],
+          'required': ['hyperparams', 'coefs', 'is_frozen_trained'],
           'properties': { 'state': { 'enum': ['trained']}}}]},
     'pipeline': {
       'type': 'object',
@@ -146,11 +150,13 @@ def to_json(op):
             result['documentation_url'] = documentation_url
         if isinstance(op, lale.operators.TrainableIndividualOp):
             result['hyperparams'] = op.hyperparams()
+            result['is_frozen_trainable'] = op.is_frozen_trainable()
         if isinstance(op, lale.operators.TrainedIndividualOp):
             if hasattr(op._impl, 'fit'):
                 result['coefs'] = 'coefs_not_available'
             else:
                 result['coefs'] = None
+            result['is_frozen_trained'] = op.is_frozen_trained()
     elif isinstance(op, lale.operators.BasePipeline):
         node2id = {s: i for (i, s) in enumerate(op.steps())}
         result['edges'] = [[node2id[x], node2id[y]] for (x, y) in op.edges()]
@@ -188,6 +194,8 @@ def from_json(json):
             trainable = planned()
         else:
             trainable = planned(**json['hyperparams'])
+        if json['is_frozen_trainable']:
+            trainable = trainable.freeze_trainable()
         if json['state'] == 'trained':
             if json['coefs']=='coefs_not_available':
                 logger.warning(f'Since the JSON representation of trained operator {name} lacks coefficients, from_json returns a trainable operator instead.')
@@ -195,6 +203,7 @@ def from_json(json):
                 assert json['coefs'] is None, json['coefs']
                 trained = lale.operators.TrainedIndividualOp(
                     name, trainable._impl, schemas)
+                assert json['is_frozen_trained'] == trained.is_frozen_trained()
                 return trained
         return trainable
     assert False, f'unexpected JSON {json}'
