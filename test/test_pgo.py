@@ -83,11 +83,11 @@ class TestPGOHyperopt(unittest.TestCase):
     def test_lr_run(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
-        from lale.lib.lale import HyperoptClassifier
+        from lale.lib.lale import HyperoptCV
         from sklearn.datasets import load_iris
 
         lr = LogisticRegression()
-        clf = HyperoptClassifier(estimator=lr, max_evals=5, pgo=pgo)
+        clf = HyperoptCV(estimator=lr, max_evals=5, pgo=pgo)
         iris = load_iris()
         clf.fit(iris.data, iris.target)
  
