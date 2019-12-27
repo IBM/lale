@@ -38,7 +38,7 @@ from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 
 from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
-from lale.lib.lale import HyperoptClassifier, HyperoptRegressor
+from lale.lib.lale import HyperoptCV
 
 import numpy as np
 from typing import List
@@ -155,8 +155,8 @@ def run_hyperopt_on_planned_pipeline(planned_pipeline, max_iters=1) :
     from sklearn.datasets import load_iris
     features, labels = load_iris(return_X_y=True)
     # set up optimizer
-    from lale.lib.lale.hyperopt_classifier import HyperoptClassifier
-    opt = HyperoptClassifier(estimator=planned_pipeline, max_evals=max_iters)
+    from lale.lib.lale.hyperopt_cv import HyperoptCV
+    opt = HyperoptCV(estimator=planned_pipeline, max_evals=max_iters)
     # run optimizer
     res = opt.fit(features, labels)    
 
@@ -196,7 +196,7 @@ class TestHyperoptClassifier(unittest.TestCase):
     def test_using_scoring(self):
         from sklearn.metrics import hinge_loss, make_scorer, f1_score, accuracy_score
         lr = LogisticRegression()
-        clf = HyperoptClassifier(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
+        clf = HyperoptCV(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         predictions_1 = clf.predict(self.X_test)
@@ -205,7 +205,7 @@ class TestHyperoptClassifier(unittest.TestCase):
     def test_custom_scoring(self):
         from sklearn.metrics import f1_score, make_scorer
         lr = LogisticRegression()
-        clf = HyperoptClassifier(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
+        clf = HyperoptCV(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         predictions_1 = clf.predict(self.X_test)
@@ -218,7 +218,7 @@ class TestHyperoptClassifier(unittest.TestCase):
         X, y = load_iris(return_X_y=True)
         
         max_opt_time = 2.0
-        hoc = HyperoptClassifier(
+        hoc = HyperoptCV(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
@@ -239,7 +239,7 @@ class TestHyperoptClassifier(unittest.TestCase):
         from sklearn.datasets import load_iris
         X, y = load_iris(return_X_y=True)
         
-        hoc = HyperoptClassifier(
+        hoc = HyperoptCV(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
@@ -257,11 +257,12 @@ class TestHyperoptClassifier(unittest.TestCase):
         X, y = load_boston(return_X_y=True)
         
         max_opt_time = 3.0
-        hor = HyperoptRegressor(
+        hor = HyperoptCV(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
-            max_opt_time=max_opt_time
+            max_opt_time=max_opt_time,
+            scoring='r2'
         )
         start = time.time()
         best_trained = hor.fit(X[:500,:], y[:500])
@@ -277,11 +278,12 @@ class TestHyperoptClassifier(unittest.TestCase):
         from sklearn.datasets import load_boston
         X, y = load_boston(return_X_y=True)
         
-        hor = HyperoptRegressor(
+        hor = HyperoptCV(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
-            max_opt_time=0.0
+            max_opt_time=0.0,
+            scoring='r2'
         )
         hor_fitted = hor.fit(X, y)
         from lale.helpers import best_estimator
