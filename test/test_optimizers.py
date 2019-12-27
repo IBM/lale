@@ -261,7 +261,8 @@ class TestHyperoptClassifier(unittest.TestCase):
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
-            max_opt_time=max_opt_time
+            max_opt_time=max_opt_time,
+            scoring='r2'
         )
         start = time.time()
         best_trained = hor.fit(X[:500,:], y[:500])
@@ -281,7 +282,8 @@ class TestHyperoptClassifier(unittest.TestCase):
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
-            max_opt_time=0.0
+            max_opt_time=0.0,
+            scoring='r2'
         )
         hor_fitted = hor.fit(X, y)
         from lale.helpers import best_estimator

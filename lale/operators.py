@@ -1207,7 +1207,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
     """
     _steps:List[OpType]
     _preds:Dict[OpType, List[OpType]]
-    _name:str=None
+    _name:str
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
@@ -1223,6 +1223,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                 steps:List[OpType], 
                 edges:Optional[Iterable[Tuple[OpType, OpType]]], 
                 ordered:bool=False) -> None:
+        self._name = "pipeline_" + str(id(self))                
         for step in steps:
             assert isinstance(step, Operator)
         if edges is None: 
@@ -1362,9 +1363,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
         cls = self.__class__
         return cls.__module__ + '.' + cls.__name__
 
-    def name(self)->str:
-        if not hasattr(self, '_name') or self._name is None:
-            self._name = "pipeline_" + str(id(self))
+    def name(self)->str:            
         return self._name
 
     def set_name(self, name):
