@@ -702,8 +702,4 @@ def best_estimator(obj):
         if hasattr(obj._impl, 'best_estimator'): #HyperoptRegressorImpl
             return obj._impl.best_estimator
         return None
-    if hasattr(obj, 'best_estimator_'): #GridSearchCV
-        if hasattr(obj.best_estimator_, 'to_lale'): #SKlearnCompatWrapper
-            return obj.best_estimator_.to_lale()
-        return obj.best_estimator_
     return obj

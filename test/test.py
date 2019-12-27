@@ -45,7 +45,7 @@ from lale.helpers import SubschemaError
 import sklearn.datasets
 
 from lale.sklearn_compat import make_sklearn_compat
-from lale.search.GridSearchCV import get_grid_search_parameter_grids
+from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 

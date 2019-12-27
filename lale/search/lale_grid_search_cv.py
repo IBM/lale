@@ -22,7 +22,7 @@ from lale.search.schema2search_space import schemaToSearchSpace
 from lale.search.PGO import PGO
 
 import numpy as np
-from sklearn.model_selection import GridSearchCV
+import sklearn.model_selection
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
@@ -33,7 +33,8 @@ def get_defaults_as_param_grid(op:'Ops.IndividualOp'):
     return {k : [v] for k,v in defaults.items()}
 
 def get_lale_gridsearchcv_op(op, params, **kwargs):
-    g = GridSearchCV(make_sklearn_compat(op), params, **kwargs)
+    g = sklearn.model_selection.GridSearchCV(
+        make_sklearn_compat(op), params, **kwargs)
     return g
 #    TODO: turn it into a Lale TrainableOperator
 #    name = f"GridSearchCV[{op.name()}]"

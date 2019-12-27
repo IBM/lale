@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import lale.lib.sklearn
-import lale.search.GridSearchCV
+import lale.search.lale_grid_search_cv
 import lale.operators
 import lale.sklearn_compat
 
@@ -33,14 +33,15 @@ class GridSearchCVImpl:
             op = lale.lib.sklearn.LogisticRegression
         else:
             op = self._hyperparams['estimator']
-        hp_grid = lale.search.GridSearchCV.get_parameter_grids(
+        hp_grid = lale.search.lale_grid_search_cv.get_parameter_grids(
             op,
             num_samples=self._hyperparams['lale_num_samples'],
             num_grids=self._hyperparams['lale_num_grids'],
             pgo=self._hyperparams['pgo'])
         if not hp_grid and isinstance(op, lale.operators.IndividualOp):
-            hp_grid = [lale.search.GridSearchCV.get_defaults_as_param_grid(op)]
-        self.grid = lale.search.GridSearchCV.get_lale_gridsearchcv_op(
+            hp_grid = [
+                lale.search.lale_grid_search_cv.get_defaults_as_param_grid(op)]
+        self.grid = lale.search.lale_grid_search_cv.get_lale_gridsearchcv_op(
             lale.sklearn_compat.make_sklearn_compat(op),
             hp_grid,
             cv=self._hyperparams['cv'],
