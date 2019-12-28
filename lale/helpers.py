@@ -705,3 +705,6 @@ def best_estimator(obj):
             return obj._impl.best_estimator
         return None
     return obj
+
+def is_empty_dict(val):
+    return isinstance(val, dict) and len(val) == 0

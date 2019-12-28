@@ -786,14 +786,14 @@ class IndividualOp(MetaModelOperator):
         self._validate_input_schema('y', y, method)
 
     def _validate_input_schema(self, arg_name, arg, method):
-        if arg is not None:
+        if arg is not None and not lale.helpers.is_empty_dict(arg):
             if method == 'fit' or method == 'partial_fit':
                 schema = self.input_schema_fit()
             elif method == 'predict' or method == 'transform':
                 schema = self.input_schema_predict()
             elif method == 'predict_proba':
                 schema = self.input_schema_predict_proba()
-            if schema != {} and arg_name in schema['properties']:
+            if len(schema) != 0 and arg_name in schema['properties']:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
                     sup = schema['properties'][arg_name]
@@ -811,7 +811,7 @@ class IndividualOp(MetaModelOperator):
         try:
             lale.helpers.validate_schema_or_subschema(result, schema)
         except Exception as e:
-            print(f'_validate_output_schema, type(result) {type(result)}, result {result}')
+            print(f'{self.name()}.{method}() invalid result: {e}')
             raise ValueError(f'{self.name()}.{method}() invalid result: {e}') from e
         return result
 
@@ -1461,6 +1461,8 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                               for i in inputs]}
             operator.validate_schema(X=inputs, y=y)
             output = operator.transform_schema(inputs)
+            if lale.helpers.is_empty_dict(output): #hack for missing schema
+                output = {'type': 'array', 'items': {'not': {}}}
             outputs[operator] = output
 
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)

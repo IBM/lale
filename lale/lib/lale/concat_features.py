@@ -19,6 +19,7 @@ import pandas as pd
 import scipy.sparse
 import jsonsubschema
 import torch
+import lale.pretty_print
 
 class ConcatFeaturesImpl():
     """Transformer to concatenate input datasets. 
@@ -96,6 +97,7 @@ class ConcatFeaturesImpl():
                 max_ab = max_a + max_b
             return min_ab, max_ab
         for s_dataset in s_X['items']:
+            assert 'items' in s_dataset, lale.pretty_print.to_string(s_dataset)
             s_rows = s_dataset['items']
             if 'type' in s_rows and 'array' == s_rows['type']:
                 s_cols = s_rows['items']

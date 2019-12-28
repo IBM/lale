@@ -63,17 +63,21 @@ _input_schema_predict = {
       'type': 'array',
       'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
-_output_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': 'Output data schema for predictions (target class labels).',
-  'anyOf': [
-    { 'description': 'For predict, class label.',
-      'type': 'array',
-      'items': { 'type': 'number'}},
-    { 'description':
-        'For predict_proba, for each sample, vector of probabilities.',
-      'type': 'array',
-      'items': { 'type': 'array', 'items': { 'type': 'number' }}}]}
+_output_predict_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Predicted class label per sample.',
+    'type': 'array',
+    'items': {
+        'type': 'number'}}
+
+_output_predict_proba_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Returns the probability of the sample for each class in the model,',
+    'type': 'array',
+    'items': {
+        'type': 'array',
+        'items': {
+            'type': 'number'}}}
 
 _hyperparams_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -255,7 +259,8 @@ _combined_schemas = {
   'properties': {
     'input_fit': _input_schema_fit,
     'input_predict': _input_schema_predict,
-    'output': _output_schema,
+    'output_predict': _output_predict_schema,
+    'output_predict_proba': _output_predict_proba_schema,
     'hyperparams': _hyperparams_schema } }
 
 if __name__ == "__main__":
