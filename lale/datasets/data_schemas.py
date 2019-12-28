@@ -230,10 +230,9 @@ def to_schema(obj):
         result = torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
-    elif isinstance(obj, list) or isinstance(obj, tuple):
-        raise ValueError(f'to_schema(obj), type {type(obj)}, value {obj}')
+    elif lale.helpers.is_schema(obj):
+        result = obj
     else:
-        result = dtype_to_schema(obj)
-    result = {'$schema': lale.helpers.JSON_META_SCHEMA_URL, **result}
+        raise ValueError(f'to_schema(obj), type {type(obj)}, value {obj}')
     lale.helpers.validate_is_schema(result)
     return result

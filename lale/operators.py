@@ -514,7 +514,12 @@ class IndividualOp(MetaModelOperator):
             Logical schema describing output of this 
             operator's predict/transform method.
         """
-        return self.get_schema('output_transform')
+        props = self._schemas.get('properties', {})
+        if self.is_transformer() and 'output_transform' in props:
+            return props['output_transform']
+        if not self.is_transformer() and 'output_predict' in props:
+            return props['output_predict']
+        return props.get('output', {})
 
     def output_schema_predict_proba(self):
         """Returns the schema for predict proba method's output.
@@ -1445,8 +1450,15 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                 inputs = [X]
             else:
                 inputs = [outputs[pred] for pred in preds]
-            if len(inputs) == 1:
+            n_datasets = len(inputs)
+            if n_datasets == 1:
                 inputs = inputs[0]
+            else:
+                inputs = {
+                    'type': 'array',
+                    'minItems': n_datasets, 'maxItems': n_datasets,
+                    'items': [lale.datasets.data_schemas.to_schema(i)
+                              for i in inputs]}
             operator.validate_schema(X=inputs, y=y)
             output = operator.transform_schema(inputs)
             outputs[operator] = output
@@ -1511,6 +1523,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         super(TrainablePipeline, self).__init__(steps, edges, ordered=ordered)
 
     def fit(self, X, y=None, **fit_params)->'TrainedPipeline':
+        X = lale.datasets.data_schemas.add_schema(X)
+        y = lale.datasets.data_schemas.add_schema(y)
+        self.validate_schema(X, y)
         trained_steps:List[TrainedOperator] = [ ]
         outputs:Dict[Operator, Any] = { }
         meta_outputs:Dict[Operator, Any] = {}
