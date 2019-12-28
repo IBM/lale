@@ -77,12 +77,12 @@ _input_schema_fit = {
           'items': {'type': 'number'}},
         { 'type': 'array',
           'items': {
-            'type': 'array', 'minItems': 1,
-            'items': {'type': 'number'}}}]},
-        'y': {
             'type': 'array',
-            'items': {'anyOf':[{'type': 'integer'}, {'type':'number'}]}
-        }
+            'items': {'type': 'number'}}}]},
+    'y': {
+      'type': 'array',
+      'items': {'anyOf':[{'type': 'integer'}, {'type':'number'}]}
+    }
   }
 }
 
@@ -100,12 +100,12 @@ _input_schema_predict = {
           'items': {'type': 'number'}},
         { 'type': 'array',
           'items': {
-            'type': 'array', 'minItems': 1,
-            'items': {'type': 'number'}}}]},
-        'y': {
             'type': 'array',
-            'items': {'anyOf':[{'type': 'integer'}, {'type':'number'}]}
-        }
+            'items': {'type': 'number'}}}]},
+    'y': {
+      'type': 'array',
+      'items': {'anyOf':[{'type': 'integer'}, {'type':'number'}]}
+    }
   }
 }
 

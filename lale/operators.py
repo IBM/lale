@@ -514,7 +514,12 @@ class IndividualOp(MetaModelOperator):
             Logical schema describing output of this 
             operator's predict/transform method.
         """
-        return self.get_schema('output_transform')
+        props = self._schemas.get('properties', {})
+        if self.is_transformer() and 'output_transform' in props:
+            return props['output_transform']
+        if not self.is_transformer() and 'output_predict' in props:
+            return props['output_predict']
+        return props.get('output', {})
 
     def output_schema_predict_proba(self):
         """Returns the schema for predict proba method's output.
@@ -781,14 +786,14 @@ class IndividualOp(MetaModelOperator):
         self._validate_input_schema('y', y, method)
 
     def _validate_input_schema(self, arg_name, arg, method):
-        if arg is not None:
+        if arg is not None and not lale.helpers.is_empty_dict(arg):
             if method == 'fit' or method == 'partial_fit':
                 schema = self.input_schema_fit()
             elif method == 'predict' or method == 'transform':
                 schema = self.input_schema_predict()
             elif method == 'predict_proba':
                 schema = self.input_schema_predict_proba()
-            if schema != {} and arg_name in schema['properties']:
+            if len(schema) != 0 and arg_name in schema['properties']:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
                     sup = schema['properties'][arg_name]
@@ -806,7 +811,7 @@ class IndividualOp(MetaModelOperator):
         try:
             lale.helpers.validate_schema_or_subschema(result, schema)
         except Exception as e:
-            print(f'_validate_output_schema, type(result) {type(result)}, result {result}')
+            print(f'{self.name()}.{method}() invalid result: {e}')
             raise ValueError(f'{self.name()}.{method}() invalid result: {e}') from e
         return result
 
@@ -1445,10 +1450,19 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                 inputs = [X]
             else:
                 inputs = [outputs[pred] for pred in preds]
-            if len(inputs) == 1:
+            n_datasets = len(inputs)
+            if n_datasets == 1:
                 inputs = inputs[0]
+            else:
+                inputs = {
+                    'type': 'array',
+                    'minItems': n_datasets, 'maxItems': n_datasets,
+                    'items': [lale.datasets.data_schemas.to_schema(i)
+                              for i in inputs]}
             operator.validate_schema(X=inputs, y=y)
             output = operator.transform_schema(inputs)
+            if lale.helpers.is_empty_dict(output): #hack for missing schema
+                output = {'type': 'array', 'items': {'not': {}}}
             outputs[operator] = output
 
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
@@ -1511,6 +1525,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         super(TrainablePipeline, self).__init__(steps, edges, ordered=ordered)
 
     def fit(self, X, y=None, **fit_params)->'TrainedPipeline':
+        X = lale.datasets.data_schemas.add_schema(X)
+        y = lale.datasets.data_schemas.add_schema(y)
+        self.validate_schema(X, y)
         trained_steps:List[TrainedOperator] = [ ]
         outputs:Dict[Operator, Any] = { }
         meta_outputs:Dict[Operator, Any] = {}

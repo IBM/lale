@@ -61,10 +61,23 @@ class ProjectImpl:
         return lale.datasets.data_schemas.add_schema(result, s_result)
 
     def transform_schema(self, s_X):
+        if hasattr(self, '_col_tfm'):
+            return self._transform_schema_col_tfm(s_X, self._col_tfm)
+        columns = self._hyperparams['columns']
+        if lale.helpers.is_schema(columns):
+            return self._transform_schema_schema(s_X, columns)
+        if not lale.helpers.is_schema(s_X):
+            X = lale.datasets.data_schemas.add_schema(s_X)
+            self.fit(X)
+            return self._transform_schema_col_tfm(X.json_schema, self._col_tfm)
+        return s_X
+
+    def _transform_schema_col_tfm(self, s_X, col_tfm):
+        s_X = lale.datasets.data_schemas.to_schema(s_X)
         s_row = s_X['items']
         s_cols = s_row['items']
         keep_cols = [col
-                     for name, tfm, cols in self._col_tfm.transformers_
+                     for name, tfm, cols in col_tfm.transformers_
                      if tfm == 'passthrough'
                      for col in cols]
         n_columns = len(keep_cols)
@@ -82,6 +95,25 @@ class ProjectImpl:
                 'minItems': n_columns, 'maxItems': n_columns,
                 'items': s_cols_result}}
         return s_result
+
+    def _transform_schema_schema(self, s_X, schema):
+        s_X = lale.datasets.data_schemas.to_schema(s_X)
+        s_row = s_X['items']
+        s_cols = s_row['items']
+        if isinstance(s_cols, dict):
+            if isSubschema(s_cols, schema):
+                s_row_result = s_row
+            else:
+                s_row_result = {'type': 'array', 'minItems': 0, 'maxItems': 0}
+        else:
+            assert isinstance(s_cols, list)
+            s_cols_result = [s for s in s_cols if isSubschema(s, schema)]
+            n_columns = len(s_cols_result)
+            s_row_result = {
+                'type': 'array',
+                'minItems': n_columns, 'maxItems': n_columns,
+                'items': s_cols_result}
+        return {'type': 'array', 'items': s_row_result}
 
 _hyperparams_schema = {
   'description': 'Hyperparameter schema for Project transformer.',

@@ -37,6 +37,8 @@ class SimpleImputerImpl():
     def transform(self, X):
         return self._sklearn_model.transform(X)
 
+    def transform_schema(self, s_X):
+        return s_X
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
