@@ -42,14 +42,13 @@ logger = logging.getLogger(__name__)
 class HyperoptCVImpl:
 
     def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, pgo:Optional[PGO]=None):
-        """ Instantiate the HyperoptClassifier that will use the given estimator and other parameters to select the 
-        best performing trainable instantiation of the estimator. This optimizer uses negation of accuracy_score 
-        as the performance metric to be minimized by Hyperopt.
+        """ Instantiate the HyperoptCV that will use the given estimator and other parameters to select the 
+        best performing trainable instantiation of the estimator. 
 
         Parameters
         ----------
         estimator : lale.operators.IndividualOp or lale.operators.Pipeline, optional
-            A valid Lale individual operator or pipeline, by default None
+            A valid Lale individual operator or pipeline, by default LogisticRegression
         max_evals : int, optional
             Number of trials of Hyperopt search, by default 50
         cv : an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
@@ -62,7 +61,7 @@ class HyperoptCVImpl:
             A boolean flag to indicating how to deal with cross validation failure for a trial.
             If True, the trial is continued by doing a 80-20 percent train-validation split of the dataset input to fit
             and reporting the score on the validation part.
-            If False, the trial is terminated by assigning accuracy to zero.
+            If False, the trial is terminated by assigning status to FAIL.
             , by default False
         scoring: string or a scorer object created using 
             https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
@@ -71,28 +70,23 @@ class HyperoptCVImpl:
             A completely custom scorer object can be created from a python function following the example at 
             https://scikit-learn.org/stable/modules/model_evaluation.html
             The metric has to return a scalar value, and note that scikit-learns's scorer object always returns values such that
-            higher score is better. Since Hyperopt solves a minimization problem, we negate the score value to pass to Hyperopt.
+            higher score is better. Since Hyperopt solves a minimization problem, we pass (best_score - score) to Hyperopt.
             by default 'accuracy'.
         best_score : float, optional
             The best score for the specified scorer. This allows us to return a loss to hyperopt that is
-            greater than equal to zero, where zero is the best loss. By default, this is set to zero to
-            follow current behavior.
+            greater than equal to zero, where zero is the best loss. By default, zero.
         max_opt_time : float, optional
             Maximum amout of time in seconds for the optimization. By default, None, implying no runtime
             bound.
         pgo : Optional[PGO], optional
             [description], by default None
         
-        Raises
-        ------
-        e
-            [description]
 
         Examples
         --------
         >>> from sklearn.metrics import make_scorer, f1_score, accuracy_score
         >>> lr = LogisticRegression()
-        >>> clf = HyperoptClassifier(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
+        >>> clf = HyperoptCV(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
         >>> from sklearn import datasets
         >>> diabetes = datasets.load_diabetes()
         >>> X = diabetes.data[:150]
@@ -102,7 +96,7 @@ class HyperoptCVImpl:
 
         Other scoring metrics:
 
-        >>> clf = HyperoptClassifier(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
+        >>> clf = HyperoptCV(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
 
         """
         self.max_evals = max_evals

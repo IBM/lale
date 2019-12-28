@@ -254,7 +254,7 @@ def create_function_test_feature_preprocessor(fproc_name):
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
-        #Tune the pipeline with LR using HyperoptClassifier
+        #Tune the pipeline with LR using HyperoptCV
         from lale.lib.lale import HyperoptCV
         hyperopt = HyperoptCV(estimator=pipeline, max_evals=1)
         trained = hyperopt.fit(self.X_train, self.y_train)
