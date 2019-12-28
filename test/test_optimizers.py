@@ -230,7 +230,7 @@ class TestHyperoptCV(unittest.TestCase):
         end = time.time()
         opt_time = end - start
         rel_diff = (opt_time - max_opt_time) / max_opt_time
-        assert rel_diff < 0.3, (
+        assert rel_diff < 0.5, (
             'Max time: {}, Actual time: {}, relative diff: {}'.format(max_opt_time, opt_time, rel_diff)
         )
         
