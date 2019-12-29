@@ -325,14 +325,14 @@ class Operator(metaclass=AbstractVisitorMeta):
         """ Method for cloning a lale operator, currently intended for internal use
         """
         pass
-    
-
-class MetaModelOperator(Operator, MetaModel):
 
     @abstractmethod
     def is_supervised(self)->bool:
         """Checks if this operator needs labeled data for learning (the `y' argument for fit)
         """
+        pass
+
+class MetaModelOperator(Operator, MetaModel):
         pass
 
 class PlannedOperator(MetaModelOperator, Planned):
@@ -780,7 +780,7 @@ class IndividualOp(MetaModelOperator):
         X = self._validate_input_schema('X', X, 'fit')
         method = 'transform' if self.is_transformer() else 'predict'
         self._validate_input_schema('X', X, method)
-        if self.is_supervised():
+        if self.is_supervised(default_if_missing=False):
             if y is None:
                 raise ValueError(f'{self.name()}.fit() y cannot be None')
             else:
@@ -820,12 +820,10 @@ class IndividualOp(MetaModelOperator):
     def transform_schema(self, s_X):
         return self.output_schema()
 
-    def is_supervised(self)->bool:
-        """Checks if the this operator needs labeled data for learning (the `y' parameter for fit)
-        """
+    def is_supervised(self, default_if_missing=True)->bool:
         if self.input_schema_fit():
             return 'y' in self.input_schema_fit().get('properties', [])
-        return True #Always assume supervised if the schema is missing
+        return default_if_missing
 
 class PlannedIndividualOp(IndividualOp, PlannedOperator):
     """
@@ -1468,8 +1466,6 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
             outputs[operator] = output
 
     def is_supervised(self)->bool:
-        """Checks if the this operator needs labeled data for learning (the `y' parameter for fit)
-        """
         s = self.steps()
         if len(s) == 0:
             return False
@@ -2151,6 +2147,12 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
             if not m.has_same_impl(o):
                 return False
         return True
+
+    def is_supervised(self)->bool:
+        s = self.steps()
+        if len(s) == 0:
+            return False
+        return self.steps()[-1].is_supervised()
 
 class PipelineFactory():
     def __init__(self):

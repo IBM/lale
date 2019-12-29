@@ -51,7 +51,7 @@ class SeriesWithSchema(pd.Series):
     def _constructor(self):
         return SeriesWithSchema
 
-def add_schema(obj, schema=None, raise_on_failure=False):
+def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
     if obj is None:
         return None
     if isinstance(obj, NDArrayWithSchema):
@@ -70,6 +70,8 @@ def add_schema(obj, schema=None, raise_on_failure=False):
         raise ValueError(f'unexpected type(obj) {type(obj)}')
     else:
         return obj
+    if recalc:
+        result.json_schema = None
     if not hasattr(result, 'json_schema') or result.json_schema is None:
         if schema is None:
             result.json_schema = to_schema(obj)
@@ -118,7 +120,7 @@ def shape_and_dtype_to_schema(shape, dtype):
 
 def ndarray_to_schema(array):
     assert isinstance(array, np.ndarray)
-    if isinstance(array, NDArrayWithSchema) and hasattr(array, 'json_schema'):
+    if isinstance(array, NDArrayWithSchema) and hasattr(array, 'json_schema') and array.json_schema is not None:
         return array.json_schema
     return shape_and_dtype_to_schema(array.shape, array.dtype)
 
@@ -128,7 +130,7 @@ def csr_matrix_to_schema(matrix):
 
 def dataframe_to_schema(df):
     assert isinstance(df, pd.DataFrame)
-    if isinstance(df, DataFrameWithSchema) and hasattr(df, 'json_schema'):
+    if isinstance(df, DataFrameWithSchema) and hasattr(df, 'json_schema') and df.json_schema is not None:
         return df.json_schema
     n_rows, n_columns = df.shape
     assert n_columns == len(df.columns) and n_columns == len(df.dtypes)
@@ -149,7 +151,7 @@ def dataframe_to_schema(df):
 
 def series_to_schema(series):
     assert isinstance(series, pd.Series)
-    if isinstance(series, SeriesWithSchema) and hasattr(series, 'json_schema'):
+    if isinstance(series, SeriesWithSchema) and hasattr(series, 'json_schema') and series.json_schema is not None:
         return series.json_schema
     (n_rows, ) = series.shape
     result = {
