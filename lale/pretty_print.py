@@ -275,7 +275,7 @@ def schema_to_string(schema):
     s3 = astunparse.unparse(s2).strip()
     s4 = re.sub(r'}, {\n    (\s+)', r'},\n\1{   ', s3)
     s5 = re.sub(r'\[{\n    (\s+)', r'[\n\1{   ', s4)
-    s6 = re.sub(r"[^\n{}\[\]]+'\$schema':[^\n]+\n", "", s5)
+    s6 = re.sub(r"'\$schema':[^\n{}\[\]]+\n\s+", "\1", s5)
     while True:
         s7 = re.sub(r',\n\s*([\]}])', r'\1', s6)
         if s6 == s7:

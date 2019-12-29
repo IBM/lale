@@ -325,10 +325,15 @@ class Operator(metaclass=AbstractVisitorMeta):
         """ Method for cloning a lale operator, currently intended for internal use
         """
         pass
-    
+
+    @abstractmethod
+    def is_supervised(self)->bool:
+        """Checks if this operator needs labeled data for learning (the `y' argument for fit)
+        """
+        pass
 
 class MetaModelOperator(Operator, MetaModel):
-    pass
+        pass
 
 class PlannedOperator(MetaModelOperator, Planned):
 
@@ -341,13 +346,6 @@ class TrainableOperator(PlannedOperator, Trainable):
     @abstractmethod
     def fit(self, X, y=None, **fit_params)->'TrainedOperator':
         pass
-
-    @abstractmethod
-    def is_supervised(self)->bool:
-        """Checks if this operator needs labeled data for learning (the `y' argument for fit)
-        """
-        pass
-
 
 class TrainedOperator(TrainableOperator, Trained):
     
@@ -780,13 +778,17 @@ class IndividualOp(MetaModelOperator):
 
     def validate_schema(self, X, y=None):
         X = self._validate_input_schema('X', X, 'fit')
-        y = self._validate_input_schema('y', y, 'fit')
         method = 'transform' if self.is_transformer() else 'predict'
         self._validate_input_schema('X', X, method)
-        self._validate_input_schema('y', y, method)
+        if self.is_supervised(default_if_missing=False):
+            if y is None:
+                raise ValueError(f'{self.name()}.fit() y cannot be None')
+            else:
+                y = self._validate_input_schema('y', y, 'fit')
+                self._validate_input_schema('y', y, method)
 
     def _validate_input_schema(self, arg_name, arg, method):
-        if arg is not None and not lale.helpers.is_empty_dict(arg):
+        if not lale.helpers.is_empty_dict(arg):
             if method == 'fit' or method == 'partial_fit':
                 schema = self.input_schema_fit()
             elif method == 'predict' or method == 'transform':
@@ -817,6 +819,11 @@ class IndividualOp(MetaModelOperator):
 
     def transform_schema(self, s_X):
         return self.output_schema()
+
+    def is_supervised(self, default_if_missing=True)->bool:
+        if self.input_schema_fit():
+            return 'y' in self.input_schema_fit().get('properties', [])
+        return default_if_missing
 
 class PlannedIndividualOp(IndividualOp, PlannedOperator):
     """
@@ -1103,13 +1110,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self._impl.__class__.__name__]), self._name, filtered_impl_params)
         self._hyperparams = filtered_impl_params
         return self
-
-    def is_supervised(self)->bool:
-        """Checks if the this operator needs labeled data for learning (the `y' parameter for fit)
-        """
-        if self.input_schema_fit():
-            return 'y' in self.input_schema_fit().get('properties', [])
-        return True #Always assume supervised if the schema is missing
 
     def transform_schema(self, s_X):
         if hasattr(self._impl, 'transform_schema'):
@@ -1465,6 +1465,12 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                 output = {'type': 'array', 'items': {'not': {}}}
             outputs[operator] = output
 
+    def is_supervised(self)->bool:
+        s = self.steps()
+        if len(s) == 0:
+            return False
+        return self.steps()[-1].is_supervised()
+
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
 class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
@@ -1658,14 +1664,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         else:
             pass #TODO
         return out
-
-    def is_supervised(self)->bool:
-        """Checks if the this operator needs labeled data for learning (the `y' parameter for fit)
-        """
-        s = self.steps()
-        if len(s) == 0:
-            return False
-        return self.steps()[-1].is_supervised()
 
     @classmethod
     def import_from_sklearn_pipeline(cls, sklearn_pipeline):
@@ -2149,6 +2147,12 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
             if not m.has_same_impl(o):
                 return False
         return True
+
+    def is_supervised(self)->bool:
+        s = self.steps()
+        if len(s) == 0:
+            return False
+        return self.steps()[-1].is_supervised()
 
 class PipelineFactory():
     def __init__(self):

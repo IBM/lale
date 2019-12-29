@@ -422,8 +422,15 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True):
     if verbose:
         print(f'training set shapes: X {X_train.shape}, y {y_train.shape}')
         print(f'test set shapes:     X {X_test.shape}, y {y_test.shape}')
-    X_train, X_test, y_train, y_test = add_schemas( \
-        schema_orig, target_col, X_train, X_test, y_train, y_test)
+    if preprocess:
+        from lale.datasets.data_schemas import add_schema
+        X_train = add_schema(X_train.astype(np.number), recalc=True)
+        y_train = add_schema(y_train.astype(np.number), recalc=True)
+        X_test = add_schema(X_test.astype(np.number), recalc=True)
+        y_test = add_schema(y_test.astype(np.number), recalc=True)
+    else:
+        X_train, X_test, y_train, y_test = add_schemas( \
+            schema_orig, target_col, X_train, X_test, y_train, y_test)
     return (X_train, y_train), (X_test, y_test)
 
 if __name__ == "__main__":
