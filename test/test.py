@@ -1158,13 +1158,11 @@ class TestDatasetSchemas(unittest.TestCase):
         all_y_schema = to_schema(all_y)
         validate_schema(all_y, all_y_schema, subsample_array=False)
         all_X_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 150, 'maxItems': 150,
             'items': {
                 'type': 'array', 'minItems': 4, 'maxItems': 4,
                 'items': {'type': 'number'}}}
         all_y_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 150, 'maxItems': 150,
             'items': {'type': 'integer'}}
         self.maxDiff = None
@@ -1185,7 +1183,6 @@ class TestDatasetSchemas(unittest.TestCase):
         train_y_schema = to_schema(train_y)
         validate_schema(train_y, train_y_schema, subsample_array=False)
         train_X_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 120, 'maxItems': 120,
             'items': {
                 'type': 'array', 'minItems': 4, 'maxItems': 4,
@@ -1195,7 +1192,6 @@ class TestDatasetSchemas(unittest.TestCase):
                     {'description': 'petal length (cm)', 'type': 'number'},
                     {'description': 'petal width (cm)', 'type': 'number'}]}}
         train_y_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 120, 'maxItems': 120,
             'items': {'description': 'target', 'type': 'integer'}}
         self.maxDiff = None
@@ -1213,7 +1209,6 @@ class TestDatasetSchemas(unittest.TestCase):
         train_y_schema = to_schema(train_y)
         validate_schema(train_y, train_y_schema, subsample_array=False)
         train_X_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {
                 'type': 'array', 'minItems': 20, 'maxItems': 20,
@@ -1259,7 +1254,6 @@ class TestDatasetSchemas(unittest.TestCase):
                     {'description': 'own_telephone', 'enum': ['none', 'yes']},
                     {'description': 'foreign_worker', 'enum': ['yes', 'no']}]}}
         train_y_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {'description': 'class', 'enum': [0, 1]}}
         self.maxDiff = None
@@ -1275,7 +1269,6 @@ class TestDatasetSchemas(unittest.TestCase):
         transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
         transformed_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {
                 'type': 'array', 'minItems': 7, 'maxItems': 7,
@@ -1299,7 +1292,6 @@ class TestDatasetSchemas(unittest.TestCase):
         transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
         transformed_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array', 'minItems': 670, 'maxItems': 670,
             'items': {
                 'type': 'array', 'minItems': 13, 'maxItems': 13,
