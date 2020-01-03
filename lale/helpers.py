@@ -592,7 +592,7 @@ def wrap_imported_operators():
     symtab = calling_frame.f_globals
     lib_modules = [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]
     for name, impl in symtab.items():
-        if inspect.isclass(impl) and not isinstance(impl, Operator):
+        if inspect.isclass(impl) and not issubclass(impl, Operator) and not isinstance(impl, Operator):
             module = impl.__module__.split('.')[0]
             looks_like_op = hasattr(impl, 'fit') and (
                 hasattr(impl, 'predict') or hasattr(impl, 'transform'))
