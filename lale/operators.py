@@ -316,7 +316,7 @@ class Operator(metaclass=AbstractVisitorMeta):
     
     @abstractmethod
     def has_same_impl(self, other:'Operator')->bool:
-        """Checks if the type of the operator imnplementations are compatible
+        """Checks if the type of the operator implementations are compatible
         """
         pass
     
