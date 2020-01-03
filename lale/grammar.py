@@ -1,9 +1,9 @@
 from lale.operators import MetaModelOperator, PlannedOperator, Operator, BasePipeline, OperatorChoice, IndividualOp
-from lale.operators import make_choice, make_pipeline
+from lale.operators import make_choice, make_pipeline, get_pipeline_of_applicable_type
 from lale.lib.lale import NoOp
 from typing import Optional
 
-class Primitive(Operator):
+class NonTerminal(Operator):
     """ Abstract operator for non-terminal grammar rules.
     """
     def __init__(self, name, value=None):
@@ -27,7 +27,7 @@ class Primitive(Operator):
         
         
 class Grammar(MetaModelOperator):
-    """ Base class for Lale grammars. The for every grammar `g`, rule `g.start` must be defined.
+    """ Base class for Lale grammars.
     """
     def __init__(self):
         self._primitives = {}
@@ -36,7 +36,7 @@ class Grammar(MetaModelOperator):
         if name.startswith('_'):
             return self.__dict__[name]
         if name not in self._primitives:
-            self._primitives[name] = Primitive(name)
+            self._primitives[name] = NonTerminal(name)
         return self._primitives[name]
         
     def __setattr__(self, name, value):
@@ -67,37 +67,42 @@ class Grammar(MetaModelOperator):
         pass
             
             
-def unroll(g: Grammar, op: Primitive, n: int) -> Optional[PlannedOperator]:
+def unroll(g: Grammar, op: Operator, n: int) -> Optional[Operator]:
     """ Unroll all possible operators from the grammar `g` starting from non-terminal `op` after `n` derivations.
     
     Parameters
     ----------
     g : Grammar
         input grammar
-    op : Primitive
+    op : Operator
         starting rule (e.g., `g.start`)
     n : int
         number of derivations
     
     Returns
     -------
-    Optional[PlannedOperator]
+    Optional[Operator]
     """
     if isinstance(op, BasePipeline):
-        steps = [unroll(g, sop, n) for sop in op._steps]
-        return make_pipeline(*steps) if not None in steps else None
+        steps = op.steps()
+        new_steps = [unroll(g, sop, n) for sop in op.steps()]
+        step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
+        new_edges = ((step_map[s], step_map[d]) for s, d in op.edges())
+        if not None in new_steps:
+            return get_pipeline_of_applicable_type(new_steps, new_edges, True)
+        return None
     if isinstance(op, OperatorChoice):
         steps = [s for s in (unroll(g, sop, n) for sop in op._steps) if s]
         return make_choice(*steps) if steps else None
-    if isinstance(op, Primitive):
+    if isinstance(op, NonTerminal):
         return unroll(g, getattr(g, op._name), n-1) if n > 0 else None
     if isinstance(op, IndividualOp):
         return op
-    assert False, f"Unknown operator {op._name} of type {op}"
+    assert False, f"Unknown operator {op.name()} of type {op}"
             
 def explore(g: Grammar, n: int) -> PlannedOperator:
     """
-    Explore the grammar `g` and generate all possible choices after `n` derivations.
+    Explore the grammar `g` starting from `g.start` and generate all possible choices after `n` derivations.
     
     Parameters
     ----------
