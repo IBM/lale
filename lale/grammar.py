@@ -6,9 +6,8 @@ from typing import Optional
 class NonTerminal(Operator):
     """ Abstract operator for non-terminal grammar rules.
     """
-    def __init__(self, name, value=None):
+    def __init__(self, name):
         self._name = name
-        self.value = value
         
     def _lale_clone(self):
         pass
@@ -30,20 +29,20 @@ class Grammar(MetaModelOperator):
     """ Base class for Lale grammars.
     """
     def __init__(self):
-        self._primitives = {}
+        self._variables = {}
 
     def __getattr__(self, name):
         if name.startswith('_'):
             return self.__dict__[name]
-        if name not in self._primitives:
-            self._primitives[name] = NonTerminal(name)
-        return self._primitives[name]
+        if name not in self._variables:
+            self._variables[name] = NonTerminal(name)
+        return self._variables[name]
         
     def __setattr__(self, name, value):
         if name.startswith('_'):
             self.__dict__[name] = value
         else:
-            self._primitives[name] = value
+            self._variables[name] = value
             
     def _lale_clone(self):
         pass
@@ -92,13 +91,13 @@ def unroll(g: Grammar, op: Operator, n: int) -> Optional[Operator]:
             return get_pipeline_of_applicable_type(new_steps, new_edges, True)
         return None
     if isinstance(op, OperatorChoice):
-        steps = [s for s in (unroll(g, sop, n) for sop in op._steps) if s]
+        steps = [s for s in (unroll(g, sop, n) for sop in op.steps()) if s]
         return make_choice(*steps) if steps else None
     if isinstance(op, NonTerminal):
-        return unroll(g, getattr(g, op._name), n-1) if n > 0 else None
+        return unroll(g, getattr(g, op.name()), n-1) if n > 0 else None
     if isinstance(op, IndividualOp):
         return op
-    assert False, f"Unknown operator {op.name()} of type {op}"
+    assert False, f"Unknown operator {op}"
             
 def explore(g: Grammar, n: int) -> PlannedOperator:
     """
