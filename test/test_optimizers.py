@@ -289,3 +289,80 @@ class TestHyperoptCV(unittest.TestCase):
         from lale.helpers import best_estimator
         assert best_estimator(hor_fitted) is None
 
+class TestAutoConfigureClassification(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_with_hyperoptcv(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.lib.lale import NoOp, HyperoptCV
+
+        planned_pipeline = (PCA | NoOp) >> LogisticRegression
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = HyperoptCV, cv = 3, 
+            scoring='accuracy', max_evals=2)
+        predictions = best_pipeline.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+        from lale.helpers import best_estimator
+        from lale.operators import TrainedPipeline
+        assert isinstance(best_estimator(best_pipeline), TrainedPipeline)
+
+    def test_with_gridsearchcv(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.lib.lale import NoOp, GridSearchCV
+
+        planned_pipeline = (PCA | NoOp)  >> LogisticRegression
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
+            scoring='accuracy', lale_num_samples=1, lale_num_grids=1)
+        predictions = best_pipeline.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+        from lale.helpers import best_estimator
+        assert best_estimator(best_pipeline) is not None
+
+class TestAutoConfigureRegression(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_boston
+        from sklearn.model_selection import train_test_split
+        X, y = load_boston(return_X_y=True)
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_with_hyperoptcv(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.lib.lale import NoOp, HyperoptCV
+
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = HyperoptCV, cv = 3, 
+            scoring='r2', max_evals=2)
+        predictions = best_pipeline.predict(self.X_test)
+        from lale.helpers import best_estimator
+        from lale.operators import TrainedPipeline
+        assert isinstance(best_estimator(best_pipeline), TrainedPipeline)
+
+    def test_with_gridsearchcv(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.lib.lale import NoOp, GridSearchCV
+
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
+            scoring='r2', lale_num_samples=1, lale_num_grids=1)
+        predictions = best_pipeline.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+        from lale.helpers import best_estimator
+        assert best_estimator(best_pipeline) is not None
+
+class TestGridSearchCV(unittest.TestCase):
+    def test_manual_grid(self):
+        from lale.lib.sklearn import SVC
+        from sklearn.datasets import load_iris
+        from lale.lib.lale import GridSearchCV
+        from lale.helpers import wrap_imported_operators
+        wrap_imported_operators()
+        iris = load_iris()
+        parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
+        svc = SVC()
+        clf = GridSearchCV(estimator=svc, param_grid=parameters)
+        clf.fit(iris.data, iris.target)
+        clf.predict(iris.data)
