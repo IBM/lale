@@ -19,7 +19,7 @@ class XGBClassifierImpl(BaseEstimator):
                 nthread=None, gamma=0, min_child_weight=1, max_delta_step=0, subsample=1, 
                 colsample_bytree=1, colsample_bylevel=1, colsample_bynode=1, reg_alpha=0, 
                 reg_lambda=1, scale_pos_weight=1, base_score=0.5, random_state=0, 
-                seed=None, missing=None):
+                seed=None, missing=None, silent=None):
         self.max_depth = max_depth
         self.learning_rate = learning_rate
         self.n_estimators = n_estimators
@@ -41,7 +41,8 @@ class XGBClassifierImpl(BaseEstimator):
         self.base_score = base_score
         self.random_state = random_state
         self.seed = seed
-        self.missing = missing      
+        self.missing = missing
+        self.silent = silent
 
     def fit(self, X, y, **fit_params):
         result = XGBClassifierImpl(self.max_depth, self.learning_rate, self.n_estimators, 
@@ -49,7 +50,7 @@ class XGBClassifierImpl(BaseEstimator):
                 self.nthread, self.gamma, self.min_child_weight, self.max_delta_step, self.subsample, 
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
-                self.seed, self.missing)
+                self.seed, self.missing, self.silent)
         result._xgboost_model = XGBoostClassifier(
                     **self.get_params())
         if fit_params is None:
@@ -236,6 +237,19 @@ _hyperparams_schema = {
             'description': 'Value in the data which needs to be present as a missing value. If'
             ' If None, defaults to np.nan.'
         },
+        'silent':{
+            'anyOf': [{
+                'type': 'boolean',
+            }, {
+                'enum': [None],
+            }],
+            'default': None,
+            'description': 'deprecated and replaced with verbosity, but adding to be backward compatible. '
+        },
+        'seed': {
+            'default': None,
+            'description': 'deprecated and replaced with random_state, but adding to be backward compatible. '
+        }
         },
     }],
 }
