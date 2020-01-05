@@ -18,7 +18,7 @@ import lale.operators
 import lale.sklearn_compat
 
 class GridSearchCVImpl:
-    def __init__(self, estimator=None, cv=5, scoring='accuracy', n_jobs=None, lale_num_samples=None, lale_num_grids=None, pgo=None):
+    def __init__(self, estimator=None, cv=5, scoring='accuracy', n_jobs=None, lale_num_samples=None, lale_num_grids=None, param_grid=None, pgo=None):
         self._hyperparams = {
             'estimator': estimator,
             'cv': cv,
@@ -26,18 +26,21 @@ class GridSearchCVImpl:
             'n_jobs': n_jobs,
             'lale_num_samples': lale_num_samples,
             'lale_num_grids': lale_num_grids,
-            'pgo': pgo }
+            'pgo': pgo,
+            'hp_grid': param_grid }
 
     def fit(self, X, y):
         if self._hyperparams['estimator'] is None:
             op = lale.lib.sklearn.LogisticRegression
         else:
             op = self._hyperparams['estimator']
-        hp_grid = lale.search.lale_grid_search_cv.get_parameter_grids(
-            op,
-            num_samples=self._hyperparams['lale_num_samples'],
-            num_grids=self._hyperparams['lale_num_grids'],
-            pgo=self._hyperparams['pgo'])
+        hp_grid = self._hyperparams['hp_grid']
+        if hp_grid is None:
+            hp_grid = lale.search.lale_grid_search_cv.get_parameter_grids(
+                op,
+                num_samples=self._hyperparams['lale_num_samples'],
+                num_grids=self._hyperparams['lale_num_grids'],
+                pgo=self._hyperparams['pgo'])
         if not hp_grid and isinstance(op, lale.operators.IndividualOp):
             hp_grid = [
                 lale.search.lale_grid_search_cv.get_defaults_as_param_grid(op)]
@@ -122,6 +125,13 @@ _hyperparams_schema = {
                 {   'description': 'Number of grids to keep.',
                     'type': 'integer',
                     'minimum': 1}],
+                'default': None},
+            'param_grid': {
+                'anyOf':[
+                {
+                'enum': [None],
+                'description': 'Generated automatically.'},
+                {'description': 'Dictionary of hyperparameter ranges in the grid.'}],
                 'default': None},
             'pgo': {
                 'anyOf': [
