@@ -708,3 +708,7 @@ def best_estimator(obj):
 
 def is_empty_dict(val):
     return isinstance(val, dict) and len(val) == 0
+
+def to_camel_case(name):
+    s1 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
+    return s1.lower()
