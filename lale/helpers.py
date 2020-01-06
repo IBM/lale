@@ -29,7 +29,6 @@ import warnings
 import yaml
 import scipy.sparse
 import importlib
-import graphviz
 from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, log_loss, make_scorer
 from sklearn.metrics.scorer import check_scoring
@@ -340,81 +339,11 @@ def create_individual_op_using_reflection(class_name, operator_name, param_dict)
     return instance
 
 def to_graphviz(lale_operator, **dot_graph_attr):
-    from lale.operators import Operator, BasePipeline
-    from lale.pretty_print import hyperparams_to_string
-    if not isinstance(lale_operator, Operator):
+    import lale.visualize
+    if not isinstance(lale_operator, lale.operators.Operator):
         raise ValueError("The input to to_graphviz needs to be a valid LALE operator.")
-    jsn = lale_operator.to_json()
-    dot = graphviz.Digraph()
-    dot.attr('graph', {**dot_graph_attr, 'rankdir': 'LR'})
-    dot.attr('node', fontsize='11', margin='0.06,0.03')
-    if isinstance(lale_operator, BasePipeline):
-        nodes = jsn['steps']
-    else:
-        nodes = [jsn]
-    #figure out what things were called in the caller
-    cls2sym, name2cls = {}, {}
-    import inspect
-    symtab = inspect.stack()[1][0].f_globals
-    for sym, val in symtab.items():
-        if isinstance(val, Operator):
-            cls = val.class_name()
-            cls2sym[cls] = '?' if (cls in cls2sym) else sym
-    cls2sym = {cls: cls2sym[cls] for cls in cls2sym if cls2sym[cls] != '?'}
-    for node in nodes:
-        name, cls = node['operator'], node['class']
-        if '|' in name:
-            for step in node['steps']:
-                name2cls[step['operator']] = step['class']
-        else:
-            name2cls[name] = cls
-    def name2sym(name):
-        if '|' in name:
-            step_syms = [name2sym(n.strip()) for n in name.split(sep='|')]
-            return ' | '.join(step_syms)
-        if name in name2cls:
-            cls = name2cls[name]
-            if cls in cls2sym:
-                return cls2sym[cls]
-        return name
-    def name2label(name):
-        sym = name2sym(name)
-        if sym.find('|') == -1:
-            l1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\n\2', sym)
-            l2 = re.sub('([a-z0-9])([A-Z])', r'\1-\n\2', l1)
-            label = re.sub(r'([^_\n-]_)([^_\n-])', r'\1-\n\2', l2)
-        else:
-            label = sym
-        return label
-    #do the actual visualizations
-    try:
-        edges = jsn['edges']
-    except KeyError:
-        edges = []
-    def make_tooltip(node):
-        sym = name2sym(node['operator'])
-        if 'hyperparams' in node:
-            hps = node['hyperparams']
-            if hps:
-                result = f'{sym}({hyperparams_to_string(hps)})'
-                if len(result) > 255: #too long for graphviz
-                    result = result[:252] + '...'
-                return result
-        return sym
-    for i, node in enumerate(nodes):
-        state2color = {
-            'trained': 'white',
-            'trainable': 'lightskyblue1',
-            'planned': 'skyblue2'}
-        attrs = {
-            'style' :'filled',
-            'fillcolor': state2color[node['state']],
-            'tooltip': make_tooltip(node)}
-        if 'documentation_url' in node:
-            attrs = {**attrs, 'URL': node['documentation_url']}
-        dot.node(str(i), name2label(node['operator']), **attrs)
-    for edge in edges:
-        dot.edge(str(edge[0]), str(edge[1]))
+    jsn = lale.json_operator.to_json(lale_operator, call_depth=2)
+    dot = lale.visualize.json_to_graphviz(jsn, dot_graph_attr)
     return dot
 
 def println_pos(message, out_file=sys.stdout):
@@ -592,7 +521,7 @@ def wrap_imported_operators():
     symtab = calling_frame.f_globals
     lib_modules = [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]
     for name, impl in symtab.items():
-        if inspect.isclass(impl) and not isinstance(impl, Operator):
+        if inspect.isclass(impl) and not issubclass(impl, Operator) and not isinstance(impl, Operator):
             module = impl.__module__.split('.')[0]
             looks_like_op = hasattr(impl, 'fit') and (
                 hasattr(impl, 'predict') or hasattr(impl, 'transform'))
@@ -708,3 +637,7 @@ def best_estimator(obj):
 
 def is_empty_dict(val):
     return isinstance(val, dict) and len(val) == 0
+
+def to_camel_case(name):
+    s1 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
+    return s1.lower()

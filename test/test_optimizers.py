@@ -313,14 +313,13 @@ class TestAutoConfigureClassification(unittest.TestCase):
         from lale.lib.sklearn import PCA, LogisticRegression
         from lale.lib.lale import NoOp, GridSearchCV
         warnings.simplefilter("ignore")
-
         planned_pipeline = (PCA | NoOp)  >> LogisticRegression
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
             scoring='accuracy', lale_num_samples=1, lale_num_grids=1)
         predictions = best_pipeline.predict(self.X_test)
         from sklearn.metrics import accuracy_score
         assert best_pipeline is not None
-
+        
 class TestAutoConfigureRegression(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_boston
@@ -343,12 +342,12 @@ class TestAutoConfigureRegression(unittest.TestCase):
         from lale.lib.sklearn import PCA, LogisticRegression
         from lale.lib.lale import NoOp, GridSearchCV
         warnings.simplefilter("ignore")
-
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
             scoring='r2', lale_num_samples=1, lale_num_grids=1)
         predictions = best_pipeline.predict(self.X_test)
         from sklearn.metrics import accuracy_score
+
         assert best_pipeline is not None
 
 class TestGridSearchCV(unittest.TestCase):
@@ -357,6 +356,7 @@ class TestGridSearchCV(unittest.TestCase):
         from sklearn.datasets import load_iris
         from lale.lib.lale import GridSearchCV
         warnings.simplefilter("ignore")
+
         from lale.helpers import wrap_imported_operators
         wrap_imported_operators()
         iris = load_iris()
