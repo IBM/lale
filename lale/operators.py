@@ -115,7 +115,7 @@ class Planned(MetaModel):
         """
         pass
 
-    def auto_configure(self, X, y = None, optimizer = None, cv = 5, scoring = None, **kwargs)->'Trainable':
+    def auto_configure(self, X, y = None, optimizer = None, cv = None, scoring = None, **kwargs)->'Trainable':
         """
         Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
         operator. The output is a trainable/trained operator chosen by the optimizer.
@@ -129,10 +129,13 @@ class Planned(MetaModel):
             Default is None.
         optimizer:
             lale.lib.lale.HyperoptCV or lale.lib.lale.GridSearchCV
+            default is None.
         cv:
             cross-validation option that is valid for the optimizer.
+            default is None, which will use the optimizer's default value.
         scoring:
             scoring option that is valid for the optimizer.
+            default is None, which will use the optimizer's default value.
         kwargs:
             other keyword arguments to be passed to the optimizer.
         
@@ -140,7 +143,15 @@ class Planned(MetaModel):
         -------
         Trainable that is chosen after performing CASH.
         """
-        optimizer_obj = optimizer(estimator=self, cv = cv, scoring=scoring, **kwargs)
+        if optimizer is None:
+            raise ValueError("Please provide a valid optimizer for auto_configure.")
+        if kwargs is None:
+            kwargs = {}
+        if cv is not None:
+            kwargs['cv'] = cv
+        if scoring is not None:
+            kwargs['scoring'] = scoring
+        optimizer_obj = optimizer(estimator=self, **kwargs)
         trained = optimizer_obj.fit(X, y)
         return lale.helpers.best_estimator(trained)
 
