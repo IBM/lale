@@ -115,8 +115,7 @@ class Planned(MetaModel):
         """
         pass
 
-    @abstractmethod
-    def auto_configure(self, X, y = None, optimizer = None)->'Trainable':
+    def auto_configure(self, X, y = None, optimizer = None, cv = 5, scoring = None, **kwargs)->'Trainable':
         """Abstract method to use an hyper-param optimizer.
 
         Automatically select hyper-parameter values using an optimizer.
@@ -126,7 +125,8 @@ class Planned(MetaModel):
         ----------
         TBD        
         """
-        pass
+        optimizer_obj = optimizer(estimator=self, cv = cv, scoring=scoring, **kwargs)
+        return optimizer_obj.fit(X, y)
 
 class Trainable(Planned):
     """Base class to tag an operator's state as Trainable.
@@ -312,7 +312,7 @@ class Operator(metaclass=AbstractVisitorMeta):
     def to_json(self):
         """Returns the json representation of the operator.
         """
-        return lale.json_operator.to_json(self)
+        return lale.json_operator.to_json(self, call_depth=2)
     
     @abstractmethod
     def has_same_impl(self, other:'Operator')->bool:
@@ -916,15 +916,6 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         """
         return hasattr(self._impl, 'transform')
 
-    def auto_configure(self, X, y = None, optimizer = None):
-        #TODO: Configure the best hyper-parameter configuration for self._impl using the
-        # optimizer provided and the given dataset
-        # In order to make LALE APIs work with all types of datasets, should we move away from X, y style
-        # to LALE dataset objects? This may allow us to accommodate different kinds of settings (supervised, semi-supervised, unsupervised),
-        # different types of dataset formats such as ndarrays, pandas, torch tensors, tf tensors etc. and
-        # different storage/access mechanisms.
-        pass
-
     def hyperparam_schema_with_hyperparams(self):
         schema = self.hyperparam_schema()
         params = None
@@ -1516,9 +1507,6 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
 
     def __call__(self, *args, **kwargs):
         self.configure(args, kwargs)
-
-    def auto_configure(self, X, y = None, optimizer = None):
-        pass#TODO
 
 TrainableOpType = TypeVar('TrainableOpType', bound=TrainableIndividualOp)
 
@@ -2120,10 +2108,6 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
 
     def arrange(self, *args, **kwargs):
         return self
-
-    def auto_configure(self, X, y = None, optimizer = None):
-        #TODO: use the optimizer to choose the best choice
-        pass
 
     def configure(self, *args, **kwargs):
         return self.__call__(args, kwargs)
