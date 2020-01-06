@@ -312,7 +312,7 @@ class Operator(metaclass=AbstractVisitorMeta):
     def to_json(self):
         """Returns the json representation of the operator.
         """
-        return lale.json_operator.to_json(self)
+        return lale.json_operator.to_json(self, call_depth=2)
     
     @abstractmethod
     def has_same_impl(self, other:'Operator')->bool:

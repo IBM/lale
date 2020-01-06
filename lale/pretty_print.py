@@ -32,10 +32,6 @@ def hyperparams_to_string(hps, op=None):
     strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
     return ', '.join(strings)
 
-def to_camel_case(name):
-    s1 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
-    return s1.lower()
-
 def indiv_op_to_string(op, name=None, module_name=None):
     assert isinstance(op, lale.operators.IndividualOp)
     if name is None:
@@ -250,7 +246,7 @@ def pipeline_to_string(pipeline, cls2name, show_imports):
             import_stmt, op_expr = indiv_op_to_string(graph, name, module_name)
             gen.imports.append(import_stmt)
             if re.fullmatch(r'.+\(.+\)', op_expr):
-                new_name = gen.gensym(to_camel_case(name))
+                new_name = gen.gensym(lale.helpers.to_camel_case(name))
                 gen.assigns.append(f'{new_name} = {op_expr}')
                 return new_name
             else:
