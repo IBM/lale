@@ -306,21 +306,20 @@ class TestAutoConfigureClassification(unittest.TestCase):
             scoring='accuracy', max_evals=2)
         predictions = best_pipeline.predict(self.X_test)
         from sklearn.metrics import accuracy_score
-        from lale.helpers import best_estimator
         from lale.operators import TrainedPipeline
-        assert isinstance(best_estimator(best_pipeline), TrainedPipeline)
+        assert isinstance(best_pipeline, TrainedPipeline)
 
     def test_with_gridsearchcv(self):
         from lale.lib.sklearn import PCA, LogisticRegression
         from lale.lib.lale import NoOp, GridSearchCV
+        warnings.simplefilter("ignore")
 
         planned_pipeline = (PCA | NoOp)  >> LogisticRegression
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
             scoring='accuracy', lale_num_samples=1, lale_num_grids=1)
         predictions = best_pipeline.predict(self.X_test)
         from sklearn.metrics import accuracy_score
-        from lale.helpers import best_estimator
-        assert best_estimator(best_pipeline) is not None
+        assert best_pipeline is not None
 
 class TestAutoConfigureRegression(unittest.TestCase):
     def setUp(self):
@@ -337,27 +336,27 @@ class TestAutoConfigureRegression(unittest.TestCase):
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = HyperoptCV, cv = 3, 
             scoring='r2', max_evals=2)
         predictions = best_pipeline.predict(self.X_test)
-        from lale.helpers import best_estimator
         from lale.operators import TrainedPipeline
-        assert isinstance(best_estimator(best_pipeline), TrainedPipeline)
+        assert isinstance(best_pipeline, TrainedPipeline)
 
     def test_with_gridsearchcv(self):
         from lale.lib.sklearn import PCA, LogisticRegression
         from lale.lib.lale import NoOp, GridSearchCV
+        warnings.simplefilter("ignore")
 
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
             scoring='r2', lale_num_samples=1, lale_num_grids=1)
         predictions = best_pipeline.predict(self.X_test)
         from sklearn.metrics import accuracy_score
-        from lale.helpers import best_estimator
-        assert best_estimator(best_pipeline) is not None
+        assert best_pipeline is not None
 
 class TestGridSearchCV(unittest.TestCase):
     def test_manual_grid(self):
         from lale.lib.sklearn import SVC
         from sklearn.datasets import load_iris
         from lale.lib.lale import GridSearchCV
+        warnings.simplefilter("ignore")
         from lale.helpers import wrap_imported_operators
         wrap_imported_operators()
         iris = load_iris()

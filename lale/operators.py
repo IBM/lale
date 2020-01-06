@@ -116,17 +116,33 @@ class Planned(MetaModel):
         pass
 
     def auto_configure(self, X, y = None, optimizer = None, cv = 5, scoring = None, **kwargs)->'Trainable':
-        """Abstract method to use an hyper-param optimizer.
-
-        Automatically select hyper-parameter values using an optimizer.
-        This will return an operator in a Trainable state.
+        """
+        Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
+        operator. The output is a trainable/trained operator chosen by the optimizer.
         
         Parameters
         ----------
-        TBD        
+        X:
+            Features that conform to the X property of input_schema_fit.
+        y: optional
+            Labels that conform to the y property of input_schema_fit.
+            Default is None.
+        optimizer:
+            lale.lib.lale.HyperoptCV or lale.lib.lale.GridSearchCV
+        cv:
+            cross-validation option that is valid for the optimizer.
+        scoring:
+            scoring option that is valid for the optimizer.
+        kwargs:
+            other keyword arguments to be passed to the optimizer.
+        
+        Returns
+        -------
+        Trainable that is chosen after performing CASH.
         """
         optimizer_obj = optimizer(estimator=self, cv = cv, scoring=scoring, **kwargs)
-        return optimizer_obj.fit(X, y)
+        trained = optimizer_obj.fit(X, y)
+        return lale.helpers.best_estimator(trained)
 
 class Trainable(Planned):
     """Base class to tag an operator's state as Trainable.
