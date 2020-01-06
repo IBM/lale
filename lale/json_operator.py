@@ -19,6 +19,9 @@ import keyword
 import lale.helpers
 import lale.operators
 from typing import Dict, Any
+import logging
+
+logger = logging.getLogger(__name__)
 
 SCHEMA = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -198,6 +201,7 @@ class _GenSym:
                     populate_label2count(s)
                 label = 'choice'
             label2count[label] = label2count.get(label, 0) + 1
+        populate_label2count(op)
         non_unique_labels = {l for l, c in label2count.items() if c > 1}
         camels = {lale.helpers.to_camel_case(l) for l in non_unique_labels}
         self._names = ({'lale'} | set(keyword.kwlist) |

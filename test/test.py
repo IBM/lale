@@ -1589,7 +1589,7 @@ class TestToAndFromJSON(unittest.TestCase):
         json_expected = {
           'class': 'lale.operators.PlannedPipeline',
           'state': 'planned',
-          'id': 'pipeline',
+          'id': 'pipeline_0',
           'edges': [[0, 1]],
           'steps': [
           { 'class': 'lale.lib.sklearn.pca.PCAImpl',
@@ -1602,12 +1602,12 @@ class TestToAndFromJSON(unittest.TestCase):
             'steps': [
             { 'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
               'state': 'trainable',
-              'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr',
+              'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr_0',
               'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
               'hyperparams': {'C': 0.09},
               'is_frozen_trainable': False},
             { 'class': 'lale.operators.TrainablePipeline',
-              'state': 'trainable', 'id': 'pipeline_0',
+              'state': 'trainable', 'id': 'pipeline_1',
               'edges': [[0, 1]],
               'steps': [
               { 'class': 'lale.lib.lale.no_op.NoOpImpl',
@@ -1619,7 +1619,7 @@ class TestToAndFromJSON(unittest.TestCase):
                 'is_frozen_trainable': True, 'is_frozen_trained': True},
               { 'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
                 'state': 'trainable',
-                'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr_0',
+                'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr_1',
                 'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
                 'hyperparams': {'C': 0.19},
                 'is_frozen_trainable': False}]}]}]}
