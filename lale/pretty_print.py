@@ -184,8 +184,6 @@ def pipeline_to_string(pipeline, cls2name, show_imports):
             self.irreducibles = []
             self.pipeline = []
             self._names = {'lale','pipeline','get_pipeline_of_applicable_type'}
-            self.op2import = {}
-            self.op2assign = {}
         def gensym(self, prefix):
             if prefix in self._names:
                 suffix = 1
@@ -246,7 +244,7 @@ def pipeline_to_string(pipeline, cls2name, show_imports):
             import_stmt, op_expr = indiv_op_to_string(graph, name, module_name)
             gen.imports.append(import_stmt)
             if re.fullmatch(r'.+\(.+\)', op_expr):
-                new_name = gen.gensym(lale.helpers.to_camel_case(name))
+                new_name = gen.gensym(lale.helpers.camelCase_to_snake(name))
                 gen.assigns.append(f'{new_name} = {op_expr}')
                 return new_name
             else:

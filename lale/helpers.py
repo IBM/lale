@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import ast
-import contextlib
-import json
 import jsonschema
 import jsonsubschema
 import numpy as np
@@ -24,13 +22,12 @@ import re
 import sys
 import time
 import traceback
-import urllib
 import warnings
 import yaml
 import scipy.sparse
 import importlib
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, log_loss, make_scorer
+from sklearn.metrics import accuracy_score, log_loss
 from sklearn.metrics.scorer import check_scoring
 from sklearn.utils.metaestimators import _safe_split
 from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
@@ -38,12 +35,11 @@ from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
 from torch.utils.data import DataLoader, TensorDataset
 import copy
 import logging
-import importlib
 import inspect
 import pkgutil
 import torch
 import h5py
-from typing import List
+from typing import Any, Dict, List, Optional, Union
 import lale.datasets.data_schemas
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -73,7 +69,7 @@ class assert_warns:
         print_yaml('error', str(exc_value), file=sys.stderr)
         return True
 
-def assignee_name(level=1):
+def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
     file_name, line_number, function_name, text = tb[-(level+2)]
     tree = ast.parse(text, file_name)
@@ -84,7 +80,7 @@ def assignee_name(level=1):
             return lhs[0].id
     return None
 
-def data_to_json(data, subsample_array = True):
+def data_to_json(data, subsample_array:bool=True) -> Union[list, dict]:
     if type(data) is tuple:
         # convert to list
         return [data_to_json(elem, subsample_array) for elem in data]
@@ -105,22 +101,10 @@ def data_to_json(data, subsample_array = True):
     else:
         return data
 
-def dict_without(orig_dict, key):
+def dict_without(orig_dict: Dict[str, Any], key: str) -> Dict[str, Any]:
     return {k: orig_dict[k] for k in orig_dict if k != key}
 
-def load_yaml(dir_name, file_name, meta_dir=True):
-    current_dir = os.path.dirname(__file__)
-    parent_dir = os.path.dirname(current_dir)
-    if meta_dir:
-        op_dir = os.path.join(parent_dir, 'meta_data', dir_name)
-    else:
-        op_dir = os.path.join(parent_dir, dir_name)
-    schema_file = os.path.join(op_dir, file_name)
-    with open(schema_file, 'r') as f:
-        result = yaml.load(f)
-    return result
-
-def ndarray_to_json(arr, subsample_array=True):
+def ndarray_to_json(arr, subsample_array:bool=True) -> Union[list, dict]:
     #sample 10 rows and no limit on columns
     if subsample_array:
         num_subsamples = [10, np.iinfo(np.int).max, np.iinfo(np.int).max]
@@ -151,10 +135,10 @@ def ndarray_to_json(arr, subsample_array=True):
                     for i in range(min(num_subsamples[len(indices)], arr.shape[len(indices)]))]
     return subarray_to_json(())
 
-def print_yaml(what, doc, file=sys.stdout):
+def print_yaml(what: str, doc: Union[list, dict], file=sys.stdout):
     print(yaml.dump({what: doc}).strip(), file=file)
 
-def validate_schema(value, schema, subsample_array=True):
+def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
     json_value = data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema)
 
@@ -173,15 +157,15 @@ def validate_schema_or_subschema(part, super_schema):
 
 JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 
-def json_meta_schema():
+def json_meta_schema() -> Dict[str, Any]:
     return jsonschema.Draft4Validator.META_SCHEMA
 
-def validate_is_schema(value):
+def validate_is_schema(value: Dict[str, Any]):
     if '$schema' in value:
         assert value['$schema'] == JSON_META_SCHEMA_URL
     jsonschema.validate(value, json_meta_schema())
 
-def is_schema(value):
+def is_schema(value) -> bool:
     if isinstance(value, dict):
         try:
             jsonschema.validate(value, json_meta_schema())
@@ -460,7 +444,7 @@ def validate_method(op, m):
         if a:
             assert (hasattr(op._impl, a))
 
-def caml_to_snake(name):
+def camelCase_to_snake(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
@@ -469,7 +453,7 @@ def get_lib_schema(impl):
         m = importlib.import_module(impl.__module__)
         return m._combined_schemas
     module_name = impl.__module__.split('.')[0]
-    class_name = caml_to_snake(impl.__class__.__name__)
+    class_name = camelCase_to_snake(impl.__class__.__name__)
     try:
         lib_name = '.'.join(['lale.lib', module_name, class_name])
         m = importlib.import_module(lib_name)
@@ -512,8 +496,6 @@ def get_default_schema(impl):
             'hyperparams': {
                 'allOf': [arg_schemas]}}}
     
-logger = logging.getLogger(__name__)
-
 def wrap_imported_operators():
     import lale.lib
     from lale.operators import Operator, make_operator
@@ -635,9 +617,5 @@ def best_estimator(obj):
         return None
     return obj
 
-def is_empty_dict(val):
+def is_empty_dict(val) -> bool:
     return isinstance(val, dict) and len(val) == 0
-
-def to_camel_case(name):
-    s1 = re.sub('([a-z0-9])([A-Z])', r'\1_\2', name)
-    return s1.lower()

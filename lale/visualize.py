@@ -13,20 +13,14 @@
 # limitations under the License.
 
 import graphviz
+import lale.json_operator
 import lale.pretty_print
 import re
-
-def _json_op_kind(jsn):
-    if 'steps' in jsn and 'edges' in jsn:
-        return 'Pipeline'
-    elif 'steps' in jsn:
-        return 'OperatorChoice'
-    return 'IndividualOp'
 
 def _get_cluster2rep(jsn):
     cluster2rep = {}
     def populate(clusters, jsn):
-        kind = _json_op_kind(jsn)
+        kind = lale.json_operator.json_op_kind(jsn)
         if kind in ['Pipeline', 'OperatorChoice']:
             more_clusters = [jsn['id'], *clusters]
             for step in jsn['steps']:
@@ -46,7 +40,7 @@ _STATE2COLOR = {
     'planned': 'skyblue2'}
 
 def _json_to_graphviz_rec(jsn, cluster2rep, is_root, dot_graph_attr):
-    kind = _json_op_kind(jsn)
+    kind = lale.json_operator.json_op_kind(jsn)
     if kind in ['Pipeline', 'OperatorChoice']:
         dot = graphviz.Digraph(name=f"cluster:{jsn['id']}")
     else:
@@ -76,7 +70,7 @@ def _json_to_graphviz_rec(jsn, cluster2rep, is_root, dot_graph_attr):
         nodes = [jsn]
         edges = []
     for node in nodes:
-        node_kind = _json_op_kind(node)
+        node_kind = lale.json_operator.json_op_kind(node)
         if node_kind in ['Pipeline', 'OperatorChoice']:
             sub_dot = _json_to_graphviz_rec(node, cluster2rep, False, {})
             dot.subgraph(sub_dot)
@@ -101,22 +95,23 @@ def _json_to_graphviz_rec(jsn, cluster2rep, is_root, dot_graph_attr):
             label3 = re.sub(r'([^_\n-]_)([^_\n-])', r'\1-\n\2', label2)
             dot.node(node['id'], label3, **attrs)
     for edge in edges:
-        src, dst = nodes[edge[0]], nodes[edge[1]]
-        src_kind, dst_kind = _json_op_kind(src), _json_op_kind(dst)
-        if src_kind == 'IndividualOp':
-            if dst_kind == 'IndividualOp':
-                dot.edge(src['id'], dst['id'])
+        tail, head = nodes[edge[0]], nodes[edge[1]]
+        tail_kind = lale.json_operator.json_op_kind(tail)
+        head_kind = lale.json_operator.json_op_kind(head)
+        if tail_kind == 'IndividualOp':
+            if head_kind == 'IndividualOp':
+                dot.edge(tail['id'], head['id'])
             else:
-                dot.edge(src['id'], cluster2rep[dst['id']],
-                         lhead=f"cluster:{dst['id']}")
+                dot.edge(tail['id'], cluster2rep[head['id']],
+                         lhead=f"cluster:{head['id']}")
         else:
-            if dst_kind == 'IndividualOp':
-                dot.edge(cluster2rep[src['id']], dst['id'],
-                         ltail=f"cluster:{src['id']}")
+            if head_kind == 'IndividualOp':
+                dot.edge(cluster2rep[tail['id']], head['id'],
+                         ltail=f"cluster:{tail['id']}")
             else:
-                dot.edge(cluster2rep[src['id']], cluster2rep[dst['id']],
-                         ltail=f"cluster:{src['id']}",
-                         lhead=f"cluster:{dst['id']}")
+                dot.edge(cluster2rep[tail['id']], cluster2rep[head['id']],
+                         ltail=f"cluster:{tail['id']}",
+                         lhead=f"cluster:{head['id']}")
     return dot
 
 def json_to_graphviz(jsn, dot_graph_attr):

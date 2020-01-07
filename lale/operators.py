@@ -2101,7 +2101,7 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
     _name:str
     _steps:List[OperatorChoiceType]
 
-    def __init__(self, steps, name:str) -> None:
+    def __init__(self, steps, name:Optional[str]) -> None:
         #name is not optional as we assume that only make_choice calls this constructor and
         #it will always pass a name, and in case it is passed as None, we assign name as below:
         if name is None or name == '':

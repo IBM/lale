@@ -154,6 +154,13 @@ SCHEMA = {
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(SCHEMA)
 
+def json_op_kind(jsn):
+    if 'steps' in jsn and 'edges' in jsn:
+        return 'Pipeline'
+    elif 'steps' in jsn:
+        return 'OperatorChoice'
+    return 'IndividualOp'
+
 def _get_state(op) -> str:
     if isinstance(op, lale.operators.Trained):
         return 'trained'
@@ -203,9 +210,9 @@ class _GenSym:
             label2count[label] = label2count.get(label, 0) + 1
         populate_label2count(op)
         non_unique_labels = {l for l, c in label2count.items() if c > 1}
-        camels = {lale.helpers.to_camel_case(l) for l in non_unique_labels}
+        snakes = {lale.helpers.camelCase_to_snake(l) for l in non_unique_labels}
         self._names = ({'lale'} | set(keyword.kwlist) |
-                       non_unique_labels | camels)
+                       non_unique_labels | snakes)
 
     def __call__(self, prefix):
         if prefix in self._names:
@@ -225,7 +232,7 @@ def _to_json_rec(op, cls2label, gensym) -> Dict[str, Any]:
     if isinstance(op, lale.operators.IndividualOp):
         result['operator'] = op.name()
         result['label'] = cls2label.get(op.class_name(), op.name())
-        result['id'] = gensym(lale.helpers.to_camel_case(result['label']))
+        result['id'] = gensym(lale.helpers.camelCase_to_snake(result['label']))
         documentation_url = op.documentation_url()
         if documentation_url is not None:
             result['documentation_url'] = documentation_url
@@ -261,15 +268,17 @@ def to_json(op, call_depth=1) -> Dict[str, Any]:
     return result
 
 def _from_json_rec(json: Dict[str, Any]):
-    if 'steps' in json and 'edges' in json:
+    kind = json_op_kind(json)
+    if kind == 'Pipeline':
         steps = [_from_json_rec(s) for s in json['steps']]
         edges = [(steps[e[0]], steps[e[1]]) for e in json['edges']]
         return lale.operators.get_pipeline_of_applicable_type(steps, edges)
-    elif 'steps' in json:
+    elif kind == 'OperatorChoice':
         steps = [_from_json_rec(s) for s in json['steps']]
         name = json['operator']
         return lale.operators.OperatorChoice(steps, name)
     else:
+        assert kind == 'IndividualOp'
         name = json['operator']
         full_class_name = json['class']
         last_period = full_class_name.rfind('.')
