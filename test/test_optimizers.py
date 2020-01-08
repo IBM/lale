@@ -149,7 +149,89 @@ class TestSMAC(unittest.TestCase):
         inc_value = tae(incumbent)
 
         print("Optimized Value: %.2f" % (inc_value))
-        
+class TestSMACCV(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        X, y = load_iris(return_X_y=True)
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_smac_cv1(self):
+        from sklearn.metrics import accuracy_score
+        from lale.lib.lale import SMACCV
+        planned_pipeline = (PCA | NoOp) >> LogisticRegression        
+        opt = SMACCV(estimator=planned_pipeline, max_evals=10)
+        # run optimizer
+        res = opt.fit(self.X_train, self.y_train)
+        predictions = res.predict(self.X_test)
+
+    def test_smac_cv2(self):
+        from sklearn.metrics import accuracy_score
+        from lale.lib.lale import SMACCV
+        planned_pipeline = (PCA | NoOp) >> (LogisticRegression | KNeighborsClassifier(n_neighbors = 10000))
+        opt = SMACCV(estimator=planned_pipeline, max_evals=10)
+        # run optimizer
+        res = opt.fit(self.X_train, self.y_train)
+        predictions = res.predict(self.X_test)
+        # Get the trials object and make sure that SMAC assigned cost_for_crash which is MAXINT by default to 
+        #at least one trial (correspond to KNN).
+        trials = res._impl.get_trials()
+        assert 2147483647.0 in trials.cost_per_config.values()
+
+    def test_smac_cv_timeout_zero_classification(self):
+        from lale.lib.lale import SMACCV
+        planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
+        opt = SMACCV(estimator=planned_pipeline, max_evals=10, max_opt_time=0.0)
+        # run optimizer
+        res = opt.fit(self.X_train, self.y_train)
+        from lale.helpers import best_estimator
+        assert best_estimator(res) is None
+
+    def test_smac_cv_timeout_zero_regression(self):
+        from lale.lib.lale import SMACCV
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        from sklearn.datasets import load_boston
+        X, y = load_boston(return_X_y=True)
+        opt = SMACCV(estimator=planned_pipeline, scoring = 'r2', max_evals=10, max_opt_time=0.0)
+        # run optimizer
+        res = opt.fit(X[:500,:], y[:500])
+        from lale.helpers import best_estimator
+        assert best_estimator(res) is None
+
+    def test_smac_cv_timeout_classification(self):
+        from lale.lib.lale import SMACCV
+        import time
+        planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
+        max_opt_time = 2.0
+        opt = SMACCV(estimator=planned_pipeline, max_evals=10, max_opt_time=max_opt_time)
+
+        start = time.time()
+        res = opt.fit(self.X_train, self.y_train)
+        end = time.time()
+        opt_time = end - start
+        rel_diff = (opt_time - max_opt_time) / max_opt_time
+        assert rel_diff < 0.7, (
+            'Max time: {}, Actual time: {}, relative diff: {}'.format(max_opt_time, opt_time, rel_diff)
+        )
+
+    def test_smac_cv_timeout_regression(self):
+        from lale.lib.lale import SMACCV
+        from sklearn.datasets import load_boston
+        import time
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        X, y = load_boston(return_X_y=True)
+        max_opt_time = 2.0
+        opt = SMACCV(estimator=planned_pipeline, scoring = 'r2', max_evals=10, max_opt_time=max_opt_time)
+
+        start = time.time()
+        res = opt.fit(X[:500,:], y[:500])
+        end = time.time()
+        opt_time = end - start
+        rel_diff = (opt_time - max_opt_time) / max_opt_time
+        assert rel_diff < 0.5, (
+            'Max time: {}, Actual time: {}, relative diff: {}'.format(max_opt_time, opt_time, rel_diff)
+        )
+
 def run_hyperopt_on_planned_pipeline(planned_pipeline, max_iters=1) :
     # data
     from sklearn.datasets import load_iris
