@@ -75,7 +75,7 @@ class SMACCVImpl:
             The best score for the specified scorer. This allows us to return a loss to hyperopt that is
             greater than equal to zero, where zero is the best loss. By default, zero.
         max_opt_time : float, optional
-            Maximum amout of time in seconds for the optimization. By default, None, implying no runtime
+            Maximum amount of wall clock time in seconds for the optimization. By default, None, implying no runtime
             bound.
 
         Examples
@@ -120,13 +120,11 @@ class SMACCVImpl:
         self.trials = None
 
     def fit(self, X_train, y_train):
-        opt_start_time = time.time()
         self.cv = check_cv(self.cv, y = y_train, classifier=True) #TODO: Replace the classifier flag value by using tags?
-
 
         def smac_train_test(trainable, X_train, y_train):
             warnings.filterwarnings("ignore")
-
+            print(trainable.to_json())
             try:
                 cv_score, logloss, execution_time = cross_val_score_track_trials(trainable, X_train, y_train, cv=self.cv, scoring=self.scoring)
                 logger.debug("Successful trial of SMAC")
@@ -146,18 +144,11 @@ class SMACCVImpl:
                         logloss = 0
                         logger.debug("Warning, log loss cannot be computed")
                 else:
-                    logger.debug(e)
                     logger.debug("Error {} with pipeline:{}".format(e, trainable.to_json()))
                     raise e
             return cv_score, logloss, execution_time
 
         def f(trainable):
-            current_time = time.time()
-            if (self.max_opt_time is not None) and ((current_time - opt_start_time) > self.max_opt_time) :
-                # if max optimization time set, and we have crossed it, exit optimization completely
-                sys.exit(0)
-
-            #params_to_save = copy.deepcopy(params)
             return_dict = {}
             try:
                 score, logloss, execution_time = smac_train_test(trainable, X_train=X_train, y_train=y_train)
@@ -195,7 +186,7 @@ class SMACCVImpl:
         try:
             predictions = trained.predict(X_eval)
         except ValueError as e:
-            logger.warning("ValueError in predicting using HyperoptCV:{}, the error is:{}".format(trained, e))
+            logger.warning("ValueError in predicting using SMACCV:{}, the error is:{}".format(trained, e))
             predictions = None
 
         return predictions
