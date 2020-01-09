@@ -30,7 +30,7 @@ from smac.configspace import ConfigurationSpace
 from smac.facade.smac_facade import SMAC
 from smac.scenario.scenario import Scenario
 from smac.tae.execute_ta_run import BudgetExhaustedException
-from lale.helpers import cross_val_score_track_trials, create_instance_from_smac_search_space
+from lale.helpers import cross_val_score_track_trials
 from lale.lib.sklearn import LogisticRegression
 import lale.operators
 from lale.search.SMAC import lale_op_smac_tae, get_smac_space, lale_trainable_op_from_config
