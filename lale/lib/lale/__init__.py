@@ -21,3 +21,7 @@ from .keep_numbers import KeepNumbers
 from .project import Project
 from .batching import Batching
 from .grid_search_cv import GridSearchCV
+try:
+    from .smac_cv import SMACCV
+except ImportError:
+    pass

@@ -49,12 +49,10 @@ def lale_op_smac_tae(op:'Ops.PlannedOperator', f_min):
     # TODO: we can probably do this in a different way, but get_smac_configuration_space
     # we already have these sklearn compatibility wrappers it is easier for now to use them
     op_compat = make_sklearn_compat(op)
-
     def f(cfg):
         from sklearn.base import clone
         wrapped_op = clone(op_compat)
         cfg2 = smac_fixup_params(cfg)
-#        print(cfg)
         trainable = wrapped_op.set_params(**cfg2)
 
         return f_min(trainable)
