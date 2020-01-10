@@ -39,7 +39,7 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 
-class HyperoptCVImpl:
+class HyperoptImpl:
 
     def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, pgo:Optional[PGO]=None):
         """ Instantiate the HyperoptCV that will use the given estimator and other parameters to select the 
@@ -298,7 +298,7 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output': _output_predict_schema}}
 
-HyperoptCV = lale.operators.make_operator(HyperoptCVImpl, _combined_schemas)
+Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
 
 if __name__ == '__main__':
     from lale.lib.lale import ConcatFeatures
@@ -316,7 +316,7 @@ if __name__ == '__main__':
     digits = sklearn.datasets.load_iris()
     X, y = sklearn.utils.shuffle(digits.data, digits.target, random_state=42)
 
-    hp_n = HyperoptCV(estimator=trainable, max_evals=2)
+    hp_n = Hyperopt(estimator=trainable, max_evals=2)
 
     hp_n_trained = hp_n.fit(X, y)
     predictions = hp_n_trained.predict(X)

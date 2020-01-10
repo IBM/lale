@@ -46,7 +46,7 @@ import sklearn.datasets
 
 from lale.sklearn_compat import make_sklearn_compat
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
-from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
+from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 
 
@@ -422,14 +422,14 @@ class TestMetaModel(unittest.TestCase):
         pipeline1_trained.predict(digits.data)
 
     def test_concat_with_hyperopt(self):
-        from lale.lib.lale import HyperoptCV
+        from lale.lib.lale import Hyperopt
         pca = PCA(n_components=3)
         nys = Nystroem(n_components=10)
         concat = ConcatFeatures()
         lr = LogisticRegression(random_state=42, C=0.1)
 
         trainable = (pca & nys) >> concat >> lr
-        clf = HyperoptCV(estimator=trainable, max_evals=2)
+        clf = Hyperopt(estimator=trainable, max_evals=2)
         from sklearn.datasets import load_iris
         iris_data = load_iris()
         clf.fit(iris_data.data, iris_data.target)
@@ -437,14 +437,14 @@ class TestMetaModel(unittest.TestCase):
 
     def test_concat_with_hyperopt2(self):
         from lale.operators import make_pipeline, make_union
-        from lale.lib.lale import HyperoptCV
+        from lale.lib.lale import Hyperopt
         pca = PCA(n_components=3)
         nys = Nystroem(n_components=10)
         concat = ConcatFeatures()
         lr = LogisticRegression(random_state=42, C=0.1)
 
         trainable = make_pipeline(make_union(pca, nys), lr)
-        clf = HyperoptCV(estimator=trainable, max_evals=2)
+        clf = Hyperopt(estimator=trainable, max_evals=2)
         from sklearn.datasets import load_iris
         iris_data = load_iris()
         clf.fit(iris_data.data, iris_data.target)
@@ -759,13 +759,13 @@ class TestTfidfVectorizer(unittest.TestCase):
 class TestHyperopt(unittest.TestCase):
     def test_nested_pipeline1(self):
         from sklearn.datasets import load_iris
-        from lale.lib.lale import HyperoptCV
+        from lale.lib.lale import Hyperopt
         from sklearn.metrics import accuracy_score
         data = load_iris()
         X, y = data.data, data.target
         #pipeline = KNeighborsClassifier() | (OneHotEncoder(handle_unknown = 'ignore') >> LogisticRegression())
         pipeline = KNeighborsClassifier() | (SimpleImputer() >> LogisticRegression())
-        clf = HyperoptCV(estimator=pipeline, max_evals=1)
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
         trained = clf.fit(X, y)
         predictions = trained.predict(X)
         print(accuracy_score(y, predictions))
@@ -777,7 +777,7 @@ class TestHyperopt(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
 
         from sklearn.datasets import load_iris
-        from lale.lib.lale import HyperoptCV
+        from lale.lib.lale import Hyperopt
         from sklearn.metrics import accuracy_score
         data = load_iris()
         X, y = data.data, data.target
@@ -786,7 +786,7 @@ class TestHyperopt(unittest.TestCase):
         concat = ConcatFeatures()
         lr = LogisticRegression(random_state=42, C=0.1)
         pipeline = ((pca & nys) >> concat >> lr) | KNeighborsClassifier()
-        clf = HyperoptCV(estimator=pipeline, max_evals=1)
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
         trained = clf.fit(X, y)
         predictions = trained.predict(X)
         print(accuracy_score(y, predictions))
@@ -799,7 +799,7 @@ class TestHyperopt(unittest.TestCase):
         logging.basicConfig(level=logging.DEBUG)
 
         from sklearn.datasets import load_iris
-        from lale.lib.lale import HyperoptCV
+        from lale.lib.lale import Hyperopt
         from sklearn.metrics import accuracy_score
         data = load_iris()
         X, y = data.data, data.target
@@ -809,7 +809,7 @@ class TestHyperopt(unittest.TestCase):
         lr = LogisticRegression(random_state=42, C=0.1)
         from lale.operators import make_pipeline
         pipeline = make_pipeline(((((SimpleImputer() | NoOp()) >> pca) & nys) >> concat >> lr) | KNeighborsClassifier())
-        clf = HyperoptCV(estimator=pipeline, max_evals=100, handle_cv_failure=True)
+        clf = Hyperopt(estimator=pipeline, max_evals=100, handle_cv_failure=True)
         trained = clf.fit(X, y)
         predictions = trained.predict(X)
         print(accuracy_score(y, predictions))
@@ -826,8 +826,8 @@ class TestHyperopt(unittest.TestCase):
         prep_num = KeepNumbers() >> Normalizer
         prep_cat = KeepNonNumbers() >> OneHotEncoder(sparse=False)
         planned = (prep_num & prep_cat) >> Concat >> Forest
-        from lale.lib.lale import HyperoptCV
-        hyperopt_classifier = HyperoptCV(estimator=planned, max_evals=1)
+        from lale.lib.lale import Hyperopt
+        hyperopt_classifier = Hyperopt(estimator=planned, max_evals=1)
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
     def test_text_and_structured(self):
@@ -845,8 +845,8 @@ class TestHyperopt(unittest.TestCase):
         prep_text = Project(columns=['review']) >> Tfidf(max_features=100)
         prep_nums = Project(columns={'type': 'number'})
         planned = (prep_text & prep_nums) >> Cat >> (LinReg | Forest)
-        from lale.lib.lale import HyperoptCV
-        hyperopt_classifier = HyperoptCV(estimator=planned, max_evals=3, scoring='r2')
+        from lale.lib.lale import Hyperopt
+        hyperopt_classifier = Hyperopt(estimator=planned, max_evals=3, scoring='r2')
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
 # class TestGetFeatureNames(unittest.TestCase):
@@ -877,118 +877,6 @@ class TestHyperopt(unittest.TestCase):
 #         trained_ohe.get_feature_names()
 #         trained_ohe.get_feature_names(df.columns)
 
-def test_f_min(op, X, y, num_folds=5):
-    from sklearn import datasets
-    from lale.helpers import cross_val_score
-    import numpy as np
-
-    # try:
-    scores = cross_val_score(op, X, y, cv = num_folds)
-
-    return 1-np.mean(scores)  # Minimize!
-    # except BaseException as e:
-    #     print(e)
-    #     return 
-
-def test_iris_f_min(op, num_folds=5):
-    from sklearn import datasets
-
-    iris = sklearn.datasets.load_iris()
-    return test_f_min(op, iris.data, iris.target, num_folds = num_folds)
-
-def test_iris_f_min_for_folds(num_folds=5):
-    return lambda op: test_iris_f_min(op, num_folds=num_folds)
-    
-from lale.search.SMAC import lale_op_smac_tae
-
-def test_iris_fmin_tae(op, num_folds=5):
-    return lale_op_smac_tae(op, test_iris_f_min_for_folds(num_folds=num_folds))
-
-class TestSMAC(unittest.TestCase):
-    def test_smac(self):
-
-        import numpy as np
-        from sklearn import svm, datasets
-        from sklearn.model_selection import cross_val_score
-
-        # Import ConfigSpace and different types of parameters
-        from smac.configspace import ConfigurationSpace
-        from ConfigSpace.hyperparameters import CategoricalHyperparameter, \
-            UniformFloatHyperparameter, UniformIntegerHyperparameter
-        from ConfigSpace.conditions import InCondition
-
-        # Import SMAC-utilities
-        from smac.tae.execute_func import ExecuteTAFuncDict
-        from smac.scenario.scenario import Scenario
-        from smac.facade.smac_facade import SMAC
-
-        from lale.search.SMAC import get_smac_space
-
-        lr = LogisticRegression()
-
-        cs:ConfigurationSpace = get_smac_space(lr)
-
-        # Scenario object
-        scenario = Scenario({"run_obj": "quality",   # we optimize quality (alternatively runtime)
-                            "runcount-limit": 200,  # maximum function evaluations
-                            "cs": cs,               # configuration space
-                            "deterministic": "true",
-                            "abort_on_first_run_crash": False
-                            })
-
-        # Optimize, using a SMAC-object
-        tae = test_iris_fmin_tae(lr, num_folds=2)
-        print("Optimizing! Depending on your machine, this might take a few minutes.")
-        smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
-                tae_runner=tae)
-
-        incumbent = smac.optimize()
-
-        inc_value = tae(incumbent)
-
-        print("Optimized Value: %.2f" % (inc_value))
-
-    def dont_test_smac_choice(self):
-
-        import numpy as np
-        from sklearn import svm, datasets
-        from sklearn.model_selection import cross_val_score
-
-        # Import ConfigSpace and different types of parameters
-        from smac.configspace import ConfigurationSpace
-        from ConfigSpace.hyperparameters import CategoricalHyperparameter, \
-            UniformFloatHyperparameter, UniformIntegerHyperparameter
-        from ConfigSpace.conditions import InCondition
-
-        # Import SMAC-utilities
-        from smac.tae.execute_func import ExecuteTAFuncDict
-        from smac.scenario.scenario import Scenario
-        from smac.facade.smac_facade import SMAC
-
-
-        tfm = PCA() | Nystroem() | NoOp()
-        planned_pipeline1 = (OneHotEncoder(handle_unknown = 'ignore',  sparse = False) | NoOp()) >> tfm >> (LogisticRegression() | KNeighborsClassifier())
-
-        cs:ConfigurationSpace = get_smac_space(planned_pipeline1, lale_num_grids=5)
-
-        # Scenario object
-        scenario = Scenario({"run_obj": "quality",   # we optimize quality (alternatively runtime)
-                            "runcount-limit": 200,  # maximum function evaluations
-                            "cs": cs,               # configuration space
-                            "deterministic": "true"
-                            })
-
-        # Optimize, using a SMAC-object
-        tae = test_iris_fmin_tae(planned_pipeline1, num_folds=2)
-        print("Optimizing! Depending on your machine, this might take a few minutes.")
-        smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
-                tae_runner=tae)
-
-        incumbent = smac.optimize()
-
-        inc_value = tae(incumbent)
-
-        print("Optimized Value: %.2f" % (inc_value))
         
 class TestOperatorWithoutSchema(unittest.TestCase):
     def test_trainable_pipe_left(self):
@@ -1011,20 +899,20 @@ class TestOperatorWithoutSchema(unittest.TestCase):
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression
         from sklearn.decomposition import PCA
-        from lale.lib.lale import HyperoptCV
+        from lale.lib.lale import Hyperopt
         iris = sklearn.datasets.load_iris()
         pipeline = NoOp() >> PCA >> LogisticRegression
-        clf = HyperoptCV(estimator=pipeline, max_evals=1)
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
         
     def test_planned_pipe_right(self):
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression
         from sklearn.decomposition import PCA
-        from lale.lib.lale import HyperoptCV
+        from lale.lib.lale import Hyperopt
         iris = sklearn.datasets.load_iris()
         pipeline = PCA >> LogisticRegression
-        clf = HyperoptCV(estimator=pipeline, max_evals=1)
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
 
 class TestPrettyPrint(unittest.TestCase):

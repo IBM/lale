@@ -19,7 +19,7 @@ import logging
 from lale.search.search_space import *
 from lale.util.Visitor import Visitor
 from lale.search import schema2search_space as opt
-from lale.search.HP import search_space_to_hp_expr, search_space_to_hp_str
+from lale.search.lale_hyperopt import search_space_to_hp_expr, search_space_to_hp_str
 from lale.search.PGO import PGO
 
 from hyperopt import hp

@@ -23,7 +23,7 @@ from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFiel
 
 from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer
 from lale.search.search_space import *
-from lale.search.HP import search_space_to_str_for_comparison
+from lale.search.lale_hyperopt import search_space_to_str_for_comparison
 from lale.search.PGO import PGO, FrequencyDistribution, Freqs
 
 logging.basicConfig(level=logging.WARNING)

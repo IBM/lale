@@ -27,21 +27,21 @@ from sklearn.metrics.scorer import check_scoring
 from smac.configspace import ConfigurationSpace
 
 # Import SMAC-utilities
-from smac.facade.smac_facade import SMAC
+from smac.facade.smac_facade import SMAC as orig_SMAC
 from smac.scenario.scenario import Scenario
 from smac.tae.execute_ta_run import BudgetExhaustedException
 from lale.helpers import cross_val_score_track_trials
 from lale.lib.sklearn import LogisticRegression
 import lale.operators
-from lale.search.SMAC import lale_op_smac_tae, get_smac_space, lale_trainable_op_from_config
+from lale.search.lale_smac import lale_op_smac_tae, get_smac_space, lale_trainable_op_from_config
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
-class SMACCVImpl:
+class SMACImpl:
 
     def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None):
-        """ Instantiate the SMACCV that will use the given estimator and other parameters to select the 
+        """ Instantiate the SMAC that will use the given estimator and other parameters to select the 
         best performing trainable instantiation of the estimator. 
 
         Parameters
@@ -82,7 +82,7 @@ class SMACCVImpl:
         --------
         >>> from sklearn.metrics import make_scorer, f1_score, accuracy_score
         >>> lr = LogisticRegression()
-        >>> clf = SMACCV(estimator=lr, scoring='accuracy', cv=5)
+        >>> clf = SMAC(estimator=lr, scoring='accuracy', cv=5)
         >>> from sklearn import datasets
         >>> diabetes = datasets.load_diabetes()
         >>> X = diabetes.data[:150]
@@ -92,7 +92,7 @@ class SMACCVImpl:
 
         Other scoring metrics:
 
-        >>> clf = SMACCV(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
+        >>> clf = SMAC(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
 
         """
         self.max_evals = max_evals
@@ -163,7 +163,7 @@ class SMACCVImpl:
             return return_dict['loss']
 
         try :
-            smac = SMAC(scenario=self.scenario, rng=np.random.RandomState(42),
+            smac = orig_SMAC(scenario=self.scenario, rng=np.random.RandomState(42),
                     tae_runner=lale_op_smac_tae(self.estimator, f))
             incumbent = smac.optimize()
             self.trials = smac.get_runhistory()
@@ -288,4 +288,4 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output': _output_predict_schema}}
 
-SMACCV = lale.operators.make_operator(SMACCVImpl, _combined_schemas)
+SMAC = lale.operators.make_operator(SMACImpl, _combined_schemas)
