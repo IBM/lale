@@ -27,7 +27,7 @@ from sklearn.metrics.scorer import check_scoring
 from smac.configspace import ConfigurationSpace
 
 # Import SMAC-utilities
-from smac.facade.smac_facade import SMAC
+from smac.facade.smac_facade import SMAC as orig_SMAC
 from smac.scenario.scenario import Scenario
 from smac.tae.execute_ta_run import BudgetExhaustedException
 from lale.helpers import cross_val_score_track_trials
@@ -163,7 +163,7 @@ class SMACImpl:
             return return_dict['loss']
 
         try :
-            smac = SMAC(scenario=self.scenario, rng=np.random.RandomState(42),
+            smac = orig_SMAC(scenario=self.scenario, rng=np.random.RandomState(42),
                     tae_runner=lale_op_smac_tae(self.estimator, f))
             incumbent = smac.optimize()
             self.trials = smac.get_runhistory()

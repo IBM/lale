@@ -90,7 +90,7 @@ class TestSMAC(unittest.TestCase):
         # Import SMAC-utilities
         from smac.tae.execute_func import ExecuteTAFuncDict
         from smac.scenario.scenario import Scenario
-        from smac.facade.smac_facade import SMAC
+        from smac.facade.smac_facade import SMAC as orig_SMAC
 
         from lale.search.lale_smac import get_smac_space
 
@@ -109,7 +109,7 @@ class TestSMAC(unittest.TestCase):
         # Optimize, using a SMAC-object
         tae = test_iris_fmin_tae(lr, num_folds=2)
         print("Optimizing! Depending on your machine, this might take a few minutes.")
-        smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
+        smac = orig_SMAC(scenario=scenario, rng=np.random.RandomState(42),
                 tae_runner=tae)
 
         incumbent = smac.optimize()
@@ -130,7 +130,7 @@ class TestSMAC(unittest.TestCase):
         # Import SMAC-utilities
         from smac.tae.execute_func import ExecuteTAFuncDict
         from smac.scenario.scenario import Scenario
-        from smac.facade.smac_facade import SMAC
+        from smac.facade.smac_facade import SMAC as orig_SMAC
 
 
         tfm = PCA() | Nystroem() | NoOp()
@@ -148,7 +148,7 @@ class TestSMAC(unittest.TestCase):
         # Optimize, using a SMAC-object
         tae = test_iris_fmin_tae(planned_pipeline1, num_folds=2)
         print("Optimizing! Depending on your machine, this might take a few minutes.")
-        smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
+        smac = orig_SMAC(scenario=scenario, rng=np.random.RandomState(42),
                 tae_runner=tae)
 
         incumbent = smac.optimize()
