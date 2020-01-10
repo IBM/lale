@@ -65,7 +65,7 @@ def test_iris_f_min(op, num_folds=5):
 def test_iris_f_min_for_folds(num_folds=5):
     return lambda op: test_iris_f_min(op, num_folds=num_folds)
     
-from lale.search.SMAC import lale_op_smac_tae
+from lale.search.lale_smac import lale_op_smac_tae
 
 def test_iris_fmin_tae(op, num_folds=5):
     return lale_op_smac_tae(op, test_iris_f_min_for_folds(num_folds=num_folds))
@@ -92,7 +92,7 @@ class TestSMAC(unittest.TestCase):
         from smac.scenario.scenario import Scenario
         from smac.facade.smac_facade import SMAC
 
-        from lale.search.SMAC import get_smac_space
+        from lale.search.lale_smac import get_smac_space
 
         lr = LogisticRegression()
 
