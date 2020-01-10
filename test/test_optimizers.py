@@ -238,7 +238,7 @@ def run_hyperopt_on_planned_pipeline(planned_pipeline, max_iters=1) :
     from sklearn.datasets import load_iris
     features, labels = load_iris(return_X_y=True)
     # set up optimizer
-    from lale.lib.lale.hyperopt_cv import Hyperopt
+    from lale.lib.lale.hyperopt import Hyperopt
     opt = Hyperopt(estimator=planned_pipeline, max_evals=max_iters)
     # run optimizer
     res = opt.fit(features, labels)    
