@@ -38,7 +38,7 @@ from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 
 from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
-from lale.lib.lale import HyperoptCV
+from lale.lib.lale import Hyperopt
 
 import numpy as np
 from typing import List
@@ -237,8 +237,8 @@ def run_hyperopt_on_planned_pipeline(planned_pipeline, max_iters=1) :
     from sklearn.datasets import load_iris
     features, labels = load_iris(return_X_y=True)
     # set up optimizer
-    from lale.lib.lale.hyperopt_cv import HyperoptCV
-    opt = HyperoptCV(estimator=planned_pipeline, max_evals=max_iters)
+    from lale.lib.lale.hyperopt import Hyperopt
+    opt = Hyperopt(estimator=planned_pipeline, max_evals=max_iters)
     # run optimizer
     res = opt.fit(features, labels)    
 
@@ -267,7 +267,7 @@ class TestHyperoptOperatorDuplication(unittest.TestCase) :
         )
         run_hyperopt_on_planned_pipeline(plan)
 
-class TestHyperoptCV(unittest.TestCase):
+class TestHyperopt(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
@@ -278,7 +278,7 @@ class TestHyperoptCV(unittest.TestCase):
     def test_using_scoring(self):
         from sklearn.metrics import hinge_loss, make_scorer, f1_score, accuracy_score
         lr = LogisticRegression()
-        clf = HyperoptCV(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
+        clf = Hyperopt(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         predictions_1 = clf.predict(self.X_test)
@@ -287,7 +287,7 @@ class TestHyperoptCV(unittest.TestCase):
     def test_custom_scoring(self):
         from sklearn.metrics import f1_score, make_scorer
         lr = LogisticRegression()
-        clf = HyperoptCV(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
+        clf = Hyperopt(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv = 5, max_evals=2)
         trained = clf.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
         predictions_1 = clf.predict(self.X_test)
@@ -300,7 +300,7 @@ class TestHyperoptCV(unittest.TestCase):
         X, y = load_iris(return_X_y=True)
         
         max_opt_time = 2.0
-        hoc = HyperoptCV(
+        hoc = Hyperopt(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
@@ -321,7 +321,7 @@ class TestHyperoptCV(unittest.TestCase):
         from sklearn.datasets import load_iris
         X, y = load_iris(return_X_y=True)
         
-        hoc = HyperoptCV(
+        hoc = Hyperopt(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
@@ -339,7 +339,7 @@ class TestHyperoptCV(unittest.TestCase):
         X, y = load_boston(return_X_y=True)
         
         max_opt_time = 3.0
-        hor = HyperoptCV(
+        hor = Hyperopt(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
@@ -360,7 +360,7 @@ class TestHyperoptCV(unittest.TestCase):
         from sklearn.datasets import load_boston
         X, y = load_boston(return_X_y=True)
         
-        hor = HyperoptCV(
+        hor = Hyperopt(
             estimator=planned_pipeline,
             max_evals=100,
             cv=3,
@@ -379,12 +379,12 @@ class TestAutoConfigureClassification(unittest.TestCase):
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
 
-    def test_with_hyperoptcv(self):
+    def test_with_Hyperopt(self):
         from lale.lib.sklearn import PCA, LogisticRegression
-        from lale.lib.lale import NoOp, HyperoptCV
+        from lale.lib.lale import NoOp, Hyperopt
 
         planned_pipeline = (PCA | NoOp) >> LogisticRegression
-        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = HyperoptCV, cv = 3, 
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
             scoring='accuracy', max_evals=2)
         predictions = best_pipeline.predict(self.X_test)
         from sklearn.metrics import accuracy_score
@@ -409,12 +409,12 @@ class TestAutoConfigureRegression(unittest.TestCase):
         X, y = load_boston(return_X_y=True)
         self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
 
-    def test_with_hyperoptcv(self):
+    def test_with_Hyperopt(self):
         from lale.lib.sklearn import PCA, LogisticRegression
-        from lale.lib.lale import NoOp, HyperoptCV
+        from lale.lib.lale import NoOp, Hyperopt
 
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
-        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = HyperoptCV, cv = 3, 
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
             scoring='r2', max_evals=2)
         predictions = best_pipeline.predict(self.X_test)
         from lale.operators import TrainedPipeline
