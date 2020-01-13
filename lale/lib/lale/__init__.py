@@ -14,7 +14,7 @@
 
 from .concat_features import ConcatFeatures
 from .no_op import NoOp
-from .hyperopt_cv import HyperoptCV
+from .hyperopt import Hyperopt
 from .sample_based_voting import SampleBasedVoting
 from .keep_non_numbers import KeepNonNumbers
 from .keep_numbers import KeepNumbers
@@ -22,6 +22,6 @@ from .project import Project
 from .batching import Batching
 from .grid_search_cv import GridSearchCV
 try:
-    from .smac_cv import SMACCV
+    from .smac import SMAC
 except ImportError:
     pass

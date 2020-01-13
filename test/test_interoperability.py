@@ -41,7 +41,7 @@ from typing import List
 import sklearn.datasets
 
 from lale.sklearn_compat import make_sklearn_compat
-from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
+from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 
 @unittest.skip("Skipping here because travis-ci fails to allocate memory. This runs on internal travis.")

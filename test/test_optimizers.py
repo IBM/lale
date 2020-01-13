@@ -37,7 +37,7 @@ from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 
-from lale.search.SMAC import get_smac_space, lale_trainable_op_from_config
+from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.lib.lale import Hyperopt
 
 import numpy as np
@@ -65,12 +65,19 @@ def test_iris_f_min(op, num_folds=5):
 def test_iris_f_min_for_folds(num_folds=5):
     return lambda op: test_iris_f_min(op, num_folds=num_folds)
     
-from lale.search.SMAC import lale_op_smac_tae
+from lale.search.lale_smac import lale_op_smac_tae
 
 def test_iris_fmin_tae(op, num_folds=5):
     return lale_op_smac_tae(op, test_iris_f_min_for_folds(num_folds=num_folds))
 
 class TestSMAC(unittest.TestCase):
+
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        X, y = load_iris(return_X_y=True)
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
     def test_smac(self):
 
         import numpy as np
@@ -83,9 +90,9 @@ class TestSMAC(unittest.TestCase):
         # Import SMAC-utilities
         from smac.tae.execute_func import ExecuteTAFuncDict
         from smac.scenario.scenario import Scenario
-        from smac.facade.smac_facade import SMAC
+        from smac.facade.smac_facade import SMAC as orig_SMAC
 
-        from lale.search.SMAC import get_smac_space
+        from lale.search.lale_smac import get_smac_space
 
         lr = LogisticRegression()
 
@@ -102,7 +109,7 @@ class TestSMAC(unittest.TestCase):
         # Optimize, using a SMAC-object
         tae = test_iris_fmin_tae(lr, num_folds=2)
         print("Optimizing! Depending on your machine, this might take a few minutes.")
-        smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
+        smac = orig_SMAC(scenario=scenario, rng=np.random.RandomState(42),
                 tae_runner=tae)
 
         incumbent = smac.optimize()
@@ -123,7 +130,7 @@ class TestSMAC(unittest.TestCase):
         # Import SMAC-utilities
         from smac.tae.execute_func import ExecuteTAFuncDict
         from smac.scenario.scenario import Scenario
-        from smac.facade.smac_facade import SMAC
+        from smac.facade.smac_facade import SMAC as orig_SMAC
 
 
         tfm = PCA() | Nystroem() | NoOp()
@@ -141,7 +148,7 @@ class TestSMAC(unittest.TestCase):
         # Optimize, using a SMAC-object
         tae = test_iris_fmin_tae(planned_pipeline1, num_folds=2)
         print("Optimizing! Depending on your machine, this might take a few minutes.")
-        smac = SMAC(scenario=scenario, rng=np.random.RandomState(42),
+        smac = orig_SMAC(scenario=scenario, rng=np.random.RandomState(42),
                 tae_runner=tae)
 
         incumbent = smac.optimize()
@@ -149,27 +156,21 @@ class TestSMAC(unittest.TestCase):
         inc_value = tae(incumbent)
 
         print("Optimized Value: %.2f" % (inc_value))
-class TestSMACCV(unittest.TestCase):
-    def setUp(self):
-        from sklearn.datasets import load_iris
-        from sklearn.model_selection import train_test_split
-        X, y = load_iris(return_X_y=True)
-        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
 
-    def test_smac_cv1(self):
+    def test_smac1(self):
         from sklearn.metrics import accuracy_score
-        from lale.lib.lale import SMACCV
+        from lale.lib.lale import SMAC
         planned_pipeline = (PCA | NoOp) >> LogisticRegression        
-        opt = SMACCV(estimator=planned_pipeline, max_evals=10)
+        opt = SMAC(estimator=planned_pipeline, max_evals=10)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
         predictions = res.predict(self.X_test)
 
-    def test_smac_cv2(self):
+    def test_smac2(self):
         from sklearn.metrics import accuracy_score
-        from lale.lib.lale import SMACCV
+        from lale.lib.lale import SMAC
         planned_pipeline = (PCA | NoOp) >> (LogisticRegression | KNeighborsClassifier(n_neighbors = 10000))
-        opt = SMACCV(estimator=planned_pipeline, max_evals=10)
+        opt = SMAC(estimator=planned_pipeline, max_evals=10)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
         predictions = res.predict(self.X_test)
@@ -178,32 +179,32 @@ class TestSMACCV(unittest.TestCase):
         trials = res._impl.get_trials()
         assert 2147483647.0 in trials.cost_per_config.values()
 
-    def test_smac_cv_timeout_zero_classification(self):
-        from lale.lib.lale import SMACCV
+    def test_smac_timeout_zero_classification(self):
+        from lale.lib.lale import SMAC
         planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
-        opt = SMACCV(estimator=planned_pipeline, max_evals=10, max_opt_time=0.0)
+        opt = SMAC(estimator=planned_pipeline, max_evals=10, max_opt_time=0.0)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
         from lale.helpers import best_estimator
         assert best_estimator(res) is None
 
-    def test_smac_cv_timeout_zero_regression(self):
-        from lale.lib.lale import SMACCV
+    def test_smac_timeout_zero_regression(self):
+        from lale.lib.lale import SMAC
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
         from sklearn.datasets import load_boston
         X, y = load_boston(return_X_y=True)
-        opt = SMACCV(estimator=planned_pipeline, scoring = 'r2', max_evals=10, max_opt_time=0.0)
+        opt = SMAC(estimator=planned_pipeline, scoring = 'r2', max_evals=10, max_opt_time=0.0)
         # run optimizer
         res = opt.fit(X[:500,:], y[:500])
         from lale.helpers import best_estimator
         assert best_estimator(res) is None
 
-    def test_smac_cv_timeout_classification(self):
-        from lale.lib.lale import SMACCV
+    def test_smac_timeout_classification(self):
+        from lale.lib.lale import SMAC
         import time
         planned_pipeline = (MinMaxScaler | Normalizer) >> (LogisticRegression | KNeighborsClassifier)
         max_opt_time = 2.0
-        opt = SMACCV(estimator=planned_pipeline, max_evals=10, max_opt_time=max_opt_time)
+        opt = SMAC(estimator=planned_pipeline, max_evals=10, max_opt_time=max_opt_time)
 
         start = time.time()
         res = opt.fit(self.X_train, self.y_train)
@@ -214,14 +215,14 @@ class TestSMACCV(unittest.TestCase):
             'Max time: {}, Actual time: {}, relative diff: {}'.format(max_opt_time, opt_time, rel_diff)
         )
 
-    def test_smac_cv_timeout_regression(self):
-        from lale.lib.lale import SMACCV
+    def test_smac_timeout_regression(self):
+        from lale.lib.lale import SMAC
         from sklearn.datasets import load_boston
         import time
         planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
         X, y = load_boston(return_X_y=True)
         max_opt_time = 2.0
-        opt = SMACCV(estimator=planned_pipeline, scoring = 'r2', max_evals=10, max_opt_time=max_opt_time)
+        opt = SMAC(estimator=planned_pipeline, scoring = 'r2', max_evals=10, max_opt_time=max_opt_time)
 
         start = time.time()
         res = opt.fit(X[:500,:], y[:500])
@@ -402,6 +403,18 @@ class TestAutoConfigureClassification(unittest.TestCase):
         from sklearn.metrics import accuracy_score
         assert best_pipeline is not None
         
+    def test_with_smaccv(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.lib.lale import NoOp, Hyperopt
+
+        planned_pipeline = (PCA | NoOp) >> LogisticRegression
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
+            scoring='accuracy', max_evals=2)
+        predictions = best_pipeline.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+        from lale.operators import TrainedPipeline
+        assert isinstance(best_pipeline, TrainedPipeline)
+
 class TestAutoConfigureRegression(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_boston
