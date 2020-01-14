@@ -523,12 +523,16 @@ def wrap_imported_operators():
             klass = impl.__name__
             try:
                 m = importlib.import_module('lale.lib.' + module)
-                symtab[name] = getattr(m, klass)
+                op = getattr(m, klass)
+                op.set_name(name)
+                symtab[name] = op
                 logger.info(f'Lale:Wrapped known operator:{name}')
             except (ModuleNotFoundError, AttributeError):
                 try:
                     m = importlib.import_module('lale.lib.autogen')
-                    symtab[name] = getattr(m, klass)
+                    op = getattr(m, klass)
+                    op.set_name(name)
+                    symtab[name] = op
                     logger.info(f'Lale:Wrapped autogen operator:{name}')
                 except (ModuleNotFoundError, AttributeError):
                     if hasattr(impl, 'fit') and (
