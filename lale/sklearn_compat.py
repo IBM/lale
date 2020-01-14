@@ -317,3 +317,12 @@ def nest_all_HPparams(name:str, grids:List[Dict[str,V]])->List[Dict[str,V]]:
 
 def unnest_HPparams(k:str)->List[str]:
     return k.split("__")
+    
+def clone_op(op: Ops.Operator, name:str=None) -> Ops.Operator:
+    """ Clone any operator.
+    """
+    from sklearn.base import clone
+    nop = clone(make_sklearn_compat(op)).to_lale()
+    if name:
+        nop.set_name(name)
+    return nop

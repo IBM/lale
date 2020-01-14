@@ -42,6 +42,7 @@ import torch
 import h5py
 from typing import Any, Dict, List, Optional, Union
 import lale.datasets.data_schemas
+from lale.sklearn_compat import clone_op
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -478,7 +479,7 @@ def get_default_schema(impl):
             'output': {},
             'hyperparams': {
                 'allOf': [arg_schemas]}}}
-     
+
 def wrap_imported_operators():
     from lale.operators import Operator, make_operator
     calling_frame = inspect.stack()[1][0]
@@ -489,16 +490,12 @@ def wrap_imported_operators():
             klass = impl.__name__
             try:
                 m = importlib.import_module('lale.lib.' + module)
-                op = getattr(m, klass)
-                op.set_name(name)
-                symtab[name] = op
+                symtab[name] = clone_op(getattr(m, klass), name)
                 logger.info(f'Lale:Wrapped known operator:{name}')
             except (ModuleNotFoundError, AttributeError):
                 try:
                     m = importlib.import_module('lale.lib.autogen')
-                    op = getattr(m, klass)
-                    op.set_name(name)
-                    symtab[name] = op
+                    symtab[name] = clone_op(getattr(m, klass), name)
                     logger.info(f'Lale:Wrapped autogen operator:{name}')
                 except (ModuleNotFoundError, AttributeError):
                     if hasattr(impl, 'fit') and (
