@@ -17,6 +17,8 @@ import lale.search.lale_grid_search_cv
 import lale.operators
 import lale.sklearn_compat
 
+from typing import Any, Dict
+
 class GridSearchCVImpl:
     def __init__(self, estimator=None, cv=5, scoring='accuracy', n_jobs=None, lale_num_samples=None, lale_num_grids=None, param_grid=None, pgo=None):
         self._hyperparams = {
@@ -142,25 +144,15 @@ _hyperparams_schema = {
 _input_fit_schema = {
     'type': 'object',
     'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {'type': ['number', 'string']}}},
-        'y': {
-            'type': 'array', 'items': {'type': 'number'}}}}
+        'X': {},
+        'y': {}}}
 
 _input_predict_schema = {
     'type': 'object',
     'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {'type': ['number', 'string']}}}}}
+        'X': {}}}
 
-_output_predict_schema = {
-    'type': 'array', 'items': {'type': 'number'}}
+_output_predict_schema:Dict[str,Any] = {}
 
 _combined_schemas = {
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_classifier.html',
