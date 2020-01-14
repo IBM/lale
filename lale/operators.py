@@ -408,8 +408,8 @@ class IndividualOp(MetaModelOperator):
         """
         self._impl = impl
         self._name = name
-        if schemas is None:
-            schemas = helpers.get_lib_schema(impl)
+        # if schemas is None:
+        #     schemas = helpers.get_lib_schema(impl)
         if schemas:
             self._schemas = schemas
         else:

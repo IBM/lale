@@ -37,6 +37,7 @@ import copy
 import logging
 import inspect
 import pkgutil
+import importlib
 import torch
 import h5py
 from typing import Any, Dict, List, Optional, Union
@@ -448,23 +449,23 @@ def camelCase_to_snake(name):
     s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
     return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
 
-def get_lib_schema(impl):
-    if impl.__module__.startswith('lale.lib'):
-        m = importlib.import_module(impl.__module__)
-        return m._combined_schemas
-    module_name = impl.__module__.split('.')[0]
-    class_name = camelCase_to_snake(impl.__class__.__name__)
-    try:
-        lib_name = '.'.join(['lale.lib', module_name, class_name])
-        m = importlib.import_module(lib_name)
-        return m._combined_schemas
-    except (ModuleNotFoundError, AttributeError):
-        try:
-            lib_name = '.'.join(['lale.lib.autogen', class_name])
-            m = importlib.import_module(lib_name)
-            return m._combined_schemas
-        except:
-            return None
+# def get_lib_schema(impl):
+#     if impl.__module__.startswith('lale.lib'):
+#         m = importlib.import_module(impl.__module__)
+#         return m._combined_schemas
+#     module_name = impl.__module__.split('.')[0]
+#     class_name = camelCase_to_snake(impl.__class__.__name__)
+#     try:
+#         lib_name = '.'.join(['lale.lib', module_name, class_name])
+#         m = importlib.import_module(lib_name)
+#         return m._combined_schemas
+#     except (ModuleNotFoundError, AttributeError):
+#         try:
+#             lib_name = '.'.join(['lale.lib.autogen', class_name])
+#             m = importlib.import_module(lib_name)
+#             return m._combined_schemas
+#         except:
+#             return None
 
 def signature_to_schema(sig):
     sig_schema = {'type': 'object', 'properties': {}}
@@ -474,7 +475,10 @@ def signature_to_schema(sig):
         if param.kind not in ignored_kinds:
             param_schema = {}
             if param.default != inspect.Parameter.empty:
-                param_schema['default'] = param.default
+                if callable(param.default):
+                    param_schema['type'] = 'object'
+                else:
+                    param_schema['default'] = param.default
             sig_schema['properties'][name] = param_schema
     return sig_schema
 
@@ -495,22 +499,46 @@ def get_default_schema(impl):
             'output': {},
             'hyperparams': {
                 'allOf': [arg_schemas]}}}
+  
+# def wrap_imported_operators():
+#     import lale.lib
+#     from lale.operators import Operator, make_operator
+#     calling_frame = inspect.stack()[1][0]
+#     symtab = calling_frame.f_globals
+#     lib_modules = [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]
+#     for name, impl in symtab.items():
+#         if inspect.isclass(impl) and not issubclass(impl, Operator) and not isinstance(impl, Operator):
+#             module = impl.__module__.split('.')[0]
+#             looks_like_op = hasattr(impl, 'fit') and (
+#                 hasattr(impl, 'predict') or hasattr(impl, 'transform'))
+#             if module in lib_modules or looks_like_op:
+#                 logger.info(f'Lale:Wrapped operator:{name}')
+#                 symtab[name] = make_operator(impl=impl, name=name)
+ 
     
 def wrap_imported_operators():
-    import lale.lib
     from lale.operators import Operator, make_operator
     calling_frame = inspect.stack()[1][0]
     symtab = calling_frame.f_globals
-    lib_modules = [p.name for p in pkgutil.iter_modules(lale.lib.__path__)]
     for name, impl in symtab.items():
-        if inspect.isclass(impl) and not issubclass(impl, Operator) and not isinstance(impl, Operator):
+        if inspect.isclass(impl) and not issubclass(impl, Operator):
             module = impl.__module__.split('.')[0]
-            looks_like_op = hasattr(impl, 'fit') and (
-                hasattr(impl, 'predict') or hasattr(impl, 'transform'))
-            if module in lib_modules or looks_like_op:
-                logger.info(f'Lale:Wrapped operator:{name}')
-                symtab[name] = make_operator(impl=impl, name=name)
-
+            klass = impl.__name__
+            try:
+                m = importlib.import_module('lale.lib.' + module)
+                symtab[name] = getattr(m, klass)
+                logger.info(f'Lale:Wrapped known operator:{name}')
+            except (ModuleNotFoundError, AttributeError):
+                try:
+                    m = importlib.import_module('lale.lib.autogen')
+                    symtab[name] = getattr(m, klass)
+                    logger.info(f'Lale:Wrapped autogen operator:{name}')
+                except (ModuleNotFoundError, AttributeError):
+                    if hasattr(impl, 'fit') and (
+                    hasattr(impl, 'predict') or hasattr(impl, 'transform')):
+                        logger.info(f'Lale:Wrapped unkwnown operator:{name}')
+                        symtab[name] = make_operator(impl=impl, name=name)
+                    
 class val_wrapper():
     """This is used to wrap values that cause problems for hyper-optimizer backends
     lale will unwrap these when given them as the value of a hyper-parameter"""
