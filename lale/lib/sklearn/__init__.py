@@ -19,6 +19,7 @@ from .min_max_scaler import MinMaxScaler
 from .mlp_classifier import MLPClassifier
 from .nystroem import Nystroem
 from .one_hot_encoder import OneHotEncoder
+from .ordinal_encoder import OrdinalEncoder
 from .pca import PCA
 from .tfidf_vectorizer import TfidfVectorizer
 from .multinomial_nb import MultinomialNB
@@ -35,6 +36,7 @@ from .gradient_boosting_classifier import GradientBoostingClassifier
 from .gradient_boosting_regressor import GradientBoostingRegressor
 from .linear_regression import LinearRegression
 from .ridge import Ridge
+from .select_k_best import SelectKBest
 from .standard_scaler import StandardScaler
 from .feature_agglomeration import FeatureAgglomeration
 from .gaussian_nb import GaussianNB
