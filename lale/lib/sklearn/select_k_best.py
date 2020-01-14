@@ -40,8 +40,7 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'score_func':  {
-                'anyOf': [{
-                    'type': 'object'}, {
+                'anyOf': [{}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'Function taking two arrays X and y, and returning a pair of arrays (scores, pvalues) or a single array with scores.'},

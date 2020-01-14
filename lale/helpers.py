@@ -475,10 +475,7 @@ def signature_to_schema(sig):
         if param.kind not in ignored_kinds:
             param_schema = {}
             if param.default != inspect.Parameter.empty:
-                if callable(param.default):
-                    param_schema['type'] = 'object'
-                else:
-                    param_schema['default'] = param.default
+                param_schema['default'] = param.default
             sig_schema['properties'][name] = param_schema
     return sig_schema
 

@@ -268,13 +268,7 @@ class TestCustomSchema(unittest.TestCase):
         helpers.validate_is_schema(foo._schemas)
         self.assertEqual(self.ll_pca._schemas['tags'], init)
         self.assertRaises(Exception, self.sk_pca.customize_schema, tags=42)
-             
-    def test_load_schema(self):
-        from lale.operators import make_operator
-        new_pca = make_operator(sklearn.decomposition.PCA)
-        self.assertEqual(self.ll_pca._schemas, new_pca._schemas)
-        self.assertNotEqual(self.ll_pca._schemas, self.sk_pca._schemas)
-        
+                     
     def test_wrap_imported_operators(self):
         old_globals = {**globals()}
         try:
