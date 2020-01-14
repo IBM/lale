@@ -156,8 +156,9 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.nystroem import NystroemImpl
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
+        from lale.lib.sklearn.select_k_best import SelectKBestImpl
         #These assertions assume topological sort
-        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBest)
+        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, ConcatFeaturesImpl)
@@ -184,11 +185,12 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.nystroem import NystroemImpl
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
-        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBest)
+        from lale.lib.sklearn.select_k_best import SelectKBestImpl
+        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, PCAImpl)
-        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[2][0]._impl, SelectKBest)
+        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[2][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[2][1]._impl, NystroemImpl)
         self.assertIsInstance(lale_pipeline.edges()[3][0]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[3][1]._impl, ConcatFeaturesImpl)
@@ -217,9 +219,10 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.nystroem import NystroemImpl
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
-        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBest)
+        from lale.lib.sklearn.select_k_best import SelectKBestImpl
+        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[2][0]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[2][1]._impl, ConcatFeaturesImpl)
