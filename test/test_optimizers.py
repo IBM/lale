@@ -39,6 +39,8 @@ from lale.lib.sklearn import FeatureAgglomeration
 
 from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.lib.lale import Hyperopt
+from lale.search.op2hp import hyperopt_search_space
+
 
 import numpy as np
 from typing import List
@@ -371,6 +373,105 @@ class TestHyperopt(unittest.TestCase):
         from lale.helpers import best_estimator
         assert best_estimator(hor_fitted) is None
 
+    def test_hyperparam_overriding_with_hyperopt(self):
+        pca1 = PCA(n_components = 3)
+        pca2 = PCA()
+        search_space1 = hyperopt_search_space(pca1)
+        search_space2 = hyperopt_search_space(pca2)
+        self.assertNotEqual(search_space1, search_space2)
+
+    def test_nested_pipeline1(self):
+        from sklearn.datasets import load_iris
+        from lale.lib.lale import Hyperopt
+        from sklearn.metrics import accuracy_score
+        data = load_iris()
+        X, y = data.data, data.target
+        #pipeline = KNeighborsClassifier() | (OneHotEncoder(handle_unknown = 'ignore') >> LogisticRegression())
+        pipeline = KNeighborsClassifier() | (SimpleImputer() >> LogisticRegression())
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
+        trained = clf.fit(X, y)
+        predictions = trained.predict(X)
+        print(accuracy_score(y, predictions))
+
+    def test_with_concat_features1(self):
+        import warnings
+        warnings.filterwarnings("ignore")
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
+
+        from sklearn.datasets import load_iris
+        from lale.lib.lale import Hyperopt
+        from sklearn.metrics import accuracy_score
+        data = load_iris()
+        X, y = data.data, data.target
+        pca = PCA(n_components=3)
+        nys = Nystroem(n_components=10)
+        concat = ConcatFeatures()
+        lr = LogisticRegression(random_state=42, C=0.1)
+        pipeline = ((pca & nys) >> concat >> lr) | KNeighborsClassifier()
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
+        trained = clf.fit(X, y)
+        predictions = trained.predict(X)
+        print(accuracy_score(y, predictions))
+        warnings.resetwarnings()
+
+    def test_with_concat_features2(self):
+        import warnings
+        warnings.filterwarnings("ignore")
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
+
+        from sklearn.datasets import load_iris
+        from lale.lib.lale import Hyperopt
+        from sklearn.metrics import accuracy_score
+        data = load_iris()
+        X, y = data.data, data.target
+        pca = PCA(n_components=3)
+        nys = Nystroem(n_components=10)
+        concat = ConcatFeatures()
+        lr = LogisticRegression(random_state=42, C=0.1)
+        from lale.operators import make_pipeline
+        pipeline = make_pipeline(((((SimpleImputer() | NoOp()) >> pca) & nys) >> concat >> lr) | KNeighborsClassifier())
+        clf = Hyperopt(estimator=pipeline, max_evals=100, handle_cv_failure=True)
+        trained = clf.fit(X, y)
+        predictions = trained.predict(X)
+        print(accuracy_score(y, predictions))
+        warnings.resetwarnings()
+
+    def test_preprocessing_union(self):
+        from lale.datasets import openml
+        (train_X, train_y), (test_X, test_y) = openml.fetch(
+            'credit-g', 'classification', preprocess=False)
+        from lale.lib.lale import KeepNumbers, KeepNonNumbers
+        from lale.lib.sklearn import Normalizer, OneHotEncoder
+        from lale.lib.lale import ConcatFeatures as Concat
+        from lale.lib.sklearn import RandomForestClassifier as Forest
+        prep_num = KeepNumbers() >> Normalizer
+        prep_cat = KeepNonNumbers() >> OneHotEncoder(sparse=False)
+        planned = (prep_num & prep_cat) >> Concat >> Forest
+        from lale.lib.lale import Hyperopt
+        hyperopt_classifier = Hyperopt(estimator=planned, max_evals=1)
+        best_found = hyperopt_classifier.fit(train_X, train_y)
+
+    def test_text_and_structured(self):
+        from lale.datasets.uci.uci_datasets import fetch_drugscom
+        from sklearn.model_selection import train_test_split
+        train_X_all, train_y_all, test_X, test_y = fetch_drugscom()
+        #subset to speed up debugging
+        train_X, train_X_ignore, train_y, train_y_ignore = train_test_split(
+            train_X_all, train_y_all, train_size=0.01, random_state=42)
+        from lale.lib.lale import Project
+        from lale.lib.lale import ConcatFeatures as Cat
+        from lale.lib.sklearn import TfidfVectorizer as Tfidf
+        from lale.lib.sklearn import LinearRegression as LinReg
+        from lale.lib.sklearn import RandomForestRegressor as Forest
+        prep_text = Project(columns=['review']) >> Tfidf(max_features=100)
+        prep_nums = Project(columns={'type': 'number'})
+        planned = (prep_text & prep_nums) >> Cat >> (LinReg | Forest)
+        from lale.lib.lale import Hyperopt
+        hyperopt_classifier = Hyperopt(estimator=planned, max_evals=3, scoring='r2')
+        best_found = hyperopt_classifier.fit(train_X, train_y)
+
 class TestAutoConfigureClassification(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
@@ -459,3 +560,68 @@ class TestGridSearchCV(unittest.TestCase):
         clf = GridSearchCV(estimator=svc, param_grid=parameters)
         clf.fit(iris.data, iris.target)
         clf.predict(iris.data)
+
+    def test_with_gridsearchcv_auto_wrapped_pipe1(self):
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+  
+        lr = LogisticRegression()
+        pca = PCA()
+        trainable = pca >> lr
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            clf = lale.lib.lale.GridSearchCV(
+                estimator=trainable, lale_num_samples=2, lale_num_grids=3,
+                cv=5, scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            clf.fit(iris.data, iris.target)
+    
+    def test_with_gridsearchcv_auto_wrapped_pipe2(self):
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+  
+        lr = LogisticRegression()
+        pca1 = PCA()
+        pca1._name = "PCA1"
+        pca2 = PCA()
+        pca2._name = "PCA2"
+        trainable = (pca1 | pca2) >> lr
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            clf = lale.lib.lale.GridSearchCV(
+                estimator=trainable, lale_num_samples=1, lale_num_grids=3,
+                cv=5, scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            clf.fit(iris.data, iris.target)
+
+class TestCrossValidation(unittest.TestCase):
+    def test_cv_folds(self):
+        trainable_lr = LogisticRegression(n_jobs=1)
+        iris = sklearn.datasets.load_iris()
+        from lale.helpers import cross_val_score
+        from sklearn.model_selection import KFold
+        cv_results = cross_val_score(trainable_lr, iris.data, iris.target, cv = KFold(2))
+        self.assertEqual(len(cv_results), 2)
+
+    def test_cv_scoring(self):
+        trainable_lr = LogisticRegression(n_jobs=1)
+        iris = sklearn.datasets.load_iris()
+        from lale.helpers import cross_val_score
+        from sklearn.metrics import confusion_matrix
+        cv_results = cross_val_score(trainable_lr, iris.data, iris.target, scoring=confusion_matrix)
+        self.assertEqual(len(cv_results), 5)
+
+    def test_cv_folds_scikit(self):
+        trainable_lr = LogisticRegression(n_jobs=1)
+        iris = sklearn.datasets.load_iris()
+        from sklearn.model_selection import cross_val_score
+        from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import KFold
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cv_results = cross_val_score(
+                trainable_lr, iris.data, iris.target,
+                cv = KFold(2), scoring=make_scorer(accuracy_score))
+        self.assertEqual(len(cv_results), 2)

@@ -346,3 +346,391 @@ class TestConcatFeatures(unittest.TestCase):
         (X_train, y_train), (X_test, y_test) = load_iris_df()
         trained = trainable.fit(X_train, y_train)
         predicted = trained.predict(X_test)
+    def test_concat_with_hyperopt(self):
+        from lale.lib.lale import Hyperopt
+        pca = PCA(n_components=3)
+        nys = Nystroem(n_components=10)
+        concat = ConcatFeatures()
+        lr = LogisticRegression(random_state=42, C=0.1)
+
+        trainable = (pca & nys) >> concat >> lr
+        clf = Hyperopt(estimator=trainable, max_evals=2)
+        from sklearn.datasets import load_iris
+        iris_data = load_iris()
+        clf.fit(iris_data.data, iris_data.target)
+        clf.predict(iris_data.data)
+
+    def test_concat_with_hyperopt2(self):
+        from lale.operators import make_pipeline, make_union
+        from lale.lib.lale import Hyperopt
+        pca = PCA(n_components=3)
+        nys = Nystroem(n_components=10)
+        concat = ConcatFeatures()
+        lr = LogisticRegression(random_state=42, C=0.1)
+
+        trainable = make_pipeline(make_union(pca, nys), lr)
+        clf = Hyperopt(estimator=trainable, max_evals=2)
+        from sklearn.datasets import load_iris
+        iris_data = load_iris()
+        clf.fit(iris_data.data, iris_data.target)
+        clf.predict(iris_data.data)
+
+class TestHyperparamRanges(unittest.TestCase):
+    def validate_get_param_ranges(self, operator):
+        # there are ranges for exactly the relevantToOptimizer properties
+        def sorted(l):
+            l_copy = [*l]
+            l_copy.sort()
+            return l_copy
+        ranges, cat_idx = operator.get_param_ranges()
+        keys1 = ranges.keys()
+        keys2 = operator.hyperparam_schema()['allOf'][0]['relevantToOptimizer']
+        self.assertEqual(sorted(keys1), sorted(keys2))
+        # all defaults are in-range
+        hp_defaults = operator.hyperparam_defaults()
+        for hp, r in ranges.items():
+            if type(r) == tuple:
+                minimum, maximum, default = r
+                if minimum != None and maximum != None and default != None:
+                    assert minimum <= default and default <= maximum
+            else:
+                minimum, maximum, default = cat_idx[hp]
+                assert minimum == 0 and len(r) - 1 == maximum
+    def test_get_param_ranges(self):
+        for op in [ConcatFeatures, KNeighborsClassifier, LogisticRegression,
+                   MLPClassifier, Nystroem, OneHotEncoder, PCA]:
+            self.validate_get_param_ranges(op)
+
+class TestKNeighborsClassifier(unittest.TestCase):
+    def test_with_multioutput_targets(self):
+        from sklearn.datasets import make_classification, load_iris
+        import numpy as np
+        from sklearn.utils import shuffle
+
+        X, y1 = make_classification(n_samples=10, n_features=100, n_informative=30, n_classes=3, random_state=1)
+        y2 = shuffle(y1, random_state=1)
+        y3 = shuffle(y1, random_state=2)
+        Y = np.vstack((y1, y2, y3)).T
+        trainable = KNeighborsClassifier()
+        trained = trainable.fit(X, Y)
+        predictions = trained.predict(X)
+    def test_predict_proba(self):
+        trainable = KNeighborsClassifier()
+        iris = sklearn.datasets.load_iris()
+        trained = trainable.fit(iris.data, iris.target)
+        #with self.assertWarns(DeprecationWarning):
+        predicted = trainable.predict_proba(iris.data)
+        predicted = trained.predict_proba(iris.data)
+
+class TestLogisticRegression(unittest.TestCase):
+    def test_hyperparam_keyword_enum(self):
+        lr = LogisticRegression(LogisticRegression.penalty.l1, C=0.1, solver=LogisticRegression.solver.saga)
+    def test_hyperparam_exclusive_min(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            lr = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
+    def test_hyperparam_penalty_solver_dependence(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            lr = LogisticRegression(LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg)
+    def test_hyperparam_dual_penalty_solver_dependence(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            lr = LogisticRegression(LogisticRegression.penalty.l2, LogisticRegression.solver.sag, dual=True)
+    def test_sample_weight(self):
+        import numpy as np
+        trainable_lr = LogisticRegression(n_jobs=1)
+        iris = sklearn.datasets.load_iris()
+        trained_lr = trainable_lr.fit(iris.data, iris.target, sample_weight = np.arange(len(iris.target)))
+        predicted = trained_lr.predict(iris.data)
+    def test_predict_proba(self):
+        import numpy as np
+        trainable_lr = LogisticRegression(n_jobs=1)
+        iris = sklearn.datasets.load_iris()
+        trained_lr = trainable_lr.fit(iris.data, iris.target, sample_weight = np.arange(len(iris.target)))
+        #with self.assertWarns(DeprecationWarning):
+        predicted = trainable_lr.predict_proba(iris.data)
+        predicted = trained_lr.predict_proba(iris.data)
+
+    def test_with_sklearn_gridsearchcv(self):
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        lr = LogisticRegression()
+        parameters = {'solver':('liblinear', 'lbfgs'), 'penalty':['l2']}
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            clf = GridSearchCV(lr, parameters, cv=5,
+                               scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            clf.fit(iris.data, iris.target)
+
+    def test_with_randomizedsearchcv(self):
+        from sklearn.model_selection import RandomizedSearchCV
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        from scipy.stats.distributions import uniform
+        import numpy as np
+        lr = LogisticRegression()
+        parameters = {'solver':('liblinear', 'lbfgs'), 'penalty':['l2']}
+        ranges, cat_idx = lr.get_param_ranges()
+        min_C, max_C, default_C = ranges['C']
+        # specify parameters and distributions to sample from
+        #the loguniform distribution needs to be taken care of properly
+        param_dist = {"solver": ranges['solver'],
+                      "C": uniform(min_C, np.log(max_C))}
+        # run randomized search
+        n_iter_search = 5
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            random_search = RandomizedSearchCV(
+                lr, param_distributions=param_dist, n_iter=n_iter_search, cv=5,
+                scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            random_search.fit(iris.data, iris.target)
+    def test_grid_search_on_trained(self):
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        lr = LogisticRegression()
+        trained = lr.fit(X, y)
+        parameters = {'solver':('liblinear', 'lbfgs'), 'penalty':['l2']}
+
+        clf = GridSearchCV(trained, parameters, cv=5, scoring=make_scorer(accuracy_score))
+    def test_grid_search_on_trained_auto(self):
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        lr = LogisticRegression()
+        trained = lr.fit(X, y)
+        parameters = get_grid_search_parameter_grids(lr, num_samples=2)
+
+        clf = GridSearchCV(trained, parameters, cv=5, scoring=make_scorer(accuracy_score))
+    def test_doc(self):
+        import sklearn.datasets
+        import sklearn.utils
+        from test.test_custom_operators import MyLR
+        iris = sklearn.datasets.load_iris()
+        X_all, y_all = sklearn.utils.shuffle(iris.data, iris.target, random_state=42)
+        X_train, y_train = X_all[10:], y_all[10:]
+        X_test, y_test = X_all[:10], y_all[:10]
+        print('expected {}'.format(y_test))
+        import warnings
+        warnings.filterwarnings("ignore", category=FutureWarning)
+        trainable = MyLR(solver = 'lbfgs', C=0.1)
+        trained = trainable.fit(X_train, y_train)
+        predictions = trained.predict(X_test)
+        print('actual {}'.format(predictions))
+
+class TestClone(unittest.TestCase):
+    def test_clone_with_scikit1(self):
+        lr = LogisticRegression()
+        lr.get_params()
+        from sklearn.base import clone
+        lr_clone = clone(lr)
+        self.assertNotEqual(lr, lr_clone)
+        self.assertNotEqual(lr._impl, lr_clone._impl)
+        iris = sklearn.datasets.load_iris()
+        trained_lr = lr.fit(iris.data, iris.target)
+        predicted = trained_lr.predict(iris.data)
+        cloned_trained_lr = clone(trained_lr)
+        self.assertNotEqual(trained_lr._impl, cloned_trained_lr._impl)
+        predicted_clone = cloned_trained_lr.predict(iris.data)
+        for i in range(len(iris.target)):
+            self.assertEqual(predicted[i], predicted_clone[i])
+        # Testing clone with pipelines having OperatorChoice
+    def test_clone_operator_choice(self):
+        from sklearn.model_selection import cross_val_score
+        from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.base import clone
+        from sklearn.datasets import load_iris
+        iris = load_iris()
+        X, y = iris.data, iris.target
+
+        lr = LogisticRegression()
+        trainable = PCA() >> lr 
+        trainable_wrapper = make_sklearn_compat(trainable)
+        trainable2 = clone(trainable_wrapper)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = cross_val_score(trainable_wrapper, X, y,
+                                     scoring=make_scorer(accuracy_score), cv=2)
+            result2 = cross_val_score(trainable2, X, y,
+                                      scoring=make_scorer(accuracy_score), cv=2)
+        for i in range(len(result)):
+            self.assertEqual(result[i], result2[i])
+
+    def test_clone_with_scikit2(self):
+        lr = LogisticRegression()
+        from sklearn.model_selection import cross_val_score
+        from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.datasets import load_iris
+        pca = PCA()
+        trainable = pca >> lr
+        from sklearn.base import clone
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        trainable2 = clone(trainable)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = cross_val_score(trainable, X, y,
+                                     scoring=make_scorer(accuracy_score), cv=2)
+            result2 = cross_val_score(trainable2, X, y,
+                                      scoring=make_scorer(accuracy_score), cv=2)
+        for i in range(len(result)):
+            self.assertEqual(result[i], result2[i])
+        # Testing clone with nested linear pipelines
+        trainable = PCA() >> trainable
+        trainable2 = clone(trainable)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            result = cross_val_score(trainable, X, y,
+                                     scoring=make_scorer(accuracy_score), cv=2)
+            result2 = cross_val_score(trainable2, X, y,
+                                      scoring=make_scorer(accuracy_score), cv=2)
+        for i in range(len(result)):
+            self.assertEqual(result[i], result2[i])
+    def test_clone_of_trained(self):
+        from sklearn.base import clone
+        lr = LogisticRegression()
+        from sklearn.datasets import load_iris
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        trained = lr.fit(X, y)
+        trained2 = clone(trained)
+    def test_with_voting_classifier1(self):
+        lr = LogisticRegression()
+        pca = PCA()
+        from sklearn.ensemble import VotingClassifier
+        vclf = VotingClassifier(estimators = [('lr', lr), ('pca', pca)])
+        from sklearn.datasets import load_iris
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        vclf.fit(X, y)
+
+    def test_with_voting_classifier2(self):
+        lr = LogisticRegression()
+        pca = PCA()
+        trainable = pca >> lr
+
+        from sklearn.ensemble import VotingClassifier
+        vclf = VotingClassifier(estimators = [('lr', lr), ('pipe', trainable)])
+        from sklearn.datasets import load_iris
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        vclf.fit(X, y)
+
+class TestMLPClassifier(unittest.TestCase):
+    def test_with_multioutput_targets(self):
+        from sklearn.datasets import make_classification, load_iris
+        import numpy as np
+        from sklearn.utils import shuffle
+
+        X, y1 = make_classification(n_samples=10, n_features=100, n_informative=30, n_classes=3, random_state=1)
+        y2 = shuffle(y1, random_state=1)
+        y3 = shuffle(y1, random_state=2)
+        Y = np.vstack((y1, y2, y3)).T
+        trainable = KNeighborsClassifier()
+        trained = trainable.fit(X, Y)
+        predictions = trained.predict(X)
+    def test_predict_proba(self):
+        trainable = MLPClassifier()
+        iris = sklearn.datasets.load_iris()
+        trained = trainable.fit(iris.data, iris.target)
+#        with self.assertWarns(DeprecationWarning):
+        predicted = trainable.predict_proba(iris.data)
+        predicted = trained.predict_proba(iris.data)
+
+class TestOperatorChoice(unittest.TestCase):
+    def test_make_choice_with_instance(self):
+        from lale.operators import make_union, make_choice, make_pipeline
+        from sklearn.datasets import load_iris
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        tfm = PCA() | Nystroem() | NoOp()
+        with self.assertRaises(AttributeError):
+            trained = tfm.fit(X, y)
+        planned_pipeline1 = (OneHotEncoder | NoOp) >> tfm >> (LogisticRegression | KNeighborsClassifier)
+        planned_pipeline2 = (OneHotEncoder | NoOp) >> (PCA | Nystroem) >> (LogisticRegression | KNeighborsClassifier)
+        planned_pipeline3 = make_choice(OneHotEncoder, NoOp) >> make_choice(PCA, Nystroem) >> make_choice(LogisticRegression, KNeighborsClassifier)
+
+class TestTfidfVectorizer(unittest.TestCase):
+    def test_more_hyperparam_values(self):
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            tf_idf = TfidfVectorizer(max_df=2.5, min_df=2,
+                                    max_features=1000,
+                                    stop_words='english')
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            tf_idf = TfidfVectorizer(max_df=2, min_df=2,
+                                    max_features=1000,
+                                    stop_words=['I', 'we', 'not', 'this', 'that'],
+                                    analyzer = 'char')
+
+    def test_non_null_tokenizer(self):
+        # tokenize the doc and lemmatize its tokens
+        def my_tokenizer():
+            return 'abc'
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            tf_idf = TfidfVectorizer(max_df=2, min_df=2,
+                                    max_features=1000,
+                                    stop_words='english',
+                                    tokenizer = my_tokenizer,
+                                    analyzer = 'char')
+
+class TestTags(unittest.TestCase):
+    def test_estimators(self):
+        ops = Ops.get_available_estimators()
+        ops_names = [op.name() for op in ops]
+        self.assertIn('LogisticRegression', ops_names)
+        self.assertIn('MLPClassifier', ops_names)
+        self.assertNotIn('PCA', ops_names)
+    def test_interpretable_estimators(self):
+        ops = Ops.get_available_estimators({'interpretable'})
+        ops_names = [op.name() for op in ops]
+        self.assertIn('KNeighborsClassifier', ops_names)
+        self.assertNotIn('MLPClassifier', ops_names)
+        self.assertNotIn('PCA', ops_names)
+    def test_transformers(self):
+        ops = Ops.get_available_transformers()
+        ops_names = [op.name() for op in ops]
+        self.assertIn('PCA', ops_names)
+        self.assertNotIn('LogisticRegression', ops_names)
+        self.assertNotIn('MLPClassifier', ops_names)
+
+class TestOperatorWithoutSchema(unittest.TestCase):
+    def test_trainable_pipe_left(self):
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import LogisticRegression
+        from sklearn.decomposition import PCA
+        iris = sklearn.datasets.load_iris()
+        pipeline = PCA() >> LogisticRegression(random_state=42)
+        pipeline.fit(iris.data, iris.target)
+    
+    def test_trainable_pipe_right(self):
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import LogisticRegression
+        from sklearn.decomposition import PCA
+        iris = sklearn.datasets.load_iris()
+        pipeline = NoOp() >> PCA() >> LogisticRegression(random_state=42)
+        pipeline.fit(iris.data, iris.target)
+
+    def test_planned_pipe_left(self):
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import LogisticRegression
+        from sklearn.decomposition import PCA
+        from lale.lib.lale import Hyperopt
+        iris = sklearn.datasets.load_iris()
+        pipeline = NoOp() >> PCA >> LogisticRegression
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
+        clf.fit(iris.data, iris.target)
+        
+    def test_planned_pipe_right(self):
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import LogisticRegression
+        from sklearn.decomposition import PCA
+        from lale.lib.lale import Hyperopt
+        iris = sklearn.datasets.load_iris()
+        pipeline = PCA >> LogisticRegression
+        clf = Hyperopt(estimator=pipeline, max_evals=1)
+        clf.fit(iris.data, iris.target)
