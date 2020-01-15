@@ -36,6 +36,8 @@ from lale.lib.xgboost import XGBClassifier
 from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
+from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+from lale.sklearn_compat import make_sklearn_compat
 
 import lale.operators as Ops
 class TestClassification(unittest.TestCase):

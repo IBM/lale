@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+import sklearn.datasets
 from lale.operators import make_pipeline
 from lale.operators import TrainablePipeline, TrainedPipeline
 from lale.helpers import import_from_sklearn_pipeline
@@ -40,6 +41,9 @@ from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 from lale.lib.autogen import SGDClassifier
 from sklearn.metrics import accuracy_score
+
+from lale.sklearn_compat import make_sklearn_compat
+from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 
 class TestCreation(unittest.TestCase):
     def setUp(self):
