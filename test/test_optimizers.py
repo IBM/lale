@@ -15,6 +15,8 @@
 import unittest
 import jsonschema
 import warnings
+
+import sklearn.datasets
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
@@ -571,7 +573,8 @@ class TestGridSearchCV(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = lale.lib.lale.GridSearchCV(
+            from lale.lib.lale import GridSearchCV
+            clf = GridSearchCV(
                 estimator=trainable, lale_num_samples=2, lale_num_grids=3,
                 cv=5, scoring=make_scorer(accuracy_score))
             iris = load_iris()
@@ -590,7 +593,8 @@ class TestGridSearchCV(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = lale.lib.lale.GridSearchCV(
+            from lale.lib.lale import GridSearchCV
+            clf = GridSearchCV(
                 estimator=trainable, lale_num_samples=1, lale_num_grids=3,
                 cv=5, scoring=make_scorer(accuracy_score))
             iris = load_iris()

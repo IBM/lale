@@ -18,7 +18,6 @@ import random
 import jsonschema
 import sys
 
-import lale.operators as Ops
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp

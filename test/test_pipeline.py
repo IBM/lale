@@ -13,9 +13,14 @@
 # limitations under the License.
 
 import unittest
+import warnings
+import random
 from lale.lib.lale import Batching, NoOp
 from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import MLPClassifier, LogisticRegression
+from lale.lib.sklearn import Nystroem
+from lale.lib.sklearn import PCA
+
 from sklearn.metrics import accuracy_score
 
 class TestBatching(unittest.TestCase):
@@ -213,8 +218,8 @@ class TestPipeline(unittest.TestCase):
         pipeline = Nystroem() >> LogisticRegression()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            
-            clf = lale.lib.lale.GridSearchCV(
+            from lale.lib.lale import GridSearchCV
+            clf = GridSearchCV(
                 estimator=pipeline, lale_num_samples=1, lale_num_grids=10,
                 cv=3, scoring=make_scorer(accuracy_score))
             iris = load_iris()

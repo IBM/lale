@@ -15,6 +15,8 @@
 import unittest
 import jsonschema
 import warnings
+import sklearn.datasets
+
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
@@ -35,6 +37,7 @@ from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 
+import lale.operators as Ops
 class TestClassification(unittest.TestCase):
 
     def setUp(self):
