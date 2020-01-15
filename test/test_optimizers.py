@@ -169,11 +169,10 @@ class TestSMAC(unittest.TestCase):
     def test_smac2(self):
         from sklearn.metrics import accuracy_score
         from lale.lib.lale import SMAC
-        planned_pipeline = (PCA | NoOp) >> (LogisticRegression | KNeighborsClassifier(n_neighbors = 10000))
-        opt = SMAC(estimator=planned_pipeline, max_evals=10)
+        planned_pipeline = (PCA | NoOp) >> KNeighborsClassifier(n_neighbors = 10000)
+        opt = SMAC(estimator=planned_pipeline, max_evals=1)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
-        predictions = res.predict(self.X_test)
         # Get the trials object and make sure that SMAC assigned cost_for_crash which is MAXINT by default to 
         #at least one trial (correspond to KNN).
         trials = res._impl.get_trials()

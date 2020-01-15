@@ -101,7 +101,7 @@ class SMACImpl:
         else:
             self.estimator = estimator
 
-        self.search_space:ConfigurationSpace = get_smac_space(self.estimator, lale_num_grids=5)
+        self.search_space:ConfigurationSpace = get_smac_space(self.estimator, lale_num_grids=None)
         self.scoring = scoring
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
