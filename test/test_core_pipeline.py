@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+import sklearn.datasets
 from lale.operators import make_pipeline
 from lale.operators import TrainablePipeline, TrainedPipeline
 from lale.helpers import import_from_sklearn_pipeline
@@ -40,6 +41,9 @@ from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 from lale.lib.autogen import SGDClassifier
 from sklearn.metrics import accuracy_score
+
+from lale.sklearn_compat import make_sklearn_compat
+from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 
 class TestCreation(unittest.TestCase):
     def setUp(self):
@@ -74,6 +78,85 @@ class TestCreation(unittest.TestCase):
         from sklearn.metrics import accuracy_score
         cloned_acc = accuracy_score(self.y_test, predictions)
         self.assertEqual(orig_acc, cloned_acc)
+
+    def test_make_pipeline(self):
+        from lale.operators import make_pipeline
+        tfm = PCA(n_components=10)
+        clf = LogisticRegression(random_state=42)
+        trainable = make_pipeline(tfm, clf)
+        digits = sklearn.datasets.load_digits()
+        trained = trainable.fit(digits.data, digits.target)
+        predicted = trained.predict(digits.data)
+    def test_compose2(self):
+        from lale.operators import make_pipeline
+        tfm = PCA(n_components=10)
+        clf = LogisticRegression(random_state=42)
+        trainable = tfm >> clf
+        digits = sklearn.datasets.load_digits()
+        trained = trainable.fit(digits.data, digits.target)
+        predicted = trained.predict(digits.data)
+    def test_compose3(self):
+        from lale.operators import make_pipeline
+        nys = Nystroem(n_components=15)
+        pca = PCA(n_components=10)
+        lr = LogisticRegression(random_state=42)
+        trainable = nys >> pca >> lr
+        digits = sklearn.datasets.load_digits()
+        trained = trainable.fit(digits.data, digits.target)
+        predicted = trained.predict(digits.data)
+    def test_pca_nys_lr(self):
+        from lale.operators import make_union
+        nys = Nystroem(n_components=15)
+        pca = PCA(n_components=10)
+        lr = LogisticRegression(random_state=42)
+        trainable = make_union(nys, pca) >> lr
+        digits = sklearn.datasets.load_digits()
+        trained = trainable.fit(digits.data, digits.target)
+        predicted = trained.predict(digits.data)
+    def test_compose4(self):
+        from lale.operators import make_choice
+        digits = sklearn.datasets.load_digits()
+        ohe = OneHotEncoder(handle_unknown=OneHotEncoder.handle_unknown.ignore)
+        ohe.get_params()
+        no_op = NoOp()
+        pca = PCA()
+        nys = Nystroem()
+        lr = LogisticRegression()
+        knn = KNeighborsClassifier()
+        step1 = ohe | no_op
+        step2 = pca | nys
+        step3 = lr | knn
+        model_plan = step1 >> step2 >> step3
+        #TODO: optimize on this plan and then fit and predict
+    def test_compose5(self):
+        ohe = OneHotEncoder(handle_unknown=OneHotEncoder.handle_unknown.ignore)
+        digits = sklearn.datasets.load_digits()
+        lr = LogisticRegression()
+        lr_trained = lr.fit(digits.data, digits.target)
+        lr_trained.predict(digits.data)
+        pipeline1 = ohe >> lr
+        pipeline1_trained = pipeline1.fit(digits.data, digits.target)
+        pipeline1_trained.predict(digits.data)
+
+    def test_compare_with_sklearn(self):
+        from lale.operators import make_pipeline
+        tfm = PCA()
+        clf = LogisticRegression(LogisticRegression.solver.lbfgs, LogisticRegression.multi_class.auto)
+        trainable = make_pipeline(tfm, clf)
+        digits = sklearn.datasets.load_digits()
+        trained = trainable.fit(digits.data, digits.target)
+        predicted = trained.predict(digits.data)
+        from sklearn.pipeline import make_pipeline as scikit_make_pipeline
+        from sklearn.decomposition import PCA as SklearnPCA
+        from sklearn.linear_model import LogisticRegression as SklearnLR
+        sklearn_pipeline = scikit_make_pipeline(SklearnPCA(), SklearnLR(solver="lbfgs", multi_class="auto"))
+        sklearn_pipeline.fit(digits.data, digits.target)
+        predicted_sklearn = sklearn_pipeline.predict(digits.data)
+
+        from sklearn.metrics import accuracy_score
+        lale_score = accuracy_score(digits.target, predicted)
+        scikit_score = accuracy_score(digits.target, predicted_sklearn)
+        self.assertEqual(lale_score, scikit_score)
 
 class TestImportExport(unittest.TestCase):
     def setUp(self):
@@ -156,8 +239,9 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.nystroem import NystroemImpl
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
+        from lale.lib.sklearn.select_k_best import SelectKBestImpl
         #These assertions assume topological sort
-        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBest)
+        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, ConcatFeaturesImpl)
@@ -184,11 +268,12 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.nystroem import NystroemImpl
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
-        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBest)
+        from lale.lib.sklearn.select_k_best import SelectKBestImpl
+        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, PCAImpl)
-        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[2][0]._impl, SelectKBest)
+        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[2][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[2][1]._impl, NystroemImpl)
         self.assertIsInstance(lale_pipeline.edges()[3][0]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[3][1]._impl, ConcatFeaturesImpl)
@@ -217,9 +302,10 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.nystroem import NystroemImpl
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
-        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, SelectKBest)
-        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBest)
+        from lale.lib.sklearn.select_k_best import SelectKBestImpl
+        self.assertIsInstance(lale_pipeline.edges()[0][0]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[0][1]._impl, SelectKBestImpl)
+        self.assertIsInstance(lale_pipeline.edges()[1][0]._impl, SelectKBestImpl)
         self.assertIsInstance(lale_pipeline.edges()[1][1]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[2][0]._impl, PCAImpl)
         self.assertIsInstance(lale_pipeline.edges()[2][1]._impl, ConcatFeaturesImpl)
@@ -347,3 +433,27 @@ class TestComposition(unittest.TestCase):
         tmp = pipeline.predict_proba(self.X_test)
         tmp = pipeline.predict(self.X_test)
 
+    def test_two_transformers(self):
+        tfm1 = PCA()
+        tfm2 = Nystroem()
+        trainable = tfm1 >> tfm2
+        digits = sklearn.datasets.load_digits()
+        trained = trainable.fit(digits.data, digits.target)
+        predicted = trained.transform(digits.data)
+
+    def test_duplicate_instances(self):
+        from lale.operators import make_pipeline
+        tfm = PCA()
+        clf = LogisticRegression(LogisticRegression.solver.lbfgs, LogisticRegression.multi_class.auto)
+        with self.assertRaises(ValueError):
+            trainable = make_pipeline(tfm, tfm, clf)
+
+    def test_increase_num_rows(self):
+        from test.test_custom_operators import IncreaseRows
+        increase_rows = IncreaseRows()
+        trainable = increase_rows >> NoOp()
+        iris = sklearn.datasets.load_iris()
+        X, y = iris.data[0:10], iris.target[0:10]
+
+        trained = trainable.fit(X, y)
+        predicted = trained.transform(X, y)

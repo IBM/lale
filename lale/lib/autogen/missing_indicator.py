@@ -98,7 +98,12 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The missing indicator for input data. The data type of ``Xt``',
-    'XXX TODO XXX': '{ndarray or sparse matrix}, shape (n_samples, n_features)',
+    'type': 'array',
+    'items': {
+        'type': 'array',
+        'items': {
+            'type': 'number'}
+    }
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

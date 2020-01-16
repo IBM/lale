@@ -13,10 +13,16 @@
 # limitations under the License.
 
 import unittest
+import warnings
+import random
 from lale.lib.lale import Batching, NoOp
 from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import MLPClassifier, LogisticRegression
+from lale.lib.sklearn import Nystroem
+from lale.lib.sklearn import PCA
+
 from sklearn.metrics import accuracy_score
+from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 
 class TestBatching(unittest.TestCase):
     def setUp(self):
@@ -137,3 +143,86 @@ class TestBatching(unittest.TestCase):
     #     trained = pipeline.fit(self.X_train, self.y_train)
     #     predictions = trained.predict(self.X_test)
     #     lale_accuracy = accuracy_score(self.y_test, predictions)
+
+class TestPipeline(unittest.TestCase):
+
+    def dont_test_with_gridsearchcv2_auto(self):
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        lr = LogisticRegression(random_state = 42)
+        pca = PCA(random_state = 42, svd_solver = 'arpack')
+        trainable = pca >> lr
+        from sklearn.pipeline import Pipeline
+        scikit_pipeline = Pipeline([(pca.name(), PCA(random_state = 42, svd_solver = 'arpack')), (lr.name(), LogisticRegression(random_state = 42))])
+        all_parameters = get_grid_search_parameter_grids(trainable, num_samples=1)
+        # otherwise the test takes too long
+        parameters = random.sample(all_parameters, 2)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            clf.fit(iris.data, iris.target)
+            predicted = clf.predict(iris.data)
+            accuracy_with_lale_operators = accuracy_score(iris.target, predicted)
+
+        from sklearn.pipeline import Pipeline
+        from sklearn.decomposition import PCA as SklearnPCA
+        from sklearn.linear_model import LogisticRegression as SklearnLR
+        scikit_pipeline = Pipeline([(pca.name(), SklearnPCA(random_state = 42, svd_solver = 'arpack')), (lr.name(), SklearnLR(random_state = 42))])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            clf.fit(iris.data, iris.target)
+            predicted = clf.predict(iris.data)
+            accuracy_with_scikit_operators = accuracy_score(iris.target, predicted)
+        self.assertEqual(accuracy_with_lale_operators, accuracy_with_scikit_operators)
+
+    def test_with_gridsearchcv3(self):
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        lr = LogisticRegression()
+        from sklearn.pipeline import Pipeline
+        scikit_pipeline = Pipeline([("nystroem", Nystroem()), ("lr", LogisticRegression())])
+        parameters = {'lr__solver':('liblinear', 'lbfgs'), 'lr__penalty':['l2']}
+        clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
+        iris = load_iris()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            clf.fit(iris.data, iris.target)
+        predicted = clf.predict(iris.data)
+
+    def test_with_gridsearchcv3_auto(self):
+        from sklearn.model_selection import GridSearchCV
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        lr = LogisticRegression()
+        from sklearn.pipeline import Pipeline
+        scikit_pipeline = Pipeline([(Nystroem().name(), Nystroem()), (lr.name(), LogisticRegression())])
+        all_parameters = get_grid_search_parameter_grids(Nystroem()>>lr, num_samples=1)
+        # otherwise the test takes too long
+        parameters = random.sample(all_parameters, 2)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+
+            clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            clf.fit(iris.data, iris.target)
+            predicted = clf.predict(iris.data)
+
+    def test_with_gridsearchcv3_auto_wrapped(self):
+        from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+
+        pipeline = Nystroem() >> LogisticRegression()
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            from lale.lib.lale import GridSearchCV
+            clf = GridSearchCV(
+                estimator=pipeline, lale_num_samples=1, lale_num_grids=1,
+                cv=2, scoring=make_scorer(accuracy_score))
+            iris = load_iris()
+            clf.fit(iris.data, iris.target)
+            predicted = clf.predict(iris.data)

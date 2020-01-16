@@ -122,7 +122,7 @@ class HyperoptImpl:
             trainable = create_instance_from_hyperopt_search_space(self.estimator, params)
             try:
                 cv_score, logloss, execution_time = cross_val_score_track_trials(trainable, X_train, y_train, cv=self.cv, scoring=self.scoring)
-                logger.debug("Successful trial of hyperopt")
+                logger.debug("Successful trial of hyperopt with hyperparameters:{}".format(params))
             except BaseException as e:
                 #If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
                 if self.handle_cv_failure:
