@@ -157,10 +157,10 @@ class TestPipeline(unittest.TestCase):
         scikit_pipeline = Pipeline([(pca.name(), PCA(random_state = 42, svd_solver = 'arpack')), (lr.name(), LogisticRegression(random_state = 42))])
         all_parameters = get_grid_search_parameter_grids(trainable, num_samples=1)
         # otherwise the test takes too long
-        parameters = random.sample(all_parameters, 10)
+        parameters = random.sample(all_parameters, 2)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = GridSearchCV(scikit_pipeline, parameters, cv=5, scoring=make_scorer(accuracy_score))
+            clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
             predicted = clf.predict(iris.data)
@@ -172,7 +172,7 @@ class TestPipeline(unittest.TestCase):
         scikit_pipeline = Pipeline([(pca.name(), SklearnPCA(random_state = 42, svd_solver = 'arpack')), (lr.name(), SklearnLR(random_state = 42))])
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            clf = GridSearchCV(scikit_pipeline, parameters, cv=5, scoring=make_scorer(accuracy_score))
+            clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
             predicted = clf.predict(iris.data)
@@ -187,7 +187,7 @@ class TestPipeline(unittest.TestCase):
         from sklearn.pipeline import Pipeline
         scikit_pipeline = Pipeline([("nystroem", Nystroem()), ("lr", LogisticRegression())])
         parameters = {'lr__solver':('liblinear', 'lbfgs'), 'lr__penalty':['l2']}
-        clf = GridSearchCV(scikit_pipeline, parameters, cv=5, scoring=make_scorer(accuracy_score))
+        clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
         iris = load_iris()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -203,11 +203,11 @@ class TestPipeline(unittest.TestCase):
         scikit_pipeline = Pipeline([(Nystroem().name(), Nystroem()), (lr.name(), LogisticRegression())])
         all_parameters = get_grid_search_parameter_grids(Nystroem()>>lr, num_samples=1)
         # otherwise the test takes too long
-        parameters = random.sample(all_parameters, 10)
+        parameters = random.sample(all_parameters, 2)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
 
-            clf = GridSearchCV(scikit_pipeline, parameters, cv=3, scoring=make_scorer(accuracy_score))
+            clf = GridSearchCV(scikit_pipeline, parameters, cv=2, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
             predicted = clf.predict(iris.data)
@@ -221,8 +221,8 @@ class TestPipeline(unittest.TestCase):
             warnings.simplefilter("ignore")
             from lale.lib.lale import GridSearchCV
             clf = GridSearchCV(
-                estimator=pipeline, lale_num_samples=1, lale_num_grids=10,
-                cv=3, scoring=make_scorer(accuracy_score))
+                estimator=pipeline, lale_num_samples=1, lale_num_grids=1,
+                cv=2, scoring=make_scorer(accuracy_score))
             iris = load_iris()
             clf.fit(iris.data, iris.target)
             predicted = clf.predict(iris.data)
