@@ -63,8 +63,8 @@ def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
         elif kind == 'OperatorChoice':
             more_clusters = [jsn['id'], *clusters]
             d_max = depth
-            for step in jsn['steps']:
-                d_leaf = populate(step, depth, more_clusters)
+            for step_uid, step_jsn in jsn['steps'].items():
+                d_leaf = populate(step_jsn, depth, more_clusters)
                 d_max = max(d_max, d_leaf)
         else:
             assert kind == 'IndividualOp'
@@ -107,10 +107,10 @@ def _json_to_graphviz_rec(jsn, cluster2reps, is_root, dot_graph_attr):
         if is_root:
             nodes = [jsn]
         else:
-            rhs = ' | '.join(s['id'] for s in jsn['steps'])
+            rhs = ' | '.join(jsn['steps'].keys())
             dot.attr('graph', label='Choice', style='filled',
                      fillcolor='skyblue2', tooltip=f"{jsn['id']} = {rhs}")
-            nodes = jsn['steps']
+            nodes = jsn['steps'].values()
         edges = []
     else:
         assert is_root and kind == 'IndividualOp'
