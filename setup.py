@@ -56,7 +56,6 @@ setup(
     extras_require={
         'full': [
             'pytorch-pretrained-bert>=0.6.1',
-            'pillow<=6.2.1', #TODO: remove this when torchvision issue solved
             'torchvision>=0.2.2',
             'tensorflow-datasets>=1.0.1',
             'tensorflow>=1.13.1',
