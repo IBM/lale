@@ -515,7 +515,7 @@ class TestLogisticRegression(unittest.TestCase):
     def test_doc(self):
         import sklearn.datasets
         import sklearn.utils
-        from test.test_custom_operators import MyLR
+        from test.mock_custom_operators import MyLR
         iris = sklearn.datasets.load_iris()
         X_all, y_all = sklearn.utils.shuffle(iris.data, iris.target, random_state=42)
         X_train, y_train = X_all[10:], y_all[10:]
