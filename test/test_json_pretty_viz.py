@@ -181,7 +181,10 @@ class TestToAndFromJSON(unittest.TestCase):
           'class': 'lale.operators.PlannedPipeline',
           'state': 'planned',
           'id': 'pipeline',
-          'edges': [[0, 2], [1, 2], [2, 3]],
+          'edges': [
+              ['pca', 'concat_features'],
+              ['no_op', 'concat_features'],
+              ['concat_features', 'lr']],
           'steps': {
             'pca': {
               'class': 'lale.lib.sklearn.pca.PCAImpl',
@@ -224,7 +227,7 @@ class TestToAndFromJSON(unittest.TestCase):
           'class': 'lale.operators.PlannedPipeline',
           'state': 'planned',
           'id': 'pipeline_0',
-          'edges': [[0, 1]],
+          'edges': [['pca', 'choice']],
           'steps': {
             'pca': {
               'class': 'lale.lib.sklearn.pca.PCAImpl',
@@ -246,7 +249,7 @@ class TestToAndFromJSON(unittest.TestCase):
                 'pipeline_1': {
                   'class': 'lale.operators.TrainablePipeline',
                   'state': 'trainable', 'id': 'pipeline_1',
-                  'edges': [[0, 1]],
+                  'edges': [['no_op', 'lr_1']],
                   'steps': {
                     'no_op': {
                       'class': 'lale.lib.lale.no_op.NoOpImpl',

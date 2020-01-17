@@ -101,7 +101,9 @@ SCHEMA = {
           'items': {
             'type': 'array',
             'minItems': 2, 'maxItems': 2,
-            'items': {'type': 'integer'}}},
+            'items': {
+              'type': 'string',
+              'pattern': '^[a-z][a-z_0-9]*$'}}},
         'steps': {
           'type': 'object',
           'patternProperties': {
@@ -253,13 +255,14 @@ def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensy
             jsn['is_frozen_trained'] = op.is_frozen_trained()
     elif isinstance(op, lale.operators.BasePipeline):
         uid = gensym('pipeline')
-        node2id = {s: i for (i, s) in enumerate(op.steps())}
-        jsn['edges'] = [
-            [node2id[x], node2id[y]] for (x, y) in op.edges()]
-        jsn['steps'] = {}
-        for step in op.steps():
-            child_uid, child_jsn = _to_json_rec(step, cls2label, gensym)
-            jsn['steps'][child_uid] = child_jsn
+        child2uid: Dict[lale.operators.Operator, str] = {}
+        child2jsn: Dict[lale.operators.Operator, JSON_TYPE] = {}
+        for idx, child in enumerate(op.steps()):
+            child_uid, child_jsn = _to_json_rec(child, cls2label, gensym)
+            child2uid[child] = child_uid
+            child2jsn[child] = child_jsn
+        jsn['edges'] = [[child2uid[x], child2uid[y]] for x, y in op.edges()]
+        jsn['steps'] = {child2uid[z]: child2jsn[z] for z in op.steps()}
     elif isinstance(op, lale.operators.OperatorChoice):
         jsn['operator'] = 'OperatorChoice'
         uid = gensym('choice')
@@ -299,8 +302,10 @@ def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
 def _from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
     kind = json_op_kind(jsn)
     if kind == 'Pipeline':
-        steps = [_from_json_rec(s) for s in jsn['steps'].values()]
-        edges = [(steps[e[0]], steps[e[1]]) for e in jsn['edges']]
+        steps_dict = {
+            uid: _from_json_rec(jsn['steps'][uid]) for uid in jsn['steps']}
+        steps = [steps_dict[i] for i in steps_dict]
+        edges = [(steps_dict[x], steps_dict[y]) for (x,y) in jsn['edges']]
         return lale.operators.get_pipeline_of_applicable_type(steps, edges)
     elif kind == 'OperatorChoice':
         steps = [_from_json_rec(s) for s in jsn['steps'].values()]
