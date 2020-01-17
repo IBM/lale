@@ -103,8 +103,9 @@ SCHEMA = {
             'minItems': 2, 'maxItems': 2,
             'items': {'type': 'integer'}}},
         'steps': {
-          'type': 'array',
-          'items': {'$ref': '#/definitions/operator'}}}},
+          'type': 'object',
+          'patternProperties': {
+            '^[a-z][a-z_0-9]*$': {'$ref': '#/definitions/operator'}}}}},
     'planned_pipeline': {
       'allOf': [
         { '$ref': '#/definitions/pipeline'},
@@ -120,11 +121,12 @@ SCHEMA = {
             'state': { 'enum': ['trainable']},
             'class': { 'enum': ['lale.operators.TrainablePipeline']},
             'steps': {
-              'type': 'array',
-              'items': {
-                'type': 'object',
-                'properties': {
-                  'state': { 'enum': ['trainable', 'trained']}}}}}}]},
+              'type': 'object',
+              'patternProperties': {
+                '^[a-z][a-z_0-9]*$': {
+                  'type': 'object',
+                  'properties': {
+                    'state': { 'enum': ['trainable', 'trained']}}}}}}}]},
     'trained_pipeline': {
       'allOf': [
         { '$ref': '#/definitions/pipeline'},
@@ -133,11 +135,12 @@ SCHEMA = {
             'state': { 'enum': ['trained']},
             'class': { 'enum': ['lale.operators.TrainedPipeline']},
             'steps': {
-              'type': 'array',
-              'items': {
-                'type': 'object',
-                'properties': {
-                  'state': { 'enum': ['trained']}}}}}}]},
+              'type': 'object',
+              'patternProperties': {
+                '^[a-z][a-z_0-9]*$': {
+                  'type': 'object',
+                  'properties': {
+                    'state': { 'enum': ['trained']}}}}}}}]},
     'operator_choice': {
       'type': 'object',
       'required': ['class', 'state', 'operator', 'steps'],
@@ -253,10 +256,10 @@ def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensy
         node2id = {s: i for (i, s) in enumerate(op.steps())}
         jsn['edges'] = [
             [node2id[x], node2id[y]] for (x, y) in op.edges()]
-        jsn['steps'] = []
+        jsn['steps'] = {}
         for step in op.steps():
             child_uid, child_jsn = _to_json_rec(step, cls2label, gensym)
-            jsn['steps'].append(child_jsn)
+            jsn['steps'][child_uid] = child_jsn
     elif isinstance(op, lale.operators.OperatorChoice):
         jsn['operator'] = 'OperatorChoice'
         uid = gensym('choice')
@@ -296,7 +299,7 @@ def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
 def _from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
     kind = json_op_kind(jsn)
     if kind == 'Pipeline':
-        steps = [_from_json_rec(s) for s in jsn['steps']]
+        steps = [_from_json_rec(s) for s in jsn['steps'].values()]
         edges = [(steps[e[0]], steps[e[1]]) for e in jsn['edges']]
         return lale.operators.get_pipeline_of_applicable_type(steps, edges)
     elif kind == 'OperatorChoice':

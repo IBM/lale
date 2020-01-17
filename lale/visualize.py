@@ -46,7 +46,7 @@ def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
     def populate(jsn, depth: int, clusters: List[str]) -> int:
         kind: str = lale.json_operator.json_op_kind(jsn)
         if kind == 'Pipeline':
-            steps = [s['id'] for s in jsn['steps']]
+            steps = list(jsn['steps'].keys())
             edges = [(steps[tail], steps[head]) for tail, head in jsn['edges']]
             for tail, head in jsn['edges']:
                 assert int(tail) < int(head), 'steps not in topological order'
@@ -55,10 +55,10 @@ def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
                 node2preds[head].append(tail)
             more_clusters = [jsn['id'], *clusters]
             d_max = depth
-            for step in jsn['steps']:
-                d_root = max([node2depth[p] for p in node2preds[step['id']]],
+            for step_uid, step_jsn in jsn['steps'].items():
+                d_root = max([node2depth[p] for p in node2preds[step_uid]],
                              default=depth)
-                d_leaf = populate(step, d_root, more_clusters)
+                d_leaf = populate(step_jsn, d_root, more_clusters)
                 d_max = max(d_max, d_leaf)
         elif kind == 'OperatorChoice':
             more_clusters = [jsn['id'], *clusters]
@@ -101,7 +101,7 @@ def _json_to_graphviz_rec(jsn, cluster2reps, is_root, dot_graph_attr):
         dot.attr('graph', label='', style='rounded,filled',
                  fillcolor=_STATE2COLOR[jsn['state']],
                  tooltip=f"{jsn['id']} = ...")
-        nodes = jsn['steps']
+        nodes = list(jsn['steps'].values())
         edges = jsn['edges']
     elif kind == 'OperatorChoice':
         if is_root:
@@ -110,7 +110,7 @@ def _json_to_graphviz_rec(jsn, cluster2reps, is_root, dot_graph_attr):
             rhs = ' | '.join(jsn['steps'].keys())
             dot.attr('graph', label='Choice', style='filled',
                      fillcolor='skyblue2', tooltip=f"{jsn['id']} = {rhs}")
-            nodes = jsn['steps'].values()
+            nodes = list(jsn['steps'].values())
         edges = []
     else:
         assert is_root and kind == 'IndividualOp'
