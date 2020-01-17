@@ -127,7 +127,6 @@ pipeline = get_pipeline_of_applicable_type(
         self.round_trip(string1)
 
 
-@unittest.skip("Skipping while I figure out the failure.")
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):
         self.maxDiff = None

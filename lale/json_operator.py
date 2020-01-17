@@ -267,6 +267,24 @@ def to_json(op, call_depth=1) -> Dict[str, Any]:
     jsonschema.validate(result, SCHEMA)
     return result
 
+def _get_lib_schema(impl):	
+    if impl.__module__.startswith('lale.lib'):	
+        m = importlib.import_module(impl.__module__)	
+        return m._combined_schemas	
+    module_name = impl.__module__.split('.')[0]	
+    class_name = camelCase_to_snake(impl.__class__.__name__)	
+    try:	
+        lib_name = '.'.join(['lale.lib', module_name, class_name])	
+        m = importlib.import_module(lib_name)	
+        return m._combined_schemas	
+    except (ModuleNotFoundError, AttributeError):	
+        try:	
+            lib_name = '.'.join(['lale.lib.autogen', class_name])	
+            m = importlib.import_module(lib_name)	
+            return m._combined_schemas	
+        except:	
+            return None
+
 def _from_json_rec(json: Dict[str, Any]):
     kind = json_op_kind(json)
     if kind == 'Pipeline':
@@ -279,33 +297,29 @@ def _from_json_rec(json: Dict[str, Any]):
         return lale.operators.OperatorChoice(steps, name)
     else:
         assert kind == 'IndividualOp'
-        name = json['operator']
         full_class_name = json['class']
         last_period = full_class_name.rfind('.')
         module = importlib.import_module(full_class_name[:last_period])
-        impl_class = getattr(module, full_class_name[last_period+1:])
-        impl = impl_class()
-        schemas = None #IndividualOp.__init__ should look up the schemas
-        planned = lale.operators.PlannedIndividualOp(name, impl, schemas)
-        if json['state'] == 'planned':
-            return planned
-        assert json['state'] in ['trainable', 'trained'], json["state"]
-        if json['hyperparams'] is None:
-            trainable = planned()
-        else:
-            trainable = planned(**json['hyperparams'])
-        if json['is_frozen_trainable']:
-            trainable = trainable.freeze_trainable()
+        impl = getattr(module, full_class_name[last_period+1:])
+        schemas = _get_lib_schema(impl)
+        name = json['operator']
+        result = lale.operators.make_operator(impl, schemas, name)
+        if json['state'] in ['trainable', 'trained']:
+            if _get_state(result) == 'planned':
+                hp = json['hyperparams']
+                result = result() if hp is None else result(**hp)
+            if json['is_frozen_trainable'] and not result.is_frozen_trainable():
+                result = result.freeze_trainable()
+            assert json['is_frozen_trainable'] == result.is_frozen_trainable()
         if json['state'] == 'trained':
-            if json['coefs']=='coefs_not_available':
+            if json['coefs'] == 'coefs_not_available':
                 logger.warning(f'Since the JSON representation of trained operator {name} lacks coefficients, from_json returns a trainable operator instead.')
             else:
                 assert json['coefs'] is None, json['coefs']
-                trained = lale.operators.TrainedIndividualOp(
-                    name, trainable._impl, schemas)
-                assert json['is_frozen_trained'] == trained.is_frozen_trained()
-                return trained
-        return trainable
+        assert _get_state(result) == json['state'] or \
+            json['state']=='trained' and json['coefs']=='coefs_not_available'
+        assert result.documentation_url() == json['documentation_url']
+        return result
     assert False, f'unexpected JSON {json}'
 
 def from_json(json: Dict[str, Any]):
