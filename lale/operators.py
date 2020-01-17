@@ -331,6 +331,10 @@ class Operator(metaclass=AbstractVisitorMeta):
         pass
 
     @abstractmethod
+    def class_name(self)->str:
+        pass
+
+    @abstractmethod
     def set_name(self, name:str):
         """Sets the name of the operator.        
         """
@@ -1216,7 +1220,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
 all_available_operators: List[PlannedOperator] = []
 
-def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
+def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
     if name is None:
         name = helpers.assignee_name()
     if inspect.isclass(impl):
