@@ -330,9 +330,9 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
-    @abstractmethod
     def class_name(self)->str:
-        pass
+        cls = self.__class__
+        return cls.__module__ + '.' + cls.__name__
 
     @abstractmethod
     def set_name(self, name:str):
@@ -1424,10 +1424,6 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
     def arrange(self, *args, **kwargs):
         pass#TODO
 
-    def class_name(self)->str:
-        cls = self.__class__
-        return cls.__module__ + '.' + cls.__name__
-
     def name(self)->str:            
         return self._name
 
@@ -2116,10 +2112,6 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
 
     def steps(self)->List[OperatorChoiceType]:
         return self._steps
-
-    def class_name(self)->str:
-        cls = self.__class__
-        return cls.__module__ + '.' + cls.__name__
 
     def name(self)->str:
         return self._name
