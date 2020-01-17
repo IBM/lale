@@ -18,10 +18,12 @@ import jsonschema
 import keyword
 import lale.helpers
 import lale.operators
-from typing import Dict, Any
+from typing import Any, Dict, Optional, Tuple, cast
 import logging
 
 logger = logging.getLogger(__name__)
+
+JSON_TYPE = Dict[str, Any]
 
 SCHEMA = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -50,9 +52,6 @@ SCHEMA = {
         'label': {
           'type': 'string',
           'pattern': '^[A-Za-z_][A-Za-z_0-9]*$'},
-        'id': {
-          'type': 'string',
-          'pattern': '^[a-z][a-z_0-9]*$'},
         'documentation_url': {
           'type': 'string'},
         'hyperparams': {
@@ -99,10 +98,13 @@ SCHEMA = {
           'items': {
             'type': 'array',
             'minItems': 2, 'maxItems': 2,
-            'items': {'type': 'integer'}}},
+            'items': {
+              'type': 'string',
+              'pattern': '^[a-z][a-z_0-9]*$'}}},
         'steps': {
-          'type': 'array',
-          'items': {'$ref': '#/definitions/operator'}}}},
+          'type': 'object',
+          'patternProperties': {
+            '^[a-z][a-z_0-9]*$': {'$ref': '#/definitions/operator'}}}}},
     'planned_pipeline': {
       'allOf': [
         { '$ref': '#/definitions/pipeline'},
@@ -118,11 +120,12 @@ SCHEMA = {
             'state': { 'enum': ['trainable']},
             'class': { 'enum': ['lale.operators.TrainablePipeline']},
             'steps': {
-              'type': 'array',
-              'items': {
-                'type': 'object',
-                'properties': {
-                  'state': { 'enum': ['trainable', 'trained']}}}}}}]},
+              'type': 'object',
+              'patternProperties': {
+                '^[a-z][a-z_0-9]*$': {
+                  'type': 'object',
+                  'properties': {
+                    'state': { 'enum': ['trainable', 'trained']}}}}}}}]},
     'trained_pipeline': {
       'allOf': [
         { '$ref': '#/definitions/pipeline'},
@@ -131,11 +134,12 @@ SCHEMA = {
             'state': { 'enum': ['trained']},
             'class': { 'enum': ['lale.operators.TrainedPipeline']},
             'steps': {
-              'type': 'array',
-              'items': {
-                'type': 'object',
-                'properties': {
-                  'state': { 'enum': ['trained']}}}}}}]},
+              'type': 'object',
+              'patternProperties': {
+                '^[a-z][a-z_0-9]*$': {
+                  'type': 'object',
+                  'properties': {
+                    'state': { 'enum': ['trained']}}}}}}}]},
     'operator_choice': {
       'type': 'object',
       'required': ['class', 'state', 'operator', 'steps'],
@@ -147,21 +151,22 @@ SCHEMA = {
         'operator': {
           'type': 'string'},
         'steps': {
-          'type': 'array',
-          'items': {'$ref': '#/definitions/operator'}}}}},
+          'type': 'object',
+          'patternProperties': {
+            '^[a-z][a-z_0-9]*$': {'$ref': '#/definitions/operator'}}}}}},
   '$ref': '#/definitions/operator'}
 
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(SCHEMA)
 
-def json_op_kind(jsn):
+def json_op_kind(jsn: JSON_TYPE) -> str:
     if 'steps' in jsn and 'edges' in jsn:
         return 'Pipeline'
     elif 'steps' in jsn:
         return 'OperatorChoice'
     return 'IndividualOp'
 
-def _get_state(op) -> str:
+def _get_state(op: 'lale.operators.Operator') -> str:
     if isinstance(op, lale.operators.Trained):
         return 'trained'
     if isinstance(op, lale.operators.Trainable):
@@ -194,9 +199,9 @@ def _get_cls2label(call_depth: int) -> Dict[str, str]:
     return cls2label
 
 class _GenSym:
-    def __init__(self, op, cls2label):
-        label2count = {}
-        def populate_label2count(op):
+    def __init__(self, op: 'lale.operators.Operator', cls2label: Dict[str, str]):
+        label2count: Dict[str, int] = {}
+        def populate_label2count(op: 'lale.operators.Operator'):
             if isinstance(op, lale.operators.IndividualOp):
                 label = cls2label.get(op.class_name(), op.name())
             elif isinstance(op, lale.operators.BasePipeline):
@@ -214,7 +219,7 @@ class _GenSym:
         self._names = ({'lale'} | set(keyword.kwlist) |
                        non_unique_labels | snakes)
 
-    def __call__(self, prefix):
+    def __call__(self, prefix: str) -> str:
         if prefix in self._names:
             suffix = 0
             while f'{prefix}_{suffix}' in self._names:
@@ -225,90 +230,113 @@ class _GenSym:
         self._names |= {result}
         return result
 
-def _to_json_rec(op, cls2label, gensym) -> Dict[str, Any]:
-    result = {}
-    result['class'] = op.class_name()
-    result['state'] = _get_state(op)
+def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensym: _GenSym) -> Tuple[str, JSON_TYPE]:
+    jsn: JSON_TYPE = {}
+    jsn['class'] = op.class_name()
+    jsn['state'] = _get_state(op)
     if isinstance(op, lale.operators.IndividualOp):
-        result['operator'] = op.name()
-        result['label'] = cls2label.get(op.class_name(), op.name())
-        result['id'] = gensym(lale.helpers.camelCase_to_snake(result['label']))
+        jsn['operator'] = op.name()
+        jsn['label'] = cls2label.get(op.class_name(), op.name())
+        uid = gensym(lale.helpers.camelCase_to_snake(jsn['label']))
         documentation_url = op.documentation_url()
         if documentation_url is not None:
-            result['documentation_url'] = documentation_url
+            jsn['documentation_url'] = documentation_url
         if isinstance(op, lale.operators.TrainableIndividualOp):
-            result['hyperparams'] = op.hyperparams()
-            result['is_frozen_trainable'] = op.is_frozen_trainable()
+            jsn['hyperparams'] = op.hyperparams()
+            jsn['is_frozen_trainable'] = op.is_frozen_trainable()
         if isinstance(op, lale.operators.TrainedIndividualOp):
             if hasattr(op._impl, 'fit'):
-                result['coefs'] = 'coefs_not_available'
+                jsn['coefs'] = 'coefs_not_available'
             else:
-                result['coefs'] = None
-            result['is_frozen_trained'] = op.is_frozen_trained()
+                jsn['coefs'] = None
+            jsn['is_frozen_trained'] = op.is_frozen_trained()
     elif isinstance(op, lale.operators.BasePipeline):
-        result['id'] = gensym('pipeline')
-        node2id = {s: i for (i, s) in enumerate(op.steps())}
-        result['edges'] = [
-            [node2id[x], node2id[y]] for (x, y) in op.edges()]
-        result['steps'] = [
-            _to_json_rec(s, cls2label, gensym) for s in op.steps()]
+        uid = gensym('pipeline')
+        child2uid: Dict[lale.operators.Operator, str] = {}
+        child2jsn: Dict[lale.operators.Operator, JSON_TYPE] = {}
+        for idx, child in enumerate(op.steps()):
+            child_uid, child_jsn = _to_json_rec(child, cls2label, gensym)
+            child2uid[child] = child_uid
+            child2jsn[child] = child_jsn
+        jsn['edges'] = [[child2uid[x], child2uid[y]] for x, y in op.edges()]
+        jsn['steps'] = {child2uid[z]: child2jsn[z] for z in op.steps()}
     elif isinstance(op, lale.operators.OperatorChoice):
-        result['operator'] = 'OperatorChoice'
-        result['id'] = gensym('choice')
-        result['state'] = 'planned'
-        result['steps'] = [
-            _to_json_rec(s, cls2label, gensym) for s in op.steps()]
-    return result
+        jsn['operator'] = 'OperatorChoice'
+        uid = gensym('choice')
+        jsn['state'] = 'planned'
+        jsn['steps'] = {}
+        for step in op.steps():
+            child_uid, child_jsn = _to_json_rec(step, cls2label, gensym)
+            jsn['steps'][child_uid] = child_jsn
+    return uid, jsn
 
-def to_json(op, call_depth=1) -> Dict[str, Any]:
+def to_json(op: 'lale.operators.Operator', call_depth:int=1) -> JSON_TYPE:
     cls2label = _get_cls2label(call_depth + 1)
     gensym = _GenSym(op, cls2label)
-    result = _to_json_rec(op, cls2label, gensym)
-    jsonschema.validate(result, SCHEMA)
-    return result
+    uid, jsn = _to_json_rec(op, cls2label, gensym)
+    jsonschema.validate(jsn, SCHEMA)
+    return jsn
 
-def _from_json_rec(json: Dict[str, Any]):
-    kind = json_op_kind(json)
+def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
+    if impl.__module__.startswith('lale.lib'):  
+        m = importlib.import_module(impl.__module__)    
+        return getattr(m, '_combined_schemas')      
+    module_name = impl.__module__.split('.')[0] 
+    class_name = lale.helpers.camelCase_to_snake(impl.__class__.__name__)    
+    try:        
+        lib_name = '.'.join(['lale.lib', module_name, class_name])      
+        m = importlib.import_module(lib_name)   
+        return getattr(m, '_combined_schemas')      
+    except (ModuleNotFoundError, AttributeError):       
+        try:    
+            lib_name = '.'.join(['lale.lib.autogen', class_name])       
+            m = importlib.import_module(lib_name)       
+            return getattr(m, '_combined_schemas')  
+        except: 
+            return None
+
+def _from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
+    kind = json_op_kind(jsn)
     if kind == 'Pipeline':
-        steps = [_from_json_rec(s) for s in json['steps']]
-        edges = [(steps[e[0]], steps[e[1]]) for e in json['edges']]
+        steps_dict = {
+            uid: _from_json_rec(jsn['steps'][uid]) for uid in jsn['steps']}
+        steps = [steps_dict[i] for i in steps_dict]
+        edges = [(steps_dict[x], steps_dict[y]) for (x,y) in jsn['edges']]
         return lale.operators.get_pipeline_of_applicable_type(steps, edges)
     elif kind == 'OperatorChoice':
-        steps = [_from_json_rec(s) for s in json['steps']]
-        name = json['operator']
+        steps = [_from_json_rec(s) for s in jsn['steps'].values()]
+        name = jsn['operator']
         return lale.operators.OperatorChoice(steps, name)
     else:
         assert kind == 'IndividualOp'
-        name = json['operator']
-        full_class_name = json['class']
+        full_class_name = jsn['class']
         last_period = full_class_name.rfind('.')
         module = importlib.import_module(full_class_name[:last_period])
-        impl_class = getattr(module, full_class_name[last_period+1:])
-        impl = impl_class()
-        schemas = None #IndividualOp.__init__ should look up the schemas
-        planned = lale.operators.PlannedIndividualOp(name, impl, schemas)
-        if json['state'] == 'planned':
-            return planned
-        assert json['state'] in ['trainable', 'trained'], json["state"]
-        if json['hyperparams'] is None:
-            trainable = planned()
-        else:
-            trainable = planned(**json['hyperparams'])
-        if json['is_frozen_trainable']:
-            trainable = trainable.freeze_trainable()
-        if json['state'] == 'trained':
-            if json['coefs']=='coefs_not_available':
+        impl = getattr(module, full_class_name[last_period+1:])
+        schemas = _get_lib_schema(impl)
+        name = jsn['operator']
+        result = lale.operators.make_operator(impl, schemas, name)
+        if jsn['state'] in ['trainable', 'trained']:
+            if _get_state(result) == 'planned':
+                hp = jsn['hyperparams']
+                result = result() if hp is None else result(**hp)
+            trnbl = cast(lale.operators.TrainableIndividualOp, result)
+            if jsn['is_frozen_trainable'] and not trnbl.is_frozen_trainable():
+                trnbl = trnbl.freeze_trainable()
+            assert jsn['is_frozen_trainable'] == trnbl.is_frozen_trainable()
+            result = trnbl
+        if jsn['state'] == 'trained':
+            if jsn['coefs'] == 'coefs_not_available':
                 logger.warning(f'Since the JSON representation of trained operator {name} lacks coefficients, from_json returns a trainable operator instead.')
             else:
-                assert json['coefs'] is None, json['coefs']
-                trained = lale.operators.TrainedIndividualOp(
-                    name, trainable._impl, schemas)
-                assert json['is_frozen_trained'] == trained.is_frozen_trained()
-                return trained
-        return trainable
-    assert False, f'unexpected JSON {json}'
+                assert jsn['coefs'] is None, jsn['coefs']
+        assert _get_state(result) == jsn['state'] or \
+            jsn['state']=='trained' and jsn['coefs']=='coefs_not_available'
+        assert result.documentation_url() == jsn['documentation_url']
+        return result
+    assert False, f'unexpected JSON {jsn}'
 
-def from_json(json: Dict[str, Any]):
-    jsonschema.validate(json, SCHEMA)
-    result = _from_json_rec(json)
+def from_json(jsn: JSON_TYPE) -> 'lale.operators.Operator':
+    jsonschema.validate(jsn, SCHEMA)
+    result = _from_json_rec(jsn)
     return result

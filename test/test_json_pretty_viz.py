@@ -127,7 +127,6 @@ pipeline = get_pipeline_of_applicable_type(
         self.round_trip(string1)
 
 
-@unittest.skip("Skipping while I figure out the failure.")
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):
         self.maxDiff = None
@@ -137,7 +136,7 @@ class TestToAndFromJSON(unittest.TestCase):
         json_expected = {
             'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
             'state': 'trainable',
-            'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr',
+            'operator': 'LogisticRegression', 'label': 'LR',
             'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
             'hyperparams': {'C': 0.1, 'solver': 'sag'},
             'is_frozen_trainable': False}
@@ -153,18 +152,20 @@ class TestToAndFromJSON(unittest.TestCase):
         from lale.lib.sklearn import MinMaxScaler as Scl
         operator = PCA | Scl
         json_expected = {
-            'class': 'lale.operators.OperatorChoice',
-            'operator': 'OperatorChoice', 'id': 'choice',
-            'state': 'planned',
-            'steps': [
-            {   'class': 'lale.lib.sklearn.pca.PCAImpl',
-                'state': 'planned',
-                'operator': 'PCA', 'label': 'PCA', 'id': 'pca',
-                'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
-            {   'class': 'lale.lib.sklearn.min_max_scaler.MinMaxScalerImpl',
-                'state': 'planned',
-                'operator': 'MinMaxScaler', 'label': 'Scl', 'id': 'scl',
-                'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html'}]}
+          'class': 'lale.operators.OperatorChoice',
+          'operator': 'OperatorChoice',
+          'state': 'planned',
+          'steps': {
+            'pca': {
+              'class': 'lale.lib.sklearn.pca.PCAImpl',
+              'state': 'planned',
+              'operator': 'PCA', 'label': 'PCA',
+              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+            'scl': {
+              'class': 'lale.lib.sklearn.min_max_scaler.MinMaxScalerImpl',
+              'state': 'planned',
+              'operator': 'MinMaxScaler', 'label': 'Scl',
+              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html'}}}
         json = to_json(operator)
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
@@ -179,31 +180,37 @@ class TestToAndFromJSON(unittest.TestCase):
         json_expected = {
           'class': 'lale.operators.PlannedPipeline',
           'state': 'planned',
-          'id': 'pipeline',
-          'edges': [[0, 2], [1, 2], [2, 3]],
-          'steps': [
-          { 'class': 'lale.lib.sklearn.pca.PCAImpl',
-            'state': 'planned',
-            'operator': 'PCA', 'label': 'PCA', 'id': 'pca',
-            'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
-          { 'class': 'lale.lib.lale.no_op.NoOpImpl',
-            'state': 'trained',
-            'operator': 'NoOp', 'label': 'NoOp', 'id': 'no_op',
-            'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.no_op.html',
-            'hyperparams': None,
-            'coefs': None,
-            'is_frozen_trainable': True, 'is_frozen_trained': True},
-          { 'class': 'lale.lib.lale.concat_features.ConcatFeaturesImpl',
-            'state': 'trained',
-            'operator': 'ConcatFeatures', 'label': 'ConcatFeatures', 'id': 'concat_features',
-            'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.concat_features.html',
-            'hyperparams': None,
-            'coefs': None,
-            'is_frozen_trainable': True, 'is_frozen_trained': True},
-          { 'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
-            'state': 'planned',
-            'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr',
-            'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html'}]}
+          'edges': [
+              ['pca', 'concat_features'],
+              ['no_op', 'concat_features'],
+              ['concat_features', 'lr']],
+          'steps': {
+            'pca': {
+              'class': 'lale.lib.sklearn.pca.PCAImpl',
+              'state': 'planned',
+              'operator': 'PCA', 'label': 'PCA',
+              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+            'no_op': {
+              'class': 'lale.lib.lale.no_op.NoOpImpl',
+              'state': 'trained',
+              'operator': 'NoOp', 'label': 'NoOp',
+              'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.no_op.html',
+              'hyperparams': None,
+              'coefs': None,
+              'is_frozen_trainable': True, 'is_frozen_trained': True},
+            'concat_features': {
+              'class': 'lale.lib.lale.concat_features.ConcatFeaturesImpl',
+              'state': 'trained',
+              'operator': 'ConcatFeatures', 'label': 'ConcatFeatures',
+              'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.concat_features.html',
+              'hyperparams': None,
+              'coefs': None,
+              'is_frozen_trainable': True, 'is_frozen_trained': True},
+            'lr': {
+              'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
+              'state': 'planned',
+              'operator': 'LogisticRegression', 'label': 'LR',
+              'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html'}}}
         json = to_json(operator)
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
@@ -218,40 +225,45 @@ class TestToAndFromJSON(unittest.TestCase):
         json_expected = {
           'class': 'lale.operators.PlannedPipeline',
           'state': 'planned',
-          'id': 'pipeline_0',
-          'edges': [[0, 1]],
-          'steps': [
-          { 'class': 'lale.lib.sklearn.pca.PCAImpl',
-            'state': 'planned',
-            'operator': 'PCA', 'label': 'PCA', 'id': 'pca',
-            'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
-          { 'class': 'lale.operators.OperatorChoice',
-            'state': 'planned',
-            'operator': 'OperatorChoice', 'id': 'choice',
-            'steps': [
-            { 'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
-              'state': 'trainable',
-              'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr_0',
-              'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
-              'hyperparams': {'C': 0.09},
-              'is_frozen_trainable': False},
-            { 'class': 'lale.operators.TrainablePipeline',
-              'state': 'trainable', 'id': 'pipeline_1',
-              'edges': [[0, 1]],
-              'steps': [
-              { 'class': 'lale.lib.lale.no_op.NoOpImpl',
-                'state': 'trained',
-                'operator': 'NoOp', 'label': 'NoOp', 'id': 'no_op',
-                'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.no_op.html',
-                'hyperparams': None,
-                'coefs': None,
-                'is_frozen_trainable': True, 'is_frozen_trained': True},
-              { 'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
-                'state': 'trainable',
-                'operator': 'LogisticRegression', 'label': 'LR', 'id': 'lr_1',
-                'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
-                'hyperparams': {'C': 0.19},
-                'is_frozen_trainable': False}]}]}]}
+          'edges': [['pca', 'choice']],
+          'steps': {
+            'pca': {
+              'class': 'lale.lib.sklearn.pca.PCAImpl',
+              'state': 'planned',
+              'operator': 'PCA', 'label': 'PCA',
+              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+            'choice': {
+              'class': 'lale.operators.OperatorChoice',
+              'state': 'planned',
+              'operator': 'OperatorChoice',
+              'steps': {
+                'lr_0': {
+                  'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
+                  'state': 'trainable',
+                  'operator': 'LogisticRegression', 'label': 'LR',
+                  'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
+                  'hyperparams': {'C': 0.09},
+                  'is_frozen_trainable': False},
+                'pipeline_1': {
+                  'class': 'lale.operators.TrainablePipeline',
+                  'state': 'trainable',
+                  'edges': [['no_op', 'lr_1']],
+                  'steps': {
+                    'no_op': {
+                      'class': 'lale.lib.lale.no_op.NoOpImpl',
+                      'state': 'trained',
+                      'operator': 'NoOp', 'label': 'NoOp',
+                      'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.no_op.html',
+                      'hyperparams': None,
+                      'coefs': None,
+                      'is_frozen_trainable': True, 'is_frozen_trained': True},
+                    'lr_1': {
+                      'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
+                      'state': 'trainable',
+                      'operator': 'LogisticRegression', 'label': 'LR',
+                      'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
+                      'hyperparams': {'C': 0.19},
+                      'is_frozen_trainable': False}}}}}}}
         json = to_json(operator)
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
