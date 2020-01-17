@@ -52,9 +52,6 @@ SCHEMA = {
         'label': {
           'type': 'string',
           'pattern': '^[A-Za-z_][A-Za-z_0-9]*$'},
-        'id': {
-          'type': 'string',
-          'pattern': '^[a-z][a-z_0-9]*$'},
         'documentation_url': {
           'type': 'string'},
         'hyperparams': {
@@ -271,7 +268,6 @@ def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensy
         for step in op.steps():
             child_uid, child_jsn = _to_json_rec(step, cls2label, gensym)
             jsn['steps'][child_uid] = child_jsn
-    jsn['id'] = uid
     return uid, jsn
 
 def to_json(op: 'lale.operators.Operator', call_depth:int=1) -> JSON_TYPE:
