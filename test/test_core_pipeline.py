@@ -449,7 +449,7 @@ class TestComposition(unittest.TestCase):
             trainable = make_pipeline(tfm, tfm, clf)
 
     def test_increase_num_rows(self):
-        from test.test_custom_operators import IncreaseRows
+        from test.mock_custom_operators import IncreaseRows
         increase_rows = IncreaseRows()
         trainable = increase_rows >> NoOp()
         iris = sklearn.datasets.load_iris()

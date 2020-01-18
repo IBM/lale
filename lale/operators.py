@@ -330,6 +330,10 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
+    def class_name(self)->str:
+        cls = self.__class__
+        return cls.__module__ + '.' + cls.__name__
+
     @abstractmethod
     def set_name(self, name:str):
         """Sets the name of the operator.        
@@ -1216,7 +1220,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
 all_available_operators: List[PlannedOperator] = []
 
-def make_operator(impl, schemas = None, name = None) -> PlannedOperator:
+def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
     if name is None:
         name = helpers.assignee_name()
     if inspect.isclass(impl):
@@ -1419,10 +1423,6 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
 
     def arrange(self, *args, **kwargs):
         pass#TODO
-
-    def class_name(self)->str:
-        cls = self.__class__
-        return cls.__module__ + '.' + cls.__name__
 
     def name(self)->str:            
         return self._name
@@ -2112,10 +2112,6 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
 
     def steps(self)->List[OperatorChoiceType]:
         return self._steps
-
-    def class_name(self)->str:
-        cls = self.__class__
-        return cls.__module__ + '.' + cls.__name__
 
     def name(self)->str:
         return self._name
