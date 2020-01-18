@@ -15,7 +15,7 @@
 import logging
 import numpy as np
 import sys
-import warnings
+
 import time
 import traceback
 from sklearn.model_selection import train_test_split
@@ -95,6 +95,7 @@ class SMACImpl:
         >>> clf = SMAC(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
 
         """
+
         self.max_evals = max_evals
         if estimator is None:
             self.estimator = LogisticRegression()
@@ -123,8 +124,6 @@ class SMACImpl:
         self.cv = check_cv(self.cv, y = y_train, classifier=True) #TODO: Replace the classifier flag value by using tags?
 
         def smac_train_test(trainable, X_train, y_train):
-            warnings.filterwarnings("ignore")
-            print(trainable.to_json())
             try:
                 cv_score, logloss, execution_time = cross_val_score_track_trials(trainable, X_train, y_train, cv=self.cv, scoring=self.scoring)
                 logger.debug("Successful trial of SMAC")
