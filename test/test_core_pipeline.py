@@ -351,7 +351,7 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn import Nystroem
         from sklearn.pipeline import FeatureUnion
 
-        lale_pipeline = (((PCA() & SelectKBest(k=3)) >> ConcatFeatures()) & Nystroem()) >> ConcatFeatures() >> KNeighborsClassifier()
+        lale_pipeline = (((PCA(svd_solver='randomized', random_state=42) & SelectKBest(k=3)) >> ConcatFeatures()) & Nystroem(random_state=42)) >> ConcatFeatures() >> KNeighborsClassifier()
         trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
         sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
         self.assertIsInstance(sklearn_pipeline.named_steps['featureunion'], FeatureUnion)
