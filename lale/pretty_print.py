@@ -19,11 +19,15 @@ import inspect
 import json
 import pprint
 import re
+from typing import Any, Dict, Optional, Tuple, Union, cast
 
 import lale.helpers
+import lale.json_operator
 import lale.operators
 
-def hyperparams_to_string(hps, op=None):
+JSON_TYPE = Dict[str, Any]
+
+def hyperparams_to_string(hps: JSON_TYPE, op:'lale.operators.Operator'=None) -> str:
     if op:
         for k, v in hps.items():
             pass #TODO: use enums where possible
@@ -32,13 +36,63 @@ def hyperparams_to_string(hps, op=None):
     strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
     return ', '.join(strings)
 
-def indiv_op_to_string(op, name=None, module_name=None):
+def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
+    def has_op(module_name, sym):
+        module = importlib.import_module(module_name)
+        if hasattr(module, sym):
+            op = getattr(module, sym)
+            if isinstance(op, lale.operators.IndividualOp):
+                return op.class_name() == class_name
+            else:
+                return hasattr(op, '__init__') and hasattr(op, 'fit') and (
+                    hasattr(op, 'predict') or hasattr(op, 'transform'))
+        return False
+    mod_name_long = class_name[:class_name.rfind('.')]
+    mod_name_short = mod_name_long[:mod_name_long.rfind('.')]
+    unqualified = class_name[class_name.rfind('.')+1:]
+    if has_op(mod_name_short, op_label):
+        return mod_name_short
+    if has_op(mod_name_long, op_label):
+        return mod_name_long
+    if has_op(mod_name_short, op_name):
+        return mod_name_short
+    if has_op(mod_name_long, op_name):
+        return mod_name_long
+    if has_op(mod_name_short, unqualified):
+        return mod_name_short
+    if has_op(mod_name_long, unqualified):
+        return mod_name_long
+    assert False, (op_label, op_name, class_name)
+
+def _indiv_op_jsn_to_string(jsn: JSON_TYPE, show_imports: bool) -> Tuple[str, str]:
+    assert lale.json_operator.json_op_kind(jsn) == 'IndividualOp'
+    label = jsn['label']
+    if show_imports:
+        class_name = jsn['class']
+        module_name = _get_module_name(label, jsn['operator'], class_name)
+        if module_name.startswith('lale.'):
+            op_name = jsn['operator']
+        else:
+            op_name = class_name[class_name.rfind('.')+1:]
+        if op_name == label:
+            import_stmt = f'from {module_name} import {op_name}'
+        else:
+            import_stmt = f'from {module_name} import {op_name} as {label}'
+    else:
+        import_stmt = ''
+    if 'hyperparams' in jsn and jsn['hyperparams'] is not None:
+        hps = hyperparams_to_string(jsn['hyperparams'])
+        op_expr = f'{label}({hps})'
+    else:
+        op_expr = label
+    return import_stmt, op_expr
+
+def _indiv_op_to_string(op: 'lale.operators.IndividualOp', show_imports: bool, name:str=None, module_name:str=None) -> Tuple[str, str]:
     assert isinstance(op, lale.operators.IndividualOp)
     if name is None:
         name = op.name()
-    if module_name is None:
-        import_stmt = ''
-    else:
+    if show_imports:
+        assert module_name is not None
         if module_name.startswith('lale.'):
             op_name = op.name()
         else:
@@ -47,17 +101,16 @@ def indiv_op_to_string(op, name=None, module_name=None):
             import_stmt = f'from {module_name} import {op_name}'
         else:
             import_stmt = f'from {module_name} import {op_name} as {name}'
+    else:
+        import_stmt = ''
     if hasattr(op._impl, "fit") and isinstance(op, lale.operators.TrainableIndividualOp):
         hps = hyperparams_to_string(op.hyperparams(), op)
         op_expr = f'{name}({hps})'
     else:
         op_expr = name
-    if module_name is None:
-        return op_expr
-    else:
-        return (import_stmt, op_expr)
+    return import_stmt, op_expr
 
-def pipeline_to_string(pipeline, cls2name, show_imports):
+def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: bool, cls2name: Dict[str,str]) -> str:
     assert isinstance(pipeline, lale.operators.BasePipeline)
     def shallow_copy_graph(pipeline):
         if isinstance(pipeline, lale.operators.OperatorChoice):
@@ -154,29 +207,6 @@ def pipeline_to_string(pipeline, cls2name, show_imports):
             return steps[0]
         else:
             return steps, preds, succs
-    def get_module(op):
-        class_name = op.class_name()
-        def has_op(module_name, op_name):
-            module = importlib.import_module(module_name)
-            if hasattr(module, op_name):
-                op = getattr(module, op_name)
-                if isinstance(op, lale.operators.IndividualOp):
-                    return op.class_name() == class_name
-                else:
-                    return hasattr(op, '__init__') and hasattr(op, 'fit') and (
-                        hasattr(op, 'predict') or hasattr(op, 'transform'))
-            return False
-        mod_name_1 = class_name[:class_name.rfind('.')]
-        mod_name_2 = mod_name_1[:mod_name_1.rfind('.')]
-        if has_op(mod_name_2, op.name()):
-            return mod_name_2
-        elif has_op(mod_name_1, op.name()):
-            return mod_name_1
-        op_name = class_name[class_name.rfind('.')+1:]
-        if has_op(mod_name_2, op_name):
-            return mod_name_2
-        assert has_op(mod_name_1, op_name)
-        return mod_name_1
     class CodeGenState:
         def __init__(self):
             self.imports = []
@@ -240,8 +270,8 @@ def pipeline_to_string(pipeline, cls2name, show_imports):
             return ' | '.join(printed_steps)
         elif isinstance(graph, lale.operators.IndividualOp):
             name = gen.gensym(cls2name[graph.class_name()])
-            module_name = get_module(graph)
-            import_stmt, op_expr = indiv_op_to_string(graph, name, module_name)
+            module_name = _get_module_name(graph.name(), graph.name(), graph.class_name())
+            import_stmt, op_expr = _indiv_op_to_string(graph, True, name, module_name)
             gen.imports.append(import_stmt)
             if re.fullmatch(r'.+\(.+\)', op_expr):
                 new_name = gen.gensym(lale.helpers.camelCase_to_snake(name))
@@ -263,7 +293,7 @@ def pipeline_to_string(pipeline, cls2name, show_imports):
     graph = introduce_structure(steps, preds, succs)
     return code_gen_top(graph)
 
-def schema_to_string(schema):
+def schema_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
     s2 = ast.parse(s1)
     s3 = astunparse.unparse(s2).strip()
@@ -278,7 +308,7 @@ def schema_to_string(schema):
     s8 = re.sub(r'{\s+}', r'{}', s7)
     return s8
 
-def to_string(arg, show_imports=True, call_depth=2):
+def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, call_depth:int=2) -> str:
     def get_cls2name():
         frame = inspect.stack()[call_depth][0]
         result = {}
@@ -290,15 +320,20 @@ def to_string(arg, show_imports=True, call_depth=2):
                     result[cls] = nm
         return result
     if lale.helpers.is_schema(arg):
-        return schema_to_string(arg)
+        return schema_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.IndividualOp):
-        return indiv_op_to_string(arg)
+        jsn = lale.json_operator.to_json(arg, call_depth=2)
+        import_stmt, op_expr = _indiv_op_jsn_to_string(jsn, show_imports)
+        if import_stmt == '':
+            return op_expr
+        else:
+            return import_stmt + '\npipeline = ' + op_expr
     elif isinstance(arg, lale.operators.BasePipeline):
-        return pipeline_to_string(arg, get_cls2name(), show_imports)
+        return _pipeline_to_string(arg, show_imports, get_cls2name())
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
 
-def ipython_display(arg, show_imports=True):
+def ipython_display(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True):
     import IPython.display
     pretty_printed = to_string(arg, show_imports, call_depth=3)
     markdown = IPython.display.Markdown(f'```python\n{pretty_printed}\n```')
