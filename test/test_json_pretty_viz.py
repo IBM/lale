@@ -13,31 +13,17 @@
 # limitations under the License.
 
 import unittest
-
-import lale.lib.lale
-from lale.lib.lale import ConcatFeatures
-from lale.lib.lale import NoOp
-from lale.lib.sklearn import KNeighborsClassifier
-from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import MinMaxScaler
-from lale.lib.sklearn import Nystroem
-from lale.lib.sklearn import PCA
-
-
-class TestToJson(unittest.TestCase):
-    def test_with_operator_choice(self):
-        from lale.operators import make_union, make_choice, make_pipeline
-        kernel_tfm_or_not =  NoOp | Nystroem
-        tfm = PCA
-        clf = make_choice(LogisticRegression, KNeighborsClassifier)
-        clf.to_json()
-        optimizable = kernel_tfm_or_not >> tfm >> clf
-        optimizable.to_json()
+import lale.pretty_print
 
 class TestToGraphviz(unittest.TestCase):
     def test_with_operator_choice(self):
-        from lale.operators import make_union, make_choice, make_pipeline
+        from lale.operators import make_choice
         from lale.helpers import to_graphviz
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import KNeighborsClassifier
+        from lale.lib.sklearn import LogisticRegression
+        from lale.lib.sklearn import Nystroem
+        from lale.lib.sklearn import PCA
         kernel_tfm_or_not =  NoOp | Nystroem
         tfm = PCA
         clf = make_choice(LogisticRegression, KNeighborsClassifier)
@@ -53,20 +39,39 @@ class TestToGraphviz(unittest.TestCase):
             to_graphviz(scikit_lr)
 
 class TestPrettyPrint(unittest.TestCase):
-    def round_trip(self, string1):
-        globals1 = {}
-        exec(string1, globals1)
-        pipeline1 = globals1['pipeline']
-        from lale.pretty_print import to_string
-        string2 = to_string(pipeline1)
+    def _roundtrip(self, expected, printed):
         self.maxDiff = None
-        self.assertEqual(string1, string2)
+        self.assertEqual(expected, printed)
         globals2 = {}
-        exec(string2, globals2)
+        exec(printed, globals2)
         pipeline2 = globals2['pipeline']
 
+    def test_indiv_op_1(self):
+        from lale.lib.sklearn import LogisticRegression
+        pipeline = LogisticRegression(solver='saga', C=0.9)
+        expected = """from lale.lib.sklearn import LogisticRegression
+pipeline = LogisticRegression(solver='saga', C=0.9)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_indiv_op_2(self):
+        from lale.lib.sklearn import LogisticRegression as LR
+        pipeline = LR(solver='saga', C=0.9)
+        expected = """from lale.lib.sklearn import LogisticRegression as LR
+pipeline = LR(solver='saga', C=0.9)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
     def test_reducible(self):
-        string1 = \
+        from lale.lib.sklearn import MinMaxScaler
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import Nystroem
+        from lale.lib.lale import ConcatFeatures
+        from lale.lib.sklearn import KNeighborsClassifier
+        from lale.lib.sklearn import LogisticRegression
+        pca = PCA(copy=False)
+        logistic_regression = LogisticRegression(solver='saga', C=0.9)
+        pipeline = (MinMaxScaler | NoOp) >> (pca & Nystroem) >> ConcatFeatures >> (KNeighborsClassifier | logistic_regression)
+        expected = \
 """from lale.lib.sklearn import MinMaxScaler
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import PCA
@@ -77,10 +82,9 @@ from lale.lib.sklearn import LogisticRegression
 pca = PCA(copy=False)
 logistic_regression = LogisticRegression(solver='saga', C=0.9)
 pipeline = (MinMaxScaler | NoOp) >> (pca & Nystroem) >> ConcatFeatures >> (KNeighborsClassifier | logistic_regression)"""
-        self.round_trip(string1)
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_import_as(self):
-        #code to reproduce in printing
         from lale.lib.sklearn import MinMaxScaler as Scaler
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import PCA
@@ -91,8 +95,7 @@ pipeline = (MinMaxScaler | NoOp) >> (pca & Nystroem) >> ConcatFeatures >> (KNeig
         pca = PCA(copy=False)
         lr = LR(solver='saga', C=0.9)
         pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)
-        #expected string
-        string1 = \
+        expected = \
 """from lale.lib.sklearn import MinMaxScaler as Scaler
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import PCA
@@ -103,17 +106,20 @@ from lale.lib.sklearn import LogisticRegression as LR
 pca = PCA(copy=False)
 lr = LR(solver='saga', C=0.9)
 pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
-        #testing harness
-        from lale.pretty_print import to_string
-        string2 = to_string(pipeline)
-        self.maxDiff = None
-        self.assertEqual(string1, string2)
-        globals2 = {}
-        exec(string2, globals2)
-        pipeline2 = globals2['pipeline']
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_irreducible(self):
-        string1 = \
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import Nystroem
+        from lale.lib.sklearn import MinMaxScaler
+        from lale.lib.sklearn import LogisticRegression
+        from lale.lib.sklearn import KNeighborsClassifier
+        from lale.operators import get_pipeline_of_applicable_type
+        step_1 = PCA | Nystroem
+        pipeline = get_pipeline_of_applicable_type(
+            steps=[step_1, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
+            edges=[(step_1,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])
+        expected = \
 """from lale.lib.sklearn import PCA
 from lale.lib.sklearn import Nystroem
 from lale.lib.sklearn import MinMaxScaler
@@ -124,7 +130,7 @@ step_1 = PCA | Nystroem
 pipeline = get_pipeline_of_applicable_type(
     steps=[step_1, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
     edges=[(step_1,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])"""
-        self.round_trip(string1)
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
 
 class TestToAndFromJSON(unittest.TestCase):
@@ -150,6 +156,7 @@ class TestToAndFromJSON(unittest.TestCase):
         self.maxDiff = None
         from lale.json_operator import to_json, from_json
         from lale.lib.sklearn import MinMaxScaler as Scl
+        from lale.lib.sklearn import PCA
         operator = PCA | Scl
         json_expected = {
           'class': 'lale.operators.OperatorChoice',
@@ -172,10 +179,12 @@ class TestToAndFromJSON(unittest.TestCase):
         json_2 = to_json(operator_2)
         self.assertEqual(json_2, json_expected)
 
-    def test_pipeline(self):
+    def test_pipeline_1(self):
         self.maxDiff = None
         from lale.json_operator import to_json, from_json
+        from lale.lib.lale import ConcatFeatures, NoOp
         from lale.lib.sklearn import LogisticRegression as LR
+        from lale.lib.sklearn import PCA
         operator = (PCA & NoOp) >> ConcatFeatures >> LR
         json_expected = {
           'class': 'lale.operators.PlannedPipeline',
@@ -217,10 +226,29 @@ class TestToAndFromJSON(unittest.TestCase):
         json_2 = to_json(operator_2)
         self.assertEqual(json, json_2)
 
+    def test_pipeline_2(self):
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import Nystroem
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import LogisticRegression
+        from lale.lib.sklearn import KNeighborsClassifier
+        from lale.operators import make_choice, make_pipeline
+        from lale.json_operator import to_json, from_json
+        kernel_tfm_or_not =  make_choice(NoOp, Nystroem)
+        tfm = PCA
+        clf = make_choice(LogisticRegression, KNeighborsClassifier)
+        operator = make_pipeline(kernel_tfm_or_not, tfm, clf)
+        json = to_json(operator)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json, json_2)
+
     def test_nested(self):
         self.maxDiff = None
         from lale.json_operator import to_json, from_json
+        from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression as LR
+        from lale.lib.sklearn import PCA
         operator = PCA >> (LR(C=0.09) | NoOp >> LR(C=0.19))
         json_expected = {
           'class': 'lale.operators.PlannedPipeline',
