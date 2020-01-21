@@ -113,91 +113,94 @@ def _indiv_op_to_string(op: 'lale.operators.IndividualOp', show_imports: bool, n
 
 _Seq = collections.namedtuple('_Seq', ['src', 'dst'])
 _Par = collections.namedtuple('_Par', ['s0', 's1'])
+_Graph = collections.namedtuple('_Graph', ['steps', 'preds', 'succs'])
 
-def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Tuple[List[Any], Dict[Any, List[Any]], Dict[Any, List[Any]]]:
+def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Union[_Graph, 'lale.operators.Operator']:
     assert isinstance(pipeline, lale.operators.BasePipeline)
-    def shallow_copy_graph(pipeline):
+    def make_graph(pipeline: 'lale.operators.BasePipeline') -> _Graph:
         if isinstance(pipeline, lale.operators.OperatorChoice):
             return [pipeline], {pipeline:[]}, {pipeline:[]}
         steps = [*pipeline.steps()]
-        preds = { step: [] for step in steps }
-        succs = { step: [] for step in steps }
+        preds: Dict[Any, List[Any]] = { step: [] for step in steps }
+        succs: Dict[Any, List[Any]] = { step: [] for step in steps }
         for (src, dst) in pipeline.edges():
             preds[dst].append(src)
             succs[src].append(dst)
-        return steps, preds, succs
-    def find_seq(steps, preds, succs):
-        for src in steps:
-            if len(succs[src]) == 1:
-                dst = succs[src][0]
-                if len(preds[dst]) == 1:
+        return _Graph(steps, preds, succs)
+    def find_seq(graph: _Graph) -> Optional[_Seq]:
+        for src in graph.steps:
+            if len(graph.succs[src]) == 1:
+                dst = graph.succs[src][0]
+                if len(graph.preds[dst]) == 1:
                     return _Seq(src, dst)
         return None
-    def find_par(steps, preds, succs):
-        for i0 in range(len(steps)):
-            for i1 in range(i0 + 1, len(steps)):
-                s0, s1 = steps[i0], steps[i1]
-                preds0, preds1 = preds[s0], preds[s1]
+    def find_par(graph: _Graph) -> Optional[_Par]:
+        for i0 in range(len(graph.steps)):
+            for i1 in range(i0 + 1, len(graph.steps)):
+                s0, s1 = graph.steps[i0], graph.steps[i1]
+                preds0, preds1 = graph.preds[s0], graph.preds[s1]
                 if len(preds0) == len(preds1) and set(preds0) == set(preds1):
-                    succs0, succs1 = succs[s0], succs[s1]
+                    succs0, succs1 = graph.succs[s0], graph.succs[s1]
                     if len(succs0)==len(succs1) and set(succs0)==set(succs1):
                         return _Par(s0, s1)
         return None
-    def replace_seq(old_steps, old_preds, old_succs, seq):
-        new_steps, new_preds, new_succs = [], {}, {}
-        for step in old_steps: #careful to keep topological order
+    def replace_seq(old_graph: _Graph, seq: _Seq) -> _Graph:
+        result = _Graph([], {}, {})
+        for step in old_graph.steps: #careful to keep topological order
             if step is seq.src:
-                new_steps.append(seq)
-                new_preds[seq] = old_preds[seq.src]
-                new_succs[seq] = old_succs[seq.dst]
+                result.steps.append(seq)
+                result.preds[seq] = old_graph.preds[seq.src]
+                result.succs[seq] = old_graph.succs[seq.dst]
             elif step is not seq.dst:
-                new_steps.append(step)
+                result.steps.append(step)
                 def map_step(step):
                     if step in [seq.src, seq.dst]:
                         return seq
                     return step
-                new_preds[step] = [map_step(pred) for pred in old_preds[step]]
-                new_succs[step] = [map_step(succ) for succ in old_succs[step]]
-        return new_steps, new_preds, new_succs
-    def replace_par(old_steps, old_preds, old_succs, par):
-        new_steps, new_preds, new_succs = [], {}, {}
-        for step in old_steps: #careful to keep topological order
+                result.preds[step] = [
+                    map_step(pred) for pred in old_graph.preds[step]]
+                result.succs[step] = [
+                    map_step(succ) for succ in old_graph.succs[step]]
+        return result
+    def replace_par(old_graph: _Graph, par: _Par) -> _Graph:
+        result = _Graph([], {}, {})
+        for step in old_graph.steps: #careful to keep topological order
             if step is par.s0:
-                new_steps.append(par)
-                new_preds[par] = old_preds[step]
-                new_succs[par] = old_succs[step]
+                result.steps.append(par)
+                result.preds[par] = old_graph.preds[step]
+                result.succs[par] = old_graph.succs[step]
             elif step is not par.s1:
-                new_steps.append(step)
-                new_preds[step] = []
-                for pred in old_preds[step]:
+                result.steps.append(step)
+                result.preds[step] = []
+                for pred in old_graph.preds[step]:
                     if pred is par.s0:
-                        new_preds[step].append(par)
+                        result.preds[step].append(par)
                     elif pred is not par.s1:
-                        new_preds[step].append(pred)
-                new_succs[step] = []
-                for succ in old_succs[step]:
+                        result.preds[step].append(pred)
+                result.succs[step] = []
+                for succ in old_graph.succs[step]:
                     if succ is par.s0:
-                        new_succs[step].append(par)
+                        result.succs[step].append(par)
                     elif succ is not par.s1:
-                        new_succs[step].append(succ)
-        return new_steps, new_preds, new_succs
-    def replace_reducibles(steps, preds, succs):
+                        result.succs[step].append(succ)
+        return result
+    def replace_reducibles(graph: _Graph) -> Union[_Graph, 'lale.operators.Operator']:
         progress = True
         while progress:
-            seq = find_seq(steps, preds, succs)
-            if seq:
-                steps, preds, succs = replace_seq(steps, preds, succs, seq)
-            par = find_par(steps, preds, succs)
-            if par:
-                steps, preds, succs = replace_par(steps, preds, succs, par)
-            progress = seq or par
-        if len(steps) == 1:
-            return steps[0]
+            seq = find_seq(graph)
+            if seq is not None:
+                graph = replace_seq(graph, seq)
+            par = find_par(graph)
+            if par is not None:
+                graph = replace_par(graph, par)
+            progress = seq is not None or par is not None
+        if len(graph.steps) == 1:
+            return graph.steps[0]
         else:
-            return steps, preds, succs
-    steps, preds, succs = shallow_copy_graph(pipeline)
-    graph = replace_reducibles(steps, preds, succs)
-    return graph
+            return graph
+    graph = make_graph(pipeline)
+    result = replace_reducibles(graph)
+    return result
 
 class _CodeGenState:
     def __init__(self):
@@ -216,8 +219,8 @@ class _CodeGenState:
         self._names |= {result}
         return result
 
-def _pipeline_to_string_rec(graph, show_imports: bool, cls2name: Dict[str,str], gen: _CodeGenState):
-    if type(graph) is tuple:
+def _pipeline_to_string_rec(graph: Union[_Graph, 'lale.operators.Operator'], show_imports: bool, cls2name: Dict[str,str], gen: _CodeGenState):
+    if isinstance(graph, _Graph):
         steps, preds, succs = graph
         dummy = gen.gensym('step')
         step2name = {}
@@ -272,7 +275,7 @@ def _pipeline_to_string_rec(graph, show_imports: bool, cls2name: Dict[str,str], 
         else:
             return name
     else:
-        assert False, f'unexpected type {type} of graph {graph}'
+        assert False, f'unexpected type {type(graph)} of graph {graph}'
 
 def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: bool, cls2name: Dict[str,str]) -> str:
     assert isinstance(pipeline, lale.operators.BasePipeline)
