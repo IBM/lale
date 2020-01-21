@@ -218,8 +218,6 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
         def __init__(self):
             self.imports = []
             self.assigns = []
-            self.irreducibles = []
-            self.pipeline = []
             self._names = {'lale','pipeline','get_pipeline_of_applicable_type'}
         def gensym(self, prefix):
             if prefix in self._names:
@@ -243,15 +241,16 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
                 else:
                     name = gen.gensym('step')
                     expr = code_gen_rec(step)
-                    gen.irreducibles.append(f'{name} = {expr}')
+                    gen.assigns.append(f'{name} = {expr}')
                     step2name[step] = name
             make_pipeline = 'get_pipeline_of_applicable_type'
             gen.imports.append(f'from lale.operators import {make_pipeline}')
-            gen.pipeline = 'pipeline = {}(\n    steps=[{}],\n    edges=[{}])' \
-               .format(make_pipeline,
-                       ', '.join([step2name[step] for step in steps]),
-                       ', '.join([f'({step2name[src]},{step2name[tgt]})'
-                                  for src in steps for tgt in succs[src]]))
+            gen.assigns.append(
+                'pipeline = {}(\n    steps=[{}],\n    edges=[{}])'.format(
+                    make_pipeline,
+                    ', '.join([step2name[step] for step in steps]),
+                    ', '.join([f'({step2name[src]},{step2name[tgt]})'
+                               for src in steps for tgt in succs[src]])))
             return None
         elif isinstance(graph, _Seq):
             def parens(op):
@@ -291,9 +290,8 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
     def code_gen_top(graph):
         expr = code_gen_rec(graph)
         if expr:
-            gen.pipeline = f'pipeline = {expr}'
-        code = gen.imports if show_imports else []
-        code = code + gen.assigns + gen.irreducibles + [gen.pipeline]
+            gen.assigns.append(f'pipeline = {expr}')
+        code = (gen.imports if show_imports else []) + gen.assigns
         result = '\n'.join(code)
         return result
     graph = _introduce_structure(pipeline)
