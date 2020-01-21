@@ -19,7 +19,7 @@ import inspect
 import json
 import pprint
 import re
-from typing import Any, Dict, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, Union, cast
 
 import lale.helpers
 import lale.json_operator
@@ -110,7 +110,24 @@ def _indiv_op_to_string(op: 'lale.operators.IndividualOp', show_imports: bool, n
         op_expr = name
     return import_stmt, op_expr
 
-def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: bool, cls2name: Dict[str,str]) -> str:
+class _Seq:
+    def __init__(self, src, dst):
+        self._src = src
+        self._dst = dst
+    def src(self):
+        return self._src
+    def dst(self):
+        return self._dst
+class _Par:
+    def __init__(self, s0, s1):
+        self._s0 = s0
+        self._s1 = s1
+    def s0(self):
+        return self._s0
+    def s1(self):
+        return self._s1
+
+def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Tuple[List[Any], Dict[Any, List[Any]], Dict[Any, List[Any]]]:
     assert isinstance(pipeline, lale.operators.BasePipeline)
     def shallow_copy_graph(pipeline):
         if isinstance(pipeline, lale.operators.OperatorChoice):
@@ -122,28 +139,12 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
             preds[dst].append(src)
             succs[src].append(dst)
         return steps, preds, succs
-    class Seq:
-        def __init__(self, src, dst):
-            self._src = src
-            self._dst = dst
-        def src(self):
-            return self._src
-        def dst(self):
-            return self._dst
-    class Par:
-        def __init__(self, s0, s1):
-            self._s0 = s0
-            self._s1 = s1
-        def s0(self):
-            return self._s0
-        def s1(self):
-            return self._s1
     def find_seq(steps, preds, succs):
         for src in steps:
             if len(succs[src]) == 1:
                 dst = succs[src][0]
                 if len(preds[dst]) == 1:
-                    return Seq(src, dst)
+                    return _Seq(src, dst)
         return None
     def find_par(steps, preds, succs):
         for i0 in range(len(steps)):
@@ -153,7 +154,7 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
                 if len(preds0) == len(preds1) and set(preds0) == set(preds1):
                     succs0, succs1 = succs[s0], succs[s1]
                     if len(succs0)==len(succs1) and set(succs0)==set(succs1):
-                        return Par(s0, s1)
+                        return _Par(s0, s1)
         return None
     def replace_seq(old_steps, old_preds, old_succs, seq):
         new_steps, new_preds, new_succs = [], {}, {}
@@ -193,7 +194,7 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
                     elif succ is not par.s1():
                         new_succs[step].append(succ)
         return new_steps, new_preds, new_succs
-    def introduce_structure(steps, preds, succs):
+    def replace_reducibles(steps, preds, succs):
         progress = True
         while progress:
             seq = find_seq(steps, preds, succs)
@@ -207,6 +208,12 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
             return steps[0]
         else:
             return steps, preds, succs
+    steps, preds, succs = shallow_copy_graph(pipeline)
+    graph = replace_reducibles(steps, preds, succs)
+    return graph
+
+def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: bool, cls2name: Dict[str,str]) -> str:
+    assert isinstance(pipeline, lale.operators.BasePipeline)
     class CodeGenState:
         def __init__(self):
             self.imports = []
@@ -246,24 +253,24 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
                        ', '.join([f'({step2name[src]},{step2name[tgt]})'
                                   for src in steps for tgt in succs[src]]))
             return None
-        elif isinstance(graph, Seq):
+        elif isinstance(graph, _Seq):
             def parens(op):
                 result = code_gen_rec(op)
-                if isinstance(op, Par) or isinstance(op, lale.operators.OperatorChoice):
+                if isinstance(op, _Par) or isinstance(op, lale.operators.OperatorChoice):
                     return f'({result})'
                 return result
             return f'{parens(graph.src())} >> {parens(graph.dst())}'
-        elif isinstance(graph, Par):
+        elif isinstance(graph, _Par):
             def parens(op):
                 result = code_gen_rec(op)
-                if isinstance(op, Seq) or isinstance(op, lale.operators.OperatorChoice):
+                if isinstance(op, _Seq) or isinstance(op, lale.operators.OperatorChoice):
                     return f'({result})'
                 return result
             return f'{parens(graph.s0())} & {parens(graph.s1())}'
         elif isinstance(graph, lale.operators.OperatorChoice):
             def parens(op):
                 result = code_gen_rec(op)
-                if isinstance(op, Seq) or isinstance(op, Par):
+                if isinstance(op, _Seq) or isinstance(op, _Par):
                     return f'({result})'
                 return result
             printed_steps = [parens(step) for step in graph.steps()]
@@ -289,8 +296,7 @@ def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: b
         code = code + gen.assigns + gen.irreducibles + [gen.pipeline]
         result = '\n'.join(code)
         return result
-    steps, preds, succs = shallow_copy_graph(pipeline)
-    graph = introduce_structure(steps, preds, succs)
+    graph = _introduce_structure(pipeline)
     return code_gen_top(graph)
 
 def schema_to_string(schema: JSON_TYPE) -> str:
