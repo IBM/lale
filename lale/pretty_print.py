@@ -14,6 +14,7 @@
 
 import ast
 import astunparse
+import collections
 import importlib
 import inspect
 import json
@@ -110,22 +111,8 @@ def _indiv_op_to_string(op: 'lale.operators.IndividualOp', show_imports: bool, n
         op_expr = name
     return import_stmt, op_expr
 
-class _Seq:
-    def __init__(self, src, dst):
-        self._src = src
-        self._dst = dst
-    def src(self):
-        return self._src
-    def dst(self):
-        return self._dst
-class _Par:
-    def __init__(self, s0, s1):
-        self._s0 = s0
-        self._s1 = s1
-    def s0(self):
-        return self._s0
-    def s1(self):
-        return self._s1
+_Seq = collections.namedtuple('_Seq', ['src', 'dst'])
+_Par = collections.namedtuple('_Par', ['s0', 's1'])
 
 def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Tuple[List[Any], Dict[Any, List[Any]], Dict[Any, List[Any]]]:
     assert isinstance(pipeline, lale.operators.BasePipeline)
@@ -159,14 +146,14 @@ def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Tuple[List[
     def replace_seq(old_steps, old_preds, old_succs, seq):
         new_steps, new_preds, new_succs = [], {}, {}
         for step in old_steps: #careful to keep topological order
-            if step is seq.src():
+            if step is seq.src:
                 new_steps.append(seq)
-                new_preds[seq] = old_preds[seq.src()]
-                new_succs[seq] = old_succs[seq.dst()]
-            elif step is not seq.dst():
+                new_preds[seq] = old_preds[seq.src]
+                new_succs[seq] = old_succs[seq.dst]
+            elif step is not seq.dst:
                 new_steps.append(step)
                 def map_step(step):
-                    if step in [seq.src(), seq.dst()]:
+                    if step in [seq.src, seq.dst]:
                         return seq
                     return step
                 new_preds[step] = [map_step(pred) for pred in old_preds[step]]
@@ -175,23 +162,23 @@ def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Tuple[List[
     def replace_par(old_steps, old_preds, old_succs, par):
         new_steps, new_preds, new_succs = [], {}, {}
         for step in old_steps: #careful to keep topological order
-            if step is par.s0():
+            if step is par.s0:
                 new_steps.append(par)
                 new_preds[par] = old_preds[step]
                 new_succs[par] = old_succs[step]
-            elif step is not par.s1():
+            elif step is not par.s1:
                 new_steps.append(step)
                 new_preds[step] = []
                 for pred in old_preds[step]:
-                    if pred is par.s0():
+                    if pred is par.s0:
                         new_preds[step].append(par)
-                    elif pred is not par.s1():
+                    elif pred is not par.s1:
                         new_preds[step].append(pred)
                 new_succs[step] = []
                 for succ in old_succs[step]:
-                    if succ is par.s0():
+                    if succ is par.s0:
                         new_succs[step].append(par)
-                    elif succ is not par.s1():
+                    elif succ is not par.s1:
                         new_succs[step].append(succ)
         return new_steps, new_preds, new_succs
     def replace_reducibles(steps, preds, succs):
@@ -212,90 +199,91 @@ def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Tuple[List[
     graph = replace_reducibles(steps, preds, succs)
     return graph
 
+class _CodeGenState:
+    def __init__(self):
+        self.imports = []
+        self.assigns = []
+        self._names = {'lale','pipeline','get_pipeline_of_applicable_type'}
+
+    def gensym(self, prefix):
+        if prefix in self._names:
+            suffix = 1
+            while f'{prefix}_{suffix}' in self._names:
+                suffix += 1
+            result = f'{prefix}_{suffix}'
+        else:
+            result = prefix
+        self._names |= {result}
+        return result
+
+def _pipeline_to_string_rec(graph, show_imports: bool, cls2name: Dict[str,str], gen: _CodeGenState):
+    if type(graph) is tuple:
+        steps, preds, succs = graph
+        dummy = gen.gensym('step')
+        step2name = {}
+        for step in steps:
+            if isinstance(step, lale.operators.IndividualOp):
+                step2name[step] = _pipeline_to_string_rec(step, show_imports, cls2name, gen)
+            else:
+                name = gen.gensym('step')
+                expr = _pipeline_to_string_rec(step, show_imports, cls2name, gen)
+                gen.assigns.append(f'{name} = {expr}')
+                step2name[step] = name
+        make_pipeline = 'get_pipeline_of_applicable_type'
+        gen.imports.append(f'from lale.operators import {make_pipeline}')
+        gen.assigns.append(
+            'pipeline = {}(\n    steps=[{}],\n    edges=[{}])'.format(
+                make_pipeline,
+                ', '.join([step2name[step] for step in steps]),
+                ', '.join([f'({step2name[src]},{step2name[tgt]})'
+                           for src in steps for tgt in succs[src]])))
+        return None
+    elif isinstance(graph, _Seq):
+        def parens(op):
+            result = _pipeline_to_string_rec(op, show_imports, cls2name, gen)
+            if isinstance(op, _Par) or isinstance(op, lale.operators.OperatorChoice):
+                return f'({result})'
+            return result
+        return f'{parens(graph.src)} >> {parens(graph.dst)}'
+    elif isinstance(graph, _Par):
+        def parens(op):
+            result = _pipeline_to_string_rec(op, show_imports, cls2name, gen)
+            if isinstance(op, _Seq) or isinstance(op, lale.operators.OperatorChoice):
+                return f'({result})'
+            return result
+        return f'{parens(graph.s0)} & {parens(graph.s1)}'
+    elif isinstance(graph, lale.operators.OperatorChoice):
+        def parens(op):
+            result = _pipeline_to_string_rec(op, show_imports, cls2name, gen)
+            if isinstance(op, _Seq) or isinstance(op, _Par):
+                return f'({result})'
+            return result
+        printed_steps = [parens(step) for step in graph.steps()]
+        return ' | '.join(printed_steps)
+    elif isinstance(graph, lale.operators.IndividualOp):
+        name = gen.gensym(cls2name[graph.class_name()])
+        module_name = _get_module_name(graph.name(), graph.name(), graph.class_name())
+        import_stmt, op_expr = _indiv_op_to_string(graph, True, name, module_name)
+        gen.imports.append(import_stmt)
+        if re.fullmatch(r'.+\(.+\)', op_expr):
+            new_name = gen.gensym(lale.helpers.camelCase_to_snake(name))
+            gen.assigns.append(f'{new_name} = {op_expr}')
+            return new_name
+        else:
+            return name
+    else:
+        assert False, f'unexpected type {type} of graph {graph}'
+
 def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: bool, cls2name: Dict[str,str]) -> str:
     assert isinstance(pipeline, lale.operators.BasePipeline)
-    class CodeGenState:
-        def __init__(self):
-            self.imports = []
-            self.assigns = []
-            self._names = {'lale','pipeline','get_pipeline_of_applicable_type'}
-        def gensym(self, prefix):
-            if prefix in self._names:
-                suffix = 1
-                while f'{prefix}_{suffix}' in self._names:
-                    suffix += 1
-                result = f'{prefix}_{suffix}'
-            else:
-                result = prefix
-            self._names |= {result}
-            return result
-    gen = CodeGenState()
-    def code_gen_rec(graph):
-        if type(graph) is tuple:
-            steps, preds, succs = graph
-            dummy = gen.gensym('step')
-            step2name = {}
-            for step in steps:
-                if isinstance(step, lale.operators.IndividualOp):
-                    step2name[step] = code_gen_rec(step)
-                else:
-                    name = gen.gensym('step')
-                    expr = code_gen_rec(step)
-                    gen.assigns.append(f'{name} = {expr}')
-                    step2name[step] = name
-            make_pipeline = 'get_pipeline_of_applicable_type'
-            gen.imports.append(f'from lale.operators import {make_pipeline}')
-            gen.assigns.append(
-                'pipeline = {}(\n    steps=[{}],\n    edges=[{}])'.format(
-                    make_pipeline,
-                    ', '.join([step2name[step] for step in steps]),
-                    ', '.join([f'({step2name[src]},{step2name[tgt]})'
-                               for src in steps for tgt in succs[src]])))
-            return None
-        elif isinstance(graph, _Seq):
-            def parens(op):
-                result = code_gen_rec(op)
-                if isinstance(op, _Par) or isinstance(op, lale.operators.OperatorChoice):
-                    return f'({result})'
-                return result
-            return f'{parens(graph.src())} >> {parens(graph.dst())}'
-        elif isinstance(graph, _Par):
-            def parens(op):
-                result = code_gen_rec(op)
-                if isinstance(op, _Seq) or isinstance(op, lale.operators.OperatorChoice):
-                    return f'({result})'
-                return result
-            return f'{parens(graph.s0())} & {parens(graph.s1())}'
-        elif isinstance(graph, lale.operators.OperatorChoice):
-            def parens(op):
-                result = code_gen_rec(op)
-                if isinstance(op, _Seq) or isinstance(op, _Par):
-                    return f'({result})'
-                return result
-            printed_steps = [parens(step) for step in graph.steps()]
-            return ' | '.join(printed_steps)
-        elif isinstance(graph, lale.operators.IndividualOp):
-            name = gen.gensym(cls2name[graph.class_name()])
-            module_name = _get_module_name(graph.name(), graph.name(), graph.class_name())
-            import_stmt, op_expr = _indiv_op_to_string(graph, True, name, module_name)
-            gen.imports.append(import_stmt)
-            if re.fullmatch(r'.+\(.+\)', op_expr):
-                new_name = gen.gensym(lale.helpers.camelCase_to_snake(name))
-                gen.assigns.append(f'{new_name} = {op_expr}')
-                return new_name
-            else:
-                return name
-        else:
-            assert False, f'unexpected type {type} of graph {graph}'
-    def code_gen_top(graph):
-        expr = code_gen_rec(graph)
-        if expr:
-            gen.assigns.append(f'pipeline = {expr}')
-        code = (gen.imports if show_imports else []) + gen.assigns
-        result = '\n'.join(code)
-        return result
     graph = _introduce_structure(pipeline)
-    return code_gen_top(graph)
+    gen = _CodeGenState()
+    expr = _pipeline_to_string_rec(graph, show_imports, cls2name, gen)
+    if expr:
+        gen.assigns.append(f'pipeline = {expr}')
+    code = (gen.imports if show_imports else []) + gen.assigns
+    result = '\n'.join(code)
+    return result
 
 def schema_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
