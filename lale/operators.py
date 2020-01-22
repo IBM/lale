@@ -1288,7 +1288,8 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                 steps:List[OpType], 
                 edges:Optional[Iterable[Tuple[OpType, OpType]]], 
                 ordered:bool=False) -> None:
-        self._name = "pipeline_" + str(id(self))                
+        self._name = "pipeline_" + str(id(self))  
+        self._preds = {}              
         for step in steps:
             assert isinstance(step, Operator)
         if edges is None: 
@@ -1307,7 +1308,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                     self._steps.extend(step.steps())
                     #from step's edges, find out all the source and sink nodes
                     source_nodes = [dst for dst in step.steps() if (step._preds[dst] is None or step._preds[dst] == [])]
-                    sink_nodes = self.find_sink_nodes()                  
+                    sink_nodes = step.find_sink_nodes()                  
                     #Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
                     new_edges = step.edges()
                     #list comprehension at the cost of iterating edges thrice
@@ -1317,7 +1318,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                     edges = new_edges
                 else:
                     self._steps.append(step)
-            self._preds = { step: [] for step in self._steps }
+            self._preds = { step: [] for step in self._steps}
             for (src, dst) in edges:
                 self._preds[dst].append(src)
             if not ordered:
@@ -1447,15 +1448,16 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
 
     def find_sink_nodes(self):
         sink_nodes = []  
-        sink_nodes.append(self.steps()[-1])
-        # Uncomment this if a Lale pipeline is allowed to have multiple sink nodes.                  
-        # for node in self.steps():
-        #     is_sink_node = True
-        #     for edge in self.edges():
-        #         if edge[0] == node:
-        #             is_sink_node = False
-        #     if is_sink_node:
-        #         sink_nodes.append(node)
+        #sink_nodes.append(self.steps()[-1])
+        #TODO: This means a Lale pipeline is allowed to have multiple sink nodes, 
+        #making this change for grammars, test for other scenarios.
+        for node in self.steps():
+            is_sink_node = True
+            for edge in self.edges():
+                if edge[0] == node:
+                    is_sink_node = False
+            if is_sink_node:
+                sink_nodes.append(node)
         return sink_nodes
 
     def validate_schema(self, X, y=None):
@@ -2182,6 +2184,7 @@ def get_pipeline_of_applicable_type(steps, edges, ordered=False)->PlannedPipelin
     should it be of type TrainedPipeline?
     Currently, it will be TrainablePipeline, i.e. it will be forced to train it again.
     """
+
     isTrainable:bool = True
     for operator in steps:
         if isinstance(operator, OperatorChoice) or not (isinstance(operator, Trainable)
