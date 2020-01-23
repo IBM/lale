@@ -60,9 +60,15 @@ class SearchSpaceEnum(SearchSpacePrimitive):
         else:
             self.pgo = FrequencyDistribution.asEnumValues(pgo, self.vals)
 
+    def __str__(self):
+        return "<" + ",".join(map(str, self.vals)) + ">"
+
 class SearchSpaceConstant(SearchSpaceEnum):
     def __init__(self, v, pgo:PGO_input_type=None):
         super(SearchSpaceConstant, self).__init__([v], pgo=pgo, default=v)
+
+    def __str__(self):
+        return str(self.vals[0])
 
 class SearchSpaceBool(SearchSpaceEnum):
     def __init__(self, pgo:PGO_input_type=None, default:Optional[Any]=None):
@@ -124,6 +130,41 @@ class SearchSpaceNumber(SearchSpacePrimitive):
                 min = numpy.nextafter(min, float('+inf'))
         return min
 
+    def __str__(self):
+        ret:str = ""
+        if self.exclusiveMinimum or self.minimum is None:
+             ret += "("
+        else:
+
+            ret += "["
+        if self.discrete:
+            ret += '\u2308'
+
+        if self.minimum is None:
+            ret += '\u221E'
+        else:
+            ret += str(self.minimum)
+
+        if not self.distribution or self.distribution == "uniform" or self.distribution == "integer":
+            ret += ","
+        elif self.distribution == "loguniform":
+            ret += ",<log>,"
+        else:
+            ret += ",<" + self.distribution + ">,"
+
+        if self.maximum is None:
+            ret += '\u221E'
+        else:
+            ret += str(self.maximum)
+
+        if self.discrete:
+            ret += '\u2309'
+        if self.exclusiveMaximum or self.maximum is None:
+             ret += ")"
+        else:
+            ret += "]"
+        return ret
+
 class SearchSpaceArray(SearchSpace):
     def __init__(self, minimum:int=0, *, maximum:int, contents:SearchSpace, is_tuple=False) -> None:
         super(SearchSpaceArray, self).__init__()
@@ -131,12 +172,45 @@ class SearchSpaceArray(SearchSpace):
         self.maximum = maximum
         self.contents = contents
         self.is_tuple = is_tuple
+    
+    def __str__(self):
+        ret:str = ""
+        ret += f"Array<{self.minimum}, {self.maximum}>"
+        if self.is_tuple:
+            ret += "("
+        else:
+            ret += "["
+
+        ret += str(self.contents)
+
+        if self.is_tuple:
+            ret += ")"
+        else:
+            ret += "]"
+        return ret
+
 
 class SearchSpaceList(SearchSpace):
     def __init__(self, contents:List[SearchSpace], is_tuple=False) -> None:
         super(SearchSpaceList, self).__init__()
         self.contents = contents
         self.is_tuple = is_tuple
+    
+    def __str__(self):
+        ret:str = ""
+        ret += "List"
+        if self.is_tuple:
+            ret += "("
+        else:
+            ret += "["
+
+        ret += ",".join(map(str,self.contents))
+
+        if self.is_tuple:
+            ret += ")"
+        else:
+            ret += "]"
+        return ret
 
 class SearchSpaceObject(SearchSpace):
     def __init__(self, longName:str, keys:List[str], choices:Iterable[Any]) -> None:
@@ -144,6 +218,22 @@ class SearchSpaceObject(SearchSpace):
         self.longName = longName
         self.keys = keys
         self.choices = choices
+
+    def __str__(self):
+        ret:str = ""
+        ret += f"Object<{self.longName}>["
+
+        choice_strs:List[str] = []
+        for c in self.choices:
+            opts:List[str] = []
+            for k,v in zip(self.keys, c):
+                opts.append(k + "->" + str(v))
+            l = ";".join(opts)
+            choice_strs.append("{" + l + "}")
+
+        ret += ",".join(choice_strs) + "]"
+
+        return ret
 
 class SearchSpaceSum(SearchSpace):
     sub_spaces:List[SearchSpace]
@@ -153,6 +243,12 @@ class SearchSpaceSum(SearchSpace):
         super(SearchSpaceSum, self).__init__(default=default)
         self.sub_spaces = sub_spaces
 
+    def __str__(self):
+        ret:str = "\u2211["
+        ret += "|".join(map(str, self.sub_spaces))
+        ret += "]"
+        return ret
+
 class SearchSpaceOperator(SearchSpace):
     sub_space:SearchSpace
     def __init__(self,
@@ -160,6 +256,12 @@ class SearchSpaceOperator(SearchSpace):
                  default:Optional[Any]=None):
         super(SearchSpaceOperator, self).__init__(default=default)
         self.sub_space = sub_space
+
+    def __str__(self):
+        ret:str = "\u00AB"
+        ret += str(self.sub_space)
+        ret += "\u00BB"
+        return ret
 
 class SearchSpaceProduct(SearchSpace):
     sub_spaces:List[Tuple[str, SearchSpace]]
@@ -183,3 +285,14 @@ class SearchSpaceProduct(SearchSpace):
             return (x[0], x[1], space)
         
         return [enhance_tuple(make_indexed(name), space) for name,space in self.sub_spaces]
+
+    def __str__(self):
+        ret:str = "\u220F{"
+
+        parts:List[str] = []
+        for k,v in self.sub_spaces:
+            parts.append(k + "->" + str(v))
+        ret = ";".join(parts)
+
+        ret += "}"
+        return ret
