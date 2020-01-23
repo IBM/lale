@@ -285,6 +285,34 @@ experiments_dict['airlines']['download_csv_url'] = 'https://www.openml.org/data/
 experiments_dict['airlines']['task_type'] = 'stream classification'
 experiments_dict['airlines']['target'] = 'class'
 
+experiments_dict['diabetes'] = {}
+experiments_dict['diabetes']['dataset_url'] = 'https://www.openml.org/d/37' 
+experiments_dict['diabetes']['download_arff_url'] = 'https://www.openml.org/data/download/37/dataset_37_diabetes.arff'
+experiments_dict['diabetes']['download_csv_url'] = 'https://www.openml.org/data/get_csv/37/dataset_37_diabetes.arff'
+experiments_dict['diabetes']['task_type'] = 'classification'
+experiments_dict['diabetes']['target'] = 'class'
+
+experiments_dict['spectf'] = {}
+experiments_dict['spectf']['dataset_url'] = 'https://www.openml.org/d/337' 
+experiments_dict['spectf']['download_arff_url'] = 'https://www.openml.org/data/download/52240/phpDQbeeh'
+experiments_dict['spectf']['download_csv_url'] = 'https://www.openml.org/data/get_csv/52240/phpDQbeeh'
+experiments_dict['spectf']['task_type'] = 'classification'
+experiments_dict['spectf']['target'] = 'overall_diagnosis'
+
+experiments_dict['hill-valley'] = {}
+experiments_dict['hill-valley']['dataset_url'] = 'https://www.openml.org/d/1479' 
+experiments_dict['hill-valley']['download_arff_url'] = 'https://www.openml.org/data/download/1590101/php3isjYz'
+experiments_dict['hill-valley']['download_csv_url'] = 'https://www.openml.org/data/get_csv/1590101/php3isjYz'
+experiments_dict['hill-valley']['task_type'] = 'classification'
+experiments_dict['hill-valley']['target'] = 'class'
+
+experiments_dict['breast-cancer'] = {}
+experiments_dict['breast-cancer']['dataset_url'] = 'https://www.openml.org/d/13' 
+experiments_dict['breast-cancer']['download_arff_url'] = 'https://www.openml.org/data/download/13/dataset_13_breast-cancer.arff'
+experiments_dict['breast-cancer']['download_csv_url'] = 'https://www.openml.org/data/get_csv/13/dataset_13_breast-cancer.arff'
+experiments_dict['breast-cancer']['task_type'] = 'classification'
+experiments_dict['breast-cancer']['target'] = 'class'
+
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
     elems_X = [item_schema for item_schema in schema_orig['items']['items']
@@ -434,9 +462,13 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True):
     return (X_train, y_train), (X_test, y_test)
 
 if __name__ == "__main__":
-    for dataset_name in experiments_dict.keys():
+    datasets = ['spectf', 'diabetes', 'breast-cancer', 'hill-valley']
+    from lale.lib.sklearn import LogisticRegression
+    for dataset_name in datasets:
         try:
             (X_train, y_train), (X_test, y_test) = fetch(dataset_name, 'classification')
+            trained = LogisticRegression().fit(X_train, y_train)
+            trained.predict(X_test)
         except BaseException as e:
             import traceback
             traceback.print_exc()
