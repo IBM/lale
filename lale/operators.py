@@ -344,7 +344,12 @@ class Operator(metaclass=AbstractVisitorMeta):
         """Returns the json representation of the operator.
         """
         return lale.json_operator.to_json(self, call_depth=2)
-    
+
+    def visualize(self):
+        """Visualize the operator using graphviz (use in a notebook).
+        """
+        return lale.helpers.to_graphviz(self, call_depth=2)
+
     @abstractmethod
     def has_same_impl(self, other:'Operator')->bool:
         """Checks if the type of the operator implementations are compatible
