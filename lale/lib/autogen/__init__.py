@@ -1,6 +1,4 @@
 from .ard_regression import ARDRegression
-from .ada_boost_classifier import AdaBoostClassifier
-from .ada_boost_regressor import AdaBoostRegressor
 from .bayesian_ridge import BayesianRidge
 from .bernoulli_nb import BernoulliNB
 from .cca import CCA
