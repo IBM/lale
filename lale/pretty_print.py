@@ -16,11 +16,10 @@ import ast
 import astunparse
 import collections
 import importlib
-import inspect
 import json
 import pprint
 import re
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import lale.helpers
 import lale.json_operator
@@ -88,74 +87,69 @@ def _indiv_op_jsn_to_string(jsn: JSON_TYPE, show_imports: bool) -> Tuple[str, st
         op_expr = label
     return import_stmt, op_expr
 
-def _indiv_op_to_string(op: 'lale.operators.IndividualOp', show_imports: bool, name:str=None, module_name:str=None) -> Tuple[str, str]:
-    assert isinstance(op, lale.operators.IndividualOp)
-    if name is None:
-        name = op.name()
-    if show_imports:
-        assert module_name is not None
-        if module_name.startswith('lale.'):
-            op_name = op.name()
-        else:
-            op_name = op.class_name().split('.')[-1]
-        if name == op_name:
-            import_stmt = f'from {module_name} import {op_name}'
-        else:
-            import_stmt = f'from {module_name} import {op_name} as {name}'
-    else:
-        import_stmt = ''
-    if hasattr(op._impl, "fit") and isinstance(op, lale.operators.TrainableIndividualOp):
-        hps = hyperparams_to_string(op.hyperparams(), op)
-        op_expr = f'{name}({hps})'
-    else:
-        op_expr = name
-    return import_stmt, op_expr
-
-_Seq = collections.namedtuple('_Seq', ['src', 'dst'])
-_Par = collections.namedtuple('_Par', ['s0', 's1'])
+_Seq = collections.namedtuple('_Seq', ['src_uid', 'src_jsn', 'dst_uid', 'dst_jsn'])
+_Par = collections.namedtuple('_Par', ['s0_uid', 's0_jsn', 's1_uid', 's1_jsn'])
 _Graph = collections.namedtuple('_Graph', ['steps', 'preds', 'succs'])
 
-def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Union[_Graph, 'lale.operators.Operator']:
-    assert isinstance(pipeline, lale.operators.BasePipeline)
-    def make_graph(pipeline: 'lale.operators.BasePipeline') -> _Graph:
-        if isinstance(pipeline, lale.operators.OperatorChoice):
-            return [pipeline], {pipeline:[]}, {pipeline:[]}
-        steps = [*pipeline.steps()]
-        preds: Dict[Any, List[Any]] = { step: [] for step in steps }
-        succs: Dict[Any, List[Any]] = { step: [] for step in steps }
-        for (src, dst) in pipeline.edges():
-            preds[dst].append(src)
-            succs[src].append(dst)
-        return _Graph(steps, preds, succs)
+def op_kind(op: Union[JSON_TYPE, _Graph, _Seq, _Par]) -> str:
+    if isinstance(op, dict):
+        return lale.json_operator.json_op_kind(op)
+    elif isinstance(op, _Graph):
+        return 'Graph'
+    elif isinstance(op, _Seq):
+        return 'Seq'
+    elif isinstance(op, _Par):
+        return 'Par'
+    raise TypeError(f'type {type(op)}, op {str(op)}')
+
+def _introduce_structure(pipeline: JSON_TYPE) -> Union[JSON_TYPE, _Graph, _Seq, _Par]:
+    assert op_kind(pipeline) == 'Pipeline'
+    def make_graph(pipeline: JSON_TYPE) -> _Graph:
+        preds: Dict[str, List[str]]
+        succs: Dict[str, List[str]]
+        if op_kind(pipeline) == 'OperatorChoice':
+            steps = {'choice': pipeline}
+            preds = {'choice': []}
+            succs = {'choice': []}
+            return _Graph(steps, preds, succs)
+        else:
+            steps = pipeline['steps']
+            preds = { step: [] for step in steps }
+            succs = { step: [] for step in steps }
+            for (src, dst) in pipeline['edges']:
+                preds[dst].append(src)
+                succs[src].append(dst)
+            return _Graph(steps, preds, succs)
     def find_seq(graph: _Graph) -> Optional[_Seq]:
         for src in graph.steps:
             if len(graph.succs[src]) == 1:
                 dst = graph.succs[src][0]
                 if len(graph.preds[dst]) == 1:
-                    return _Seq(src, dst)
+                    return _Seq(src, graph.steps[src], dst, graph.steps[dst])
         return None
     def find_par(graph: _Graph) -> Optional[_Par]:
-        for i0 in range(len(graph.steps)):
-            for i1 in range(i0 + 1, len(graph.steps)):
-                s0, s1 = graph.steps[i0], graph.steps[i1]
+        step_uids = list(graph.steps.keys())
+        for i0 in range(len(step_uids)):
+            for i1 in range(i0 + 1, len(step_uids)):
+                s0, s1 = step_uids[i0], step_uids[i1]
                 preds0, preds1 = graph.preds[s0], graph.preds[s1]
                 if len(preds0) == len(preds1) and set(preds0) == set(preds1):
                     succs0, succs1 = graph.succs[s0], graph.succs[s1]
                     if len(succs0)==len(succs1) and set(succs0)==set(succs1):
-                        return _Par(s0, s1)
+                        return _Par(s0, graph.steps[s0], s1, graph.steps[s1])
         return None
     def replace_seq(old_graph: _Graph, seq: _Seq) -> _Graph:
-        result = _Graph([], {}, {})
+        result = _Graph({}, {}, {})
         for step in old_graph.steps: #careful to keep topological order
-            if step is seq.src:
-                result.steps.append(seq)
-                result.preds[seq] = old_graph.preds[seq.src]
-                result.succs[seq] = old_graph.succs[seq.dst]
-            elif step is not seq.dst:
-                result.steps.append(step)
+            if step == seq.src_uid:
+                result.steps[step] = seq
+                result.preds[step] = old_graph.preds[seq.src_uid]
+                result.succs[step] = old_graph.succs[seq.dst_uid]
+            elif step != seq.dst_uid:
+                result.steps[step] = old_graph.steps[step]
                 def map_step(step):
-                    if step in [seq.src, seq.dst]:
-                        return seq
+                    if step in [seq.src_uid, seq.dst_uid]:
+                        return seq.src_uid
                     return step
                 result.preds[step] = [
                     map_step(pred) for pred in old_graph.preds[step]]
@@ -163,28 +157,28 @@ def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Union[_Grap
                     map_step(succ) for succ in old_graph.succs[step]]
         return result
     def replace_par(old_graph: _Graph, par: _Par) -> _Graph:
-        result = _Graph([], {}, {})
+        result = _Graph({}, {}, {})
         for step in old_graph.steps: #careful to keep topological order
-            if step is par.s0:
-                result.steps.append(par)
-                result.preds[par] = old_graph.preds[step]
-                result.succs[par] = old_graph.succs[step]
-            elif step is not par.s1:
-                result.steps.append(step)
+            if step == par.s0_uid:
+                result.steps[step] = par
+                result.preds[step] = old_graph.preds[step]
+                result.succs[step] = old_graph.succs[step]
+            elif step != par.s1_uid:
+                result.steps[step] = old_graph.steps[step]
                 result.preds[step] = []
                 for pred in old_graph.preds[step]:
-                    if pred is par.s0:
-                        result.preds[step].append(par)
-                    elif pred is not par.s1:
+                    if pred == par.s0_uid:
+                        result.preds[step].append(par.s0_uid)
+                    elif pred != par.s1_uid:
                         result.preds[step].append(pred)
                 result.succs[step] = []
                 for succ in old_graph.succs[step]:
-                    if succ is par.s0:
-                        result.succs[step].append(par)
-                    elif succ is not par.s1:
+                    if succ == par.s0_uid:
+                        result.succs[step].append(par.s0_uid)
+                    elif succ != par.s1_uid:
                         result.succs[step].append(succ)
         return result
-    def replace_reducibles(graph: _Graph) -> Union[_Graph, 'lale.operators.Operator']:
+    def replace_reducibles(graph: _Graph) -> Union[JSON_TYPE, _Graph, _Seq, _Par]:
         progress = True
         while progress:
             seq = find_seq(graph)
@@ -195,7 +189,7 @@ def _introduce_structure(pipeline: 'lale.operators.BasePipeline') -> Union[_Grap
                 graph = replace_par(graph, par)
             progress = seq is not None or par is not None
         if len(graph.steps) == 1:
-            return graph.steps[0]
+            return list(graph.steps.values())[0]
         else:
             return graph
     graph = make_graph(pipeline)
@@ -219,19 +213,22 @@ class _CodeGenState:
         self._names |= {result}
         return result
 
-def _pipeline_to_string_rec(graph: Union[_Graph, 'lale.operators.Operator'], show_imports: bool, cls2name: Dict[str,str], gen: _CodeGenState):
-    if isinstance(graph, _Graph):
-        steps, preds, succs = graph
+def _pipeline_to_string_rec(graph: Union[JSON_TYPE, _Graph, _Seq, _Par], show_imports: bool, gen: _CodeGenState):
+    if op_kind(graph) == 'Pipeline':
+        structured = _introduce_structure(cast(JSON_TYPE, graph))
+        return _pipeline_to_string_rec(structured, show_imports, gen)
+    elif op_kind(graph) == 'Graph':
+        steps, preds, succs = cast(_Graph, graph)
         dummy = gen.gensym('step')
         step2name = {}
-        for step in steps:
-            if isinstance(step, lale.operators.IndividualOp):
-                step2name[step] = _pipeline_to_string_rec(step, show_imports, cls2name, gen)
+        for step_uid, step_jsn in steps.items():
+            if op_kind(step_jsn) == 'IndividualOp':
+                step2name[step_uid] = _pipeline_to_string_rec(step_jsn, show_imports, gen)
             else:
                 name = gen.gensym('step')
-                expr = _pipeline_to_string_rec(step, show_imports, cls2name, gen)
+                expr = _pipeline_to_string_rec(step_jsn, show_imports, gen)
                 gen.assigns.append(f'{name} = {expr}')
-                step2name[step] = name
+                step2name[step_uid] = name
         make_pipeline = 'get_pipeline_of_applicable_type'
         gen.imports.append(f'from lale.operators import {make_pipeline}')
         gen.assigns.append(
@@ -241,32 +238,35 @@ def _pipeline_to_string_rec(graph: Union[_Graph, 'lale.operators.Operator'], sho
                 ', '.join([f'({step2name[src]},{step2name[tgt]})'
                            for src in steps for tgt in succs[src]])))
         return None
-    elif isinstance(graph, _Seq):
+    elif op_kind(graph) == 'Seq':
         def parens(op):
-            result = _pipeline_to_string_rec(op, show_imports, cls2name, gen)
-            if isinstance(op, _Par) or isinstance(op, lale.operators.OperatorChoice):
+            result = _pipeline_to_string_rec(op, show_imports, gen)
+            if op_kind(op) == 'Par' or op_kind(op) == 'OperatorChoice':
                 return f'({result})'
             return result
-        return f'{parens(graph.src)} >> {parens(graph.dst)}'
-    elif isinstance(graph, _Par):
+        graph = cast(_Seq, graph)
+        return f'{parens(graph.src_jsn)} >> {parens(graph.dst_jsn)}'
+    elif op_kind(graph) == 'Par':
         def parens(op):
-            result = _pipeline_to_string_rec(op, show_imports, cls2name, gen)
-            if isinstance(op, _Seq) or isinstance(op, lale.operators.OperatorChoice):
+            result = _pipeline_to_string_rec(op, show_imports, gen)
+            if op_kind(op) == 'Seq' or op_kind(op) == 'OperatorChoice':
                 return f'({result})'
             return result
-        return f'{parens(graph.s0)} & {parens(graph.s1)}'
-    elif isinstance(graph, lale.operators.OperatorChoice):
+        graph = cast(_Par, graph)
+        return f'{parens(graph.s0_jsn)} & {parens(graph.s1_jsn)}'
+    elif op_kind(graph) == 'OperatorChoice':
         def parens(op):
-            result = _pipeline_to_string_rec(op, show_imports, cls2name, gen)
-            if isinstance(op, _Seq) or isinstance(op, _Par):
+            result = _pipeline_to_string_rec(op, show_imports, gen)
+            if op_kind(op) == 'Seq' or op_kind(op) == 'Par':
                 return f'({result})'
             return result
-        printed_steps = [parens(step) for step in graph.steps()]
+        graph = cast(JSON_TYPE, graph)
+        printed_steps = [parens(step) for step in graph['steps'].values()]
         return ' | '.join(printed_steps)
-    elif isinstance(graph, lale.operators.IndividualOp):
-        name = gen.gensym(cls2name[graph.class_name()])
-        module_name = _get_module_name(graph.name(), graph.name(), graph.class_name())
-        import_stmt, op_expr = _indiv_op_to_string(graph, True, name, module_name)
+    elif op_kind(graph) == 'IndividualOp':
+        graph = cast(JSON_TYPE, graph)
+        name = graph['label']
+        import_stmt, op_expr = _indiv_op_jsn_to_string(graph, True)
         gen.imports.append(import_stmt)
         if re.fullmatch(r'.+\(.+\)', op_expr):
             new_name = gen.gensym(lale.helpers.camelCase_to_snake(name))
@@ -277,14 +277,21 @@ def _pipeline_to_string_rec(graph: Union[_Graph, 'lale.operators.Operator'], sho
     else:
         assert False, f'unexpected type {type(graph)} of graph {graph}'
 
-def _pipeline_to_string(pipeline: 'lale.operators.BasePipeline', show_imports: bool, cls2name: Dict[str,str]) -> str:
-    assert isinstance(pipeline, lale.operators.BasePipeline)
-    graph = _introduce_structure(pipeline)
+def _pipeline_to_string(jsn: JSON_TYPE, show_imports: bool) -> str:
     gen = _CodeGenState()
-    expr = _pipeline_to_string_rec(graph, show_imports, cls2name, gen)
+    expr = _pipeline_to_string_rec(jsn, show_imports, gen)
     if expr:
         gen.assigns.append(f'pipeline = {expr}')
-    code = (gen.imports if show_imports else []) + gen.assigns
+    if show_imports:
+        imports_set: Set[str] = set()
+        imports_list: List[str] = []
+        for imp in gen.imports:
+            if imp not in imports_set:
+                imports_set |= {imp}
+                imports_list.append(imp)
+        code = imports_list + gen.assigns
+    else:
+        code = gen.assigns
     result = '\n'.join(code)
     return result
 
@@ -303,28 +310,19 @@ def schema_to_string(schema: JSON_TYPE) -> str:
     s8 = re.sub(r'{\s+}', r'{}', s7)
     return s8
 
-def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, call_depth:int=2) -> str:
-    def get_cls2name():
-        frame = inspect.stack()[call_depth][0]
-        result = {}
-        all_items = [*frame.f_locals.items(), *frame.f_globals.items()]
-        for nm, op in all_items:
-            if isinstance(op, lale.operators.IndividualOp) and nm[0].isupper():
-                cls = op.class_name()
-                if cls not in result:
-                    result[cls] = nm
-        return result
+def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, call_depth:int=1) -> str:
     if lale.helpers.is_schema(arg):
         return schema_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.IndividualOp):
-        jsn = lale.json_operator.to_json(arg, call_depth=2)
+        jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
         import_stmt, op_expr = _indiv_op_jsn_to_string(jsn, show_imports)
         if import_stmt == '':
             return op_expr
         else:
             return import_stmt + '\npipeline = ' + op_expr
     elif isinstance(arg, lale.operators.BasePipeline):
-        return _pipeline_to_string(arg, show_imports, get_cls2name())
+        jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
+        return _pipeline_to_string(jsn, show_imports)
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
 

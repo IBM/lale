@@ -132,6 +132,22 @@ pipeline = get_pipeline_of_applicable_type(
     edges=[(step_1,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_nested(self):
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import LogisticRegression as LR
+        from lale.lib.lale import NoOp
+        lr = LR(C=0.09)
+        lr_1 = LR(C=0.19)
+        pipeline = PCA >> (LR(C=0.09) | NoOp >> LR(C=0.19))
+        expected = \
+"""from lale.lib.sklearn import PCA
+from lale.lib.sklearn import LogisticRegression as LR
+from lale.lib.lale import NoOp
+lr = LR(C=0.09)
+lr_1 = LR(C=0.19)
+pipeline = PCA >> (lr | NoOp >> lr_1)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):
