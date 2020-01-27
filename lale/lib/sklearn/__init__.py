@@ -46,3 +46,5 @@ from .normalizer import Normalizer
 from .robust_scaler import RobustScaler
 from .nmf import NMF
 from .rfe import RFE
+from .ada_boost_classifier import AdaBoostClassifier
+from .ada_boost_regressor import AdaBoostRegressor

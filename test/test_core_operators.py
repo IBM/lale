@@ -130,7 +130,8 @@ classifiers = ['lale.lib.sklearn.RandomForestClassifier',
                'lale.lib.sklearn.MLPClassifier',
                'lale.lib.sklearn.SVC',
                'lale.lib.sklearn.PassiveAggressiveClassifier',
-               'lale.lib.sklearn.MultinomialNB']
+               'lale.lib.sklearn.MultinomialNB',
+               'lale.lib.sklearn.AdaBoostClassifier']
 for clf in classifiers:
     setattr(
         TestClassification,
@@ -200,7 +201,8 @@ regressors = ['lale.lib.sklearn.RandomForestRegressor',
               'lale.lib.sklearn.LinearRegression',
               'lale.lib.sklearn.Ridge',
               'lale.lib.lightgbm.LGBMRegressor',
-              'lale.lib.xgboost.XGBRegressor']
+              'lale.lib.xgboost.XGBRegressor',
+              'lale.lib.sklearn.AdaBoostRegressor']
 for clf in regressors:
     setattr(
         TestRegression,
