@@ -507,10 +507,10 @@ class TestAutoConfigureClassification(unittest.TestCase):
         
     def test_with_smaccv(self):
         from lale.lib.sklearn import PCA, LogisticRegression
-        from lale.lib.lale import NoOp, Hyperopt
+        from lale.lib.lale import NoOp, SMAC
 
         planned_pipeline = (PCA | NoOp) >> LogisticRegression
-        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = SMAC, cv = 3, 
             scoring='accuracy', max_evals=1)
         predictions = best_pipeline.predict(self.X_test)
         from sklearn.metrics import accuracy_score

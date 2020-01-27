@@ -457,3 +457,14 @@ class TestComposition(unittest.TestCase):
 
         trained = trainable.fit(X, y)
         predicted = trained.transform(X, y)
+
+    def test_remove_last1(self):
+        pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
+        pipeline.remove_last()
+        self.assertEqual(len(pipeline._steps), 6)
+
+    def test_remove_last2(self):
+        pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> (PassiveAggressiveClassifier() & LogisticRegression())
+        with self.assertRaises(ValueError):
+            pipeline.remove_last()
+
