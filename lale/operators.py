@@ -1494,6 +1494,16 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
             return False
         return self.steps()[-1].is_supervised()
 
+    def remove_last(self):
+        sink_nodes = self.find_sink_nodes()
+        if len(sink_nodes) > 1:
+            raise ValueError("This pipeline has more than 1 sink nodes, can not remove last step meaningfully.")
+        else:
+            n_steps = len(self._steps)
+            old_clf = self._steps[n_steps-1]
+            self._steps.remove(old_clf)
+            del self._preds[old_clf]
+
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
 class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
@@ -1539,6 +1549,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
 
     def __call__(self, *args, **kwargs):
         self.configure(args, kwargs)
+    
 
 TrainableOpType = TypeVar('TrainableOpType', bound=TrainableIndividualOp)
 
