@@ -350,12 +350,23 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         return lale.helpers.to_graphviz(self, call_depth=2)
 
+    def pretty_print(self, show_imports:bool=True, ipython_display:bool=False):
+        """Returns the Python source code representation of the operator.
+        """
+        result = lale.pretty_print.to_string(self, show_imports, call_depth=2)
+        if ipython_display:
+            import IPython.display
+            markdown = IPython.display.Markdown(f'```python\n{result}\n```')
+            return IPython.display.display(markdown)
+        else:
+            return result
+
     @abstractmethod
     def has_same_impl(self, other:'Operator')->bool:
         """Checks if the type of the operator implementations are compatible
         """
         pass
-    
+
     @abstractmethod
     def _lale_clone(self, cloner:Callable[[Any],Any]):
         """ Method for cloning a lale operator, currently intended for internal use
