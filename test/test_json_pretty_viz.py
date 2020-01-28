@@ -60,6 +60,13 @@ pipeline = LogisticRegression(solver='saga', C=0.9)"""
 pipeline = LR(solver='saga', C=0.9)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_indiv_op_3(self):
+        from lale.lib.sklearn import LogisticRegression
+        pipeline = LogisticRegression()
+        expected = """from lale.lib.sklearn import LogisticRegression
+pipeline = LogisticRegression()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
     def test_reducible(self):
         from lale.lib.sklearn import MinMaxScaler
         from lale.lib.lale import NoOp
@@ -108,6 +115,28 @@ lr = LR(solver='saga', C=0.9)
 pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_multimodal(self):
+        from lale.lib.lale import Project
+        from lale.lib.sklearn import Normalizer as Norm
+        from lale.lib.sklearn import OneHotEncoder as OneHot
+        from lale.lib.lale import ConcatFeatures as Cat
+        from lale.lib.sklearn import LinearSVC
+        project_0 = Project(columns={'type': 'number'})
+        project_1 = Project(columns={'type': 'string'})
+        linear_svc = LinearSVC(C=29617.4, dual=False, tol=0.005266)
+        pipeline = ((project_0 >> Norm()) & (project_1 >> OneHot())) >> Cat >> linear_svc
+        expected = \
+"""from lale.lib.lale import Project
+from lale.lib.sklearn import Normalizer as Norm
+from lale.lib.sklearn import OneHotEncoder as OneHot
+from lale.lib.lale import ConcatFeatures as Cat
+from lale.lib.sklearn import LinearSVC
+project_0 = Project(columns={'type': 'number'})
+project_1 = Project(columns={'type': 'string'})
+linear_svc = LinearSVC(C=29617.4, dual=False, tol=0.005266)
+pipeline = ((project_0 >> Norm()) & (project_1 >> OneHot())) >> Cat >> linear_svc"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
     def test_irreducible(self):
         from lale.lib.sklearn import PCA
         from lale.lib.sklearn import Nystroem
@@ -115,10 +144,10 @@ pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
         from lale.lib.sklearn import LogisticRegression
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.operators import get_pipeline_of_applicable_type
-        step_1 = PCA | Nystroem
+        choice = PCA | Nystroem
         pipeline = get_pipeline_of_applicable_type(
-            steps=[step_1, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
-            edges=[(step_1,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])
+            steps=[choice, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
+            edges=[(choice,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])
         expected = \
 """from lale.lib.sklearn import PCA
 from lale.lib.sklearn import Nystroem
@@ -126,26 +155,24 @@ from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import LogisticRegression
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.operators import get_pipeline_of_applicable_type
-step_1 = PCA | Nystroem
-pipeline = get_pipeline_of_applicable_type(
-    steps=[step_1, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
-    edges=[(step_1,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])"""
+choice = PCA | Nystroem
+pipeline = get_pipeline_of_applicable_type(steps=[choice, MinMaxScaler, LogisticRegression, KNeighborsClassifier], edges=[(choice,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_nested(self):
         from lale.lib.sklearn import PCA
         from lale.lib.sklearn import LogisticRegression as LR
         from lale.lib.lale import NoOp
-        lr = LR(C=0.09)
+        lr_0 = LR(C=0.09)
         lr_1 = LR(C=0.19)
-        pipeline = PCA >> (LR(C=0.09) | NoOp >> LR(C=0.19))
+        pipeline = PCA >> (lr_0 | NoOp >> lr_1)
         expected = \
 """from lale.lib.sklearn import PCA
 from lale.lib.sklearn import LogisticRegression as LR
 from lale.lib.lale import NoOp
-lr = LR(C=0.09)
+lr_0 = LR(C=0.09)
 lr_1 = LR(C=0.19)
-pipeline = PCA >> (lr | NoOp >> lr_1)"""
+pipeline = PCA >> (lr_0 | NoOp >> lr_1)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
 
