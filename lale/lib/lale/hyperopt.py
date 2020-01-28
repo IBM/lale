@@ -26,7 +26,7 @@ import traceback
 
 import time
 import logging
-from typing import Optional
+from typing import Any, Dict, Optional
 import json
 import datetime
 import copy
@@ -263,27 +263,14 @@ _hyperparams_schema = {
 _input_fit_schema = {
     'type': 'object',
     'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'anyOf': [
-                {   'type': 'array', 'items': {'type': ['number', 'string']}},
-                {   'type': 'string'}]}},
-        'y': {
-            'type': 'array', 'items': {'type': 'number'}}}}
-
+        'X': {},
+        'y': {}}}
 _input_predict_schema = {
     'type': 'object',
     'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'anyOf': [
-                {   'type': 'array', 'items': {'type': ['number', 'string']}},
-                {   'type': 'string'}]}}}}
+        'X': {}}}
 
-_output_predict_schema = {
-    'type': 'array', 'items': {'type': 'number'}}
+_output_predict_schema:Dict[str, Any] = {}
 
 _combined_schemas = {
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_cv.html',
