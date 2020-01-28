@@ -90,6 +90,7 @@ def _indiv_op_jsn_to_string(jsn: JSON_TYPE, show_imports: bool) -> Tuple[str, st
 _Seq = collections.namedtuple('_Seq', ['src_uid', 'src_jsn', 'dst_uid', 'dst_jsn'])
 _Par = collections.namedtuple('_Par', ['s0_uid', 's0_jsn', 's1_uid', 's1_jsn'])
 _Graph = collections.namedtuple('_Graph', ['steps', 'preds', 'succs'])
+_CodeGenState = collections.namedtuple('_CodeGenState', ['imports', 'assigns'])
 
 def op_kind(op: Union[JSON_TYPE, _Graph, _Seq, _Par]) -> str:
     if isinstance(op, dict):
@@ -196,72 +197,52 @@ def _introduce_structure(pipeline: JSON_TYPE) -> Union[JSON_TYPE, _Graph, _Seq, 
     result = replace_reducibles(graph)
     return result
 
-class _CodeGenState:
-    def __init__(self):
-        self.imports = []
-        self.assigns = []
-        self._names = {'lale','pipeline','get_pipeline_of_applicable_type'}
-
-    def gensym(self, prefix):
-        if prefix in self._names:
-            suffix = 1
-            while f'{prefix}_{suffix}' in self._names:
-                suffix += 1
-            result = f'{prefix}_{suffix}'
-        else:
-            result = prefix
-        self._names |= {result}
-        return result
-
-def _pipeline_to_string_rec(graph: Union[JSON_TYPE, _Graph, _Seq, _Par], show_imports: bool, gen: _CodeGenState):
+def _pipeline_to_string_rec(uid: str, graph: Union[JSON_TYPE, _Graph, _Seq, _Par], gen: _CodeGenState) -> str:
     if op_kind(graph) == 'Pipeline':
         structured = _introduce_structure(cast(JSON_TYPE, graph))
-        return _pipeline_to_string_rec(structured, show_imports, gen)
+        return _pipeline_to_string_rec(uid, structured, gen)
     elif op_kind(graph) == 'Graph':
         steps, preds, succs = cast(_Graph, graph)
-        dummy = gen.gensym('step')
-        step2name = {}
-        for step_uid, step_jsn in steps.items():
-            if op_kind(step_jsn) == 'IndividualOp':
-                step2name[step_uid] = _pipeline_to_string_rec(step_jsn, show_imports, gen)
+        step2name: Dict[str, str] = {}
+        for step_uid, step_val in steps.items():
+            expr = _pipeline_to_string_rec(step_uid, step_val, gen)
+            if re.fullmatch('[A-Za-z][A-Za-z0-9_]*', expr):
+                step2name[step_uid] = expr
             else:
-                name = gen.gensym('step')
-                expr = _pipeline_to_string_rec(step_jsn, show_imports, gen)
-                gen.assigns.append(f'{name} = {expr}')
-                step2name[step_uid] = name
+                step2name[step_uid] = step_uid
+                gen.assigns.append(f'{step_uid} = {expr}')
         make_pipeline = 'get_pipeline_of_applicable_type'
         gen.imports.append(f'from lale.operators import {make_pipeline}')
-        gen.assigns.append(
-            'pipeline = {}(\n    steps=[{}],\n    edges=[{}])'.format(
-                make_pipeline,
-                ', '.join([step2name[step] for step in steps]),
-                ', '.join([f'({step2name[src]},{step2name[tgt]})'
-                           for src in steps for tgt in succs[src]])))
-        return None
+        result = '{}(steps=[{}], edges=[{}])'.format(
+            make_pipeline,
+            ', '.join([step2name[step] for step in steps]),
+            ', '.join([f'({step2name[src]},{step2name[tgt]})'
+                       for src in steps for tgt in succs[src]]))
+        return result
     elif op_kind(graph) == 'Seq':
-        def parens(op):
-            result = _pipeline_to_string_rec(op, show_imports, gen)
-            if op_kind(op) == 'Par' or op_kind(op) == 'OperatorChoice':
+        def parens(step_uid, step_val):
+            result = _pipeline_to_string_rec(step_uid, step_val, gen)
+            if op_kind(step_val) in ['Par', 'OperatorChoice']:
                 return f'({result})'
             return result
         graph = cast(_Seq, graph)
-        return f'{parens(graph.src_jsn)} >> {parens(graph.dst_jsn)}'
+        return f'{parens(graph.src_uid, graph.src_jsn)} >> {parens(graph.dst_uid, graph.dst_jsn)}'
     elif op_kind(graph) == 'Par':
-        def parens(op):
-            result = _pipeline_to_string_rec(op, show_imports, gen)
-            if op_kind(op) == 'Seq' or op_kind(op) == 'OperatorChoice':
+        def parens(step_uid, step_val):
+            result = _pipeline_to_string_rec(step_uid, step_val, gen)
+            if op_kind(step_val) in ['Seq', 'OperatorChoice']:
                 return f'({result})'
             return result
         graph = cast(_Par, graph)
-        return f'{parens(graph.s0_jsn)} & {parens(graph.s1_jsn)}'
+        return f'{parens(graph.s0_uid, graph.s0_jsn)} & {parens(graph.s1_uid, graph.s1_jsn)}'
     elif op_kind(graph) == 'OperatorChoice':
-        def parens(op):
-            result = _pipeline_to_string_rec(op, show_imports, gen)
-            if op_kind(op) == 'Seq' or op_kind(op) == 'Par':
+        def parens(step_uid, step_val):
+            result = _pipeline_to_string_rec(step_uid, step_val, gen)
+            if op_kind(step_val) in ['Seq', 'Par']:
                 return f'({result})'
             return result
         graph = cast(JSON_TYPE, graph)
-        printed_steps = [parens(step) for step in graph['steps'].values()]
+        printed_steps = [parens(step_uid, step_val) for step_uid, step_val in graph['steps'].items()]
         return ' | '.join(printed_steps)
     elif op_kind(graph) == 'IndividualOp':
         graph = cast(JSON_TYPE, graph)
@@ -269,19 +250,17 @@ def _pipeline_to_string_rec(graph: Union[JSON_TYPE, _Graph, _Seq, _Par], show_im
         import_stmt, op_expr = _indiv_op_jsn_to_string(graph, True)
         gen.imports.append(import_stmt)
         if re.fullmatch(r'.+\(.+\)', op_expr):
-            new_name = gen.gensym(lale.helpers.camelCase_to_snake(name))
-            gen.assigns.append(f'{new_name} = {op_expr}')
-            return new_name
+            gen.assigns.append(f'{uid} = {op_expr}')
+            return uid
         else:
-            return name
+            return op_expr
     else:
         assert False, f'unexpected type {type(graph)} of graph {graph}'
 
 def _pipeline_to_string(jsn: JSON_TYPE, show_imports: bool) -> str:
-    gen = _CodeGenState()
-    expr = _pipeline_to_string_rec(jsn, show_imports, gen)
-    if expr:
-        gen.assigns.append(f'pipeline = {expr}')
+    gen = _CodeGenState([], [])
+    expr = _pipeline_to_string_rec('(root)', jsn, gen)
+    gen.assigns.append(f'pipeline = {expr}')
     if show_imports:
         imports_set: Set[str] = set()
         imports_list: List[str] = []
