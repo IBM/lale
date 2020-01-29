@@ -262,6 +262,7 @@ _hyperparams_schema = {
 
 _input_fit_schema = {
     'type': 'object',
+    'required': ['X', 'y'],
     'properties': {
         'X': {},
         'y': {}}}

@@ -145,6 +145,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Ridge regression model',
     'type': 'object',
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',

@@ -165,6 +165,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a forest of trees from the training set (X, y).',
     'type': 'object',
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
