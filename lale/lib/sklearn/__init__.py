@@ -48,3 +48,5 @@ from .nmf import NMF
 from .rfe import RFE
 from .ada_boost_classifier import AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor
+from .sgd_classifier import SGDClassifier
+from .sgd_regressor import SGDRegressor
