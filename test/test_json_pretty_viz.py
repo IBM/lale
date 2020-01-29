@@ -115,6 +115,16 @@ lr = LR(solver='saga', C=0.9)
 pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_operator_choice(self):
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import MinMaxScaler as Scl
+        pipeline = PCA | Scl
+        expected = \
+"""from lale.lib.sklearn import PCA
+from lale.lib.sklearn import MinMaxScaler as Scl
+pipeline = PCA | Scl"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))        
+
     def test_multimodal(self):
         from lale.lib.lale import Project
         from lale.lib.sklearn import Normalizer as Norm
@@ -137,7 +147,7 @@ linear_svc = LinearSVC(C=29617.4, dual=False, tol=0.005266)
 pipeline = ((project_0 >> Norm()) & (project_1 >> OneHot())) >> Cat >> linear_svc"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
-    def test_irreducible(self):
+    def test_irreducible_1(self):
         from lale.lib.sklearn import PCA
         from lale.lib.sklearn import Nystroem
         from lale.lib.sklearn import MinMaxScaler
@@ -157,6 +167,28 @@ from lale.lib.sklearn import KNeighborsClassifier
 from lale.operators import get_pipeline_of_applicable_type
 choice = PCA | Nystroem
 pipeline = get_pipeline_of_applicable_type(steps=[choice, MinMaxScaler, LogisticRegression, KNeighborsClassifier], edges=[(choice,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_irreducible_2(self):
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import MinMaxScaler as MMS
+        from lale.lib.lale import ConcatFeatures as HStack
+        from lale.lib.sklearn import KNeighborsClassifier as KNN
+        from lale.lib.sklearn import LogisticRegression as LR
+        from lale.operators import get_pipeline_of_applicable_type
+        pipeline_0 = HStack >> LR
+        pipeline = get_pipeline_of_applicable_type(
+            steps=[PCA, MMS, KNN, pipeline_0],
+            edges=[(PCA, KNN), (PCA, pipeline_0), (MMS, pipeline_0)])
+        expected = \
+"""from lale.lib.sklearn import PCA
+from lale.lib.sklearn import MinMaxScaler as MMS
+from lale.lib.sklearn import KNeighborsClassifier as KNN
+from lale.lib.lale import ConcatFeatures as HStack
+from lale.lib.sklearn import LogisticRegression as LR
+from lale.operators import get_pipeline_of_applicable_type
+pipeline_0 = HStack >> LR
+pipeline = get_pipeline_of_applicable_type(steps=[PCA, MMS, KNN, pipeline_0], edges=[(PCA,KNN), (PCA,pipeline_0), (MMS,pipeline_0)])"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_nested(self):
@@ -198,8 +230,8 @@ class TestToAndFromJSON(unittest.TestCase):
     def test_operator_choice(self):
         self.maxDiff = None
         from lale.json_operator import to_json, from_json
-        from lale.lib.sklearn import MinMaxScaler as Scl
         from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import MinMaxScaler as Scl
         operator = PCA | Scl
         json_expected = {
           'class': 'lale.operators.OperatorChoice',

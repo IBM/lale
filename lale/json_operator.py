@@ -216,8 +216,8 @@ class _GenSym:
         populate_label2count(op)
         non_unique_labels = {l for l, c in label2count.items() if c > 1}
         snakes = {lale.helpers.camelCase_to_snake(l) for l in non_unique_labels}
-        self._names = ({'lale'} | set(keyword.kwlist) |
-                       non_unique_labels | snakes)
+        self._names = ({'lale', 'make_pipeline', 'make_union', 'make_choice'}
+                       | set(keyword.kwlist) | non_unique_labels | snakes)
 
     def __call__(self, prefix: str) -> str:
         if prefix in self._names:
