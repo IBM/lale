@@ -72,7 +72,8 @@ _hyperparams_schema = {
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a boosted classifier from the training set (X, y).',
-    'type': 'object',
+    'type': 'object',    
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',

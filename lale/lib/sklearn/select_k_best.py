@@ -58,7 +58,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Run score function on (X, y) and get the appropriate features.',
     'type': 'object',
-    'required': ['X'],
+    'required': ['X', 'y'],
     'additionalProperties': False,
     'properties': {
         'X': {

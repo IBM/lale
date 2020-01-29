@@ -80,6 +80,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model.',
     'type': 'object',
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'description': 'Features; the outer array is over samples.',

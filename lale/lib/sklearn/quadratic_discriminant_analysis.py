@@ -78,6 +78,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model according to the given training data and parameters.',
     'type': 'object',
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',

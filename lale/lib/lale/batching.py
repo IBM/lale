@@ -67,7 +67,7 @@ _input_schema_fit = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for fit.',
   'type': 'object',
-  'required': ['X'],
+  'required': ['X', 'y'],
   'additionalProperties': False,
   'properties': {
     'X': {

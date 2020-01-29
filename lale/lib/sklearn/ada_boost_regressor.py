@@ -69,6 +69,7 @@ _hyperparams_schema = {
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a boosted regressor from the training set (X, y).',
+    'required': ['X', 'y'],
     'type': 'object',
     'properties': {
         'X': {
