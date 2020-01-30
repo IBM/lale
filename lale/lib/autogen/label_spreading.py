@@ -44,7 +44,9 @@ _hyperparams_schema = {
                 'description': 'String identifier for kernel function to use or the kernel function'},
             'gamma': {
                 'type': 'number',
-                'forOptimizer': False,
+                'minimumForOptimizer': 0,
+                'maximumForOptimizer': 20,
+                'distribution': 'uniform',
                 'default': 20,
                 'description': 'parameter for rbf kernel'},
             'n_neighbors': {

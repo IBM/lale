@@ -56,7 +56,9 @@ _hyperparams_schema = {
                 'description': "'auto' : Attempt to choose the most efficient solver"},
             'tol': {
                 'type': 'number',
-                'forOptimizer': False,
+                'minimumForOptimizer': 0,
+                'maximumForOptimizer': 1,
+                'distribution': 'uniform',
                 'default': 0,
                 'description': 'Convergence tolerance passed to arpack or lobpcg.'},
             'max_iter': {
