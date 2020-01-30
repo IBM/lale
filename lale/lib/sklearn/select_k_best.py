@@ -19,9 +19,14 @@ import lale.operators
 class SelectKBestImpl():
 
     def __init__(self, score_func=None, k=10):
-        self._hyperparams = {
-            'score_func': score_func,
-            'k': k}
+        if score_func:
+            self._hyperparams = {
+                'score_func': score_func,
+                'k': k}
+        else:
+            self._hyperparams = {
+                'k': k
+            }
 
     def fit(self, X, y=None):
         self._sklearn_model = sklearn.feature_selection.SelectKBest(**self._hyperparams)
