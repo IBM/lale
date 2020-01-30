@@ -650,3 +650,14 @@ class TestHigherOrderOperators(unittest.TestCase):
         from sklearn.tree import DecisionTreeClassifier
         clf = AdaBoostClassifier(base_estimator = DecisionTreeClassifier())
         clf.fit(self.X_train, self.y_train)
+
+    def test_ada_boost_regressor(self):
+        from sklearn.datasets import load_boston
+        from sklearn.model_selection import train_test_split
+        X, y = load_boston(return_X_y=True)
+        X_train, X_test, y_train, y_test =  train_test_split(X, y)    
+        from lale.lib.sklearn import AdaBoostRegressor, DecisionTreeRegressor
+        reg = AdaBoostRegressor(base_estimator = DecisionTreeRegressor())
+        trained = reg.auto_configure(X_train, y_train, optimizer=Hyperopt, max_evals=1, scoring='r2')
+        #Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
+        self.assertNotEqual(trained.hyperparams()['base_estimator'].hyperparams()['min_samples_leaf'], 1)

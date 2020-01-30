@@ -32,6 +32,7 @@ class DecisionTreeRegressorImpl():
             'min_impurity_decrease': min_impurity_decrease,
             'min_impurity_split': min_impurity_split,
             'presort': presort}
+        self._sklearn_model = sklearn.tree.tree.DecisionTreeRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         self._sklearn_model = sklearn.tree.tree.DecisionTreeRegressor(**self._hyperparams)
