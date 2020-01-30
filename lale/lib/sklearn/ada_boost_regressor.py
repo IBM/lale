@@ -20,6 +20,11 @@ from numpy import nan, inf
 class AdaBoostRegressorImpl():
 
     def __init__(self, base_estimator=None, n_estimators=50, learning_rate=1.0, loss='linear', random_state=None):
+        if isinstance(base_estimator, lale.operators.Operator):
+            if isinstance(base_estimator, lale.operators.IndividualOp):
+                base_estimator = base_estimator._impl._sklearn_model
+            else:
+                raise ValueError("If base_estimator is a Lale operator, it needs to be an individual operator. ")
         self._hyperparams = {
             'base_estimator': base_estimator,
             'n_estimators': n_estimators,
@@ -48,7 +53,7 @@ _hyperparams_schema = {
         'properties': {
             'base_estimator': {
                 'anyOf': [{
-                    'type': 'object'}, {
+                    'typeForOptimizer' : 'operator'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The base estimator from which the boosted ensemble is built.'},
