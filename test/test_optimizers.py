@@ -629,3 +629,24 @@ class TestCrossValidation(unittest.TestCase):
                 trainable_lr, iris.data, iris.target,
                 cv = KFold(2), scoring=make_scorer(accuracy_score))
         self.assertEqual(len(cv_results), 2)
+
+class TestHigherOrderOperators(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_ada_boost(self):
+        from lale.lib.sklearn import AdaBoostClassifier, DecisionTreeClassifier
+        clf = AdaBoostClassifier(base_estimator = DecisionTreeClassifier())
+        trained = clf.auto_configure(self.X_train, self.y_train, optimizer=Hyperopt, max_evals=1)
+        #Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
+        self.assertNotEqual(trained.hyperparams()['base_estimator'].hyperparams()['min_samples_leaf'], 1)
+
+    def test_ada_boost1(self):
+        from lale.lib.sklearn import AdaBoostClassifier
+        from sklearn.tree import DecisionTreeClassifier
+        clf = AdaBoostClassifier(base_estimator = DecisionTreeClassifier())
+        clf.fit(self.X_train, self.y_train)

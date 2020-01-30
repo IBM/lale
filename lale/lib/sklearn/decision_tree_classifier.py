@@ -16,7 +16,7 @@ import sklearn.tree.tree
 import lale.helpers
 import lale.operators
 
-class DecisionTreeClassifierImpl():
+class DecisionTreeClassifierImpl():        
 
     def __init__(self, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, class_weight=None, presort=False):
         self._hyperparams = {
@@ -33,6 +33,8 @@ class DecisionTreeClassifierImpl():
             'min_impurity_split': min_impurity_split,
             'class_weight': class_weight,
             'presort': presort}
+        self._sklearn_model = sklearn.tree.tree.DecisionTreeClassifier(**self._hyperparams)
+
 
     def fit(self, X, y, **fit_params):
         self._sklearn_model = sklearn.tree.tree.DecisionTreeClassifier(**self._hyperparams)
@@ -47,6 +49,8 @@ class DecisionTreeClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'A decision tree classifier.',
