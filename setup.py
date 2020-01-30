@@ -67,7 +67,7 @@ setup(
             'BlackBoxAuditing'],
         'test':[
             'jupyter',
-            'mypy<=0.740',
+            'mypy',
             'flake8',
             'numpydoc',
             'sphinx',
