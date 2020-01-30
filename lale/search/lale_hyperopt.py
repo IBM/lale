@@ -199,7 +199,7 @@ class SearchSpaceHPExprVisitor(Visitor):
             search_space[k] = valid_hyperparam_combinations[i]
             i = i + 1
         return search_space
-    
+
     def visitSearchSpaceProduct(self, prod:SearchSpaceProduct, path:str, counter=None):
         search_spaces = [accept(space, self, self.get_unique_name(make_indexed_name(name, index))) for name, index, space in prod.get_indexed_spaces()]
         return search_spaces
@@ -214,6 +214,9 @@ class SearchSpaceHPExprVisitor(Visitor):
 
     def visitSearchSpaceOperator(self, op:SearchSpaceOperator, path:str, counter=None):
         return scope.make_nested_hyperopt(accept(op.sub_space, self, path))
+
+    def visitSearchSpaceEmpty(self, op:SearchSpaceEmpty, path:str, counter=None):
+        raise NotImplementedError("The hyperopt backend can't compile an empty (sub-) search space")
 
 class SearchSpaceHPStrVisitor(Visitor):
     pgo_dict:Dict[str, FrequencyDistribution]
@@ -453,3 +456,5 @@ def make_nested_hyperopt(space):
 """
         return f"scope.make_nested_hyperopt({accept(op.sub_space, self, path, counter=counter, useCounter=useCounter)})"
 
+    def visitSearchSpaceEmpty(self, op:SearchSpaceEmpty, path:str, counter=None, useCounter=True)->str:
+        return "***EMPTY**"

@@ -40,7 +40,11 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
         return self._default
 
 class SearchSpaceEmpty(SearchSpace):
-    pass
+    def __init__(self):
+        super(SearchSpaceEmpty, self).__init__()
+
+    def __str__(sefl):
+        return "***EMPTY***"
 
 class SearchSpacePrimitive(SearchSpace):
     def __init__(self, default:Optional[Any]=None):
