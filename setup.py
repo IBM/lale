@@ -34,7 +34,7 @@ else:
         'PyYAML',
         'scikit-learn==0.20.3',
         'scipy',
-        'pandas',
+        'pandas<=0.25.3',
         'xgboost',
         'lightgbm',
         'decorator',
