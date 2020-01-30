@@ -62,17 +62,17 @@ class FrequencyDistribution(Generic[T]):
     @classmethod
     def asIntegerValues(cls, freqs:Iterable[Tuple[Any, int]], inclusive_min:Optional[int]=None, inclusive_max:Optional[int]=None)->'FrequencyDistribution[int]':
         freqs = freqsAsIntegerValues(freqs, inclusive_min=inclusive_min, inclusive_max=inclusive_max)
-        return cls(list(freqs), dtype=int)
+        return FrequencyDistribution[int](list(freqs), dtype=int)
 
     @classmethod
     def asFloatValues(cls, freqs:Iterable[Tuple[Any, int]], inclusive_min:Optional[int]=None, inclusive_max:Optional[int]=None)->'FrequencyDistribution[float]':
         freqs = freqsAsFloatValues(freqs, inclusive_min=inclusive_min, inclusive_max=inclusive_max)
-        return cls(list(freqs), dtype=float)
+        return FrequencyDistribution[float](list(freqs), dtype=float)
 
     @classmethod
     def asEnumValues(cls, freqs:Iterable[Tuple[Any, int]], values:List[Any])->'FrequencyDistribution[Any]':
         freqs = freqsAsEnumValues(freqs, values=values)
-        return cls(list(freqs), dtype=object)
+        return FrequencyDistribution[Any](list(freqs), dtype=object)
 
     def __init__(self, freqs:Iterable[Tuple[Defaultable[T], int]], dtype=object):
         # we need them to be sorted for locality
