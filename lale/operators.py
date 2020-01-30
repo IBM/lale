@@ -549,7 +549,7 @@ class IndividualOp(MetaModelOperator):
         """
         return self.input_schema_predict()
 
-    def output_schema(self):
+    def output_schema(self, method=None):
         """Returns the schema for predict/transform method's output.
         
         Returns
@@ -559,6 +559,8 @@ class IndividualOp(MetaModelOperator):
             operator's predict/transform method.
         """
         props = self._schemas.get('properties', {})
+        if method is not None and 'output_'+method in props:
+            return props['output_'+method]
         if self.is_transformer() and 'output_transform' in props:
             return props['output_transform']
         if not self.is_transformer() and 'output_predict' in props:
@@ -852,7 +854,7 @@ class IndividualOp(MetaModelOperator):
 
     def _validate_output_schema(self, result, method):
         if method == 'predict' or method == 'transform':
-            schema = self.output_schema()
+            schema = self.output_schema(method)
         elif method == 'predict_proba':
             schema = self.output_schema_predict_proba()
         result = lale.datasets.data_schemas.add_schema(result)
