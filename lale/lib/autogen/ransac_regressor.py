@@ -132,6 +132,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit estimator using RANSAC algorithm.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'anyOf': [{
@@ -170,6 +171,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the estimated model.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

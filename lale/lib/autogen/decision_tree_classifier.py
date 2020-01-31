@@ -137,6 +137,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a decision tree classifier from the training set (X, y).',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'anyOf': [{
@@ -193,6 +194,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class or regression value for X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{
@@ -232,6 +234,7 @@ _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities of the input samples X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{

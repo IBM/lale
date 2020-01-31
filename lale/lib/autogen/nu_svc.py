@@ -128,6 +128,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the SVM model according to the given training data.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -153,6 +154,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on samples in X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -175,6 +177,7 @@ _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute probabilities of possible outcomes for samples in X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

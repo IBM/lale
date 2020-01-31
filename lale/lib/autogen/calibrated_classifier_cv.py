@@ -58,6 +58,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the calibrated model',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -86,6 +87,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict the target of new samples. Can be different from the',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -108,6 +110,7 @@ _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Posterior probabilities of classification',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

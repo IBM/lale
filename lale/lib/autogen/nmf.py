@@ -122,6 +122,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Learn a NMF model for the data X.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -139,6 +140,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform the data X according to the fitted NMF model',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

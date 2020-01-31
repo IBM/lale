@@ -71,7 +71,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1e-08,
                 'description': 'tolerance for numerical error'},
             'fit_algorithm': {
@@ -151,6 +151,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model from data in X.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -168,6 +169,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Encode the data as a sparse combination of the dictionary atoms.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

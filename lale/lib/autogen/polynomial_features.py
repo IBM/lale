@@ -53,6 +53,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute number of output features.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -68,6 +69,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform data to polynomial features',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{

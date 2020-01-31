@@ -90,7 +90,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.01,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1.0,
                 'description': 'Constant by which the updates are multiplied. Defaults to 1.'},
             'n_jobs': {
@@ -155,6 +155,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Stochastic Gradient Descent.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -197,6 +198,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{

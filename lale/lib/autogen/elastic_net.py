@@ -111,6 +111,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit model with coordinate descent.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'XXX TODO XXX': 'ndarray or scipy.sparse matrix, (n_samples, n_features)',
@@ -128,6 +129,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the linear model',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{

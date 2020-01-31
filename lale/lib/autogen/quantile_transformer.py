@@ -74,6 +74,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the quantiles used for transforming.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'XXX TODO XXX': 'ndarray or sparse matrix, shape (n_samples, n_features)',
@@ -84,6 +85,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Feature-wise transformation of the data.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'XXX TODO XXX': 'ndarray or sparse matrix, shape (n_samples, n_features)',

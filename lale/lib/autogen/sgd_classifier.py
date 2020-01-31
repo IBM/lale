@@ -91,7 +91,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-08,
                     'maximumForOptimizer': 0.01,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The stopping criterion. If it is not None, the iterations will stop'},
@@ -205,6 +205,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Stochastic Gradient Descent.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -247,6 +248,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{
@@ -274,6 +276,7 @@ _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability estimates.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

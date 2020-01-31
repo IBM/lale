@@ -200,6 +200,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Learn model for the data X with variational Bayes method.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'anyOf': [{
@@ -222,6 +223,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform data X according to the fitted model.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{

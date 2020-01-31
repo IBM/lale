@@ -45,6 +45,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the label sets binarizer, storing `classes_`',
     'type': 'object',
+    'required': ['y'],
     'properties': {
         'y': {
             'XXX TODO XXX': 'iterable of iterables',
@@ -55,6 +56,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform the given label sets',
     'type': 'object',
+    'required': ['y'],
     'properties': {
         'y': {
             'XXX TODO XXX': 'iterable of iterables',

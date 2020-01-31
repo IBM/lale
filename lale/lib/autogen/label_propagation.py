@@ -44,7 +44,9 @@ _hyperparams_schema = {
                 'description': 'String identifier for kernel function to use or the kernel function'},
             'gamma': {
                 'type': 'number',
-                'forOptimizer': False,
+                'minimumForOptimizer': 0.0,
+                'maximumForOptimizer': 20.0,
+                'distribution': 'uniform',
                 'default': 20,
                 'description': 'Parameter for rbf kernel'},
             'n_neighbors': {
@@ -88,6 +90,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit a semi-supervised label propagation model based',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -108,6 +111,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Performs inductive inference across the model.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -129,6 +133,7 @@ _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict probability for each possible outcome.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

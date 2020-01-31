@@ -153,6 +153,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a forest of trees from the training set (X, y).',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'anyOf': [{
@@ -194,6 +195,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict regression target for X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{
