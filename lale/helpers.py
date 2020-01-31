@@ -36,13 +36,11 @@ from torch.utils.data import DataLoader, TensorDataset
 import copy
 import logging
 import inspect
-import pkgutil
-import importlib
 import torch
 import h5py
 from typing import Any, Dict, List, Optional, Union
 import lale.datasets.data_schemas
-from lale.sklearn_compat import clone_op
+
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
@@ -521,29 +519,6 @@ def get_default_schema(impl):
             'hyperparams': {
                 'allOf': [arg_schemas]}}}
 
-def wrap_imported_operators():
-    from lale.operators import Operator, make_operator
-    calling_frame = inspect.stack()[1][0]
-    symtab = calling_frame.f_globals
-    for name, impl in symtab.items():
-        if inspect.isclass(impl) and not issubclass(impl, Operator):
-            module = impl.__module__.split('.')[0]
-            klass = impl.__name__
-            try:
-                m = importlib.import_module('lale.lib.' + module)
-                symtab[name] = clone_op(getattr(m, klass), name)
-                logger.info(f'Lale:Wrapped known operator:{name}')
-            except (ModuleNotFoundError, AttributeError):
-                try:
-                    m = importlib.import_module('lale.lib.autogen')
-                    symtab[name] = clone_op(getattr(m, klass), name)
-                    logger.info(f'Lale:Wrapped autogen operator:{name}')
-                except (ModuleNotFoundError, AttributeError):
-                    if hasattr(impl, 'fit') and (
-                    hasattr(impl, 'predict') or hasattr(impl, 'transform')):
-                        logger.info(f'Lale:Wrapped unkwnown operator:{name}')
-                        symtab[name] = make_operator(impl=impl, name=name)
-                    
 class val_wrapper():
     """This is used to wrap values that cause problems for hyper-optimizer backends
     lale will unwrap these when given them as the value of a hyper-parameter"""
