@@ -54,13 +54,6 @@ pipeline = LogisticRegression(solver='saga', C=0.9)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_indiv_op_2(self):
-        from lale.lib.sklearn import LogisticRegression as LR
-        pipeline = LR(solver='saga', C=0.9)
-        expected = """from lale.lib.sklearn import LogisticRegression as LR
-pipeline = LR(solver='saga', C=0.9)"""
-        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
-
-    def test_indiv_op_3(self):
         from lale.lib.sklearn import LogisticRegression
         pipeline = LogisticRegression()
         expected = """from lale.lib.sklearn import LogisticRegression
@@ -91,7 +84,14 @@ logistic_regression = LogisticRegression(solver='saga', C=0.9)
 pipeline = (MinMaxScaler | NoOp) >> (pca & Nystroem) >> ConcatFeatures >> (KNeighborsClassifier | logistic_regression)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
-    def test_import_as(self):
+    def test_import_as_1(self):
+        from lale.lib.sklearn import LogisticRegression as LR
+        pipeline = LR(solver='saga', C=0.9)
+        expected = """from lale.lib.sklearn import LogisticRegression as LR
+pipeline = LR(solver='saga', C=0.9)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_import_as_2(self):
         from lale.lib.sklearn import MinMaxScaler as Scaler
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import PCA
@@ -123,7 +123,19 @@ pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
 """from lale.lib.sklearn import PCA
 from lale.lib.sklearn import MinMaxScaler as Scl
 pipeline = PCA | Scl"""
-        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))        
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_higher_order(self):
+        from lale.lib.lale import Both
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import Nystroem
+        pipeline = Both(op1=PCA(n_components=2), op2=Nystroem)
+        expected = """from lale.lib.lale import Both
+from lale.lib.sklearn import PCA
+from lale.lib.sklearn import Nystroem
+pca = PCA(n_components=2)
+pipeline = Both(op1=pca, op2=Nystroem)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_multimodal(self):
         from lale.lib.lale import Project
