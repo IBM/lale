@@ -246,8 +246,9 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             if op_kind(step_val) in ['Seq', 'Par']:
                 return f'({result})'
             return result
-        printed_steps = [parens(step_uid, step_val) for step_uid, step_val in jsn['steps'].items()]
-        return ' | '.join(printed_steps)
+        printed_steps = {step_uid: parens(step_uid, step_val)
+                         for step_uid, step_val in jsn['steps'].items()}
+        return ' | '.join(printed_steps.values())
     elif op_kind(jsn) == 'IndividualOp':
         label = jsn['label']
         class_name = jsn['class']
