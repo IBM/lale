@@ -27,10 +27,7 @@ import lale.operators
 
 JSON_TYPE = Dict[str, Any]
 
-def hyperparams_to_string(hps: JSON_TYPE, op:'lale.operators.Operator'=None) -> str:
-    if op:
-        for k, v in hps.items():
-            pass #TODO: use enums where possible
+def hyperparams_to_string(hps: JSON_TYPE) -> str:
     def value_to_string(value):
         return pprint.pformat(value, width=10000, compact=True)
     strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
@@ -63,29 +60,6 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
     if has_op(mod_name_long, unqualified):
         return mod_name_long
     assert False, (op_label, op_name, class_name)
-
-def _indiv_op_jsn_to_string(jsn: JSON_TYPE, show_imports: bool) -> Tuple[str, str]:
-    assert lale.json_operator.json_op_kind(jsn) == 'IndividualOp'
-    label = jsn['label']
-    if show_imports:
-        class_name = jsn['class']
-        module_name = _get_module_name(label, jsn['operator'], class_name)
-        if module_name.startswith('lale.'):
-            op_name = jsn['operator']
-        else:
-            op_name = class_name[class_name.rfind('.')+1:]
-        if op_name == label:
-            import_stmt = f'from {module_name} import {op_name}'
-        else:
-            import_stmt = f'from {module_name} import {op_name} as {label}'
-    else:
-        import_stmt = ''
-    if 'hyperparams' in jsn and jsn['hyperparams'] is not None:
-        hps = hyperparams_to_string(jsn['hyperparams'])
-        op_expr = f'{label}({hps})'
-    else:
-        op_expr = label
-    return import_stmt, op_expr
 
 class _CodeGenState:
     imports: List[str]
@@ -275,9 +249,33 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
         printed_steps = [parens(step_uid, step_val) for step_uid, step_val in jsn['steps'].items()]
         return ' | '.join(printed_steps)
     elif op_kind(jsn) == 'IndividualOp':
-        name = jsn['label']
-        import_stmt, op_expr = _indiv_op_jsn_to_string(jsn, True)
+        label = jsn['label']
+        class_name = jsn['class']
+        module_name = _get_module_name(label, jsn['operator'], class_name)
+        if module_name.startswith('lale.'):
+            op_name = jsn['operator']
+        else:
+            op_name = class_name[class_name.rfind('.')+1:]
+        if op_name == label:
+            import_stmt = f'from {module_name} import {op_name}'
+        else:
+            import_stmt = f'from {module_name} import {op_name} as {label}'
         gen.imports.append(import_stmt)
+        printed_steps = {
+            step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
+            for step_uid, step_val in jsn.get('steps', {}).items()}
+        if 'hyperparams' in jsn and jsn['hyperparams'] is not None:
+            def value_to_string(value):
+                if isinstance(value, dict) and '$ref' in value:
+                    step_uid = value['$ref'].split('/')[-1]
+                    return printed_steps[step_uid]
+                return pprint.pformat(value, width=10000, compact=True)
+            hp_strings = [f'{hp_name}={value_to_string(hp_val)}'
+                          for hp_name, hp_val in jsn['hyperparams'].items()]
+            hp_string = ', '.join(hp_strings)
+            op_expr = f'{label}({hp_string})'
+        else:
+            op_expr = label
         if re.fullmatch(r'.+\(.+\)', op_expr):
             gen.assigns.append(f'{uid} = {op_expr}')
             return uid
@@ -287,19 +285,20 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
         assert False, f'unexpected type {type(jsn)} of jsn {jsn}'
 
 def _collect_names(jsn: JSON_TYPE) -> Set[str]:
-    if op_kind(jsn) in ['Pipeline', 'OperatorChoice']:
-        result: Set[str] = set()
+    result: Set[str] = set()
+    if 'steps' in jsn:
         for step_uid, step_jsn in jsn['steps'].items():
             result |= {step_uid}
             result |= _collect_names(step_jsn)
-        return result
-    assert op_kind(jsn) == 'IndividualOp'
-    return {jsn['label']}
+    if 'label' in jsn:
+        result |= {jsn['label']}
+    return result
 
 def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool) -> str:
     gen = _CodeGenState(_collect_names(jsn))
-    expr = _operator_jsn_to_string_rec('(root)', jsn, gen)
-    gen.assigns.append(f'pipeline = {expr}')
+    expr = _operator_jsn_to_string_rec('pipeline', jsn, gen)
+    if expr != 'pipeline':
+        gen.assigns.append(f'pipeline = {expr}')
     if show_imports:
         imports_set: Set[str] = set()
         imports_list: List[str] = []
@@ -331,13 +330,6 @@ def schema_to_string(schema: JSON_TYPE) -> str:
 def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, call_depth:int=1) -> str:
     if lale.helpers.is_schema(arg):
         return schema_to_string(cast(JSON_TYPE, arg))
-    elif isinstance(arg, lale.operators.IndividualOp):
-        jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
-        import_stmt, op_expr = _indiv_op_jsn_to_string(jsn, show_imports)
-        if import_stmt == '':
-            return op_expr
-        else:
-            return import_stmt + '\npipeline = ' + op_expr
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
         return _operator_jsn_to_string(jsn, show_imports)
