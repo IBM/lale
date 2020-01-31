@@ -26,6 +26,9 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LabelEncoder    Encode labels with value between 0 and n_classes-1.',
     'allOf': [{
         'type': 'object',
+        'required': [],
+        'relevantToOptimizer': [],
+        'additionalProperties': False,
         'properties': {
             
         }}],
@@ -34,6 +37,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit label encoder',
     'type': 'object',
+    'required': ['y'],
     'properties': {
         'y': {
             'type': 'array',
@@ -46,6 +50,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform labels to normalized encoding.',
     'type': 'object',
+    'required': ['y'],
     'properties': {
         'y': {
             'type': 'array',

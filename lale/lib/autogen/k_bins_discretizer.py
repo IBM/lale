@@ -54,6 +54,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fits the estimator.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'XXX TODO XXX': 'numeric array-like, shape (n_samples, n_features)',
@@ -66,6 +67,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Discretizes the data.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'XXX TODO XXX': 'numeric array-like, shape (n_samples, n_features)',

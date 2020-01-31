@@ -299,6 +299,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model to data matrix X and target(s) y.',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'anyOf': [{
@@ -332,6 +333,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the multi-layer perceptron model.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

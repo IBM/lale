@@ -69,6 +69,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the transformer on X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -84,6 +85,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Generate missing values indicator for X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -98,12 +100,7 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The missing indicator for input data. The data type of ``Xt``',
-    'type': 'array',
-    'items': {
-        'type': 'array',
-        'items': {
-            'type': 'number'}
-    }
+    'XXX TODO XXX': '{ndarray or sparse matrix}, shape (n_samples, n_features)',
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

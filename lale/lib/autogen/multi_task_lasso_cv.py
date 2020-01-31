@@ -45,7 +45,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.001,
                 'description': 'Length of the path. ``eps=1e-3`` means that'},
             'n_alphas': {
@@ -128,6 +128,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with coordinate descent',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'XXX TODO XXX': '{array-like}, shape (n_samples, n_features)',
@@ -151,6 +152,7 @@ _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the linear model',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'anyOf': [{

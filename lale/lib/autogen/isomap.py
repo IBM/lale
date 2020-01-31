@@ -56,8 +56,8 @@ _hyperparams_schema = {
                 'description': "'auto' : Attempt to choose the most efficient solver"},
             'tol': {
                 'type': 'number',
-                'minimumForOptimizer': 0,
-                'maximumForOptimizer': 1,
+                'minimumForOptimizer': 0.0,
+                'maximumForOptimizer': 1.0,
                 'distribution': 'uniform',
                 'default': 0,
                 'description': 'Convergence tolerance passed to arpack or lobpcg.'},
@@ -87,6 +87,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the embedding vectors for data X',
     'type': 'object',
+    'required': ['y', 'X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -102,6 +103,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform X.',
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',

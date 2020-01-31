@@ -55,6 +55,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit label binarizer',
     'type': 'object',
+    'required': ['y'],
     'properties': {
         'y': {
             'anyOf': [{
@@ -75,6 +76,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform multi-class labels to binary labels',
     'type': 'object',
+    'required': ['y'],
     'properties': {
         'y': {
             'anyOf': [{
