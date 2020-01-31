@@ -743,3 +743,30 @@ class TestOperatorWithoutSchema(unittest.TestCase):
         pipeline = PCA >> LogisticRegression
         clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
+
+class TestVotingClassifier(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_with_lale_classifiers(self):
+        from lale.lib.sklearn import VotingClassifier
+        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
+        trained = clf.fit(self.X_train, self.y_train)
+        trained.predict(self.X_test)
+        
+    def test_with_lale_pipeline(self):
+        from lale.lib.sklearn import VotingClassifier
+        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('pca_lr', PCA() >> LogisticRegression())])
+        trained = clf.fit(self.X_train, self.y_train)
+        trained.predict(self.X_test)
+
+    @unittest.skip("not working with higher order operators yet.")
+    def test_with_hyperopt(self):
+        from lale.lib.sklearn import VotingClassifier
+        from lale.lib.lale import Hyperopt
+        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
+        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
