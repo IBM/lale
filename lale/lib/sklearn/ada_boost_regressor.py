@@ -1,3 +1,16 @@
+# Copyright 2019 IBM Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 from sklearn.ensemble.weight_boosting import AdaBoostRegressor as SKLModel
 import lale.helpers
@@ -7,6 +20,11 @@ from numpy import nan, inf
 class AdaBoostRegressorImpl():
 
     def __init__(self, base_estimator=None, n_estimators=50, learning_rate=1.0, loss='linear', random_state=None):
+        if isinstance(base_estimator, lale.operators.Operator):
+            if isinstance(base_estimator, lale.operators.IndividualOp):
+                base_estimator = base_estimator._impl._sklearn_model
+            else:
+                raise ValueError("If base_estimator is a Lale operator, it needs to be an individual operator. ")
         self._hyperparams = {
             'base_estimator': base_estimator,
             'n_estimators': n_estimators,
@@ -35,7 +53,7 @@ _hyperparams_schema = {
         'properties': {
             'base_estimator': {
                 'anyOf': [{
-                    'type': 'object'}, {
+                    'typeForOptimizer' : 'operator'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The base estimator from which the boosted ensemble is built.'},

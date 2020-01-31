@@ -33,6 +33,7 @@ import copy
 import sys
 import lale.operators
 from lale.lib.sklearn import LogisticRegression
+import multiprocessing 
 
 SEED=42
 logging.basicConfig(level=logging.WARNING)
@@ -41,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 class HyperoptImpl:
 
-    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, pgo:Optional[PGO]=None):
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None):
         """ Instantiate the HyperoptCV that will use the given estimator and other parameters to select the 
         best performing trainable instantiation of the estimator. 
 
@@ -78,6 +79,8 @@ class HyperoptImpl:
         max_opt_time : float, optional
             Maximum amout of time in seconds for the optimization. By default, None, implying no runtime
             bound.
+        max_eval_time : float, optional
+            Maximum amout of time in seconds for each evaluation. By default, None, implying no runtime bound.
         pgo : Optional[PGO], optional
             [description], by default None
         
@@ -111,6 +114,7 @@ class HyperoptImpl:
         self.cv = cv
         self.trials = Trials()
         self.max_opt_time = max_opt_time
+        self.max_eval_time = max_eval_time
 
 
     def fit(self, X_train, y_train):
@@ -143,6 +147,21 @@ class HyperoptImpl:
                     logger.debug("Error {} with pipeline:{}".format(e, trainable.to_json()))
                     raise e
             return cv_score, logloss, execution_time
+            
+            
+        def proc_train_test(params, X_train, y_train, return_dict):
+            params_to_save = copy.deepcopy(params)
+            try:
+                score, logloss, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
+                return_dict['loss'] = self.best_score - score
+                return_dict['time'] = execution_time
+                return_dict['log_loss'] = logloss
+                return_dict['status'] = STATUS_OK
+                return_dict['params'] = params_to_save
+            except BaseException as e:
+                logger.warning(f"Exception caught in HyperoptCV:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
+                return_dict['status'] = STATUS_FAIL
+            
         def get_final_trained_estimator(params, X_train, y_train):
             warnings.filterwarnings("ignore")
             trainable = create_instance_from_hyperopt_search_space(self.estimator, params)
@@ -155,21 +174,19 @@ class HyperoptImpl:
                 # if max optimization time set, and we have crossed it, exit optimization completely
                 sys.exit(0)
 
-            params_to_save = copy.deepcopy(params)
-            return_dict = {}
-            try:
-                score, logloss, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
-                return_dict = {
-                    'loss': self.best_score - score,
-                    'time': execution_time,
-                    'log_loss': logloss,
-                    'status': STATUS_OK,
-                    'params': params_to_save
-                }
-            except BaseException as e:
-                logger.warning(f"Exception caught in HyperoptCV:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
-                return_dict = {'status': STATUS_FAIL}
-            return return_dict
+            manager = multiprocessing.Manager()
+            proc_dict = manager.dict()
+            p = multiprocessing.Process(
+                target=proc_train_test,
+                args=(params, X_train, y_train, proc_dict))
+            p.start()
+            p.join(self.max_eval_time)
+            if p.is_alive():
+                p.terminate()
+                p.join()
+                logger.warning(f"Maximum alloted evaluation time exceeded. with hyperparams: {params}, setting status to FAIL")
+                proc_dict['status'] = STATUS_FAIL
+            return proc_dict
 
         try :
             fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
@@ -249,6 +266,12 @@ _hyperparams_schema = {
                 'type': 'number',
                 'default': 0.0},
             'max_opt_time': {
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0},
+                {   'enum': [None]}],
+                'default': None},
+            'max_eval_time': {
                 'anyOf': [
                 {   'type': 'number',
                     'minimum': 0.0},
