@@ -59,6 +59,11 @@ SCHEMA = {
             { 'enum': [None]},
             { 'type': 'object',
               'patternProperties': {'^[A-Za-z_][A-Za-z_0-9]*$': {}}}]},
+        'steps': {
+          'description': 'Nested operators in higher-order individual op.',
+          'type': 'object',
+          'patternProperties': {
+            '^[a-z][a-z_0-9]*$': {'$ref': '#/definitions/operator'}}},
         'is_frozen_trainable': {
           'type': 'boolean'},
         'is_frozen_trained': {
@@ -160,10 +165,12 @@ if __name__ == "__main__":
     lale.helpers.validate_is_schema(SCHEMA)
 
 def json_op_kind(jsn: JSON_TYPE) -> str:
-    if 'steps' in jsn and 'edges' in jsn:
-        return 'Pipeline'
-    elif 'steps' in jsn:
+    if jsn['class'] == 'lale.operators.OperatorChoice':
         return 'OperatorChoice'
+    if jsn['class'] in ['lale.operators.PlannedPipeline',
+                        'lale.operators.TrainablePipeline',
+                        'lale.operators.TrainedPipeline']:
+        return 'Pipeline'
     return 'IndividualOp'
 
 def _get_state(op: 'lale.operators.Operator') -> str:
@@ -242,7 +249,22 @@ def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensy
         if documentation_url is not None:
             jsn['documentation_url'] = documentation_url
         if isinstance(op, lale.operators.TrainableIndividualOp):
-            jsn['hyperparams'] = op.hyperparams()
+            if op.hyperparams() is None:
+                jsn['hyperparams'] = None
+            else:
+                hps: Dict[str, JSON_TYPE] = {}
+                steps: Dict[str, JSON_TYPE] = {}
+                for hp_name, hp_val in op.hyperparams().items():
+                    if isinstance(hp_val, lale.operators.Operator):
+                        step_uid, step_jsn = _to_json_rec(
+                            hp_val, cls2label, gensym)
+                        hps[hp_name] = {'$ref': f'../steps/{step_uid}'}
+                        steps[step_uid] = step_jsn
+                    else:
+                        hps[hp_name] = hp_val
+                jsn['hyperparams'] = hps
+                if len(steps) > 0:
+                    jsn['steps'] = steps
             jsn['is_frozen_trainable'] = op.is_frozen_trainable()
         if isinstance(op, lale.operators.TrainedIndividualOp):
             if hasattr(op._impl, 'fit'):
@@ -318,8 +340,18 @@ def _from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
         result = lale.operators.make_operator(impl, schemas, name)
         if jsn['state'] in ['trainable', 'trained']:
             if _get_state(result) == 'planned':
-                hp = jsn['hyperparams']
-                result = result() if hp is None else result(**hp)
+                hps = jsn['hyperparams']
+                if hps is None:
+                    result = result()
+                else:
+                    def decode_if_op(hp_val):
+                        if isinstance(hp_val, dict) and '$ref' in hp_val:
+                            step_uid = hp_val['$ref'].split('/')[-1]
+                            step_jsn = jsn['steps'][step_uid]
+                            return _from_json_rec(step_jsn)
+                        return hp_val
+                    hps = {k: decode_if_op(v) for k, v in hps.items()}
+                    result = result(**hps)
             trnbl = cast(lale.operators.TrainableIndividualOp, result)
             if jsn['is_frozen_trainable'] and not trnbl.is_frozen_trainable():
                 trnbl = trnbl.freeze_trainable()

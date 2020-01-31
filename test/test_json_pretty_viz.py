@@ -318,6 +318,39 @@ class TestToAndFromJSON(unittest.TestCase):
         json_2 = to_json(operator_2)
         self.assertEqual(json, json_2)
 
+    def test_higher_order_1(self):
+        from lale.lib.lale import Both
+        from lale.lib.sklearn import PCA, Nystroem
+        from lale.json_operator import from_json
+        operator = Both(op1=PCA(n_components=2), op2=Nystroem)
+        json_expected = {
+          'class': 'lale.lib.lale.both.BothImpl',
+          'state': 'trainable',
+          'operator': 'Both', 'label': 'Both',
+          'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.both.html',
+          'hyperparams': {
+            'op1': {'$ref': '../steps/pca'},
+            'op2': {'$ref': '../steps/nystroem'}},
+          'steps': {
+            'pca': {
+              'class': 'lale.lib.sklearn.pca.PCAImpl',
+              'state': 'trainable',
+              'operator': 'PCA', 'label': 'PCA',
+              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+              'hyperparams': {'n_components': 2},
+              'is_frozen_trainable': False},
+            'nystroem': {
+              'class': 'lale.lib.sklearn.nystroem.NystroemImpl',
+              'state': 'planned',
+              'operator': 'Nystroem', 'label': 'Nystroem',
+              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.kernel_approximation.Nystroem.html'}},
+          'is_frozen_trainable': False}
+        json = operator.to_json()
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        json_2 = operator_2.to_json()
+        self.assertEqual(json, json_2)
+
     def test_nested(self):
         self.maxDiff = None
         from lale.json_operator import to_json, from_json
