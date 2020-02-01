@@ -16,7 +16,7 @@ import graphviz
 import lale.json_operator
 import lale.pretty_print
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
     """For each cluster (Pipeline, OperatorChoice, or higher-order IndividualOp), get two representatives (first-order IndividualOps).
@@ -95,6 +95,7 @@ def _indiv_op_tooltip(uid, jsn) -> str:
     if 'hyperparams' in jsn:
         hps = jsn['hyperparams']
         if hps is not None:
+            steps: Optional[Dict[str, Any]]
             if 'steps' in jsn:
                 steps = {step_uid: step_uid for step_uid in jsn['steps']}
             else:
