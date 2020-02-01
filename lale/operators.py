@@ -346,10 +346,10 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         return lale.json_operator.to_json(self, call_depth=2)
 
-    def visualize(self):
+    def visualize(self, ipython_display:bool=True):
         """Visualize the operator using graphviz (use in a notebook).
         """
-        return lale.helpers.to_graphviz(self, call_depth=2)
+        return lale.helpers.to_graphviz(self, ipython_display, call_depth=2)
 
     def pretty_print(self, show_imports:bool=True, ipython_display:bool=False):
         """Returns the Python source code representation of the operator.
