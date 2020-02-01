@@ -329,12 +329,12 @@ def create_individual_op_using_reflection(class_name, operator_name, param_dict)
             instance = class_(**param_dict)
     return instance
 
-def to_graphviz(lale_operator, call_depth:int=1, **dot_graph_attr):
+def to_graphviz(lale_operator: 'lale.operators.Operator', ipython_display:bool=True, call_depth:int=1, **dot_graph_attr):
     import lale.visualize
     if not isinstance(lale_operator, lale.operators.Operator):
-        raise ValueError("The input to to_graphviz needs to be a valid LALE operator.")
+        raise TypeError("The input to to_graphviz needs to be a valid LALE operator.")
     jsn = lale.json_operator.to_json(lale_operator, call_depth=call_depth+1)
-    dot = lale.visualize.json_to_graphviz(jsn, dot_graph_attr)
+    dot = lale.visualize.json_to_graphviz(jsn, ipython_display, dot_graph_attr)
     return dot
 
 def println_pos(message, out_file=sys.stdout):

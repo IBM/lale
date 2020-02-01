@@ -16,10 +16,10 @@ import graphviz
 import lale.json_operator
 import lale.pretty_print
 import re
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
-    """For each cluster (Pipeline or OperatorChoice), get two representatives (IndividualOps).
+    """For each cluster (Pipeline, OperatorChoice, or higher-order IndividualOp), get two representatives (first-order IndividualOps).
 
     Lale visualizes composite operators using graphviz clusters. To
     visualize an edge to (from) a cluster, we need to tell graphviz a
@@ -63,7 +63,7 @@ def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
                              default=depth)
                 d_leaf = populate(step_uid, step_jsn, d_root, more_clusters)
                 d_max = max(d_max, d_leaf)
-        elif kind == 'OperatorChoice':
+        elif kind == 'OperatorChoice' or 'steps' in jsn:
             more_clusters = [uid, *clusters]
             d_max = depth
             for step_uid, step_jsn in jsn['steps'].items():
@@ -89,10 +89,27 @@ _STATE2COLOR = {
     'trainable': 'lightskyblue1',
     'planned': 'skyblue2'}
 
+def _indiv_op_tooltip(uid, jsn) -> str:
+    assert lale.json_operator.json_op_kind(jsn) == 'IndividualOp'
+    tooltip = f"{uid} = {jsn['label']}"
+    if 'hyperparams' in jsn:
+        hps = jsn['hyperparams']
+        if hps is not None:
+            steps: Optional[Dict[str, Any]]
+            if 'steps' in jsn:
+                steps = {step_uid: step_uid for step_uid in jsn['steps']}
+            else:
+                steps = None
+            hp_string = lale.pretty_print.hyperparams_to_string(hps, steps)
+            if len(hp_string) > 255: #too long for graphviz
+                hp_string = hp_string[:252] + '...'
+            tooltip = f'{tooltip}({hp_string})'
+    return tooltip
+
 def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
     kind = lale.json_operator.json_op_kind(jsn)
-    if kind in ['Pipeline', 'OperatorChoice']:
-        dot = graphviz.Digraph(name=f"cluster:{uid}")
+    if kind in ['Pipeline', 'OperatorChoice'] or 'steps' in jsn:
+        dot = graphviz.Digraph(name=f'cluster:{uid}')
     else:
         dot = graphviz.Digraph()
     if is_root:
@@ -103,38 +120,36 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
     if kind == 'Pipeline':
         dot.attr('graph', label='', style='rounded,filled',
                  fillcolor=_STATE2COLOR[jsn['state']],
-                 tooltip=f"{uid} = ...")
+                 tooltip=f'{uid} = ...')
         nodes = jsn['steps']
         edges = jsn['edges']
-    elif kind == 'OperatorChoice':
+    else:
+        edges = []
         if is_root:
             nodes = {'(root)': jsn}
-        else:
+        elif kind == 'OperatorChoice':
             rhs = ' | '.join(jsn['steps'].keys())
             dot.attr('graph', label='Choice', style='filled',
-                     fillcolor='skyblue2', tooltip=f"{uid} = {rhs}")
+                     fillcolor=_STATE2COLOR[jsn['state']],
+                     tooltip=f'{uid} = {rhs}')
             nodes = jsn['steps']
-        edges = []
-    else:
-        assert is_root and kind == 'IndividualOp'
-        nodes = {'(root)': jsn}
-        edges = []
+        else:
+            assert kind == 'IndividualOp' and 'steps' in jsn
+            dot.attr('graph', label=jsn['label'], style='filled',
+                     fillcolor=_STATE2COLOR[jsn['state']],
+                     tooltip=_indiv_op_tooltip(uid, jsn))
+            if 'documentation_url' in jsn:
+                dot.attr('graph', URL=jsn['documentation_url'])
+            nodes = jsn['steps']
     for step_uid, step_jsn in nodes.items():
         node_kind = lale.json_operator.json_op_kind(step_jsn)
-        if node_kind in ['Pipeline', 'OperatorChoice']:
+        if node_kind in ['Pipeline', 'OperatorChoice'] or 'steps' in step_jsn:
             sub_dot = _json_to_graphviz_rec(
                 step_uid, step_jsn, cluster2reps, False, {})
             dot.subgraph(sub_dot)
         else:
             assert node_kind == 'IndividualOp'
-            tooltip = f"{step_uid} = {step_jsn['label']}"
-            if 'hyperparams' in step_jsn:
-                hps = step_jsn['hyperparams']
-                if hps is not None:
-                    hpss = lale.pretty_print.hyperparams_to_string(hps)
-                    if len(hpss) > 255: #too long for graphviz
-                        hpss = hpss[:252] + '...'
-                    tooltip = f'{tooltip}({hpss})'
+            tooltip = _indiv_op_tooltip(step_uid, step_jsn)
             attrs = {
                 'style' :'filled',
                 'fillcolor': _STATE2COLOR[step_jsn['state']],
@@ -147,23 +162,27 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
             dot.node(step_uid, label3, **attrs)
     cluster2root, cluster2leaf = cluster2reps
     for tail, head in edges:
-        tail_kind = lale.json_operator.json_op_kind(nodes[tail])
-        head_kind = lale.json_operator.json_op_kind(nodes[head])
-        if tail_kind == 'IndividualOp':
-            if head_kind == 'IndividualOp':
-                dot.edge(tail, head)
-            else:
-                dot.edge(tail, cluster2root[head], lhead=f"cluster:{head}")
-        else:
-            if head_kind == 'IndividualOp':
-                dot.edge(cluster2leaf[tail], head, ltail=f"cluster:{tail}")
-            else:
+        tail_is_cluster = 'steps' in nodes[tail]
+        head_is_cluster = 'steps' in nodes[head]
+        if tail_is_cluster:
+            if head_is_cluster:
                 dot.edge(cluster2leaf[tail], cluster2root[head],
                          ltail=f"cluster:{tail}", lhead=f"cluster:{head}")
+            else:
+                dot.edge(cluster2leaf[tail], head, ltail=f"cluster:{tail}")
+        else:
+            if head_is_cluster:
+                dot.edge(tail, cluster2root[head], lhead=f"cluster:{head}")
+            else:
+                dot.edge(tail, head)
     return dot
 
-def json_to_graphviz(jsn, dot_graph_attr):
+def json_to_graphviz(jsn, ipython_display, dot_graph_attr):
     cluster2reps = _get_cluster2reps(jsn)
     dot = _json_to_graphviz_rec(
         '(root)', jsn, cluster2reps, True, dot_graph_attr)
+    if ipython_display:
+        import IPython.display
+        IPython.display.display(dot)
+        return None
     return dot

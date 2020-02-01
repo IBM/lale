@@ -27,15 +27,15 @@ class TestToGraphviz(unittest.TestCase):
         kernel_tfm_or_not =  NoOp | Nystroem
         tfm = PCA
         clf = make_choice(LogisticRegression, KNeighborsClassifier)
-        to_graphviz(clf)
+        to_graphviz(clf, ipython_display=False)
         optimizable = kernel_tfm_or_not >> tfm >> clf
-        to_graphviz(optimizable)
+        to_graphviz(optimizable, ipython_display=False)
 
     def test_invalid_input(self):
         from sklearn.linear_model import LogisticRegression as SklearnLR
         scikit_lr = SklearnLR()
         from lale.helpers import to_graphviz
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             to_graphviz(scikit_lr)
 
 class TestPrettyPrint(unittest.TestCase):
