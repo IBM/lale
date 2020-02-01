@@ -186,6 +186,9 @@ class HyperoptImpl:
                 p.join()
                 logger.warning(f"Maximum alloted evaluation time exceeded. with hyperparams: {params}, setting status to FAIL")
                 proc_dict['status'] = STATUS_FAIL
+            if 'status' not in proc_dict:
+                logger.warning(f"Corrupted results, setting status to FAIL")
+                proc_dict['status'] = STATUS_FAIL     
             return proc_dict
 
         try :
