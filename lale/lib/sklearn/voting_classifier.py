@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.ensemble.voting_classifier import VotingClassifier as SKLModel
+from sklearn.ensemble import VotingClassifier as SKLModel
 import lale.helpers
 import lale.operators
 
