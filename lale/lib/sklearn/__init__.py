@@ -51,3 +51,4 @@ from .ada_boost_regressor import AdaBoostRegressor
 from .sgd_classifier import SGDClassifier
 from .sgd_regressor import SGDRegressor
 from .voting_classifier import VotingClassifier
+from .bagging_classifier import BaggingClassifier
