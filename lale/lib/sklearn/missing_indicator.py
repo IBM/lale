@@ -35,7 +35,7 @@ _hyperparams_schema = {
             'missing_values': {
                 'anyOf': [{'type': 'number'},
                           {'type': 'string'},
-                          {'enum': [np.nan]},
+                          {'enum': [nan]},
                           {'enum': [None]}],
                 'description': 'The placeholder for the missing values.',
                 'type': 'number',
