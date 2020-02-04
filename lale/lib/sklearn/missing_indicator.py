@@ -105,9 +105,7 @@ _output_transform_schema = {
     'type': 'array',
     'items': {'type': 'array', 
         'items':{
-            'anyOf':[
-                {'type': 'number'},
-                {'type': 'string'}]}}
+            {'type': 'number'}}}
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
