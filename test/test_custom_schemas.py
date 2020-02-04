@@ -309,7 +309,7 @@ class TestWrapUnknownOps(unittest.TestCase):
         try:
             from lale.operators import make_operator, PlannedIndividualOp
             self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
-            helpers.wrap_imported_operators()
+            lale.wrap_imported_operators()
             self.assertTrue(isinstance(UnknownOp, PlannedIndividualOp))
             self.assertEqual(UnknownOp.hyperparam_schema(),
                              self.expected_schema)

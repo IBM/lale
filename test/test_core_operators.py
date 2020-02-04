@@ -282,6 +282,7 @@ feature_preprocessors = ['lale.lib.sklearn.PolynomialFeatures',
                          'lale.lib.sklearn.StandardScaler',
                          'lale.lib.sklearn.FeatureAgglomeration',
                          'lale.lib.sklearn.RobustScaler',
+                         'lale.lib.sklearn.QuantileTransformer'
                          ]
 for fproc in feature_preprocessors:
     setattr(
@@ -769,4 +770,34 @@ class TestVotingClassifier(unittest.TestCase):
         from lale.lib.sklearn import VotingClassifier
         from lale.lib.lale import Hyperopt
         clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
+        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+class TestBaggingClassifier(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    @unittest.skip("not working yet.")
+    def test_with_lale_classifiers(self):
+        from lale.lib.sklearn import BaggingClassifier
+        from lale.sklearn_compat import make_sklearn_compat
+        clf = BaggingClassifier(base_estimator=make_sklearn_compat(LogisticRegression()))
+        trained = clf.fit(self.X_train, self.y_train)
+        trained.predict(self.X_test)
+
+    @unittest.skip("not working yet.")  
+    def test_with_lale_pipeline(self):
+        from lale.lib.sklearn import BaggingClassifier
+        clf = BaggingClassifier(base_estimator = PCA() >> LogisticRegression())
+        trained = clf.fit(self.X_train, self.y_train)
+        trained.predict(self.X_test)
+
+    @unittest.skip("not working yet.")
+    def test_with_hyperopt(self):
+        from lale.lib.sklearn import BaggingClassifier
+        from lale.lib.lale import Hyperopt
+        clf = BaggingClassifier(base_estimator=LogisticRegression())
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)

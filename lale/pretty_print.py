@@ -27,8 +27,11 @@ import lale.operators
 
 JSON_TYPE = Dict[str, Any]
 
-def hyperparams_to_string(hps: JSON_TYPE) -> str:
+def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[JSON_TYPE]=None) -> str:
     def value_to_string(value):
+        if isinstance(value, dict) and '$ref' in value and steps is not None:
+            step_uid = value['$ref'].split('/')[-1]
+            return steps[step_uid]
         return pprint.pformat(value, width=10000, compact=True)
     strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
     return ', '.join(strings)
@@ -266,14 +269,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
             for step_uid, step_val in jsn.get('steps', {}).items()}
         if 'hyperparams' in jsn and jsn['hyperparams'] is not None:
-            def value_to_string(value):
-                if isinstance(value, dict) and '$ref' in value:
-                    step_uid = value['$ref'].split('/')[-1]
-                    return printed_steps[step_uid]
-                return pprint.pformat(value, width=10000, compact=True)
-            hp_strings = [f'{hp_name}={value_to_string(hp_val)}'
-                          for hp_name, hp_val in jsn['hyperparams'].items()]
-            hp_string = ', '.join(hp_strings)
+            hp_string = hyperparams_to_string(jsn['hyperparams'], printed_steps)
             op_expr = f'{label}({hp_string})'
         else:
             op_expr = label

@@ -554,7 +554,7 @@ class TestGridSearchCV(unittest.TestCase):
         from lale.lib.lale import GridSearchCV
         warnings.simplefilter("ignore")
 
-        from lale.helpers import wrap_imported_operators
+        from lale import wrap_imported_operators
         wrap_imported_operators()
         iris = load_iris()
         parameters = {'kernel':('linear', 'rbf'), 'C':[1, 10]}
