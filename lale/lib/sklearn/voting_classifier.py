@@ -52,7 +52,15 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'estimators': {
-                'typeForOptimizer': 'operator',
+                'type': 'array',
+                'items': {
+                    'type': 'array',
+                    'typeForOptimizer': 'tuple',
+                    'items': [
+                        {'type':'string'},
+                        {'typeForOptimizer': 'operator'}
+                    ]
+                },
                 'description': 'list of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones'},
             'voting': {
                 'enum': ['hard', 'soft'],
