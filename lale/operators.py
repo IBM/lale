@@ -1519,10 +1519,17 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
         if len(sink_nodes) > 1:
             raise ValueError("This pipeline has more than 1 sink nodes, can not remove last step meaningfully.")
         else:
-            n_steps = len(self._steps)
-            old_clf = self._steps[n_steps-1]
+            old_clf = self._steps[-1]
             self._steps.remove(old_clf)
             del self._preds[old_clf]
+
+    def get_last(self)->Optional[OpType]:
+        sink_nodes = self.find_sink_nodes()
+        if len(sink_nodes) > 1:
+            return None
+        else:
+            old_clf = self._steps[-1]
+            return old_clf
 
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 

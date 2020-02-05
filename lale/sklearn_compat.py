@@ -372,6 +372,45 @@ class SKlearnCompatWrapper(object):
     def hyperparam_defaults(self)->Dict[str,Any]:
         return DefaultsVisitor.run(self.to_lale())
 
+    def _final_individual_op(self)->Optional[Ops.IndividualOp]:
+        op:Optional[Ops.Operator] = self.to_lale()
+        while op is not None and isinstance(op, Ops.BasePipeline):
+            op = op.get_last()
+        if op is not None and not isinstance(op, Ops.IndividualOp):
+            op = None
+        return op
+
+    @property
+    def _final_estimator(self):
+        op:Optional[Ops.IndividualOp] = self._final_individual_op()
+        model = None
+        if op is None:
+            model = None
+        elif hasattr(op, '_impl') and hasattr(op._impl, '_sklearn_model'):
+            model = op._impl._sklearn_model
+        return 'passthrough' if model is None else model
+
+    @property
+    def classes_(self):
+        return self._final_estimator.classes_
+
+    @property
+    def n_classes_(self):
+        return self._final_estimator.n_classes_
+
+    @property
+    def _estimator_type(self):
+        return self._final_estimator._estimator_type
+
+    # sklearn compatibility
+    # @property
+    # def _final_estimator(self):
+    #     lale_op = self.to_lale()
+    #     if lale_op is _
+
+    #     estimator = self.steps[-1][1]
+    #     return 'passthrough' if estimator is None else estimator
+        
 class DefaultsVisitor(Visitor):
     @classmethod
     def run(cls, op:Ops.Operator)->Dict[str,Any]:
