@@ -20,6 +20,7 @@ from .schema_ranges import SchemaRange
 
 from typing import Any, Dict, Generic, List, Set, Iterable, Iterator, Optional, Tuple, TypeVar, Union
 from .schema_utils import Schema, getMinimum, getMaximum, isForOptimizer, makeAllOf, makeAnyOf, makeOneOf, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema
+from lale.helpers import validate_schema
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -156,7 +157,6 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     s_not_enum_list:List[set_with_str_for_keys[Any]] = []
     s_enum_list:List[set_with_str_for_keys[Any]] = []
 
-
     s_type = None
     s_type_for_optimizer = None
     s_typed = []
@@ -206,8 +206,15 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                     logger.info(f"simplifyAll: {schemas} is not a satisfiable list of conjoined schemas because the enumeration {list(s['enum'])} has no elements that are satisfiable by the conjoined schemas")
                     return impossible()
             elif 'type' in s:
-                t = s['type']
+                t = s.get('type', None)
+                to = s.get('typeForOptimizer', None)
+                if t == 'array':
+                    # tuples are distinct from arrays
+                    if to is not None and to == 'tuple':
+                        t = to
+
                 if s_type:
+                    # handle subtyping relation between integers and numbers
                     if s_type == 'number' and t == 'integer' or s_type == 'integer' and t == 'number':
                         s_type = 'integer'
                     elif s_type != t:
@@ -437,6 +444,112 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         if len(s_required) != 0:
             obj['required'] = list(s_required)
         s_typed = [obj]
+    elif s_type == 'array' or s_type == 'tuple':
+        is_tuple = s_type == 'tuple'
+        min_size:int = 0
+        max_size:Optional[int] = None
+        min_size_for_optimizer:int = 0
+        max_size_for_optimizer:Optional[int] = None
+        longest_item_list:int = 0
+        items_schemas:List[Schema] = []
+        item_list_entries:List[Tuple[List[Schema], Optional[Schema]]] = []
+
+        for arr in s_typed:
+            arr_min_size = arr.get('minItems', 0)
+            min_size = max(min_size, arr_min_size)
+
+            arr_min_size_for_optimizr = arr.get('minItemsForOptimizer', 0)
+            min_size_for_optimizer = max(min_size_for_optimizer, arr_min_size_for_optimizr)
+
+            arr_max_size = arr.get('maxItems', None)
+            if arr_max_size is not None:
+                if max_size is None:
+                    max_size = arr_max_size
+                else:
+                    max_size = min(max_size, arr_max_size)
+
+            arr_max_size_for_optimizer = arr.get('maxItemsForOptimizer', None)
+            if arr_max_size_for_optimizer is not None:
+                if max_size_for_optimizer is None:
+                    max_size_for_optimizer = arr_max_size_for_optimizer
+                else:
+                    max_size_for_optimizer = min(max_size_for_optimizer, arr_max_size_for_optimizer)
+
+            arr_item = arr.get('items', None)
+            if arr_item is not None:
+                if isinstance(arr_item, list):
+                    arr_item_len = len(arr_item)
+                    longest_item_list = max(longest_item_list, arr_item_len)
+
+                    arr_additional = arr.get('additionalItems', None)
+                    item_list_entries.append((arr_item, arr_additional))
+                    if arr_additional == False:
+                        # If we are not allowed additional elements,
+                        # that effectively sets the maximum allowed length
+                        if max_size is None:
+                            max_size = arr_item_len
+                        else:
+                            max_size = min(max_size, arr_item_len)
+                else:
+                    items_schemas.append(arr_item)
+        # We now have accurate min/max bounds, and if there are item lists
+        # we know how long the longest one is
+        # additionally, we have gathered up all the item (object) schemas
+
+        ret_arr:Dict[str,Any] = {'type':'array'}
+        if is_tuple:
+            ret_arr['typeForOptimizer'] = 'tuple'
+        if min_size > 0:
+            ret_arr['minItems'] = min_size
+        if max_size is not None:
+            ret_arr['maxItems'] = max_size
+
+        if min_size_for_optimizer > min_size:
+            ret_arr['minItemsForOptimizer'] = min_size_for_optimizer
+
+        if max_size_for_optimizer is not None:
+            if max_size is None or max_size_for_optimizer < max_size:
+                ret_arr['maxItemsForOptimizer'] = max_size_for_optimizer
+
+        all_items_schema:Optional[Schema] = None
+        if items_schemas:
+            all_items_schema = simplifyAll(items_schemas, floatAny=floatAny)
+
+        if not item_list_entries:
+            # there are no list items schemas
+            assert longest_item_list == 0
+            if all_items_schema:
+                ret_arr['items'] = all_items_schema
+        else:
+            ret_item_list_list:List[List[Schema]] = [[] for _ in range(longest_item_list)]
+            additional_schemas:List[Schema] = []
+            for (arr_item_list, arr_additional_schema) in item_list_entries:
+                for x in range(longest_item_list):
+                    ils = ret_item_list_list[x]
+                    if x < len(arr_item_list):
+                         ils.append(arr_item_list[x])
+                    elif arr_additional_schema:
+                        ils.append(arr_additional_schema)
+                    if all_items_schema:
+                        ils.append(all_items_schema)
+
+                if arr_additional_schema:
+                    additional_schemas.append(arr_additional_schema)
+
+            if max_size is None or max_size > longest_item_list:
+                # if it is possible to have more elements
+                # we constrain them as specified
+
+                if additional_schemas:
+                    if all_items_schema is not None:
+                        additional_schemas.append(all_items_schema)
+                    all_items_schema = simplifyAll(additional_schemas, floatAny=floatAny)
+                if all_items_schema is not None:
+                    ret_arr['additionalItems'] = all_items_schema
+
+            ret_item_list:List[Schema] = [simplifyAll(x, floatAny=floatAny) for x in ret_item_list_list]
+            ret_arr['items'] = ret_item_list
+        s_typed = [ret_arr]
 
     # TODO: more!
     assert not s_all
