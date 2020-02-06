@@ -22,7 +22,7 @@ from lale.util.Visitor import Visitor
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
 
-from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer
+from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer, has_operator, atomize_schema_enumerations
 from lale.search.search_space import *
 from lale.search.lale_hyperopt import search_space_to_str_for_comparison
 from lale.search.PGO import PGO, FrequencyDistribution, Freqs
@@ -303,8 +303,6 @@ class SearchSpaceOperatorVisitor(Visitor):
             elif typ == "string":
                 pass
             elif typ == "operator":
-                # this will not currently happen 
-                # since it will have been merged into an enum by now
                 # TODO: If there is a default, we could use it
                 vals = schema.get('enum', None)
                 if vals is None:
@@ -382,6 +380,7 @@ class SearchSpaceOperatorVisitor(Visitor):
         else:
             return self.schemaToSearchSpaceHelper_(longName, longName, schema, relevantFields, pgo_freqs=pgo_freqs)
 
+
     def schemaToSimplifiedAndSearchSpace(self,
         longName:str, 
         name:str, 
@@ -389,6 +388,9 @@ class SearchSpaceOperatorVisitor(Visitor):
         relevantFields = findRelevantFields(schema)
         if relevantFields:
             schema = narrowToGivenRelevantFields(schema, relevantFields)
+
+        if has_operator(schema):
+            atomize_schema_enumerations(schema)
         simplified_schema = simplify(schema, True)
     #    from . import helpers
     #    helpers.print_yaml('SIMPLIFIED_' + longName, simplified_schema)
