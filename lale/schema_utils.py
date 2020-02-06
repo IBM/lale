@@ -167,3 +167,124 @@ def forOptimizer(schema:Schema)->Schema:
         return ret
 
     return schema
+
+def has_operator(schema:Schema)->bool:
+    to = schema.get('typeForOptimizer', None)
+    if to == 'operator':
+        return True
+    if 'not' in schema:
+        if has_operator(schema['not']):
+            return True
+    if 'anyOf' in schema:
+        if any(has_operator(s) for s in schema['anyOf']):
+            return True
+    if 'allOf' in schema:
+        if any(has_operator(s) for s in schema['allOf']):
+            return True
+    if 'oneOf' in schema:
+        if any(has_operator(s) for s in schema['oneOf']):
+            return True
+    if 'items' in schema:
+        it = schema['items']
+        if isinstance(it, list):
+            if any(has_operator(s) for s in it):
+                return True
+        else:
+            if has_operator(it):
+                return True
+    if 'properties' in schema:
+        props = schema['properties']
+        if any(has_operator(s) for s in props.values()):
+                return True
+    if 'patternProperties' in schema:
+        pattern_props = schema['patternProperties']
+        if any(has_operator(s) for s in pattern_props.values()):
+                return True
+    if 'additionalProperties' in schema:
+        add_props = schema['additionalProperties']
+        if not isinstance(add_props, bool):
+            if has_operator(add_props):
+                return True
+    if 'dependencies' in schema:
+        depends = schema['dependencies']
+        for d in depends.values():
+            if not isinstance(d, list):
+                if has_operator(d):
+                    return True
+    # if we survived all of the checks, then we
+    return False
+
+def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
+    """ Given a schema, converts structured enumeration values (records, arrays)
+        into schemas where the structured part is specified as a schema, with the
+        primitive as the enum.
+    """
+    if schema is None:
+        return
+    if isinstance(schema, list):
+        for s in schema:
+            atomize_schema_enumerations(s)
+        return
+
+    if not isinstance(schema, dict):
+        return
+
+    for key in ['anyOf', 'allOf', 'oneOf', 'items', 'additionalProperties']:
+        atomize_schema_enumerations(schema.get(key, None))
+
+    for key in ['properties', 'patternProperties', 'dependencies']:
+        v = schema.get(key, None)
+        if v is not None:
+            atomize_schema_enumerations(list(v.values()))
+
+    # now that we have handled all the recursive cases
+    ev = schema.get('enum', None)
+    if ev is not None:
+        simple_evs:List[Any]=[]
+        complex_evs:List[Schema]=[]
+        for e in ev:
+            if isinstance(e, dict):
+                required:List[str] = []
+                props:Dict[str,Schema] = {}
+                for k,v in e:
+                    required.append(k)
+                    vs = {'enum': [v]}
+                    atomize_schema_enumerations(vs)
+                    props[k] = vs
+                ds = {'type': 'object',
+                      'additionalProperties':False,
+                      'required': list(e.keys()),
+                      'properties':props}
+                complex_evs.append(ds)
+
+            elif isinstance(e, list) or isinstance(e, tuple):
+                is_tuple = isinstance(e, tuple)
+                items_len = len(e)
+                items:List[Schema] = []
+                for v in e:
+                    vs = {'enum': [v]}
+                    atomize_schema_enumerations(vs)
+                    items.append(vs)
+
+                ls = {'type': 'array',
+                      'items': items,
+                      'additionalItems': False,
+                      'minItems': items_len,
+                      'maxItems': items_len
+                     }
+                if is_tuple:
+                    ls['typeForOptimizer'] = 'tuple'
+                complex_evs.append(ls)
+            else:
+                simple_evs.append(ev)
+
+        if complex_evs:
+            del schema['enum']
+            if simple_evs:
+                complex_evs.append({'enum': simple_evs})
+            if len(complex_evs) == 1:
+                # special case, just update in place
+                schema.update(complex_evs[0])
+            else:
+                schema['anyOf'] = complex_evs
+
