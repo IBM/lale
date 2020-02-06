@@ -20,9 +20,9 @@ class MiniBatchKMeansImpl():
             'init_size': init_size,
             'n_init': n_init,
             'reassignment_ratio': reassignment_ratio}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

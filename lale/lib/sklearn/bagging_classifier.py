@@ -30,8 +30,9 @@ class BaggingClassifierImpl():
             'n_jobs': n_jobs,
             'random_state': random_state,
             'verbose': verbose}
-    def fit(self, X, y=None):
         self._sklearn_model = SKLModel(**self._hyperparams)
+
+    def fit(self, X, y=None):
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

@@ -23,9 +23,9 @@ class PolynomialFeaturesImpl():
             'degree': degree,
             'interaction_only': interaction_only,
             'include_bias': include_bias}
+        self._sklearn_model = sklearn.preprocessing.data.PolynomialFeatures(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.preprocessing.data.PolynomialFeatures(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

@@ -30,9 +30,9 @@ class GradientBoostingRegressorImpl():
             'validation_fraction': validation_fraction,
             'n_iter_no_change': n_iter_no_change,
             'tol': tol}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

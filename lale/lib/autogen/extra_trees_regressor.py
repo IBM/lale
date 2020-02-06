@@ -24,9 +24,9 @@ class ExtraTreesRegressorImpl():
             'random_state': random_state,
             'verbose': verbose,
             'warm_start': warm_start}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

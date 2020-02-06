@@ -14,9 +14,9 @@ class OneHotEncoderImpl():
             'handle_unknown': handle_unknown,
             'n_values': n_values,
             'categorical_features': categorical_features}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

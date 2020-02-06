@@ -31,9 +31,9 @@ class LinearSVCImpl():
             'verbose': verbose,
             'random_state': random_state,
             'max_iter': max_iter}
+        self._sklearn_model = sklearn.svm.classes.LinearSVC(**self._hyperparams)
 
     def fit(self, X, y=None, sample_weight=None):
-        self._sklearn_model = sklearn.svm.classes.LinearSVC(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

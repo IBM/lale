@@ -12,9 +12,9 @@ class BernoulliNBImpl():
             'binarize': binarize,
             'fit_prior': fit_prior,
             'class_prior': class_prior}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

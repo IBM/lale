@@ -27,9 +27,9 @@ class SelectKBestImpl():
             self._hyperparams = {
                 'k': k
             }
+        self._sklearn_model = sklearn.feature_selection.SelectKBest(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.feature_selection.SelectKBest(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

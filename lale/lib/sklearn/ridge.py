@@ -28,9 +28,9 @@ class RidgeImpl():
             'tol': tol,
             'solver': solver,
             'random_state': random_state}
+        self._sklearn_model = sklearn.linear_model.ridge.Ridge(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        self._sklearn_model = sklearn.linear_model.ridge.Ridge(**self._hyperparams)
         if fit_params is None:
             self._sklearn_model.fit(X, y)
         else:

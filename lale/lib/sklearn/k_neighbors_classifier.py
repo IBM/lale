@@ -19,9 +19,9 @@ import sklearn.neighbors
 class KNeighborsClassifierImpl():
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
+        self._sklearn_model = sklearn.neighbors.KNeighborsClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.neighbors.KNeighborsClassifier(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

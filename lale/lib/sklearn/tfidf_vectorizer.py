@@ -23,9 +23,9 @@ class TfidfVectorizerImpl():
         if 'dtype' in hyperparams and hyperparams['dtype'] == 'float64':
             hyperparams = {**hyperparams, 'dtype': np.float64}
         self._hyperparams = hyperparams
+        self._sklearn_model = sklearn.feature_extraction.text.TfidfVectorizer(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.feature_extraction.text.TfidfVectorizer(**self._hyperparams)
         if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
             X = X.squeeze()
         self._sklearn_model.fit(X, y)

@@ -19,10 +19,10 @@ import sklearn.linear_model
 class LogisticRegressionImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-
-    def fit(self, X, y, **fit_params):
         self._sklearn_model = sklearn.linear_model.LogisticRegression(
             **self._hyperparams)
+
+    def fit(self, X, y, **fit_params):
         if fit_params is None:
             self._sklearn_model.fit(X, y)
         else:

@@ -24,9 +24,9 @@ class VotingClassifierImpl():
             'weights': weights,
             'n_jobs': n_jobs,
             'flatten_transform': flatten_transform}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

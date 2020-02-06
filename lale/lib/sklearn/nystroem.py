@@ -19,9 +19,9 @@ import sklearn.kernel_approximation
 class NystroemImpl():
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
+        self._sklearn_model = sklearn.kernel_approximation.Nystroem(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.kernel_approximation.Nystroem(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

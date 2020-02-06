@@ -12,9 +12,9 @@ class RobustScalerImpl():
             'with_scaling': with_scaling,
             'quantile_range': quantile_range,
             'copy': copy}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

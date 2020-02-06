@@ -25,9 +25,9 @@ class QuadraticDiscriminantAnalysisImpl():
             'store_covariance': store_covariance,
             'tol': tol,
             'store_covariances': store_covariances}
+        self._sklearn_model = sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

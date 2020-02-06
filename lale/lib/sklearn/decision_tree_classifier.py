@@ -37,7 +37,6 @@ class DecisionTreeClassifierImpl():
 
 
     def fit(self, X, y, **fit_params):
-        self._sklearn_model = sklearn.tree.tree.DecisionTreeClassifier(**self._hyperparams)
         if fit_params is None:
             self._sklearn_model.fit(X, y)
         else:

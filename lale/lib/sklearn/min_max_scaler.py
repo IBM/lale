@@ -19,10 +19,10 @@ import sklearn.preprocessing
 class MinMaxScalerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-
-    def fit(self, X, y=None):
         self._sklearn_model = sklearn.preprocessing.MinMaxScaler(
             **self._hyperparams)
+
+    def fit(self, X, y=None):
         self._sklearn_model.fit(X)
         return self
 
