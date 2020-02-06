@@ -14,9 +14,9 @@ class HuberRegressorImpl():
             'warm_start': warm_start,
             'fit_intercept': fit_intercept,
             'tol': tol}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

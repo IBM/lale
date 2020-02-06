@@ -13,9 +13,9 @@ class QuadraticDiscriminantAnalysisImpl():
             'store_covariance': store_covariance,
             'tol': tol,
             'store_covariances': store_covariances}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

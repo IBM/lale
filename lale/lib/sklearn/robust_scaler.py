@@ -24,9 +24,9 @@ class RobustScalerImpl():
             'with_scaling': with_scaling,
             'quantile_range': quantile_range,
             'copy': copy}
+        self._sklearn_model = sklearn.preprocessing.data.RobustScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.preprocessing.data.RobustScaler(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

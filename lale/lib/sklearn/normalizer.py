@@ -22,9 +22,9 @@ class NormalizerImpl():
         self._hyperparams = {
             'norm': norm,
             'copy': copy}
+        self._sklearn_model = sklearn.preprocessing.data.Normalizer(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.preprocessing.data.Normalizer(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

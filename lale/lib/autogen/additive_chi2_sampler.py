@@ -10,9 +10,9 @@ class AdditiveChi2SamplerImpl():
         self._hyperparams = {
             'sample_steps': sample_steps,
             'sample_interval': sample_interval}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

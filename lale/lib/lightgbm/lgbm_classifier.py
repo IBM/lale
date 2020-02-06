@@ -46,10 +46,10 @@ class LGBMClassifierImpl():
             'silent': silent,
             'importance_type': importance_type
         }
+        self._sklearn_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
 
     def fit(self, X, y=None, **fit_params):
         try:
-            self._sklearn_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
             if fit_params is None:
                 self._sklearn_model.fit(X, y)
             else:

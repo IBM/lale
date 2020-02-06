@@ -24,9 +24,9 @@ class LogisticRegressionCVImpl():
             'intercept_scaling': intercept_scaling,
             'multi_class': multi_class,
             'random_state': random_state}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

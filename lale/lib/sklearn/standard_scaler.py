@@ -23,9 +23,9 @@ class StandardScalerImpl():
             'copy': copy,
             'with_mean': with_mean,
             'with_std': with_std}
+        self._sklearn_model = sklearn.preprocessing.data.StandardScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.preprocessing.data.StandardScaler(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

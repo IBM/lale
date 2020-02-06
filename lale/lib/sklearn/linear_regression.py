@@ -24,9 +24,9 @@ class LinearRegressionImpl():
             'normalize': normalize,
             'copy_X': copy_X,
             'n_jobs': n_jobs}
+        self._sklearn_model = sklearn.linear_model.base.LinearRegression(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        self._sklearn_model = sklearn.linear_model.base.LinearRegression(**self._hyperparams)
         if fit_params is None:
             self._sklearn_model.fit(X, y)
         else:

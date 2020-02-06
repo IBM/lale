@@ -16,9 +16,9 @@ class FunctionTransformerImpl():
             'check_inverse': check_inverse,
             'kw_args': kw_args,
             'inv_kw_args': inv_kw_args}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

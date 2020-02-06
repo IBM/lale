@@ -20,9 +20,9 @@ import sklearn.preprocessing
 class OrdinalEncoderImpl():
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
+        self._sklearn_model = sklearn.preprocessing.OrdinalEncoder(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.preprocessing.OrdinalEncoder(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         if isinstance(X, pd.DataFrame):
             cols_X = [str(c) for c in X.columns]

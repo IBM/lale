@@ -22,9 +22,9 @@ class GaussianNBImpl():
         self._hyperparams = {
             'priors': priors,
             'var_smoothing': var_smoothing}
+        self._sklearn_model = sklearn.naive_bayes.GaussianNB(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.naive_bayes.GaussianNB(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

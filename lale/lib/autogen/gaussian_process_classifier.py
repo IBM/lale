@@ -17,9 +17,9 @@ class GaussianProcessClassifierImpl():
             'random_state': random_state,
             'multi_class': multi_class,
             'n_jobs': n_jobs}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

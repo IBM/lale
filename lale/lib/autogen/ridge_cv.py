@@ -15,9 +15,9 @@ class RidgeCVImpl():
             'cv': cv,
             'gcv_mode': gcv_mode,
             'store_cv_values': store_cv_values}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

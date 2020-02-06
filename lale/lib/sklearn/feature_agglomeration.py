@@ -28,9 +28,9 @@ class FeatureAgglomerationImpl():
             'compute_full_tree': compute_full_tree,
             'linkage': linkage,
             'pooling_func': pooling_func}
+        self._sklearn_model = sklearn.cluster.hierarchical.FeatureAgglomeration(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.cluster.hierarchical.FeatureAgglomeration(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

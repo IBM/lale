@@ -19,9 +19,9 @@ class KMeansImpl():
             'copy_x': copy_x,
             'n_jobs': n_jobs,
             'algorithm': algorithm}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

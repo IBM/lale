@@ -23,9 +23,9 @@ class RFEImpl():
             'n_features_to_select': n_features_to_select,
             'step': step,
             'verbose': verbose}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

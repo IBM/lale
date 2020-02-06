@@ -19,9 +19,9 @@ import sklearn.neural_network.multilayer_perceptron
 class MLPClassifierImpl():
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
+        self._sklearn_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 

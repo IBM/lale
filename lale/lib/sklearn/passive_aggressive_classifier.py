@@ -39,9 +39,9 @@ class PassiveAggressiveClassifierImpl():
             'warm_start': warm_start,
             'class_weight': class_weight,
             'average': average}
+        self._sklearn_model = sklearn.linear_model.passive_aggressive.PassiveAggressiveClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = sklearn.linear_model.passive_aggressive.PassiveAggressiveClassifier(**self._hyperparams)
         self._sklearn_model.fit(X, y)
         return self
 
