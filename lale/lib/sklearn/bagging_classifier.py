@@ -15,11 +15,12 @@
 from sklearn.ensemble.bagging import BaggingClassifier as SKLModel
 import lale.helpers
 import lale.operators
+from lale.sklearn_compat import make_sklearn_compat
 
 class BaggingClassifierImpl():
     def __init__(self, base_estimator=None, n_estimators=10, max_samples=1.0, max_features=1.0, bootstrap=True, bootstrap_features=False, oob_score=False, warm_start=False, n_jobs=None, random_state=None, verbose=0):
         self._hyperparams = {
-            'base_estimator': base_estimator,
+            'base_estimator': make_sklearn_compat(base_estimator),
             'n_estimators': n_estimators,
             'max_samples': max_samples,
             'max_features': max_features,
