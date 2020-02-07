@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+import functools
 import jsonschema
 import jsonsubschema
 import numpy as np
@@ -197,6 +198,21 @@ class SubschemaError(Exception):
 def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
     if not jsonsubschema.isSubschema(sub, sup):
         raise SubschemaError(sub, sup, sub_name, sup_name)
+
+def join_schemas(*schemas):
+    def join_two_schemas(s_a, s_b):
+        if s_a is None:
+            return s_b
+        s_a = lale.helpers.dict_without(s_a, 'description')
+        s_b = lale.helpers.dict_without(s_b, 'description')
+        if jsonsubschema.isSubschema(s_a, s_b):
+            return s_b
+        if jsonsubschema.isSubschema(s_b, s_a):
+            return s_a
+        return jsonsubschema.joinSchemas(s_a, s_b)
+    if len(schemas) == 0:
+        return {'not':{}}
+    return functools.reduce(join_two_schemas, schemas)
 
 def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
     subset_X, subset_y = _safe_split(
