@@ -79,16 +79,6 @@ class ConcatFeaturesImpl():
 
     def transform_schema(self, s_X):
         min_cols, max_cols, elem_schema = 0, 0, None
-        def join_schemas(s_a, s_b):
-            if s_a is None:
-                return s_b
-            s_a = lale.helpers.dict_without(s_a, 'description')
-            s_b = lale.helpers.dict_without(s_b, 'description')
-            if jsonsubschema.isSubschema(s_a, s_b):
-                return s_b
-            if jsonsubschema.isSubschema(s_b, s_a):
-                return s_a
-            return jsonsubschema.joinSchemas(s_a, s_b)
         def add_ranges(min_a, max_a, min_b, max_b):
             min_ab = min_a + min_b
             if max_a == 'unbounded' or max_b == 'unbounded':
@@ -104,14 +94,14 @@ class ConcatFeaturesImpl():
                 if isinstance(s_cols, dict):
                     min_c = s_rows['minItems'] if 'minItems' in s_rows else 1
                     max_c = s_rows['maxItems'] if 'maxItems' in s_rows else 'unbounded'
-                    elem_schema = join_schemas(elem_schema, s_cols)
+                    elem_schema = lale.helpers.join_schemas(elem_schema, s_cols)
                 else:
                     min_c, max_c = len(s_cols), len(s_cols)
                     for s_col in s_cols:
-                        elem_schema = join_schemas(elem_schema, s_col)
+                        elem_schema = lale.helpers.join_schemas(elem_schema, s_col)
                 min_cols, max_cols = add_ranges(min_cols,max_cols,min_c,max_c)
             else:
-                elem_schema = join_schemas(elem_schema, s_rows)
+                elem_schema = lale.helpers.join_schemas(elem_schema, s_rows)
                 min_cols, max_cols = add_ranges(min_cols, max_cols, 1, 1)
         s_result = {
             '$schema': 'http://json-schema.org/draft-04/schema#',

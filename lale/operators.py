@@ -341,6 +341,14 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
+    @abstractmethod
+    def validate_schema(self, X, y=None):
+        pass
+
+    @abstractmethod
+    def transform_schema(self, s_X):
+        pass
+
     def to_json(self):
         """Returns the json representation of the operator.
         """
@@ -1485,28 +1493,41 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                 sink_nodes.append(node)
         return sink_nodes
 
-    def validate_schema(self, X, y=None):
+    def _validate_or_transform_schema(self, X, y=None, validate=True):
+        def combine_schemas(schemas):
+            n_datasets = len(schemas)
+            if n_datasets == 1:
+                result = schemas[0]
+            else:
+                result = {
+                    'type': 'array',
+                    'minItems': n_datasets, 'maxItems': n_datasets,
+                    'items': [lale.datasets.data_schemas.to_schema(i)
+                              for i in schemas]}
+            return result
         outputs = { }
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
-                inputs = [X]
+                inputs = X
             else:
-                inputs = [outputs[pred] for pred in preds]
-            n_datasets = len(inputs)
-            if n_datasets == 1:
-                inputs = inputs[0]
-            else:
-                inputs = {
-                    'type': 'array',
-                    'minItems': n_datasets, 'maxItems': n_datasets,
-                    'items': [lale.datasets.data_schemas.to_schema(i)
-                              for i in inputs]}
-            operator.validate_schema(X=inputs, y=y)
+                inputs = combine_schemas([outputs[pred] for pred in preds])
+            if validate:
+                operator.validate_schema(X=inputs, y=y)
             output = operator.transform_schema(inputs)
             if lale.helpers.is_empty_dict(output): #hack for missing schema
                 output = {'type': 'array', 'items': {'not': {}}}
             outputs[operator] = output
+        if not validate:
+            sinks = self.find_sink_nodes()
+            pipeline_outputs = [outputs[sink] for sink in sinks]
+            return combine_schemas(pipeline_outputs)
+
+    def validate_schema(self, X, y=None):
+        self._validate_or_transform_schema(X, y, validate=True)
+
+    def transform_schema(self, s_X):
+        return self._validate_or_transform_schema(s_X, validate=False)
 
     def is_supervised(self)->bool:
         s = self.steps()
@@ -2203,6 +2224,15 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
         if len(s) == 0:
             return False
         return self.steps()[-1].is_supervised()
+
+    def validate_schema(self, X, y=None):
+        for step in self.steps():
+            step.validate_schema(X, y)
+
+    def transform_schema(self, s_X):
+        transformed_schemas = [st.transform_schema(s_X) for st in self.steps()]
+        result = lale.helpers.join_schemas(*transformed_schemas)
+        return result
 
 class PipelineFactory():
     def __init__(self):

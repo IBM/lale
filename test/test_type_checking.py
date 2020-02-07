@@ -262,6 +262,32 @@ class TestDatasetSchemas(unittest.TestCase):
             s_output = NoOp.transform_schema(s_input)
             self.assertIs(s_input, s_output)
 
+    def test_transform_schema_pipeline(self):
+        from lale.datasets.data_schemas import to_schema
+        pipeline = NMF >> LogisticRegression
+        input_schema = to_schema(self._digits['X'])
+        transformed_schema = pipeline.transform_schema(input_schema)
+        transformed_expected = {
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'description': 'Predicted class label per sample.',
+            'type': 'array', 'items': {'type': 'number'}}
+        self.maxDiff = None
+        self.assertEqual(transformed_schema, transformed_expected)
+
+    def test_transform_schema_choice(self):
+        from lale.datasets.data_schemas import to_schema
+        choice = NMF | LogisticRegression
+        input_schema = to_schema(self._digits['X'])
+        transformed_schema = choice.transform_schema(input_schema)
+        transformed_expected = {
+            'anyOf': [
+                {   'type': 'array',
+                    'items': {
+                        'type': 'array', 'items': {'type': 'number'}}},
+                {   'type': 'array', 'items': {'type': 'number'}}]}
+        self.maxDiff = None
+        self.assertEqual(transformed_schema, transformed_expected)        
+
     def test_transform_schema_Concat_irisArr(self):
         from lale.datasets.data_schemas import to_schema
         data_X, data_y = self._irisArr['X'], self._irisArr['y']
