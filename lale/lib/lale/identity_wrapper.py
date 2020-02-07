@@ -24,13 +24,16 @@ class IdentityWrapperImpl():
         self._hyperparams = {'op':op}
 
     def getOp(self):
-        return self._hyperparams.op
+        return self._hyperparams['op']
 
     def transform(self, X, y = None):
         return self.getOp().transform(X, y=y)
 
-#    def transform_schema(self, s_X):
-#        return self.getOp().transform_schema(s_X)
+    def transform_schema(self, s_X):
+        return self.getOp().transform_schema(s_X)
+
+    def input_schema_fit(self):
+        return self.getOp().input_schema_fit()
 
     def predict(self, X):
         return self.getOp().predict(X)

@@ -349,6 +349,10 @@ class Operator(metaclass=AbstractVisitorMeta):
     def transform_schema(self, s_X):
         pass
 
+    @abstractmethod
+    def input_schema_fit(self, s_X):
+        pass
+
     def to_json(self):
         """Returns the json representation of the operator.
         """
@@ -1170,6 +1174,12 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         else:
             return super(TrainableIndividualOp, self).transform_schema(s_X)
 
+    def input_schema_fit(self):
+        if hasattr(self._impl, 'input_schema_fit'):
+            return self._impl.input_schema_fit()
+        else:
+            return super(TrainableIndividualOp, self).input_schema_fit()
+
     def _lale_clone(self, cloner:Callable[[Any],Any]):
         impl = self._impl
         if impl is not None:
@@ -1479,19 +1489,19 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
                 return False
         return True
 
-    def find_sink_nodes(self):
-        sink_nodes = []  
-        #sink_nodes.append(self.steps()[-1])
-        #TODO: This means a Lale pipeline is allowed to have multiple sink nodes, 
-        #making this change for grammars, test for other scenarios.
-        for node in self.steps():
-            is_sink_node = True
-            for edge in self.edges():
-                if edge[0] == node:
-                    is_sink_node = False
-            if is_sink_node:
-                sink_nodes.append(node)
-        return sink_nodes
+    def find_sink_nodes(self) -> List[OpType]:
+        is_sink = {s: True for s in self.steps()}
+        for src, _ in self.edges():
+            is_sink[src] = False
+        result = [s for s in self.steps() if is_sink[s]]
+        return result
+
+    def find_source_nodes(self) -> List[OpType]:
+        is_source = {s: True for s in self.steps()}
+        for _, dst in self.edges():
+            is_source[dst] = False
+        result = [s for s in self.steps() if is_source[s]]
+        return result
 
     def _validate_or_transform_schema(self, X, y=None, validate=True):
         def combine_schemas(schemas):
@@ -1528,6 +1538,12 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
 
     def transform_schema(self, s_X):
         return self._validate_or_transform_schema(s_X, validate=False)
+
+    def input_schema_fit(self):
+        sources = self.find_source_nodes()
+        pipeline_inputs = [source.input_schema_fit() for source in sources]
+        result = lale.helpers.join_schemas(*pipeline_inputs)
+        return result
 
     def is_supervised(self)->bool:
         s = self.steps()
@@ -2232,6 +2248,11 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
     def transform_schema(self, s_X):
         transformed_schemas = [st.transform_schema(s_X) for st in self.steps()]
         result = lale.helpers.join_schemas(*transformed_schemas)
+        return result
+
+    def input_schema_fit(self):
+        pipeline_inputs = [s.input_schema_fit() for s in self.steps()]
+        result = lale.helpers.join_schemas(*pipeline_inputs)
         return result
 
 class PipelineFactory():

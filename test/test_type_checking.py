@@ -14,10 +14,12 @@
 
 import unittest
 import jsonschema
+import jsonsubschema
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
+from lale.lib.lale import IdentityWrapper
 from lale.lib.sklearn import LogisticRegression
 from lale.lib.sklearn import TfidfVectorizer
 from lale.lib.sklearn import NMF
@@ -255,6 +257,45 @@ class TestDatasetSchemas(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
 
+    def test_input_schema_fit(self):
+        self.maxDiff = None
+        self.assertEqual(
+            LogisticRegression.input_schema_fit(),
+            LogisticRegression.get_schema('input_fit'))
+        self.assertEqual(
+            (NMF >> LogisticRegression).input_schema_fit(),
+            NMF.get_schema('input_fit'))
+        self.assertEqual(
+            IdentityWrapper(op=LogisticRegression).input_schema_fit(),
+            LogisticRegression.get_schema('input_fit'))
+        actual = (TfidfVectorizer | NMF).input_schema_fit()
+        expected = {
+            'anyOf': [
+            {   'type': 'object',
+                'required': ['X'],
+                'additionalProperties': False,
+                'properties': {
+                    'X': {
+                        'anyOf': [
+                        {   'type': 'array', 'items': {'type': 'string'}},
+                        {   'type': 'array',
+                            'items': {
+                                'type': 'array',
+                                'minItems': 1, 'maxItems': 1,
+                                'items': {'type': 'string'}}}]},
+                    'y': {}}},
+            {   'type': 'object',
+                'required': ['X'],
+                'additionalProperties': False,
+                'properties': {
+                    'X': {
+                        'type': 'array',
+                        'items': {
+                            'type': 'array',
+                            'items': {'type': 'number', 'minimum': 0.0}}},
+                    'y': {}}}]}
+        self.assertEqual(actual, expected)
+
     def test_transform_schema_NoOp(self):
         from lale.datasets.data_schemas import to_schema
         for ds in [self._irisArr, self._irisDf, self._digits, self._housing, self._creditG, self._movies, self._drugRev]:
@@ -287,6 +328,16 @@ class TestDatasetSchemas(unittest.TestCase):
                 {   'type': 'array', 'items': {'type': 'number'}}]}
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)        
+
+    def test_transform_schema_higher_order(self):
+        from lale.datasets.data_schemas import to_schema
+        inner = LogisticRegression
+        outer = IdentityWrapper(op=LogisticRegression)
+        input_schema = to_schema(self._digits['X'])
+        transformed_inner = inner.transform_schema(input_schema)
+        transformed_outer = outer.transform_schema(input_schema)
+        self.maxDiff = None
+        self.assertEqual(transformed_inner, transformed_outer)
 
     def test_transform_schema_Concat_irisArr(self):
         from lale.datasets.data_schemas import to_schema
