@@ -211,7 +211,7 @@ def join_schemas(*schemas):
             return s_a
         return jsonsubschema.joinSchemas(s_a, s_b)
     if len(schemas) == 0:
-        return {}
+        return {'not':{}}
     return functools.reduce(join_two_schemas, schemas)
 
 def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
