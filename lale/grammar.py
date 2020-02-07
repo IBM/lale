@@ -31,6 +31,9 @@ class NonTerminal(Operator):
 
     def transform_schema(self, s_X):
         raise NotImplementedError() #TODO
+
+    def input_schema_fit(self):
+        raise NotImplementedError() #TODO
         
         
 class Grammar(MetaModelOperator):
@@ -77,6 +80,9 @@ class Grammar(MetaModelOperator):
         raise NotImplementedError() #TODO
 
     def transform_schema(self, s_X):
+        raise NotImplementedError() #TODO
+
+    def input_schema_fit(self):
         raise NotImplementedError() #TODO
 
     def _unfold(self, op: Operator, n: int) -> Optional[Operator]:
