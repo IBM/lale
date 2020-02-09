@@ -765,7 +765,6 @@ class TestVotingClassifier(unittest.TestCase):
         trained = clf.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)
 
-    @unittest.skip("not working with higher order operators yet.")
     def test_with_hyperopt(self):
         from lale.lib.sklearn import VotingClassifier
         from lale.lib.lale import Hyperopt
