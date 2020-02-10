@@ -59,8 +59,7 @@ class SGDClassifierImpl():
 
     def partial_fit(self, X, y=None, classes = None):
       if not hasattr(self, "_sklearn_model"):
-        self._sklearn_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(
-            **self._hyperparams)
+        self._sklearn_model = SKLModel(**self._hyperparams)
       self._sklearn_model.partial_fit(X, y, classes = classes)
       return self
 
