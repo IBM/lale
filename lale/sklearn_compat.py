@@ -87,6 +87,8 @@ class WithoutGetParams(object):
             raise AttributeError
         if name == 'get_params':
             raise AttributeError
+        if name in ['__getstate__', '__setstate__', '__repr__']:
+            raise AttributeError
         else:
             return getattr(self._base, name)
     
@@ -96,6 +98,15 @@ class WithoutGetParams(object):
             obj = obj._base
         assert isinstance(obj, Ops.Operator)
         return WithoutGetParams(clone_lale(obj))
+
+    def __str__(self):
+        b = getattr(self, '_base', None)
+        s:str
+        if b is None:
+            s = ""
+        else:
+            s = str(b)       
+        return f"WGP<{s}>"
 
 def partition_sklearn_params(d:Dict[str, Any])->Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
     sub_parts:Dict[str, Dict[str, Any]] = {}
