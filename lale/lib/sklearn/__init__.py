@@ -35,6 +35,7 @@ from .extra_trees_regressor import ExtraTreesRegressor
 from .gradient_boosting_classifier import GradientBoostingClassifier
 from .gradient_boosting_regressor import GradientBoostingRegressor
 from .linear_regression import LinearRegression
+from .missing_indicator import MissingIndicator
 from .ridge import Ridge
 from .select_k_best import SelectKBest
 from .standard_scaler import StandardScaler
