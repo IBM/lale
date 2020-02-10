@@ -810,3 +810,20 @@ class TestBaggingClassifier(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         clf = BaggingClassifier(base_estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier()))
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+class TestBatching(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_batching_with_hyperopt(self):
+        from lale.lib.sklearn import MinMaxScaler, SGDClassifier
+        from lale.lib.lale import Hyperopt, Batching
+        from sklearn.metrics import accuracy_score
+
+        pipeline = Batching(operator=MinMaxScaler() >> SGDClassifier())
+        trained = pipeline.auto_configure(self.X_train, self.y_train, optimizer=Hyperopt, max_evals=1) 
+        predictions = trained.predict(self.X_test)
