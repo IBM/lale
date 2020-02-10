@@ -24,41 +24,11 @@ class OneHotEncoderImpl():
 
     def fit(self, X, y=None):
         self._sklearn_model.fit(X, y)
-        if isinstance(X, pd.DataFrame):
-            cols_X = [str(c) for c in X.columns]
-            self._feature_names = self._sklearn_model.get_feature_names(cols_X)
-        else:
-            self._feature_names = self._sklearn_model.get_feature_names()
         return self
 
     def transform(self, X):
         return self._sklearn_model.transform(X)
 
-    def get_feature_names(self, input_features=None):
-        """Return feature names for output features after this transformation. 
-        This uses the output features obtained from scikit-learn's
-        OneHotEncoder's get_feature_names method.
-        https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html#sklearn.preprocessing.OneHotEncoder.get_feature_names
-        The precedence of input feature names used is as follows:
-        1. input_features passed as an argument to this function.
-           This is a list string of length n_features.
-        2. feature_names obtained at the time of training.
-           They are input data's column names if it was a Pandas dataframe.
-        3. feature_names obtained at the time of training.
-           If training data was not a Pandas DataFrame, this method returns
-           the output of scikit's get_feature_names(None).
-        Returns
-        -------
-        output_feature_names : array of string, length n_output_features
-        """
-        try:
-            trained_sklearn_model = self._sklearn_model
-        except AttributeError:
-            raise ValueError('Can only call get_feature_names on a trained operator. Please call fit to get a trained operator.')
-        if input_features is not None:
-            return trained_sklearn_model.get_feature_names(input_features)
-        elif self._feature_names is not None:
-            return self._feature_names
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -87,7 +57,7 @@ _hyperparams_schema = {
                             'items': {
                                 'type': 'number'},
                             'description': 'Should be sorted.'}]}}],
-                'default': None},
+                'default': 'auto'},
             'sparse': {
                 'description':
                     'Will return sparse matrix if set true, else array.',

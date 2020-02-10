@@ -24,11 +24,6 @@ class OrdinalEncoderImpl():
 
     def fit(self, X, y=None):
         self._sklearn_model.fit(X, y)
-        if isinstance(X, pd.DataFrame):
-            cols_X = [str(c) for c in X.columns]
-            self._feature_names = self._sklearn_model.get_feature_names(cols_X)
-        else:
-            self._feature_names = self._sklearn_model.get_feature_names()
         return self
 
     def transform(self, X):
@@ -61,7 +56,7 @@ _hyperparams_schema = {
                             'items': {
                                 'type': 'number'},
                             'description': 'Should be sorted.'}]}}],
-                'default': None},
+                'default': 'auto'},
             'dtype': {
                 'description': 'Desired dtype of output, must be number. See https://docs.scipy.org/doc/numpy-1.14.0/reference/arrays.scalars.html#arrays-scalars-built-in',
                 'enum': ['byte', 'short', 'intc', 'int_', 'longlong', 'intp', 'int8', 'int16', 'int32', 'int64', 'ubyte', 'ushort', 'uintc', 'uint', 'ulonglong', 'uintp', 'uint16', 'uint32', 'uint64', 'half', 'single', 'double', 'float_', 'longfloat', 'float16', 'float32', 'float64', 'float96', 'float128'],
