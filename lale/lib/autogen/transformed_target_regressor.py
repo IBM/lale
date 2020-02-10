@@ -13,9 +13,9 @@ class TransformedTargetRegressorImpl():
             'func': func,
             'inverse_func': inverse_func,
             'check_inverse': check_inverse}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

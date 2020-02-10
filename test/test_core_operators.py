@@ -765,7 +765,6 @@ class TestVotingClassifier(unittest.TestCase):
         trained = clf.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)
 
-    @unittest.skip("not working with higher order operators yet.")
     def test_with_hyperopt(self):
         from lale.lib.sklearn import VotingClassifier
         from lale.lib.lale import Hyperopt
@@ -780,24 +779,34 @@ class TestBaggingClassifier(unittest.TestCase):
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
 
-    @unittest.skip("not working yet.")
     def test_with_lale_classifiers(self):
         from lale.lib.sklearn import BaggingClassifier
         from lale.sklearn_compat import make_sklearn_compat
-        clf = BaggingClassifier(base_estimator=make_sklearn_compat(LogisticRegression()))
+        clf = BaggingClassifier(base_estimator=LogisticRegression())
         trained = clf.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)
 
-    @unittest.skip("not working yet.")  
     def test_with_lale_pipeline(self):
         from lale.lib.sklearn import BaggingClassifier
         clf = BaggingClassifier(base_estimator = PCA() >> LogisticRegression())
         trained = clf.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)
 
-    @unittest.skip("not working yet.")
     def test_with_hyperopt(self):
         from lale.lib.sklearn import BaggingClassifier
         from lale.lib.lale import Hyperopt
         clf = BaggingClassifier(base_estimator=LogisticRegression())
+        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+        print(trained.to_json())
+
+    def test_pipeline_with_hyperopt(self):
+        from lale.lib.sklearn import BaggingClassifier
+        from lale.lib.lale import Hyperopt
+        clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
+        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+    def test_pipeline_choice_with_hyperopt(self):
+        from lale.lib.sklearn import BaggingClassifier
+        from lale.lib.lale import Hyperopt
+        clf = BaggingClassifier(base_estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier()))
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)

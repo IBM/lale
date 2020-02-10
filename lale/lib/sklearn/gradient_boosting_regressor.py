@@ -42,9 +42,9 @@ class GradientBoostingRegressorImpl():
             'validation_fraction': validation_fraction,
             'n_iter_no_change': n_iter_no_change,
             'tol': tol}
+        self._sklearn_model = sklearn.ensemble.gradient_boosting.GradientBoostingRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        self._sklearn_model = sklearn.ensemble.gradient_boosting.GradientBoostingRegressor(**self._hyperparams)
         if fit_params is None:
             self._sklearn_model.fit(X, y)
         else:

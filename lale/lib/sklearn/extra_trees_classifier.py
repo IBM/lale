@@ -37,9 +37,9 @@ class ExtraTreesClassifierImpl():
             'verbose': verbose,
             'warm_start': warm_start,
             'class_weight': class_weight}
+        self._sklearn_model = sklearn.ensemble.forest.ExtraTreesClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        self._sklearn_model = sklearn.ensemble.forest.ExtraTreesClassifier(**self._hyperparams)
         if fit_params is None:
             self._sklearn_model.fit(X, y)
         else:

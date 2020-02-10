@@ -24,10 +24,10 @@ class MultinomialNBImpl():
             'alpha': alpha,
             'fit_prior': fit_prior,
             'class_prior': class_prior}
-
-    def fit(self, X, y=None):
         self._sklearn_model = sklearn.naive_bayes.MultinomialNB(
             **self._hyperparams)
+
+    def fit(self, X, y=None):
         self._sklearn_model.fit(X, y)
         return self
 

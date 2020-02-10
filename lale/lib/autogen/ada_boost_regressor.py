@@ -13,9 +13,9 @@ class AdaBoostRegressorImpl():
             'learning_rate': learning_rate,
             'loss': loss,
             'random_state': random_state}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

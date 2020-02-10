@@ -25,6 +25,15 @@ class NonTerminal(Operator):
     
     def set_name(self, name):
         self._name = name
+
+    def validate_schema(self, X, y=None):
+        raise NotImplementedError() #TODO
+
+    def transform_schema(self, s_X):
+        raise NotImplementedError() #TODO
+
+    def input_schema_fit(self):
+        raise NotImplementedError() #TODO
         
         
 class Grammar(MetaModelOperator):
@@ -67,7 +76,15 @@ class Grammar(MetaModelOperator):
     def arrange(self, *args, **kwargs):
         pass
             
-            
+    def validate_schema(self, X, y=None):
+        raise NotImplementedError() #TODO
+
+    def transform_schema(self, s_X):
+        raise NotImplementedError() #TODO
+
+    def input_schema_fit(self):
+        raise NotImplementedError() #TODO
+
     def _unfold(self, op: Operator, n: int) -> Optional[Operator]:
         """ Unroll all possible operators from the grammar `g` starting from    non-terminal `op` after `n` derivations.
         

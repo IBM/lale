@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+import functools
 import jsonschema
 import jsonsubschema
 import numpy as np
@@ -47,7 +48,7 @@ logger = logging.getLogger(__name__)
 class NestedHyperoptSpace():
     sub_space:Any
     def __init__(self, sub_space):
-        self.sub_space = sub_space        
+        self.sub_space = sub_space
 
 class assert_raises:
     def __init__(self, expected_exc_type):
@@ -197,6 +198,21 @@ class SubschemaError(Exception):
 def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
     if not jsonsubschema.isSubschema(sub, sup):
         raise SubschemaError(sub, sup, sub_name, sup_name)
+
+def join_schemas(*schemas):
+    def join_two_schemas(s_a, s_b):
+        if s_a is None:
+            return s_b
+        s_a = lale.helpers.dict_without(s_a, 'description')
+        s_b = lale.helpers.dict_without(s_b, 'description')
+        if jsonsubschema.isSubschema(s_a, s_b):
+            return s_b
+        if jsonsubschema.isSubschema(s_b, s_a):
+            return s_a
+        return jsonsubschema.joinSchemas(s_a, s_b)
+    if len(schemas) == 0:
+        return {'not':{}}
+    return functools.reduce(join_two_schemas, schemas)
 
 def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
     subset_X, subset_y = _safe_split(
@@ -348,6 +364,56 @@ def println_pos(message, out_file=sys.stdout):
     if match:
         os.system('echo {}'.format(to_log))
 
+def instantiate_from_hyperopt_search_space(obj_hyperparams, new_hyperparams):
+    if isinstance(new_hyperparams, NestedHyperoptSpace):
+        sub_params = new_hyperparams.sub_space
+
+        sub_op = obj_hyperparams
+        if isinstance(sub_op, list):
+            if len(sub_op)==1:
+                sub_op = sub_op[0]
+            else:
+                step_index, step_params = list(sub_params)[0]
+                if step_index < len(sub_op):
+                    sub_op = sub_op[step_index]
+                    sub_params = step_params
+
+        return create_instance_from_hyperopt_search_space(sub_op, sub_params)
+
+    elif isinstance(new_hyperparams, (list, tuple)):
+        assert isinstance(obj_hyperparams, (list, tuple))
+        params_len = len(new_hyperparams)
+        assert params_len == len(obj_hyperparams)
+        res:Optional[List[Any]] = None
+
+        for i in range(params_len):
+            nhi = new_hyperparams[i]
+            ohi = obj_hyperparams[i]
+            updated_params = instantiate_from_hyperopt_search_space(ohi, nhi)
+            if updated_params is not None:
+                if res is None:
+                    res = list(new_hyperparams)
+                res[i] = updated_params
+        if res is not None:
+            if isinstance(obj_hyperparams, tuple):
+                return tuple(res)
+            else:
+                return res
+        return None
+
+    elif isinstance(new_hyperparams, dict):
+        assert isinstance(obj_hyperparams, dict)
+
+        for k,sub_params in new_hyperparams.items():
+            if k in obj_hyperparams:
+                sub_op = obj_hyperparams[k]
+                updated_params = instantiate_from_hyperopt_search_space(sub_op, sub_params)
+                if updated_params is not None:
+                    new_hyperparams[k] = updated_params
+        return None
+    else:
+        return None
+
 def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
     '''
     Hyperparams is a n-tuple of dictionaries of hyper-parameters, each
@@ -368,29 +434,14 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
             obj_hyperparams = dict(lale_object._hyperparams)
         else:
             obj_hyperparams = {}
-        updated_keys:List[str] = []
 
         for k,sub_params in new_hyperparams.items():
-            if isinstance(sub_params, NestedHyperoptSpace):
-                sub_params = sub_params.sub_space
-
+            if k in obj_hyperparams:
                 sub_op = obj_hyperparams[k]
-                if isinstance(sub_op, list):
-                    if len(sub_op)==1:
-                        sub_op = sub_op[0]
-                    else:
-                        step_index, step_params = list(sub_params)[0]
-                        if step_index < len(sub_op):
-                            sub_op = sub_op[step_index]
-                            sub_params = step_params
+                updated_params = instantiate_from_hyperopt_search_space(sub_op, sub_params)
+                if updated_params is not None:
+                    new_hyperparams[k] = updated_params
 
-                updated_sub_op = create_instance_from_hyperopt_search_space(sub_op, sub_params)
-                obj_hyperparams[k] = updated_sub_op
-                updated_keys.append(k)
-        if updated_keys:
-            for k in updated_keys:
-                del new_hyperparams[k]
-            lale_object._hyperparams = obj_hyperparams
         all_hyperparams = {**obj_hyperparams, **new_hyperparams}
         return lale_object(**all_hyperparams)
     elif isinstance(lale_object, BasePipeline):

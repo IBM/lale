@@ -24,9 +24,9 @@ class VotingClassifierImpl():
             'weights': weights,
             'n_jobs': n_jobs,
             'flatten_transform': flatten_transform}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:
@@ -52,7 +52,15 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'estimators': {
-                'typeForOptimizer': 'operator',
+                'type': 'array',
+                'items': {
+                    'type': 'array',
+                    'typeForOptimizer': 'tuple',
+                    'items': [
+                        {'type':'string'},
+                        {'typeForOptimizer': 'operator'}
+                    ]
+                },
                 'description': 'list of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones'},
             'voting': {
                 'enum': ['hard', 'soft'],

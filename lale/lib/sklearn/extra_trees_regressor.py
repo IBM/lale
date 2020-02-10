@@ -36,9 +36,9 @@ class ExtraTreesRegressorImpl():
             'random_state': random_state,
             'verbose': verbose,
             'warm_start': warm_start}
+        self._sklearn_model = sklearn.ensemble.forest.ExtraTreesRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        self._sklearn_model = sklearn.ensemble.forest.ExtraTreesRegressor(**self._hyperparams)
         if fit_params is None:
             self._sklearn_model.fit(X, y)
         else:

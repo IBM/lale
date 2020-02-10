@@ -36,9 +36,9 @@ class SVCImpl():
             'max_iter': max_iter,
             'decision_function_shape': decision_function_shape,
             'random_state': random_state}
+        self._sklearn_model = sklearn.svm.classes.SVC(**self._hyperparams)
 
     def fit(self, X, y=None, sample_weight=None):
-        self._sklearn_model = sklearn.svm.classes.SVC(**self._hyperparams)
         self._sklearn_model.fit(X, y, sample_weight)
         return self
 

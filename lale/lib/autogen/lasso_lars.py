@@ -18,9 +18,9 @@ class LassoLarsImpl():
             'copy_X': copy_X,
             'fit_path': fit_path,
             'positive': positive}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:

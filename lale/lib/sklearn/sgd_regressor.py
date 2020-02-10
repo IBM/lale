@@ -40,9 +40,9 @@ class SGDRegressorImpl():
             'n_iter_no_change': n_iter_no_change,
             'warm_start': warm_start,
             'average': average}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:
