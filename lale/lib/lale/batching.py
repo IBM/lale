@@ -127,6 +127,7 @@ _hyperparams_schema = {
       'properties': {
         'operator':{
           'description':'A lale pipeline object to be used inside of batching',
+          'typeForOptimizer': 'operator'
         },
         'batch_size':{
           'description': 'Batch size used for transform.',

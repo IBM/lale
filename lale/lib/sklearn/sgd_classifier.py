@@ -56,6 +56,13 @@ class SGDClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+    def partial_fit(self, X, y=None, classes = None):
+      if not hasattr(self, "_sklearn_model"):
+        self._sklearn_model = SKLModel(**self._hyperparams)
+      self._sklearn_model.partial_fit(X, y, classes = classes)
+      return self
+
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for SGDClassifier Linear classifiers (SVM, logistic regression, a.o.) with SGD training.',
