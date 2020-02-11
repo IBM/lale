@@ -173,22 +173,26 @@ class HyperoptImpl:
             if (self.max_opt_time is not None) and ((current_time - opt_start_time) > self.max_opt_time) :
                 # if max optimization time set, and we have crossed it, exit optimization completely
                 sys.exit(0)
-
-            manager = multiprocessing.Manager()
-            proc_dict = manager.dict()
-            p = multiprocessing.Process(
-                target=proc_train_test,
-                args=(params, X_train, y_train, proc_dict))
-            p.start()
-            p.join(self.max_eval_time)
-            if p.is_alive():
-                p.terminate()
-                p.join()
-                logger.warning(f"Maximum alloted evaluation time exceeded. with hyperparams: {params}, setting status to FAIL")
-                proc_dict['status'] = STATUS_FAIL
-            if 'status' not in proc_dict:
-                logger.warning(f"Corrupted results, setting status to FAIL")
-                proc_dict['status'] = STATUS_FAIL     
+            if self.max_eval_time:
+                # Run hyperopt in a subprocess that can be interupted
+                manager = multiprocessing.Manager()
+                proc_dict = manager.dict()
+                p = multiprocessing.Process(
+                    target=proc_train_test,
+                    args=(params, X_train, y_train, proc_dict))
+                p.start()
+                p.join(self.max_eval_time)
+                if p.is_alive():
+                    p.terminate()
+                    p.join()
+                    logger.warning(f"Maximum alloted evaluation time exceeded. with hyperparams: {params}, setting status to FAIL")
+                    proc_dict['status'] = STATUS_FAIL
+                if 'status' not in proc_dict:
+                    logger.warning(f"Corrupted results, setting status to FAIL")
+                    proc_dict['status'] = STATUS_FAIL
+            else:
+                proc_dict = {}
+                proc_train_test(params, X_train, y_train, proc_dict)    
             return proc_dict
 
         try :
