@@ -415,6 +415,8 @@ class TrainedOperator(TrainableOperator, Trained):
         """
         pass
 
+_schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
+
 class IndividualOp(MetaModelOperator):
     """
     This is a concrete class that can instantiate a new individual
@@ -441,6 +443,7 @@ class IndividualOp(MetaModelOperator):
         """
         self._impl = impl
         self._name = name
+        self._enum_attributes = None
         if schemas:
             self._schemas = schemas
         else:
@@ -448,7 +451,44 @@ class IndividualOp(MetaModelOperator):
 
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1
-        enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
+#        enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
+
+    _enum_attributes:Optional[Dict[str, enum.Enum]]
+
+    @property
+    def enum_attributes(self)->Dict[str, enum.Enum]:
+        ea = getattr(self, '_enum_attributes', None)
+        if ea is None:
+            nea = enum_gen.schemaToPythonEnums(self.hyperparam_schema())
+            self._enum_attributes = nea
+            return nea
+        else:
+            return ea
+
+
+    def _invalidate_enum_attributes(self)->None:
+        for k in _schema_derived_attributes:
+            try:
+                delattr(self, k)
+            except AttributeError:
+                pass
+
+    def __getattr__(self, name:str):
+        if name in _schema_derived_attributes or name in [
+            '__setstate__', '_schemas']:
+            raise AttributeError
+        ea = self.enum_attributes
+        if name in ea:
+            return ea[name]
+        else:
+            raise AttributeError
+
+    def __getstate__(self):
+        state = self.__dict__.copy()
+        # Remove entries that can't be pickled
+        for k in _schema_derived_attributes:
+            state.pop(k, None)
+        return state
 
     def get_schema_maybe(self, schema_kind:str, default:Any=None)->Dict[str, Any]:
         """Return a schema of the operator or a given default if the schema is unspecified
@@ -832,8 +872,10 @@ class IndividualOp(MetaModelOperator):
                 assert isinstance(value, dict)
                 op._schemas['tags'] = value
             else:
-                assert False, "Unkown method or parameter."
-        enum_gen.addSchemaEnumsAsFields(op, op.hyperparam_schema(), force=True)
+                assert False, "Unknown method or parameter."
+        # since the schema has changed, we need to invalidate any
+        # cached enum attributes
+        self._invalidate_enum_attributes()
         return op
 
     def validate_schema(self, X, y=None):
