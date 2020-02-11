@@ -43,7 +43,7 @@ class RidgeClassifierImpl():
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Linear least squares with l2 regularization.',
+    'description': 'Classifier using Ridge regression.',
     'allOf': [{
         'type': 'object',
         'required': ['alpha', 'fit_intercept', 'solver'],
@@ -213,7 +213,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html',
+    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RidgeClassifier.html',
     'type': 'object',
     'tags': {
         'pre': [],
