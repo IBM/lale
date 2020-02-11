@@ -36,6 +36,7 @@ from lale.lib.xgboost import XGBClassifier
 from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
+from lale.lib.sklearn import RidgeClassifier
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.sklearn_compat import make_sklearn_compat
 
@@ -132,7 +133,8 @@ classifiers = ['lale.lib.sklearn.RandomForestClassifier',
                'lale.lib.sklearn.PassiveAggressiveClassifier',
                'lale.lib.sklearn.MultinomialNB',
                'lale.lib.sklearn.AdaBoostClassifier',
-               'lale.lib.sklearn.SGDClassifier']
+               'lale.lib.sklearn.SGDClassifier',
+               'lale.lib.sklearn.RidgeClassifier']
 for clf in classifiers:
     setattr(
         TestClassification,

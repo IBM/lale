@@ -37,6 +37,7 @@ from .gradient_boosting_regressor import GradientBoostingRegressor
 from .linear_regression import LinearRegression
 from .missing_indicator import MissingIndicator
 from .ridge import Ridge
+from .ridge_classifier import RidgeClassifier
 from .select_k_best import SelectKBest
 from .standard_scaler import StandardScaler
 from .feature_agglomeration import FeatureAgglomeration
