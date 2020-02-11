@@ -468,3 +468,7 @@ class TestComposition(unittest.TestCase):
         with self.assertRaises(ValueError):
             pipeline.remove_last()
 
+    def test_remove_last3(self):
+        pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
+        pipeline.remove_last().freeze_trainable()
+

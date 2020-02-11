@@ -1601,6 +1601,7 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
             old_clf = self._steps[-1]
             self._steps.remove(old_clf)
             del self._preds[old_clf]
+        return self
 
     def get_last(self)->Optional[OpType]:
         sink_nodes = self.find_sink_nodes()
