@@ -460,11 +460,25 @@ class TestComposition(unittest.TestCase):
 
     def test_remove_last1(self):
         pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
-        pipeline.remove_last()
-        self.assertEqual(len(pipeline._steps), 6)
+        new_pipeline = pipeline.remove_last()
+        self.assertEqual(len(new_pipeline._steps), 6)
+        self.assertEqual(len(pipeline._steps), 7)
 
     def test_remove_last2(self):
         pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> (PassiveAggressiveClassifier() & LogisticRegression())
         with self.assertRaises(ValueError):
             pipeline.remove_last()
 
+    def test_remove_last3(self):
+        pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
+        pipeline.remove_last().freeze_trainable()
+
+    def test_remove_last4(self):
+        pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
+        new_pipeline = pipeline.remove_last(inplace=True)
+        self.assertEqual(len(new_pipeline._steps), 6)
+        self.assertEqual(len(pipeline._steps), 6)
+
+    def test_remove_last5(self):
+        pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
+        pipeline.remove_last(inplace=True).freeze_trainable()

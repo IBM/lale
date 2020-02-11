@@ -1593,14 +1593,21 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
             return False
         return self.steps()[-1].is_supervised()
 
-    def remove_last(self):
+    def remove_last(self, inplace=False):
         sink_nodes = self.find_sink_nodes()
         if len(sink_nodes) > 1:
             raise ValueError("This pipeline has more than 1 sink nodes, can not remove last step meaningfully.")
+        elif not inplace:
+            modified_pipeline = copy.deepcopy(self)
+            old_clf = modified_pipeline._steps[-1]
+            modified_pipeline._steps.remove(old_clf)
+            del modified_pipeline._preds[old_clf]
+            return modified_pipeline
         else:
             old_clf = self._steps[-1]
             self._steps.remove(old_clf)
             del self._preds[old_clf]
+            return self
 
     def get_last(self)->Optional[OpType]:
         sink_nodes = self.find_sink_nodes()
