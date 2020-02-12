@@ -255,22 +255,6 @@ class SearchSpaceOperatorVisitor(Visitor):
 
                 is_tuple:bool = typeForOptimizer == "tuple"
 
-                items_schema = schema.get('itemsForOptimizer', None)
-                if items_schema is None:
-                    items_schema = schema.get('items', None)
-                    if items_schema is None:
-                        raise ValueError(f"an array type was found without a provided schema for the items in the schema {schema}.  Please provide a schema for the items (consider using itemsForOptimizer)")
-
-                if isinstance(items_schema, list):
-                    contents = []
-                    for i,sub_schema in enumerate(items_schema):
-                        sub = self.schemaToSearchSpaceHelper_(longName, path + "_" + str(i), sub_schema, relevantFields)
-                        if sub is None:
-                            return None
-                        else:
-                            contents.append(sub)
-                    return SearchSpaceList(contents=contents, is_tuple=is_tuple)
-
                 min_items = schema.get('minItemsForOptimizer', None)
                 if min_items is None:
                     min_items = schema.get('minItems', None)
@@ -279,18 +263,53 @@ class SearchSpaceOperatorVisitor(Visitor):
                 max_items = schema.get('maxItemsForOptimizer', None)
                 if max_items is None:
                     max_items = schema.get('maxItems', None)
-                    if max_items is None:
-                        raise ValueError(f"an array type was found without a provided maximum number of items in the schema {schema}.  Please provide a maximum (consider using maxItemsForOptimizer)")
 
-                sub_opt = self.schemaToSearchSpaceHelper_(longName, path + "-", items_schema, relevantFields)
-                is_tuple = typeForOptimizer == "tuple"
-                if sub_opt is None:
-                    if min_items <= 0 and max_items > 0:
-                        return SearchSpaceConstant([])
+                items_schema = schema.get('itemsForOptimizer', None)
+                if items_schema is None:
+                    items_schema = schema.get('items', None)
+                    if items_schema is None:
+                        raise ValueError(f"an array type was found without a provided schema for the items in the schema {schema}.  Please provide a schema for the items (consider using itemsForOptimizer)")
+
+                # we can search an empty list even without schemas
+                if max_items == 0:
+                    if is_tuple:
+                        return SearchSpaceConstant([()])
                     else:
-                        return None
+                        return SearchSpaceConstant([[]])
+
+                prefix:Optional[List[SearchSpace]] = None
+                additional:Optional[SearchSpace] = None
+                if isinstance(items_schema, list):
+                    prefix = []
+                    for i,sub_schema in enumerate(items_schema):
+                        sub = self.schemaToSearchSpaceHelper_(longName, path + "_" + str(i), sub_schema, relevantFields)
+                        if sub is None:
+                            return None
+                        else:
+                            prefix.append(sub)
+                    prefix_len = len(prefix)
+                    additional_items_schema = schema.get('additionalItemsForOptimizer', None)
+                    if additional_items_schema is None:
+                        additional_items_schema = schema.get('additionalItems', None)
+                    if additional_items_schema is None:
+                        if max_items is None or max_items > prefix_len:
+                            raise ValueError(f"an array type was found with provided schemas for {prefix_len} elements, but either an unspecified or too high a maxItems, and no schema for the additionalItems.  Please constraing maxItems to <= {prefix_len} (you can set maxItemsForOptimizer), or provide a schema for additionalItems")
+                    elif additional_items_schema == False:
+                        if max_items is None:
+                            max_items = prefix_len
+                        else:
+                            max_items = min(max_items, prefix_len)
+                    else:
+                        additional = self.schemaToSearchSpaceHelper_(longName, path + "-", sub_schema, relevantFields)
+                        # if items_schema is None:
+                        #     raise ValueError(f"an array type was found without a provided schema for the items in the schema {schema}.  Please provide a schema for the items (consider using itemsForOptimizer)")
                 else:
-                    return SearchSpaceArray(minimum=min_items, maximum=max_items, contents=sub_opt, is_tuple=is_tuple)
+                    additional = self.schemaToSearchSpaceHelper_(longName, path + "-", items_schema, relevantFields)
+
+                if max_items is None:
+                    raise ValueError(f"an array type was found without a provided maximum number of items in the schema {schema}, and it is not a list with 'additionalItems' set to False.  Please provide a maximum (consider using maxItemsForOptimizer), or, if you are using a list, set additionalItems to False")
+
+                return SearchSpaceArray(prefix=prefix, minimum=min_items, maximum=max_items, additional=additional, is_tuple=is_tuple)
 
             elif typ == "object":
                 if 'properties' not in schema:

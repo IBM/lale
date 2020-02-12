@@ -20,7 +20,7 @@ import math
 from collections import ChainMap
 
 from lale.util.Visitor import Visitor, accept
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceList, SearchSpaceOperator
+from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceOperator
 from lale.search.schema2search_space import op_to_search_space
 from lale.search.PGO import PGO
 from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUMMY_SEARCH_SPACE_GRID_PARAM_NAME, discriminant_name, make_indexed_name
@@ -122,8 +122,6 @@ class SearchSpaceToGridVisitor(Visitor):
         #     res = hp.choice(p, exprs)
         #     return res
 
-    def visitSearchSpaceList(self, space:SearchSpaceList):
-        raise ValueError("List(Array) search spaces not yet supported for search grid based backends")
 
     def visitSearchSpaceObject(self, space:SearchSpaceObject)->List[SearchSpaceGrid]:
         keys = space.keys
