@@ -142,10 +142,8 @@ class SearchSpaceHPExprVisitor(Visitor):
 
     def array_single_expr_(self, space:SearchSpaceArray, path:str, num):
         p = _mk_label(path, num) + "_"
-        # mypy does not know about the accept method, since it was
-        # added via the VisitorMeta class
-        contents:Any = space.contents
-        ret = [contents.accept(self, p, counter=x) for x in range(num)]
+        items:Iterable[SearchSpace] = space.items()
+        ret = [accept(sub, self, p, counter=x) for x,sub in enumerate(items)]
         return tuple(ret) if space.is_tuple else ret
 
     def visitSearchSpaceArray(self, space:SearchSpaceArray, path:str, counter=None):
@@ -160,13 +158,6 @@ class SearchSpaceHPExprVisitor(Visitor):
             res = hp.choice(p, exprs)
             return res
 
-    def visitSearchSpaceList(self, space:SearchSpaceList, path:str, counter=None):
-        p = _mk_label(path, counter)
-        # mypy does not know about the accept method, since it was
-        # added via the VisitorMeta class
-        contents:List[Any] = space.contents
-        ret = [sub.accept(self, p, counter=x) for x,sub in enumerate(contents)]
-        return tuple(ret) if space.is_tuple else ret
 
     def visitSearchSpaceObject(self, space:SearchSpaceObject, path:str, counter=None):
         search_space = {}
@@ -341,10 +332,8 @@ class SearchSpaceHPStrVisitor(Visitor):
     def array_single_str_(self, space:SearchSpaceArray, path:str, num, useCounter=True)->str:
         p = _mk_label(path, num, useCounter=useCounter) + "_"
         ret = "(" if space.is_tuple else "["
-        # mypy does not know about the accept method, since it was
-        # added via the VisitorMeta class
-        contents:Any = space.contents
-        ret += ",".join((contents.accept(self, p, counter=x, useCounter=useCounter) for x in range(num)))
+        items:Iterable[SearchSpace] = space.items()
+        ret += ",".join((accept(sub, self, p, counter=x, useCounter=useCounter) for x,sub in enumerate(items)))
         ret += ")" if space.is_tuple else "]"
         return ret
     
@@ -360,16 +349,6 @@ class SearchSpaceHPStrVisitor(Visitor):
             res += ",".join((self.array_single_str_(space, cp, x, useCounter=useCounter) for x in range(space.minimum, space.maximum+1)))
             res += "])"
             return res
-
-    def visitSearchSpaceList(self, space:SearchSpaceList, path:str, counter=None, useCounter=True)->str:
-        p = _mk_label(path, counter, useCounter=useCounter)
-        ret = "(" if space.is_tuple else "["
-        # mypy does not know about the accept method, since it was
-        # added via the VisitorMeta class
-        contents:List[Any] = space.contents
-        ret += ",".join((sub.accept(self, p, counter=x, useCounter=useCounter) for x,sub in enumerate(contents)))
-        ret += ")" if space.is_tuple else "]"
-        return ret
 
     def visitSearchSpaceObject(self, space:SearchSpaceObject, path:str, counter=None, useCounter=True):
         s_decls = []
