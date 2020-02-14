@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 class SMACImpl:
 
-    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None):
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, lale_num_grids=None):
         """ Instantiate the SMAC that will use the given estimator and other parameters to select the 
         best performing trainable instantiation of the estimator. 
 
@@ -102,7 +102,7 @@ class SMACImpl:
         else:
             self.estimator = estimator
 
-        self.search_space:ConfigurationSpace = get_smac_space(self.estimator, lale_num_grids=None)
+        self.search_space:ConfigurationSpace = get_smac_space(self.estimator, lale_num_grids=lale_num_grids)
         self.scoring = scoring
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
@@ -205,7 +205,7 @@ _hyperparams_schema = {
     {   'type': 'object',
         'required': [
             'estimator', 'max_evals', 'cv', 'handle_cv_failure',
-            'max_opt_time'],
+            'max_opt_time', 'lale_num_grids'],
         'relevantToOptimizer': ['estimator'],
         'additionalProperties': False,
         'properties': {
@@ -247,7 +247,22 @@ _hyperparams_schema = {
                 {   'type': 'number',
                     'minimum': 0.0},
                 {   'enum': [None]}],
-                'default': None}}}]}
+                'default': None},
+            'lale_num_grids': {
+                'anyOf': [
+                {   'description': 'If not set, keep all grids.',
+                    'enum': [None]},
+                {   'description': 'Fraction of grids to keep.',
+                    'type': 'number',
+                    'minimum': 0.0,
+                    'exclusiveMinimum': True,
+                    'maximum': 1.0,
+                    'exclusiveMaximum': True},
+                {   'description': 'Number of grids to keep.',
+                    'type': 'integer',
+                    'minimum': 1}],
+                'default': None}
+                }}]}
 
 _input_fit_schema = {
     'type': 'object',
