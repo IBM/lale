@@ -388,15 +388,14 @@ class TestImportExport(unittest.TestCase):
         self.assertIsInstance(sklearn_pipeline.named_steps['logisticregression'], LogisticRegression)
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
 
-    #Doesn't work yet.
-    # def test_export_to_pickle(self):
-    #     from lale.lib.sklearn import LogisticRegression
-    #     from lale.operators import make_pipeline
+    def test_export_to_pickle(self):
+        from lale.lib.sklearn import LogisticRegression
+        from lale.operators import make_pipeline
 
-    #     lale_pipeline = make_pipeline(LogisticRegression())
-    #     trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
-    #     pickle.dumps(lale_pipeline)
-    #     pickle.dumps(trained_lale_pipeline)
+        lale_pipeline = make_pipeline(LogisticRegression())
+        trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
+        pickle.dumps(lale_pipeline)
+        pickle.dumps(trained_lale_pipeline)
 
 class TestComposition(unittest.TestCase):
     def setUp(self):
