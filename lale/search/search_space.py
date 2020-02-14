@@ -170,11 +170,12 @@ class SearchSpaceNumber(SearchSpacePrimitive):
         return ret
 
 class SearchSpaceArray(SearchSpace):
-    def __init__(self, minimum:int=0, *, maximum:int, contents:SearchSpace, is_tuple=False) -> None:
+    def __init__(self, prefix:Optional[List[SearchSpace]], minimum:int=0, *, maximum:int, additional:Optional[SearchSpace]=None, is_tuple=False) -> None:
         super(SearchSpaceArray, self).__init__()
         self.minimum = minimum
         self.maximum = maximum
-        self.contents = contents
+        self.prefix = prefix
+        self.additional = additional
         self.is_tuple = is_tuple
     
     def __str__(self):
@@ -185,7 +186,13 @@ class SearchSpaceArray(SearchSpace):
         else:
             ret += "["
 
-        ret += str(self.contents)
+        if self.prefix is not None:
+            ret += ",".join(map(str,self.prefix))
+            if self.additional is not None:
+                ret += ","
+        if self.additional is not None:
+            ret += "...,"
+            ret += str(self.additional)
 
         if self.is_tuple:
             ret += ")"
@@ -193,28 +200,23 @@ class SearchSpaceArray(SearchSpace):
             ret += "]"
         return ret
 
-
-class SearchSpaceList(SearchSpace):
-    def __init__(self, contents:List[SearchSpace], is_tuple=False) -> None:
-        super(SearchSpaceList, self).__init__()
-        self.contents = contents
-        self.is_tuple = is_tuple
-    
-    def __str__(self):
-        ret:str = ""
-        ret += "List"
-        if self.is_tuple:
-            ret += "("
+    def items(self, max:Optional[int]=None)->Iterable[SearchSpace]:
+        prefix_len:int
+        if self.prefix is not None:
+            prefix_len = len(self.prefix)
         else:
-            ret += "["
+            prefix_len = 0
 
-        ret += ",".join(map(str,self.contents))
+        num_elts = self.maximum
+        if max is not None:
+            num_elts = min(num_elts, max)
 
-        if self.is_tuple:
-            ret += ")"
-        else:
-            ret += "]"
-        return ret
+        for i in range(num_elts):
+            if self.prefix is not None and i < prefix_len:
+                yield self.prefix[i]
+            else:
+                if self.additional is not None:
+                    yield self.additional
 
 class SearchSpaceObject(SearchSpace):
     def __init__(self, longName:str, keys:List[str], choices:Iterable[Any]) -> None:

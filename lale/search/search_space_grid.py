@@ -20,10 +20,10 @@ import math
 from collections import ChainMap
 
 from lale.util.Visitor import Visitor, accept
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceList, SearchSpaceOperator
+from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceOperator
 from lale.search.schema2search_space import op_to_search_space
 from lale.search.PGO import PGO
-from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUMMY_SEARCH_SPACE_GRID_PARAM_NAME, discriminant_name, make_indexed_name
+from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUMMY_SEARCH_SPACE_GRID_PARAM_NAME, discriminant_name, make_indexed_name, make_array_index_name, structure_type_name, structure_type_list, structure_type_tuple, structure_type_dict
 
 from lale.operators import PlannedOperator, OperatorChoice, PlannedIndividualOp, PlannedPipeline, Operator
 
@@ -101,29 +101,34 @@ class SearchSpaceToGridVisitor(Visitor):
 
     visitSearchSpaceNumber = visitSearchSpacePrimitive
 
-    # def array_single_expr_(self, space:SearchSpaceArray, path:str, num):
-    #     p = mk_label(path, num) + "_"
-    #     # mypy does not know about the accept method, since it was
-    #     # added via the VisitorMeta class
-    #     contents:Any = space.contents
-    #     ret = [contents.accept(self, p, counter=x) for x in range(num)]
-    #     return tuple(ret) if space.is_tuple else ret
+    def _searchSpaceList(self, space:SearchSpaceArray, *, size:int)->List[SearchSpaceGrid]:
+        sub_spaces = space.items(max=size)
 
-    def visitSearchSpaceArray(self, space:SearchSpaceArray):
-        raise ValueError("Array search spaces not yet supported for search grid based backends")
-        # assert space.maximum >= space.minimum
-        # p = mk_label(path, counter)
-        # cp = p + "_"
+        param_grids:List[List[SearchSpaceGrid]] = \
+            [nest_all_HPparams(str(index), self.fixupDegenerateSearchSpaces(accept(sub,self))) for index,sub in enumerate(sub_spaces)]
 
-        # if space.minimum == space.maximum:
-        #     return self.array_single_expr_(space, cp, space.minimum)
-        # else:
-        #     exprs = [self.array_single_expr_(space, cp, x) for x in range(space.minimum, space.maximum+1)]
-        #     res = hp.choice(p, exprs)
-        #     return res
+        param_grids_product:Iterable[Iterable[SearchSpaceGrid]] = itertools.product(*param_grids)
+        chained_grids:List[SearchSpaceGrid] = [
+            dict(ChainMap(*gridline,)) for gridline in param_grids_product]
 
-    def visitSearchSpaceList(self, space:SearchSpaceList):
-        raise ValueError("List(Array) search spaces not yet supported for search grid based backends")
+        if space.is_tuple:
+            st_val = structure_type_tuple
+        else:
+            st_val = structure_type_list
+
+        discriminated_grids:List[SearchSpaceGrid]=[{**d, structure_type_name:SearchSpaceConstant(st_val)} for d in chained_grids]
+
+
+        return discriminated_grids
+
+    def visitSearchSpaceArray(self, space:SearchSpaceArray)->List[SearchSpaceGrid]:
+        if space.minimum == space.maximum:
+            return self._searchSpaceList(space, size=space.minimum)
+        else:
+            ret:List[SearchSpaceGrid] = []
+            for i in range(space.minimum, space.maximum+1):
+                ret.extend(self._searchSpaceList(space, size=i))
+            return ret
 
     def visitSearchSpaceObject(self, space:SearchSpaceObject)->List[SearchSpaceGrid]:
         keys = space.keys
@@ -178,7 +183,7 @@ class SearchSpaceToGridVisitor(Visitor):
             return final_grids
 
     def visitSearchSpaceProduct(self, op:SearchSpaceProduct)->SearchSpaceGridInternalType:
-        
+
         sub_spaces = op.get_indexed_spaces()
 
         param_grids:List[List[SearchSpaceGrid]] = [nest_all_HPparams(make_indexed_name(name, index), self.fixupDegenerateSearchSpaces(accept(space,self))) for name,index,space in sub_spaces]

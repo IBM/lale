@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, Optional, List, Set, Tuple, TypeVar
+from typing import Any, Dict, Iterable, Optional, List, Set, Tuple, TypeVar, Union
 import random
 import math
 import warnings
@@ -32,22 +32,20 @@ from lale.util.Visitor import Visitor
 # should be encoded identically
 
 # our encoding scheme:
-## __ separates nested components
+## __ separates nested components (as-in sklearn)
 ## ? is the discriminant (choice made) for a choice
-### ? is also a prefix for the nested parts of the chosen branch
+## ? is also a prefix for the nested parts of the chosen branch
 ## x@n In a pipeline, if multiple components have identical names,
-## everything but the first are suffixed with a number (starting with 1)
-## indicating which one we are talking about.
-## For example, given (x >> y >> x), we would treat this much the same as
-## (x >> y >> x@1)
+### everything but the first are suffixed with a number (starting with 1)
+### indicating which one we are talking about.
+### For example, given (x >> y >> x), we would treat this much the same as
+### (x >> y >> x@1)
 ## $ is used in the rare case that sklearn would expect the key of an object,
-## but we allow (and have) a non-object schema.  In that case,
-## $ is used as the key
-
-
-# TODO: we don't correctly support $ yet
-# TODO: when we add support for lists using #, document it here
-
+### but we allow (and have) a non-object schema.  In that case,
+### $ is used as the key. This should only happen at the top level,
+### since nested occurences should be removed.
+## # is a structure indicator, and the value should be one of 'list', 'tuple', or 'dict'
+## n is used to represent the nth component in an array or tuple
 
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
@@ -147,6 +145,11 @@ def partition_sklearn_choice_params(d:Dict[str, Any])->Tuple[int, Dict[str, Any]
 DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:str = "$"
 discriminant_name:str = "?"
 choice_prefix:str = "?"
+structure_type_name:str = "#"
+structure_type_list:str = "list"
+structure_type_tuple:str = "tuple"
+structure_type_dict:str = "dict"
+
 
 def get_name_and_index(name:str)->Tuple[str,int]:
     """ given a name of the form "name@i", returns (name, i)
@@ -167,6 +170,78 @@ def make_indexed_name(name, index):
     else:
         return f"{name}@{index}"
 
+def make_array_index_name(index, is_tuple:bool=False):
+    sep = "##" if is_tuple else "#"
+    return f"{sep}{str(index)}"
+
+def is_numeric_structure(structure_type:str):
+
+    if structure_type == "list" or structure_type == "tuple":
+        return True
+    elif structure_type == "dict":
+        return False
+    else:
+        assert False, f"Unknown structure type {structure_type} found"
+
+def set_structured_params(k, params:Dict[str, Any], hyper_parent):
+    # need to handle the different encoding schemes used
+    if params is None:
+        return None
+    if structure_type_name in params:
+        # this is a structured type
+        structure_type = params[structure_type_name]
+        type_params, sub_params = partition_sklearn_params(params)
+
+        hyper = None
+        if isinstance(hyper_parent, dict):
+            hyper = hyper_parent.get(k, None)
+        elif isinstance(hyper_parent, list) and k < len(hyper_parent):
+            hyper = hyper_parent[k]
+        if hyper is None:
+                hyper = {}
+        elif isinstance(hyper, tuple):
+            # to make it mutable
+            hyper = list(hyper)
+
+        del type_params[structure_type_name]
+        actual_key:Union[str,int]
+        for elem_key, elem_value in type_params.items():
+            if elem_value is not None:
+                if not isinstance(hyper, dict):
+                    assert is_numeric_structure(structure_type)
+                    actual_key = int(elem_key)
+                else:
+                    actual_key = elem_key
+                hyper[actual_key] = elem_value
+
+        for elem_key, elem_params in sub_params.items():
+            if not isinstance(hyper, dict):
+                assert is_numeric_structure(structure_type)
+                actual_key = int(elem_key)
+            else:
+                actual_key = elem_key
+            set_structured_params(actual_key, elem_params, hyper)
+        if isinstance(hyper, dict) and is_numeric_structure(structure_type):
+            max_key = max(map(int,hyper.keys()))
+            hyper = [hyper.get(str(x), None) for x in range(max_key)]
+        if structure_type == "tuple":
+            hyper = tuple(hyper)
+        hyper_parent[k] = hyper
+    else:
+        # if it is not a structured parameter
+        # then it must be a nested higher order operator
+        sub_op = hyper_parent[k]
+        if isinstance(sub_op, list):
+            if len(sub_op) == 1:
+                sub_op = sub_op[0]
+            else:
+                (disc, chosen_params) = partition_sklearn_choice_params(params)
+                assert 0 <= disc and disc < len(sub_op)
+                sub_op = sub_op[disc]
+                params = chosen_params
+        trainable_sub_op = set_operator_params(sub_op, **params)
+        hyper_parent[k] = trainable_sub_op
+
 def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
     """May return a new operator, in which case the old one should be overwritten
     """
@@ -177,23 +252,7 @@ def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
             hyper = {}
         # we set the sub params first
         for sub_key, sub_params in partitioned_sub_params.items():
-            # need to handle the different encoding schemes used
-            sub_op = hyper[sub_key]
-            if isinstance(sub_op, list):
-                if len(sub_op) == 1:
-                    sub_op = sub_op[0]
-                else:
-                    (disc, chosen_params) = partition_sklearn_choice_params(sub_params)
-                    assert 0 <= disc and disc < len(sub_op)
-                    sub_op = sub_op[disc]
-                    sub_params = chosen_params
-                hyper[sub_key] = sub_op  
-            # sub_op and sub_params are now set correctly
-            # hyper[sub_key] is updated if needed to make the 
-            # appropriate choice
-
-            trainable_sub_op = set_operator_params(sub_op, **sub_params)
-            hyper[sub_key] = trainable_sub_op
+            set_structured_params(sub_key, sub_params, hyper)
 
          # we have now updated any nested operators
          # (if this is a higher order operator)
@@ -469,6 +528,9 @@ class DefaultsVisitor(Visitor):
 V = TypeVar('V')
 
 def nest_HPparam(name:str, key:str):
+    if key == DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:
+        # we can get rid of the dummy now, since we have a name for it
+        return name
     return name + "__" + key
 
 def nest_HPparams(name:str, grid:Dict[str,V])->Dict[str,V]:
