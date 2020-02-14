@@ -2329,11 +2329,16 @@ def get_pipeline_of_applicable_type(steps, edges, ordered=False)->PlannedPipelin
     """
 
     isTrainable:bool = True
+    isTrained:bool = True
     for operator in steps:
-        if isinstance(operator, OperatorChoice) or not (isinstance(operator, Trainable)
-            or isinstance(operator, Trained)):
+        if not isinstance(operator, Trained):
+            isTrained = False #Even if a single step is not trained, the pipeline can't be used for predict/transform 
+            # without training it first
+        if isinstance(operator, OperatorChoice) or not isinstance(operator, Trainable):
             isTrainable = False
-    if isTrainable:
+    if isTrained:
+        return TrainedPipeline(steps, edges, ordered=ordered)
+    elif isTrainable:
         return TrainablePipeline(steps, edges, ordered=ordered)
     else:
         return PlannedPipeline(steps, edges, ordered=ordered)
