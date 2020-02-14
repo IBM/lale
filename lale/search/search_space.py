@@ -200,14 +200,18 @@ class SearchSpaceArray(SearchSpace):
             ret += "]"
         return ret
 
-    def items(self)->Iterable[SearchSpace]:
+    def items(self, max:Optional[int]=None)->Iterable[SearchSpace]:
         prefix_len:int
         if self.prefix is not None:
             prefix_len = len(self.prefix)
         else:
             prefix_len = 0
 
-        for i in range(self.maximum):
+        num_elts = self.maximum
+        if max is not None:
+            num_elts = min(num_elts, max)
+
+        for i in range(num_elts):
             if self.prefix is not None and i < prefix_len:
                 yield self.prefix[i]
             else:

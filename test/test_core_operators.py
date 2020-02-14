@@ -94,12 +94,10 @@ def create_function_test_classifier(clf_name):
                 #because exponential loss does not work with iris dataset as it is not binary classification
                 import lale.schemas as schemas
                 clf = clf.customize_schema(loss=schemas.Enum(default='deviance', values=['deviance']))
-            if not isinstance(clf._impl, MLPClassifierImpl):
-                #mlp fails due to issue #164.
-                grid_search = lale.lib.lale.GridSearchCV(
-                    estimator=clf, lale_num_samples=1, lale_num_grids=1,
-                    cv=2, scoring=make_scorer(accuracy_score))
-                grid_search.fit(X_train, y_train)
+            grid_search = lale.lib.lale.GridSearchCV(
+                estimator=clf, lale_num_samples=1, lale_num_grids=1,
+                cv=2, scoring=make_scorer(accuracy_score))
+            grid_search.fit(X_train, y_train)
 
         #test_predict_on_trainable
         trained = clf.fit(X_train, y_train)
@@ -772,6 +770,14 @@ class TestVotingClassifier(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+    def test_with_gridsearch(self):
+        from lale.lib.sklearn import VotingClassifier
+        from lale.lib.lale import GridSearchCV
+        from sklearn.metrics import accuracy_score, make_scorer
+        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
+        grid = GridSearchCV(estimator=clf, lale_num_samples=1, lale_num_grids=1, cv=2, scoring=make_scorer(accuracy_score))
+        trained = grid.fit(self.X_train, self.y_train)
 
 class TestBaggingClassifier(unittest.TestCase):
     def setUp(self):
