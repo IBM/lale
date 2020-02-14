@@ -480,14 +480,14 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         step_object = choices[step_index]
         return create_instance_from_hyperopt_search_space(step_object, hyperparams)
         
-def import_from_sklearn_pipeline(sklearn_pipeline):
+def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     #For all pipeline steps, identify equivalent lale wrappers if present,
     #if not, call make operator on sklearn classes and create a lale pipeline.
 
-    def get_equivalent_lale_op(sklearn_obj):
+    def get_equivalent_lale_op(sklearn_obj, fitted):
         module_name = "lale.lib.sklearn"
         from sklearn.base import clone
-        from lale.operators import make_operator
+        from lale.operators import make_operator, TrainedIndividualOp
 
         class_name = sklearn_obj.__class__.__name__
         module = importlib.import_module(module_name)
@@ -495,24 +495,27 @@ def import_from_sklearn_pipeline(sklearn_pipeline):
             class_ = getattr(module, class_name)
         except AttributeError:
             class_ = make_operator(sklearn_obj, name=class_name)
-        class_ = class_(**sklearn_obj.get_params())
+        if not fitted:#If fitted is False, we do not want to return a Trained operator.
+            lale_op = class_
+        else:
+            lale_op = TrainedIndividualOp(class_._name, class_._impl, class_._schemas)
+        class_ = lale_op(**sklearn_obj.get_params())
         class_._impl._sklearn_model =  copy.deepcopy(sklearn_obj)
-        return class_         
+        return class_
 
     from sklearn.pipeline import FeatureUnion, Pipeline
     from sklearn.base import BaseEstimator
     from lale.operators import make_pipeline, make_union
-    
     if isinstance(sklearn_pipeline, Pipeline):
         nested_pipeline_steps = sklearn_pipeline.named_steps.values()
-        nested_pipeline_lale_objects = [import_from_sklearn_pipeline(nested_pipeline_step) for nested_pipeline_step in nested_pipeline_steps]
+        nested_pipeline_lale_objects = [import_from_sklearn_pipeline(nested_pipeline_step, fitted=fitted) for nested_pipeline_step in nested_pipeline_steps]
         lale_op_obj = make_pipeline(*nested_pipeline_lale_objects)
     elif isinstance(sklearn_pipeline, FeatureUnion):
         transformer_list = sklearn_pipeline.transformer_list
-        concat_predecessors = [import_from_sklearn_pipeline(transformer[1]) for transformer in transformer_list]
+        concat_predecessors = [import_from_sklearn_pipeline(transformer[1], fitted=fitted) for transformer in transformer_list]
         lale_op_obj = make_union(*concat_predecessors)
     else:
-        lale_op_obj = get_equivalent_lale_op(sklearn_pipeline)
+        lale_op_obj = get_equivalent_lale_op(sklearn_pipeline, fitted=fitted)
     return lale_op_obj
         
 def get_hyperparam_names(op):

@@ -397,6 +397,30 @@ class TestImportExport(unittest.TestCase):
         pickle.dumps(lale_pipeline)
         pickle.dumps(trained_lale_pipeline)
 
+    def test_import_from_sklearn_pipeline2(self):
+        from sklearn.feature_selection import SelectKBest
+        from sklearn.feature_selection import f_regression        
+        from sklearn import svm
+        from sklearn.pipeline import Pipeline
+        anova_filter = SelectKBest(f_regression, k=3)
+        clf = svm.SVC(kernel='linear')        
+        sklearn_pipeline = Pipeline([('anova', anova_filter), ('svc', clf)])
+        sklearn_pipeline.fit(self.X_train, self.y_train)
+        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline.predict(self.X_test)
+
+    def test_import_from_sklearn_pipeline3(self):
+        from sklearn.feature_selection import SelectKBest
+        from sklearn.feature_selection import f_regression        
+        from sklearn import svm
+        from sklearn.pipeline import Pipeline
+        anova_filter = SelectKBest(f_regression, k=3)
+        clf = svm.SVC(kernel='linear')        
+        sklearn_pipeline = Pipeline([('anova', anova_filter), ('svc', clf)])
+        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline, fitted=False)
+        with self.assertRaises(ValueError):#fitted=False returns a Trainable, so calling predict is invalid.
+            lale_pipeline.predict(self.X_test)
+
 class TestComposition(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
