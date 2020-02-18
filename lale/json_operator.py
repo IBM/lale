@@ -174,13 +174,13 @@ def json_op_kind(jsn: JSON_TYPE) -> str:
     return 'IndividualOp'
 
 def _get_state(op: 'lale.operators.Operator') -> str:
-    if isinstance(op, lale.operators.Trained):
+    if isinstance(op, lale.operators.TrainedOperator):
         return 'trained'
-    if isinstance(op, lale.operators.Trainable):
+    if isinstance(op, lale.operators.TrainableOperator):
         return 'trainable'
-    if isinstance(op, lale.operators.Planned) or isinstance(op, lale.operators.OperatorChoice):
+    if isinstance(op, lale.operators.PlannedOperator) or isinstance(op, lale.operators.OperatorChoice):
         return 'planned'
-    if isinstance(op, lale.operators.MetaModel):
+    if isinstance(op, lale.operators.Operator):
         return 'metamodel'
     raise TypeError(f'Expected lale.operators.Operator, got {type(op)}.')
 

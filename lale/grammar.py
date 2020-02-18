@@ -1,4 +1,4 @@
-from lale.operators import MetaModelOperator, PlannedOperator, Operator, BasePipeline, OperatorChoice, IndividualOp
+from lale.operators import PlannedOperator, Operator, BasePipeline, OperatorChoice, IndividualOp
 from lale.operators import make_choice, make_pipeline, get_pipeline_of_applicable_type
 from lale.lib.lale import NoOp
 from typing import Optional
@@ -36,7 +36,7 @@ class NonTerminal(Operator):
         raise NotImplementedError() #TODO
         
         
-class Grammar(MetaModelOperator):
+class Grammar(Operator):
     """ Base class for Lale grammars.
     """
     def __init__(self):
@@ -69,12 +69,6 @@ class Grammar(MetaModelOperator):
     
     def set_name(self, name):
         self._name = name
-            
-    def auto_arrange(self, planner):
-        pass
-    
-    def arrange(self, *args, **kwargs):
-        pass
             
     def validate_schema(self, X, y=None):
         raise NotImplementedError() #TODO
