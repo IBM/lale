@@ -161,6 +161,7 @@ class HyperoptImpl:
             except BaseException as e:
                 logger.warning(f"Exception caught in HyperoptCV:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
                 return_dict['status'] = STATUS_FAIL
+                return_dict['error_msg'] = f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}"
             
         def get_final_trained_estimator(params, X_train, y_train):
             warnings.filterwarnings("ignore")
@@ -199,6 +200,10 @@ class HyperoptImpl:
             fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
         except SystemExit :
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
+        except ValueError:
+            self.best_estimator = None
+            if STATUS_OK not in self.trials.statuses():
+                raise ValueError('ValueError from hyperopt, none of the trials succeeded.')
 
         try :
             best_params = space_eval(self.search_space, self.trials.argmin)
@@ -218,6 +223,9 @@ class HyperoptImpl:
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
+        if self.best_estimator is None:
+            raise ValueError("Can not predict as the best estimator is None. Either an attempt to call `predict` "
+        "before calling `fit` or all the trials during `fit` failed.")
         trained = self.best_estimator
         try:
             predictions = trained.predict(X_eval)
