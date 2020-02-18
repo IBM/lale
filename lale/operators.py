@@ -2146,7 +2146,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         sklearn_op = sink_node._impl._sklearn_model
                     else:
                         sklearn_op = sink_node._impl
-                    sklearn_op = clone(sklearn_op)
+                    sklearn_op = copy.deepcopy(sklearn_op)
                     if preds is None or len(preds) == 0:
                         return sklearn_op       
                     else:
