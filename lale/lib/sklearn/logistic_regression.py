@@ -48,9 +48,13 @@ _input_schema_fit = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {
       'description': 'Target class labels; the array is over samples.',
+      'anyOf':[{
       'type': 'array',
-      'items': {'anyOf':[{
-                'type': 'number'},{'type':'string'}]}}}}
+      'items': {
+          'type': 'number'}},{
+      'type': 'array',
+      'items': {
+          'type': 'number'}}]}}}
 
 _input_schema_predict = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -67,9 +71,14 @@ _input_schema_predict = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
+    'anyOf':[{
     'type': 'array',
-    'items': {'anyOf':[{
-                'type': 'number'},{'type':'string'}]}}
+    'items': {
+        'type': 'number'}},{
+    'type': 'array',
+    'items': {
+        'type': 'number'}}]
+}
 
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

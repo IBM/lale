@@ -166,9 +166,13 @@ _input_fit_schema = {
                 }}],
             'description': 'The training input samples. Internally, it will be converted to'},
         'y': {
+            'anyOf':[{
             'type': 'array',
-            'items': {'anyOf':[{
-                'type': 'number'},{'type':'string'}]},
+            'items': {
+                'type': 'number'}},{
+            'type': 'array',
+            'items': {
+                'type': 'number'}}],
             'description': 'The target values (class labels) as integers or strings.'},
         'sample_weight': {
             'anyOf': [{
@@ -217,9 +221,13 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted classes, or the predict values.',
+    'anyOf':[{
     'type': 'array',
-    'items': {'anyOf':[{
-                'type': 'number'},{'type':'string'}]},
+    'items': {
+        'type': 'number'}},{
+    'type': 'array',
+    'items': {
+        'type': 'number'}}]
 }
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
