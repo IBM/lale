@@ -256,6 +256,7 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     -------
         cv_results: a list of scores corresponding to each cross validation fold
     """
+    from sklearn.base import clone
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)
 
@@ -267,7 +268,11 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
         X_train, y_train = split_with_schemas(estimator, X, y, train)
         X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         start = time.time()
-        trained = estimator.fit(X_train, y_train)
+        try:
+            estimator_copy = clone(estimator)
+        except BaseException: #as clone can either raise a TypeError or RuntimeError
+            estimator_copy = estimator
+        trained = estimator_copy.fit(X_train, y_train)
         score_value  = scorer(trained, X_test, y_test)
         execution_time = time.time() - start
         # not all estimators have predict probability
