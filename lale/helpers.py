@@ -270,9 +270,9 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
         start = time.time()
         try:
             estimator_copy = clone(estimator)
+            trained = estimator_copy.fit(X_train, y_train)
         except BaseException: #as clone can either raise a TypeError or RuntimeError
-            estimator_copy = estimator
-        trained = estimator_copy.fit(X_train, y_train)
+            trained = estimator.fit(X_train, y_train)
         score_value  = scorer(trained, X_test, y_test)
         execution_time = time.time() - start
         # not all estimators have predict probability
