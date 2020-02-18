@@ -39,224 +39,6 @@ import lale.json_operator
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
-
-class MetaModel(ABC):
-    """Abstract base class for LALE operators states: MetaModel, Planned, Trainable, and Trained.
-    """
-    @abstractmethod
-    def auto_arrange(self, planner):
-        """Auto arrange the operators to make a new plan.
-        
-        Parameters
-        ----------
-        TBD
-        """
-        pass
-
-    @abstractmethod
-    def arrange(self, *args, **kwargs):
-        """Given composable operators, create a plan. TBD.
-        """
-        pass
-
-class Planned(MetaModel):
-    """Base class to tag an operator's state as Planned.
-    
-    Warning: This class is not to be used directly by users/developers.
-    """
-
-    @abstractmethod
-    def configure(self, *args, **kwargs)->'Trainable':
-        """Bind hyperparameters (for individual operators) and operator choices (for pipelines).
-
-        Usually, this will be invoked via `__call__`, to conform to
-        the look-and-feel of scikit-learn's `__init__` convention.
-        Not all hyperparameters need to be explicitly specified. If
-        some of the hyperparameters are not specified, then a
-        subsequent `fit` invocation will bind them to their default
-        values.  On the other hand, if some hyperparameters are still
-        free and the operator is not marked as `is_frozen_trainable`,
-        then a subsequent `auto_configure` search will include those
-        free hyperparameters in its search space, to be tuned and then
-        bound to the best found values.
-
-        Parameters
-        ----------
-        args:
-            The non-keyword arguments must be valid enumeration constants
-            for hyperparameters of this operator that accepts categoricals,
-            according to the `hyperparam_schema` of this operator.
-        kwargs:
-            Keyword arguments must be valid according to the
-            `hyperparam_schema` of this operator, and can be categorical
-            or continuous.
-
-        Returns
-        -------
-        Trainable
-            A new copy of this operator that is the same except that some
-            of its hyperparameters are bound to the specified values.
-
-        """
-        pass
-
-    @abstractmethod
-    def __call__(self, *args, **kwargs)->'Trainable':
-        """Abstract method to make Planned objects callable.
-
-        Operators in a Planned states are made callable by overriding 
-        the __call__ method (https://docs.python.org/3/reference/datamodel.html#special-method-names).
-        It is supposed to return an operator in a Trainable state.
-
-        Parameters
-        ----------
-        args, kwargs: 
-            The parameters are used to configure an operator in a Planned
-            state to bind hyper-parameter values such that it becomes Trainable.
-        """
-        pass
-
-    def auto_configure(self, X, y = None, optimizer = None, cv = None, scoring = None, **kwargs)->'Trainable':
-        """
-        Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
-        operator. The output is a trainable/trained operator chosen by the optimizer.
-        
-        Parameters
-        ----------
-        X:
-            Features that conform to the X property of input_schema_fit.
-        y: optional
-            Labels that conform to the y property of input_schema_fit.
-            Default is None.
-        optimizer:
-            lale.lib.lale.HyperoptCV or lale.lib.lale.GridSearchCV
-            default is None.
-        cv:
-            cross-validation option that is valid for the optimizer.
-            default is None, which will use the optimizer's default value.
-        scoring:
-            scoring option that is valid for the optimizer.
-            default is None, which will use the optimizer's default value.
-        kwargs:
-            other keyword arguments to be passed to the optimizer.
-        
-        Returns
-        -------
-        Trainable that is chosen after performing CASH.
-        """
-        if optimizer is None:
-            raise ValueError("Please provide a valid optimizer for auto_configure.")
-        if kwargs is None:
-            kwargs = {}
-        if cv is not None:
-            kwargs['cv'] = cv
-        if scoring is not None:
-            kwargs['scoring'] = scoring
-        optimizer_obj = optimizer(estimator=self, **kwargs)
-        trained = optimizer_obj.fit(X, y)
-        return lale.helpers.best_estimator(trained)
-
-class Trainable(Planned):
-    """Base class to tag an operator's state as Trainable.
-    
-    Warning: This class is not to be used directly by users/developers.
-    """
-
-    @abstractmethod
-    def fit(self, X, y=None, **fit_params)->'Trained':
-        """Train the learnable coefficients of this operator, if any.
-
-        Return a trained version of this operator.  If this operator
-        has free learnable coefficients, bind them to values that fit
-        the data according to the operator's algorithm.  Do nothing if
-        the operator implementation lacks a `fit` method or if the
-        operator has been marked as `is_frozen_trained`.
-
-        Parameters
-        ----------
-        X:
-            Features that conform to the X property of input_schema_fit.
-        y: optional
-            Labels that conform to the y property of input_schema_fit.
-            Default is None.
-        fit_params: Dictionary, optional
-            A dictionary of keyword parameters to be used during training.
-
-        Returns
-        -------
-        Trained
-            A new copy of this operators that is the same except that its
-            learnable coefficients are bound to their trained values.
-
-        """
-        pass
-
-    @abstractmethod
-    def is_frozen_trainable(self)->bool:
-        """Return true if all hyperparameters are bound, in other words,
-           search spaces contain no free hyperparameters to be tuned.
-        """
-        pass
-
-    @abstractmethod
-    def freeze_trainable(self)->'Trainable':
-        """Return a copy of this trainable operator that is the same except
-           that all hyperparameters are bound and none are free to be tuned.
-        """
-        pass
-
-class Trained(Trainable):
-    """Base class to tag an operator's state as Trained.
-    
-    Warning: This class is not to be used directly by users/developers.
-    """
-
-    @abstractmethod
-    def predict(self, X):
-        """Abstract predict method to be overriden by trained operators as applicable.
-        
-        Parameters
-        ----------
-        X : 
-            The type of X is as per input_predict schema of the operator.
-        """
-        pass
-
-    @abstractmethod
-    def transform(self, X, y = None):
-        """Abstract transform method to be overriden by trained operators as applicable.
-        
-        Parameters
-        ----------
-        X : 
-            The type of X is as per input_predict schema of the operator.
-        """
-        pass
-
-    @abstractmethod
-    def predict_proba(self, X):
-        """Abstract predict method to be overriden by trained operators as applicable.
-
-        Parameters
-        ----------
-        X :
-            The type of X is as per input_predict schema of the operator.
-        """
-        pass
-
-    @abstractmethod
-    def is_frozen_trained(self)->bool:
-        """Return true if all learnable coefficients are bound, in other
-           words, there are no free parameters to be learned by fit.
-        """
-        pass
-
-    @abstractmethod
-    def freeze_trained(self)->'Trained':
-        """Return a copy of this trainable operator that is the same except
-           that all learnable coefficients are bound and thus fit is a no-op.
-        """
-        pass
 	
 class Operator(metaclass=AbstractVisitorMeta):
     """Abstract base class for a LALE operator.
@@ -350,7 +132,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         pass
 
     @abstractmethod
-    def input_schema_fit(self, s_X):
+    def input_schema_fit(self):
         pass
 
     def to_json(self):
@@ -392,22 +174,198 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
-class MetaModelOperator(Operator, MetaModel):
-        pass
+class PlannedOperator(Operator):
 
-class PlannedOperator(MetaModelOperator, Planned):
+    @abstractmethod
+    def configure(self, *args, **kwargs)->'TrainableOperator':
+        """Bind hyperparameters (for individual operators) and operator choices (for pipelines).
+
+        Usually, this will be invoked via `__call__`, to conform to
+        the look-and-feel of scikit-learn's `__init__` convention.
+        Not all hyperparameters need to be explicitly specified. If
+        some of the hyperparameters are not specified, then a
+        subsequent `fit` invocation will bind them to their default
+        values.  On the other hand, if some hyperparameters are still
+        free and the operator is not marked as `is_frozen_trainable`,
+        then a subsequent `auto_configure` search will include those
+        free hyperparameters in its search space, to be tuned and then
+        bound to the best found values.
+
+        Parameters
+        ----------
+        args:
+            The non-keyword arguments must be valid enumeration constants
+            for hyperparameters of this operator that accepts categoricals,
+            according to the `hyperparam_schema` of this operator.
+        kwargs:
+            Keyword arguments must be valid according to the
+            `hyperparam_schema` of this operator, and can be categorical
+            or continuous.
+
+        Returns
+        -------
+        TrainableOperator
+            A new copy of this operator that is the same except that some
+            of its hyperparameters are bound to the specified values.
+
+        """
+        pass
 
     @abstractmethod
     def __call__(self, *args, **kwargs)->'TrainableOperator':
+        """Abstract method to make Planned objects callable.
+
+        Operators in a Planned states are made callable by overriding 
+        the __call__ method (https://docs.python.org/3/reference/datamodel.html#special-method-names).
+        It is supposed to return an operator in a Trainable state.
+
+        Parameters
+        ----------
+        args, kwargs: 
+            The arguments are used to configure an operator in a Planned
+            state to bind hyper-parameter values such that it becomes Trainable.
+
+        Returns
+        -------
+        TrainableOperator
+            A new copy of this operator that is the same except that some
+            of its hyperparameters are bound to the specified values.
+        """
         pass
 
-class TrainableOperator(PlannedOperator, Trainable):
+    def auto_configure(self, X, y = None, optimizer = None, cv = None, scoring = None, **kwargs)->'TrainableOperator':
+        """
+        Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
+        operator. The output is a trainable/trained operator chosen by the optimizer.
+        
+        Parameters
+        ----------
+        X:
+            Features that conform to the X property of input_schema_fit.
+        y: optional
+            Labels that conform to the y property of input_schema_fit.
+            Default is None.
+        optimizer:
+            lale.lib.lale.HyperoptCV or lale.lib.lale.GridSearchCV
+            default is None.
+        cv:
+            cross-validation option that is valid for the optimizer.
+            default is None, which will use the optimizer's default value.
+        scoring:
+            scoring option that is valid for the optimizer.
+            default is None, which will use the optimizer's default value.
+        kwargs:
+            other keyword arguments to be passed to the optimizer.
+        
+        Returns
+        -------
+        Trainable that is chosen after performing CASH.
+        """
+        if optimizer is None:
+            raise ValueError("Please provide a valid optimizer for auto_configure.")
+        if kwargs is None:
+            kwargs = {}
+        if cv is not None:
+            kwargs['cv'] = cv
+        if scoring is not None:
+            kwargs['scoring'] = scoring
+        optimizer_obj = optimizer(estimator=self, **kwargs)
+        trained = optimizer_obj.fit(X, y)
+        return lale.helpers.best_estimator(trained)
+
+class TrainableOperator(PlannedOperator):
 
     @abstractmethod
     def fit(self, X, y=None, **fit_params)->'TrainedOperator':
+        """Train the learnable coefficients of this operator, if any.
+
+        Return a trained version of this operator.  If this operator
+        has free learnable coefficients, bind them to values that fit
+        the data according to the operator's algorithm.  Do nothing if
+        the operator implementation lacks a `fit` method or if the
+        operator has been marked as `is_frozen_trained`.
+
+        Parameters
+        ----------
+        X:
+            Features that conform to the X property of input_schema_fit.
+        y: optional
+            Labels that conform to the y property of input_schema_fit.
+            Default is None.
+        fit_params: Dictionary, optional
+            A dictionary of keyword parameters to be used during training.
+
+        Returns
+        -------
+        TrainedOperator
+            A new copy of this operators that is the same except that its
+            learnable coefficients are bound to their trained values.
+
+        """
         pass
 
-class TrainedOperator(TrainableOperator, Trained):
+    @abstractmethod
+    def is_frozen_trainable(self)->bool:
+        """Return true if all hyperparameters are bound, in other words,
+           search spaces contain no free hyperparameters to be tuned.
+        """
+        pass
+
+    @abstractmethod
+    def freeze_trainable(self)->'TrainableOperator':
+        """Return a copy of this trainable operator that is the same except
+           that all hyperparameters are bound and none are free to be tuned.
+        """
+        pass
+
+class TrainedOperator(TrainableOperator):
+
+    @abstractmethod
+    def predict(self, X):
+        """Abstract predict method to be overriden by trained operators as applicable.
+        
+        Parameters
+        ----------
+        X : 
+            The type of X is as per input_predict schema of the operator.
+        """
+        pass
+
+    @abstractmethod
+    def transform(self, X, y = None):
+        """Abstract transform method to be overriden by trained operators as applicable.
+        
+        Parameters
+        ----------
+        X : 
+            The type of X is as per input_predict schema of the operator.
+        """
+        pass
+
+    @abstractmethod
+    def predict_proba(self, X):
+        """Abstract predict method to be overriden by trained operators as applicable.
+
+        Parameters
+        ----------
+        X :
+            The type of X is as per input_predict schema of the operator.
+        """
+        pass
+
+    @abstractmethod
+    def is_frozen_trained(self)->bool:
+        """Return true if all learnable coefficients are bound, in other
+           words, there are no free parameters to be learned by fit.
+        """
+        pass
+
+    @abstractmethod
+    def freeze_trained(self)->'TrainedOperator':
+        """Return a copy of this trainable operator that is the same except
+           that all learnable coefficients are bound and thus fit is a no-op.
+        """
+        pass
     
     @abstractmethod
     def is_transformer(self)->bool:
@@ -417,7 +375,7 @@ class TrainedOperator(TrainableOperator, Trained):
 
 _schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
 
-class IndividualOp(MetaModelOperator):
+class IndividualOp(Operator):
     """
     This is a concrete class that can instantiate a new individual
     operator and provide access to its metadata.
@@ -796,12 +754,6 @@ class IndividualOp(MetaModelOperator):
         else:
             class_name = module + '.' + self._impl.__class__.__name__
         return class_name
-
-    def auto_arrange(self, planner):
-        return PlannedIndividualOp(self._name, self._impl, self._schemas)
-
-    def arrange(self, *args, **kwargs):
-        return PlannedIndividualOp(self._name, self._impl, self._schemas)
 
     def __str__(self)->str:
         return self.name()
@@ -1351,7 +1303,7 @@ def get_available_transformers(tags: AbstractSet[str] = None) -> List[PlannedOpe
     return get_available_operators('transformer', tags)
 
 OpType = TypeVar('OpType', bound=Operator)
-class BasePipeline(MetaModelOperator, Generic[OpType]):
+class BasePipeline(Operator, Generic[OpType]):
     """
     This is a concrete class that can instantiate a new pipeline operator and provide access to its meta data.
     """
@@ -1503,12 +1455,6 @@ class BasePipeline(MetaModelOperator, Generic[OpType]):
             if states[operator] is state.TODO:
                 dfs(operator)
         self._steps = result
-
-    def auto_arrange(self, planner):
-        pass#TODO
-
-    def arrange(self, *args, **kwargs):
-        pass#TODO
 
     def name(self)->str:            
         return self._name
@@ -2255,12 +2201,6 @@ class OperatorChoice(Operator, Generic[OperatorChoiceType]):
         new_steps:List[OperatorChoiceType] = [s._lale_clone(cloner) for s in steps]
         return self.__class__(new_steps, self._name)
        
-    def auto_arrange(self):
-        return self
-
-    def arrange(self, *args, **kwargs):
-        return self
-
     def configure(self, *args, **kwargs):
         return self.__call__(args, kwargs)
 
@@ -2331,10 +2271,10 @@ def get_pipeline_of_applicable_type(steps, edges, ordered=False)->PlannedPipelin
     isTrainable:bool = True
     isTrained:bool = True
     for operator in steps:
-        if not isinstance(operator, Trained):
+        if not isinstance(operator, TrainedOperator):
             isTrained = False #Even if a single step is not trained, the pipeline can't be used for predict/transform 
             # without training it first
-        if isinstance(operator, OperatorChoice) or not isinstance(operator, Trainable):
+        if isinstance(operator, OperatorChoice) or not isinstance(operator, TrainableOperator):
             isTrainable = False
     if isTrained:
         return TrainedPipeline(steps, edges, ordered=ordered)
