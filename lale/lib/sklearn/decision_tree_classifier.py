@@ -12,43 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.datasets.data_schemas
 import sklearn.tree.tree
 import lale.helpers
 import lale.operators
-
-class DecisionTreeClassifierImpl():        
-
-    def __init__(self, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, class_weight=None, presort=False):
-        self._hyperparams = {
-            'criterion': criterion,
-            'splitter': splitter,
-            'max_depth': max_depth,
-            'min_samples_split': min_samples_split,
-            'min_samples_leaf': min_samples_leaf,
-            'min_weight_fraction_leaf': min_weight_fraction_leaf,
-            'max_features': max_features,
-            'random_state': random_state,
-            'max_leaf_nodes': max_leaf_nodes,
-            'min_impurity_decrease': min_impurity_decrease,
-            'min_impurity_split': min_impurity_split,
-            'class_weight': class_weight,
-            'presort': presort}
-        self._sklearn_model = sklearn.tree.tree.DecisionTreeClassifier(**self._hyperparams)
-
-
-    def fit(self, X, y, **fit_params):
-        if fit_params is None:
-            self._sklearn_model.fit(X, y)
-        else:
-            self._sklearn_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._sklearn_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
-
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -214,13 +181,14 @@ _input_predict_schema = {
             'description': 'Allow to bypass several input checking.'},
     },
 }
+
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'The predicted classes, or the predict values.',
-    'type': 'array',
-    'items': {
-        'type': 'number'},
-}
+    'description': 'Predicted class label per sample.',
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities of the input samples X.',
@@ -240,16 +208,16 @@ _input_predict_proba_schema = {
             'description': 'Run check_array on X.'},
     },
 }
+
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'such arrays if n_outputs > 1.',
-    'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }    
-}
+    'description': 'Probability of the sample for each class in the model.',
+    'anyOf': [
+    {   'type': 'array',
+        'items': {'type': 'array', 'items': {'type': 'number'}}},
+    {   'type': 'array',
+        'items': {'type': 'array', 'items': {'type': 'string'}}}]}
+
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
@@ -267,6 +235,45 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema},
 }
+
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
+
+
+class DecisionTreeClassifierImpl():        
+
+    def __init__(self, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, class_weight=None, presort=False):
+        self._hyperparams = {
+            'criterion': criterion,
+            'splitter': splitter,
+            'max_depth': max_depth,
+            'min_samples_split': min_samples_split,
+            'min_samples_leaf': min_samples_leaf,
+            'min_weight_fraction_leaf': min_weight_fraction_leaf,
+            'max_features': max_features,
+            'random_state': random_state,
+            'max_leaf_nodes': max_leaf_nodes,
+            'min_impurity_decrease': min_impurity_decrease,
+            'min_impurity_split': min_impurity_split,
+            'class_weight': class_weight,
+            'presort': presort}
+        self._sklearn_model = sklearn.tree.tree.DecisionTreeClassifier(**self._hyperparams)
+
+    def fit(self, X, y, **fit_params):
+        if fit_params is None:
+            self._sklearn_model.fit(X, y)
+        else:
+            self._sklearn_model.fit(X, y, **fit_params)
+        self._schema_fit_y = lale.datasets.data_schemas.to_schema(y)
+        return self
+
+    def predict(self, X):
+        return self._sklearn_model.predict(X)
+
+    def predict_proba(self, X):
+        return self._sklearn_model.predict_proba(X)
+
+    def transform_schema(self, X):
+        return getattr(self, '_schema_fit_y', _output_predict_schema)
+
 DecisionTreeClassifier = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)
