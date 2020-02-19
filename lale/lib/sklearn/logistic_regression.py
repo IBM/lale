@@ -54,12 +54,12 @@ _output_predict_schema = {
 
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Probability of the sample for each class in the model.',
-    'anyOf': [
-    {   'type': 'array',
-        'items': {'type': 'array', 'items': {'type': 'number'}}},
-    {   'type': 'array',
-        'items': {'type': 'array', 'items': {'type': 'string'}}}]}
+    'description': 'Returns the probability of the sample for each class in the model,',
+    'type': 'array',
+    'items': {
+        'type': 'array',
+        'items': {
+            'type': 'number'}}}
 
 _hyperparams_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
