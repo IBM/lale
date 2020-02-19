@@ -30,8 +30,9 @@ _input_schema_fit = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {
       'description': 'Target class labels; the array is over samples.',
-      'type': 'array',
-      'items': {'type': 'number'}}}}
+        'anyOf': [
+            {'type': 'array', 'items': {'type': 'number'}},
+            {'type': 'array', 'items': {'type': 'string'}}]}}}
 
 _input_schema_predict = {
   '$schema': 'http://json-schema.org/draft-04/schema#',

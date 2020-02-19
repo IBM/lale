@@ -117,6 +117,7 @@ _hyperparams_schema = {
                 'description': 'Whether to presort the data to speed up the finding of best splits in'},
         }}]
 }
+
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a decision tree classifier from the training set (X, y).',
@@ -133,9 +134,9 @@ _input_fit_schema = {
                 }}],
             'description': 'The training input samples. Internally, it will be converted to'},
         'y': {
-            'type': 'array',
-            'items': {
-                'type': 'number'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'The target values (class labels) as integers or strings.'},
         'sample_weight': {
             'anyOf': [{
