@@ -12,28 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.datasets.data_schemas
 import lale.helpers
 import lale.operators
 import sklearn.linear_model
-
-class LogisticRegressionImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._sklearn_model = sklearn.linear_model.LogisticRegression(
-            **self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        if fit_params is None:
-            self._sklearn_model.fit(X, y)
-        else:
-            self._sklearn_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._sklearn_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
 
 _input_schema_fit = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -48,8 +30,9 @@ _input_schema_fit = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {
       'description': 'Target class labels; the array is over samples.',
-      'type': 'array',
-      'items': {'type': 'number'}}}}
+        'anyOf': [
+            {'type': 'array', 'items': {'type': 'number'}},
+            {'type': 'array', 'items': {'type': 'string'}}]}}}
 
 _input_schema_predict = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -66,9 +49,9 @@ _input_schema_predict = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
-    'type': 'array',
-    'items': {
-        'type': 'number'}}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
 
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -265,5 +248,28 @@ _combined_schemas = {
 
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(_combined_schemas)
+
+class LogisticRegressionImpl:
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
+        self._sklearn_model = sklearn.linear_model.LogisticRegression(
+            **self._hyperparams)
+
+    def fit(self, X, y, **fit_params):
+        if fit_params is None:
+            self._sklearn_model.fit(X, y)
+        else:
+            self._sklearn_model.fit(X, y, **fit_params)
+        self._schema_fit_y = lale.datasets.data_schemas.to_schema(y)
+        return self
+
+    def predict(self, X):
+        return self._sklearn_model.predict(X)
+
+    def predict_proba(self, X):
+        return self._sklearn_model.predict_proba(X)
+
+    def transform_schema(self, X):
+        return getattr(self, '_schema_fit_y', _output_predict_schema)
 
 LogisticRegression = lale.operators.make_operator(LogisticRegressionImpl, _combined_schemas)
