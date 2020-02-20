@@ -872,7 +872,7 @@ class IndividualOp(Operator):
         return result
 
     def transform_schema(self, s_X):
-        return self.output_schema()
+        return self.output_schema_predict_proba()
 
     def is_supervised(self, default_if_missing=True)->bool:
         s = self.input_schema_fit()

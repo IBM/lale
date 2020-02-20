@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.datasets.data_schemas
 import lale.helpers
 import lale.operators
 import sklearn.neighbors
@@ -189,7 +188,6 @@ class KNeighborsClassifierImpl():
 
     def fit(self, X, y=None):
         self._sklearn_model.fit(X, y)
-        self._schema_fit_y = lale.datasets.data_schemas.to_schema(y)
         return self
 
     def predict(self, X):
@@ -197,8 +195,5 @@ class KNeighborsClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
-
-    def transform_schema(self, X):
-        return getattr(self, '_schema_fit_y', _output_predict_schema)
 
 KNeighborsClassifier = lale.operators.make_operator(KNeighborsClassifierImpl, _combined_schemas)
