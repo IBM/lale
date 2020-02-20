@@ -23,7 +23,7 @@ from lightgbm import LGBMClassifier as baz
 from sklearn.linear_model.least_angle import Lars as foobar
 from test.mock_module import UnknownOp
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
-
+import numpy as np
 
 class TestCustomSchema(unittest.TestCase):
     def setUp(self):
@@ -362,24 +362,26 @@ class TestFreeze(unittest.TestCase):
     def test_individual_op_freeze_trained(self):
         from lale.lib.sklearn import KNeighborsClassifier
         trainable = KNeighborsClassifier(n_neighbors=1)
-        X = [[0], [1], [2]]
-        y_old = [0, 0, 1]
-        y_new = [1, 0, 0]
+        X = np.array([[0], [1], [2]])
+        y_old = np.array([0, 0, 1])
+        y_new = np.array([1, 0, 0])
         liquid_old = trainable.fit(X, y_old)
-        self.assertEqual(list(liquid_old.predict(X)), y_old)
+        self.assertEqual(list(liquid_old.predict(X)), list(y_old))
         liquid_new = liquid_old.fit(X, y_new)
-        self.assertEqual(list(liquid_new.predict(X)), y_new)
+        self.assertEqual(list(liquid_new.predict(X)), list(y_new))
         frozen_old = trainable.fit(X, y_old).freeze_trained()
         self.assertFalse(liquid_old.is_frozen_trained())
         self.assertTrue(frozen_old.is_frozen_trained())
-        self.assertEqual(list(frozen_old.predict(X)), y_old)
+        self.assertEqual(list(frozen_old.predict(X)), list(y_old))
         frozen_new = frozen_old.fit(X, y_new)
-        self.assertEqual(list(frozen_new.predict(X)), y_old)
+        self.assertEqual(list(frozen_new.predict(X)), list(y_old))
 
     def test_pipeline_freeze_trained(self):
         from lale.lib.sklearn import MinMaxScaler, LogisticRegression
         trainable = MinMaxScaler() >> LogisticRegression()
-        liquid = trainable.fit([[0], [1], [2]], [0, 0, 1])
+        X = np.array([[0], [1], [2]])
+        y = np.array([0, 0, 1])
+        liquid = trainable.fit(X, y)
         frozen = liquid.freeze_trained()
         self.assertFalse(liquid.is_frozen_trained())
         self.assertTrue(frozen.is_frozen_trained())

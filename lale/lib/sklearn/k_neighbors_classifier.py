@@ -128,6 +128,8 @@ _input_fit_schema = {
             'description': 'Target class labels; the array is over samples.',
             'anyOf': [
                 {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {
+                    'type': 'array', 'items': {'type': 'number'}}},
                 {'type': 'array', 'items': {'type': 'string'}}]}}}
 
 _input_predict_schema = {
@@ -149,6 +151,8 @@ _output_predict_schema = {
     'description': 'Predicted class label per sample.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {
+            'type': 'array', 'items': {'type': 'number'}}},
         {'type': 'array', 'items': {'type': 'string'}}]}
 
 _output_predict_proba_schema = {
