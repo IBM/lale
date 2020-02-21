@@ -411,11 +411,11 @@ class SearchSpaceOperatorVisitor(Visitor):
         if has_operator(schema):
             atomize_schema_enumerations(schema)
         simplified_schema = simplify(schema, True)
-    #    from . import helpers
-    #    helpers.print_yaml('SIMPLIFIED_' + longName, simplified_schema)
+    #    from . import pretty_print
+    #    print(f'SIMPLIFIED_{longName}: {pretty_print.to_string(simplified_schema)}')
 
         filtered_schema = filterForOptimizer(simplified_schema)
-    #    helpers.print_yaml('FILTERED_' + longName, filtered_schema)
+    #    print(f'SIMPLIFIED_{longName}: {pretty_print.to_string(filtered_schema)}')
 
         return (filtered_schema, 
                 self.schemaToSearchSpaceHelper(
