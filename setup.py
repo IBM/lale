@@ -30,7 +30,6 @@ else:
         'jsonschema==2.6.0',
         'jsonsubschema',
         'numpy',
-        'PyYAML',
         'scikit-learn==0.20.3',
         'scipy',
         'pandas<=0.25.3',

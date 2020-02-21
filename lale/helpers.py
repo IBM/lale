@@ -24,7 +24,6 @@ import sys
 import time
 import traceback
 import warnings
-import yaml
 import scipy.sparse
 import importlib
 from sklearn.model_selection import StratifiedKFold
@@ -49,31 +48,6 @@ class NestedHyperoptSpace():
     sub_space:Any
     def __init__(self, sub_space):
         self.sub_space = sub_space
-
-class assert_raises:
-    def __init__(self, expected_exc_type):
-        self.__expected_exc_type = expected_exc_type
-
-    def __enter__(self):
-        pass
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        assert exc_type is self.__expected_exc_type
-        print_yaml('error', str(exc_value), file=sys.stderr)
-        return True
-
-class assert_warns:
-    def __init__(self, expected_exc_type):
-        self.__expected_exc_type = expected_exc_type
-
-    def __enter__(self):
-        warnings.filterwarnings("error", category=self.__expected_exc_type)
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        warnings.resetwarnings()
-        assert exc_type is self.__expected_exc_type
-        print_yaml('error', str(exc_value), file=sys.stderr)
-        return True
 
 def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
@@ -140,9 +114,6 @@ def ndarray_to_json(arr, subsample_array:bool=True) -> Union[list, dict]:
             return [subarray_to_json(indices + (i,))
                     for i in range(min(num_subsamples[len(indices)], arr.shape[len(indices)]))]
     return subarray_to_json(())
-
-def print_yaml(what: str, doc: Union[list, dict], file=sys.stdout):
-    print(yaml.dump({what: doc}).strip(), file=file)
 
 def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
     json_value = data_to_json(value, subsample_array)
