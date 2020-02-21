@@ -29,7 +29,6 @@ else:
         'hyperopt==0.1.2',
         'jsonschema==2.6.0',
         'jsonsubschema',
-        'liac-arff>=2.4.0',
         'numpy',
         'PyYAML',
         'scikit-learn==0.20.3',
@@ -55,6 +54,7 @@ setup(
     install_requires = install_requires,
     extras_require={
         'full': [
+            'liac-arff>=2.4.0',
             'pytorch-pretrained-bert>=0.6.1',
             'torchvision>=0.2.2',
             'tensorflow-datasets>=1.0.1',
