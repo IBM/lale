@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.datasets.data_schemas
 import sklearn.tree.tree
 import lale.helpers
 import lale.operators
@@ -267,7 +266,6 @@ class DecisionTreeClassifierImpl():
             self._sklearn_model.fit(X, y)
         else:
             self._sklearn_model.fit(X, y, **fit_params)
-        self._schema_fit_y = lale.datasets.data_schemas.to_schema(y)
         return self
 
     def predict(self, X):
@@ -275,8 +273,5 @@ class DecisionTreeClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
-
-    def transform_schema(self, X):
-        return getattr(self, '_schema_fit_y', _output_predict_schema)
 
 DecisionTreeClassifier = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)

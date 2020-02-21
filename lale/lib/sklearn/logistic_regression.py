@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.datasets.data_schemas
 import lale.helpers
 import lale.operators
 import sklearn.linear_model
@@ -55,7 +54,7 @@ _output_predict_schema = {
 
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Returns the probability of the sample for each class in the model,',
+    'description': 'Probability of the sample for each class in the model.',
     'type': 'array',
     'items': {
         'type': 'array',
@@ -260,7 +259,6 @@ class LogisticRegressionImpl:
             self._sklearn_model.fit(X, y)
         else:
             self._sklearn_model.fit(X, y, **fit_params)
-        self._schema_fit_y = lale.datasets.data_schemas.to_schema(y)
         return self
 
     def predict(self, X):
@@ -268,8 +266,5 @@ class LogisticRegressionImpl:
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
-
-    def transform_schema(self, X):
-        return getattr(self, '_schema_fit_y', _output_predict_schema)
 
 LogisticRegression = lale.operators.make_operator(LogisticRegressionImpl, _combined_schemas)
