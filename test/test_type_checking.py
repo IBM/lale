@@ -310,10 +310,10 @@ class TestDatasetSchemas(unittest.TestCase):
         transformed_schema = pipeline.transform_schema(input_schema)
         transformed_expected = {
             '$schema': 'http://json-schema.org/draft-04/schema#',
-            'description': 'Predicted class label per sample.',
-            'anyOf': [
-                {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}}]}
+            'description':
+                'Probability of the sample for each class in the model.',
+            'type': 'array',
+            'items': {'type': 'array', 'items': {'type': 'number'}}}
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
 
@@ -323,11 +323,9 @@ class TestDatasetSchemas(unittest.TestCase):
         input_schema = to_schema(self._digits['X'])
         transformed_schema = choice.transform_schema(input_schema)
         transformed_expected = {
-            'anyOf': [
-                {'type': 'array', 'items': {
-                    'type': 'array', 'items': {'type': 'number'}}},
-                {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}}]}
+            '$schema': 'http://json-schema.org/draft-04/schema#',
+            'type': 'array',
+            'items': {'type': 'array', 'items': {'type': 'number'}}}
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)        
 
