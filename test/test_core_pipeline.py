@@ -22,7 +22,6 @@ import pickle
 
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
-from lale.lib.lale import Batching
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LinearSVC
 from lale.lib.sklearn import LogisticRegression
