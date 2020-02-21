@@ -15,7 +15,8 @@ This will install the **Lale Core** setup target, which includes many
 operators, pipelines, and search space generation targeting hyperopt
 and scikit-learn's GridSearchCV.  It has a smaller set of dependencies
 than the **Lale Full** setup target, which also includes search space
-generation for SMAC and some deep-learning operators. You can install
+generation for SMAC, support for loading OpenML datasets in ARFF
+format, and some deep-learning operators. You can install
 it as follows:
 
 .. code:: Bash

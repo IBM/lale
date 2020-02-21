@@ -14,7 +14,13 @@
 
 from typing import Dict
 import os
-import arff
+try:
+    import arff
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("""Package 'arff' not found. You can install it with
+    pip install 'liac-arff>=2.4.0'
+or with
+    pip install 'lale[full]'""")
 import urllib
 import pandas as pd
 import numpy as np
