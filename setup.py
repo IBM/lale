@@ -66,7 +66,6 @@ setup(
             'BlackBoxAuditing'],
         'test':[
             'jupyter',
-            'liac-arff>=2.4.0',
             'mypy',
             'flake8',
             'numpydoc',
