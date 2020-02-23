@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from torch.utils.data import Dataset
+try:
+    from torch.utils.data import Dataset
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("""Your Python environment does not have torch installed. You can install it with 
+                                pip install torch
+                                or with
+                                    pip install 'lale[full]'""")
 
 class NumpyTorchDataset(Dataset):
     """Pytorch Dataset subclass that takes a numpy array and an optional label array."""

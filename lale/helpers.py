@@ -30,16 +30,18 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import accuracy_score, log_loss
 from sklearn.metrics.scorer import check_scoring
 from sklearn.utils.metaestimators import _safe_split
-from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
-from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
-from torch.utils.data import DataLoader, TensorDataset
 import copy
 import logging
 import inspect
-import torch
 import h5py
 from typing import Any, Dict, List, Optional, Union
 import lale.datasets.data_schemas
+
+try:
+    import torch
+    torch_installed=True
+except ImportError:
+    torch_installed=False
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -75,7 +77,7 @@ def data_to_json(data, subsample_array:bool=True) -> Union[list, dict]:
     elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
-    elif isinstance(data, torch.Tensor):
+    elif torch_installed and isinstance(data, torch.Tensor):
         np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
     else:
@@ -587,7 +589,7 @@ def append_batch(data, batch_data):
             X = append_batch(X, batch_X)
             y = append_batch(y, batch_y)
             return X, y
-    elif isinstance(data, torch.Tensor):
+    elif torch_installed and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
     elif isinstance(data, h5py.File):
@@ -597,6 +599,10 @@ def append_batch(data, batch_data):
     #TODO:Handle dataframes
 
 def create_data_loader(X, y = None, batch_size = 1):
+    from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
+    from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
+    from torch.utils.data import DataLoader, TensorDataset
+    import torch
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
         if isinstance(y, pd.Series):

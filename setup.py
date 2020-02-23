@@ -36,7 +36,6 @@ else:
         'xgboost',
         'lightgbm',
         'decorator',
-        'torch>=1.0',
         'h5py']
 
 setup(
@@ -63,6 +62,7 @@ setup(
             'smac<=0.10.0',
             'aif360',
             'numba',
+            'torch>=1.0',
             'BlackBoxAuditing'],
         'test':[
             'jupyter',

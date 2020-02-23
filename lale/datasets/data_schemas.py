@@ -16,8 +16,11 @@ import lale.helpers
 import numpy as np
 import pandas as pd
 import scipy.sparse
-import torch
-
+try:
+    import torch
+    torch_installed=True
+except ImportError:
+    torch_installed=False
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 class NDArrayWithSchema(np.ndarray):
@@ -165,6 +168,10 @@ def series_to_schema(series):
     return result
 
 def torch_tensor_to_schema(tensor):
+    assert torch_installed, """Your Python environment does not have torch installed. You can install it with
+    pip install torch
+or with
+    pip install 'lale[full]'"""
     assert isinstance(tensor, torch.Tensor)
     #https://pytorch.org/docs/stable/tensor_attributes.html#torch-dtype
     if tensor.dtype == torch.bool:
@@ -231,7 +238,7 @@ def to_schema(obj):
         result = dataframe_to_schema(obj)
     elif isinstance(obj, pd.Series):
         result = series_to_schema(obj)
-    elif isinstance(obj, torch.Tensor):
+    elif torch_installed and isinstance(obj, torch.Tensor):
         result = torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
