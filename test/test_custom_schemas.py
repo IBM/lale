@@ -362,9 +362,9 @@ class TestFreeze(unittest.TestCase):
     def test_individual_op_freeze_trained(self):
         from lale.lib.sklearn import KNeighborsClassifier
         trainable = KNeighborsClassifier(n_neighbors=1)
-        X = np.array([[0], [1], [2]])
-        y_old = np.array([0, 0, 1])
-        y_new = np.array([1, 0, 0])
+        X = np.array([[0.0], [1.0], [2.0]])
+        y_old = np.array([0.0, 0.0, 1.0])
+        y_new = np.array([1.0, 0.0, 0.0])
         liquid_old = trainable.fit(X, y_old)
         self.assertEqual(list(liquid_old.predict(X)), list(y_old))
         liquid_new = liquid_old.fit(X, y_new)
@@ -379,9 +379,39 @@ class TestFreeze(unittest.TestCase):
     def test_pipeline_freeze_trained(self):
         from lale.lib.sklearn import MinMaxScaler, LogisticRegression
         trainable = MinMaxScaler() >> LogisticRegression()
-        X = np.array([[0], [1], [2]])
-        y = np.array([0, 0, 1])
+        X = np.array([[0.0], [1.0], [2.0]])
+        y = np.array([0.0, 0.0, 1.0])
         liquid = trainable.fit(X, y)
         frozen = liquid.freeze_trained()
         self.assertFalse(liquid.is_frozen_trained())
         self.assertTrue(frozen.is_frozen_trained())
+
+    def test_trained_individual_op_freeze_trainable(self):
+        from lale.lib.sklearn import KNeighborsClassifier
+        from lale.operators import TrainedIndividualOp
+        trainable = KNeighborsClassifier(n_neighbors=1)
+        X = np.array([[0.0], [1.0], [2.0]])
+        y_old = np.array([0.0, 0.0, 1.0])
+        liquid = trainable.fit(X, y_old)
+        self.assertIsInstance(liquid, TrainedIndividualOp)
+        self.assertFalse(liquid.is_frozen_trainable())
+        self.assertIn('algorithm', liquid.free_hyperparams())
+        frozen = liquid.freeze_trainable()
+        self.assertIsInstance(frozen, TrainedIndividualOp)
+        self.assertTrue(frozen.is_frozen_trainable())
+        self.assertFalse(frozen.is_frozen_trained())
+        self.assertEqual(len(frozen.free_hyperparams()), 0)
+
+    def test_trained_pipeline_freeze_trainable(self):
+        from lale.lib.sklearn import MinMaxScaler, LogisticRegression
+        from lale.operators import TrainedPipeline
+        trainable = MinMaxScaler() >> LogisticRegression()
+        X = np.array([[0.0], [1.0], [2.0]])
+        y = np.array([0.0, 0.0, 1.0])
+        liquid = trainable.fit(X, y)
+        self.assertIsInstance(liquid, TrainedPipeline)
+        self.assertFalse(liquid.is_frozen_trainable())
+        frozen = liquid.freeze_trainable()
+        self.assertFalse(liquid.is_frozen_trainable())
+        self.assertTrue(frozen.is_frozen_trainable())
+        self.assertIsInstance(frozen, TrainedPipeline)
