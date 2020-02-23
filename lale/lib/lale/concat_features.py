@@ -22,7 +22,7 @@ import lale.pretty_print
 try:
     import torch
 except ImportError:
-    torch=None
+    torch_not_installed=True
 class ConcatFeaturesImpl():
     """Transformer to concatenate input datasets. 
 
@@ -67,7 +67,7 @@ class ConcatFeaturesImpl():
                 np_dataset = dataset.values
             elif isinstance(dataset, scipy.sparse.csr_matrix):
                 np_dataset = dataset.toarray()
-            elif torch is not None and isinstance(dataset, torch.Tensor):
+            elif not torch_not_installed and isinstance(dataset, torch.Tensor):
                 np_dataset = dataset.detach().cpu().numpy()
             else:
                 np_dataset = dataset

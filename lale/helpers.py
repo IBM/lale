@@ -40,7 +40,7 @@ import lale.datasets.data_schemas
 try:
     import torch
 except ImportError:
-    torch = None
+    torch_not_installed=True
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -76,7 +76,7 @@ def data_to_json(data, subsample_array:bool=True) -> Union[list, dict]:
     elif isinstance(data, pd.DataFrame) or isinstance(data, pd.Series):
         np_array = data.values
         return ndarray_to_json(np_array, subsample_array)
-    elif torch is not None and isinstance(data, torch.Tensor):
+    elif not torch_not_installed and isinstance(data, torch.Tensor):
         np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
     else:
@@ -588,7 +588,7 @@ def append_batch(data, batch_data):
             X = append_batch(X, batch_X)
             y = append_batch(y, batch_y)
             return X, y
-    elif torch is not None and isinstance(data, torch.Tensor):
+    elif not torch_not_installed and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
     elif isinstance(data, h5py.File):
