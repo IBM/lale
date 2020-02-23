@@ -1752,7 +1752,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             frozen_map[liquid] = frozen
             frozen_steps.append(frozen)
         frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
-        result = cast(TrainedPipeline, get_pipeline_of_applicable_type(
+        result = cast(TrainablePipeline, get_pipeline_of_applicable_type(
             frozen_steps, frozen_edges, ordered=True))
         assert result.is_frozen_trainable()
         return result
