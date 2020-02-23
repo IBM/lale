@@ -22,7 +22,7 @@ from lale import schema2enums as enum_gen
 import numpy as np
 import lale.datasets.data_schemas
 
-from typing import AbstractSet, Any, Callable, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union
+from typing import AbstractSet, Any, Callable, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union, cast
 import warnings
 import copy
 from lale.util.VisitorMeta import AbstractVisitorMeta
@@ -1092,12 +1092,16 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         free = self.free_hyperparams()
         return len(free) == 0
 
-    def freeze_trainable(self)->'TrainableIndividualOp':
+    def _freeze_trainable_bindings(self):
         old_bindings = self._hyperparams if self._hyperparams else {}
         free = self.free_hyperparams()
         defaults = self.hyperparam_defaults()
         new_bindings = {name: defaults[name] for name in free}
         bindings = {**old_bindings, **new_bindings}
+        return bindings
+
+    def freeze_trainable(self)->'TrainableIndividualOp':
+        bindings = self._freeze_trainable_bindings()
         result = self._configure(**bindings)
         assert result.is_frozen_trainable(), str(result.free_hyperparams())
         return result
@@ -1229,6 +1233,13 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         else:
             raise ValueError("The operator {} does not support predict_proba".format(self.name()))
         result = self._validate_output_schema(result, 'predict_proba')
+        return result
+
+    def freeze_trainable(self)->'TrainedIndividualOp':
+        result = copy.deepcopy(self)
+        result._hyperparams = self._freeze_trainable_bindings()
+        assert result.is_frozen_trainable(), str(result.free_hyperparams())
+        assert isinstance(result, TrainedIndividualOp)
         return result
 
     def is_frozen_trained(self)->bool:
@@ -1741,7 +1752,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             frozen_map[liquid] = frozen
             frozen_steps.append(frozen)
         frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
-        result = TrainablePipeline(frozen_steps, frozen_edges, ordered=True)
+        result = cast(TrainedPipeline, get_pipeline_of_applicable_type(
+            frozen_steps, frozen_edges, ordered=True))
         assert result.is_frozen_trainable()
         return result
 
@@ -2088,6 +2100,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             shutil.rmtree(serialization_out_dir)
             
         return return_data
+
+    def freeze_trainable(self)->'TrainedPipeline':
+        result = super(TrainedPipeline, self).freeze_trainable()
+        return cast(TrainedPipeline, result)
 
     def is_frozen_trained(self)->bool:
         for step in self.steps():
