@@ -34,6 +34,7 @@ from lale.helpers import cross_val_score_track_trials
 from lale.lib.sklearn import LogisticRegression
 import lale.operators
 from lale.search.lale_smac import lale_op_smac_tae, get_smac_space, lale_trainable_op_from_config
+import lale.sklearn_compat
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -200,8 +201,14 @@ class SMACImpl:
         """
         return self.trials
 
-    def get_pipeline(self):
-        return getattr(self, '_best_estimator', None)
+    def get_pipeline(self, pipeline_name=None, astype='lale'):
+        if pipeline_name is not None:
+            raise NotImplementedError('Cannot get pipeline by name yet.')
+        result = getattr(self, '_best_estimator', None)
+        if result is None or astype == 'lale':
+            return result
+        assert astype == 'sklearn', astype
+        return lale.sklearn_compat.make_sklearn_compat(result)
 
 _hyperparams_schema = {
     'allOf': [

@@ -22,6 +22,7 @@ from sklearn.metrics import log_loss
 from sklearn.metrics.scorer import check_scoring
 import warnings
 import numpy as np
+import pandas as pd
 import traceback
 
 import time
@@ -33,7 +34,8 @@ import copy
 import sys
 import lale.operators
 from lale.lib.sklearn import LogisticRegression
-import multiprocessing 
+import multiprocessing
+import lale.sklearn_compat
 
 SEED=42
 logging.basicConfig(level=logging.WARNING)
@@ -112,7 +114,7 @@ class HyperoptImpl:
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
-        self.trials = Trials()
+        self._trials = Trials()
         self.max_opt_time = max_opt_time
         self.max_eval_time = max_eval_time
 
@@ -197,19 +199,19 @@ class HyperoptImpl:
             return proc_dict
 
         try :
-            fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self.trials, rstate=np.random.RandomState(SEED))
+            fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self._trials, rstate=np.random.RandomState(SEED))
         except SystemExit :
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
         except ValueError:
             self._best_estimator = None
-            if STATUS_OK not in self.trials.statuses():
+            if STATUS_OK not in self._trials.statuses():
                 raise ValueError('ValueError from hyperopt, none of the trials succeeded.')
 
         try :
-            best_params = space_eval(self.search_space, self.trials.argmin)
+            best_params = space_eval(self.search_space, self._trials.argmin)
             logger.info(
                 'best score: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(
-                    self.best_score - self.trials.average_best_error(), self.max_evals, best_params
+                    self.best_score - self._trials.average_best_error(), self.max_evals, best_params
                 )
             )
             trained = get_final_trained_estimator(best_params, X_train, y_train)
@@ -235,11 +237,31 @@ class HyperoptImpl:
 
         return predictions
 
-    def get_trials(self):
-        return self.trials
+    def results(self):
+        def make_record(trial_dict):
+            return {
+                'name': f'p{trial_dict["tid"]}',
+                'tid': trial_dict['tid'],
+                'loss': trial_dict['result']['loss'],
+                'time': trial_dict['result']['time'],
+                'log_loss': trial_dict['result']['log_loss'],
+                'status': trial_dict['result']['status']}
+        records = [make_record(td) for td in self._trials.trials]
+        result = pd.DataFrame.from_records(records, index='name')
+        return result
 
-    def get_pipeline(self):
-        return self._best_estimator
+    def get_pipeline(self, pipeline_name=None, astype='lale'):
+        if pipeline_name is None:
+            result = getattr(self, '_best_estimator', None)
+        else:
+            tid = int(pipeline_name[1:])
+            params = self._trials.trials[tid]['result']['params']
+            result = create_instance_from_hyperopt_search_space(
+                self.estimator, params)
+        if result is None or astype == 'lale':
+            return result
+        assert astype == 'sklearn', astype
+        return lale.sklearn_compat.make_sklearn_compat(result)
 
 _hyperparams_schema = {
     'allOf': [

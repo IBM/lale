@@ -20,6 +20,7 @@ import os
 import itertools
 from lale import schema2enums as enum_gen
 import numpy as np
+import pandas as pd
 import lale.datasets.data_schemas
 
 from typing import AbstractSet, Any, Callable, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union, cast
@@ -1255,9 +1256,13 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate='_impl')
-    def get_pipeline(self)->'TrainedIndividualOp':
-        result = self._impl.get_pipeline()
+    def get_pipeline(self, pipeline_name=None, astype='lale')->Optional[TrainableOperator]:
+        result = self._impl.get_pipeline(pipeline_name, astype)
         return result
+
+    @if_delegate_has_method(delegate='_impl')
+    def results(self)->pd.DataFrame:
+        return self._impl.results()
 
     def _lale_clone(self, cloner:Callable[[Any],Any]):
         """ This is really used for sklearn clone compatibility.
