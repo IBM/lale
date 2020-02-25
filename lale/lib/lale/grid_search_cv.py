@@ -65,8 +65,14 @@ class GridSearchCVImpl:
     def predict(self, X):
         return self._best_estimator.predict(X)
 
-    def get_pipeline(self):
-        return self._best_estimator
+    def get_pipeline(self, pipeline_name=None, astype='lale'):
+        if pipeline_name is not None:
+            raise NotImplementedError('Cannot get pipeline by name yet.')
+        result = getattr(self, '_best_estimator', None)
+        if result is None or astype == 'lale':
+            return result
+        assert astype == 'sklearn', astype
+        return lale.sklearn_compat.make_sklearn_compat(result)
 
 _hyperparams_schema = {
     'allOf': [
