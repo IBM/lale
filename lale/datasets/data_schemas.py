@@ -57,6 +57,8 @@ class SeriesWithSchema(pd.Series):
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
     if obj is None:
         return None
+    if isinstance(obj, list):
+        obj = np.array(obj)
     if isinstance(obj, NDArrayWithSchema):
         result = obj
     elif isinstance(obj, np.ndarray):

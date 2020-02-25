@@ -362,9 +362,9 @@ class TestFreeze(unittest.TestCase):
     def test_individual_op_freeze_trained(self):
         from lale.lib.sklearn import KNeighborsClassifier
         trainable = KNeighborsClassifier(n_neighbors=1)
-        X = np.array([[0.0], [1.0], [2.0]])
-        y_old = np.array([0.0, 0.0, 1.0])
-        y_new = np.array([1.0, 0.0, 0.0])
+        X = [[0.0], [1.0], [2.0]]
+        y_old = [0.0, 0.0, 1.0]
+        y_new = [1.0, 0.0, 0.0]
         liquid_old = trainable.fit(X, y_old)
         self.assertEqual(list(liquid_old.predict(X)), list(y_old))
         liquid_new = liquid_old.fit(X, y_new)
@@ -379,8 +379,8 @@ class TestFreeze(unittest.TestCase):
     def test_pipeline_freeze_trained(self):
         from lale.lib.sklearn import MinMaxScaler, LogisticRegression
         trainable = MinMaxScaler() >> LogisticRegression()
-        X = np.array([[0.0], [1.0], [2.0]])
-        y = np.array([0.0, 0.0, 1.0])
+        X = [[0.0], [1.0], [2.0]]
+        y = [0.0, 0.0, 1.0]
         liquid = trainable.fit(X, y)
         frozen = liquid.freeze_trained()
         self.assertFalse(liquid.is_frozen_trained())
@@ -390,8 +390,8 @@ class TestFreeze(unittest.TestCase):
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.operators import TrainedIndividualOp
         trainable = KNeighborsClassifier(n_neighbors=1)
-        X = np.array([[0.0], [1.0], [2.0]])
-        y_old = np.array([0.0, 0.0, 1.0])
+        X = [[0.0], [1.0], [2.0]]
+        y_old = [0.0, 0.0, 1.0]
         liquid = trainable.fit(X, y_old)
         self.assertIsInstance(liquid, TrainedIndividualOp)
         self.assertFalse(liquid.is_frozen_trainable())
@@ -406,8 +406,8 @@ class TestFreeze(unittest.TestCase):
         from lale.lib.sklearn import MinMaxScaler, LogisticRegression
         from lale.operators import TrainedPipeline
         trainable = MinMaxScaler() >> LogisticRegression()
-        X = np.array([[0.0], [1.0], [2.0]])
-        y = np.array([0.0, 0.0, 1.0])
+        X = [[0.0], [1.0], [2.0]]
+        y = [0.0, 0.0, 1.0]
         liquid = trainable.fit(X, y)
         self.assertIsInstance(liquid, TrainedPipeline)
         self.assertFalse(liquid.is_frozen_trainable())
