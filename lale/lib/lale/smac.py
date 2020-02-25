@@ -201,7 +201,7 @@ class SMACImpl:
         return self.trials
 
     def get_pipeline(self):
-        return self._best_estimator
+        return getattr(self, '_best_estimator', None)
 
 _hyperparams_schema = {
     'allOf': [
