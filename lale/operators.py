@@ -36,6 +36,7 @@ import logging
 import h5py
 import shutil
 import lale.json_operator
+from sklearn.pipeline import if_delegate_has_method
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -271,7 +272,7 @@ class PlannedOperator(Operator):
             kwargs['scoring'] = scoring
         optimizer_obj = optimizer(estimator=self, **kwargs)
         trained = optimizer_obj.fit(X, y)
-        return lale.helpers.best_estimator(trained)
+        return trained.get_pipeline()
 
 class TrainableOperator(PlannedOperator):
 
@@ -1251,6 +1252,11 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result = copy.deepcopy(self)
         result._frozen_trained = True
         assert result.is_frozen_trained()
+        return result
+
+    @if_delegate_has_method(delegate='_impl')
+    def get_pipeline(self)->'TrainedIndividualOp':
+        result = self._impl.get_pipeline()
         return result
 
     def _lale_clone(self, cloner:Callable[[Any],Any]):
