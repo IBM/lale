@@ -660,11 +660,12 @@ def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_
     return file_obj
 
 def best_estimator(obj):
-    if hasattr(obj, '_impl'): #TrainedIndividualOp
-        if hasattr(obj._impl, 'best_estimator'): #HyperoptRegressorImpl
-            return obj._impl.best_estimator
-        return None
-    return obj
+    """
+    .. deprecated:: 0.3.3
+       The best_estimator(obj) function has been replaced by the
+       obj.get_pipeline() method.
+    """
+    return obj.get_pipeline()
 
 def is_empty_dict(val) -> bool:
     return isinstance(val, dict) and len(val) == 0

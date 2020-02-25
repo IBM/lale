@@ -56,14 +56,17 @@ class GridSearchCVImpl:
                 scoring=self._hyperparams['scoring'],
                 n_jobs=self._hyperparams['n_jobs'])
             self.grid.fit(X, y)
-            self.best_estimator = self.grid.best_estimator_.to_lale()
+            self._best_estimator = self.grid.best_estimator_.to_lale()
         else:
             assert isinstance(op, lale.operators.TrainableOperator)
-            self.best_estimator = op
+            self._best_estimator = op
         return self
 
     def predict(self, X):
-        return self.best_estimator.predict(X)
+        return self._best_estimator.predict(X)
+
+    def get_pipeline(self):
+        return self._best_estimator
 
 _hyperparams_schema = {
     'allOf': [

@@ -201,7 +201,7 @@ class HyperoptImpl:
         except SystemExit :
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
         except ValueError:
-            self.best_estimator = None
+            self._best_estimator = None
             if STATUS_OK not in self.trials.statuses():
                 raise ValueError('ValueError from hyperopt, none of the trials succeeded.')
 
@@ -213,20 +213,20 @@ class HyperoptImpl:
                 )
             )
             trained = get_final_trained_estimator(best_params, X_train, y_train)
-            self.best_estimator = trained
+            self._best_estimator = trained
         except BaseException as e :
             logger.warning('Unable to extract the best parameters from optimization, the error: {}'.format(e))
-            self.best_estimator = None
+            self._best_estimator = None
 
         return self
 
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
-        if self.best_estimator is None:
+        if self._best_estimator is None:
             raise ValueError("Can not predict as the best estimator is None. Either an attempt to call `predict` "
         "before calling `fit` or all the trials during `fit` failed.")
-        trained = self.best_estimator
+        trained = self._best_estimator
         try:
             predictions = trained.predict(X_eval)
         except ValueError as e:
@@ -237,6 +237,9 @@ class HyperoptImpl:
 
     def get_trials(self):
         return self.trials
+
+    def get_pipeline(self):
+        return self._best_estimator
 
 _hyperparams_schema = {
     'allOf': [

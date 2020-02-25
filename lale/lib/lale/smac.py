@@ -169,19 +169,19 @@ class SMACImpl:
             trainable = lale_trainable_op_from_config(self.estimator, incumbent)
             #get the trainable corresponding to the best params and train it on the entire training dataset.
             trained = trainable.fit(X_train, y_train)
-            self.best_estimator = trained
+            self._best_estimator = trained
         except BudgetExhaustedException:
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
         except BaseException as e:
             logger.warning('Error during optimization: {}'.format(e))
-            self.best_estimator = None
+            self._best_estimator = None
 
         return self
 
     def predict(self, X_eval):
         import warnings
         warnings.filterwarnings("ignore")
-        trained = self.best_estimator
+        trained = self._best_estimator
         try:
             predictions = trained.predict(X_eval)
         except ValueError as e:
@@ -199,6 +199,9 @@ class SMACImpl:
             RunHistory of all the trials executed during the optimization i.e. fit method of SMACCV.
         """
         return self.trials
+
+    def get_pipeline(self):
+        return self._best_estimator
 
 _hyperparams_schema = {
     'allOf': [

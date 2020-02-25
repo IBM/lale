@@ -188,8 +188,7 @@ class TestSMAC(unittest.TestCase):
         opt = SMAC(estimator=planned_pipeline, max_evals=1, max_opt_time=0.0)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
-        from lale.helpers import best_estimator
-        assert best_estimator(res) is None
+        assert res.get_pipeline() is None
 
     def test_smac_timeout_zero_regression(self):
         from lale.lib.lale import SMAC
@@ -199,8 +198,7 @@ class TestSMAC(unittest.TestCase):
         opt = SMAC(estimator=planned_pipeline, scoring = 'r2', max_evals=1, max_opt_time=0.0)
         # run optimizer
         res = opt.fit(X[:500,:], y[:500])
-        from lale.helpers import best_estimator
-        assert best_estimator(res) is None
+        assert res.get_pipeline() is None
 
     def test_smac_timeout_classification(self):
         from lale.lib.lale import SMAC
@@ -333,8 +331,7 @@ class TestHyperopt(unittest.TestCase):
             max_opt_time=0.0
         )
         hoc_fitted = hoc.fit(X, y)
-        from lale.helpers import best_estimator
-        assert best_estimator(hoc_fitted) is None
+        assert hoc_fitted.get_pipeline() is None
 
     def test_runtime_limit_hor(self):
         import time
@@ -372,8 +369,7 @@ class TestHyperopt(unittest.TestCase):
             scoring='r2'
         )
         hor_fitted = hor.fit(X, y)
-        from lale.helpers import best_estimator
-        assert best_estimator(hor_fitted) is None
+        assert hor_fitted.get_pipeline() is None
 
     def test_hyperparam_overriding_with_hyperopt(self):
         pca1 = PCA(n_components = 3)
