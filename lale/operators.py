@@ -1035,6 +1035,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self.__trained = result
         return result
 
+    @if_delegate_has_method(delegate='_impl')
     def predict(self, X):
         """
         .. deprecated:: 0.0.0
@@ -1049,6 +1050,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `predict`.')
 
+    @if_delegate_has_method(delegate='_impl')
     def transform(self, X, y = None):
         """
         .. deprecated:: 0.0.0
@@ -1063,6 +1065,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `transform`.')
 
+    @if_delegate_has_method(delegate='_impl')
     def predict_proba(self, X):
         """
         .. deprecated:: 0.0.0
