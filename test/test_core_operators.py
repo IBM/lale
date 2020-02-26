@@ -776,8 +776,7 @@ class TestVotingClassifier(unittest.TestCase):
         from lale.lib.lale import GridSearchCV
         from sklearn.metrics import accuracy_score, make_scorer
         clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
-        grid = GridSearchCV(estimator=clf, lale_num_samples=1, lale_num_grids=1, cv=2, scoring=make_scorer(accuracy_score))
-        trained = grid.fit(self.X_train, self.y_train)
+        trained = clf.auto_configure(self.X_train, self.y_train, GridSearchCV, lale_num_samples=1, lale_num_grids=1, cv=2, scoring=make_scorer(accuracy_score))
 
 class TestBaggingClassifier(unittest.TestCase):
     def setUp(self):
