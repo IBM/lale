@@ -1035,6 +1035,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self.__trained = result
         return result
 
+    @if_delegate_has_method(delegate='_impl')
     def predict(self, X):
         """
         .. deprecated:: 0.0.0
@@ -1049,6 +1050,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `predict`.')
 
+    @if_delegate_has_method(delegate='_impl')
     def transform(self, X, y = None):
         """
         .. deprecated:: 0.0.0
@@ -1063,6 +1065,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `transform`.')
 
+    @if_delegate_has_method(delegate='_impl')
     def predict_proba(self, X):
         """
         .. deprecated:: 0.0.0
@@ -1211,12 +1214,14 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         else:
             return self 
 
+    @if_delegate_has_method(delegate='_impl')
     def predict(self, X):
         X = self._validate_input_schema('X', X, 'predict')
         result = self._impl.predict(X)
         self._validate_output_schema(result, 'predict')
         return result
 
+    @if_delegate_has_method(delegate='_impl')
     def transform(self, X, y = None):
         X = self._validate_input_schema('X', X, 'transform')
         if ('y' in [required_property.lower() for required_property 
@@ -1228,6 +1233,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result = self._validate_output_schema(result, 'transform')
         return result
 
+    @if_delegate_has_method(delegate='_impl')
     def predict_proba(self, X):
         X = self._validate_input_schema('X', X, 'predict_proba')
         if hasattr(self._impl, 'predict_proba'):
