@@ -261,7 +261,7 @@ class HyperoptImpl:
         if result is None or astype == 'lale':
             return result
         assert astype == 'sklearn', astype
-        return lale.sklearn_compat.make_sklearn_compat(result)
+        return result.export_to_sklearn_pipeline()
 
 _hyperparams_schema = {
     'allOf': [

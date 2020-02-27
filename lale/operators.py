@@ -1591,6 +1591,58 @@ class BasePipeline(Operator, Generic[OpType]):
             old_clf = self._steps[-1]
             return old_clf
 
+    def export_to_sklearn_pipeline(self):
+        from sklearn.pipeline import make_pipeline
+        from sklearn.base import clone
+        from lale.lib.lale.concat_features import ConcatFeaturesImpl
+        from sklearn.pipeline import FeatureUnion
+
+        def create_pipeline_from_sink_node(sink_node):
+            #Ensure that the pipeline is either linear or has a "union followed by concat" construct
+            #Translate the "union followed by concat" constructs to "featureUnion"
+            if isinstance(sink_node._impl, ConcatFeaturesImpl):
+                list_of_transformers = []
+                for pred in self._preds[sink_node]:
+                    pred_transformer = create_pipeline_from_sink_node(pred)
+                    list_of_transformers.append((pred.name()+"_"+str(id(pred)), make_pipeline(*pred_transformer) if isinstance(pred_transformer, list) else pred_transformer))
+                return FeatureUnion(list_of_transformers)
+            else:
+                preds = self._preds[sink_node]                    
+                if preds is not None and len(preds) > 1:
+                    raise ValueError("A pipeline graph that has operators other than ConcatFeatures with "
+                    "multiple incoming edges is not a valid scikit-learn pipeline:{}".format(self.to_json()))
+                else:
+                    if hasattr(sink_node._impl,'_sklearn_model'):
+                        sklearn_op = sink_node._impl._sklearn_model
+                    else:
+                        sklearn_op = sink_node._impl
+                    sklearn_op = copy.deepcopy(sklearn_op)
+                    if preds is None or len(preds) == 0:
+                        return sklearn_op       
+                    else:
+                        previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
+                        if isinstance(previous_sklearn_op, list):
+                            previous_sklearn_op.append(sklearn_op)
+                            return previous_sklearn_op
+                        else:
+                            return [previous_sklearn_op, sklearn_op]
+
+        sklearn_steps_list = []
+        #Finding the sink node so that we can do a backward traversal
+        sink_nodes = self.find_sink_nodes()
+        #For a trained pipeline that is scikit compatible, there should be only one sink node
+        if len(sink_nodes) != 1:
+            raise ValueError("A pipeline graph that ends with more than one estimator is not a"
+            " valid scikit-learn pipeline:{}".format(self.to_json()))
+        else:
+            sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
+        try:
+            sklearn_pipeline = make_pipeline(*sklearn_steps_list) \
+                    if isinstance(sklearn_steps_list, list) else make_pipeline(sklearn_steps_list)
+        except TypeError:
+            raise TypeError("Error creating a scikit-learn pipeline, most likely because the steps are not scikit compatible.")
+        return sklearn_pipeline
+
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
 class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
@@ -2153,56 +2205,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         """
         # Currently, all TrainedPipelines implement transform
         return True
-
-    def export_to_sklearn_pipeline(self):
-        from sklearn.pipeline import make_pipeline
-        from sklearn.base import clone
-        from lale.lib.lale.concat_features import ConcatFeaturesImpl
-        from sklearn.pipeline import FeatureUnion
-
-        def create_pipeline_from_sink_node(sink_node):
-            #Ensure that the pipeline is either linear or has a "union followed by concat" construct
-            #Translate the "union followed by concat" constructs to "featureUnion"
-            if isinstance(sink_node._impl, ConcatFeaturesImpl):
-                list_of_transformers = []
-                for pred in self._preds[sink_node]:
-                    pred_transformer = create_pipeline_from_sink_node(pred)
-                    list_of_transformers.append((pred.name()+"_"+str(id(pred)), make_pipeline(*pred_transformer) if isinstance(pred_transformer, list) else pred_transformer))
-                return FeatureUnion(list_of_transformers)
-            else:
-                preds = self._preds[sink_node]                    
-                if preds is not None and len(preds) > 1:
-                    raise ValueError("A pipeline graph that has operators other than ConcatFeatures with "
-                    "multiple incoming edges is not a valid scikit-learn pipeline:{}".format(self.to_json()))
-                else:
-                    if hasattr(sink_node._impl,'_sklearn_model'):
-                        sklearn_op = sink_node._impl._sklearn_model
-                    else:
-                        sklearn_op = sink_node._impl
-                    sklearn_op = copy.deepcopy(sklearn_op)
-                    if preds is None or len(preds) == 0:
-                        return sklearn_op       
-                    else:
-                        previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
-                        if isinstance(previous_sklearn_op, list):
-                            previous_sklearn_op.append(sklearn_op)
-                            return previous_sklearn_op
-                        else:
-                            return [previous_sklearn_op, sklearn_op]
-
-        sklearn_steps_list = []
-        #Finding the sink node so that we can do a backward traversal
-        sink_nodes = self.find_sink_nodes()
-        #For a trained pipeline that is scikit compatible, there should be only one sink node
-        if len(sink_nodes) != 1:
-            raise ValueError("A pipeline graph that ends with more than one estimator is not a"
-            " valid scikit-learn pipeline:{}".format(self.to_json()))
-        else:
-            sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
-
-        sklearn_pipeline = make_pipeline(*sklearn_steps_list) \
-                if isinstance(sklearn_steps_list, list) else make_pipeline(sklearn_steps_list)
-        return sklearn_pipeline
 
 OperatorChoiceType = TypeVar('OperatorChoiceType', bound=Operator)
 class OperatorChoice(Operator, Generic[OperatorChoiceType]):
