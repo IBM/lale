@@ -28,13 +28,13 @@ def _isSubschema(sub, sup):
         raise ValueError(f'problem checking ({sub} <: {sup})') from e
 
 class ProjectImpl:
-    """Keeps only a subset of the columns.
+    """Projection, like in relational algebra, to keep only a subset of the columns.
 
-    Instead of using ProjectImpl directly, use its wrapper, Project.
+    Instead of using ``ProjectImpl`` directly, use its wrapper, ``Project``.
 
     Parameters
     ----------
-    columns: see schema
+    columns:
         The subset of columns to retain.
 
         The supported column specification formats include those of
@@ -46,23 +46,29 @@ class ProjectImpl:
         .. code:: python
 
           schema = {'anyOf': [
-            {'type': 'string'},
-            {'type': 'integer'},
-            {'type': 'array', 'items': {'type': 'string'}},
-            {'type': 'array', 'items': {'type': 'integer'}},
-            {'type': 'array', 'items': {'type': 'boolean'}},
-            {'type': 'object'}]}"""
+            { 'type': 'integer',
+              'description': 'One column by index.'},
+            { 'type': 'array', 'items': {'type': 'integer'},
+              'description': 'Multiple columns by index.'},
+            { 'type': 'string',
+              'description': 'One Dataframe column by name.'},
+            { 'type': 'array', 'items': {'type': 'string'},
+              'description': 'Multiple Dataframe columns by names.'},
+            { 'type': 'array', 'items': {'type': 'boolean'},
+              'description': 'Boolean mask.'},
+            { 'type': 'object',
+              'description': 'Keep columns whose schema is a subschema of this JSON schema.'}]}"""
 
     def __init__(self, columns=None):
         self._hyperparams = { 'columns': columns }
 
     def fit(self, X, y=None):
-        """Fit the concrete set of columns to keep based on the data X and
-        and the colums hyperparameter.
+        """Pick concrete columns to keep based on the ``columns``
+        hyperparameter and the data ``X``.
 
         Parameters
         ----------
-        X: see schema
+        X:
             Features; the outer array is over samples.
 
             .. code:: python
@@ -76,7 +82,7 @@ class ProjectImpl:
                      'anyOf':[{'type': 'number'}, {'type':'string'}]}}}
 
         y: optional
-            Target for supervised learning."""
+            Target for supervised learning (ignored)."""
         columns = self._hyperparams['columns']
         if lale.helpers.is_schema(columns):
             s_all = lale.datasets.data_schemas.to_schema(X)
@@ -100,12 +106,45 @@ class ProjectImpl:
         return self
 
     def transform(self, X, y=None):
+        """Transform `X`.
+
+        Parameters
+        ----------
+        X:
+            Features; the outer array is over samples.
+
+            .. code:: python
+
+              schema = {
+                'type': 'array',
+                'items': {
+                  'type': 'array',
+                  'items': {
+                     'anyOf':[{'type': 'number'}, {'type':'string'}]}}}
+
+        y: optional
+            Target for supervised learning (ignored).
+
+        Returns
+        -------
+        result:
+            Features; the outer array is over samples.
+
+            .. code:: python
+
+              schema = {
+                'type': 'array',
+                'items': {
+                  'type': 'array',
+                  'items': {
+                     'anyOf':[{'type': 'number'}, {'type':'string'}]}}}"""
         result = self._col_tfm.transform(X)
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
         return lale.datasets.data_schemas.add_schema(result, s_result)
 
     def transform_schema(self, s_X):
+        """Function used internally by Lale for type-checking pipelines."""
         if hasattr(self, '_col_tfm'):
             return self._transform_schema_col_tfm(s_X, self._col_tfm)
         columns = self._hyperparams['columns']
@@ -172,14 +211,20 @@ _hyperparams_schema = {
       'relevantToOptimizer': [],
       'properties': {
           'columns': {
-              'description': 'string or int, array-like of string or int, slice, boolean mask array or callable.',
+              'description': 'The subset of columns to retain.',
               'anyOf': [
-                  {'type': 'string'},
-                  {'type': 'integer'},
-                  {'type': 'array', 'items': {'type': 'string'}},
-                  {'type': 'array', 'items': {'type': 'integer'}},
-                  {'type': 'array', 'items': {'type': 'boolean'}},
-                  {'type': 'object'}]}}}]}
+                 { 'type': 'integer',
+                   'description': 'One column by index.'},
+                 { 'type': 'array', 'items': {'type': 'integer'},
+                   'description': 'Multiple columns by index.'},
+                 { 'type': 'string',
+                   'description': 'One Dataframe column by name.'},
+                 { 'type': 'array', 'items': {'type': 'string'},
+                   'description': 'Multiple Dataframe columns by names.'},
+                 { 'type': 'array', 'items': {'type': 'boolean'},
+                   'description': 'Boolean mask.'},
+                 { 'type': 'object',
+                   'description': 'Keep columns whose schema is a subschema of this JSON schema.'}]}}}]}
 
 _input_fit_schema = {
   'description': 'Input data schema for training Project.',
@@ -195,7 +240,7 @@ _input_fit_schema = {
         'items': {
           'anyOf':[{'type': 'number'}, {'type':'string'}]}}},
     'y': {
-      'description': 'Target class labels; the array is over samples.'}}}
+      'description': 'Target for supervised learning (ignored).'}}}
 
 _input_predict_schema = {
   'description': 'Input data schema for transformation using Project.',
