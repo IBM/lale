@@ -486,9 +486,17 @@ class TestAutoConfigureClassification(unittest.TestCase):
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
             scoring='accuracy', max_evals=1)
         predictions = best_pipeline.predict(self.X_test)
-        from sklearn.metrics import accuracy_score
         from lale.operators import TrainedPipeline
         assert isinstance(best_pipeline, TrainedPipeline)
+
+    def test_with_Hyperopt_2(self):
+        from lale.lib.sklearn import LogisticRegression as LR
+        from lale.lib.sklearn import KNeighborsClassifier as KNN
+        from lale.lib.lale import Hyperopt
+        choice = LR | KNN
+        best = choice.auto_configure(self.X_train, self.y_train,
+                                     optimizer=Hyperopt, cv=3, max_evals=3)
+        predictions = best.predict(self.X_test)
 
     def test_with_gridsearchcv(self):
         from lale.lib.sklearn import PCA, LogisticRegression
@@ -498,7 +506,6 @@ class TestAutoConfigureClassification(unittest.TestCase):
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
             scoring='accuracy', lale_num_samples=1, lale_num_grids=1)
         predictions = best_pipeline.predict(self.X_test)
-        from sklearn.metrics import accuracy_score
         assert best_pipeline is not None
         
     def test_with_smaccv(self):
@@ -509,7 +516,6 @@ class TestAutoConfigureClassification(unittest.TestCase):
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = SMAC, cv = 3, 
             scoring='accuracy', max_evals=1)
         predictions = best_pipeline.predict(self.X_test)
-        from sklearn.metrics import accuracy_score
         from lale.operators import TrainedPipeline
         assert isinstance(best_pipeline, TrainedPipeline)
 
@@ -539,8 +545,6 @@ class TestAutoConfigureRegression(unittest.TestCase):
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = GridSearchCV, cv = 3, 
             scoring='r2', lale_num_samples=1, lale_num_grids=1)
         predictions = best_pipeline.predict(self.X_test)
-        from sklearn.metrics import accuracy_score
-
         assert best_pipeline is not None
 
 class TestGridSearchCV(unittest.TestCase):

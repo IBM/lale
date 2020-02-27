@@ -2207,7 +2207,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         return True
 
 OperatorChoiceType = TypeVar('OperatorChoiceType', bound=Operator)
-class OperatorChoice(Operator, Generic[OperatorChoiceType]):
+class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
     _name:str
     _steps:List[OperatorChoiceType]
 
