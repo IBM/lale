@@ -54,21 +54,26 @@ class SeriesWithSchema(pd.Series):
     def _constructor(self):
         return SeriesWithSchema
 
-def _list_tensor_shape(obj):
-    if isinstance(obj, int) or isinstance(obj, float) or isinstance(obj, str):
-        return (str(type(obj)),)
+def is_list_tensor(obj):
+    def list_tensor_shape(ls):
+        if isinstance(ls, int) or isinstance(ls, float) or isinstance(ls, str):
+            return (str(type(ls)),)
+        if isinstance(ls, list):
+            sub_shape = 'Any'
+            for item in ls:
+                item_result = list_tensor_shape(item)
+                if item_result is None:
+                    return None
+                if sub_shape == 'Any':
+                    sub_shape = item_result
+                elif sub_shape != item_result:
+                    return None
+            return (len(ls),) + sub_shape
+        return None
     if isinstance(obj, list):
-        sub_shape = 'Any'
-        for item in obj:
-            item_result = _list_tensor_shape(item)
-            if item_result is None:
-                return None
-            if sub_shape == 'Any':
-                sub_shape = item_result
-            elif sub_shape != item_result:
-                return None
-        return (len(obj),) + sub_shape
-    return None
+        shape = list_tensor_shape(obj)
+        return shape is not None
+    return False
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
     if obj is None:
@@ -85,7 +90,7 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
         result = obj
     elif isinstance(obj, pd.DataFrame):
         result = DataFrameWithSchema(obj)
-    elif _list_tensor_shape(obj) is not None:
+    elif is_list_tensor(obj):
         obj = np.array(obj)
         result = obj.view(NDArrayWithSchema)
     elif raise_on_failure:
