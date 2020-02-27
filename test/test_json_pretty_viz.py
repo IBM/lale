@@ -136,6 +136,20 @@ pca = PCA(n_components=2)
 pipeline = Both(op1=pca, op2=Nystroem)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_higher_order_2(self):
+        from lale.lib.sklearn import VotingClassifier as Vote
+        from lale.lib.sklearn import KNeighborsClassifier as KNN
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import LogisticRegression as LR
+        pipeline = Vote(estimators=[('knn',KNN), ('pipeline',PCA()>>LR)],
+                        voting='soft')
+        expected = """from lale.lib.sklearn import VotingClassifier as Vote
+from lale.lib.sklearn import KNeighborsClassifier as KNN
+from lale.lib.sklearn import PCA
+from lale.lib.sklearn import LogisticRegression as LR
+pipeline = Vote(estimators=[('knn', KNN), ('pipeline', PCA() >> LR)], voting='soft')"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
     def test_multimodal(self):
         from lale.lib.lale import Project
         from lale.lib.sklearn import Normalizer as Norm
