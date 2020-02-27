@@ -17,7 +17,7 @@ from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGri
 from lale.sklearn_compat import make_sklearn_compat, unnest_HPparams
 import lale.operators as Ops
 from lale.schema_utils import Schema, getMinimum, getMaximum
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray
+from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray, should_print_search_space
 from lale.search.PGO import PGO
 
 import numpy as np
@@ -70,6 +70,12 @@ def get_grid_search_parameter_grids(
     """
     hp_grids = get_search_space_grids(op, num_grids=num_grids, pgo=pgo)
     grids = SearchSpaceGridstoGSGrids(hp_grids, num_samples=num_samples)
+    if should_print_search_space("true", "all", "backend", "gridsearchcv"):
+        name = op.name()
+        if not name:
+            name = "an operator"
+        print(f"GridSearchCV grids for {name}:\n{gridsearchcv_grids_to_string(grids)}")
+
     return grids
 
 GSValue = Any
@@ -146,3 +152,10 @@ def SearchSpaceGridtoGSGrid( hp:SearchSpaceGrid,
 def SearchSpaceGridstoGSGrids(hp_grids:List[SearchSpaceGrid],
                      num_samples:Optional[int]=None)->List[GSGrid]:
     return [SearchSpaceGridtoGSGrid(g, num_samples=num_samples) for g in hp_grids]
+
+def gridsearchcv_grid_to_string(grid:GSGrid)->str:
+    return "{" + ";".join(f"{k}->{str(v)}" for k,v in grid.items()) + "}"
+
+def gridsearchcv_grids_to_string(grids:List[GSGrid])->str:
+    return "|".join(gridsearchcv_grid_to_string(grid) for grid in grids)
+

@@ -21,6 +21,7 @@ from hyperopt import hp
 from hyperopt.pyll import scope
 from lale.util.VisitorMeta import AbstractVisitorMeta
 from lale.search.PGO import FrequencyDistribution
+import os
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -302,3 +303,29 @@ class SearchSpaceProduct(SearchSpace):
 
         ret += "}"
         return ret
+
+# for debugging
+_print_search_space_env_options:Optional[Set[str]] = None
+
+def _get_print_search_space_options()->Set[str]:
+    global _print_search_space_env_options
+    options:Set[str]
+    if _print_search_space_env_options is None:
+        debug = os.environ.get("LALE_PRINT_SEARCH_SPACE", None)
+        if debug is None:
+            options = set()
+        else:
+            options_raw = debug.split(",")
+            options = set(s.strip().lower() for s in options_raw)
+        _print_search_space_env_options = options
+    else:
+        options = _print_search_space_env_options
+    return options
+
+def should_print_search_space(*s:str):
+    options:Set[str] = _get_print_search_space_options()
+    for x in s:
+        if x in options:
+            return True
+    return False
+  

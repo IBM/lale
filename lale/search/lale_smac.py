@@ -28,7 +28,7 @@ from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGri
 from lale.sklearn_compat import make_sklearn_compat
 
 from lale.schema_utils import Schema, getMinimum, getMaximum
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray
+from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray, should_print_search_space
 from lale.search.PGO import PGO
 import numpy as np
 
@@ -82,8 +82,14 @@ def get_smac_space(op:'Ops.PlannedOperator',
     """
     
     hp_grids = get_search_space_grids(op, num_grids=lale_num_grids, pgo=lale_pgo)
-    grids = hp_grids_to_smac_cs(hp_grids)
-    return grids
+    cs = hp_grids_to_smac_cs(hp_grids)
+    if should_print_search_space("true", "all", "backend", "smac"):
+        name = op.name()
+        if not name:
+            name = "an operator"
+        print(f"SMAC configuration for {name}:\n{str(cs)}")
+
+    return cs
 
 def smac_fixup_params(cfg):
     def strip_key(k:str)->str:
@@ -172,3 +178,4 @@ def hp_grids_to_smac_cs(grids:List[SearchSpaceGrid])->ConfigurationSpace:
     cs:ConfigurationSpace = ConfigurationSpace()
     addSearchSpaceGrids(grids, cs)
     return cs
+
