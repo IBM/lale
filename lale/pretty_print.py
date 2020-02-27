@@ -27,12 +27,23 @@ import lale.operators
 
 JSON_TYPE = Dict[str, Any]
 
-def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[JSON_TYPE]=None) -> str:
+def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None) -> str:
     def value_to_string(value):
-        if isinstance(value, dict) and '$ref' in value and steps is not None:
-            step_uid = value['$ref'].split('/')[-1]
-            return steps[step_uid]
-        return pprint.pformat(value, width=10000, compact=True)
+        if isinstance(value, dict):
+            if '$ref' in value and steps is not None:
+                step_uid = value['$ref'].split('/')[-1]
+                return steps[step_uid]
+            else:
+                sl = {f"'{k}': {value_to_string(v)}" for k,v in value.items()}
+                return '{' + ', '.join(sl) + '}'
+        elif isinstance(value, tuple):
+            sl = [value_to_string(v) for v in value]
+            return '(' + ', '.join(sl) + ')'
+        elif isinstance(value, list):
+            sl = [value_to_string(v) for v in value]
+            return '[' + ', '.join(sl) + ']'
+        else:
+            return pprint.pformat(value, width=10000, compact=True)
     strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
     return ', '.join(strings)
 

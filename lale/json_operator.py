@@ -237,7 +237,24 @@ class _GenSym:
         self._names |= {result}
         return result
 
-def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensym: _GenSym) -> Tuple[str, JSON_TYPE]:
+def _hps_to_json_rec(hps, cls2label: Dict[str, str], gensym: _GenSym, steps) -> Any:
+    if isinstance(hps, lale.operators.Operator):
+        step_uid, step_jsn = _op_to_json_rec(hps, cls2label, gensym)
+        steps[step_uid] = step_jsn
+        return {'$ref': f'../steps/{step_uid}'}
+    elif isinstance(hps, dict):
+        return {hp_name: _hps_to_json_rec(hp_val, cls2label, gensym, steps)
+               for hp_name, hp_val in hps.items()}
+    elif isinstance(hps, tuple):
+        return tuple([_hps_to_json_rec(hp_val, cls2label, gensym, steps)
+                      for hp_val in hps])
+    elif isinstance(hps, list):
+        return [_hps_to_json_rec(hp_val, cls2label, gensym, steps)
+                for hp_val in hps]
+    else:
+        return hps
+
+def _op_to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensym: _GenSym) -> Tuple[str, JSON_TYPE]:
     jsn: JSON_TYPE = {}
     jsn['class'] = op.class_name()
     jsn['state'] = _get_state(op)
@@ -252,17 +269,9 @@ def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensy
             if op.hyperparams() is None:
                 jsn['hyperparams'] = None
             else:
-                hps: Dict[str, JSON_TYPE] = {}
                 steps: Dict[str, JSON_TYPE] = {}
-                for hp_name, hp_val in op.hyperparams().items():
-                    if isinstance(hp_val, lale.operators.Operator):
-                        step_uid, step_jsn = _to_json_rec(
-                            hp_val, cls2label, gensym)
-                        hps[hp_name] = {'$ref': f'../steps/{step_uid}'}
-                        steps[step_uid] = step_jsn
-                    else:
-                        hps[hp_name] = hp_val
-                jsn['hyperparams'] = hps
+                jsn['hyperparams'] = _hps_to_json_rec(
+                    op.hyperparams(), cls2label, gensym, steps)
                 if len(steps) > 0:
                     jsn['steps'] = steps
             jsn['is_frozen_trainable'] = op.is_frozen_trainable()
@@ -277,7 +286,7 @@ def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensy
         child2uid: Dict[lale.operators.Operator, str] = {}
         child2jsn: Dict[lale.operators.Operator, JSON_TYPE] = {}
         for idx, child in enumerate(op.steps()):
-            child_uid, child_jsn = _to_json_rec(child, cls2label, gensym)
+            child_uid, child_jsn = _op_to_json_rec(child, cls2label, gensym)
             child2uid[child] = child_uid
             child2jsn[child] = child_jsn
         jsn['edges'] = [[child2uid[x], child2uid[y]] for x, y in op.edges()]
@@ -288,45 +297,60 @@ def _to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], gensy
         jsn['state'] = 'planned'
         jsn['steps'] = {}
         for step in op.steps():
-            child_uid, child_jsn = _to_json_rec(step, cls2label, gensym)
+            child_uid, child_jsn = _op_to_json_rec(step, cls2label, gensym)
             jsn['steps'][child_uid] = child_jsn
     return uid, jsn
 
 def to_json(op: 'lale.operators.Operator', call_depth:int=1) -> JSON_TYPE:
     cls2label = _get_cls2label(call_depth + 1)
     gensym = _GenSym(op, cls2label)
-    uid, jsn = _to_json_rec(op, cls2label, gensym)
+    uid, jsn = _op_to_json_rec(op, cls2label, gensym)
     jsonschema.validate(jsn, SCHEMA)
     return jsn
 
 def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
-    if impl.__module__.startswith('lale.lib'):  
-        m = importlib.import_module(impl.__module__)    
-        return getattr(m, '_combined_schemas')      
-    module_name = impl.__module__.split('.')[0] 
-    class_name = lale.helpers.camelCase_to_snake(impl.__class__.__name__)    
-    try:        
-        lib_name = '.'.join(['lale.lib', module_name, class_name])      
-        m = importlib.import_module(lib_name)   
-        return getattr(m, '_combined_schemas')      
-    except (ModuleNotFoundError, AttributeError):       
-        try:    
-            lib_name = '.'.join(['lale.lib.autogen', class_name])       
-            m = importlib.import_module(lib_name)       
-            return getattr(m, '_combined_schemas')  
-        except: 
+    if impl.__module__.startswith('lale.lib'):
+        m = importlib.import_module(impl.__module__)
+        return getattr(m, '_combined_schemas')
+    module_name = impl.__module__.split('.')[0]
+    class_name = lale.helpers.camelCase_to_snake(impl.__class__.__name__)
+    try:
+        lib_name = '.'.join(['lale.lib', module_name, class_name])
+        m = importlib.import_module(lib_name)
+        return getattr(m, '_combined_schemas')
+    except (ModuleNotFoundError, AttributeError):
+        try:
+            lib_name = '.'.join(['lale.lib.autogen', class_name])
+            m = importlib.import_module(lib_name)
+            return getattr(m, '_combined_schemas')
+        except:
             return None
 
-def _from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
+def _hps_from_json_rec(jsn: JSON_TYPE, steps: JSON_TYPE) -> Any:
+    if isinstance(jsn, dict):
+        if '$ref' in jsn:
+            step_uid = jsn['$ref'].split('/')[-1]
+            step_jsn = steps[step_uid]
+            return _op_from_json_rec(step_jsn)
+        else:
+            return {k: _hps_from_json_rec(v, steps) for k, v in jsn.items()}
+    elif isinstance(jsn, tuple):
+        return tuple([_hps_from_json_rec(v, steps) for v in jsn])
+    elif isinstance(jsn, list):
+        return [_hps_from_json_rec(v, steps) for v in jsn]
+    else:
+        return jsn
+
+def _op_from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
     kind = json_op_kind(jsn)
     if kind == 'Pipeline':
         steps_dict = {
-            uid: _from_json_rec(jsn['steps'][uid]) for uid in jsn['steps']}
+            uid: _op_from_json_rec(jsn['steps'][uid]) for uid in jsn['steps']}
         steps = [steps_dict[i] for i in steps_dict]
         edges = [(steps_dict[x], steps_dict[y]) for (x,y) in jsn['edges']]
         return lale.operators.get_pipeline_of_applicable_type(steps, edges)
     elif kind == 'OperatorChoice':
-        steps = [_from_json_rec(s) for s in jsn['steps'].values()]
+        steps = [_op_from_json_rec(s) for s in jsn['steps'].values()]
         name = jsn['operator']
         return lale.operators.OperatorChoice(steps, name)
     else:
@@ -344,13 +368,7 @@ def _from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
                 if hps is None:
                     result = result()
                 else:
-                    def decode_if_op(hp_val):
-                        if isinstance(hp_val, dict) and '$ref' in hp_val:
-                            step_uid = hp_val['$ref'].split('/')[-1]
-                            step_jsn = jsn['steps'][step_uid]
-                            return _from_json_rec(step_jsn)
-                        return hp_val
-                    hps = {k: decode_if_op(v) for k, v in hps.items()}
+                    hps = _hps_from_json_rec(hps, jsn.get('steps', {}))
                     result = result(**hps)
             trnbl = cast(lale.operators.TrainableIndividualOp, result)
             if jsn['is_frozen_trainable'] and not trnbl.is_frozen_trainable():
@@ -370,5 +388,5 @@ def _from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
 
 def from_json(jsn: JSON_TYPE) -> 'lale.operators.Operator':
     jsonschema.validate(jsn, SCHEMA)
-    result = _from_json_rec(jsn)
+    result = _op_from_json_rec(jsn)
     return result
