@@ -18,7 +18,6 @@ import lale.pretty_print
 class TestToGraphviz(unittest.TestCase):
     def test_with_operator_choice(self):
         from lale.operators import make_choice
-        from lale.helpers import to_graphviz
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.lib.sklearn import LogisticRegression
@@ -27,9 +26,9 @@ class TestToGraphviz(unittest.TestCase):
         kernel_tfm_or_not =  NoOp | Nystroem
         tfm = PCA
         clf = make_choice(LogisticRegression, KNeighborsClassifier)
-        to_graphviz(clf, ipython_display=False)
+        clf.visualize(ipython_display=False)
         optimizable = kernel_tfm_or_not >> tfm >> clf
-        to_graphviz(optimizable, ipython_display=False)
+        optimizable.visualize(ipython_display=False)
 
     def test_invalid_input(self):
         from sklearn.linear_model import LogisticRegression as SklearnLR
@@ -357,6 +356,56 @@ class TestToAndFromJSON(unittest.TestCase):
               'operator': 'Nystroem', 'label': 'Nystroem',
               'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.kernel_approximation.Nystroem.html'}},
           'is_frozen_trainable': False}
+        json = operator.to_json()
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        json_2 = operator_2.to_json()
+        self.assertEqual(json, json_2)
+
+    def test_higher_order_2(self):
+        self.maxDiff = None
+        from lale.lib.sklearn import VotingClassifier as Vote
+        from lale.lib.sklearn import KNeighborsClassifier as KNN
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import LogisticRegression as LR
+        from lale.json_operator import from_json
+        operator = Vote(estimators=[('knn',KNN), ('pipeline',PCA()>>LR)],
+                        voting='soft')
+        json_expected = {
+          'class': 'lale.lib.sklearn.voting_classifier.VotingClassifierImpl',
+          'state': 'trainable',
+          'operator': 'VotingClassifier',
+          'is_frozen_trainable': True,
+          'label': 'Vote',
+          'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.VotingClassifier.html',
+          'hyperparams': {
+            'estimators': [
+              ('knn', {'$ref': '../steps/knn'}),
+              ('pipeline', {'$ref': '../steps/pipeline'})],
+            'voting': 'soft'},
+          'steps': {
+            'knn': {
+              'class': 'lale.lib.sklearn.k_neighbors_classifier.KNeighborsClassifierImpl',
+              'state': 'planned',
+              'operator': 'KNeighborsClassifier', 'label': 'KNN',
+              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html'},
+            'pipeline': {
+              'class': 'lale.operators.PlannedPipeline',
+              'state': 'planned',
+              'edges': [['pca', 'lr']],
+              'steps': {
+                'pca': {
+                  'class': 'lale.lib.sklearn.pca.PCAImpl',
+                  'state': 'trainable',
+                  'operator': 'PCA', 'label': 'PCA',
+                  'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+                  'hyperparams': {},
+                  'is_frozen_trainable': False},
+                'lr': {
+                  'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
+                  'state': 'planned',
+                  'operator': 'LogisticRegression', 'label': 'LR',
+                  'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html'}}}}}
         json = operator.to_json()
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
