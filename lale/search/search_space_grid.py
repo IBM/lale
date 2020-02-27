@@ -20,7 +20,7 @@ import math
 from collections import ChainMap
 
 from lale.util.Visitor import Visitor, accept
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceOperator
+from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceOperator, should_print_search_space
 from lale.search.schema2search_space import op_to_search_space
 from lale.search.PGO import PGO
 from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUMMY_SEARCH_SPACE_GRID_PARAM_NAME, discriminant_name, make_indexed_name, make_array_index_name, structure_type_name, structure_type_list, structure_type_tuple, structure_type_dict
@@ -28,6 +28,12 @@ from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUM
 from lale.operators import PlannedOperator, OperatorChoice, PlannedIndividualOp, PlannedPipeline, Operator
 
 SearchSpaceGrid = Dict[str,SearchSpacePrimitive]
+
+def search_space_grid_to_string(grid:SearchSpaceGrid)->str:
+    return "{" + ";".join(f"{k}->{str(v)}" for k,v in grid.items()) + "}"
+
+def search_space_grids_to_string(grids:List[SearchSpaceGrid])->str:
+    return "|".join(search_space_grid_to_string(grid) for grid in grids)
 
 def get_search_space_grids( op:'PlannedOperator', 
                             num_grids:Optional[float]=None, 
@@ -42,6 +48,11 @@ def get_search_space_grids( op:'PlannedOperator',
         note that setting it to 1 is treated as in integer.  To return all results, use None
     """
     all_parameters = op_to_search_space_grids(op, pgo=pgo)
+    if should_print_search_space("true", "all", "search_space_grids", "grids"):
+        name = op.name()
+        if not name:
+            name = "an operator"
+        print(f"search space grids for {name}:\n{search_space_grids_to_string(all_parameters)}")
     if num_grids is None:
         return all_parameters
     else:

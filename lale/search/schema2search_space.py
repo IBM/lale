@@ -16,6 +16,7 @@ import math
 import logging
 import numpy
 import jsonschema
+import os
 
 from lale.util.Visitor import Visitor
 
@@ -30,13 +31,19 @@ from lale.search.PGO import PGO, FrequencyDistribution, Freqs
 from lale.operators import *
 
 logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)              
 
 def op_to_search_space(op:PlannedOperator, pgo:Optional[PGO]=None)->SearchSpace:
     """ Given an operator, this method compiles its schemas into a SearchSpace
     """
-    return SearchSpaceOperatorVisitor.run(op, pgo=pgo)
+    search_space = SearchSpaceOperatorVisitor.run(op, pgo=pgo)
 
+    if should_print_search_space("true", "all", "search_space"):
+        name = op.name()
+        if not name:
+            name = "an operator"
+        print(f"search space for {name}:\n {str(search_space)}")
+    return search_space
 
 def get_default(schema)->Optional[Any]:
     d = schema.get('default', None)

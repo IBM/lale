@@ -39,7 +39,7 @@ def hyperopt_search_space(op:'PlannedOperator',
     if search_space:
         name = op.name()
 
-        if os.environ.get("LALE_PRINT_SEARCH_SPACE", "false") == "true":
+        if should_print_search_space("true", "all", "backend", "hyperopt"):
             print(f"hyperopt search space for {name}: {search_space_to_hp_str(search_space, name)}")
         return search_space_to_hp_expr(search_space, name)
     else:
