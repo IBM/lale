@@ -21,17 +21,62 @@ import pandas as pd
 import sklearn.compose
 import sys
 
-def isSubschema(sub, sup):
+def _isSubschema(sub, sup):
     try:
         return jsonsubschema.isSubschema(sub, sup)
     except Exception as e:
         raise ValueError(f'problem checking ({sub} <: {sup})') from e
 
 class ProjectImpl:
+    """Keeps only a subset of the columns.
+
+    Instead of using ProjectImpl directly, use its wrapper, Project.
+
+    Parameters
+    ----------
+    columns: see schema
+        The subset of columns to retain.
+
+        The supported column specification formats include those of
+        scikit-learn's ColumnTransformer_, and in addition, filtering
+        by using a JSON subschema_ check.
+
+        .. _ColumnTransformer: https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html
+        .. _subschema: https://github.com/IBM/jsonsubschema
+        .. code:: python
+
+          schema = {'anyOf': [
+            {'type': 'string'},
+            {'type': 'integer'},
+            {'type': 'array', 'items': {'type': 'string'}},
+            {'type': 'array', 'items': {'type': 'integer'}},
+            {'type': 'array', 'items': {'type': 'boolean'}},
+            {'type': 'object'}]}"""
+
     def __init__(self, columns=None):
         self._hyperparams = { 'columns': columns }
 
     def fit(self, X, y=None):
+        """Fit the concrete set of columns to keep based on the data X and
+        and the colums hyperparameter.
+
+        Parameters
+        ----------
+        X: see schema
+            Features; the outer array is over samples.
+
+            .. code:: python
+
+              schema = {
+                'description': 'Features; the outer array is over samples.',
+                'type': 'array',
+                'items': {
+                  'type': 'array',
+                  'items': {
+                     'anyOf':[{'type': 'number'}, {'type':'string'}]}}}
+
+        y: optional
+            Target for supervised learning."""
         columns = self._hyperparams['columns']
         if lale.helpers.is_schema(columns):
             s_all = lale.datasets.data_schemas.to_schema(X)
@@ -40,7 +85,7 @@ class ProjectImpl:
             assert n_columns == s_row['maxItems']
             s_cols = s_row['items']
             if isinstance(s_cols, dict):
-                if isSubschema(s_cols, columns):
+                if _isSubschema(s_cols, columns):
                     columns = [*range(n_columns)]
                 else:
                     columns = []
@@ -48,7 +93,7 @@ class ProjectImpl:
                 assert isinstance(s_cols, list)
                 columns = [
                     i for i in range(n_columns)
-                    if isSubschema(s_cols[i], columns)]
+                    if _isSubschema(s_cols[i], columns)]
         self._col_tfm = sklearn.compose.ColumnTransformer(
             transformers=[('keep', 'passthrough', columns)])
         self._col_tfm.fit(X)
@@ -101,13 +146,13 @@ class ProjectImpl:
         s_row = s_X['items']
         s_cols = s_row['items']
         if isinstance(s_cols, dict):
-            if isSubschema(s_cols, schema):
+            if _isSubschema(s_cols, schema):
                 s_row_result = s_row
             else:
                 s_row_result = {'type': 'array', 'minItems': 0, 'maxItems': 0}
         else:
             assert isinstance(s_cols, list)
-            s_cols_result = [s for s in s_cols if isSubschema(s, schema)]
+            s_cols_result = [s for s in s_cols if _isSubschema(s, schema)]
             n_columns = len(s_cols_result)
             s_row_result = {
                 'type': 'array',
