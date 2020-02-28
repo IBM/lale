@@ -14,12 +14,10 @@
 
 import jsonsubschema
 import lale.datasets.data_schemas
+import lale.docstrings
 import lale.helpers
 import lale.operators
-import numpy as np
-import pandas as pd
 import sklearn.compose
-import sys
 
 def _isSubschema(sub, sup):
     try:
@@ -28,61 +26,10 @@ def _isSubschema(sub, sup):
         raise ValueError(f'problem checking ({sub} <: {sup})') from e
 
 class ProjectImpl:
-    """Projection, like in relational algebra, to keep only a subset of the columns.
-
-    Instead of using ``ProjectImpl`` directly, use its wrapper, ``Project``.
-
-    Parameters
-    ----------
-    columns:
-        The subset of columns to retain.
-
-        The supported column specification formats include those of
-        scikit-learn's ColumnTransformer_, and in addition, filtering
-        by using a JSON subschema_ check.
-
-        .. _ColumnTransformer: https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html
-        .. _subschema: https://github.com/IBM/jsonsubschema
-        .. code:: python
-
-          schema = {'anyOf': [
-            { 'type': 'integer',
-              'description': 'One column by index.'},
-            { 'type': 'array', 'items': {'type': 'integer'},
-              'description': 'Multiple columns by index.'},
-            { 'type': 'string',
-              'description': 'One Dataframe column by name.'},
-            { 'type': 'array', 'items': {'type': 'string'},
-              'description': 'Multiple Dataframe columns by names.'},
-            { 'type': 'array', 'items': {'type': 'boolean'},
-              'description': 'Boolean mask.'},
-            { 'type': 'object',
-              'description': 'Keep columns whose schema is a subschema of this JSON schema.'}]}"""
-
     def __init__(self, columns=None):
         self._hyperparams = { 'columns': columns }
 
     def fit(self, X, y=None):
-        """Pick concrete columns to keep based on the ``columns``
-        hyperparameter and the data ``X``.
-
-        Parameters
-        ----------
-        X:
-            Features; the outer array is over samples.
-
-            .. code:: python
-
-              schema = {
-                'description': 'Features; the outer array is over samples.',
-                'type': 'array',
-                'items': {
-                  'type': 'array',
-                  'items': {
-                     'anyOf':[{'type': 'number'}, {'type':'string'}]}}}
-
-        y: optional
-            Target for supervised learning (ignored)."""
         columns = self._hyperparams['columns']
         if lale.helpers.is_schema(columns):
             s_all = lale.datasets.data_schemas.to_schema(X)
@@ -105,46 +52,14 @@ class ProjectImpl:
         self._col_tfm.fit(X)
         return self
 
-    def transform(self, X, y=None):
-        """Transform `X`.
-
-        Parameters
-        ----------
-        X:
-            Features; the outer array is over samples.
-
-            .. code:: python
-
-              schema = {
-                'type': 'array',
-                'items': {
-                  'type': 'array',
-                  'items': {
-                     'anyOf':[{'type': 'number'}, {'type':'string'}]}}}
-
-        y: optional
-            Target for supervised learning (ignored).
-
-        Returns
-        -------
-        result:
-            Features; the outer array is over samples.
-
-            .. code:: python
-
-              schema = {
-                'type': 'array',
-                'items': {
-                  'type': 'array',
-                  'items': {
-                     'anyOf':[{'type': 'number'}, {'type':'string'}]}}}"""
+    def transform(self, X):
         result = self._col_tfm.transform(X)
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
         return lale.datasets.data_schemas.add_schema(result, s_result)
 
     def transform_schema(self, s_X):
-        """Function used internally by Lale for type-checking pipelines."""
+        """Used internally by Lale for type-checking downstream operators."""
         if hasattr(self, '_col_tfm'):
             return self._transform_schema_col_tfm(s_X, self._col_tfm)
         columns = self._hyperparams['columns']
@@ -200,18 +115,24 @@ class ProjectImpl:
         return {'type': 'array', 'items': s_row_result}
 
 _hyperparams_schema = {
-  'description': 'Hyperparameter schema for Project transformer.',
   'allOf': [
     { 'description':
         'This first sub-object lists all constructor arguments with their '
-        'types, one at a time, omitting cross-argument constraints.',
+        'types, one at a time, omitting cross-argument constraints, if any.',
       'type': 'object',
       'additionalProperties': False,
       'required': ['columns'],
       'relevantToOptimizer': [],
       'properties': {
           'columns': {
-              'description': 'The subset of columns to retain.',
+              'description': """The subset of columns to retain.
+
+The supported column specification formats include those of
+scikit-learn's ColumnTransformer_, and in addition, filtering
+by using a JSON subschema_ check.
+
+.. _ColumnTransformer: https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html
+.. _subschema: https://github.com/IBM/jsonsubschema""",
               'anyOf': [
                  { 'type': 'integer',
                    'description': 'One column by index.'},
@@ -227,7 +148,6 @@ _hyperparams_schema = {
                    'description': 'Keep columns whose schema is a subschema of this JSON schema.'}]}}}]}
 
 _input_fit_schema = {
-  'description': 'Input data schema for training Project.',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -243,7 +163,6 @@ _input_fit_schema = {
       'description': 'Target for supervised learning (ignored).'}}}
 
 _input_predict_schema = {
-  'description': 'Input data schema for transformation using Project.',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -257,7 +176,7 @@ _input_predict_schema = {
            'anyOf':[{'type': 'number'}, {'type':'string'}]}}}}}
 
 _output_schema = {
-  'description': 'Output data schema for transformed data using Project.',
+  'description': 'Features; the outer array is over samples.',
   'type': 'array',
   'items': {
     'type': 'array',
@@ -266,7 +185,8 @@ _output_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
+    'description':
+      'Projection keeps a subset of the columns, like in relational algebra.',
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.project.html',
     'type': 'object',
     'tags': {
@@ -277,9 +197,11 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema }}
+        'output_transform': _output_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
+
+lale.docstrings.set_docstrings(ProjectImpl, _combined_schemas)
 
 Project = lale.operators.make_operator(ProjectImpl, _combined_schemas)

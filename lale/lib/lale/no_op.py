@@ -12,73 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.docstrings
 import lale.helpers
 import lale.operators
-import pandas as pd
 
 class NoOpImpl():
-    def __init__(self, hyperparams=None):
-        self._hyperparams = hyperparams
+    def __init__(self):
+        pass
 
-    # def fit(self, X, y = None):
-    #     result = NoOpImpl(self._hyperparams)
-    #     if isinstance(X, pd.DataFrame):
-    #         result._feature_names = list(X.columns)
-    #     else:
-    #         #This assumes X is a 2d array which is consistent with its schema.
-    #         result._feature_names = ['x%d' % i for i in range(X.shape[1])] 
-    #     return result
-
-    def transform(self, X, y = None):
+    def transform(self, X):
         return X
 
     def transform_schema(self, s_X):
+        """Used internally by Lale for type-checking downstream operators."""
         return s_X
 
-    # def get_feature_names(self, input_features=None):
-    #     if input_features is not None:
-    #         return list(input_features)
-    #     elif self._feature_names is not None:
-    #         return self._feature_names
-    #     else:
-    #         raise ValueError('Can only call get_feature_names on a trained operator. Please call fit to get a trained operator.')
-
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Hyperparameter schema for the NoOp, which is a place-holder for no operation.',
-    'allOf': [
-    {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
-        'type': 'object',
-        'additionalProperties': False,
-        'relevantToOptimizer': [],
-        'properties': {}}]}
+  'allOf': [
+    { 'description':
+        'This first sub-object lists all constructor arguments with their '
+        'types, one at a time, omitting cross-argument constraints, if any.',
+      'type': 'object',
+      'additionalProperties': False,
+      'relevantToOptimizer': [],
+      'properties': {}}]}
 
-_input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Input data schema for training NoOp.',
+_input_predict_schema = {
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
     'properties': {
-        'X': {}}}
-
-_input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Input data schema for transformations using NoOp.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {},
-        'y': {}}}
+        'X': {'description': 'Features; no restrictions on data type.'}}}
 
 _output_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Output data schema for transformations using NoOp.'}
+    'description': 'Features; no restrictions on data type.'}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
+    'description': 'Passes the data through unchanged.',
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.no_op.html',
     'type': 'object',
     'tags': {
@@ -87,11 +58,12 @@ _combined_schemas = {
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema }}
+        'output_transform': _output_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
+
+lale.docstrings.set_docstrings(NoOpImpl, _combined_schemas)
 
 NoOp = lale.operators.make_operator(NoOpImpl, _combined_schemas)

@@ -12,55 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.docstrings
 import lale.helpers
 import lale.operators
 import numpy as np
 import pandas as pd
 import scipy.sparse
-import jsonsubschema
 import lale.pretty_print
 try:
     import torch
     torch_installed=True
 except ImportError:
     torch_installed=False
+
 class ConcatFeaturesImpl():
-    """Transformer to concatenate input datasets. 
-
-    This transformer concatenates the input datasets column-wise.
-
-    Examples
-    --------
-    >>> A = [ [11, 12, 13],
-              [21, 22, 23],
-              [31, 32, 33] ]
-    >>> B = [ [14, 15],
-              [24, 25],
-              [34, 35] ]
-    >>> trainable_cf = ConcatFeatures()
-    >>> trained_cf = trainable_cf.fit(X = [A, B])
-    >>> trained_cf.transform([A, B])
-        [ [11, 12, 13, 14, 15],
-          [21, 22, 23, 24, 25],
-          [31, 32, 33, 34, 35] ]
-    """
-
     def __init__(self):
         pass
 
     def transform(self, X):
-        """Transform the list of datasets to one single dataset by concatenating column-wise.
-        
-        Parameters
-        ----------
-        X : list
-            List of datasets to be concatenated.
-        
-        Returns
-        -------
-        [type]
-            [description]
-        """
         np_datasets = []
         #Preprocess the datasets to convert them to 2-d numpy arrays
         for dataset in X:
@@ -81,6 +50,7 @@ class ConcatFeaturesImpl():
         return result
 
     def transform_schema(self, s_X):
+        """Used internally by Lale for type-checking downstream operators."""
         min_cols, max_cols, elem_schema = 0, 0, None
         def add_ranges(min_a, max_a, min_b, max_b):
             min_ab = min_a + min_b
@@ -119,40 +89,16 @@ class ConcatFeaturesImpl():
         return s_result
     
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Hyperparameter schema for the ConcatFeatures operator.\n',
-    'allOf': [{
-        'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
+    'allOf': [
+      { 'description':
+          'This first sub-object lists all constructor arguments with their '
+          'types, one at a time, omitting cross-argument constraints, if any.',
         'type': 'object',
         'additionalProperties': False,
         'relevantToOptimizer': [],
         'properties': {}}]}
 
-_input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Input data schema for training the ConcatFeatures operator. As this operator does not actually require training, this is the same as the input schema for making predictions.',
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': True,
-    'properties': {
-        'X': {
-            'description': 'Outermost array dimension is over datasets.',
-            'type': 'array',
-            'items': {
-                'description': 'Middle array dimension is over samples (aka rows).',
-                'type': 'array',
-                'items': {
-                    'description': 'Innermost array dimension is over features (aka columns).',
-                    'anyOf': [{
-                        'type': 'array',
-                        'items': {
-                            'type': 'number'},
-                    }, {
-                        'type': 'number'}]}}}}}
-
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Input data schema for making predictions using the ConcatFeatures operator.',
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
@@ -173,17 +119,31 @@ _input_predict_schema = {
                         'type': 'number'}]}}}}}
 
 _output_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Output data schema for transformed data using the ConcatFeatures operator.',
+    'description': 'Features; the outer array is over samples.',
     'type': 'array',
     'items': {
-        'type': 'array',
-        'items': {
-            'type': 'number'}}}
+      'type': 'array',
+      'description': 'Outer array dimension is over samples (aka rows).',
+      'items': {
+        'description': 'Inner array dimension is over features (aka columns).',
+        'type': 'number'}}}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
+    'description': """Horizontal stacking concatenates features (aka columns) of input datasets.
+
+Examples
+--------
+>>> A = [ [11, 12, 13],
+...       [21, 22, 23],
+...       [31, 32, 33] ]
+>>> B = [ [14, 15],
+...       [24, 25],
+...       [34, 35] ]
+>>> ConcatFeatures.transform([A, B])
+NDArrayWithSchema([[11, 12, 13, 14, 15],
+                   [21, 22, 23, 24, 25],
+                   [31, 32, 33, 34, 35]])""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.concat_features.html',
     'type': 'object',
     'tags': {
@@ -192,11 +152,12 @@ _combined_schemas = {
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema }}
+        'output_transform': _output_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
+
+lale.docstrings.set_docstrings(ConcatFeaturesImpl, _combined_schemas)
 
 ConcatFeatures = lale.operators.make_operator(ConcatFeaturesImpl, _combined_schemas)
