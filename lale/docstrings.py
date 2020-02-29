@@ -1,10 +1,9 @@
 import lale.helpers
 import lale.pretty_print
 
-def add_indent(string, amount):
+def add_indent(prefix, string):
     lines = string.splitlines()
-    indent = ' ' * amount
-    indented = [indent + line for line in lines]
+    indented = [prefix + line for line in lines]
     result = '\n'.join(indented)
     return result
 
@@ -26,11 +25,11 @@ def _params_docstring(params_schema):
                 tags.append('optional')
         result += ', '.join(tags)
         result += '\n'
-        result += add_indent(param_schema['description'], 2)
-        result += '\n\n  .. code:: text\n\n'
+        result += add_indent('  ', param_schema['description'])
+        result += '\n\n'
         schema = lale.helpers.dict_without(param_schema, 'description')
         schema_string = lale.pretty_print.schema_to_string(schema)
-        result += add_indent('schema = ' + schema_string, 4)
+        result += add_indent('  | ', 'schema = ' + schema_string)
         result += '\n\n'
     return result
 
@@ -39,11 +38,11 @@ def _method_docstring(description, params_schema, result_schema=None):
     result += _params_docstring(params_schema)
     if result_schema is not None:
         result += 'Returns\n-------\nSee schema.\n'
-        result += add_indent(result_schema['description'], 2)
-        result += '\n\n  .. code:: text\n\n'
+        result += add_indent('  ', result_schema['description'])
+        result += '\n\n'
         schema = lale.helpers.dict_without(result_schema, 'description')
         schema_string = lale.pretty_print.schema_to_string(schema)
-        result += add_indent('schema = ' + schema_string, 4)
+        result += add_indent('  | ', 'schema = ' + schema_string)
     return result
 
 def _hyperparams_docstring(hyperparams_schema):
