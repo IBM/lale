@@ -26,10 +26,10 @@ def _params_docstring(params_schema):
         result += ', '.join(tags)
         result += '\n'
         result += add_indent('  ', param_schema['description'])
-        result += '\n\n'
+        result += '\n\n  ::\n\n'
         schema = lale.helpers.dict_without(param_schema, 'description')
         schema_string = lale.pretty_print.schema_to_string(schema)
-        result += add_indent('  | ', 'schema = ' + schema_string)
+        result += add_indent('    ', 'schema = ' + schema_string)
         result += '\n\n'
     return result
 
@@ -39,10 +39,10 @@ def _method_docstring(description, params_schema, result_schema=None):
     if result_schema is not None:
         result += 'Returns\n-------\nSee schema.\n'
         result += add_indent('  ', result_schema['description'])
-        result += '\n\n'
+        result += '\n\n  ::\n\n'
         schema = lale.helpers.dict_without(result_schema, 'description')
         schema_string = lale.pretty_print.schema_to_string(schema)
-        result += add_indent('  | ', 'schema = ' + schema_string)
+        result += add_indent('    ', 'schema = ' + schema_string)
     return result
 
 def _hyperparams_docstring(hyperparams_schema):
