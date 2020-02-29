@@ -27,7 +27,7 @@ def _params_docstring(params_schema):
         result += ', '.join(tags)
         result += '\n'
         result += add_indent(param_schema['description'], 2)
-        result += '\n\n  .. code::\n\n'
+        result += '\n\n  .. code:: text\n\n'
         schema = lale.helpers.dict_without(param_schema, 'description')
         schema_string = lale.pretty_print.schema_to_string(schema)
         result += add_indent('schema = ' + schema_string, 4)
@@ -40,7 +40,7 @@ def _method_docstring(description, params_schema, result_schema=None):
     if result_schema is not None:
         result += 'Returns\n-------\nSee schema.\n'
         result += add_indent(result_schema['description'], 2)
-        result += '\n\n  .. code::\n\n'
+        result += '\n\n  .. code:: text\n\n'
         schema = lale.helpers.dict_without(result_schema, 'description')
         schema_string = lale.pretty_print.schema_to_string(schema)
         result += add_indent('schema = ' + schema_string, 4)
@@ -55,7 +55,7 @@ def _cls_docstring(impl_cls, combined_schemas):
     result = combined_schemas['description']
     module_name = impl_cls.__module__
     cls_name = impl_cls.__name__
-    result += f'\n\nInstead of using `{module_name}.{cls_name}` directly,\nuse its wrapper, `{module_name[:module_name.rfind(".")]}.{cls_name[:-4]}`.\n'
+    result += f'\n\nInstead of using `{module_name}.{cls_name}` directly,\nuse its wrapper, `{module_name[:module_name.rfind(".")]}.{cls_name[:-4]}`.\n\n'
     result += 'This documentation is auto-generated from JSON schemas.\n\n'
     hyperparams_schema = combined_schemas['properties']['hyperparams']
     result += _hyperparams_docstring(hyperparams_schema)
