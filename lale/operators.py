@@ -2035,18 +2035,16 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             if hasattr(operator._impl, "set_meta_data"):
                 operator._impl.set_meta_data(meta_data_inputs)
             meta_output = {}
-            if operator.is_transformer():
+            if operator in sink_nodes:#Since this is pipeline's predict, we should invoke predict from sink nodes
+                output = operator.predict(X = inputs)
+            elif operator.is_transformer():
                 output = operator.transform(X = inputs, y = y)
                 if hasattr(operator._impl, "get_transform_meta_output"):
                     meta_output = operator._impl.get_transform_meta_output()
+            elif hasattr(operator._impl, 'predict_proba'):#For estimator as a transformer, use predict_proba if available
+                output = operator.predict_proba(X = inputs)
             else:
-                if operator in sink_nodes:
-                    output = operator.predict(X = inputs)
-                else:
-                    if hasattr(operator._impl, 'predict_proba'):
-                        output = operator.predict_proba(X = inputs)
-                    else:
-                        output = operator.predict(X = inputs)
+                output = operator.predict(X = inputs)
                 if hasattr(operator._impl, "get_predict_meta_output"):
                     meta_output = operator._impl.get_predict_meta_output()
             outputs[operator] = output
