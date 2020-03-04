@@ -50,6 +50,10 @@ class NestedHyperoptSpace():
     sub_space:Any
     def __init__(self, sub_space):
         self.sub_space = sub_space
+    def __str__(self):
+        return str(self.sub_space)
+    #define __repr__ so that __str__ gets invoked while printing lists and dictionaries
+    __repr__ = __str__
 
 def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
