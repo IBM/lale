@@ -2035,7 +2035,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             if hasattr(operator._impl, "set_meta_data"):
                 operator._impl.set_meta_data(meta_data_inputs)
             meta_output = {}
-            if operator in sink_nodes:#Since this is pipeline's predict, we should invoke predict from sink nodes
+            if operator in sink_nodes and hasattr(operator._impl, 'predict'):#Since this is pipeline's predict, we should invoke predict from sink nodes
                 output = operator.predict(X = inputs)
             elif operator.is_transformer():
                 output = operator.transform(X = inputs, y = y)
