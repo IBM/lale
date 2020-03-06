@@ -52,7 +52,7 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     if not relevant or schema.get('forOptimizer', False):
         tags.append('not for optimizer')
     if 'default' in schema:
-        tags.append('default ' + value_docstring(schema['default']))
+        tags.append('default ' + _value_docstring(schema['default']))
     result = name + ' : ' if name else ''
     result += ', '.join(tags)
     assert len(result) > 0 and result.rstrip() == result
