@@ -18,8 +18,6 @@ from .hyperopt import Hyperopt
 from .identity_wrapper import IdentityWrapper
 from .both import Both
 from .sample_based_voting import SampleBasedVoting
-from .keep_non_numbers import KeepNonNumbers
-from .keep_numbers import KeepNumbers
 from .project import Project
 from .batching import Batching
 from .grid_search_cv import GridSearchCV

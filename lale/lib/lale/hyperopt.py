@@ -28,14 +28,12 @@ import traceback
 import time
 import logging
 from typing import Any, Dict, Optional
-import json
-import datetime
 import copy
 import sys
+import lale.docstrings
 import lale.operators
 from lale.lib.sklearn import LogisticRegression
 import multiprocessing
-import lale.sklearn_compat
 
 SEED=42
 logging.basicConfig(level=logging.WARNING)
@@ -45,65 +43,6 @@ logger = logging.getLogger(__name__)
 class HyperoptImpl:
 
     def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None):
-        """ Instantiate the HyperoptCV that will use the given estimator and other parameters to select the 
-        best performing trainable instantiation of the estimator. 
-
-        Parameters
-        ----------
-        estimator : lale.operators.IndividualOp or lale.operators.Pipeline, optional
-            A valid Lale individual operator or pipeline, by default LogisticRegression
-        max_evals : int, optional
-            Number of trials of Hyperopt search, by default 50
-        cv : an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
-            Integer value is used as number of folds in sklearn.model_selection.StratifiedKFold, default is 5.
-            Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
-            The fit method performs cross validation on the input dataset for per trial, 
-            and uses the mean cross validation performance for optimization. This behavior is also impacted by handle_cv_failure flag, 
-            by default 5
-        handle_cv_failure : bool, optional
-            A boolean flag to indicating how to deal with cross validation failure for a trial.
-            If True, the trial is continued by doing a 80-20 percent train-validation split of the dataset input to fit
-            and reporting the score on the validation part.
-            If False, the trial is terminated by assigning status to FAIL.
-            , by default False
-        scoring: string or a scorer object created using 
-            https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
-            A string from sklearn.metrics.SCORERS.keys() can be used or a scorer created from one of 
-            sklearn.metrics (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics).
-            A completely custom scorer object can be created from a python function following the example at 
-            https://scikit-learn.org/stable/modules/model_evaluation.html
-            The metric has to return a scalar value, and note that scikit-learns's scorer object always returns values such that
-            higher score is better. Since Hyperopt solves a minimization problem, we pass (best_score - score) to Hyperopt.
-            by default 'accuracy'.
-        best_score : float, optional
-            The best score for the specified scorer. This allows us to return a loss to hyperopt that is
-            greater than equal to zero, where zero is the best loss. By default, zero.
-        max_opt_time : float, optional
-            Maximum amout of time in seconds for the optimization. By default, None, implying no runtime
-            bound.
-        max_eval_time : float, optional
-            Maximum amout of time in seconds for each evaluation. By default, None, implying no runtime bound.
-        pgo : Optional[PGO], optional
-            [description], by default None
-        
-
-        Examples
-        --------
-        >>> from sklearn.metrics import make_scorer, f1_score, accuracy_score
-        >>> lr = LogisticRegression()
-        >>> clf = HyperoptCV(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
-        >>> from sklearn import datasets
-        >>> diabetes = datasets.load_diabetes()
-        >>> X = diabetes.data[:150]
-        >>> y = diabetes.target[:150]
-        >>> trained = clf.fit(X, y)
-        >>> predictions = trained.predict(X)
-
-        Other scoring metrics:
-
-        >>> clf = HyperoptCV(estimator=lr, scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
-
-        """
         self.max_evals = max_evals
         if estimator is None:
             self.estimator = LogisticRegression()
@@ -238,6 +177,11 @@ class HyperoptImpl:
         return predictions
 
     def results(self):
+        """Table summarizing the trial results (ID, loss, time, log_loss, status).
+
+Returns
+-------
+result : DataFrame"""
         def make_record(trial_dict):
             return {
                 'name': f'p{trial_dict["tid"]}',
@@ -251,6 +195,25 @@ class HyperoptImpl:
         return result
 
     def get_pipeline(self, pipeline_name=None, astype='lale'):
+        """Retrieve one of the trials.
+
+Parameters
+----------
+pipeline_name : union type, default None
+
+    - string
+        Key for table returned by results(), return a trainable pipeline.
+
+    - None
+        When not specified, return the best trained pipeline found.
+
+astype : 'lale' or 'sklearn', default 'lale'
+    Type of resulting pipeline.
+
+Returns
+-------
+result : Trained operator if best, trainable operator otherwise.
+"""
         if pipeline_name is None:
             result = getattr(self, '_best_estimator', None)
         else:
@@ -273,27 +236,60 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'estimator': {
+                'description': 'Planned Lale individual operator or pipeline,\nby default LogisticRegression.',
                 'anyOf': [
                 {   'typeForOptimizer': 'operator',
                     'not': {'enum': [None]}},
                 {   'enum': [None]}],
                 'default': None},
             'max_evals': {
+                'description': 'Number of trials of Hyperopt search.',
                 'type': 'integer',
                 'minimum': 1,
                 'default': 50},
             'cv': {
+                'description': """Cross-validation as integer or as object that has a split function.
+
+The fit method performs cross validation on the input dataset for per
+trial, and uses the mean cross validation performance for optimization.
+This behavior is also impacted by handle_cv_failure flag.
+
+If integer: number of folds in sklearn.model_selection.StratifiedKFold.
+
+If object with split function: generator yielding (train, test) splits
+as arrays of indices. Can use any of the iterators from
+https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
                 'type': 'integer',
                 'minimum': 1,
                 'default': 5},
             'handle_cv_failure': {
+                'description': """How to deal with cross validation failure for a trial.
+
+If True, continue the trial by doing a 80-20 percent train-validation
+split of the dataset input to fit and report the score on the
+validation part. If False, terminate the trial with FAIL status.""",
                 'type': 'boolean',
                 'default': False},
             'scoring': {
+                'description': 'Scorer object, or known scorer named by string.',
                 'anyOf': [
-                {    'description': 'Custom scorer object, see https://scikit-learn.org/stable/modules/model_evaluation.html',
+                {    'description': """Custom scorer object created with `make_scorer`_.
+
+The argument to make_scorer can be one of scikit-learn's metrics_,
+or it can be a user-written Python function to create a completely
+custom scorer objects, following the `model_evaluation`_ example.
+The metric has to return a scalar value. Note that scikit-learns's
+scorer object always returns values such that higher score is
+better. Since Hyperopt solves a minimization problem, we pass
+(best_score - score) to Hyperopt.
+
+.. _`make_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
+.. _metrics: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
+.. _`model_evaluation`: https://scikit-learn.org/stable/modules/model_evaluation.html
+""",
                      'not': {'type': 'string'}},
-                {    'enum': [
+                {   'description': 'A string from sklearn.metrics.SCORERS.keys().',
+                    'enum': [
                         'accuracy', 'explained_variance', 'max_error',
                         'roc_auc', 'roc_auc_ovr', 'roc_auc_ovo',
                         'roc_auc_ovr_weighted', 'roc_auc_ovo_weighted',
@@ -303,19 +299,27 @@ _hyperparams_schema = {
                          'neg_median_absolute_error']}],
                 'default': 'accuracy'},
             'best_score': {
+                'description': """The best score for the specified scorer.
+
+This allows us to return a loss to hyperopt that is >=0,
+where zero is the best loss.""",
                 'type': 'number',
                 'default': 0.0},
             'max_opt_time': {
+                'description': 'Maximum amout of time in seconds for the optimization.',
                 'anyOf': [
                 {   'type': 'number',
                     'minimum': 0.0},
-                {   'enum': [None]}],
+                {   'description': 'No runtime bound.',
+                    'enum': [None]}],
                 'default': None},
             'max_eval_time': {
+                'description': 'Maximum amout of time in seconds for each evaluation.',
                 'anyOf': [
                 {   'type': 'number',
                     'minimum': 0.0},
-                {   'enum': [None]}],
+                {   'description': 'No runtime bound.',
+                    'enum': [None]}],
                 'default': None},
             'pgo': {
                 'anyOf': [
@@ -337,6 +341,27 @@ _input_predict_schema = {
 _output_predict_schema:Dict[str, Any] = {}
 
 _combined_schemas = {
+    'description': """Hyperopt_ is a popular open-source Bayesian optimizer.
+
+.. _Hyperopt: https://github.com/hyperopt/hyperopt
+
+Examples
+--------
+>>> from sklearn.metrics import make_scorer, f1_score, accuracy_score
+>>> lr = LogisticRegression()
+>>> clf = HyperoptCV(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
+>>> from sklearn import datasets
+>>> diabetes = datasets.load_diabetes()
+>>> X = diabetes.data[:150]
+>>> y = diabetes.target[:150]
+>>> trained = clf.fit(X, y)
+>>> predictions = trained.predict(X)
+
+Other scoring metrics:
+
+>>> clf = HyperoptCV(estimator=lr,
+...    scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
+""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_cv.html',
     'type': 'object',
     'tags': {
@@ -347,7 +372,9 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_predict_schema}}
+        'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
 
 Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
 

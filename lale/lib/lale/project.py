@@ -185,8 +185,16 @@ _output_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description':
-      'Projection keeps a subset of the columns, like in relational algebra.',
+    'description': """Projection keeps a subset of the columns, like in relational algebra.
+
+Examples
+--------
+>>> df = pd.DataFrame(data={'A': [1,2], 'B': ['x','y'], 'C': [3,4]})
+>>> keep_numbers = Project(columns={'type': 'number'})
+>>> keep_numbers.fit(df).transform(df)
+NDArrayWithSchema([[1, 3],
+                   [2, 4]])
+""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.project.html',
     'type': 'object',
     'tags': {
