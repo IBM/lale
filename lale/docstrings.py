@@ -16,9 +16,7 @@ def _value_docstring(value):
 
 def _kind_tag(schema):
     if 'type' in schema:
-        if 'typeForOptimizer' in schema:
-            return schema['typeForOptimizer']
-        elif schema['type'] == 'object':
+        if schema['type'] == 'object':
             return 'dict'
         else:
             return schema['type']
@@ -28,10 +26,10 @@ def _kind_tag(schema):
         if len(values) == 1:
             return _value_docstring(values[0])
         elif len(values) == 2:
-            return ' or '.join([_value_docstring[v] for v in values])
+            return ' or '.join([_value_docstring(v) for v in values])
         else:
-            prefix = ', '.join([_value_docstring[v] for v in values[:-1]])
-            suffix = ' or ' + _value_docstring[values[-1]]
+            prefix = ', '.join([_value_docstring(v) for v in values[:-1]])
+            suffix = ', or ' + _value_docstring(values[-1])
             return prefix + suffix
     elif 'anyOf' in schema:
         return 'union type'
@@ -43,8 +41,22 @@ def _kind_tag(schema):
         return 'any type'
 
 def _schema_docstring(name, schema, required=True, relevant=True):
-    tags = [_kind_tag(schema)]
-    #TODO: for numbers, keywords minimum, maximum, exclusive{Minimum,Maximum}
+    tags = []
+    if 'typeForOptimizer' in schema:
+        tags.append(schema['typeForOptimizer'])
+    tags.append(_kind_tag(schema))
+    if 'minimum' in schema:
+        op = '>' if schema.get('exclusiveMinimum', False) else '>='
+        tags.append(op + _value_docstring(schema['minimum']))
+    if 'minimumForOptimizer' in schema:
+        tags.append('>=' + _value_docstring(schema['minimumForOptimizer'])
+                    + ' for optimizer')
+    if 'maximum' in schema:
+        op = '<' if schema.get('exclusiveMaximum', False) else '<='
+        tags.append(op + _value_docstring(schema['maximum']))
+    if 'maximumForOptimizer' in schema:
+        tags.append('<=' + _value_docstring(schema['maximumForOptimizer'])
+                    + ' for optimizer')
     #TODO: for numbers, distribution
     #TODO: for arrays, {min,max}Items, {min,max}ItemsForOptimizer
     if not required:
@@ -94,7 +106,7 @@ def _params_docstring(params_schema):
                     or param_name in params_schema['relevantToOptimizer'])
         item_docstring = _schema_docstring(
             param_name, param_schema, required, relevant)
-        result += _indent('  ', item_docstring, '')
+        result += _indent('  ', item_docstring, '').rstrip()
         result += '\n\n'
     return result
 
@@ -110,15 +122,19 @@ def _method_docstring(description, params_schema, result_schema=None):
 
 def _hyperparams_docstring(hyperparams_schema):
     result = _params_docstring(hyperparams_schema['allOf'][0])
-    assert len(hyperparams_schema['allOf']) == 1, 'not yet implemented'
+    assert len(hyperparams_schema['allOf']) == 1, 'TODO: constraints'
     return result
 
 def _cls_docstring(impl_cls, combined_schemas):
-    result = combined_schemas['description']
+    descr_lines = combined_schemas['description'].splitlines()
+    result = descr_lines[0]
     module_name = impl_cls.__module__
     cls_name = impl_cls.__name__
     result += f'\n\nInstead of using `{module_name}.{cls_name}` directly,\nuse its wrapper, `{module_name[:module_name.rfind(".")]}.{cls_name[:-4]}`.\n\n'
     result += 'This documentation is auto-generated from JSON schemas.\n\n'
+    more_description = '\n'.join(descr_lines[1:]).strip()
+    if more_description != '':
+        result += more_description + '\n\n'
     hyperparams_schema = combined_schemas['properties']['hyperparams']
     result += _hyperparams_docstring(hyperparams_schema)
     return result
@@ -137,3 +153,9 @@ def set_docstrings(impl_cls, combined_schemas):
             'Transform the data.',
             combined_schemas['properties']['input_predict'],
             combined_schemas['properties']['output_transform'])
+    if hasattr(impl_cls, 'predict'):
+        assert impl_cls.predict.__doc__ is None
+        impl_cls.predict.__doc__ = _method_docstring(
+            'Make predictions.',
+            combined_schemas['properties']['input_predict'],
+            combined_schemas['properties']['output_predict'])

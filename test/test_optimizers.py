@@ -440,12 +440,12 @@ class TestHyperopt(unittest.TestCase):
         from lale.datasets import openml
         (train_X, train_y), (test_X, test_y) = openml.fetch(
             'credit-g', 'classification', preprocess=False)
-        from lale.lib.lale import KeepNumbers, KeepNonNumbers
+        from lale.lib.lale import Project
         from lale.lib.sklearn import Normalizer, OneHotEncoder
         from lale.lib.lale import ConcatFeatures as Concat
         from lale.lib.sklearn import RandomForestClassifier as Forest
-        prep_num = KeepNumbers() >> Normalizer
-        prep_cat = KeepNonNumbers() >> OneHotEncoder(sparse=False)
+        prep_num = Project(columns={'type': 'number'}) >> Normalizer
+        prep_cat = Project(columns={'not': {'type': 'number'}}) >> OneHotEncoder(sparse=False)
         planned = (prep_num & prep_cat) >> Concat >> Forest
         from lale.lib.lale import Hyperopt
         hyperopt_classifier = Hyperopt(estimator=planned, max_evals=1)

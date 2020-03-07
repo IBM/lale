@@ -187,9 +187,9 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_keep_numbers(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.lib.lale import KeepNumbers
+        from lale.lib.lale import Project
         train_X, train_y = self._creditG['X'], self._creditG['y']
-        trainable = KeepNumbers()
+        trainable = Project(columns={'type': 'number'})
         trained = trainable.fit(train_X)
         transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
@@ -210,9 +210,9 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_keep_non_numbers(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.lib.lale import KeepNonNumbers
+        from lale.lib.lale import Project
         train_X, train_y = self._creditG['X'], self._creditG['y']
-        trainable = KeepNonNumbers()
+        trainable = Project(columns={'not': {'type': 'number'}})
         trained = trainable.fit(train_X)
         transformed = trained.transform(train_X)
         transformed_schema = to_schema(transformed)
