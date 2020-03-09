@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.docstrings
 import lale.helpers
 import lale.operators
 import sklearn.decomposition
@@ -44,7 +45,8 @@ _hyperparams_schema = {
                     'enum': [None]},
                 {   'description': "Use Minka's MLE to guess the dimension.",
                     'enum': ['mle']},
-                {   'description': 'Select the number of components such that the amount of variance that needs to be explained is greater than the specified percentage.',
+                {   'description': """Select the number of components such that the amount of variance that
+needs to be explained is greater than the specified percentage.""",
                     'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
@@ -59,7 +61,9 @@ _hyperparams_schema = {
                 'description': 'If false, overwrite data passed to fit.',
                 'default': True},
             'whiten': {
-                'description': 'When true, multiply the components_ vectors by the square root of n_samples and then divide by the singular values to ensure uncorrelated outputs with unit component-wise variances.',
+                'description': """When true, multiply the components vectors by the square root of
+n_samples and then divide by the singular values to ensure uncorrelated
+outputs with unit component-wise variances.""",
                 'type': 'boolean',
                 'default': False},
             'svd_solver': {
@@ -107,7 +111,6 @@ _hyperparams_schema = {
             'properties': {
                 'n_components': {
                     'not': {
-                        'description': 'Select the number of components such that the amount of variance that needs to be explained is greater than the specified percentage.',
                         'type': 'number',
                         'minimum': 0.0,
                         'exclusiveMinimum': True,
@@ -157,7 +160,6 @@ _hyperparams_schema = {
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Input data schema for training the PCA model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
@@ -169,11 +171,10 @@ _input_fit_schema = {
                 'type': 'array',
                 'items': {'type': 'number'}}},
         'y': {
-            'description': 'Target class labels; the array is over samples.'}}}
+            'description': 'Target for supervised learning (ignored).'}}}
 
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Input data schema for predictions using the PCA model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
@@ -187,7 +188,7 @@ _input_predict_schema = {
 
 _output_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Output data schema for predictions (projected data) using the PCA model from scikit-learn.',
+    'description': 'Features; the outer array is over samples.',
     'type': 'array',
     'items': {
         'type': 'array',
@@ -195,8 +196,11 @@ _output_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+    'description': """`Principal component analysis`_ for linear dimensionality reduction.
+
+.. _`Principal component analysis`: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],
@@ -206,9 +210,11 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema }}
+        'output_transform': _output_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
+
+lale.docstrings.set_docstrings(PCAImpl, _combined_schemas)
 
 PCA = lale.operators.make_operator(PCAImpl, _combined_schemas)

@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.docstrings
 import lale.helpers
 import lale.operators
 import sklearn.linear_model
 
 _input_schema_fit = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': 'Input data schema for training.',
   'type': 'object',
   'required': ['X', 'y'],
   'additionalProperties': False,
@@ -35,7 +35,6 @@ _input_schema_fit = {
 
 _input_schema_predict = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': 'Input data schema for predictions.',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -231,8 +230,11 @@ _hyperparams_schema = {
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': 'Combined schema for expected data and hyperparameters.',
-  'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
+  'description': """`Logistic regression`_ linear model for classification.
+
+.. _`Logistic regression`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+""",
+  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
   'type': 'object',
   'tags': {
     'pre': ['~categoricals'],
@@ -266,5 +268,7 @@ class LogisticRegressionImpl:
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+lale.docstrings.set_docstrings(LogisticRegressionImpl, _combined_schemas)
 
 LogisticRegression = lale.operators.make_operator(LogisticRegressionImpl, _combined_schemas)

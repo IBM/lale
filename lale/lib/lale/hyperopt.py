@@ -335,6 +335,7 @@ _input_fit_schema = {
         'y': {}}}
 _input_predict_schema = {
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {}}}
 
