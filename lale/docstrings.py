@@ -93,7 +93,7 @@ def _schema_docstring(name, schema, required=True, relevant=True):
             body = item_docstring('items', items_schemas)
         else:
             items_docstrings = [item_docstring(f'item {i}', s)
-                                for i, s in enumerate(items_schema)]
+                                for i, s in enumerate(items_schemas)]
             body = '\n\n'.join(items_docstrings)
     elif schema.get('type', '') == 'object' and 'properties' in schema:
         item_docstrings = [item_docstring(k, s)

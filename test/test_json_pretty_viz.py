@@ -243,7 +243,7 @@ class TestToAndFromJSON(unittest.TestCase):
             'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
             'state': 'trainable',
             'operator': 'LogisticRegression', 'label': 'LR',
-            'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
+            'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
             'hyperparams': {'C': 0.1, 'solver': 'sag'},
             'is_frozen_trainable': False}
         json = to_json(operator)
@@ -267,7 +267,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.pca.PCAImpl',
               'state': 'planned',
               'operator': 'PCA', 'label': 'PCA',
-              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+              'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html'},
             'scl': {
               'class': 'lale.lib.sklearn.min_max_scaler.MinMaxScalerImpl',
               'state': 'planned',
@@ -298,7 +298,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.pca.PCAImpl',
               'state': 'planned',
               'operator': 'PCA', 'label': 'PCA',
-              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+              'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html'},
             'no_op': {
               'class': 'lale.lib.lale.no_op.NoOpImpl',
               'state': 'trained',
@@ -319,7 +319,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
               'state': 'planned',
               'operator': 'LogisticRegression', 'label': 'LR',
-              'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html'}}}
+              'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html'}}}
         json = to_json(operator)
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
@@ -361,7 +361,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.pca.PCAImpl',
               'state': 'trainable',
               'operator': 'PCA', 'label': 'PCA',
-              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+              'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html',
               'hyperparams': {'n_components': 2},
               'is_frozen_trainable': False},
             'nystroem': {
@@ -412,14 +412,14 @@ class TestToAndFromJSON(unittest.TestCase):
                   'class': 'lale.lib.sklearn.pca.PCAImpl',
                   'state': 'trainable',
                   'operator': 'PCA', 'label': 'PCA',
-                  'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html',
+                  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html',
                   'hyperparams': {},
                   'is_frozen_trainable': False},
                 'lr': {
                   'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
                   'state': 'planned',
                   'operator': 'LogisticRegression', 'label': 'LR',
-                  'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html'}}}}}
+                  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html'}}}}}
         json = operator.to_json()
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
@@ -442,7 +442,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.pca.PCAImpl',
               'state': 'planned',
               'operator': 'PCA', 'label': 'PCA',
-              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html'},
+              'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html'},
             'choice': {
               'class': 'lale.operators.OperatorChoice',
               'state': 'planned',
@@ -452,7 +452,7 @@ class TestToAndFromJSON(unittest.TestCase):
                   'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
                   'state': 'trainable',
                   'operator': 'LogisticRegression', 'label': 'LR',
-                  'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
+                  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
                   'hyperparams': {'C': 0.09},
                   'is_frozen_trainable': False},
                 'pipeline_1': {
@@ -472,7 +472,7 @@ class TestToAndFromJSON(unittest.TestCase):
                       'class': 'lale.lib.sklearn.logistic_regression.LogisticRegressionImpl',
                       'state': 'trainable',
                       'operator': 'LogisticRegression', 'label': 'LR',
-                      'documentation_url': 'http://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html',
+                      'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
                       'hyperparams': {'C': 0.19},
                       'is_frozen_trainable': False}}}}}}}
         json = to_json(operator)
