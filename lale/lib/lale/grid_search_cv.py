@@ -84,6 +84,7 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'estimator': {
+                'description': 'Planned Lale individual operator or pipeline,\nby default LogisticRegression.',
                 'anyOf': [
                 {   'typeForOptimizer': 'operator',
                     'not': {'enum': [None]}},
@@ -91,20 +92,24 @@ _hyperparams_schema = {
                     'description': 'lale.lib.sklearn.LogisticRegression'}],
                 'default': None},
             'cv': {
+                'description': 'Number of folds for cross-validation.',
                 'type': 'integer',
                 'minimum': 1,
                 'default': 5},
             'scoring': {
+                'description': 'Scorer object, or known scorer named by string.',
                 'anyOf': [
                 {   'description': 'Custom scorer object, see https://scikit-learn.org/stable/modules/model_evaluation.html',
                     'not': {'type': 'string'}},
-                {   'enum': [
+                {   'description': 'Known scorer for classification task.',
+                    'enum': [
                         'accuracy', 'explained_variance', 'max_error',
                         'roc_auc', 'roc_auc_ovr', 'roc_auc_ovo',
                         'roc_auc_ovr_weighted', 'roc_auc_ovo_weighted',
                         'balanced_accuracy', 'average_precision',
                         'neg_log_loss', 'neg_brier_score']},
-                {   'enum': [
+                {   'description': 'Known scorer for regression task.',
+                    'enum': [
                         'r2', 'neg_mean_squared_error',
                         'neg_mean_absolute_error',
                         'neg_root_mean_squared_error',
@@ -112,6 +117,7 @@ _hyperparams_schema = {
                         'neg_median_absolute_error']}],
                 'default': 'accuracy'},
             'n_jobs': {
+                'description': 'Number of jobs to run in parallel.',
                 'anyOf': [
                     {   'description':
                             '1 unless in joblib.parallel_backend context.',
@@ -123,13 +129,15 @@ _hyperparams_schema = {
                         'minimum': 1}],
                 'default': None},
             'lale_num_samples': {
+                'description': 'How many samples to draw when discretizing a continuous hyperparameter.',
                 'anyOf': [
-                    {   'description': 'How many samples to draw when discretizing a continuous hyperparameter.',
-                        'type': 'integer',
+                    {   'type': 'integer',
                         'minimum': 1},
-                    {   'enum': [None]}],
+                    {   'description': 'lale.search.lale_grid_search_cv.DEFAULT_SAMPLES_PER_DISTRIBUTION',
+                        'enum': [None]}],
                 'default': None},
             'lale_num_grids': {
+                'description': 'How many top-level disjuncts to explore.',
                 'anyOf': [
                 {   'description': 'If not set, keep all grids.',
                     'enum': [None]},
@@ -165,12 +173,16 @@ _input_fit_schema = {
 
 _input_predict_schema = {
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {}}}
 
 _output_predict_schema:Dict[str,Any] = {}
 
 _combined_schemas = {
+    'description': """GridSearchCV_ performs an exhaustive search over a discretized space.
+
+.. _GridSearchCV: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.GridSearchCV.html""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_classifier.html',
     'type': 'object',
     'tags': {
@@ -181,6 +193,8 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_predict_schema}}
+        'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(GridSearchCVImpl, _combined_schemas)
 
 GridSearchCV = lale.operators.make_operator(GridSearchCVImpl, _combined_schemas)

@@ -57,21 +57,26 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     if 'maximumForOptimizer' in schema:
         tags.append('<=' + _value_docstring(schema['maximumForOptimizer'])
                     + ' for optimizer')
-    #TODO: for numbers, distribution
-    #TODO: for arrays, {min,max}Items, {min,max}ItemsForOptimizer
+    if 'distribution' in schema:
+        tags.append(schema['distribution'] + ' distribution')
+    if 'minItems' in schema:
+        tags.append('>=' + _value_docstring(schema['minItems']) + ' items')
+    if 'minItemsForOptimizer' in schema:
+        tags.append('>=' + _value_docstring(schema['minItemsForOptimizer'])
+                    + ' items for optimizer')
+    if 'maxItems' in schema:
+        tags.append('<=' + _value_docstring(schema['maxItems']) + ' items')
+    if 'maxItemsForOptimizer' in schema:
+        tags.append('<=' + _value_docstring(schema['maxItemsForOptimizer'])
+                    + ' items for optimizer')
     if not required:
         tags.append('optional')
     if not relevant or schema.get('forOptimizer', False):
         tags.append('not for optimizer')
     if 'default' in schema:
         tags.append('default ' + _value_docstring(schema['default']))
-    result = name + ' : ' if name else ''
-    result += ', '.join(tags)
-    assert len(result) > 0 and result.rstrip() == result
-    if 'description' in schema:
-        result += '\n\n' + _indent('  ', schema['description']).rstrip()
-    def item_docstring(name, item_schema):
-        sd = _schema_docstring(name, item_schema)
+    def item_docstring(name, item_schema, required=True):
+        sd = _schema_docstring(name, item_schema, required=required)
         return _indent('    ', sd, '  - ').rstrip()
     body = None
     if 'anyOf' in schema:
@@ -84,14 +89,25 @@ def _schema_docstring(name, schema, required=True, relevant=True):
         body = item_docstring(None, schema['not'])
     elif schema.get('type', '') == 'array':
         items_schemas = schema['items']
-        assert isinstance(items_schemas, dict), 'TODO: array items as list'
-        body = item_docstring('items', items_schemas)
+        if isinstance(items_schemas, dict):
+            body = item_docstring('items', items_schemas)
+        else:
+            items_docstrings = [item_docstring(f'item {i}', s)
+                                for i, s in enumerate(items_schemas)]
+            body = '\n\n'.join(items_docstrings)
     elif schema.get('type', '') == 'object' and 'properties' in schema:
-        #TODO: pass down info on which properties are required
         item_docstrings = [item_docstring(k, s)
                            for k, s in schema['properties'].items()]
         body = '\n\n'.join(item_docstrings)
-    if body is not None:
+    result = name + ' : ' if name else ''
+    result += ', '.join(tags)
+    assert len(result) > 0 and result.rstrip() == result
+    if body is not None and body.find('\n') == -1:
+        assert body.startswith('  - ')
+        result += ' **of** ' + body[4:]
+    if 'description' in schema:
+        result += '\n\n' + _indent('  ', schema['description']).rstrip()
+    if body is not None and body.find('\n') != -1:
         result += '\n\n' + body
     return result.rstrip()
 
@@ -122,7 +138,13 @@ def _method_docstring(description, params_schema, result_schema=None):
 
 def _hyperparams_docstring(hyperparams_schema):
     result = _params_docstring(hyperparams_schema['allOf'][0])
-    assert len(hyperparams_schema['allOf']) == 1, 'TODO: constraints'
+    if len(hyperparams_schema['allOf']) > 1:
+        result += 'Notes\n-----\n'
+        item_docstrings = [
+            _schema_docstring(f'constraint {i}',
+                              hyperparams_schema['allOf'][i])
+            for i in range(1, len(hyperparams_schema['allOf']))]
+        result += '\n\n'.join(item_docstrings)
     return result
 
 def _cls_docstring(impl_cls, combined_schemas):
@@ -159,3 +181,9 @@ def set_docstrings(impl_cls, combined_schemas):
             'Make predictions.',
             combined_schemas['properties']['input_predict'],
             combined_schemas['properties']['output_predict'])
+    if hasattr(impl_cls, 'predict_proba'):
+        assert impl_cls.predict_proba.__doc__ is None
+        impl_cls.predict_proba.__doc__ = _method_docstring(
+            'Probability estimates for all classes.',
+            combined_schemas['properties']['input_predict'],
+            combined_schemas['properties']['output_predict_proba'])
