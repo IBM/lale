@@ -176,7 +176,7 @@ class HyperoptImpl:
 
         return predictions
 
-    def results(self):
+    def summary(self):
         """Table summarizing the trial results (ID, loss, time, log_loss, status).
 
 Returns
@@ -202,7 +202,7 @@ Parameters
 pipeline_name : union type, default None
 
     - string
-        Key for table returned by results(), return a trainable pipeline.
+        Key for table returned by summary(), return a trainable pipeline.
 
     - None
         When not specified, return the best trained pipeline found.

@@ -1267,8 +1267,8 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate='_impl')
-    def results(self)->pd.DataFrame:
-        return self._impl.results()
+    def summary(self)->pd.DataFrame:
+        return self._impl.summary()
 
     def _lale_clone(self, cloner:Callable[[Any],Any]):
         """ This is really used for sklearn clone compatibility.
