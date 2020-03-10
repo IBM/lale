@@ -451,4 +451,4 @@ class TestErrorMessages(unittest.TestCase):
         with self.assertRaises(jsonschema.ValidationError) as cm:
             LogisticRegression(solver='sag', penalty='l1')
         summary = cm.exception.message.split('\n')[0]
-        self.assertEqual(summary, "Invalid configuration for LogisticRegression(solver='sag', penalty='l1') due to constraint the newton-cg, sag, and lbfgs solvers support only l2 penalties.")
+        self.assertEqual(summary, "Invalid configuration for LogisticRegression(solver='sag', penalty='l1') due to {'enum': ['newton-cg', 'sag', 'lbfgs']} is not allowed for 'sag'.")
