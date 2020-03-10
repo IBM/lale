@@ -26,7 +26,7 @@ else:
     install_requires=[
         'astunparse',
         'graphviz',
-        'hyperopt==0.1.2',
+        'hyperopt==0.2.3',
         'jsonschema==2.6.0',
         'jsonsubschema',
         'numpy',
