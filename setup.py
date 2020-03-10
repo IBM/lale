@@ -27,7 +27,7 @@ else:
         'astunparse',
         'graphviz',
         'hyperopt==0.2.3',
-        'jsonschema==2.6.0',
+        'jsonschema',
         'jsonsubschema',
         'numpy',
         'scikit-learn==0.20.3',

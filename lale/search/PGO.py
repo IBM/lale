@@ -45,7 +45,7 @@ def load_pgo_file(filepath) -> PGO:
         return load_pgo_data(json_data)
 
 def load_pgo_data(json_data) -> PGO:
-    jsonschema.validate(json_data, _input_schema)
+    jsonschema.validate(json_data, _input_schema, jsonschema.Draft4Validator)
     norm = normalize_pgo_type(json_data)
     return norm
 

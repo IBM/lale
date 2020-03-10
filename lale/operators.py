@@ -928,7 +928,8 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         params_all = trainable_to_get_params.get_params_all()
         try:
             helpers.validate_schema(params_all, self.hyperparam_schema())
-        except jsonschema.ValidationError as e:
+        except jsonschema.ValidationError as e_orig:
+            e = e_orig if e_orig.parent is None else e_orig.parent
             lale.helpers.validate_is_schema(e.schema)
             schema = lale.pretty_print.to_string(e.schema)
             if [*e.schema_path][:3] == ['allOf', 0, 'properties']:
