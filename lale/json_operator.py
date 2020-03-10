@@ -305,7 +305,7 @@ def to_json(op: 'lale.operators.Operator', call_depth:int=1) -> JSON_TYPE:
     cls2label = _get_cls2label(call_depth + 1)
     gensym = _GenSym(op, cls2label)
     uid, jsn = _op_to_json_rec(op, cls2label, gensym)
-    jsonschema.validate(jsn, SCHEMA)
+    jsonschema.validate(jsn, SCHEMA, jsonschema.Draft4Validator)
     return jsn
 
 def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
@@ -387,6 +387,6 @@ def _op_from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
     assert False, f'unexpected JSON {jsn}'
 
 def from_json(jsn: JSON_TYPE) -> 'lale.operators.Operator':
-    jsonschema.validate(jsn, SCHEMA)
+    jsonschema.validate(jsn, SCHEMA, jsonschema.Draft4Validator)
     result = _op_from_json_rec(jsn)
     return result

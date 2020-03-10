@@ -125,7 +125,7 @@ def enumValues(es:set_with_str_for_keys[Any], s:Schema)->set_with_str_for_keys[A
     try:
         for e in es:
             try:
-                jsonschema.validate(e, s)
+                jsonschema.validate(e, s, jsonschema.Draft4Validator)
                 ret.append(e)
             except:
                 logger.debug(f"enumValues: {e} removed from {es} because it does not validate according to {s}")

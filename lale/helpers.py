@@ -123,7 +123,7 @@ def ndarray_to_json(arr, subsample_array:bool=True) -> Union[list, dict]:
 
 def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
     json_value = data_to_json(value, subsample_array)
-    jsonschema.validate(json_value, schema)
+    jsonschema.validate(json_value, schema, jsonschema.Draft4Validator)
 
 def validate_schema_or_subschema(part, super_schema):
     if is_schema(part):

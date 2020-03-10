@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import unittest
-import jsonschema
 import warnings
 
 import sklearn.datasets

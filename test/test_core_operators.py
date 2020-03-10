@@ -667,11 +667,11 @@ class TestOperatorChoice(unittest.TestCase):
 
 class TestTfidfVectorizer(unittest.TestCase):
     def test_more_hyperparam_values(self):
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
+        with self.assertRaises(jsonschema.ValidationError):
             tf_idf = TfidfVectorizer(max_df=2.5, min_df=2,
                                     max_features=1000,
                                     stop_words='english')
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
+        with self.assertRaises(jsonschema.ValidationError):
             tf_idf = TfidfVectorizer(max_df=2, min_df=2,
                                     max_features=1000,
                                     stop_words=['I', 'we', 'not', 'this', 'that'],
@@ -681,7 +681,7 @@ class TestTfidfVectorizer(unittest.TestCase):
         # tokenize the doc and lemmatize its tokens
         def my_tokenizer():
             return 'abc'
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
+        with self.assertRaises(jsonschema.ValidationError):
             tf_idf = TfidfVectorizer(max_df=2, min_df=2,
                                     max_features=1000,
                                     stop_words='english',

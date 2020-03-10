@@ -50,7 +50,7 @@ def get_default(schema)->Optional[Any]:
     if d is not None:
         try:
             s = forOptimizer(schema)
-            jsonschema.validate(d, s)
+            jsonschema.validate(d, s, jsonschema.Draft4Validator)
             return d
         except:
             logger.debug(f"get_default: default {d} not used because it is not valid for the schema {schema}")
