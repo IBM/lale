@@ -44,7 +44,7 @@ _hyperparams_schema = {
           'Operators or pipelines to be applied to subsets of the data.',
         'type': 'array',
         'items': {
-          'description': 'Tuple of (name, transformer, column(s))',
+          'description': 'Tuple of (name, transformer, column(s)).',
           'type': 'array',
           'typeForOptimizer': 'tuple',
           'minItems': 3, 'maxItems': 3,
@@ -54,8 +54,7 @@ _hyperparams_schema = {
           { 'description': 'Transformer.',
             'anyOf': [
             { 'description': 'Transformer supporting fit and transform.',
-              'typeForOptimizer': 'operator',
-              'not': {'type': 'string'}},
+              'typeForOptimizer': 'operator'},
             { 'enum': ['passthrough', 'drop']}]},
           { 'description': 'Column(s).',
             'anyOf': [
@@ -74,8 +73,7 @@ _hyperparams_schema = {
           'Transformation for columns that were not specified in transformers.',
         'anyOf': [
         { 'description': 'Transformer supporting fit and transform.',
-          'typeForOptimizer': 'operator',
-          'not': {'type': 'string'}},
+          'typeForOptimizer': 'operator'},
         { 'enum': ['passthrough', 'drop']}],
         'default': 'drop'},
       'sparse_threshold': {
@@ -141,14 +139,14 @@ _output_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Column transformer`_ applies transformers to columns of an array or pandas DataFrame.
+    'description': """ColumnTransformer_ applies transformers to columns of an array or pandas DataFrame.
 
-.. _`Column transformer`: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html
+.. _ColumnTransformer: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.column_transformer.html',
     'type': 'object',
     'tags': {
-        'pre': ['categoricals'],
+        'pre': [],
         'op': ['transformer'],
         'post': []},
     'properties': {
