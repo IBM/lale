@@ -485,7 +485,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             lale_op = TrainedIndividualOp(class_._name, class_._impl, class_._schemas)
         class_ = lale_op(**sklearn_obj.get_params())
         if lale_wrapper_found:
-            class_._impl._sklearn_model =  copy.deepcopy(sklearn_obj)
+            class_._impl_instance()._sklearn_model =  copy.deepcopy(sklearn_obj)
         else:# If there is no lale wrapper, there is no _sklearn_model
             class_._impl = copy.deepcopy(sklearn_obj) 
         return class_
@@ -512,7 +512,7 @@ def get_hyperparam_names(op):
         params = next(iter(hp_schema.get('allOf', []))).get('properties', {})
         return list(params.keys())
     else:
-        return inspect.getargspec(op._impl.__class__.__init__).args
+        return inspect.getargspec(op._impl_class().__init__).args
                 
 def validate_method(op, m):
     if op._impl.__module__.startswith('lale'):

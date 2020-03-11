@@ -16,6 +16,7 @@ import unittest
 import jsonschema
 import warnings
 import sklearn.datasets
+import inspect
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
@@ -90,7 +91,7 @@ def create_function_test_classifier(clf_name):
             warnings.simplefilter("ignore")
             from lale.lib.sklearn.gradient_boosting_classifier import GradientBoostingClassifierImpl
             from lale.lib.sklearn.mlp_classifier import MLPClassifierImpl
-            if isinstance(clf._impl, GradientBoostingClassifierImpl):
+            if clf._impl_class() == GradientBoostingClassifierImpl:
                 #because exponential loss does not work with iris dataset as it is not binary classification
                 import lale.schemas as schemas
                 clf = clf.customize_schema(loss=schemas.Enum(default='deviance', values=['deviance']))
@@ -186,7 +187,7 @@ def create_function_test_regressor(clf_name):
 
         #test_with_hyperopt
         from lale.lib.sklearn.ridge import RidgeImpl
-        if not isinstance(regr._impl, RidgeImpl):
+        if regr._impl_class() != RidgeImpl:
             from lale.lib.lale import Hyperopt
             hyperopt = Hyperopt(estimator=pipeline, max_evals=1, scoring='r2')
             trained = hyperopt.fit(self.X_train, self.y_train)
@@ -234,7 +235,7 @@ def create_function_test_feature_preprocessor(fproc_name):
         fproc = class_()
 
         from lale.lib.sklearn.one_hot_encoder import OneHotEncoderImpl
-        if isinstance(fproc._impl, OneHotEncoderImpl):
+        if fproc._impl_class() == OneHotEncoderImpl:
             #fproc = OneHotEncoder(handle_unknown = 'ignore')
             #remove the hack when this is fixed
             fproc = PCA()
@@ -817,3 +818,9 @@ class TestBaggingClassifier(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         clf = BaggingClassifier(base_estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier()))
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+class TestLazyImpl(unittest.TestCase):
+    def test_lazy_impl(self):
+        from lale.lib.lale import Hyperopt
+        impl = Hyperopt._impl
+        self.assertTrue(inspect.isclass(impl))
