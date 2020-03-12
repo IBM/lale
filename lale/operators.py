@@ -1306,13 +1306,18 @@ all_available_operators: List[PlannedOperator] = []
 def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
     if name is None:
         name = helpers.assignee_name()
-    if hasattr(impl, 'fit'):
-        if inspect.isclass(impl):
+    if inspect.isclass(impl):
+        if hasattr(impl, 'fit'):
             operatorObj = PlannedIndividualOp(name, impl, schemas)
         else:
-            operatorObj = TrainableIndividualOp(name, impl, schemas)
+            operatorObj = TrainedIndividualOp(name, impl, schemas)
     else:
-        operatorObj = TrainedIndividualOp(name, impl, schemas)
+        if hasattr(impl, 'fit'):
+            operatorObj = TrainableIndividualOp(name, impl, schemas)
+        else:
+            operatorObj = TrainedIndividualOp(name, impl, schemas)
+        if hasattr(impl, 'get_params'):
+            operatorObj._hyperparams = {**impl.get_params()}
     all_available_operators.append(operatorObj)
     return operatorObj
 

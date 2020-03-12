@@ -535,7 +535,7 @@ def signature_to_schema(sig):
     for name, param in sig.parameters.items():
         ignored_kinds = [inspect.Parameter.VAR_POSITIONAL,
                          inspect.Parameter.VAR_KEYWORD]
-        if param.kind not in ignored_kinds:
+        if name != 'self' and param.kind not in ignored_kinds:
             param_schema = {}
             if param.default != inspect.Parameter.empty:
                 param_schema['default'] = param.default
