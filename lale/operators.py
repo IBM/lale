@@ -913,8 +913,8 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     """
     _hyperparams:Optional[Dict[str,Any]]
 
-    def __init__(self, name:str, impl, schemas) -> None:
-        super(PlannedIndividualOp, self).__init__(name, impl, schemas)
+    def __init__(self, _name:str, _impl, _schemas) -> None:
+        super(PlannedIndividualOp, self).__init__(_name, _impl, _schemas)
         self._hyperparams = None
 
     def _configure(self, *args, **kwargs)->'TrainableIndividualOp':
@@ -937,7 +937,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
                 v2 = v
             hyperparams[k] = v2
         #using params_all instead of hyperparams to ensure the construction is consistent with schema
-        trainable_to_get_params = TrainableIndividualOp(name=self.name(), impl=None, schemas=self._schemas)
+        trainable_to_get_params = TrainableIndividualOp(_name=self.name(), _impl=None, _schemas=self._schemas)
         trainable_to_get_params._hyperparams = hyperparams
         params_all = trainable_to_get_params.get_params_all()
         try:
@@ -978,7 +978,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         else:
             impl = class_(**params_all)
 
-        result = TrainableIndividualOp(name=self.name(), impl=impl, schemas=self._schemas)
+        result = TrainableIndividualOp(_name=self.name(), _impl=impl, _schemas=self._schemas)
         result._hyperparams = hyperparams
         return result
 
@@ -1019,8 +1019,8 @@ def _mutation_warning(method_name:str)->str:
     return msg.format(method_name, method_name)
 
 class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
-    def __init__(self, name, impl, schemas):
-        super(TrainableIndividualOp, self).__init__(name, impl, schemas)
+    def __init__(self, _name, _impl, _schemas):
+        super(TrainableIndividualOp, self).__init__(_name, _impl, _schemas)
 
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
         X = self._validate_input_schema('X', X, 'fit')
@@ -1213,8 +1213,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
     _frozen_trained:bool
 
-    def __init__(self, name, impl, schemas):
-        super(TrainedIndividualOp, self).__init__(name, impl, schemas)
+    def __init__(self, _name, _impl, _schemas):
+        super(TrainedIndividualOp, self).__init__(_name, _impl, _schemas)
         self._frozen_trained = not hasattr(self._impl, 'fit')
 
     def __call__(self, *args, **kwargs)->'TrainedIndividualOp':
