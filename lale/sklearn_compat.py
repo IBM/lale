@@ -456,8 +456,8 @@ class SKlearnCompatWrapper(object):
         model = None
         if op is None:
             model = None
-        elif hasattr(op, '_impl') and hasattr(op._impl, '_sklearn_model'):
-            model = op._impl._sklearn_model
+        elif hasattr(op, '_impl') and hasattr(op._impl_instance(), '_sklearn_model'):
+            model = op._impl_instance()._sklearn_model
         return 'passthrough' if model is None else model
 
     @property
