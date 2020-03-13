@@ -186,12 +186,10 @@ _input_fit_schema = {
                 }}],
             'description': 'The training input samples. Internally, its dtype will be converted'},
         'y': {
-            'type': 'array',
-            'items': {
-                'anyOf':[
-                {'type': 'number'},
-                {'type': 'string'}]},
-            'description': 'The target values (class labels in classification, real numbers in'},
+            'description': 'The target values (class labels in classification, real numbers in',
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}]},
         'sample_weight': {
             'anyOf': [{
                 'type': 'array',
@@ -220,12 +218,10 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted classes.',
-    'type': 'array',
-    'items': {
-        'anyOf':[
-        {'type': 'number'},
-        {'type': 'string'}]},
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities for X.',

@@ -176,9 +176,9 @@ _input_fit_schema = {
                 'items': { 'type': 'number'}}},
         'y': {
             'description': 'Target values',
-            'type': 'array',
-            'items': {
-                    'type': 'number'}
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}]
             },
         'coef_init': {
             'type': 'array',
@@ -210,9 +210,9 @@ _input_predict_schema = {
 _output_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
-    'type': 'array',
-        'items': {
-            'type': 'number'}}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

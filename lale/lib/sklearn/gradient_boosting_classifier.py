@@ -225,11 +225,9 @@ _input_fit_schema = {
             },
             'description': 'The input samples. Internally, it will be converted to'},
         'y': {
-            'type': 'array',
-            'items': {
-                'anyOf':[
-                {'type': 'number'},
-                {'type': 'string'}]},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'Target values (strings or integers in classification, real numbers'},
         'sample_weight': {
             'anyOf': [{
@@ -263,12 +261,10 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted values.',
-    'type': 'array',
-    'items': {
-        'anyOf':[
-        {'type': 'number'},
-        {'type': 'string'}]},
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities for X.',
