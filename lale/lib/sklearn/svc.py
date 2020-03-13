@@ -173,8 +173,9 @@ _input_fit_schema = {
             'items': {'type': 'array', 'items': {'type': 'number'}},
             'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
-            'type': 'array',
-            'items': {'type': 'number'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'Target values (class labels in classification, real numbers in regression)'},
         'sample_weight': {
             'anyOf': [{
@@ -200,10 +201,11 @@ _input_predict_schema = {
 }
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'type': 'array',
-    'items':  {'type': 'number'},
     'description': 'Class labels for samples in X.',
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'type': 'object',

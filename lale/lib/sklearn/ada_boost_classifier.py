@@ -101,9 +101,9 @@ _input_fit_schema = {
             },
             'description': 'The training input samples. Sparse matrix can be CSC, CSR, COO,'},
         'y': {
-            'type': 'array',
-            'items': {
-                'type': 'number'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'The target values (class labels).'},
         'sample_weight': {
             'anyOf': [{
@@ -134,10 +134,10 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted classes.',
-    'type': 'array',
-    'items': {
-        'type': 'number'},
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities for X.',

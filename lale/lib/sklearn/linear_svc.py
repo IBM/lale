@@ -194,8 +194,9 @@ _input_fit_schema = {
             'items': {'type': 'array', 'items': {'type': 'number'}},
             'description': 'Training vector.'},
         'y': {
-            'type': 'array',
-            'items': {'type': 'number'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'Target vector relative to X.'},
         'sample_weight': {
             'anyOf': [
@@ -220,9 +221,9 @@ _input_predict_schema = {
 _output_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
-    'required': ['C'],
-    'type': 'array',
-    'items': { 'type': 'number'}}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

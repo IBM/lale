@@ -117,7 +117,7 @@ def dtype_to_schema(typ):
         result = {'type': 'integer'}
     elif np.issubdtype(typ, np.number):
         result = {'type': 'number'}
-    elif np.issubdtype(typ, np.string_):
+    elif np.issubdtype(typ, np.string_) or np.issubdtype(typ, np.unicode_):
         result = {'type': 'string'}
     elif isinstance(typ, np.dtype):
         if typ.fields:

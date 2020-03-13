@@ -89,9 +89,9 @@ _input_fit_schema = {
             },
             'description': 'Training vector, where n_samples is the number of samples and'},
         'y': {
-            'type': 'array',
-            'items': {
-                'type': 'number'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'Target values (integers)'},
     },
 }
@@ -112,10 +112,10 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
-    'type': 'array',
-    'items': {
-        'type': 'number'},
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return posterior probabilities of classification.',

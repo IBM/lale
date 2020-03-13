@@ -419,7 +419,10 @@ _input_fit_schema = {
                     'items': { 'type': 'number'}}},
             {   'type': 'array',
                 'items': {
-                    'type': 'number'}}]}}}
+                    'type': 'number'}},
+            {   'type': 'array',
+                'items': {
+                    'type': 'string'}}]}}}
 
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -444,7 +447,10 @@ _output_schema = {
             'items': {'type': 'number'}}},
     {   'type': 'array',
         'items': {
-            'type': 'number'}}]}
+            'type': 'number'}},
+    {   'type': 'array',
+        'items': {
+            'type': 'string'}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

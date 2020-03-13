@@ -267,9 +267,9 @@ _input_fit_schema = {
             },
             'description': 'Training data'},
         'y': {
-            'type': 'array',
-            'items': {
-                'type': 'number'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'Target values'},
         'coef_init': {
             'type': 'array',
@@ -313,10 +313,10 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
-    'type': 'array',
-    'items': {
-        'type': 'number'},
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability estimates.',

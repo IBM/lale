@@ -77,8 +77,9 @@ _input_fit_schema = {
             'items': {'type': 'array', 'items': {'type': 'number'}},
             'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
-            'type': 'array',
-            'items': {'type': 'number'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}}],
             'description': 'Target values.'},
         'sample_weight': {
             'anyOf': [{
@@ -103,10 +104,10 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
-    'type': 'array',
-    'items': {'type': 'number'},
-    'description': 'Predicted target values for X'
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
