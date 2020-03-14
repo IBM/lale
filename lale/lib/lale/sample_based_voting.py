@@ -109,10 +109,9 @@ _input_predict_schema = {
             'description': 'Features; the outer array is over samples.',
             'type': 'array'}}}
 
-_output_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Output data schema for transformations using NoOp.',
-    'type': 'array'}
+_output_transform_schema = {
+  'type': 'array',
+  'items': {'laleType': 'Any'}}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -127,7 +126,7 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema }}
+        'output_transform': _output_transform_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

@@ -54,7 +54,7 @@ _hyperparams_schema = {
                 'XXX TODO XXX': 'tuple, length = n_layers - 2, default (100,)',
                 'description': 'The ith element represents the number of neurons in the ith',
                 'type': 'array',
-                'typeForOptimizer': 'tuple',
+                'laleType': 'tuple',
                 'default': (100,)},
             'activation': {
                 'enum': ['identity', 'logistic', 'tanh', 'relu'],

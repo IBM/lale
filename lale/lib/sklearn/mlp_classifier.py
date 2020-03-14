@@ -66,7 +66,7 @@ _hyperparams_schema = {
                     'The ith element represents the number of neurons in '
                     'the ith hidden layer.',
                 'type': 'array',
-                'typeForOptimizer': 'tuple',
+                'laleType': 'tuple',
                 'minItemsForOptimizer': 1,
                 'maxItemsForOptimizer': 20,
                 'items': {
@@ -437,7 +437,7 @@ _input_predict_schema = {
             'items': {
                 'type': 'array', 'items': {'type': 'number'}}}}}
 
-_output_schema = {
+_output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the multi-layer perceptron classifier',
     'anyOf': [
@@ -465,7 +465,7 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema }}
+        'output_predict': _output_predict_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

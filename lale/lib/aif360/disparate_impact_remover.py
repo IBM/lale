@@ -69,8 +69,8 @@ _input_schema_predict = {
       'type': 'array',
       'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
-_output_schema = {
-    'description': 'Output data schema for predictions (reweighed features).',
+_output_transform_schema = {
+    'description': 'Output data schema for reweighted features.',
     'type': 'array',
     'items': {
         'type': 'array',
@@ -105,7 +105,7 @@ _combined_schemas = {
   'properties': {
     'input_fit': _input_schema_fit,
     'input_predict': _input_schema_predict,
-    'output': _output_schema,
+    'output_transform': _output_transform_schema,
     'hyperparams': _hyperparams_schema } }
 
 if __name__ == "__main__":

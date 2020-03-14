@@ -111,7 +111,8 @@ _input_schema_predict = {
 
 _output_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': 'Output data schema for transformed data.'}
+  'description': 'Output data schema for transformed data.',
+  'laleType': 'Any'}
   
 
 _hyperparams_schema = {
@@ -127,7 +128,7 @@ _hyperparams_schema = {
       'properties': {
         'operator':{
           'description':'A lale pipeline object to be used inside of batching',
-          'typeForOptimizer': 'operator'
+          'laleType': 'operator'
         },
         'batch_size':{
           'description': 'Batch size used for transform.',

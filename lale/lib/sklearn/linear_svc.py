@@ -218,7 +218,7 @@ _input_predict_schema = {
             'items': {'type': 'array', 'items': {'type': 'number'}},
             'description': 'Samples.'}}}
 
-_output_schema = {
+_output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
     'anyOf': [
@@ -238,7 +238,7 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema},
+        'output_predict': _output_predict_schema},
 }
 
 if (__name__ == '__main__'):

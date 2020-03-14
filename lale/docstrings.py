@@ -42,8 +42,8 @@ def _kind_tag(schema):
 
 def _schema_docstring(name, schema, required=True, relevant=True):
     tags = []
-    if 'typeForOptimizer' in schema:
-        tags.append(schema['typeForOptimizer'])
+    if 'laleType' in schema:
+        tags.append(schema['laleType'])
     tags.append(_kind_tag(schema))
     if 'minimum' in schema:
         op = '>' if schema.get('exclusiveMinimum', False) else '>='

@@ -44,7 +44,7 @@ _hyperparams_schema = {
                 'XXX TODO XXX': 'tuple (q_min, q_max), 0.0 < q_min < q_max < 100.0',
                 'description': 'Default: (25.0, 75.0) = (1st quantile, 3rd quantile) = IQR',
                 'type': 'array',
-                'typeForOptimizer': 'tuple',
+                'laleType': 'tuple',
                 'default': (25.0, 75.0)},
             'copy': {
                 'XXX TODO XXX': 'boolean, optional, default is True',

@@ -61,7 +61,7 @@ _input_schema_predict = {
       'type': 'array',
       'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
-_output_schema = {
+_output_transform_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for transformed data.',
   'type': 'array',
@@ -82,7 +82,7 @@ _hyperparams_schema = {
         'feature_range': {
           'description': 'Desired range of transformed data.',
           'type': 'array',
-          'typeForOptimizer': 'tuple',
+          'laleType': 'tuple',
           'minItems': 2,
           'maxItems': 2,
           'default': [0, 1]},
@@ -105,7 +105,7 @@ _combined_schemas = {
   'properties': {
     'input_fit': _input_schema_fit,
     'input_predict': _input_schema_predict,
-    'output': _output_schema,
+    'output_transform': _output_transform_schema,
     'hyperparams': _hyperparams_schema } }
 
 if __name__ == "__main__":

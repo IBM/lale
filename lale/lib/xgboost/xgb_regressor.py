@@ -366,7 +366,7 @@ _input_predict_schema = {
             'type': 'boolean',
             'default': True,
             'description': "When this is True, validate that the Booster's and data's feature_names are identical."}}}
-_output_schema = {
+_output_predict_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for predictions (target class labels).',
   'type': 'array',
@@ -380,7 +380,7 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output': _output_schema,
+        'output_predict': _output_predict_schema,
     },
 }
 if (__name__ == '__main__'):

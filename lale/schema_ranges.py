@@ -109,7 +109,7 @@ class SchemaRange(object):
         else:
             number_schema['type'] = 'number'
             if optimizer_range.is_integer:
-                number_schema['typeForOptimizer'] = 'integer'
+                number_schema['laleType'] = 'integer'
 
         if actual_range.minimum is not None:
             number_schema['minimum'] = actual_range.minimum

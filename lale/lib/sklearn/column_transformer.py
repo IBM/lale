@@ -46,7 +46,7 @@ _hyperparams_schema = {
         'items': {
           'description': 'Tuple of (name, transformer, column(s)).',
           'type': 'array',
-          'typeForOptimizer': 'tuple',
+          'laleType': 'tuple',
           'minItems': 3, 'maxItems': 3,
           'items': [
           { 'description': 'Name.',
@@ -54,7 +54,7 @@ _hyperparams_schema = {
           { 'description': 'Transformer.',
             'anyOf': [
             { 'description': 'Transformer supporting fit and transform.',
-              'typeForOptimizer': 'operator'},
+              'laleType': 'operator'},
             { 'enum': ['passthrough', 'drop']}]},
           { 'description': 'Column(s).',
             'anyOf': [
@@ -73,7 +73,7 @@ _hyperparams_schema = {
           'Transformation for columns that were not specified in transformers.',
         'anyOf': [
         { 'description': 'Transformer supporting fit and transform.',
-          'typeForOptimizer': 'operator'},
+          'laleType': 'operator'},
         { 'enum': ['passthrough', 'drop']}],
         'default': 'drop'},
       'sparse_threshold': {
@@ -130,7 +130,7 @@ _input_predict_schema = {
         'items': {
            'anyOf':[{'type': 'number'}, {'type':'string'}]}}}}}
 
-_output_schema = {
+_output_transform_schema = {
   'description': 'Features; the outer array is over samples.',
   'type': 'array',
   'items': {
@@ -153,7 +153,7 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output_transform': _output_schema }}
+        'output_transform': _output_transform_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

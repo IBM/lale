@@ -207,7 +207,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                     return impossible()
             elif 'type' in s:
                 t = s.get('type', None)
-                to = s.get('typeForOptimizer', None)
+                to = s.get('laleType', None)
                 if t == 'array':
                     # tuples are distinct from arrays
                     if to is not None and to == 'tuple':
@@ -227,11 +227,11 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 # Ignore missing constraints
                 pass
             else:
-                to = s.get('typeForOptimizer', None)
+                to = s.get('laleType', None)
                 if to is None:
                     logger.warning(f"simplifyAll: '{s}' has unknown type")
                 s_other.append(s)
-            to = s.get('typeForOptimizer', None)
+            to = s.get('laleType', None)
             if to == 'operator':
                 if s_type_for_optimizer is not None and s_type_for_optimizer != 'operator':
                     logger.error(f"simplifyAll: '{s}' has operator type for optimizer, but we also have another type for optimizer saved")
@@ -498,7 +498,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
 
         ret_arr:Dict[str,Any] = {'type':'array'}
         if is_tuple:
-            ret_arr['typeForOptimizer'] = 'tuple'
+            ret_arr['laleType'] = 'tuple'
         if min_size > 0:
             ret_arr['minItems'] = min_size
         if max_size is not None:
@@ -557,7 +557,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     ret_main = s_extra if s_extra else {}
 
     if s_type_for_optimizer is not None:
-        ret_main["typeForOptimizer"] = s_type_for_optimizer
+        ret_main["laleType"] = s_type_for_optimizer
     if s_enum:
         # we should simplify these as for s_not_enum
         ret_main['enum']=list(s_enum)
