@@ -31,7 +31,6 @@ from lale.search.PGO import remove_defaults_dict
 import inspect
 from lale.schemas import Schema 
 import jsonschema
-import jsonsubschema
 import lale.pretty_print
 import logging
 import h5py
@@ -897,7 +896,7 @@ class IndividualOp(Operator):
     def is_supervised(self, default_if_missing=True)->bool:
         s = self.input_schema_fit()
         if s:
-            return jsonsubschema.isSubschema(s, _is_supervised_schema)
+            return lale.helpers.is_subschema(s, _is_supervised_schema)
         return default_if_missing
 
 _is_supervised_schema = {

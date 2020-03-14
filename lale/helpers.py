@@ -157,6 +157,41 @@ def is_schema(value) -> bool:
         return True
     return False
 
+def json_replace(subject, old, new):
+    if subject == old:
+        return new
+    if isinstance(subject, list):
+        result = [json_replace(s, old, new) for s in subject]
+        for i in range(len(subject)):
+            if subject[i] != result[i]:
+                return result
+    elif isinstance(subject, tuple):
+        result = tuple([json_replace(s, old, new) for s in subject])
+        for i in range(len(subject)):
+            if subject[i] != result[i]:
+                return result
+    elif isinstance(subject, dict):
+        if isinstance(old, dict):
+            is_sub_dict = True
+            for k, v in old.items():
+                if k not in subject or subject[k] != v:
+                    is_sub_dict = False
+                    break
+            if is_sub_dict:
+                return {**subject, **new}
+        result = {k: json_replace(v, old, new) for k, v in subject.items()}
+        for k in subject:
+            if subject[k] != result[k]:
+                return result
+    return subject #nothing changed so share original object (not a copy)
+
+def is_subschema(sub, sup):
+    new_sub = json_replace(sub, {'laleType': 'Any'}, {'not': {}})
+    try:
+        return jsonsubschema.isSubschema(new_sub, sup)
+    except Exception as e:
+        raise ValueError(f'problem checking ({sub} <: {sup})') from e
+
 class SubschemaError(Exception):
     def __init__(self, sub, sup, sub_name='sub', sup_name='super'):
         self.sub = sub
@@ -173,7 +208,7 @@ class SubschemaError(Exception):
         return summary + details
 
 def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
-    if not jsonsubschema.isSubschema(sub, sup):
+    if not is_subschema(sub, sup):
         raise SubschemaError(sub, sup, sub_name, sup_name)
 
 def join_schemas(*schemas):
@@ -182,9 +217,9 @@ def join_schemas(*schemas):
             return s_b
         s_a = lale.helpers.dict_without(s_a, 'description')
         s_b = lale.helpers.dict_without(s_b, 'description')
-        if jsonsubschema.isSubschema(s_a, s_b):
+        if is_subschema(s_a, s_b):
             return s_b
-        if jsonsubschema.isSubschema(s_b, s_a):
+        if is_subschema(s_b, s_a):
             return s_a
         return jsonsubschema.joinSchemas(s_a, s_b)
     if len(schemas) == 0:

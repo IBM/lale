@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import jsonsubschema
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.helpers
 import lale.operators
 import sklearn.compose
-
-def _isSubschema(sub, sup):
-    try:
-        return jsonsubschema.isSubschema(sub, sup)
-    except Exception as e:
-        raise ValueError(f'problem checking ({sub} <: {sup})') from e
 
 class ProjectImpl:
     def __init__(self, columns=None):
@@ -38,7 +31,7 @@ class ProjectImpl:
             assert n_columns == s_row['maxItems']
             s_cols = s_row['items']
             if isinstance(s_cols, dict):
-                if _isSubschema(s_cols, columns):
+                if lale.helpers.is_subschema(s_cols, columns):
                     columns = [*range(n_columns)]
                 else:
                     columns = []
@@ -46,7 +39,7 @@ class ProjectImpl:
                 assert isinstance(s_cols, list)
                 columns = [
                     i for i in range(n_columns)
-                    if _isSubschema(s_cols[i], columns)]
+                    if lale.helpers.is_subschema(s_cols[i], columns)]
         self._col_tfm = sklearn.compose.ColumnTransformer(
             transformers=[('keep', 'passthrough', columns)])
         self._col_tfm.fit(X)
@@ -100,13 +93,14 @@ class ProjectImpl:
         s_row = s_X['items']
         s_cols = s_row['items']
         if isinstance(s_cols, dict):
-            if _isSubschema(s_cols, schema):
+            if lale.helpers.is_subschema(s_cols, schema):
                 s_row_result = s_row
             else:
                 s_row_result = {'type': 'array', 'minItems': 0, 'maxItems': 0}
         else:
             assert isinstance(s_cols, list)
-            s_cols_result = [s for s in s_cols if _isSubschema(s, schema)]
+            s_cols_result = [s for s in s_cols
+                             if lale.helpers.is_subschema(s, schema)]
             n_columns = len(s_cols_result)
             s_row_result = {
                 'type': 'array',
