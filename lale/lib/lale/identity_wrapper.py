@@ -62,7 +62,7 @@ _hyperparams_schema = {
         'relevantToOptimizer': ['order', 'op1', 'op2'],
         'properties': {
             'op': {
-                'typeForOptimizer': 'operator'
+                'laleType': 'operator'
             }
         }}]}
 
@@ -88,7 +88,8 @@ _input_predict_schema = {
 
 _output_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Output data schema for transformations using identity.'}
+    'description': 'Output data schema for transformations using identity.',
+    'laleType': 'Any'}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

@@ -186,7 +186,7 @@ _input_predict_schema = {
                 'type': 'array',
                 'items': {'type': 'number'}}}}}
 
-_output_schema = {
+_output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Features; the outer array is over samples.',
     'type': 'array',
@@ -210,7 +210,7 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output_transform': _output_schema }}
+        'output_transform': _output_transform_schema }}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

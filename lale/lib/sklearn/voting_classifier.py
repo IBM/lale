@@ -55,10 +55,10 @@ _hyperparams_schema = {
                 'type': 'array',
                 'items': {
                     'type': 'array',
-                    'typeForOptimizer': 'tuple',
+                    'laleType': 'tuple',
                     'items': [
                         {'type':'string'},
-                        {'typeForOptimizer': 'operator'}
+                        {'laleType': 'operator'}
                     ]
                 },
                 'description': 'list of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones'},

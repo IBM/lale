@@ -161,7 +161,7 @@ class Array(Schema):
                  minItemsForOptimizer: Option[int] = undefined,
                  maxItems: Option[int] = undefined,
                  maxItemsForOptimizer: Option[int] = undefined,
-                 typeForOptimizer: Option[str] = undefined,):
+                 laleType: Option[str] = undefined,):
         super().__init__(desc, default, forOptimizer)
         self.set('type', 'array')
         self.set('items', items.schema)
@@ -169,7 +169,7 @@ class Array(Schema):
         self.set('minItemsForOptimizer', minItemsForOptimizer)
         self.set('maxItems', maxItems)
         self.set('maxItemsForOptimizer', maxItemsForOptimizer)
-        self.set('typeForOptimizer', typeForOptimizer)
+        self.set('laleType', laleType)
 
 
 class Object(Schema):

@@ -55,7 +55,7 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'base_estimator': {
-                'anyOf': [{'typeForOptimizer' : 'operator'},
+                'anyOf': [{'laleType' : 'operator'},
                 {'enum': [None]}],
                 'default': None,
                 'description': 'The base estimator from which the boosted ensemble is built.'},

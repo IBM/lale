@@ -221,7 +221,7 @@ _hyperparams_schema = {
         'properties': {
             'estimator': {
                 'anyOf': [
-                {   'typeForOptimizer': 'operator',
+                {   'laleType': 'operator',
                     'not': {'enum': [None]}},
                 {   'enum': [None]}],
                 'default': None},

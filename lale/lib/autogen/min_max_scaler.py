@@ -34,7 +34,7 @@ _hyperparams_schema = {
                 'XXX TODO XXX': 'tuple (min, max), default=(0, 1)',
                 'description': 'Desired range of transformed data.',
                 'type': 'array',
-                'typeForOptimizer': 'tuple',
+                'laleType': 'tuple',
                 'default': (0, 1)},
             'copy': {
                 'type': 'boolean',

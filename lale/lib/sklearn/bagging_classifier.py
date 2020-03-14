@@ -57,7 +57,7 @@ _hyperparams_schema = {
         'properties': {
             'base_estimator': {
                 'anyOf': [{
-                    'typeForOptimizer': 'operator'}, {
+                    'laleType': 'operator'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The base estimator to fit on random subsets of the dataset.'},

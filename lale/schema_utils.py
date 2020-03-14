@@ -169,7 +169,7 @@ def forOptimizer(schema:Schema)->Schema:
     return schema
 
 def has_operator(schema:Schema)->bool:
-    to = schema.get('typeForOptimizer', None)
+    to = schema.get('laleType', None)
     if to == 'operator':
         return True
     if 'not' in schema:
@@ -273,7 +273,7 @@ def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
                       'maxItems': items_len
                      }
                 if is_tuple:
-                    ls['typeForOptimizer'] = 'tuple'
+                    ls['laleType'] = 'tuple'
                 complex_evs.append(ls)
             else:
                 simple_evs.append(ev)

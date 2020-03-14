@@ -238,7 +238,7 @@ _hyperparams_schema = {
             'estimator': {
                 'description': 'Planned Lale individual operator or pipeline,\nby default LogisticRegression.',
                 'anyOf': [
-                {   'typeForOptimizer': 'operator',
+                {   'laleType': 'operator',
                     'not': {'enum': [None]}},
                 {   'enum': [None]}],
                 'default': None},

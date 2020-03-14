@@ -200,7 +200,7 @@ class SearchSpaceOperatorVisitor(Visitor):
             return None
 
         typ:Optional[str] = None
-        typ = schema.get('typeForOptimizer', None)
+        typ = schema.get('laleType', None)
         if typ is None:
             typ = schema.get('type', None)
         else:
@@ -234,13 +234,13 @@ class SearchSpaceOperatorVisitor(Visitor):
 
                 distribution = schema.get('distribution', None)
 
-                typeForOptimizer = schema.get('typeForOptimizer', None)
-                if typeForOptimizer is None:
-                    typeForOptimizer = typ
+                laleType = schema.get('laleType', None)
+                if laleType is None:
+                    laleType = typ
 
-                if typeForOptimizer == "number":
+                if laleType == "number":
                     discrete = False
-                elif typeForOptimizer == "integer":
+                elif laleType == "integer":
                     discrete = True
                 else:
                     raise NotImplementedError()
@@ -256,11 +256,11 @@ class SearchSpaceOperatorVisitor(Visitor):
                                 pgo=asFreqs(pgo_freqs),
                                 default=get_default(schema))
             elif typ == "array" or typ =="tuple":
-                typeForOptimizer = schema.get('typeForOptimizer', None)
-                if typeForOptimizer is None:
-                    typeForOptimizer = typ
+                laleType = schema.get('laleType', None)
+                if laleType is None:
+                    laleType = typ
 
-                is_tuple:bool = typeForOptimizer == "tuple"
+                is_tuple:bool = laleType == "tuple"
 
                 min_items = schema.get('minItemsForOptimizer', None)
                 if min_items is None:

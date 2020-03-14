@@ -153,7 +153,7 @@ _input_schema_predict = {
       'description': 'Pytorch Dataset.'
       }}}
 
-_output_schema = {
+_output_predict_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for transformed data.',
   'type': 'array',
@@ -220,7 +220,7 @@ _combined_schemas = {
   'properties': {
     'input_fit': _input_schema_fit,
     'input_predict': _input_schema_predict,
-    'output': _output_schema,
+    'output_predict': _output_predict_schema,
     'hyperparams': _hyperparams_schema } }
 
 ResNet50 = make_operator(ResNet50Impl, _combined_schemas)

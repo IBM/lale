@@ -136,7 +136,7 @@ _input_schema_predict = {
                      'items': {'type': 'string'}}}]}
     }}
 
-_output_schema = {
+_output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for transformed data.',
     'type': 'array',
@@ -172,7 +172,7 @@ _combined_schemas = {
     'properties': {
         'input_fit': _input_schema_fit,
         'input_predict': _input_schema_predict,
-        'output': _output_schema,
+        'output_transform': _output_transform_schema,
         'hyperparams': _hyperparams_schema}}
 
 

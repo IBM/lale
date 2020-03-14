@@ -76,10 +76,10 @@ _hyperparams_schema = {
                 'default': 'forward'
             },
             'op1': {
-                'typeForOptimizer': 'operator'
+                'laleType': 'operator'
             },
             'op2': {
-                'typeForOptimizer': 'operator'
+                'laleType': 'operator'
             }
         }}]}
 
@@ -105,7 +105,8 @@ _input_predict_schema = {
 
 _output_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Output data schema for transformations using both.'}
+    'description': 'Output data schema for transformations using both.',
+    'laleType': 'Any'}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

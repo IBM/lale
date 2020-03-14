@@ -51,7 +51,7 @@ _hyperparams_schema = {
                 'description': 'If True, scale the data to interquartile range.'},
             'quantile_range': {
                 'type': 'array',
-                'typeForOptimizer': 'tuple',
+                'laleType': 'tuple',
                 'minItemsForOptimizer': 2,
                 'maxItemsForOptimizer': 2,
                 'items': [{
