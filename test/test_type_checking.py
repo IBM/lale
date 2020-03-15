@@ -14,7 +14,6 @@
 
 import unittest
 import jsonschema
-import jsonsubschema
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
@@ -452,3 +451,12 @@ class TestErrorMessages(unittest.TestCase):
             LogisticRegression(solver='sag', penalty='l1')
         summary = cm.exception.message.split('\n')[0]
         self.assertEqual(summary, "Invalid configuration for LogisticRegression(solver='sag', penalty='l1') due to constraint the newton-cg, sag, and lbfgs solvers support only l2 penalties.")
+
+class TestSchemaValidation(unittest.TestCase):
+    def test_any(self):
+        num_schema = {'type': 'number'}
+        any_schema = {'laleType': 'Any'}
+        jsonschema.validate(42, num_schema)
+        jsonschema.validate(42, any_schema)        
+        self.assertTrue(lale.helpers.is_subschema(num_schema, any_schema))
+        self.assertTrue(lale.helpers.is_subschema(any_schema, num_schema))
