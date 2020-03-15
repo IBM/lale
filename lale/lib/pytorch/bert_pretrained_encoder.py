@@ -109,7 +109,7 @@ _input_schema_fit = {
     }
     }}
 
-_input_schema_predict = {
+_input_transform_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for predictions.',
   'type': 'object',
@@ -164,10 +164,10 @@ _combined_schemas = {
     'op': ['transformer', '~interpretable'],
     'post': ['embedding']},
   'properties': {
+    'hyperparams': _hyperparams_schema,
     'input_fit': _input_schema_fit,
-    'input_predict': _input_schema_predict,
-    'output_transform': _output_transform_schema,
-    'hyperparams': _hyperparams_schema } }
+    'input_transform': _input_transform_schema,
+    'output_transform': _output_transform_schema}}
 
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(_combined_schemas)

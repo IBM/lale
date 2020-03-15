@@ -63,7 +63,7 @@ class BatchingImpl():
   def predict(self, X, y = None):
     return self.transform(X, y)
 
-_input_schema_fit = {
+_input_fit_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for fit.',
   'type': 'object',
@@ -86,7 +86,7 @@ _input_schema_fit = {
   }
 }
 
-_input_schema_predict = {
+_input_predict_transform_schema = { #TODO: separate predict vs. transform
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for predictions.',
   'type': 'object',
@@ -109,7 +109,7 @@ _input_schema_predict = {
   }
 }
 
-_output_schema = {
+_output_schema = { #TODO: separate predict vs. transform
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for transformed data.',
   'laleType': 'Any'}
@@ -163,13 +163,15 @@ _combined_schemas = {
   'type': 'object',
   'tags': {
     'pre': [],
-    'op': [],
+    'op': ['estimator', 'transformer'],
     'post': []},
   'properties': {
-    'input_fit': _input_schema_fit,
-    'input_predict': _input_schema_predict,
-    'output': _output_schema,
-    'hyperparams': _hyperparams_schema } }
+    'hyperparams': _hyperparams_schema,
+    'input_fit': _input_fit_schema,
+    'input_predict': _input_predict_transform_schema,
+    'output_predict': _output_schema,
+    'input_transform': _input_predict_transform_schema,
+    'output_transform': _output_schema}}
 
 if __name__ == "__main__":
     helpers.validate_is_schema(_combined_schemas)

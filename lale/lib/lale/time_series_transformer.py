@@ -412,21 +412,6 @@ _hyperparams_schema = {
         ]
 }
 
-_input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Input data schema for training NoOp.',
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {
-            'description': 'Features; the outer array is over samples.',
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'}}}}}
-
 _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input format for data passed to the transform method.',
@@ -459,10 +444,9 @@ _combined_schemas = {
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema, #TODO: should be None as there is no fit method for this transformer.
-        'input_predict': _input_transform_schema,
-        'output': _output_transform_schema},
-}
+        'input_transform': _input_transform_schema,
+        'output_transform': _output_transform_schema}}
+
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
 TimeFreqEigenVectors = lale.operators.make_operator(TimeFreqEigenVectorsImpl, _combined_schemas)

@@ -558,7 +558,10 @@ class IndividualOp(Operator):
             Logical schema describing input required by this 
             operator's transform method.
         """
-        return self.input_schema_predict()
+        result = self.get_schema_maybe('input_transform')
+        if result is None:
+            return self.input_schema_predict()
+        return result
 
     def output_schema(self, method=None):
         """Returns the schema for predict/transform method's output.

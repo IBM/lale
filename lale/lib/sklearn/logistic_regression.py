@@ -241,11 +241,11 @@ _combined_schemas = {
     'op': ['estimator', 'classifier', 'interpretable'],
     'post': ['probabilities']},
   'properties': {
+    'hyperparams': _hyperparams_schema,
     'input_fit': _input_schema_fit,
     'input_predict': _input_schema_predict,
     'output_predict': _output_predict_schema,
-    'output_predict_proba': _output_predict_proba_schema,
-    'hyperparams': _hyperparams_schema } }
+    'output_predict_proba': _output_predict_proba_schema}}
 
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(_combined_schemas)

@@ -142,7 +142,7 @@ _input_schema_fit = {
       'description': 'Pytorch Dataset.'
       }}}
 
-_input_schema_predict = {
+_input_predict_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for predictions.',
   'type': 'object',
@@ -215,13 +215,13 @@ _combined_schemas = {
   'type': 'object',
   'tags': {
     'pre': ['images'],
-    'op': ['estimator', '~interpretable', 'pytorch'],
+    'op': ['estimator', 'classifier', '~interpretable', 'pytorch'],
     'post': []},
   'properties': {
+    'hyperparams': _hyperparams_schema,
     'input_fit': _input_schema_fit,
-    'input_predict': _input_schema_predict,
-    'output_predict': _output_predict_schema,
-    'hyperparams': _hyperparams_schema } }
+    'input_predict': _input_predict_schema,
+    'output_predict': _output_predict_schema}}
 
 ResNet50 = make_operator(ResNet50Impl, _combined_schemas)
 
