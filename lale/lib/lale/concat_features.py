@@ -98,7 +98,7 @@ _hyperparams_schema = {
         'relevantToOptimizer': [],
         'properties': {}}]}
 
-_input_predict_schema = {
+_input_transform_schema = {
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
@@ -152,8 +152,8 @@ NDArrayWithSchema([[11, 12, 13, 14, 15],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
-        'input_predict': _input_predict_schema,
-        'output_transform': _output_transform_schema }}
+        'input_transform': _input_transform_schema,
+        'output_transform': _output_transform_schema}}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

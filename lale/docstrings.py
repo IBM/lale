@@ -173,7 +173,7 @@ def set_docstrings(impl_cls, combined_schemas):
         assert impl_cls.transform.__doc__ is None
         impl_cls.transform.__doc__ = _method_docstring(
             'Transform the data.',
-            combined_schemas['properties']['input_predict'],
+            combined_schemas['properties']['input_transform'],
             combined_schemas['properties']['output_transform'])
     if hasattr(impl_cls, 'predict'):
         assert impl_cls.predict.__doc__ is None

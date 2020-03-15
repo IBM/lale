@@ -45,7 +45,7 @@ class DisparateImpactRemoverImpl:
         result = pd.DataFrame(features, columns=X.columns)
         return result
 
-_input_schema_fit = {
+_input_fit_schema = {
   'description': 'Input data schema for training.',
   'type': 'object',
   'required': ['X'],
@@ -58,7 +58,7 @@ _input_schema_fit = {
     'y': {
       'description': 'Target class labels; the array is over samples.'}}}
 
-_input_schema_predict = {
+_input_transform_schema = {
   'description': 'Input data schema for transform.',
   'type': 'object',
   'required': ['X'],
@@ -103,10 +103,10 @@ _combined_schemas = {
     'op': ['transformer'],
     'post': []},
   'properties': {
-    'input_fit': _input_schema_fit,
-    'input_predict': _input_schema_predict,
-    'output_transform': _output_transform_schema,
-    'hyperparams': _hyperparams_schema } }
+    'hyperparams': _hyperparams_schema,
+    'input_fit': _input_fit_schema,
+    'input_transform': _input_transform_schema,
+    'output_transform': _output_transform_schema}}
 
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(_combined_schemas)

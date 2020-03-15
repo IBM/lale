@@ -174,9 +174,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
-        'output_predict_proba': _output_predict_proba_schema,
-    },
-}
+        'output_predict_proba': _output_predict_proba_schema}}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

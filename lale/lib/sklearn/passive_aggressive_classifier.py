@@ -221,14 +221,14 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator'],
+        'op': ['estimator', 'classifier'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema},
-}
+        'output_predict': _output_predict_schema}}
+
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
 PassiveAggressiveClassifier = lale.operators.make_operator(PassiveAggressiveClassifierImpl, _combined_schemas)

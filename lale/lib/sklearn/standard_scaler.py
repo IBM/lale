@@ -112,9 +112,9 @@ _combined_schemas = {
     'properties': {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
-        'input_predict': _input_transform_schema,
-        'output': _output_transform_schema},
-}
+        'input_transform': _input_transform_schema,
+        'output_transform': _output_transform_schema}}
+
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
 StandardScaler = lale.operators.make_operator(StandardScalerImpl, _combined_schemas)

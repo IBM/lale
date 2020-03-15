@@ -76,7 +76,7 @@ _input_fit_schema = {
     'properties': {
         'X': {}}}
 
-_input_predict_schema = {
+_input_predict_transform_schema = { #TODO: separate predict vs. predict_proba vs. transform
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for transformations using identity.',
     'type': 'object',
@@ -86,7 +86,7 @@ _input_predict_schema = {
         'X': {},
         'y': {}}}
 
-_output_schema = {
+_output_schema = { #TODO: separate predict vs. predict_proba vs. transform
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for transformations using identity.',
     'laleType': 'Any'}
@@ -98,13 +98,17 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['transformer'],
+        'op': ['estimator', 'transformer'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output': _output_schema }}
+        'input_predict': _input_predict_transform_schema,
+        'output_predict': _output_schema,
+        'input_predict_proba': _input_predict_transform_schema,
+        'output_predict_proba': _output_schema,
+        'input_transform': _input_predict_transform_schema,
+        'output_transform': _output_schema}}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)
