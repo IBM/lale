@@ -23,9 +23,9 @@ class PassiveAggressiveRegressorImpl():
             'warm_start': warm_start,
             'average': average,
             'n_iter': n_iter}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:
@@ -46,11 +46,11 @@ _hyperparams_schema = {
             'C': {
                 'type': 'number',
                 'default': 1.0,
-                'description': 'Maximum step size (regularization). Defaults to 1.0.'},
+                'description': 'Maximum step size (regularization)'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether the intercept should be estimated or not. If False, the'},
+                'description': 'Whether the intercept should be estimated or not'},
             'max_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -59,7 +59,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The maximum number of passes over the training data (aka epochs).'},
+                'description': 'The maximum number of passes over the training data (aka epochs)'},
             'tol': {
                 'anyOf': [{
                     'type': 'number',
@@ -68,19 +68,19 @@ _hyperparams_schema = {
                     'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The stopping criterion. If it is not None, the iterations will stop'},
+                'description': 'The stopping criterion'},
             'early_stopping': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to use early stopping to terminate training when validation.'},
+                'description': 'Whether to use early stopping to terminate training when validation'},
             'validation_fraction': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'The proportion of training data to set aside as validation set for'},
+                'description': 'The proportion of training data to set aside as validation set for early stopping'},
             'n_iter_no_change': {
                 'type': 'integer',
                 'default': 5,
-                'description': 'Number of iterations with no improvement to wait before early stopping.'},
+                'description': 'Number of iterations with no improvement to wait before early stopping'},
             'shuffle': {
                 'type': 'boolean',
                 'default': True,
@@ -92,31 +92,31 @@ _hyperparams_schema = {
             'loss': {
                 'enum': ['huber', 'squared_epsilon_insensitive', 'squared_loss', 'epsilon_insensitive'],
                 'default': 'epsilon_insensitive',
-                'description': 'The loss function to be used:'},
+                'description': 'The loss function to be used: epsilon_insensitive: equivalent to PA-I in the reference paper'},
             'epsilon': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
                 'distribution': 'loguniform',
                 'default': 0.1,
-                'description': 'If the difference between the current prediction and the correct label'},
+                'description': 'If the difference between the current prediction and the correct label is below this threshold, the model is not updated.'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
+                'description': 'The seed of the pseudo random number generator to use when shuffling the data'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to True, reuse the solution of the previous call to fit as'},
+                'description': 'When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'average': {
                 'anyOf': [{
                     'type': 'boolean'}, {
                     'type': 'integer'}],
                 'default': False,
-                'description': 'When set to True, computes the averaged SGD weights and stores the'},
+                'description': 'When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute'},
             'n_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -125,7 +125,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of passes over the training data (aka epochs).'},
+                'description': 'The number of passes over the training data (aka epochs)'},
         }}, {
         'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
         'description': 'validation_fraction, only used if early_stopping is true',
@@ -145,7 +145,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Passive Aggressive algorithm.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -190,6 +190,7 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted target values per element in X.',
+    'laleType': 'Any',
     'XXX TODO XXX': '',
 }
 _combined_schemas = {

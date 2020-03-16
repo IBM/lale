@@ -51,10 +51,10 @@ _hyperparams_schema = {
             'loss': {
                 'enum': ['epsilon_insensitive', 'huber', 'squared_epsilon_insensitive', 'squared_loss'],
                 'default': 'squared_loss',
-                'description': "The loss function to be used. The possible values are 'squared_loss',"},
+                'description': 'The loss function to be used'},
             'penalty': {
                 'XXX TODO XXX': "str, 'none', 'l2', 'l1', or 'elasticnet'",
-                'description': "The penalty (aka regularization term) to be used. Defaults to 'l2'",
+                'description': 'The penalty (aka regularization term) to be used',
                 'enum': ['elasticnet', 'l1', 'l2', 'none'],
                 'default': 'l2'},
             'alpha': {
@@ -63,15 +63,15 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 0.0001,
-                'description': 'Constant that multiplies the regularization term. Defaults to 0.0001'},
+                'description': 'Constant that multiplies the regularization term'},
             'l1_ratio': {
                 'type': 'number',
                 'default': 0.15,
-                'description': 'The Elastic Net mixing parameter, with 0 <= l1_ratio <= 1.'},
+                'description': 'The Elastic Net mixing parameter, with 0 <= l1_ratio <= 1'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether the intercept should be estimated or not. If False, the'},
+                'description': 'Whether the intercept should be estimated or not'},
             'max_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -80,7 +80,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The maximum number of passes over the training data (aka epochs).'},
+                'description': 'The maximum number of passes over the training data (aka epochs)'},
             'tol': {
                 'anyOf': [{
                     'type': 'number',
@@ -89,11 +89,11 @@ _hyperparams_schema = {
                     'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The stopping criterion. If it is not None, the iterations will stop'},
+                'description': 'The stopping criterion'},
             'shuffle': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether or not the training data should be shuffled after each epoch.'},
+                'description': 'Whether or not the training data should be shuffled after each epoch'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
@@ -104,25 +104,25 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.35,
                 'distribution': 'loguniform',
                 'default': 0.1,
-                'description': 'Epsilon in the epsilon-insensitive loss functions; only if `loss` is'},
+                'description': "Epsilon in the epsilon-insensitive loss functions; only if `loss` is 'huber', 'epsilon_insensitive', or 'squared_epsilon_insensitive'"},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
+                'description': 'The seed of the pseudo random number generator to use when shuffling the data'},
             'learning_rate': {
                 'enum': ['constant', 'optimal', 'invscaling'],
                 'default': 'invscaling',
-                'description': 'The learning rate schedule:'},
+                'description': "The learning rate schedule:  'constant':     eta = eta0 'optimal':     eta = 1.0 / (alpha * (t + t0))     where t0 is chosen by a heuristic proposed by Leon Bottou"},
             'eta0': {
                 'type': 'number',
                 'minimumForOptimizer': 0.01,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.01,
-                'description': "The initial learning rate for the 'constant', 'invscaling' or"},
+                'description': "The initial learning rate for the 'constant', 'invscaling' or 'adaptive' schedules"},
             'power_t': {
                 'type': 'number',
                 'default': 0.25,
@@ -130,25 +130,25 @@ _hyperparams_schema = {
             'early_stopping': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to use early stopping to terminate training when validation'},
+                'description': 'Whether to use early stopping to terminate training when validation score is not improving'},
             'validation_fraction': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'The proportion of training data to set aside as validation set for'},
+                'description': 'The proportion of training data to set aside as validation set for early stopping'},
             'n_iter_no_change': {
                 'type': 'integer',
                 'default': 5,
-                'description': 'Number of iterations with no improvement to wait before early stopping.'},
+                'description': 'Number of iterations with no improvement to wait before early stopping'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to True, reuse the solution of the previous call to fit as'},
+                'description': 'When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'average': {
                 'anyOf': [{
                     'type': 'boolean'}, {
                     'type': 'integer'}],
                 'default': False,
-                'description': 'When set to True, computes the averaged SGD weights and stores the'},
+                'description': 'When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute'},
             'n_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -157,7 +157,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of passes over the training data (aka epochs).'},
+                'description': 'The number of passes over the training data (aka epochs)'},
         }}, {
         'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
         'description': "epsilon, only if loss is 'huber'",
@@ -189,7 +189,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Stochastic Gradient Descent.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -222,7 +222,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'Weights applied to individual samples (1. for unweighted).'},
+            'description': 'Weights applied to individual samples (1'},
     },
 }
 _input_predict_schema = {
@@ -243,6 +243,7 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted target values per element in X.',
+    'laleType': 'Any',
     'XXX TODO XXX': '',
 }
 _combined_schemas = {

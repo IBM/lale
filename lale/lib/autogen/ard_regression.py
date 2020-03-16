@@ -46,46 +46,46 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 300,
-                'description': 'Maximum number of iterations. Default is 300'},
+                'description': 'Maximum number of iterations'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 0.001,
-                'description': 'Stop the algorithm if w has converged. Default is 1.e-3.'},
+                'description': 'Stop the algorithm if w has converged'},
             'alpha_1': {
                 'type': 'number',
                 'default': 1e-06,
-                'description': 'Hyper-parameter : shape parameter for the Gamma distribution prior'},
+                'description': 'Hyper-parameter : shape parameter for the Gamma distribution prior over the alpha parameter'},
             'alpha_2': {
                 'type': 'number',
                 'default': 1e-06,
-                'description': 'Hyper-parameter : inverse scale parameter (rate parameter) for the'},
+                'description': 'Hyper-parameter : inverse scale parameter (rate parameter) for the Gamma distribution prior over the alpha parameter'},
             'lambda_1': {
                 'type': 'number',
                 'default': 1e-06,
-                'description': 'Hyper-parameter : shape parameter for the Gamma distribution prior'},
+                'description': 'Hyper-parameter : shape parameter for the Gamma distribution prior over the lambda parameter'},
             'lambda_2': {
                 'type': 'number',
                 'default': 1e-06,
-                'description': 'Hyper-parameter : inverse scale parameter (rate parameter) for the'},
+                'description': 'Hyper-parameter : inverse scale parameter (rate parameter) for the Gamma distribution prior over the lambda parameter'},
             'compute_score': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'If True, compute the objective function at each step of the model.'},
+                'description': 'If True, compute the objective function at each step of the model'},
             'threshold_lambda': {
                 'type': 'number',
                 'default': 10000.0,
-                'description': 'threshold for removing (pruning) weights with high precision from'},
+                'description': 'threshold for removing (pruning) weights with high precision from the computation'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'whether to calculate the intercept for this model. If set'},
+                'description': 'whether to calculate the intercept for this model'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
@@ -100,7 +100,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the ARDRegression model according to the given training data',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -109,12 +109,12 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples in the number of samples and'},
+            'description': 'Training vector, where n_samples in the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': "Target values (integers). Will be cast to X's dtype if necessary"},
+            'description': 'Target values (integers)'},
     },
 }
 _input_predict_schema = {

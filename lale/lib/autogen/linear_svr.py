@@ -44,7 +44,7 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.35,
                 'distribution': 'loguniform',
                 'default': 0.0,
-                'description': 'Epsilon parameter in the epsilon-insensitive loss function. Note'},
+                'description': 'Epsilon parameter in the epsilon-insensitive loss function'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
@@ -55,34 +55,34 @@ _hyperparams_schema = {
             'C': {
                 'type': 'number',
                 'default': 1.0,
-                'description': 'Penalty parameter C of the error term. The penalty is a squared'},
+                'description': 'Penalty parameter C of the error term'},
             'loss': {
                 'enum': ['hinge', 'l2', 'squared_epsilon_insensitive', 'squared_hinge', 'epsilon_insensitive'],
                 'default': 'epsilon_insensitive',
-                'description': 'Specifies the loss function. The epsilon-insensitive loss'},
+                'description': 'Specifies the loss function'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to calculate the intercept for this model. If set'},
+                'description': 'Whether to calculate the intercept for this model'},
             'intercept_scaling': {
                 'type': 'number',
                 'default': 1.0,
-                'description': 'When self.fit_intercept is True, instance vector x becomes'},
+                'description': 'When self.fit_intercept is True, instance vector x becomes [x, self.intercept_scaling], i.e'},
             'dual': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Select the algorithm to either solve the dual or primal'},
+                'description': 'Select the algorithm to either solve the dual or primal optimization problem'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
-                'description': 'Enable verbose output. Note that this setting takes advantage of a'},
+                'description': 'Enable verbose output'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
+                'description': 'The seed of the pseudo random number generator to use when shuffling the data'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
@@ -96,7 +96,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model according to the given training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -105,7 +105,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples in the number of samples and'},
+            'description': 'Training vector, where n_samples in the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
@@ -119,7 +119,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'Array of weights that are assigned to individual'},
+            'description': 'Array of weights that are assigned to individual samples'},
     },
 }
 _input_predict_schema = {
@@ -132,6 +132,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

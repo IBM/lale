@@ -39,7 +39,7 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Set to False to perform inplace row normalization and avoid a'},
+                'description': 'Set to False to perform inplace row normalization and avoid a copy (if the input is already a numpy array).'},
         }}],
 }
 _input_fit_schema = {
@@ -55,7 +55,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The data used to compute the per-feature minimum and maximum'},
+            'description': 'The data used to compute the per-feature minimum and maximum used for later scaling along the features axis.'},
     },
 }
 _input_transform_schema = {

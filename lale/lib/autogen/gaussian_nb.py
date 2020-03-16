@@ -41,18 +41,18 @@ _hyperparams_schema = {
                 }, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Prior probabilities of the classes. If specified the priors are not'},
+                'description': 'Prior probabilities of the classes'},
             'var_smoothing': {
                 'type': 'number',
                 'default': 1e-09,
-                'description': 'Portion of the largest variance of all features that is added to'},
+                'description': 'Portion of the largest variance of all features that is added to variances for calculation stability.'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Gaussian Naive Bayes according to X, y',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -61,7 +61,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
@@ -75,7 +75,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'Weights applied to individual samples (1. for unweighted).'},
+            'description': 'Weights applied to individual samples (1'},
     },
 }
 _input_predict_schema = {
@@ -117,7 +117,7 @@ _input_predict_proba_schema = {
 }
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Returns the probability of the samples for each class in',
+    'description': 'Returns the probability of the samples for each class in the model',
     'type': 'array',
     'items': {
         'type': 'array',

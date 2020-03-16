@@ -52,25 +52,25 @@ _hyperparams_schema = {
             'kernel': {
                 'enum': ['linear', 'poly', 'sigmoid', 'rbf'],
                 'default': 'rbf',
-                'description': 'Specifies the kernel type to be used in the algorithm.'},
+                'description': 'Specifies the kernel type to be used in the algorithm'},
             'degree': {
                 'type': 'integer',
                 'minimumForOptimizer': 2,
                 'maximumForOptimizer': 3,
                 'distribution': 'uniform',
                 'default': 3,
-                'description': "Degree of the polynomial kernel function ('poly')."},
+                'description': "Degree of the polynomial kernel function ('poly')"},
             'gamma': {
                 'anyOf': [{
                     'type': 'number',
                     'forOptimizer': False}, {
                     'enum': ['auto_deprecated']}],
                 'default': 'auto_deprecated',
-                'description': "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'."},
+                'description': "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'"},
             'coef0': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'Independent term in kernel function.'},
+                'description': 'Independent term in kernel function'},
             'shrinking': {
                 'type': 'boolean',
                 'default': True,
@@ -78,7 +78,7 @@ _hyperparams_schema = {
             'probability': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to enable probability estimates. This must be enabled prior'},
+                'description': 'Whether to enable probability estimates'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
@@ -96,11 +96,11 @@ _hyperparams_schema = {
             'class_weight': {
                 'enum': ['dict', 'balanced'],
                 'default': 'balanced',
-                'description': 'Set the parameter C of class i to class_weight[i]*C for'},
+                'description': 'Set the parameter C of class i to class_weight[i]*C for SVC'},
             'verbose': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Enable verbose output. Note that this setting takes advantage of a'},
+                'description': 'Enable verbose output'},
             'max_iter': {
                 'XXX TODO XXX': 'int, optional (default=-1)',
                 'description': 'Hard limit on iterations within solver, or -1 for no limit.',
@@ -111,7 +111,7 @@ _hyperparams_schema = {
                 'default': (- 1)},
             'decision_function_shape': {
                 'XXX TODO XXX': "'ovo', 'ovr', default='ovr'",
-                'description': "Whether to return a one-vs-rest ('ovr') decision function of shape",
+                'description': "Whether to return a one-vs-rest ('ovr') decision function of shape (n_samples, n_classes) as all other classifiers, or the original one-vs-one ('ovo') decision function of libsvm which has shape (n_samples, n_classes * (n_classes - 1) / 2)",
                 'enum': ['ovr'],
                 'default': 'ovr'},
             'random_state': {
@@ -120,7 +120,7 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator used when shuffling'},
+                'description': 'The seed of the pseudo random number generator used when shuffling the data for probability estimates'},
         }}, {
         'XXX TODO XXX': "Parameter: coef0 > only significant in 'poly' and 'sigmoid'"}],
 }
@@ -128,7 +128,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the SVM model according to the given training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -137,17 +137,17 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features'},
         'y': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'Target values (class labels in classification, real numbers in'},
+            'description': 'Target values (class labels in classification, real numbers in regression)'},
         'sample_weight': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'Per-sample weights. Rescale C per sample. Higher weights'},
+            'description': 'Per-sample weights'},
     },
 }
 _input_predict_schema = {
@@ -163,7 +163,7 @@ _input_predict_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'For kernel="precomputed", the expected shape of X is'},
+            'description': 'For kernel="precomputed", the expected shape of X is [n_samples_test, n_samples_train]'},
     },
 }
 _output_predict_schema = {
@@ -186,12 +186,12 @@ _input_predict_proba_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'For kernel="precomputed", the expected shape of X is'},
+            'description': 'For kernel="precomputed", the expected shape of X is [n_samples_test, n_samples_train]'},
     },
 }
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Returns the probability of the sample for each class in',
+    'description': 'Returns the probability of the sample for each class in the model',
     'type': 'array',
     'items': {
         'type': 'array',

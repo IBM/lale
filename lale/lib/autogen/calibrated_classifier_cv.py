@@ -36,17 +36,17 @@ _hyperparams_schema = {
         'properties': {
             'base_estimator': {
                 'XXX TODO XXX': 'instance BaseEstimator',
-                'description': 'The classifier whose output decision function needs to be calibrated',
+                'description': 'The classifier whose output decision function needs to be calibrated to offer more accurate predict_proba outputs',
                 'enum': [None],
                 'default': None},
             'method': {
                 'XXX TODO XXX': "'sigmoid' or 'isotonic'",
-                'description': "The method to use for calibration. Can be 'sigmoid' which",
+                'description': 'The method to use for calibration',
                 'enum': ['isotonic', 'sigmoid'],
                 'default': 'sigmoid'},
             'cv': {
                 'XXX TODO XXX': 'integer, cross-validation generator, iterable or "prefit", optional',
-                'description': 'Determines the cross-validation splitting strategy.',
+                'description': 'Determines the cross-validation splitting strategy',
                 'type': 'integer',
                 'minimumForOptimizer': 3,
                 'maximumForOptimizer': 4,
@@ -58,7 +58,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the calibrated model',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -80,7 +80,7 @@ _input_fit_schema = {
                     'type': 'number'},
             }, {
                 'enum': [None]}],
-            'description': 'Sample weights. If None, then samples are equally weighted.'},
+            'description': 'Sample weights'},
     },
 }
 _input_predict_schema = {

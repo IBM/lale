@@ -43,15 +43,15 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 1.0,
-                'description': 'Regularization strength; must be a positive float. Regularization'},
+                'description': 'Regularization strength; must be a positive float'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to calculate the intercept for this model. If set to false, no'},
+                'description': 'Whether to calculate the intercept for this model'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
@@ -64,7 +64,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Maximum number of iterations for conjugate gradient solver.'},
+                'description': 'Maximum number of iterations for conjugate gradient solver'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
@@ -74,20 +74,20 @@ _hyperparams_schema = {
                 'description': 'Precision of the solution.'},
             'class_weight': {
                 'XXX TODO XXX': "dict or 'balanced', optional",
-                'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
+                'description': 'Weights associated with classes in the form ``{class_label: weight}``',
                 'enum': ['balanced'],
                 'default': 'balanced'},
             'solver': {
                 'enum': ['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg', 'sag', 'saga'],
                 'default': 'auto',
-                'description': 'Solver to use in the computational routines:'},
+                'description': "Solver to use in the computational routines:  - 'auto' chooses the solver automatically based on the type of data"},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
+                'description': 'The seed of the pseudo random number generator to use when shuffling the data'},
         }}, {
         'XXX TODO XXX': 'Parameter: solver > only guaranteed on features with approximately the same scale'}],
 }
@@ -95,7 +95,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Ridge regression model.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -117,7 +117,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             }],
-            'description': 'Sample weight.'},
+            'description': 'Sample weight'},
     },
 }
 _input_predict_schema = {
@@ -130,6 +130,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

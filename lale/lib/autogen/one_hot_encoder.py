@@ -36,7 +36,7 @@ _hyperparams_schema = {
         'properties': {
             'categories': {
                 'XXX TODO XXX': "'auto' or a list of lists/arrays of values, default='auto'.",
-                'description': 'Categories (unique values) per feature:',
+                'description': "Categories (unique values) per feature:  - 'auto' : Determine categories automatically from the training data",
                 'enum': [None],
                 'default': None},
             'sparse': {
@@ -44,21 +44,22 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'Will return sparse matrix if set True else will return an array.'},
             'dtype': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'number type, default=np.float',
                 'description': 'Desired dtype of output.'},
             'handle_unknown': {
                 'XXX TODO XXX': "'error' or 'ignore', default='error'.",
-                'description': 'Whether to raise an error or ignore if an unknown categorical feature',
+                'description': 'Whether to raise an error or ignore if an unknown categorical feature is present during transform (default is to raise)',
                 'enum': ['error'],
                 'default': 'error'},
             'n_values': {
                 'XXX TODO XXX': "'auto', int or array of ints, default='auto'",
-                'description': 'Number of values per feature.',
+                'description': 'Number of values per feature',
                 'enum': [None],
                 'default': None},
             'categorical_features': {
                 'XXX TODO XXX': "'all' or array of indices or mask, default='all'",
-                'description': 'Specify what features are treated as categorical.',
+                'description': 'Specify what features are treated as categorical',
                 'enum': [None],
                 'default': None},
         }}],
@@ -98,6 +99,7 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transformed input.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'sparse matrix if sparse=True else a 2-d array',
 }
 _combined_schemas = {

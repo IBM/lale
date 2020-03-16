@@ -41,28 +41,28 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': ['linear', 'poly', 'rbf', 'sigmoid']}],
                 'default': 'rbf',
-                'description': 'Kernel map to be approximated. A callable should accept two arguments'},
+                'description': 'Kernel map to be approximated'},
             'gamma': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Gamma parameter for the RBF, laplacian, polynomial, exponential chi2'},
+                'description': 'Gamma parameter for the RBF, laplacian, polynomial, exponential chi2 and sigmoid kernels'},
             'coef0': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Zero coefficient for polynomial and sigmoid kernels.'},
+                'description': 'Zero coefficient for polynomial and sigmoid kernels'},
             'degree': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Degree of the polynomial kernel. Ignored by other kernels.'},
+                'description': 'Degree of the polynomial kernel'},
             'kernel_params': {
                 'XXX TODO XXX': 'mapping of string to any, optional',
-                'description': 'Additional parameters (keyword arguments) for kernel function passed',
+                'description': 'Additional parameters (keyword arguments) for kernel function passed as callable object.',
                 'enum': [None],
                 'default': None},
             'n_components': {
@@ -71,14 +71,14 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 256,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'Number of features to construct.'},
+                'description': 'Number of features to construct'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
         }}],
 }
 _input_fit_schema = {

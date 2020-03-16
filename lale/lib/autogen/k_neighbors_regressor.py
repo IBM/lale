@@ -49,32 +49,32 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': ['distance', 'uniform']}],
                 'default': 'uniform',
-                'description': 'weight function used in prediction.  Possible values:'},
+                'description': 'weight function used in prediction'},
             'algorithm': {
                 'enum': ['auto', 'ball_tree', 'kd_tree', 'brute'],
                 'default': 'auto',
-                'description': 'Algorithm used to compute the nearest neighbors:'},
+                'description': "Algorithm used to compute the nearest neighbors:  - 'ball_tree' will use :class:`BallTree` - 'kd_tree' will use :class:`KDTree` - 'brute' will use a brute-force search"},
             'leaf_size': {
                 'type': 'integer',
                 'minimumForOptimizer': 30,
                 'maximumForOptimizer': 31,
                 'distribution': 'uniform',
                 'default': 30,
-                'description': 'Leaf size passed to BallTree or KDTree.  This can affect the'},
+                'description': 'Leaf size passed to BallTree or KDTree'},
             'p': {
                 'type': 'integer',
                 'minimumForOptimizer': 2,
                 'maximumForOptimizer': 3,
                 'distribution': 'uniform',
                 'default': 2,
-                'description': 'Power parameter for the Minkowski metric. When p = 1, this is'},
+                'description': 'Power parameter for the Minkowski metric'},
             'metric': {
                 'anyOf': [{
                     'type': 'object',
                     'forOptimizer': False}, {
                     'enum': ['euclidean', 'manhattan', 'minkowski', 'precomputed']}],
                 'default': 'minkowski',
-                'description': 'the distance metric to use for the tree.  The default metric is'},
+                'description': 'the distance metric to use for the tree'},
             'metric_params': {
                 'anyOf': [{
                     'type': 'object'}, {
@@ -86,27 +86,29 @@ _hyperparams_schema = {
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of parallel jobs to run for neighbors search.'},
+                'description': 'The number of parallel jobs to run for neighbors search'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model using X as training data and y as target values',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
             'items': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'item type'},
             'XXX TODO XXX': '{array-like, sparse matrix, BallTree, KDTree}',
-            'description': 'Training data. If array or matrix, shape [n_samples, n_features],'},
+            'description': 'Training data'},
         'y': {
             'type': 'array',
             'items': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'item type'},
             'XXX TODO XXX': '{array-like, sparse matrix}',
-            'description': 'Target values, array of float values, shape = [n_samples]'},
+            'description': 'Target values, array of float values, shape = [n_samples]  or [n_samples, n_outputs]'},
     },
 }
 _input_predict_schema = {
@@ -116,6 +118,7 @@ _input_predict_schema = {
     'required': ['X'],
     'properties': {
         'X': {
+            'laleType': 'Any',
             'XXX TODO XXX': "array-like, shape (n_query, n_features),                 or (n_query, n_indexed) if metric == 'precomputed'",
             'description': 'Test samples.'},
     },
@@ -123,6 +126,7 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Target values',
+    'laleType': 'Any',
     'XXX TODO XXX': 'array of int, shape = [n_samples] or [n_samples, n_outputs]',
 }
 _combined_schemas = {

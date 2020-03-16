@@ -31,7 +31,7 @@ _hyperparams_schema = {
         'properties': {
             'copy': {
                 'XXX TODO XXX': 'boolean, optional, default is True',
-                'description': 'Set to False to perform inplace scaling and avoid a copy (if the input',
+                'description': 'Set to False to perform inplace scaling and avoid a copy (if the input is already a numpy array).',
                 'type': 'boolean',
                 'default': True},
         }}],
@@ -49,7 +49,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The data used to compute the per-feature minimum and maximum'},
+            'description': 'The data used to compute the per-feature minimum and maximum used for later scaling along the features axis.'},
     },
 }
 _input_transform_schema = {
@@ -61,6 +61,7 @@ _input_transform_schema = {
         'X': {
             'type': 'array',
             'items': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'item type'},
             'XXX TODO XXX': '{array-like, sparse matrix}',
             'description': 'The data that should be scaled.'},

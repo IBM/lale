@@ -47,21 +47,21 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of components, if n_components is not set all features'},
+                'description': 'Number of components, if n_components is not set all features are kept.'},
             'init': {
                 'enum': ['custom', 'nndsvd', 'nndsvda', 'nndsvdar', 'random', None],
                 'default': None,
-                'description': 'Method used to initialize the procedure.'},
+                'description': 'Method used to initialize the procedure'},
             'solver': {
                 'enum': ['cd', 'mu'],
                 'default': 'cd',
-                'description': 'Numerical solver to use:'},
+                'description': "Numerical solver to use: 'cd' is a Coordinate Descent solver"},
             'beta_loss': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'type': 'string'}],
                 'default': 'frobenius',
-                'description': "String must be in {'frobenius', 'kullback-leibler', 'itakura-saito'}."},
+                'description': "String must be in {'frobenius', 'kullback-leibler', 'itakura-saito'}"},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
@@ -82,18 +82,18 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'alpha': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 0.0,
-                'description': 'Constant that multiplies the regularization terms. Set it to zero to'},
+                'description': 'Constant that multiplies the regularization terms'},
             'l1_ratio': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'The regularization mixing parameter, with 0 <= l1_ratio <= 1.'},
+                'description': 'The regularization mixing parameter, with 0 <= l1_ratio <= 1'},
             'verbose': {
                 'anyOf': [{
                     'type': 'boolean'}, {
@@ -103,7 +103,7 @@ _hyperparams_schema = {
             'shuffle': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'If true, randomize the order of coordinates in the CD solver.'},
+                'description': 'If true, randomize the order of coordinates in the CD solver'},
         }}, {
         'description': "beta_loss, only in 'mu' solver",
         'anyOf': [{
@@ -122,7 +122,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Learn a NMF model for the data X.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',

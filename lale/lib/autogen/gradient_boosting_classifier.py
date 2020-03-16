@@ -55,26 +55,26 @@ _hyperparams_schema = {
             'loss': {
                 'enum': ['deviance', 'exponential'],
                 'default': 'deviance',
-                'description': "loss function to be optimized. 'deviance' refers to"},
+                'description': 'loss function to be optimized'},
             'learning_rate': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'learning rate shrinks the contribution of each tree by `learning_rate`.'},
+                'description': 'learning rate shrinks the contribution of each tree by `learning_rate`'},
             'n_estimators': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 100,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'The number of boosting stages to perform. Gradient boosting'},
+                'description': 'The number of boosting stages to perform'},
             'subsample': {
                 'type': 'number',
                 'default': 1.0,
-                'description': 'The fraction of samples to be used for fitting the individual base'},
+                'description': 'The fraction of samples to be used for fitting the individual base learners'},
             'criterion': {
                 'type': 'string',
                 'default': 'friedman_mse',
-                'description': 'The function to measure the quality of a split. Supported criteria'},
+                'description': 'The function to measure the quality of a split'},
             'min_samples_split': {
                 'anyOf': [{
                     'type': 'integer',
@@ -84,7 +84,7 @@ _hyperparams_schema = {
                     'maximumForOptimizer': 0.5,
                     'distribution': 'uniform'}],
                 'default': 2,
-                'description': 'The minimum number of samples required to split an internal node:'},
+                'description': 'The minimum number of samples required to split an internal node:  - If int, then consider `min_samples_split` as the minimum number'},
             'min_samples_leaf': {
                 'anyOf': [{
                     'type': 'integer',
@@ -94,31 +94,31 @@ _hyperparams_schema = {
                     'maximumForOptimizer': 0.5,
                     'distribution': 'uniform'}],
                 'default': 1,
-                'description': 'The minimum number of samples required to be at a leaf node.'},
+                'description': 'The minimum number of samples required to be at a leaf node'},
             'min_weight_fraction_leaf': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all'},
+                'description': 'The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node'},
             'max_depth': {
                 'type': 'integer',
                 'minimumForOptimizer': 3,
                 'maximumForOptimizer': 5,
                 'distribution': 'uniform',
                 'default': 3,
-                'description': 'maximum depth of the individual regression estimators. The maximum'},
+                'description': 'maximum depth of the individual regression estimators'},
             'min_impurity_decrease': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity'},
+                'description': 'A node will be split if this split induces a decrease of the impurity greater than or equal to this value'},
             'min_impurity_split': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Threshold for early stopping in tree growth. A node will split'},
+                'description': 'Threshold for early stopping in tree growth'},
             'init': {
                 'XXX TODO XXX': 'estimator, optional',
-                'description': 'An estimator object that is used to compute the initial',
+                'description': 'An estimator object that is used to compute the initial predictions',
                 'enum': [None],
                 'default': None},
             'random_state': {
@@ -127,7 +127,7 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'max_features': {
                 'anyOf': [{
                     'type': 'integer',
@@ -140,40 +140,40 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of features to consider when looking for the best split:'},
+                'description': 'The number of features to consider when looking for the best split:  - If int, then consider `max_features` features at each split'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
-                'description': 'Enable verbose output. If 1 then it prints progress and performance'},
+                'description': 'Enable verbose output'},
             'max_leaf_nodes': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Grow trees with ``max_leaf_nodes`` in best-first fashion.'},
+                'description': 'Grow trees with ``max_leaf_nodes`` in best-first fashion'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to ``True``, reuse the solution of the previous call to fit'},
+                'description': 'When set to ``True``, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just erase the previous solution'},
             'presort': {
                 'XXX TODO XXX': "bool or 'auto', optional (default='auto')",
-                'description': 'Whether to presort the data to speed up the finding of best splits in',
+                'description': 'Whether to presort the data to speed up the finding of best splits in fitting',
                 'enum': ['auto'],
                 'default': 'auto'},
             'validation_fraction': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'The proportion of training data to set aside as validation set for'},
+                'description': 'The proportion of training data to set aside as validation set for early stopping'},
             'n_iter_no_change': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': '``n_iter_no_change`` is used to decide if early stopping will be used'},
+                'description': '``n_iter_no_change`` is used to decide if early stopping will be used to terminate training when validation score is not improving'},
             'tol': {
                 'type': 'number',
                 'default': 0.0001,
-                'description': 'Tolerance for the early stopping. When the loss is not improving'},
+                'description': 'Tolerance for the early stopping'},
         }}, {
         'XXX TODO XXX': 'Parameter: min_samples_leaf > only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}, {
         'XXX TODO XXX': 'Parameter: validation_fraction > only used if n_iter_no_change is set to an integer'}],
@@ -182,7 +182,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the gradient boosting model.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -191,12 +191,12 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The input samples. Internally, it will be converted to'},
+            'description': 'The input samples'},
         'y': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'Target values (strings or integers in classification, real numbers'},
+            'description': 'Target values (strings or integers in classification, real numbers in regression) For classification, labels must correspond to classes.'},
         'sample_weight': {
             'anyOf': [{
                 'type': 'array',
@@ -204,13 +204,13 @@ _input_fit_schema = {
                     'type': 'number'},
             }, {
                 'enum': [None]}],
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
+            'description': 'Sample weights'},
         'monitor': {
             'anyOf': [{
                 'type': 'object'}, {
                 'enum': [None]}],
             'default': None,
-            'description': 'The monitor is called after each iteration with the current'},
+            'description': 'The monitor is called after each iteration with the current iteration, a reference to the estimator and the local variables of ``_fit_stages`` as keyword arguments ``callable(i, self, locals())``'},
     },
 }
 _input_predict_schema = {
@@ -226,7 +226,7 @@ _input_predict_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The input samples. Internally, it will be converted to'},
+            'description': 'The input samples'},
     },
 }
 _output_predict_schema = {
@@ -249,12 +249,12 @@ _input_predict_proba_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The input samples. Internally, it will be converted to'},
+            'description': 'The input samples'},
     },
 }
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'The class probabilities of the input samples. The order of the',
+    'description': 'The class probabilities of the input samples',
     'type': 'array',
     'items': {
         'type': 'array',

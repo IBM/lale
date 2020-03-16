@@ -48,25 +48,25 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 8,
                 'distribution': 'uniform',
                 'default': 8,
-                'description': 'The number of clusters to form as well as the number of'},
+                'description': 'The number of clusters to form as well as the number of centroids to generate.'},
             'init': {
                 'enum': ['k-means++', 'random', 'ndarray'],
                 'default': 'k-means++',
-                'description': "Method for initialization, defaults to 'k-means++':"},
+                'description': "Method for initialization, defaults to 'k-means++':  'k-means++' : selects initial cluster centers for k-mean clustering in a smart way to speed up convergence"},
             'n_init': {
                 'type': 'integer',
                 'minimumForOptimizer': 3,
                 'maximumForOptimizer': 10,
                 'distribution': 'uniform',
                 'default': 10,
-                'description': 'Number of time the k-means algorithm will be run with different'},
+                'description': 'Number of time the k-means algorithm will be run with different centroid seeds'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 300,
-                'description': 'Maximum number of iterations of the k-means algorithm for a'},
+                'description': 'Maximum number of iterations of the k-means algorithm for a single run.'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
@@ -77,7 +77,7 @@ _hyperparams_schema = {
             'precompute_distances': {
                 'enum': ['auto', True, False],
                 'default': 'auto',
-                'description': 'Precompute distances (faster but takes more memory).'},
+                'description': 'Precompute distances (faster but takes more memory)'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
@@ -88,20 +88,20 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Determines random number generation for centroid initialization. Use'},
+                'description': 'Determines random number generation for centroid initialization'},
             'copy_x': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'When pre-computing distances it is more numerically accurate to center'},
+                'description': 'When pre-computing distances it is more numerically accurate to center the data first'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of jobs to use for the computation. This works by computing'},
+                'description': 'The number of jobs to use for the computation'},
             'algorithm': {
                 'XXX TODO XXX': '"auto", "full" or "elkan", default="auto"',
-                'description': 'K-means algorithm to use. The classical EM-style algorithm is "full".',
+                'description': 'K-means algorithm to use',
                 'enum': ['auto', 'elkan', 'full'],
                 'default': 'auto'},
         }}],
@@ -110,12 +110,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute k-means clustering.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape=(n_samples, n_features)'}, {
                 'type': 'array',
@@ -124,7 +125,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'Training instances to cluster. It must be noted that the data'},
+            'description': 'Training instances to cluster'},
         'y': {
             'description': 'not used, present here for API consistency by convention.'},
         'sample_weight': {
@@ -135,7 +136,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'The weights for each observation in X. If None, all observations'},
+            'description': 'The weights for each observation in X'},
     },
 }
 _input_transform_schema = {
@@ -186,7 +187,7 @@ _input_predict_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'The weights for each observation in X. If None, all observations'},
+            'description': 'The weights for each observation in X'},
     },
 }
 _output_predict_schema = {

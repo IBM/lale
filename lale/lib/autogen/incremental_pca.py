@@ -40,15 +40,15 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of components to keep. If ``n_components `` is ``None``,'},
+                'description': 'Number of components to keep'},
             'whiten': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When True (False by default) the ``components_`` vectors are divided'},
+                'description': 'When True (False by default) the ``components_`` vectors are divided by ``n_samples`` times ``components_`` to ensure uncorrelated outputs with unit component-wise variances'},
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If False, X will be overwritten. ``copy=False`` can be used to'},
+                'description': 'If False, X will be overwritten'},
             'batch_size': {
                 'anyOf': [{
                     'type': 'integer',
@@ -57,7 +57,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of samples to use for each batch. Only used when calling'},
+                'description': 'The number of samples to use for each batch'},
         }}, {
         'XXX TODO XXX': 'Parameter: batch_size > only used when calling fit'}],
 }
@@ -65,7 +65,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model with X, using minibatches of size batch_size.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -74,7 +74,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training data, where n_samples is the number of samples and'},
+            'description': 'Training data, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             
         }},
@@ -92,7 +92,7 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'New data, where n_samples is the number of samples'},
+            'description': 'New data, where n_samples is the number of samples and n_features is the number of features.'},
     },
 }
 _output_transform_schema = {

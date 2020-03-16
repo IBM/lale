@@ -44,7 +44,7 @@ _hyperparams_schema = {
             'learning_rate': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'The learning rate for weight updates. It is *highly* recommended'},
+                'description': 'The learning rate for weight updates'},
             'batch_size': {
                 'type': 'integer',
                 'minimumForOptimizer': 3,
@@ -58,14 +58,14 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 10,
-                'description': 'Number of iterations/sweeps over the training dataset to perform'},
+                'description': 'Number of iterations/sweeps over the training dataset to perform during training.'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
-                'description': 'The verbosity level. The default, zero, means silent mode.'},
+                'description': 'The verbosity level'},
             'random_state': {
                 'XXX TODO XXX': 'integer or RandomState, optional',
-                'description': 'A random number generator instance to define the state of the',
+                'description': 'A random number generator instance to define the state of the random permutations generator',
                 'type': 'integer',
                 'default': 33},
         }}],

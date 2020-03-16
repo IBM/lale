@@ -39,17 +39,17 @@ _hyperparams_schema = {
             'threshold': {
                 'type': 'number',
                 'default': 0.5,
-                'description': 'The radius of the subcluster obtained by merging a new sample and the'},
+                'description': 'The radius of the subcluster obtained by merging a new sample and the closest subcluster should be lesser than the threshold'},
             'branching_factor': {
                 'type': 'integer',
                 'minimumForOptimizer': 50,
                 'maximumForOptimizer': 51,
                 'distribution': 'uniform',
                 'default': 50,
-                'description': 'Maximum number of CF subclusters in each node. If a new samples enters'},
+                'description': 'Maximum number of CF subclusters in each node'},
             'n_clusters': {
                 'XXX TODO XXX': 'int, instance of sklearn.cluster model, default 3',
-                'description': 'Number of clusters after the final clustering step, which treats the',
+                'description': 'Number of clusters after the final clustering step, which treats the subclusters from the leaves as new samples',
                 'type': 'integer',
                 'minimumForOptimizer': 2,
                 'maximumForOptimizer': 8,
@@ -62,14 +62,14 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether or not to make a copy of the given data. If set to False,'},
+                'description': 'Whether or not to make a copy of the given data'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a CF Tree for the input data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -128,6 +128,7 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Labelled data.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'ndarray, shape(n_samples)',
 }
 _combined_schemas = {

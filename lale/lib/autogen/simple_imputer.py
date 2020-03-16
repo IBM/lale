@@ -35,16 +35,16 @@ _hyperparams_schema = {
         'properties': {
             'missing_values': {
                 'XXX TODO XXX': 'number, string, np.nan (default) or None',
-                'description': 'The placeholder for the missing values. All occurrences of',
+                'description': 'The placeholder for the missing values',
                 'type': 'number',
                 'default': nan},
             'strategy': {
                 'type': 'string',
                 'default': 'mean',
-                'description': 'The imputation strategy.'},
+                'description': 'The imputation strategy'},
             'fill_value': {
                 'XXX TODO XXX': 'string or numerical value, optional (default=None)',
-                'description': 'When strategy == "constant", fill_value is used to replace all',
+                'description': 'When strategy == "constant", fill_value is used to replace all occurrences of missing_values',
                 'enum': [None],
                 'default': None},
             'verbose': {
@@ -54,7 +54,7 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True, a copy of X will be created. If False, imputation will'},
+                'description': 'If True, a copy of X will be created'},
         }}, {
         'XXX TODO XXX': 'Parameter: strategy > only be used with numeric data'}],
 }
@@ -71,7 +71,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Input data, where ``n_samples`` is the number of samples and'},
+            'description': 'Input data, where ``n_samples`` is the number of samples and ``n_features`` is the number of features.'},
     },
 }
 _input_transform_schema = {

@@ -52,18 +52,18 @@ _hyperparams_schema = {
         'properties': {
             'hidden_layer_sizes': {
                 'XXX TODO XXX': 'tuple, length = n_layers - 2, default (100,)',
-                'description': 'The ith element represents the number of neurons in the ith',
+                'description': 'The ith element represents the number of neurons in the ith hidden layer.',
                 'type': 'array',
                 'laleType': 'tuple',
                 'default': (100,)},
             'activation': {
                 'enum': ['identity', 'logistic', 'tanh', 'relu'],
                 'default': 'relu',
-                'description': 'Activation function for the hidden layer.'},
+                'description': 'Activation function for the hidden layer'},
             'solver': {
                 'enum': ['lbfgs', 'sgd', 'adam'],
                 'default': 'adam',
-                'description': 'The solver for weight optimization.'},
+                'description': 'The solver for weight optimization'},
             'alpha': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
@@ -79,44 +79,44 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': ['auto']}],
                 'default': 'auto',
-                'description': 'Size of minibatches for stochastic optimizers.'},
+                'description': 'Size of minibatches for stochastic optimizers'},
             'learning_rate': {
                 'enum': ['constant', 'invscaling', 'adaptive'],
                 'default': 'constant',
-                'description': 'Learning rate schedule for weight updates.'},
+                'description': 'Learning rate schedule for weight updates'},
             'learning_rate_init': {
                 'type': 'number',
                 'default': 0.001,
-                'description': 'The initial learning rate used. It controls the step-size'},
+                'description': 'The initial learning rate used'},
             'power_t': {
                 'type': 'number',
                 'default': 0.5,
-                'description': 'The exponent for inverse scaling learning rate.'},
+                'description': 'The exponent for inverse scaling learning rate'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 200,
-                'description': 'Maximum number of iterations. The solver iterates until convergence'},
+                'description': 'Maximum number of iterations'},
             'shuffle': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to shuffle samples in each iteration. Only used when'},
+                'description': 'Whether to shuffle samples in each iteration'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 0.0001,
-                'description': 'Tolerance for the optimization. When the loss or score is not improving'},
+                'description': 'Tolerance for the optimization'},
             'verbose': {
                 'type': 'boolean',
                 'default': False,
@@ -124,42 +124,42 @@ _hyperparams_schema = {
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to True, reuse the solution of the previous'},
+                'description': 'When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'momentum': {
                 'type': 'number',
                 'default': 0.9,
-                'description': 'Momentum for gradient descent update.  Should be between 0 and 1. Only'},
+                'description': 'Momentum for gradient descent update'},
             'nesterovs_momentum': {
                 'type': 'boolean',
                 'default': True,
-                'description': "Whether to use Nesterov's momentum. Only used when solver='sgd' and"},
+                'description': "Whether to use Nesterov's momentum"},
             'early_stopping': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to use early stopping to terminate training when validation'},
+                'description': 'Whether to use early stopping to terminate training when validation score is not improving'},
             'validation_fraction': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'The proportion of training data to set aside as validation set for'},
+                'description': 'The proportion of training data to set aside as validation set for early stopping'},
             'beta_1': {
                 'type': 'number',
                 'default': 0.9,
-                'description': 'Exponential decay rate for estimates of first moment vector in adam,'},
+                'description': 'Exponential decay rate for estimates of first moment vector in adam, should be in [0, 1)'},
             'beta_2': {
                 'type': 'number',
                 'default': 0.999,
-                'description': 'Exponential decay rate for estimates of second moment vector in adam,'},
+                'description': 'Exponential decay rate for estimates of second moment vector in adam, should be in [0, 1)'},
             'epsilon': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
                 'distribution': 'loguniform',
                 'default': 1e-08,
-                'description': "Value for numerical stability in adam. Only used when solver='adam'"},
+                'description': 'Value for numerical stability in adam'},
             'n_iter_no_change': {
                 'type': 'integer',
                 'default': 10,
-                'description': 'Maximum number of epochs to not meet ``tol`` improvement.'},
+                'description': 'Maximum number of epochs to not meet ``tol`` improvement'},
         }}, {
         'description': "learning_rate, only used when solver='sgd'",
         'anyOf': [{
@@ -299,12 +299,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model to data matrix X and target(s) y.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',
@@ -326,7 +327,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The target values (class labels in classification, real numbers in'},
+            'description': 'The target values (class labels in classification, real numbers in regression).'},
     },
 }
 _input_predict_schema = {

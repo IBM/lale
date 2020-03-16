@@ -35,20 +35,20 @@ _hyperparams_schema = {
             'with_centering': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True, center the data before scaling.'},
+                'description': 'If True, center the data before scaling'},
             'with_scaling': {
                 'type': 'boolean',
                 'default': True,
                 'description': 'If True, scale the data to interquartile range.'},
             'quantile_range': {
                 'XXX TODO XXX': 'tuple (q_min, q_max), 0.0 < q_min < q_max < 100.0',
-                'description': 'Default: (25.0, 75.0) = (1st quantile, 3rd quantile) = IQR',
+                'description': 'Default: (25.0, 75.0) = (1st quantile, 3rd quantile) = IQR Quantile range used to calculate ``scale_``',
                 'type': 'array',
                 'laleType': 'tuple',
                 'default': (25.0, 75.0)},
             'copy': {
                 'XXX TODO XXX': 'boolean, optional, default is True',
-                'description': 'If False, try to avoid a copy and do inplace scaling instead.',
+                'description': 'If False, try to avoid a copy and do inplace scaling instead',
                 'type': 'boolean',
                 'default': True},
         }}],
@@ -66,7 +66,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The data used to compute the median and quantiles'},
+            'description': 'The data used to compute the median and quantiles used for later scaling along the features axis.'},
     },
 }
 _input_transform_schema = {
@@ -78,6 +78,7 @@ _input_transform_schema = {
         'X': {
             'type': 'array',
             'items': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'item type'},
             'XXX TODO XXX': '{array-like, sparse matrix}',
             'description': 'The data used to scale along the specified axis.'},

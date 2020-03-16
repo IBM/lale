@@ -32,13 +32,13 @@ _hyperparams_schema = {
         'properties': {
             'threshold': {
                 'XXX TODO XXX': 'float, optional (0.0 by default)',
-                'description': 'Feature values below or equal to this are replaced by 0, above it by 1.',
+                'description': 'Feature values below or equal to this are replaced by 0, above it by 1',
                 'type': 'number',
                 'default': 0.0},
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'set to False to perform inplace binarization and avoid a copy (if'},
+                'description': 'set to False to perform inplace binarization and avoid a copy (if the input is already a numpy array or a scipy.sparse CSR matrix).'},
         }}],
 }
 _input_fit_schema = {
@@ -50,6 +50,7 @@ _input_fit_schema = {
         'X': {
             'type': 'array',
             'items': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'item type'},
             'XXX TODO XXX': 'array-like'},
     },
@@ -58,7 +59,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Binarize each element of X',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -67,10 +68,11 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The data to binarize, element by element.'},
+            'description': 'The data to binarize, element by element'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': '(ignored)',
-            'description': '.. deprecated:: 0.19'},
+            'description': ''},
         'copy': {
             'type': 'boolean',
             'description': 'Copy the input X or not.'},

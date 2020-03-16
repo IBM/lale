@@ -43,15 +43,15 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 1.0,
-                'description': 'Constant that multiplies the L1/L2 term. Defaults to 1.0'},
+                'description': 'Constant that multiplies the L1/L2 term'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'whether to calculate the intercept for this model. If set'},
+                'description': 'whether to calculate the intercept for this model'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
@@ -69,36 +69,38 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 0.0001,
-                'description': 'The tolerance for the optimization: if the updates are'},
+                'description': 'The tolerance for the optimization: if the updates are smaller than ``tol``, the optimization code checks the dual gap for optimality and continues until it is smaller than ``tol``.'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to ``True``, reuse the solution of the previous call to fit as'},
+                'description': 'When set to ``True``, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator that selects a random'},
+                'description': 'The seed of the pseudo random number generator that selects a random feature to update'},
             'selection': {
                 'type': 'string',
                 'default': 'cyclic',
-                'description': "If set to 'random', a random coefficient is updated every iteration"},
+                'description': "If set to 'random', a random coefficient is updated every iteration rather than looping over features sequentially by default"},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit MultiTaskElasticNet model with coordinate descent',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'ndarray, shape (n_samples, n_features)',
             'description': 'Data'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'ndarray, shape (n_samples, n_tasks)',
-            'description': "Target. Will be cast to X's dtype if necessary"},
+            'description': 'Target'},
     },
 }
 _input_predict_schema = {
@@ -111,6 +113,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

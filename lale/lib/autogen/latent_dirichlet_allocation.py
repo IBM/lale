@@ -57,25 +57,25 @@ _hyperparams_schema = {
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Prior of document topic distribution `theta`. If the value is None,'},
+                'description': 'Prior of document topic distribution `theta`'},
             'topic_word_prior': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Prior of topic word distribution `beta`. If the value is None, defaults'},
+                'description': 'Prior of topic word distribution `beta`'},
             'learning_method': {
                 'enum': ['batch', 'online'],
                 'default': 'batch',
-                'description': 'Method used to update `_component`. Only used in `fit` method.'},
+                'description': 'Method used to update `_component`'},
             'learning_decay': {
                 'type': 'number',
                 'default': 0.7,
-                'description': 'It is a parameter that control learning rate in the online learning'},
+                'description': 'It is a parameter that control learning rate in the online learning method'},
             'learning_offset': {
                 'type': 'number',
                 'default': 10.0,
-                'description': 'A (positive) parameter that downweights early iterations in online'},
+                'description': 'A (positive) parameter that downweights early iterations in online learning'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
@@ -89,14 +89,14 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 128,
                 'distribution': 'uniform',
                 'default': 128,
-                'description': 'Number of documents to use in each EM iteration. Only used in online'},
+                'description': 'Number of documents to use in each EM iteration'},
             'evaluate_every': {
                 'type': 'integer',
                 'minimumForOptimizer': (- 1),
                 'maximumForOptimizer': 0,
                 'distribution': 'uniform',
                 'default': (- 1),
-                'description': 'How often to evaluate perplexity. Only used in `fit` method.'},
+                'description': 'How often to evaluate perplexity'},
             'total_samples': {
                 'anyOf': [{
                     'type': 'integer',
@@ -106,11 +106,11 @@ _hyperparams_schema = {
                     'maximumForOptimizer': 1.0,
                     'distribution': 'uniform'}],
                 'default': 1000000.0,
-                'description': 'Total number of documents. Only used in the `partial_fit` method.'},
+                'description': 'Total number of documents'},
             'perp_tol': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'Perplexity tolerance in batch learning. Only used when'},
+                'description': 'Perplexity tolerance in batch learning'},
             'mean_change_tol': {
                 'type': 'number',
                 'default': 0.001,
@@ -121,13 +121,13 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 101,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'Max number of iterations for updating document topic distribution in'},
+                'description': 'Max number of iterations for updating document topic distribution in the E-step.'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of jobs to use in the E-step.'},
+                'description': 'The number of jobs to use in the E-step'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
@@ -138,13 +138,13 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'n_topics': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'This parameter has been renamed to n_components and will'},
+                'description': 'This parameter has been renamed to n_components and will be removed in version 0.21'},
         }}, {
         'description': 'learning_method, only used in fit method',
         'anyOf': [{
@@ -200,12 +200,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Learn model for the data X with variational Bayes method.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape=(n_samples, n_features)'}, {
                 'type': 'array',
@@ -229,6 +230,7 @@ _input_transform_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape=(n_samples, n_features)'}, {
                 'type': 'array',
@@ -243,6 +245,7 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Document topic distribution for X.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'shape=(n_samples, n_components)',
 }
 _combined_schemas = {

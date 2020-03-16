@@ -41,14 +41,14 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 256,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'Number of Monte Carlo samples per original feature.'},
+                'description': 'Number of Monte Carlo samples per original feature'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
         }}],
 }
 _input_fit_schema = {
@@ -64,7 +64,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training data, where n_samples in the number of samples'},
+            'description': 'Training data, where n_samples in the number of samples and n_features is the number of features.'},
     },
 }
 _input_transform_schema = {
@@ -80,7 +80,7 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'New data, where n_samples in the number of samples'},
+            'description': 'New data, where n_samples in the number of samples and n_features is the number of features.'},
     },
 }
 _output_transform_schema = {

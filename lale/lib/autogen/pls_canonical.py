@@ -50,12 +50,12 @@ _hyperparams_schema = {
                 'description': 'Option to scale data'},
             'algorithm': {
                 'XXX TODO XXX': 'string, "nipals" or "svd"',
-                'description': 'The algorithm used to estimate the weights. It will be called',
+                'description': 'The algorithm used to estimate the weights',
                 'enum': ['nipals', 'svd'],
                 'default': 'nipals'},
             'max_iter': {
                 'XXX TODO XXX': 'an integer, (default 500)',
-                'description': 'the maximum number of iterations of the NIPALS inner loop (used',
+                'description': 'the maximum number of iterations of the NIPALS inner loop (used only if algorithm="nipals")',
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
@@ -72,7 +72,7 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether the deflation should be done on a copy. Let the default'},
+                'description': 'Whether the deflation should be done on a copy'},
         }}, {
         'XXX TODO XXX': 'Parameter: max_iter > only if algorithm="nipals")'}],
 }
@@ -89,7 +89,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples and'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of predictors.'},
         'Y': {
             'type': 'array',
             'items': {
@@ -97,7 +97,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Target vectors, where n_samples is the number of samples and'},
+            'description': 'Target vectors, where n_samples is the number of samples and n_targets is the number of response variables.'},
     },
 }
 _input_transform_schema = {
@@ -113,7 +113,7 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples and'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of predictors.'},
         'Y': {
             'type': 'array',
             'items': {
@@ -121,7 +121,7 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Target vectors, where n_samples is the number of samples and'},
+            'description': 'Target vectors, where n_samples is the number of samples and n_targets is the number of response variables.'},
         'copy': {
             'type': 'boolean',
             'default': True,
@@ -131,6 +131,7 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Apply the dimension reduction learned on the train data.',
+    'laleType': 'Any',
     'XXX TODO XXX': '',
 }
 _input_predict_schema = {
@@ -146,7 +147,7 @@ _input_predict_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples and'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of predictors.'},
         'copy': {
             'type': 'boolean',
             'default': True,

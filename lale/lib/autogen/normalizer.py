@@ -38,7 +38,7 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'set to False to perform inplace row normalization and avoid a'},
+                'description': 'set to False to perform inplace row normalization and avoid a copy (if the input is already a numpy array or a scipy.sparse CSR matrix).'},
         }}],
 }
 _input_fit_schema = {
@@ -50,6 +50,7 @@ _input_fit_schema = {
         'X': {
             'type': 'array',
             'items': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'item type'},
             'XXX TODO XXX': 'array-like'},
     },
@@ -58,7 +59,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Scale each non zero row of X to unit norm',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -67,10 +68,11 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The data to normalize, row by row. scipy.sparse matrices should be'},
+            'description': 'The data to normalize, row by row'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': '(ignored)',
-            'description': '.. deprecated:: 0.19'},
+            'description': ''},
         'copy': {
             'anyOf': [{
                 'type': 'boolean'}, {

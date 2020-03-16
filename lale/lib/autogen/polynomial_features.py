@@ -37,15 +37,15 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 3,
                 'distribution': 'uniform',
                 'default': 2,
-                'description': 'The degree of the polynomial features. Default = 2.'},
+                'description': 'The degree of the polynomial features'},
             'interaction_only': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'If true, only interaction features are produced: features that are'},
+                'description': 'If true, only interaction features are produced: features that are products of at most ``degree`` *distinct* input features (so not ``x[1] ** 2``, ``x[0] * x[2] ** 3``, etc.).'},
             'include_bias': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True (default), then include a bias column, the feature in which'},
+                'description': 'If True (default), then include a bias column, the feature in which all polynomial powers are zero (i.e'},
         }}, {
         'XXX TODO XXX': 'Parameter: interaction_only > only interaction features are produced: features that are products of at most degree *distinct* input features (so not x[1] ** 2'}],
 }
@@ -75,6 +75,7 @@ _input_transform_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape [n_samples, n_features]'}, {
                 'type': 'array',
@@ -83,12 +84,13 @@ _input_transform_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The data to transform, row by row.'},
+            'description': 'The data to transform, row by row'},
     },
 }
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'The matrix of features, where NP is the number of polynomial',
+    'description': 'The matrix of features, where NP is the number of polynomial features generated from the combination of inputs.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'np.ndarray or CSC sparse matrix, shape [n_samples, NP]',
 }
 _combined_schemas = {
