@@ -36,7 +36,7 @@ _hyperparams_schema = {
         'properties': {
             'alpha': {
                 'XXX TODO XXX': '{float, array-like}, shape = [n_targets]',
-                'description': 'Small positive values of alpha improve the conditioning of the problem',
+                'description': 'Small positive values of alpha improve the conditioning of the problem and reduce the variance of the estimates',
                 'type': 'integer',
                 'minimumForOptimizer': 1,
                 'maximumForOptimizer': 2,
@@ -48,30 +48,30 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': ['linear', 'poly', 'rbf', 'sigmoid']}],
                 'default': 'linear',
-                'description': 'Kernel mapping used internally. A callable should accept two arguments'},
+                'description': 'Kernel mapping used internally'},
             'gamma': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Gamma parameter for the RBF, laplacian, polynomial, exponential chi2'},
+                'description': 'Gamma parameter for the RBF, laplacian, polynomial, exponential chi2 and sigmoid kernels'},
             'degree': {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
                 'distribution': 'uniform',
                 'default': 3,
-                'description': 'Degree of the polynomial kernel. Ignored by other kernels.'},
+                'description': 'Degree of the polynomial kernel'},
             'coef0': {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
                 'distribution': 'uniform',
                 'default': 1,
-                'description': 'Zero coefficient for polynomial and sigmoid kernels.'},
+                'description': 'Zero coefficient for polynomial and sigmoid kernels'},
             'kernel_params': {
                 'XXX TODO XXX': 'mapping of string to any, optional',
-                'description': 'Additional parameters (keyword arguments) for kernel function passed',
+                'description': 'Additional parameters (keyword arguments) for kernel function passed as callable object.',
                 'enum': [None],
                 'default': None},
         }}],
@@ -80,7 +80,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Kernel Ridge regression model',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -89,7 +89,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training data. If kernel == "precomputed" this is instead'},
+            'description': 'Training data'},
         'y': {
             'anyOf': [{
                 'type': 'array',
@@ -126,7 +126,7 @@ _input_predict_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Samples. If kernel == "precomputed" this is instead a'},
+            'description': 'Samples'},
     },
 }
 _output_predict_schema = {

@@ -55,11 +55,11 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 2,
                 'distribution': 'uniform',
                 'default': 1,
-                'description': 'Sparsity controlling parameter. Higher values lead to sparser'},
+                'description': 'Sparsity controlling parameter'},
             'ridge_alpha': {
                 'type': 'number',
                 'default': 0.01,
-                'description': 'Amount of ridge shrinkage to apply in order to improve'},
+                'description': 'Amount of ridge shrinkage to apply in order to improve conditioning when calling the transform method.'},
             'n_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 5,
@@ -85,7 +85,7 @@ _hyperparams_schema = {
                     'type': 'integer'}, {
                     'type': 'boolean'}],
                 'default': False,
-                'description': 'Controls the verbosity; the higher, the more messages. Defaults to 0.'},
+                'description': 'Controls the verbosity; the higher, the more messages'},
             'shuffle': {
                 'type': 'boolean',
                 'default': True,
@@ -95,29 +95,29 @@ _hyperparams_schema = {
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of parallel jobs to run.'},
+                'description': 'Number of parallel jobs to run'},
             'method': {
                 'enum': ['lars', 'cd'],
                 'default': 'lars',
-                'description': 'lars: uses the least angle regression method to solve the lasso problem'},
+                'description': 'lars: uses the least angle regression method to solve the lasso problem (linear_model.lars_path) cd: uses the coordinate descent method to compute the Lasso solution (linear_model.Lasso)'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'normalize_components': {
                 'type': 'boolean',
                 'default': False,
-                'description': '- if False, use a version of Sparse PCA without components'},
+                'description': '- if False, use a version of Sparse PCA without components   normalization and without data centering'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model from data in X.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -126,7 +126,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples in the number of samples'},
+            'description': 'Training vector, where n_samples in the number of samples and n_features is the number of features.'},
         'y': {
             
         }},
@@ -144,16 +144,17 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Test data to be transformed, must have the same number of'},
+            'description': 'Test data to be transformed, must have the same number of features as the data used to train the model.'},
         'ridge_alpha': {
             'type': 'number',
             'default': 0.01,
-            'description': 'Amount of ridge shrinkage to apply in order to improve'},
+            'description': 'Amount of ridge shrinkage to apply in order to improve conditioning'},
     },
 }
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transformed data.',
+    'laleType': 'Any',
     'XXX TODO XXX': '',
 }
 _combined_schemas = {

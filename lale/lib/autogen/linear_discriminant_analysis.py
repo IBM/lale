@@ -43,14 +43,14 @@ _hyperparams_schema = {
             'solver': {
                 'enum': ['lsqr', 'svd'],
                 'default': 'svd',
-                'description': 'Solver to use, possible values:'},
+                'description': "Solver to use, possible values:   - 'svd': Singular value decomposition (default)"},
             'shrinkage': {
                 'anyOf': [{
                     'type': 'string'}, {
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Shrinkage parameter, possible values:'},
+                'description': 'Shrinkage parameter, possible values:   - None: no shrinkage (default)'},
             'priors': {
                 'XXX TODO XXX': 'array, optional, shape (n_classes,)',
                 'description': 'Class priors.',
@@ -68,14 +68,14 @@ _hyperparams_schema = {
             'store_covariance': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Additionally compute class covariance matrix (default False), used'},
+                'description': "Additionally compute class covariance matrix (default False), used only in 'svd' solver"},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 0.0001,
-                'description': 'Threshold used for rank estimation in SVD solver.'},
+                'description': 'Threshold used for rank estimation in SVD solver'},
         }}, {
         'description': "shrinkage, only with 'lsqr' and 'eigen' solvers",
         'anyOf': [{
@@ -106,7 +106,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit LinearDiscriminantAnalysis model according to the given',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -159,6 +159,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

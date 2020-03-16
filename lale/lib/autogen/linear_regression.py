@@ -35,11 +35,11 @@ _hyperparams_schema = {
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'whether to calculate the intercept for this model. If set'},
+                'description': 'whether to calculate the intercept for this model'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
@@ -49,7 +49,7 @@ _hyperparams_schema = {
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of jobs to use for the computation. This will only provide'},
+                'description': 'The number of jobs to use for the computation'},
         }}, {
         'XXX TODO XXX': 'Parameter: n_jobs > only provide speedup for n_targets > 1 and sufficient large problems'}],
 }
@@ -57,12 +57,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',
@@ -79,12 +80,12 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': "Target values. Will be cast to X's dtype if necessary"},
+            'description': 'Target values'},
         'sample_weight': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'Individual weights for each sample'},
+            'description': 'Individual weights for each sample  '},
     },
 }
 _input_predict_schema = {
@@ -97,6 +98,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

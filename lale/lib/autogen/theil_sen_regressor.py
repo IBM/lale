@@ -40,7 +40,7 @@ _hyperparams_schema = {
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to calculate the intercept for this model. If set'},
+                'description': 'Whether to calculate the intercept for this model'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
@@ -51,13 +51,13 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 10001,
                 'distribution': 'uniform',
                 'default': 10000,
-                'description': "Instead of computing with a set of cardinality 'n choose k', where n is"},
+                'description': "Instead of computing with a set of cardinality 'n choose k', where n is the number of samples and k is the number of subsamples (at least number of features), consider only a stochastic subpopulation of a given maximal size if 'n choose k' is larger than max_subpopulation"},
             'n_subsamples': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of samples to calculate the parameters. This is at least the'},
+                'description': 'Number of samples to calculate the parameters'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
@@ -78,13 +78,13 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'A random number generator instance to define the state of the random'},
+                'description': 'A random number generator instance to define the state of the random permutations generator'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of CPUs to use during the cross validation.'},
+                'description': 'Number of CPUs to use during the cross validation'},
             'verbose': {
                 'type': 'boolean',
                 'default': False,
@@ -96,7 +96,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -123,6 +123,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

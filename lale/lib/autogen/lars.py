@@ -17,9 +17,9 @@ class LarsImpl():
             'copy_X': copy_X,
             'fit_path': fit_path,
             'positive': positive}
+        self._sklearn_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model = SKLModel(**self._hyperparams)
         if (y is not None):
             self._sklearn_model.fit(X, y)
         else:
@@ -40,7 +40,7 @@ _hyperparams_schema = {
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to calculate the intercept for this model. If set'},
+                'description': 'Whether to calculate the intercept for this model'},
             'verbose': {
                 'anyOf': [{
                     'type': 'boolean'}, {
@@ -50,31 +50,32 @@ _hyperparams_schema = {
             'normalize': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'precompute': {
                 'anyOf': [{
                     'type': 'array',
                     'items': {
+                        'laleType': 'Any',
                         'XXX TODO XXX': 'item type'},
                     'XXX TODO XXX': "True | False | 'auto' | array-like",
                     'forOptimizer': False}, {
                     'enum': ['auto']}],
                 'default': 'auto',
-                'description': 'Whether to use a precomputed Gram matrix to speed up'},
+                'description': 'Whether to use a precomputed Gram matrix to speed up calculations'},
             'n_nonzero_coefs': {
                 'type': 'integer',
                 'minimumForOptimizer': 500,
                 'maximumForOptimizer': 501,
                 'distribution': 'uniform',
                 'default': 500,
-                'description': 'Target number of non-zero coefficients. Use ``np.inf`` for no limit.'},
+                'description': 'Target number of non-zero coefficients'},
             'eps': {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 2.220446049250313e-16,
-                'description': 'The machine-precision regularization in the computation of the'},
+                'description': 'The machine-precision regularization in the computation of the Cholesky diagonal factors'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
@@ -82,18 +83,18 @@ _hyperparams_schema = {
             'fit_path': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True the full path is stored in the ``coef_path_`` attribute.'},
+                'description': 'If True the full path is stored in the ``coef_path_`` attribute'},
             'positive': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Restrict coefficients to be >= 0. Be aware that you might want to'},
+                'description': 'Restrict coefficients to be >= 0'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model using X, y as training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -117,8 +118,9 @@ _input_fit_schema = {
                 }}],
             'description': 'Target values.'},
         'Xy': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'array-like, shape (n_samples,) or (n_samples, n_targets),                 optional',
-            'description': 'Xy = np.dot(X.T, y) that can be precomputed. It is useful'},
+            'description': 'Xy = np.dot(X.T, y) that can be precomputed'},
     },
 }
 _input_predict_schema = {
@@ -131,6 +133,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

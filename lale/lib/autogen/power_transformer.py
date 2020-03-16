@@ -34,11 +34,11 @@ _hyperparams_schema = {
             'method': {
                 'type': 'string',
                 'default': 'yeo-johnson',
-                'description': 'The power transform method. Available methods are:'},
+                'description': 'The power transform method'},
             'standardize': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Set to True to apply zero-mean, unit-variance normalization to the'},
+                'description': 'Set to True to apply zero-mean, unit-variance normalization to the transformed output.'},
             'copy': {
                 'type': 'boolean',
                 'default': True,
@@ -50,7 +50,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Estimate the optimal parameter lambda for each feature.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',

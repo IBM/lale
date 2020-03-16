@@ -32,7 +32,7 @@ _hyperparams_schema = {
         'properties': {
             'classes': {
                 'XXX TODO XXX': 'array-like of shape [n_classes] (optional)',
-                'description': 'Indicates an ordering for the class labels.',
+                'description': 'Indicates an ordering for the class labels',
                 'enum': [None],
                 'default': None},
             'sparse_output': {
@@ -48,8 +48,9 @@ _input_fit_schema = {
     'required': ['y'],
     'properties': {
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'iterable of iterables',
-            'description': 'A set of labels (any orderable and hashable object) for each'},
+            'description': 'A set of labels (any orderable and hashable object) for each sample'},
     },
 }
 _input_transform_schema = {
@@ -59,13 +60,15 @@ _input_transform_schema = {
     'required': ['y'],
     'properties': {
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'iterable of iterables',
-            'description': 'A set of labels (any orderable and hashable object) for each'},
+            'description': 'A set of labels (any orderable and hashable object) for each sample'},
     },
 }
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'A matrix such that `y_indicator[i, j] = 1` iff `classes_[j]` is in',
+    'description': 'A matrix such that `y_indicator[i, j] = 1` iff `classes_[j]` is in `y[i]`, and 0 otherwise.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'array or CSR matrix, shape (n_samples, n_classes)',
 }
 _combined_schemas = {

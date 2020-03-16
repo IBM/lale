@@ -32,10 +32,11 @@ _hyperparams_schema = {
         'properties': {
             'categories': {
                 'XXX TODO XXX': "'auto' or a list of lists/arrays of values.",
-                'description': 'Categories (unique values) per feature:',
+                'description': "Categories (unique values) per feature:  - 'auto' : Determine categories automatically from the training data",
                 'enum': ['auto'],
                 'default': 'auto'},
             'dtype': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'number type, default np.float64',
                 'description': 'Desired dtype of output.'},
         }}],
@@ -75,6 +76,7 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transformed input.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'sparse matrix or a 2-d array',
 }
 _combined_schemas = {

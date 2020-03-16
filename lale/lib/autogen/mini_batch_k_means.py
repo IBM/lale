@@ -49,18 +49,18 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 8,
                 'distribution': 'uniform',
                 'default': 8,
-                'description': 'The number of clusters to form as well as the number of'},
+                'description': 'The number of clusters to form as well as the number of centroids to generate.'},
             'init': {
                 'enum': ['k-means++', 'random', 'ndarray'],
                 'default': 'k-means++',
-                'description': "Method for initialization, defaults to 'k-means++':"},
+                'description': "Method for initialization, defaults to 'k-means++':  'k-means++' : selects initial cluster centers for k-mean clustering in a smart way to speed up convergence"},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'Maximum number of iterations over the complete dataset before'},
+                'description': 'Maximum number of iterations over the complete dataset before stopping independently of any early stopping criterion heuristics.'},
             'batch_size': {
                 'type': 'integer',
                 'minimumForOptimizer': 3,
@@ -77,31 +77,31 @@ _hyperparams_schema = {
             'compute_labels': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Compute label assignment and inertia for the complete dataset'},
+                'description': 'Compute label assignment and inertia for the complete dataset once the minibatch optimization has converged in fit.'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Determines random number generation for centroid initialization and'},
+                'description': 'Determines random number generation for centroid initialization and random reassignment'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 0.0,
-                'description': 'Control early stopping based on the relative center changes as'},
+                'description': 'Control early stopping based on the relative center changes as measured by a smoothed, variance-normalized of the mean center squared position changes'},
             'max_no_improvement': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 11,
                 'distribution': 'uniform',
                 'default': 10,
-                'description': 'Control early stopping based on the consecutive number of mini'},
+                'description': 'Control early stopping based on the consecutive number of mini batches that does not yield an improvement on the smoothed inertia'},
             'init_size': {
                 'XXX TODO XXX': 'int, optional, default: 3 * batch_size',
-                'description': 'Number of samples to randomly sample for speeding up the',
+                'description': 'Number of samples to randomly sample for speeding up the initialization (sometimes at the expense of accuracy): the only algorithm is initialized by running a batch KMeans on a random subset of the data',
                 'enum': [None],
                 'default': None},
             'n_init': {
@@ -110,11 +110,11 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 10,
                 'distribution': 'uniform',
                 'default': 3,
-                'description': 'Number of random initializations that are tried.'},
+                'description': 'Number of random initializations that are tried'},
             'reassignment_ratio': {
                 'type': 'number',
                 'default': 0.01,
-                'description': 'Control the fraction of the maximum number of counts for a'},
+                'description': 'Control the fraction of the maximum number of counts for a center to be reassigned'},
         }}, {
         'XXX TODO XXX': 'Parameter: init_size > only algorithm is initialized by running a batch kmeans on a random subset of the data'}, {
         'XXX TODO XXX': 'Parameter: n_init > only run once'}],
@@ -123,12 +123,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the centroids on X by chunking it into mini-batches.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape=(n_samples, n_features)'}, {
                 'type': 'array',
@@ -137,7 +138,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'Training instances to cluster. It must be noted that the data'},
+            'description': 'Training instances to cluster'},
         'y': {
             'description': 'not used, present here for API consistency by convention.'},
         'sample_weight': {
@@ -148,7 +149,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'The weights for each observation in X. If None, all observations'},
+            'description': 'The weights for each observation in X'},
     },
 }
 _input_transform_schema = {
@@ -199,7 +200,7 @@ _input_predict_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'The weights for each observation in X. If None, all observations'},
+            'description': 'The weights for each observation in X'},
     },
 }
 _output_predict_schema = {

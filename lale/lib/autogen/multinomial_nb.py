@@ -40,11 +40,11 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 1.0,
-                'description': 'Additive (Laplace/Lidstone) smoothing parameter'},
+                'description': 'Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing).'},
             'fit_prior': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to learn class prior probabilities or not.'},
+                'description': 'Whether to learn class prior probabilities or not'},
             'class_prior': {
                 'anyOf': [{
                     'type': 'array',
@@ -53,14 +53,14 @@ _hyperparams_schema = {
                 }, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Prior probabilities of the classes. If specified the priors are not'},
+                'description': 'Prior probabilities of the classes'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Naive Bayes classifier according to X, y',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -69,7 +69,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples and'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
@@ -83,7 +83,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'Weights applied to individual samples (1. for unweighted).'},
+            'description': 'Weights applied to individual samples (1'},
     },
 }
 _input_predict_schema = {
@@ -125,7 +125,7 @@ _input_predict_proba_schema = {
 }
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Returns the probability of the samples for each class in',
+    'description': 'Returns the probability of the samples for each class in the model',
     'type': 'array',
     'items': {
         'type': 'array',

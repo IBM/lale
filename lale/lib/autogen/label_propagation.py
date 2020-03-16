@@ -41,7 +41,7 @@ _hyperparams_schema = {
             'kernel': {
                 'enum': ['knn', 'rbf', 'callable'],
                 'default': 'rbf',
-                'description': 'String identifier for kernel function to use or the kernel function'},
+                'description': 'String identifier for kernel function to use or the kernel function itself'},
             'gamma': {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
@@ -62,7 +62,7 @@ _hyperparams_schema = {
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Clamping factor.'},
+                'description': 'Clamping factor'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
@@ -76,13 +76,13 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 0.001,
-                'description': 'Convergence tolerance: threshold to consider the system at steady'},
+                'description': 'Convergence tolerance: threshold to consider the system at steady state'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of parallel jobs to run.'},
+                'description': 'The number of parallel jobs to run'},
         }}, {
         'XXX TODO XXX': "Parameter: kernel > only 'rbf' and 'knn' strings are valid inputs"}],
 }
@@ -90,7 +90,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit a semi-supervised label propagation model based',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -104,7 +104,7 @@ _input_fit_schema = {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'n_labeled_samples (unlabeled points are marked as -1)'},
+            'description': 'n_labeled_samples (unlabeled points are marked as -1) All unlabeled samples will be transductively assigned labels'},
     },
 }
 _input_predict_schema = {
@@ -146,7 +146,7 @@ _input_predict_proba_schema = {
 }
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Normalized probability distributions across',
+    'description': 'Normalized probability distributions across class labels',
     'type': 'array',
     'items': {
         'type': 'array',

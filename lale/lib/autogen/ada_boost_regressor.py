@@ -38,36 +38,36 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The base estimator from which the boosted ensemble is built.'},
+                'description': 'The base estimator from which the boosted ensemble is built'},
             'n_estimators': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 100,
                 'distribution': 'uniform',
                 'default': 50,
-                'description': 'The maximum number of estimators at which boosting is terminated.'},
+                'description': 'The maximum number of estimators at which boosting is terminated'},
             'learning_rate': {
                 'type': 'number',
                 'default': 1.0,
-                'description': 'Learning rate shrinks the contribution of each regressor by'},
+                'description': 'Learning rate shrinks the contribution of each regressor by ``learning_rate``'},
             'loss': {
                 'enum': ['linear', 'square', 'exponential'],
                 'default': 'linear',
-                'description': 'The loss function to use when updating the weights after each'},
+                'description': 'The loss function to use when updating the weights after each boosting iteration.'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a boosted regressor from the training set (X, y).',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -76,7 +76,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The training input samples. Sparse matrix can be CSC, CSR, COO,'},
+            'description': 'The training input samples'},
         'y': {
             'type': 'array',
             'items': {
@@ -90,7 +90,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'Sample weights. If None, the sample weights are initialized to'},
+            'description': 'Sample weights'},
     },
 }
 _input_predict_schema = {
@@ -106,7 +106,7 @@ _input_predict_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The training input samples. Sparse matrix can be CSC, CSR, COO,'},
+            'description': 'The training input samples'},
     },
 }
 _output_predict_schema = {

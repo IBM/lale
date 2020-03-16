@@ -54,11 +54,11 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 100,
                 'distribution': 'uniform',
                 'default': 10,
-                'description': 'The number of trees in the forest.'},
+                'description': 'The number of trees in the forest'},
             'criterion': {
                 'enum': ['entropy', 'gini'],
                 'default': 'gini',
-                'description': 'The function to measure the quality of a split. Supported criteria are'},
+                'description': 'The function to measure the quality of a split'},
             'max_depth': {
                 'anyOf': [{
                     'type': 'integer',
@@ -67,7 +67,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The maximum depth of the tree. If None, then nodes are expanded until'},
+                'description': 'The maximum depth of the tree'},
             'min_samples_split': {
                 'anyOf': [{
                     'type': 'integer',
@@ -77,7 +77,7 @@ _hyperparams_schema = {
                     'maximumForOptimizer': 0.5,
                     'distribution': 'uniform'}],
                 'default': 2,
-                'description': 'The minimum number of samples required to split an internal node:'},
+                'description': 'The minimum number of samples required to split an internal node:  - If int, then consider `min_samples_split` as the minimum number'},
             'min_samples_leaf': {
                 'anyOf': [{
                     'type': 'integer',
@@ -87,11 +87,11 @@ _hyperparams_schema = {
                     'maximumForOptimizer': 0.5,
                     'distribution': 'uniform'}],
                 'default': 1,
-                'description': 'The minimum number of samples required to be at a leaf node.'},
+                'description': 'The minimum number of samples required to be at a leaf node'},
             'min_weight_fraction_leaf': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all'},
+                'description': 'The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node'},
             'max_features': {
                 'anyOf': [{
                     'type': 'integer',
@@ -104,44 +104,44 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': [None]}],
                 'default': 'auto',
-                'description': 'The number of features to consider when looking for the best split:'},
+                'description': 'The number of features to consider when looking for the best split:  - If int, then consider `max_features` features at each split'},
             'max_leaf_nodes': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Grow trees with ``max_leaf_nodes`` in best-first fashion.'},
+                'description': 'Grow trees with ``max_leaf_nodes`` in best-first fashion'},
             'min_impurity_decrease': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity'},
+                'description': 'A node will be split if this split induces a decrease of the impurity greater than or equal to this value'},
             'min_impurity_split': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Threshold for early stopping in tree growth. A node will split'},
+                'description': 'Threshold for early stopping in tree growth'},
             'bootstrap': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether bootstrap samples are used when building trees. If False, the'},
+                'description': 'Whether bootstrap samples are used when building trees'},
             'oob_score': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to use out-of-bag samples to estimate'},
+                'description': 'Whether to use out-of-bag samples to estimate the generalization accuracy.'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of jobs to run in parallel for both `fit` and `predict`.'},
+                'description': 'The number of jobs to run in parallel for both `fit` and `predict`'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
@@ -149,10 +149,10 @@ _hyperparams_schema = {
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to ``True``, reuse the solution of the previous call to fit'},
+                'description': 'When set to ``True``, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just fit a whole new forest'},
             'class_weight': {
                 'XXX TODO XXX': 'dict, list of dicts, "balanced", "balanced_subsample" or     None, optional (default=None)',
-                'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
+                'description': 'Weights associated with classes in the form ``{class_label: weight}``',
                 'enum': ['balanced'],
                 'default': 'balanced'},
         }}, {
@@ -162,12 +162,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a forest of trees from the training set (X, y).',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix of shape = [n_samples, n_features]'}, {
                 'type': 'array',
@@ -176,7 +177,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The training input samples. Internally, its dtype will be converted'},
+            'description': 'The training input samples'},
         'y': {
             'anyOf': [{
                 'type': 'array',
@@ -189,7 +190,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The target values (class labels in classification, real numbers in'},
+            'description': 'The target values (class labels in classification, real numbers in regression).'},
         'sample_weight': {
             'anyOf': [{
                 'type': 'array',
@@ -197,7 +198,7 @@ _input_fit_schema = {
                     'type': 'number'},
             }, {
                 'enum': [None]}],
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
+            'description': 'Sample weights'},
     },
 }
 _input_predict_schema = {
@@ -210,6 +211,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix of shape = [n_samples, n_features]'}, {
                 'type': 'array',
@@ -218,7 +220,7 @@ _input_predict_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The input samples. Internally, its dtype will be converted to'},
+            'description': 'The input samples'},
     },
 }
 _output_predict_schema = {
@@ -246,6 +248,7 @@ _input_predict_proba_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix of shape = [n_samples, n_features]'}, {
                 'type': 'array',
@@ -254,12 +257,13 @@ _input_predict_proba_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The input samples. Internally, its dtype will be converted to'},
+            'description': 'The input samples'},
     },
 }
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'such arrays if n_outputs > 1.',
+    'description': 'such arrays if n_outputs > 1',
+    'laleType': 'Any',
     'XXX TODO XXX': 'array of shape = [n_samples, n_classes], or a list of n_outputs',
 }
 _combined_schemas = {

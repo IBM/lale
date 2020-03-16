@@ -61,7 +61,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples and'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of predictors.'},
         'Y': {
             'type': 'array',
             'items': {
@@ -69,7 +69,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Target vectors, where n_samples is the number of samples and'},
+            'description': 'Target vectors, where n_samples is the number of samples and n_targets is the number of response variables.'},
     },
 }
 _input_transform_schema = {
@@ -85,7 +85,7 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples and'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of predictors.'},
         'Y': {
             'type': 'array',
             'items': {
@@ -93,7 +93,7 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Target vectors, where n_samples is the number of samples and'},
+            'description': 'Target vectors, where n_samples is the number of samples and n_targets is the number of response variables.'},
     },
 }
 _output_transform_schema = {

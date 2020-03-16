@@ -46,28 +46,29 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 1.0,
-                'description': 'Constant that multiplies the penalty terms. Defaults to 1.0.'},
+                'description': 'Constant that multiplies the penalty terms'},
             'l1_ratio': {
                 'type': 'number',
                 'default': 0.5,
-                'description': 'The ElasticNet mixing parameter, with ``0 <= l1_ratio <= 1``. For'},
+                'description': 'The ElasticNet mixing parameter, with ``0 <= l1_ratio <= 1``'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether the intercept should be estimated or not. If ``False``, the'},
+                'description': 'Whether the intercept should be estimated or not'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'precompute': {
                 'anyOf': [{
                     'type': 'array',
                     'items': {
+                        'laleType': 'Any',
                         'XXX TODO XXX': 'item type'},
                     'XXX TODO XXX': 'True | False | array-like'}, {
                     'type': 'boolean'}],
                 'default': False,
-                'description': 'Whether to use a precomputed Gram matrix to speed up'},
+                'description': 'Whether to use a precomputed Gram matrix to speed up calculations'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
@@ -85,11 +86,11 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 0.0001,
-                'description': 'The tolerance for the optimization: if the updates are'},
+                'description': 'The tolerance for the optimization: if the updates are smaller than ``tol``, the optimization code checks the dual gap for optimality and continues until it is smaller than ``tol``.'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to ``True``, reuse the solution of the previous call to fit as'},
+                'description': 'When set to ``True``, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'positive': {
                 'type': 'boolean',
                 'default': False,
@@ -100,29 +101,31 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator that selects a random'},
+                'description': 'The seed of the pseudo random number generator that selects a random feature to update'},
             'selection': {
                 'enum': ['random', 'cyclic'],
                 'default': 'cyclic',
-                'description': "If set to 'random', a random coefficient is updated every iteration"},
+                'description': "If set to 'random', a random coefficient is updated every iteration rather than looping over features sequentially by default"},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit model with coordinate descent.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'ndarray or scipy.sparse matrix, (n_samples, n_features)',
             'description': 'Data'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'ndarray, shape (n_samples,) or (n_samples, n_targets)',
-            'description': "Target. Will be cast to X's dtype if necessary"},
+            'description': 'Target'},
         'check_input': {
             'type': 'boolean',
             'default': True,
-            'description': 'Allow to bypass several input checking.'},
+            'description': 'Allow to bypass several input checking'},
     },
 }
 _input_predict_schema = {
@@ -135,6 +138,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

@@ -47,13 +47,13 @@ _hyperparams_schema = {
         'properties': {
             'penalty': {
                 'XXX TODO XXX': "str, 'l1' or 'l2', default: 'l2'",
-                'description': "Used to specify the norm used in the penalization. The 'newton-cg',",
+                'description': 'Used to specify the norm used in the penalization',
                 'enum': ['l2'],
                 'default': 'l2'},
             'dual': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Dual or primal formulation. Dual formulation is only implemented for'},
+                'description': 'Dual or primal formulation'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
@@ -64,21 +64,21 @@ _hyperparams_schema = {
             'C': {
                 'type': 'number',
                 'default': 1.0,
-                'description': 'Inverse of regularization strength; must be a positive float.'},
+                'description': 'Inverse of regularization strength; must be a positive float'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Specifies if a constant (a.k.a. bias or intercept) should be'},
+                'description': 'Specifies if a constant (a.k.a'},
             'intercept_scaling': {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
                 'distribution': 'uniform',
                 'default': 1,
-                'description': "Useful only when the solver 'liblinear' is used"},
+                'description': "Useful only when the solver 'liblinear' is used and self.fit_intercept is set to True"},
             'class_weight': {
                 'XXX TODO XXX': "dict or 'balanced', default: None",
-                'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
+                'description': 'Weights associated with classes in the form ``{class_label: weight}``',
                 'enum': ['balanced'],
                 'default': 'balanced'},
             'random_state': {
@@ -87,36 +87,36 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
+                'description': 'The seed of the pseudo random number generator to use when shuffling the data'},
             'solver': {
                 'enum': ['lbfgs', 'liblinear', 'newton-cg', 'sag', 'saga'],
                 'default': 'liblinear',
-                'description': 'Algorithm to use in the optimization problem.'},
+                'description': 'Algorithm to use in the optimization problem'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'Useful only for the newton-cg, sag and lbfgs solvers.'},
+                'description': 'Useful only for the newton-cg, sag and lbfgs solvers'},
             'multi_class': {
                 'enum': ['auto', 'liblinear', 'multinomial', 'ovr'],
                 'default': 'ovr',
-                'description': "If the option chosen is 'ovr', then a binary problem is fit for each"},
+                'description': "If the option chosen is 'ovr', then a binary problem is fit for each label"},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
-                'description': 'For the liblinear and lbfgs solvers set verbose to any positive'},
+                'description': 'For the liblinear and lbfgs solvers set verbose to any positive number for verbosity.'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to True, reuse the solution of the previous call to fit as'},
+                'description': 'When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of CPU cores used when parallelizing over classes if'},
+                'description': 'Number of CPU cores used when parallelizing over classes if multi_class=\'ovr\'"'},
         }}, {
         'XXX TODO XXX': 'Parameter: penalty > only l2 penalties'}, {
         'XXX TODO XXX': 'Parameter: dual > only implemented for l2 penalty with liblinear solver'}, {
@@ -139,7 +139,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model according to the given training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -148,15 +148,16 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples is the number of samples and'},
+            'description': 'Training vector, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
                 'type': 'number'},
             'description': 'Target vector relative to X.'},
         'sample_weight': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'array-like, shape (n_samples,) optional',
-            'description': 'Array of weights that are assigned to individual samples.'},
+            'description': 'Array of weights that are assigned to individual samples'},
     },
 }
 _input_predict_schema = {
@@ -169,6 +170,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',
@@ -204,7 +206,7 @@ _input_predict_proba_schema = {
 }
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Returns the probability of the sample for each class in the model,',
+    'description': 'Returns the probability of the sample for each class in the model, where classes are ordered as they are in ``self.classes_``.',
     'type': 'array',
     'items': {
         'type': 'array',

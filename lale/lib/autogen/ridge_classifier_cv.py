@@ -40,25 +40,25 @@ _hyperparams_schema = {
                 'items': {
                     'type': 'number'},
                 'default': [0.1, 1.0, 10.0],
-                'description': 'Array of alpha values to try.'},
+                'description': 'Array of alpha values to try'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to calculate the intercept for this model. If set'},
+                'description': 'Whether to calculate the intercept for this model'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'scoring': {
                 'anyOf': [{
                     'type': 'string'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'A string (see model evaluation documentation) or'},
+                'description': 'A string (see model evaluation documentation) or a scorer callable object / function with signature ``scorer(estimator, X, y)``.'},
             'cv': {
                 'XXX TODO XXX': 'int, cross-validation generator or an iterable, optional',
-                'description': 'Determines the cross-validation splitting strategy.',
+                'description': 'Determines the cross-validation splitting strategy',
                 'anyOf': [{
                     'type': 'integer',
                     'minimumForOptimizer': 3,
@@ -68,13 +68,13 @@ _hyperparams_schema = {
                 'default': None},
             'class_weight': {
                 'XXX TODO XXX': "dict or 'balanced', optional",
-                'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
+                'description': 'Weights associated with classes in the form ``{class_label: weight}``',
                 'enum': ['balanced'],
                 'default': 'balanced'},
             'store_cv_values': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Flag indicating if the cross-validation values corresponding to'},
+                'description': 'Flag indicating if the cross-validation values corresponding to each alpha should be stored in the ``cv_values_`` attribute (see below)'},
         }}, {
         'XXX TODO XXX': 'Parameter: store_cv_values > only compatible with cv=none (i'}],
 }
@@ -82,7 +82,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the ridge classifier.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -91,12 +91,12 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': "Target values. Will be cast to X's dtype if necessary"},
+            'description': 'Target values'},
         'sample_weight': {
             'anyOf': [{
                 'type': 'number'}, {
@@ -117,6 +117,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

@@ -35,7 +35,7 @@ _hyperparams_schema = {
         'properties': {
             'regressor': {
                 'XXX TODO XXX': 'object, default=LinearRegression()',
-                'description': 'Regressor object such as derived from ``RegressorMixin``. This',
+                'description': 'Regressor object such as derived from ``RegressorMixin``',
                 'enum': [None],
                 'default': None},
             'transformer': {
@@ -43,28 +43,28 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Estimator object such as derived from ``TransformerMixin``. Cannot be'},
+                'description': 'Estimator object such as derived from ``TransformerMixin``'},
             'func': {
                 'XXX TODO XXX': 'function, optional',
-                'description': 'Function to apply to ``y`` before passing to ``fit``. Cannot be set at',
+                'description': 'Function to apply to ``y`` before passing to ``fit``',
                 'enum': [None],
                 'default': None},
             'inverse_func': {
                 'XXX TODO XXX': 'function, optional',
-                'description': 'Function to apply to the prediction of the regressor. Cannot be set at',
+                'description': 'Function to apply to the prediction of the regressor',
                 'enum': [None],
                 'default': None},
             'check_inverse': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to check that ``transform`` followed by ``inverse_transform``'},
+                'description': 'Whether to check that ``transform`` followed by ``inverse_transform`` or ``func`` followed by ``inverse_func`` leads to the original targets.'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model according to the given training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -73,15 +73,16 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples is the number of samples and'},
+            'description': 'Training vector, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
                 'type': 'number'},
             'description': 'Target values.'},
         'sample_weight': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'array-like, shape (n_samples,) optional',
-            'description': 'Array of weights that are assigned to individual samples.'},
+            'description': 'Array of weights that are assigned to individual samples'},
     },
 }
 _input_predict_schema = {

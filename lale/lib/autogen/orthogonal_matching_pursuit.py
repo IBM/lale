@@ -41,7 +41,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Desired number of non-zero entries in the solution. If None (by'},
+                'description': 'Desired number of non-zero entries in the solution'},
             'tol': {
                 'anyOf': [{
                     'type': 'number',
@@ -50,26 +50,26 @@ _hyperparams_schema = {
                     'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Maximum norm of the residual. If not None, overrides n_nonzero_coefs.'},
+                'description': 'Maximum norm of the residual'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'whether to calculate the intercept for this model. If set'},
+                'description': 'whether to calculate the intercept for this model'},
             'normalize': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'precompute': {
                 'enum': [True, False, 'auto'],
                 'default': 'auto',
-                'description': 'Whether to use a precomputed Gram and Xy matrix to speed up'},
+                'description': 'Whether to use a precomputed Gram and Xy matrix to speed up calculations'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model using X, y as training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -91,7 +91,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': "Target values. Will be cast to X's dtype if necessary"},
+            'description': 'Target values'},
     },
 }
 _input_predict_schema = {
@@ -104,6 +104,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

@@ -53,48 +53,49 @@ _hyperparams_schema = {
             'eigen_solver': {
                 'enum': ['auto', 'arpack', 'dense'],
                 'default': 'auto',
-                'description': "'auto' : Attempt to choose the most efficient solver"},
+                'description': "'auto' : Attempt to choose the most efficient solver for the given problem"},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
                 'distribution': 'uniform',
                 'default': 0,
-                'description': 'Convergence tolerance passed to arpack or lobpcg.'},
+                'description': 'Convergence tolerance passed to arpack or lobpcg'},
             'max_iter': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Maximum number of iterations for the arpack solver.'},
+                'description': 'Maximum number of iterations for the arpack solver'},
             'path_method': {
                 'enum': ['D', 'FW', 'auto'],
                 'default': 'auto',
-                'description': 'Method to use in finding shortest path.'},
+                'description': 'Method to use in finding shortest path'},
             'neighbors_algorithm': {
                 'enum': ['auto', 'ball_tree', 'brute', 'kd_tree'],
                 'default': 'auto',
-                'description': 'Algorithm to use for nearest neighbors search,'},
+                'description': 'Algorithm to use for nearest neighbors search, passed to neighbors.NearestNeighbors instance.'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of parallel jobs to run.'},
+                'description': 'The number of parallel jobs to run'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the embedding vectors for data X',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
             'items': {
+                'laleType': 'Any',
                 'XXX TODO XXX': 'item type'},
             'XXX TODO XXX': '{array-like, sparse matrix, BallTree, KDTree, NearestNeighbors}',
-            'description': 'Sample data, shape = (n_samples, n_features), in the form of a'},
+            'description': 'Sample data, shape = (n_samples, n_features), in the form of a numpy array, precomputed tree, or NearestNeighbors object.'},
         'y': {
             
         }},

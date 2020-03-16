@@ -35,7 +35,7 @@ _hyperparams_schema = {
         'properties': {
             'n_components': {
                 'XXX TODO XXX': "int or 'auto', optional (default = 'auto')",
-                'description': 'Dimensionality of the target projection space.',
+                'description': 'Dimensionality of the target projection space',
                 'anyOf': [{
                     'type': 'integer',
                     'minimumForOptimizer': 2,
@@ -45,12 +45,12 @@ _hyperparams_schema = {
                 'default': 'auto'},
             'density': {
                 'XXX TODO XXX': "float in range ]0, 1], optional (default='auto')",
-                'description': 'Ratio of non-zero component in the random projection matrix.',
+                'description': 'Ratio of non-zero component in the random projection matrix',
                 'enum': ['auto'],
                 'default': 'auto'},
             'eps': {
                 'XXX TODO XXX': 'strictly positive float, optional, (default=0.1)',
-                'description': 'Parameter to control the quality of the embedding according to',
+                'description': "Parameter to control the quality of the embedding according to the Johnson-Lindenstrauss lemma when n_components is set to 'auto'",
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
@@ -59,26 +59,27 @@ _hyperparams_schema = {
             'dense_output': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'If True, ensure that the output of the random projection is a'},
+                'description': 'If True, ensure that the output of the random projection is a dense numpy array even if the input and random projection matrix are both sparse'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Control the pseudo random number generator used to generate the matrix'},
+                'description': 'Control the pseudo random number generator used to generate the matrix at fit time'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Generate a sparse random projection matrix',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'numpy array or scipy.sparse of shape [n_samples, n_features]'}, {
                 'type': 'array',
@@ -87,8 +88,9 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'Training set: only the shape is used to find optimal random'},
+            'description': 'Training set: only the shape is used to find optimal random matrix dimensions based on the theory referenced in the afore mentioned papers.'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': '',
             'description': 'Ignored'},
     },
@@ -103,6 +105,7 @@ _input_transform_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'numpy array or scipy.sparse of shape [n_samples, n_features]'}, {
                 'type': 'array',
@@ -120,6 +123,7 @@ _output_transform_schema = {
     'anyOf': [{
         'type': 'array',
         'items': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'item type'},
         'XXX TODO XXX': 'numpy array or scipy sparse of shape [n_samples, n_components]'}, {
         'type': 'array',

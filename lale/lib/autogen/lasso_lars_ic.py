@@ -44,7 +44,7 @@ _hyperparams_schema = {
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'whether to calculate the intercept for this model. If set'},
+                'description': 'whether to calculate the intercept for this model'},
             'verbose': {
                 'anyOf': [{
                     'type': 'boolean'}, {
@@ -54,31 +54,32 @@ _hyperparams_schema = {
             'normalize': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'precompute': {
                 'anyOf': [{
                     'type': 'array',
                     'items': {
+                        'laleType': 'Any',
                         'XXX TODO XXX': 'item type'},
                     'XXX TODO XXX': "True | False | 'auto' | array-like",
                     'forOptimizer': False}, {
                     'enum': ['auto']}],
                 'default': 'auto',
-                'description': 'Whether to use a precomputed Gram matrix to speed up'},
+                'description': 'Whether to use a precomputed Gram matrix to speed up calculations'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 500,
-                'description': 'Maximum number of iterations to perform. Can be used for'},
+                'description': 'Maximum number of iterations to perform'},
             'eps': {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
                 'distribution': 'uniform',
                 'default': 2.220446049250313e-16,
-                'description': 'The machine-precision regularization in the computation of the'},
+                'description': 'The machine-precision regularization in the computation of the Cholesky diagonal factors'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
@@ -86,7 +87,7 @@ _hyperparams_schema = {
             'positive': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Restrict coefficients to be >= 0. Be aware that you might want to'},
+                'description': 'Restrict coefficients to be >= 0'},
         }}, {
         'XXX TODO XXX': 'Parameter: positive > only coefficients up to the smallest alpha value (alphas_[alphas_ > 0'}],
 }
@@ -94,7 +95,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model using X, y as training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -108,7 +109,7 @@ _input_fit_schema = {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': "target values. Will be cast to X's dtype if necessary"},
+            'description': 'target values'},
         'copy_X': {
             'type': 'boolean',
             'default': True,
@@ -125,6 +126,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',
