@@ -97,7 +97,7 @@ class Grammar(Operator):
             steps = op.steps()
             new_steps = [self._unfold(sop, n) for sop in op.steps()]
             step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
-            new_edges = ((step_map[s], step_map[d]) for s, d in op.edges())
+            new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
             if not None in new_steps:
                 return get_pipeline_of_applicable_type(new_steps, new_edges, True)
             return None
