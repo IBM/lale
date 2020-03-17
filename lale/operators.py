@@ -1608,24 +1608,29 @@ class BasePipeline(Operator, Generic[OpType]):
         from sklearn.pipeline import FeatureUnion
 
         def convert_data_with_schemas_to_data(node):
-            impl = node._impl
-            for element in dir(impl):#Looking at only 1 level for now.
-                value = getattr(impl,element)
-                if isinstance(value, lale.datasets.data_schemas.NDArrayWithSchema):
-                    modified_value = np.array(value)
-                elif isinstance(value, lale.datasets.data_schemas.DataFrameWithSchema):
-                    modified_value = pd.DataFrame(value)
-                elif isinstance(value, lale.datasets.data_schemas.SeriesWithSchema):
-                    modified_value = pd.Series(value)
-                else:
-                    continue
-                setattr(impl, element, modified_value)
+            for element in dir(node):#Looking at only 1 level for now.
+                try:
+                    value = getattr(node,element)
+                    if isinstance(value, lale.datasets.data_schemas.NDArrayWithSchema):
+                        modified_value = np.array(value)
+                    elif isinstance(value, lale.datasets.data_schemas.DataFrameWithSchema):
+                        modified_value = pd.DataFrame(value)
+                    elif isinstance(value, lale.datasets.data_schemas.SeriesWithSchema):
+                        modified_value = pd.Series(value)
+                    else:
+                        continue
+                    setattr(node, element, modified_value)
+                except BaseException:
+                    #This is an optional processing, so if there is any exception, continue.
+                    #For example, some scikit-learn classes will fail at getattr because they have
+                    #that property defined conditionally. 
+                    pass
 
         def create_pipeline_from_sink_node(sink_node):
             #Ensure that the pipeline is either linear or has a "union followed by concat" construct
             #Translate the "union followed by concat" constructs to "featureUnion"
             #Inspect the node and convert any data with schema objects to original data types
-            convert_data_with_schemas_to_data(sink_node)
+            convert_data_with_schemas_to_data(sink_node._impl)
             if sink_node._impl_class() == ConcatFeaturesImpl:
                 list_of_transformers = []
                 for pred in self._preds[sink_node]:
@@ -1640,11 +1645,12 @@ class BasePipeline(Operator, Generic[OpType]):
                 else:
                     if hasattr(sink_node._impl_instance(), '_sklearn_model'):
                         sklearn_op = sink_node._impl_instance()._sklearn_model
+                        convert_data_with_schemas_to_data(sklearn_op)#This case needs one more level of conversion
                     else:
                         sklearn_op = sink_node._impl_instance()
                     sklearn_op = copy.deepcopy(sklearn_op)
                     if preds is None or len(preds) == 0:
-                        return sklearn_op       
+                        return sklearn_op
                     else:
                         previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
                         if isinstance(previous_sklearn_op, list):
