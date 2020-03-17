@@ -47,11 +47,11 @@ _hyperparams_schema = {
             'C': {
                 'type': 'number',
                 'default': 1.0,
-                'description': 'Maximum step size (regularization). Defaults to 1.0.'},
+                'description': 'Maximum step size (regularization)'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether the intercept should be estimated or not. If False, the'},
+                'description': 'Whether the intercept should be estimated or not'},
             'max_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -60,7 +60,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The maximum number of passes over the training data (aka epochs).'},
+                'description': 'The maximum number of passes over the training data (aka epochs)'},
             'tol': {
                 'anyOf': [{
                     'type': 'number',
@@ -69,19 +69,19 @@ _hyperparams_schema = {
                     'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The stopping criterion. If it is not None, the iterations will stop'},
+                'description': 'The stopping criterion'},
             'early_stopping': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to use early stopping to terminate training when validation.'},
+                'description': 'Whether to use early stopping to terminate training when validation'},
             'validation_fraction': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'The proportion of training data to set aside as validation set for'},
+                'description': 'The proportion of training data to set aside as validation set for early stopping'},
             'n_iter_no_change': {
                 'type': 'integer',
                 'default': 5,
-                'description': 'Number of iterations with no improvement to wait before early stopping.'},
+                'description': 'Number of iterations with no improvement to wait before early stopping'},
             'shuffle': {
                 'type': 'boolean',
                 'default': True,
@@ -93,27 +93,27 @@ _hyperparams_schema = {
             'loss': {
                 'enum': ['epsilon_insensitive', 'huber', 'log', 'modified_huber', 'perceptron', 'squared_epsilon_insensitive', 'squared_hinge', 'squared_loss', 'hinge'],
                 'default': 'hinge',
-                'description': 'The loss function to be used:'},
+                'description': 'The loss function to be used: hinge: equivalent to PA-I in the reference paper'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of CPUs to use to do the OVA (One Versus All, for'},
+                'description': 'The number of CPUs to use to do the OVA (One Versus All, for multi-class problems) computation'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
+                'description': 'The seed of the pseudo random number generator to use when shuffling the data'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to True, reuse the solution of the previous call to fit as'},
+                'description': 'When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'class_weight': {
                 'XXX TODO XXX': 'dict, {class_label: weight} or "balanced" or None, optional',
-                'description': 'Preset for the class_weight fit parameter.',
+                'description': 'Preset for the class_weight fit parameter',
                 'enum': ['balanced'],
                 'default': 'balanced'},
             'average': {
@@ -121,7 +121,7 @@ _hyperparams_schema = {
                     'type': 'boolean'}, {
                     'type': 'integer'}],
                 'default': False,
-                'description': 'When set to True, computes the averaged SGD weights and stores the'},
+                'description': 'When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute'},
             'n_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -130,7 +130,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of passes over the training data (aka epochs).'},
+                'description': 'The number of passes over the training data (aka epochs)'},
         }}, {
         'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
         'description': 'validation_fraction, only used if early_stopping is true',
@@ -150,7 +150,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Passive Aggressive algorithm.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -190,6 +190,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

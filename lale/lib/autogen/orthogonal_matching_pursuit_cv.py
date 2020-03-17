@@ -38,15 +38,15 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether the design matrix X must be copied by the algorithm. A false'},
+                'description': 'Whether the design matrix X must be copied by the algorithm'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'whether to calculate the intercept for this model. If set'},
+                'description': 'whether to calculate the intercept for this model'},
             'normalize': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'This parameter is ignored when ``fit_intercept`` is set to False'},
             'max_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -55,10 +55,10 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Maximum numbers of iterations to perform, therefore maximum features'},
+                'description': 'Maximum numbers of iterations to perform, therefore maximum features to include'},
             'cv': {
                 'XXX TODO XXX': 'int, cross-validation generator or an iterable, optional',
-                'description': 'Determines the cross-validation splitting strategy.',
+                'description': 'Determines the cross-validation splitting strategy',
                 'type': 'integer',
                 'minimumForOptimizer': 3,
                 'maximumForOptimizer': 4,
@@ -69,7 +69,7 @@ _hyperparams_schema = {
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of CPUs to use during the cross validation.'},
+                'description': 'Number of CPUs to use during the cross validation'},
             'verbose': {
                 'anyOf': [{
                     'type': 'boolean'}, {
@@ -83,7 +83,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model using X, y as training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -97,7 +97,7 @@ _input_fit_schema = {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': "Target values. Will be cast to X's dtype if necessary"},
+            'description': 'Target values'},
     },
 }
 _input_predict_schema = {
@@ -110,6 +110,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

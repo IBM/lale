@@ -71,20 +71,20 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-08,
                 'description': 'tolerance for numerical error'},
             'fit_algorithm': {
                 'enum': ['lars', 'cd'],
                 'default': 'lars',
-                'description': 'lars: uses the least angle regression method to solve the lasso problem'},
+                'description': 'lars: uses the least angle regression method to solve the lasso problem (linear_model.lars_path) cd: uses the coordinate descent method to compute the Lasso solution (linear_model.Lasso)'},
             'transform_algorithm': {
                 'enum': ['lasso_lars', 'lasso_cd', 'lars', 'omp', 'threshold'],
                 'default': 'omp',
-                'description': 'Algorithm used to transform the data'},
+                'description': 'Algorithm used to transform the data lars: uses the least angle regression method (linear_model.lars_path) lasso_lars: uses Lars to compute the Lasso solution lasso_cd: uses the coordinate descent method to compute the Lasso solution (linear_model.Lasso)'},
             'transform_n_nonzero_coefs': {
                 'XXX TODO XXX': 'int, ``0.1 * n_features`` by default',
-                'description': 'Number of nonzero coefficients to target in each column of the',
+                'description': 'Number of nonzero coefficients to target in each column of the solution',
                 'enum': [None],
                 'default': None},
             'transform_alpha': {
@@ -92,13 +92,13 @@ _hyperparams_schema = {
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': "If `algorithm='lasso_lars'` or `algorithm='lasso_cd'`, `alpha` is the"},
+                'description': "If `algorithm='lasso_lars'` or `algorithm='lasso_cd'`, `alpha` is the penalty applied to the L1 norm"},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of parallel jobs to run.'},
+                'description': 'Number of parallel jobs to run'},
             'code_init': {
                 'anyOf': [{
                     'type': 'array',
@@ -128,22 +128,22 @@ _hyperparams_schema = {
             'split_sign': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to split the sparse feature vector into the concatenation of'},
+                'description': 'Whether to split the sparse feature vector into the concatenation of its negative part and its positive part'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'positive_code': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to enforce positivity when finding the code.'},
+                'description': 'Whether to enforce positivity when finding the code'},
             'positive_dict': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to enforce positivity when finding the dictionary'},
+                'description': 'Whether to enforce positivity when finding the dictionary  '},
         }}, {
         'XXX TODO XXX': "Parameter: transform_n_nonzero_coefs > only used by algorithm='lars' and algorithm='omp' and is overridden by alpha in the omp case"}],
 }
@@ -151,7 +151,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model from data in X.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -160,7 +160,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples in the number of samples'},
+            'description': 'Training vector, where n_samples in the number of samples and n_features is the number of features.'},
         'y': {
             
         }},
@@ -178,7 +178,7 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Test data to be transformed, must have the same number of'},
+            'description': 'Test data to be transformed, must have the same number of features as the data used to train the model.'},
     },
 }
 _output_transform_schema = {

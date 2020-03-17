@@ -34,22 +34,22 @@ _hyperparams_schema = {
         'properties': {
             'missing_values': {
                 'XXX TODO XXX': 'number, string, np.nan (default) or None',
-                'description': 'The placeholder for the missing values. All occurrences of',
+                'description': 'The placeholder for the missing values',
                 'type': 'number',
                 'default': nan},
             'features': {
                 'type': 'string',
                 'default': 'missing-only',
-                'description': 'Whether the imputer mask should represent all or a subset of'},
+                'description': 'Whether the imputer mask should represent all or a subset of features'},
             'sparse': {
                 'XXX TODO XXX': 'boolean or "auto", optional',
-                'description': 'Whether the imputer mask format should be sparse or dense.',
+                'description': 'Whether the imputer mask format should be sparse or dense',
                 'enum': ['auto'],
                 'default': 'auto'},
             'error_on_new': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True (default), transform will raise an error when there are'},
+                'description': 'If True (default), transform will raise an error when there are features with missing values in transform that have no missing values in fit'},
         }}, {
         'XXX TODO XXX': 'Parameter: features > only represent features containing missing values during fit time'}, {
         'description': 'error_on_new, only when features="missing-only"',
@@ -78,7 +78,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Input data, where ``n_samples`` is the number of samples and'},
+            'description': 'Input data, where ``n_samples`` is the number of samples and ``n_features`` is the number of features.'},
     },
 }
 _input_transform_schema = {
@@ -99,7 +99,8 @@ _input_transform_schema = {
 }
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'The missing indicator for input data. The data type of ``Xt``',
+    'description': 'The missing indicator for input data',
+    'laleType': 'Any',
     'XXX TODO XXX': '{ndarray or sparse matrix}, shape (n_samples, n_features)',
 }
 _combined_schemas = {

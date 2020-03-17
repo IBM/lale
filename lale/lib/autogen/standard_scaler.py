@@ -34,22 +34,22 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If False, try to avoid a copy and do inplace scaling instead.'},
+                'description': 'If False, try to avoid a copy and do inplace scaling instead'},
             'with_mean': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True, center the data before scaling.'},
+                'description': 'If True, center the data before scaling'},
             'with_std': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True, scale the data to unit variance (or equivalently,'},
+                'description': 'If True, scale the data to unit variance (or equivalently, unit standard deviation).'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the mean and std to be used for later scaling.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -58,8 +58,9 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The data used to compute the mean and standard deviation'},
+            'description': 'The data used to compute the mean and standard deviation used for later scaling along the features axis.'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': '',
             'description': 'Ignored'},
     },
@@ -68,7 +69,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform standardization by centering and scaling',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -79,8 +80,9 @@ _input_transform_schema = {
             },
             'description': 'The data used to scale along the features axis.'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': '(ignored)',
-            'description': '.. deprecated:: 0.19'},
+            'description': ''},
         'copy': {
             'anyOf': [{
                 'type': 'boolean'}, {

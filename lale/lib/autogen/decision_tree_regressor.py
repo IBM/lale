@@ -43,11 +43,11 @@ _hyperparams_schema = {
             'criterion': {
                 'enum': ['friedman_mse', 'mse'],
                 'default': 'mse',
-                'description': 'The function to measure the quality of a split. Supported criteria'},
+                'description': 'The function to measure the quality of a split'},
             'splitter': {
                 'enum': ['random', 'best'],
                 'default': 'best',
-                'description': 'The strategy used to choose the split at each node. Supported'},
+                'description': 'The strategy used to choose the split at each node'},
             'max_depth': {
                 'anyOf': [{
                     'type': 'integer',
@@ -56,7 +56,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The maximum depth of the tree. If None, then nodes are expanded until'},
+                'description': 'The maximum depth of the tree'},
             'min_samples_split': {
                 'anyOf': [{
                     'type': 'integer',
@@ -66,7 +66,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'forOptimizer': False}],
                 'default': 2,
-                'description': 'The minimum number of samples required to split an internal node:'},
+                'description': 'The minimum number of samples required to split an internal node:  - If int, then consider `min_samples_split` as the minimum number'},
             'min_samples_leaf': {
                 'anyOf': [{
                     'type': 'integer',
@@ -76,11 +76,11 @@ _hyperparams_schema = {
                     'type': 'number',
                     'forOptimizer': False}],
                 'default': 1,
-                'description': 'The minimum number of samples required to be at a leaf node.'},
+                'description': 'The minimum number of samples required to be at a leaf node'},
             'min_weight_fraction_leaf': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all'},
+                'description': 'The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node'},
             'max_features': {
                 'anyOf': [{
                     'type': 'integer',
@@ -93,34 +93,34 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of features to consider when looking for the best split:'},
+                'description': 'The number of features to consider when looking for the best split:  - If int, then consider `max_features` features at each split'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'max_leaf_nodes': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Grow a tree with ``max_leaf_nodes`` in best-first fashion.'},
+                'description': 'Grow a tree with ``max_leaf_nodes`` in best-first fashion'},
             'min_impurity_decrease': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity'},
+                'description': 'A node will be split if this split induces a decrease of the impurity greater than or equal to this value'},
             'min_impurity_split': {
                 'anyOf': [{
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Threshold for early stopping in tree growth. A node will split'},
+                'description': 'Threshold for early stopping in tree growth'},
             'presort': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to presort the data to speed up the finding of best splits in'},
+                'description': 'Whether to presort the data to speed up the finding of best splits in fitting'},
         }}, {
         'XXX TODO XXX': 'Parameter: min_samples_leaf > only be considered if it leaves at least min_samples_leaf training samples in each of the left and right branches'}],
 }
@@ -128,12 +128,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a decision tree regressor from the training set (X, y).',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape = [n_samples, n_features]'}, {
                 'type': 'array',
@@ -142,7 +143,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The training input samples. Internally, it will be converted to'},
+            'description': 'The training input samples'},
         'y': {
             'anyOf': [{
                 'type': 'array',
@@ -155,7 +156,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The target values (real numbers). Use ``dtype=np.float64`` and'},
+            'description': 'The target values (real numbers)'},
         'sample_weight': {
             'anyOf': [{
                 'type': 'array',
@@ -163,11 +164,11 @@ _input_fit_schema = {
                     'type': 'number'},
             }, {
                 'enum': [None]}],
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
+            'description': 'Sample weights'},
         'check_input': {
             'type': 'boolean',
             'default': True,
-            'description': 'Allow to bypass several input checking.'},
+            'description': 'Allow to bypass several input checking'},
         'X_idx_sorted': {
             'anyOf': [{
                 'type': 'array',
@@ -178,7 +179,7 @@ _input_fit_schema = {
                 }}, {
                 'enum': [None]}],
             'default': None,
-            'description': 'The indexes of the sorted training input samples. If many tree'},
+            'description': 'The indexes of the sorted training input samples'},
     },
 }
 _input_predict_schema = {
@@ -191,6 +192,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix of shape = [n_samples, n_features]'}, {
                 'type': 'array',
@@ -199,11 +201,11 @@ _input_predict_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'The input samples. Internally, it will be converted to'},
+            'description': 'The input samples'},
         'check_input': {
             'type': 'boolean',
             'default': True,
-            'description': 'Allow to bypass several input checking.'},
+            'description': 'Allow to bypass several input checking'},
     },
 }
 _output_predict_schema = {

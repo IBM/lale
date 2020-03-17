@@ -44,18 +44,18 @@ _hyperparams_schema = {
             'reg_param': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'Regularizes the covariance estimate as'},
+                'description': 'Regularizes the covariance estimate as ``(1-reg_param)*Sigma + reg_param*np.eye(n_features)``'},
             'store_covariance': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'If True the covariance matrices are computed and stored in the'},
+                'description': 'If True the covariance matrices are computed and stored in the `self.covariance_` attribute'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0001,
-                'description': 'Threshold used for rank estimation.'},
+                'description': 'Threshold used for rank estimation'},
             'store_covariances': {
                 'anyOf': [{
                     'type': 'boolean'}, {
@@ -68,7 +68,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model according to the given training data and parameters.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -77,7 +77,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples is the number of samples and'},
+            'description': 'Training vector, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {

@@ -39,7 +39,7 @@ _hyperparams_schema = {
             'n_components': {
                 'enum': ['int', None],
                 'default': None,
-                'description': 'Dimensionality of latent space, the number of components'},
+                'description': 'Dimensionality of latent space, the number of components of ``X`` that are obtained after ``transform``'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
@@ -50,7 +50,7 @@ _hyperparams_schema = {
             'copy': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to make a copy of X. If ``False``, the input X gets overwritten'},
+                'description': 'Whether to make a copy of X'},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
@@ -60,27 +60,27 @@ _hyperparams_schema = {
                 'description': 'Maximum number of iterations.'},
             'noise_variance_init': {
                 'XXX TODO XXX': 'None | array, shape=(n_features,)',
-                'description': 'The initial guess of the noise variance for each feature.',
+                'description': 'The initial guess of the noise variance for each feature',
                 'enum': [None],
                 'default': None},
             'svd_method': {
                 'enum': ['lapack', 'randomized'],
                 'default': 'randomized',
-                'description': "Which SVD method to use. If 'lapack' use standard SVD from"},
+                'description': 'Which SVD method to use'},
             'iterated_power': {
                 'type': 'integer',
                 'minimumForOptimizer': 3,
                 'maximumForOptimizer': 4,
                 'distribution': 'uniform',
                 'default': 3,
-                'description': 'Number of iterations for the power method. 3 by default. Only used'},
+                'description': 'Number of iterations for the power method'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': 0,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`'},
         }}, {
         'XXX TODO XXX': "Parameter: iterated_power > only used if svd_method equals 'randomized'"}, {
         'XXX TODO XXX': "Parameter: random_state > only used when svd_method equals 'randomized'"}],
@@ -89,7 +89,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the FactorAnalysis model to X using EM',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',

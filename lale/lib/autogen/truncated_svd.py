@@ -39,39 +39,39 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 256,
                 'distribution': 'uniform',
                 'default': 2,
-                'description': 'Desired dimensionality of output data.'},
+                'description': 'Desired dimensionality of output data'},
             'algorithm': {
                 'enum': ['arpack', 'randomized'],
                 'default': 'randomized',
-                'description': 'SVD solver to use. Either "arpack" for the ARPACK wrapper in SciPy'},
+                'description': 'SVD solver to use'},
             'n_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 5,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 5,
-                'description': 'Number of iterations for randomized SVD solver. Not used by ARPACK.'},
+                'description': 'Number of iterations for randomized SVD solver'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0,
-                'description': 'Tolerance for ARPACK. 0 means machine precision. Ignored by randomized'},
+                'description': 'Tolerance for ARPACK'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit LSI model on training data X.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -103,7 +103,7 @@ _input_transform_schema = {
 }
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Reduced version of X. This will always be a dense array.',
+    'description': 'Reduced version of X',
     'type': 'array',
     'items': {
         'type': 'array',

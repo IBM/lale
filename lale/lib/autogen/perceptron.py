@@ -46,7 +46,7 @@ _hyperparams_schema = {
         'properties': {
             'penalty': {
                 'XXX TODO XXX': "None, 'l2' or 'l1' or 'elasticnet'",
-                'description': 'The penalty (aka regularization term) to be used. Defaults to None.',
+                'description': 'The penalty (aka regularization term) to be used',
                 'enum': [None],
                 'default': None},
             'alpha': {
@@ -55,11 +55,11 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 0.0001,
-                'description': 'Constant that multiplies the regularization term if regularization is'},
+                'description': 'Constant that multiplies the regularization term if regularization is used'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether the intercept should be estimated or not. If False, the'},
+                'description': 'Whether the intercept should be estimated or not'},
             'max_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -68,7 +68,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The maximum number of passes over the training data (aka epochs).'},
+                'description': 'The maximum number of passes over the training data (aka epochs)'},
             'tol': {
                 'anyOf': [{
                     'type': 'number',
@@ -77,7 +77,7 @@ _hyperparams_schema = {
                     'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The stopping criterion. If it is not None, the iterations will stop'},
+                'description': 'The stopping criterion'},
             'shuffle': {
                 'type': 'boolean',
                 'default': True,
@@ -92,41 +92,41 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 1.0,
-                'description': 'Constant by which the updates are multiplied. Defaults to 1.'},
+                'description': 'Constant by which the updates are multiplied'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of CPUs to use to do the OVA (One Versus All, for'},
+                'description': 'The number of CPUs to use to do the OVA (One Versus All, for multi-class problems) computation'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
+                'description': 'The seed of the pseudo random number generator to use when shuffling the data'},
             'early_stopping': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to use early stopping to terminate training when validation.'},
+                'description': 'Whether to use early stopping to terminate training when validation'},
             'validation_fraction': {
                 'type': 'number',
                 'default': 0.1,
-                'description': 'The proportion of training data to set aside as validation set for'},
+                'description': 'The proportion of training data to set aside as validation set for early stopping'},
             'n_iter_no_change': {
                 'type': 'integer',
                 'default': 5,
-                'description': 'Number of iterations with no improvement to wait before early stopping.'},
+                'description': 'Number of iterations with no improvement to wait before early stopping'},
             'class_weight': {
                 'XXX TODO XXX': 'dict, {class_label: weight} or "balanced" or None, optional',
-                'description': 'Preset for the class_weight fit parameter.',
+                'description': 'Preset for the class_weight fit parameter',
                 'enum': ['balanced'],
                 'default': 'balanced'},
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to True, reuse the solution of the previous call to fit as'},
+                'description': 'When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution'},
             'n_iter': {
                 'anyOf': [{
                     'type': 'integer',
@@ -135,7 +135,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of passes over the training data (aka epochs).'},
+                'description': 'The number of passes over the training data (aka epochs)'},
         }}, {
         'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
         'description': 'validation_fraction, only used if early_stopping is true',
@@ -155,7 +155,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Stochastic Gradient Descent.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -191,7 +191,7 @@ _input_fit_schema = {
             }, {
                 'enum': [None]}],
             'default': None,
-            'description': 'Weights applied to individual samples.'},
+            'description': 'Weights applied to individual samples'},
     },
 }
 _input_predict_schema = {
@@ -204,6 +204,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

@@ -39,27 +39,29 @@ _hyperparams_schema = {
                         'type': 'number'},
                 }],
                 'default': 5,
-                'description': 'The number of bins to produce. Raises ValueError if ``n_bins < 2``.'},
+                'description': 'The number of bins to produce'},
             'encode': {
                 'enum': ['onehot', 'onehot-dense', 'ordinal'],
                 'default': 'onehot',
-                'description': 'Method used to encode the transformed result.'},
+                'description': 'Method used to encode the transformed result'},
             'strategy': {
                 'enum': ['uniform', 'quantile', 'kmeans'],
                 'default': 'quantile',
-                'description': 'Strategy used to define the widths of the bins.'},
+                'description': 'Strategy used to define the widths of the bins'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fits the estimator.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'numeric array-like, shape (n_samples, n_features)',
             'description': 'Data to be discretized.'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'ignored'},
     },
 }
@@ -70,6 +72,7 @@ _input_transform_schema = {
     'required': ['X'],
     'properties': {
         'X': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'numeric array-like, shape (n_samples, n_features)',
             'description': 'Data to be discretized.'},
     },
@@ -77,6 +80,7 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Data in the binned space.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'numeric array-like or sparse matrix',
 }
 _combined_schemas = {

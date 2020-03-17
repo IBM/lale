@@ -36,7 +36,7 @@ _hyperparams_schema = {
         'properties': {
             'epsilon': {
                 'XXX TODO XXX': 'float, greater than 1.0, default 1.35',
-                'description': 'The parameter epsilon controls the number of samples that should be',
+                'description': 'The parameter epsilon controls the number of samples that should be classified as outliers',
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
@@ -48,7 +48,7 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'Maximum number of iterations that scipy.optimize.fmin_l_bfgs_b'},
+                'description': 'Maximum number of iterations that scipy.optimize.fmin_l_bfgs_b should run for.'},
             'alpha': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
@@ -59,25 +59,25 @@ _hyperparams_schema = {
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This is useful if the stored attributes of a previously used model'},
+                'description': 'This is useful if the stored attributes of a previously used model has to be reused'},
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether or not to fit the intercept. This can be set to False'},
+                'description': 'Whether or not to fit the intercept'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
                 'distribution': 'loguniform',
                 'default': 1e-05,
-                'description': 'The iteration will stop when'},
+                'description': 'The iteration will stop when ``max{|proj g_i | i = 1, '},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model according to the given training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -86,7 +86,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples in the number of samples and'},
+            'description': 'Training vector, where n_samples in the number of samples and n_features is the number of features.'},
         'y': {
             'type': 'array',
             'items': {
@@ -109,6 +109,7 @@ _input_predict_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
                 'type': 'array',

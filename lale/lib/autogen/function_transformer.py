@@ -41,33 +41,33 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The callable to use for the transformation. This will be passed'},
+                'description': 'The callable to use for the transformation'},
             'inverse_func': {
                 'anyOf': [{
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The callable to use for the inverse transformation. This will be'},
+                'description': 'The callable to use for the inverse transformation'},
             'validate': {
                 'anyOf': [{
                     'type': 'boolean'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Indicate that the input X array should be checked before calling'},
+                'description': 'Indicate that the input X array should be checked before calling ``func``'},
             'accept_sparse': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Indicate that func accepts a sparse matrix as input. If validate is'},
+                'description': 'Indicate that func accepts a sparse matrix as input'},
             'pass_y': {
                 'anyOf': [{
                     'type': 'boolean'}, {
                     'enum': ['deprecated']}],
                 'default': 'deprecated',
-                'description': 'Indicate that transform should forward the y argument to the'},
+                'description': 'Indicate that transform should forward the y argument to the inner callable'},
             'check_inverse': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether to check that or ``func`` followed by ``inverse_func`` leads to'},
+                'description': 'Whether to check that or ``func`` followed by ``inverse_func`` leads to the original inputs'},
             'kw_args': {
                 'anyOf': [{
                     'type': 'object'}, {
@@ -102,7 +102,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform X using the forward function.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -113,8 +113,9 @@ _input_transform_schema = {
             },
             'description': 'Input array.'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': '(ignored)',
-            'description': '.. deprecated::0.19'},
+            'description': ''},
     },
 }
 _output_transform_schema = {

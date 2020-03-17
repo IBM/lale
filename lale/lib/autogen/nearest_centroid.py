@@ -36,7 +36,7 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': ['euclidean', 'manhattan', 'minkowski']}],
                 'default': 'euclidean',
-                'description': 'The metric to use when calculating distance between instances in a'},
+                'description': 'The metric to use when calculating distance between instances in a feature array'},
             'shrink_threshold': {
                 'anyOf': [{
                     'type': 'number'}, {
@@ -49,7 +49,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the NearestCentroid model according to the given training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -58,7 +58,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vector, where n_samples is the number of samples and'},
+            'description': 'Training vector, where n_samples is the number of samples and n_features is the number of features'},
         'y': {
             'type': 'array',
             'items': {

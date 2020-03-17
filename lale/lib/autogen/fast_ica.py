@@ -45,7 +45,7 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Number of components to use. If none is passed, all are used.'},
+                'description': 'Number of components to use'},
             'algorithm': {
                 'enum': ['parallel', 'deflation'],
                 'default': 'parallel',
@@ -53,15 +53,15 @@ _hyperparams_schema = {
             'whiten': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If whiten is false, the data is already considered to be'},
+                'description': 'If whiten is false, the data is already considered to be whitened, and no whitening is performed.'},
             'fun': {
                 'XXX TODO XXX': "string or function, optional. Default: 'logcosh'",
-                'description': 'The functional form of the G function used in the',
+                'description': 'The functional form of the G function used in the approximation to neg-entropy',
                 'enum': ['exp', 'logcosh'],
                 'default': 'logcosh'},
             'fun_args': {
                 'XXX TODO XXX': 'dictionary, optional',
-                'description': 'Arguments to send to the functional form.',
+                'description': 'Arguments to send to the functional form',
                 'enum': [None],
                 'default': None},
             'max_iter': {
@@ -89,14 +89,14 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.'},
         }}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model to X.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -105,7 +105,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training data, where n_samples is the number of samples'},
+            'description': 'Training data, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
             
         }},
@@ -114,7 +114,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Recover the sources from X (apply the unmixing matrix).',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -123,13 +123,15 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Data to transform, where n_samples is the number of samples'},
+            'description': 'Data to transform, where n_samples is the number of samples and n_features is the number of features.'},
         'y': {
+            'laleType': 'Any',
             'XXX TODO XXX': '(ignored)',
-            'description': '.. deprecated:: 0.19'},
+            'description': ''},
         'copy': {
+            'laleType': 'Any',
             'XXX TODO XXX': 'bool (optional)',
-            'description': 'If False, data passed to fit are overwritten. Defaults to True.'},
+            'description': 'If False, data passed to fit are overwritten'},
     },
 }
 _output_transform_schema = {

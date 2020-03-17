@@ -45,10 +45,10 @@ _hyperparams_schema = {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Base estimator object which implements the following methods:'},
+                'description': 'Base estimator object which implements the following methods:   * `fit(X, y)`: Fit model to given training data and target values'},
             'min_samples': {
                 'XXX TODO XXX': 'int (>= 1) or float ([0, 1]), optional',
-                'description': 'Minimum number of samples chosen randomly from original data. Treated',
+                'description': 'Minimum number of samples chosen randomly from original data',
                 'anyOf': [{
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
@@ -61,19 +61,19 @@ _hyperparams_schema = {
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Maximum residual for a data sample to be classified as an inlier.'},
+                'description': 'Maximum residual for a data sample to be classified as an inlier'},
             'is_data_valid': {
                 'anyOf': [{
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'This function is called with the randomly selected data before the'},
+                'description': 'This function is called with the randomly selected data before the model is fitted to it: `is_data_valid(X, y)`'},
             'is_model_valid': {
                 'anyOf': [{
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'This function is called with the estimated model and the randomly'},
+                'description': 'This function is called with the estimated model and the randomly selected data: `is_model_valid(model, X, y)`'},
             'max_trials': {
                 'type': 'integer',
                 'minimumForOptimizer': 100,
@@ -90,7 +90,7 @@ _hyperparams_schema = {
                     'maximumForOptimizer': 1.0,
                     'distribution': 'uniform'}],
                 'default': inf,
-                'description': 'Maximum number of iterations that can be skipped due to finding zero'},
+                'description': 'Maximum number of iterations that can be skipped due to finding zero inliers or invalid data defined by ``is_data_valid`` or invalid models defined by ``is_model_valid``'},
             'stop_n_inliers': {
                 'anyOf': [{
                     'type': 'integer',
@@ -107,7 +107,7 @@ _hyperparams_schema = {
                 'description': 'Stop iteration if score is greater equal than this threshold.'},
             'stop_probability': {
                 'XXX TODO XXX': 'float in range [0, 1], optional',
-                'description': 'RANSAC iteration stops if at least one outlier-free set of the training',
+                'description': 'RANSAC iteration stops if at least one outlier-free set of the training data is sampled in RANSAC',
                 'type': 'number',
                 'default': 0.99},
             'loss': {
@@ -116,14 +116,14 @@ _hyperparams_schema = {
                     'forOptimizer': False}, {
                     'enum': ['absolute_loss', 'squared_loss']}],
                 'default': 'absolute_loss',
-                'description': 'String inputs, "absolute_loss" and "squared_loss" are supported which'},
+                'description': 'String inputs, "absolute_loss" and "squared_loss" are supported which find the absolute loss and squared loss per sample respectively'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The generator used to initialize the centers.  If int, random_state is'},
+                'description': 'The generator used to initialize the centers'},
         }}, {
         'XXX TODO XXX': 'Parameter: base_estimator > only supports regression estimators'}, {
         'XXX TODO XXX': 'Parameter: is_model_valid > only be used if the estimated model is needed for making the rejection decision'}],
@@ -132,12 +132,13 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit estimator using RANSAC algorithm.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array-like or sparse matrix, shape [n_samples, n_features]'}, {
                 'type': 'array',
@@ -164,7 +165,7 @@ _input_fit_schema = {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'Individual weights for each sample'},
+            'description': 'Individual weights for each sample raises error if sample_weight is passed and base_estimator fit method does not support it.'},
     },
 }
 _input_predict_schema = {

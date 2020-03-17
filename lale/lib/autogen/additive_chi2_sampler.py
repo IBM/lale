@@ -42,7 +42,7 @@ _hyperparams_schema = {
                     'type': 'number'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'Sampling interval. Must be specified when sample_steps not in {1,2,3}.'},
+                'description': 'Sampling interval'},
         }}],
 }
 _input_fit_schema = {
@@ -58,7 +58,7 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training data, where n_samples in the number of samples'},
+            'description': 'Training data, where n_samples in the number of samples and n_features is the number of features.'},
     },
 }
 _input_transform_schema = {
@@ -78,7 +78,8 @@ _input_transform_schema = {
 }
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Whether the return value is an array of sparse matrix depends on',
+    'description': 'Whether the return value is an array of sparse matrix depends on the type of the input X.',
+    'laleType': 'Any',
     'XXX TODO XXX': '{array, sparse matrix},                shape = (n_samples, n_features * (2*sample_steps + 1))',
 }
 _combined_schemas = {

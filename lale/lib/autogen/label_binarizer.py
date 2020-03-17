@@ -48,7 +48,7 @@ _hyperparams_schema = {
             'sparse_output': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'True if the returned array from transform is desired to be in sparse'},
+                'description': 'True if the returned array from transform is desired to be in sparse CSR format.'},
         }}],
 }
 _input_fit_schema = {
@@ -69,7 +69,7 @@ _input_fit_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'Target values. The 2-d matrix should only contain 0 and 1,'},
+            'description': 'Target values'},
     },
 }
 _input_transform_schema = {
@@ -82,6 +82,7 @@ _input_transform_schema = {
             'anyOf': [{
                 'type': 'array',
                 'items': {
+                    'laleType': 'Any',
                     'XXX TODO XXX': 'item type'},
                 'XXX TODO XXX': 'array or sparse matrix of shape [n_samples,] or             [n_samples, n_classes]'}, {
                 'type': 'array',
@@ -94,12 +95,13 @@ _input_transform_schema = {
                     'items': {
                         'type': 'number'},
                 }}],
-            'description': 'Target values. The 2-d matrix should only contain 0 and 1,'},
+            'description': 'Target values'},
     },
 }
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Shape will be [n_samples, 1] for binary problems.',
+    'laleType': 'Any',
     'XXX TODO XXX': 'numpy array or CSR matrix of shape [n_samples, n_classes]',
 }
 _combined_schemas = {

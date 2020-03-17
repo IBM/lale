@@ -57,55 +57,55 @@ _hyperparams_schema = {
             'reg': {
                 'type': 'number',
                 'default': 0.001,
-                'description': 'regularization constant, multiplies the trace of the local covariance'},
+                'description': 'regularization constant, multiplies the trace of the local covariance matrix of the distances.'},
             'eigen_solver': {
                 'enum': ['arpack', 'auto', 'dense'],
                 'default': 'auto',
-                'description': 'auto : algorithm will attempt to choose the best method for input data'},
+                'description': 'auto : algorithm will attempt to choose the best method for input data  arpack : use arnoldi iteration in shift-invert mode'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-06,
-                'description': "Tolerance for 'arpack' method"},
+                'description': "Tolerance for 'arpack' method Not used if eigen_solver=='dense'."},
             'max_iter': {
                 'type': 'integer',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
                 'default': 100,
-                'description': 'maximum number of iterations for the arpack solver.'},
+                'description': 'maximum number of iterations for the arpack solver'},
             'method': {
                 'XXX TODO XXX': "string ('standard', 'hessian', 'modified' or 'ltsa')",
-                'description': 'standard : use the standard locally linear embedding algorithm.  see',
+                'description': 'standard : use the standard locally linear embedding algorithm',
                 'enum': ['ltsa', 'modified', 'standard'],
                 'default': 'standard'},
             'hessian_tol': {
                 'type': 'number',
                 'default': 0.0001,
-                'description': 'Tolerance for Hessian eigenmapping method.'},
+                'description': 'Tolerance for Hessian eigenmapping method'},
             'modified_tol': {
                 'type': 'number',
                 'default': 1e-12,
-                'description': 'Tolerance for modified LLE method.'},
+                'description': 'Tolerance for modified LLE method'},
             'neighbors_algorithm': {
                 'enum': ['auto', 'ball_tree', 'brute', 'kd_tree'],
                 'default': 'auto',
-                'description': 'algorithm to use for nearest neighbors search,'},
+                'description': 'algorithm to use for nearest neighbors search, passed to neighbors.NearestNeighbors instance'},
             'random_state': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'type': 'object'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`'},
             'n_jobs': {
                 'anyOf': [{
                     'type': 'integer'}, {
                     'enum': [None]}],
                 'default': None,
-                'description': 'The number of parallel jobs to run.'},
+                'description': 'The number of parallel jobs to run'},
         }}, {
         'description': "hessian_tol, only used if method == 'hessian'",
         'anyOf': [{
@@ -136,7 +136,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the embedding vectors for data X',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',

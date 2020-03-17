@@ -42,7 +42,7 @@ _hyperparams_schema = {
             'nu': {
                 'type': 'number',
                 'default': 0.5,
-                'description': 'An upper bound on the fraction of training errors and a lower bound of'},
+                'description': 'An upper bound on the fraction of training errors and a lower bound of the fraction of support vectors'},
             'C': {
                 'type': 'number',
                 'default': 1.0,
@@ -50,25 +50,25 @@ _hyperparams_schema = {
             'kernel': {
                 'enum': ['linear', 'poly', 'sigmoid', 'rbf'],
                 'default': 'rbf',
-                'description': 'Specifies the kernel type to be used in the algorithm.'},
+                'description': 'Specifies the kernel type to be used in the algorithm'},
             'degree': {
                 'type': 'integer',
                 'minimumForOptimizer': 2,
                 'maximumForOptimizer': 3,
                 'distribution': 'uniform',
                 'default': 3,
-                'description': "Degree of the polynomial kernel function ('poly')."},
+                'description': "Degree of the polynomial kernel function ('poly')"},
             'gamma': {
                 'anyOf': [{
                     'type': 'number',
                     'forOptimizer': False}, {
                     'enum': ['auto_deprecated']}],
                 'default': 'auto_deprecated',
-                'description': "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'."},
+                'description': "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'"},
             'coef0': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'Independent term in kernel function.'},
+                'description': 'Independent term in kernel function'},
             'shrinking': {
                 'type': 'boolean',
                 'default': True,
@@ -77,7 +77,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.001,
                 'description': 'Tolerance for stopping criterion.'},
             'cache_size': {
@@ -90,7 +90,7 @@ _hyperparams_schema = {
             'verbose': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Enable verbose output. Note that this setting takes advantage of a'},
+                'description': 'Enable verbose output'},
             'max_iter': {
                 'XXX TODO XXX': 'int, optional (default=-1)',
                 'description': 'Hard limit on iterations within solver, or -1 for no limit.',
@@ -106,7 +106,7 @@ _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the SVM model according to the given training data.',
     'type': 'object',
-    'required': ['y', 'X'],
+    'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
@@ -115,17 +115,17 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'Training vectors, where n_samples is the number of samples'},
+            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features'},
         'y': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'Target values (class labels in classification, real numbers in'},
+            'description': 'Target values (class labels in classification, real numbers in regression)'},
         'sample_weight': {
             'type': 'array',
             'items': {
                 'type': 'number'},
-            'description': 'Per-sample weights. Rescale C per sample. Higher weights'},
+            'description': 'Per-sample weights'},
     },
 }
 _input_predict_schema = {
@@ -141,7 +141,7 @@ _input_predict_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'For kernel="precomputed", the expected shape of X is'},
+            'description': 'For kernel="precomputed", the expected shape of X is (n_samples_test, n_samples_train).'},
     },
 }
 _output_predict_schema = {
