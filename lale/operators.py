@@ -1609,16 +1609,22 @@ class BasePipeline(Operator, Generic[OpType]):
 
         def convert_data_with_schemas_to_data(node):
             for element in dir(node):#Looking at only 1 level for now.
-                value = getattr(node,element)
-                if isinstance(value, lale.datasets.data_schemas.NDArrayWithSchema):
-                    modified_value = np.array(value)
-                elif isinstance(value, lale.datasets.data_schemas.DataFrameWithSchema):
-                    modified_value = pd.DataFrame(value)
-                elif isinstance(value, lale.datasets.data_schemas.SeriesWithSchema):
-                    modified_value = pd.Series(value)
-                else:
-                    continue
-                setattr(node, element, modified_value)
+                try:
+                    value = getattr(node,element)
+                    if isinstance(value, lale.datasets.data_schemas.NDArrayWithSchema):
+                        modified_value = np.array(value)
+                    elif isinstance(value, lale.datasets.data_schemas.DataFrameWithSchema):
+                        modified_value = pd.DataFrame(value)
+                    elif isinstance(value, lale.datasets.data_schemas.SeriesWithSchema):
+                        modified_value = pd.Series(value)
+                    else:
+                        continue
+                    setattr(node, element, modified_value)
+                except BaseException:
+                    #This is an optional processing, so if there is any exception, continue.
+                    #For example, some scikit-learn classes will fail at getattr because they have
+                    #that property defined conditionally. 
+                    pass
 
         def create_pipeline_from_sink_node(sink_node):
             #Ensure that the pipeline is either linear or has a "union followed by concat" construct
