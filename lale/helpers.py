@@ -583,17 +583,21 @@ def get_default_schema(impl):
         arg_schemas = signature_to_schema(sig)
     else:
         arg_schemas = {'type': 'object', 'properties': {}}
-    return {
+    arg_schemas['relevantToOptimizer'] = []
+    props = {'hyperparams': {'allOf': [arg_schemas]}}
+    if hasattr(impl, 'fit'):
+        props['input_fit'] = {'laleType': 'Any'}
+    for method_name in ['predict', 'predict_proba', 'transform']:
+        if hasattr(impl, method_name):
+            props['input_' + method_name] = {'laleType': 'Any'}
+            props['output_' + method_name] = {'laleType': 'Any'}
+    result = {
         '$schema': 'http://json-schema.org/draft-04/schema#',
         'description':
         'Combined schema for expected data and hyperparameters.',
         'type': 'object',
-        'properties': {
-            'input_fit': {},
-            'input_predict': {},
-            'output': {},
-            'hyperparams': {
-                'allOf': [arg_schemas]}}}
+        'properties': props}
+    return result
 
 class val_wrapper():
     """This is used to wrap values that cause problems for hyper-optimizer backends

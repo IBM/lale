@@ -449,28 +449,12 @@ class IndividualOp(Operator):
             state.pop(k, None)
         return state
 
-    def get_schema_maybe(self, schema_kind:str, default:Any=None)->Dict[str, Any]:
-        """Return a schema of the operator or a given default if the schema is unspecified
-
-        Parameters
-        ----------
-        schema_kind : string, 'input_fit' or 'input_predict' or 'output' or 'hyperparams'
-                Type of the schema to be returned.
-
-        Returns
-        -------
-        dict
-            The python object containing the json schema of the operator.
-            For all the schemas currently present, this would be a dictionary.
-        """
-        return self._schemas.get('properties',{}).get(schema_kind, default)
-
     def get_schema(self, schema_kind:str)->Dict[str, Any]:
         """Return a schema of the operator.
         
         Parameters
         ----------
-        schema_kind : string, 'input_fit' or 'input_predict' or 'output' or 'hyperparams'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_predict' or 'input_predict_proba' or 'input_transform' 'output_predict' or 'output_predict_proba' or 'output_transform'
                 Type of the schema to be returned.    
                     
         Returns
@@ -479,7 +463,10 @@ class IndividualOp(Operator):
             The python object containing the json schema of the operator. 
             For all the schemas currently present, this would be a dictionary.
         """
-        return self.get_schema_maybe(schema_kind, {})
+        props = self._schemas['properties']
+        assert schema_kind in props, f'missing schema {schema_kind} for operator {self.name()} with class {self.class_name()}'
+        result = props[schema_kind]
+        return result
 
     def documentation_url(self):
         if 'documentation_url' in self._schemas:
@@ -543,11 +530,7 @@ class IndividualOp(Operator):
             Logical schema describing input required by this
             operator's predict proba method.
         """
-        sch = self.get_schema_maybe('input_predict_proba')
-        if sch is None:
-            return self.input_schema_predict()
-        else:
-            return sch
+        return self.get_schema('input_predict_proba')
 
     def input_schema_transform(self):
         """Returns the schema for transform method's input.
@@ -558,31 +541,10 @@ class IndividualOp(Operator):
             Logical schema describing input required by this 
             operator's transform method.
         """
-        result = self.get_schema_maybe('input_transform')
-        if result is None:
-            return self.input_schema_predict()
-        return result
+        return self.get_schema('input_transform')
 
-    def output_schema(self, method=None):
-        """Returns the schema for predict/transform method's output.
-        
-        Returns
-        -------
-        dict
-            Logical schema describing output of this 
-            operator's predict/transform method.
-        """
-        props = self._schemas.get('properties', {})
-        if method is not None and 'output_'+method in props:
-            return props['output_'+method]
-        if self.is_transformer() and 'output_transform' in props:
-            return props['output_transform']
-        if not self.is_transformer() and 'output_predict' in props:
-            return props['output_predict']
-        return props.get('output', {})
-
-    def output_schema_predict_proba(self):
-        """Returns the schema for predict proba method's output.
+    def output_schema_predict(self):
+        """Returns the schema for predict method's output.
 
         Returns
         -------
@@ -590,11 +552,29 @@ class IndividualOp(Operator):
             Logical schema describing output of this
             operator's predict proba method.
         """
-        sch = self.get_schema_maybe('output_predict_proba')
-        if sch is None:
-            return self.output_schema()
-        else:
-            return sch
+        return self.get_schema('output_predict')
+
+    def output_schema_predict_proba(self):
+        """Returns the schema for predict_proba method's output.
+
+        Returns
+        -------
+        dict
+            Logical schema describing output of this
+            operator's predict_proba method.
+        """
+        return self.get_schema('output_predict_proba')
+
+    def output_schema_transform(self):
+        """Returns the schema for transform method's output.
+
+        Returns
+        -------
+        dict
+            Logical schema describing output of this
+            operator's transform method.
+        """
+        return self.get_schema('output_transform')
 
     def hyperparam_schema(self, name:Optional[str]=None):
         """Returns the hyperparameter schema for the operator.
@@ -867,10 +847,12 @@ class IndividualOp(Operator):
         if not lale.helpers.is_empty_dict(arg):
             if method == 'fit' or method == 'partial_fit':
                 schema = self.input_schema_fit()
-            elif method == 'predict' or method == 'transform':
+            elif method == 'predict':
                 schema = self.input_schema_predict()
             elif method == 'predict_proba':
                 schema = self.input_schema_predict_proba()
+            elif method == 'transform':
+                schema = self.input_schema_transform()
             if len(schema) != 0 and arg_name in schema['properties']:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
@@ -881,10 +863,12 @@ class IndividualOp(Operator):
         return arg
 
     def _validate_output_schema(self, result, method):
-        if method == 'predict' or method == 'transform':
-            schema = self.output_schema(method)
+        if method == 'predict':
+            schema = self.output_schema_predict()
         elif method == 'predict_proba':
             schema = self.output_schema_predict_proba()
+        elif method == 'transform':
+            schema = self.output_schema_transform()
         result = lale.datasets.data_schemas.add_schema(result)
         try:
             lale.helpers.validate_schema_or_subschema(result, schema)
@@ -894,6 +878,8 @@ class IndividualOp(Operator):
         return result
 
     def transform_schema(self, s_X):
+        if self.is_transformer():
+            return self.output_schema_transform()
         return self.output_schema_predict_proba()
 
     def is_supervised(self, default_if_missing=True)->bool:

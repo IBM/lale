@@ -55,18 +55,18 @@ class TestCustomSchema(unittest.TestCase):
             Exception, self.sk_pca.customize_schema, input_foo=pca_input)
 
     def test_override_output(self):
-        init_output_schema = self.sk_pca.get_schema('output')
-        pca_output = self.ll_pca.get_schema('output')
-        foo = self.sk_pca.customize_schema(output=schemas.JSON(pca_output))
-        self.assertEqual(foo.get_schema('output'), pca_output)
+        init_output_schema = self.sk_pca.get_schema('output_transform')
+        pca_output = self.ll_pca.get_schema('output_transform')
+        foo = self.sk_pca.customize_schema(output_transform=schemas.JSON(pca_output))
+        self.assertEqual(foo.get_schema('output_transform'), pca_output)
         helpers.validate_is_schema(foo._schemas)
-        self.assertEqual(self.sk_pca.get_schema('output'), init_output_schema)
+        self.assertEqual(self.sk_pca.get_schema('output_transform'), init_output_schema)
         self.assertRaises(Exception, self.sk_pca.customize_schema, output={})
         self.assertRaises(
             Exception, self.sk_pca.customize_schema, output_foo=pca_output)
 
     def test_override_output2(self):
-        init_output_schema = self.sk_pca.get_schema('output')
+        init_output_schema = self.sk_pca.get_schema('output_transform')
         pca_output = schemas.AnyOf([
             schemas.Array(
                 schemas.Array(
@@ -81,10 +81,10 @@ class TestCustomSchema(unittest.TestCase):
                         {'type': 'array',
                          'items': {
                              'type': 'number'}}]}
-        foo = self.sk_pca.customize_schema(output=pca_output)
-        self.assertEqual(foo.get_schema('output'), expected)
+        foo = self.sk_pca.customize_schema(output_transform=pca_output)
+        self.assertEqual(foo.get_schema('output_transform'), expected)
         helpers.validate_is_schema(foo._schemas)
-        self.assertEqual(self.sk_pca.get_schema('output'), init_output_schema)
+        self.assertEqual(self.sk_pca.get_schema('output_transform'), init_output_schema)
 
     def test_override_bool_param_sk(self):
         init = self.sk_pca.hyperparam_schema('whiten')
@@ -217,6 +217,7 @@ class TestCustomSchema(unittest.TestCase):
         init = self.sk_pca.hyperparam_schema()
         init_expected = {'allOf': [
             {   'type': 'object',
+                'relevantToOptimizer': [],
                 'properties': {
                     'n_components': {'default': None},
                     'copy': {'default': True},
@@ -291,6 +292,7 @@ class TestWrapUnknownOps(unittest.TestCase):
     expected_schema = {
         'allOf': [{
             'type': 'object',
+            'relevantToOptimizer': [],
             'properties': {
                 'n_neighbors': {'default': 5},
                 'algorithm': {'default': 'auto'}}}]}
