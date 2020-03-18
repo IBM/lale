@@ -108,7 +108,7 @@ _combined_schemas = {
     'output_transform': _output_transform_schema}}
 
 if __name__ == "__main__":
-    import lale.type_checking
-    lale.type_checking.validate_is_schema(_combined_schemas)
+    import lale.helpers
+    lale.helpers.validate_is_schema(_combined_schemas)
 
 DisparateImpactRemover = lale.operators.make_operator(DisparateImpactRemoverImpl, _combined_schemas)

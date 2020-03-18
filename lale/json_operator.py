@@ -162,8 +162,8 @@ SCHEMA = {
   '$ref': '#/definitions/operator'}
 
 if __name__ == "__main__":
-    import lale.type_checking
-    lale.type_checking.validate_is_schema(SCHEMA)
+    import lale.helpers
+    lale.helpers.validate_is_schema(SCHEMA)
 
 def json_op_kind(jsn: JSON_TYPE) -> str:
     if jsn['class'] == 'lale.operators.OperatorChoice':
