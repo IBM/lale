@@ -1541,8 +1541,6 @@ class BasePipeline(Operator, Generic[OpType]):
             if validate:
                 operator.validate_schema(X=inputs, y=y)
             output = operator.transform_schema(inputs)
-            if lale.helpers.is_empty_dict(output): #hack for missing schema
-                output = {'type': 'array', 'items': {'not': {}}}
             outputs[operator] = output
         if not validate:
             sinks = self.find_sink_nodes()
