@@ -26,8 +26,8 @@ def create_function_test_encoder(encoder_name):
         #test_schemas_are_schemas
         from lale.helpers import validate_is_schema
         validate_is_schema(encoder.input_schema_fit())
-        validate_is_schema(encoder.input_schema_predict())
-        validate_is_schema(encoder.output_schema())
+        validate_is_schema(encoder.input_schema_transform())
+        validate_is_schema(encoder.output_schema_transform())
         validate_is_schema(encoder.hyperparam_schema())
 
         #test_init_fit_transform

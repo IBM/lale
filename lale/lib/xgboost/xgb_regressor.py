@@ -372,6 +372,24 @@ _output_predict_schema = {
   'type': 'array',
   'items': {'type': 'number'}}
 
+_input_predict_proba_schema = {
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {
+                    'type': 'number'},
+            }}}}
+
+_output_predict_probaschema = {
+    'type': 'array',
+    'items': {
+        'type': 'array',
+        'items': {'type': 'number'}}}
+
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
@@ -384,7 +402,9 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema}}
+        'output_predict': _output_predict_schema,
+        'input_predict_proba': _input_predict_schema,
+        'output_predict_proba': _output_predict_schema}}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

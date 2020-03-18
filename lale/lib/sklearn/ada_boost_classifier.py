@@ -45,6 +45,7 @@ class AdaBoostClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema.',

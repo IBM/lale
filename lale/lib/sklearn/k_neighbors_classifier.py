@@ -154,6 +154,20 @@ _output_predict_schema = {
             'type': 'array', 'items': {'type': 'number'}}},
         {'type': 'array', 'items': {'type': 'string'}}]}
 
+_input_predict_proba_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Input data schema for predictions using the KNeighborsClassifier model from scikit-learn.',
+    'type': 'object',
+    'required': ['X'],
+    'additionalProperties': False,
+    'properties': {
+        'X': {
+            'description': 'Features; the outer array is over samples.',
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': { 'type': 'number'}}}}}
+
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability of the sample for each class in the model.',
@@ -174,6 +188,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
+        'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
 
 if (__name__ == '__main__'):
