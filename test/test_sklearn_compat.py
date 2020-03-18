@@ -57,10 +57,10 @@ class MutatingOpImpl():
 _input_schema_fit = {
   '$schema': 'http://json-schema.org/draft-04/schema#'
 }
-_input_schema_predict = {
+_input_predict_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
 }
-_output_schema = {
+_output_predict_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#'}
 
 _hyperparam_schema = {
@@ -90,8 +90,8 @@ _combined_schemas = {
     'properties': {
         'hyperparams': _hyperparam_schema,
         'input_fit': _input_schema_fit,
-        'input_predict': _input_schema_predict,
-        'output': _output_schema}}
+        'input_predict': _input_predict_schema,
+        'output_predict': _output_predict_schema}}
 
 MutatingOp = make_operator(MutatingOpImpl, _combined_schemas)
 

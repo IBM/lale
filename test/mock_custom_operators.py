@@ -30,7 +30,7 @@ class IncreaseRowsImpl():
         y = np.concatenate((y, y_subset), axis = 0)
         return X, y
 
-_input_schema_fit = {
+_input_fit_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X', 'y'],
@@ -45,7 +45,7 @@ _input_schema_fit = {
       'type': 'array',
       'items': {'type': 'number'}}}}
 
-_input_schema_predict = {
+_input_transform_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X' ,'y'],
@@ -57,7 +57,7 @@ _input_schema_predict = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {}}}
 
-_output_schema = {
+_output_transform_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#'}
 #,
 #  'type': 'array',
@@ -85,9 +85,9 @@ _combined_schemas = {
         'post': []},
     'properties': {
         'hyperparams': _hyperparam_schema,
-        'input_fit': _input_schema_fit,
-        'input_predict': _input_schema_predict,
-        'output': _output_schema}}
+        'input_fit': _input_fit_schema,
+        'input_transform': _input_transform_schema,
+        'output_transform': _output_transform_schema}}
 
 IncreaseRows = make_operator(IncreaseRowsImpl, _combined_schemas)
 
@@ -109,7 +109,7 @@ class MyLRImpl:
     def predict(self, X):
         return self._sklearn_model.predict(X)
 
-_input_schema_fit = {
+_input_fit_schema = {
   'type': 'object',
   'required': ['X', 'y'],
   'additionalProperties': False,
@@ -121,7 +121,7 @@ _input_schema_fit = {
       'type': 'array',
       'items': {'type': 'number'}}}}
 
-_input_schema_predict = {
+_input_predict_schema = {
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -130,7 +130,7 @@ _input_schema_predict = {
       'type': 'array',
       'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
-_output_schema = {
+_output_predict_schema = {
   'type': 'array',
   'items': {'type': 'number'}}
 
@@ -178,13 +178,12 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'properties': {
-    'input_fit': _input_schema_fit,
-    'input_predict': _input_schema_predict,
-    'output': _output_schema,
+    'input_fit': _input_fit_schema,
+    'input_predict': _input_predict_schema,
+    'output_predict': _output_predict_schema,
     'hyperparams': _hyperparams_schema } }
 
 import lale.helpers
 lale.helpers.validate_is_schema(_combined_schemas)
 
 MyLR = lale.operators.make_operator(MyLRImpl, _combined_schemas)
-

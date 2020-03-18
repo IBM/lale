@@ -67,7 +67,7 @@ def create_function_test_classifier(clf_name):
         from lale.helpers import validate_is_schema
         validate_is_schema(clf.input_schema_fit())
         validate_is_schema(clf.input_schema_predict())
-        validate_is_schema(clf.output_schema())
+        validate_is_schema(clf.output_schema_predict())
         validate_is_schema(clf.hyperparam_schema())
 
         #test_init_fit_predict
@@ -166,7 +166,7 @@ def create_function_test_regressor(clf_name):
         from lale.helpers import validate_is_schema
         validate_is_schema(regr.input_schema_fit())
         validate_is_schema(regr.input_schema_predict())
-        validate_is_schema(regr.output_schema())
+        validate_is_schema(regr.output_schema_predict())
         validate_is_schema(regr.hyperparam_schema())
 
         #test_init_fit_predict
@@ -243,7 +243,7 @@ def create_function_test_feature_preprocessor(fproc_name):
         from lale.helpers import validate_is_schema
         validate_is_schema(fproc.input_schema_fit())
         validate_is_schema(fproc.input_schema_transform())
-        validate_is_schema(fproc.output_schema())
+        validate_is_schema(fproc.output_schema_transform())
         validate_is_schema(fproc.hyperparam_schema())
 
         #test_init_fit_transform

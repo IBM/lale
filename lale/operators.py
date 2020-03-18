@@ -449,28 +449,12 @@ class IndividualOp(Operator):
             state.pop(k, None)
         return state
 
-    def get_schema_maybe(self, schema_kind:str, default:Any=None)->Dict[str, Any]:
-        """Return a schema of the operator or a given default if the schema is unspecified
-
-        Parameters
-        ----------
-        schema_kind : string, 'input_fit' or 'input_predict' or 'output' or 'hyperparams'
-                Type of the schema to be returned.
-
-        Returns
-        -------
-        dict
-            The python object containing the json schema of the operator.
-            For all the schemas currently present, this would be a dictionary.
-        """
-        return self._schemas.get('properties',{}).get(schema_kind, default)
-
     def get_schema(self, schema_kind:str)->Dict[str, Any]:
         """Return a schema of the operator.
         
         Parameters
         ----------
-        schema_kind : string, 'input_fit' or 'input_predict' or 'output' or 'hyperparams'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_predict' or 'input_predict_proba' or 'input_transform' 'output_predict' or 'output_predict_proba' or 'output_transform'
                 Type of the schema to be returned.    
                     
         Returns
@@ -479,7 +463,10 @@ class IndividualOp(Operator):
             The python object containing the json schema of the operator. 
             For all the schemas currently present, this would be a dictionary.
         """
-        return self.get_schema_maybe(schema_kind, {})
+        props = self._schemas['properties']
+        assert schema_kind in props, f'missing schema {schema_kind} for operator {self.name()} with class {self.class_name()}'
+        result = props[schema_kind]
+        return result
 
     def documentation_url(self):
         if 'documentation_url' in self._schemas:
@@ -543,11 +530,7 @@ class IndividualOp(Operator):
             Logical schema describing input required by this
             operator's predict proba method.
         """
-        sch = self.get_schema_maybe('input_predict_proba')
-        if sch is None:
-            return self.input_schema_predict()
-        else:
-            return sch
+        return self.get_schema('input_predict_proba')
 
     def input_schema_transform(self):
         """Returns the schema for transform method's input.
@@ -558,31 +541,10 @@ class IndividualOp(Operator):
             Logical schema describing input required by this 
             operator's transform method.
         """
-        result = self.get_schema_maybe('input_transform')
-        if result is None:
-            return self.input_schema_predict()
-        return result
+        return self.get_schema('input_transform')
 
-    def output_schema(self, method=None):
-        """Returns the schema for predict/transform method's output.
-        
-        Returns
-        -------
-        dict
-            Logical schema describing output of this 
-            operator's predict/transform method.
-        """
-        props = self._schemas.get('properties', {})
-        if method is not None and 'output_'+method in props:
-            return props['output_'+method]
-        if self.is_transformer() and 'output_transform' in props:
-            return props['output_transform']
-        if not self.is_transformer() and 'output_predict' in props:
-            return props['output_predict']
-        return props.get('output', {})
-
-    def output_schema_predict_proba(self):
-        """Returns the schema for predict proba method's output.
+    def output_schema_predict(self):
+        """Returns the schema for predict method's output.
 
         Returns
         -------
@@ -590,11 +552,29 @@ class IndividualOp(Operator):
             Logical schema describing output of this
             operator's predict proba method.
         """
-        sch = self.get_schema_maybe('output_predict_proba')
-        if sch is None:
-            return self.output_schema()
-        else:
-            return sch
+        return self.get_schema('output_predict')
+
+    def output_schema_predict_proba(self):
+        """Returns the schema for predict_proba method's output.
+
+        Returns
+        -------
+        dict
+            Logical schema describing output of this
+            operator's predict_proba method.
+        """
+        return self.get_schema('output_predict_proba')
+
+    def output_schema_transform(self):
+        """Returns the schema for transform method's output.
+
+        Returns
+        -------
+        dict
+            Logical schema describing output of this
+            operator's transform method.
+        """
+        return self.get_schema('output_transform')
 
     def hyperparam_schema(self, name:Optional[str]=None):
         """Returns the hyperparameter schema for the operator.
@@ -853,25 +833,29 @@ class IndividualOp(Operator):
         return op
 
     def validate_schema(self, X, y=None):
-        X = self._validate_input_schema('X', X, 'fit')
+        if hasattr(self._impl, 'fit'):
+            X = self._validate_input_schema('X', X, 'fit')
         method = 'transform' if self.is_transformer() else 'predict'
         self._validate_input_schema('X', X, method)
         if self.is_supervised(default_if_missing=False):
             if y is None:
                 raise ValueError(f'{self.name()}.fit() y cannot be None')
             else:
-                y = self._validate_input_schema('y', y, 'fit')
+                if hasattr(self._impl, 'fit'):
+                    y = self._validate_input_schema('y', y, 'fit')
                 self._validate_input_schema('y', y, method)
 
     def _validate_input_schema(self, arg_name, arg, method):
         if not lale.helpers.is_empty_dict(arg):
             if method == 'fit' or method == 'partial_fit':
                 schema = self.input_schema_fit()
-            elif method == 'predict' or method == 'transform':
+            elif method == 'predict':
                 schema = self.input_schema_predict()
             elif method == 'predict_proba':
                 schema = self.input_schema_predict_proba()
-            if len(schema) != 0 and arg_name in schema['properties']:
+            elif method == 'transform':
+                schema = self.input_schema_transform()
+            if 'properties' in schema and arg_name in schema['properties']:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
                     sup = schema['properties'][arg_name]
@@ -881,10 +865,12 @@ class IndividualOp(Operator):
         return arg
 
     def _validate_output_schema(self, result, method):
-        if method == 'predict' or method == 'transform':
-            schema = self.output_schema(method)
+        if method == 'predict':
+            schema = self.output_schema_predict()
         elif method == 'predict_proba':
             schema = self.output_schema_predict_proba()
+        elif method == 'transform':
+            schema = self.output_schema_transform()
         result = lale.datasets.data_schemas.add_schema(result)
         try:
             lale.helpers.validate_schema_or_subschema(result, schema)
@@ -894,12 +880,16 @@ class IndividualOp(Operator):
         return result
 
     def transform_schema(self, s_X):
-        return self.output_schema_predict_proba()
+        if self.is_transformer():
+            return self.output_schema_transform()
+        if hasattr(self._impl, 'predict_proba'):
+            return self.output_schema_predict_proba()
+        return self.output_schema_predict()
 
     def is_supervised(self, default_if_missing=True)->bool:
-        s = self.input_schema_fit()
-        if s:
-            return lale.helpers.is_subschema(s, _is_supervised_schema)
+        if hasattr(self._impl, 'fit'):
+            schema_fit = self.input_schema_fit()
+            return lale.helpers.is_subschema(schema_fit, _is_supervised_schema)
         return default_if_missing
 
 _is_supervised_schema = {
@@ -1551,8 +1541,6 @@ class BasePipeline(Operator, Generic[OpType]):
             if validate:
                 operator.validate_schema(X=inputs, y=y)
             output = operator.transform_schema(inputs)
-            if lale.helpers.is_empty_dict(output): #hack for missing schema
-                output = {'type': 'array', 'items': {'not': {}}}
             outputs[operator] = output
         if not validate:
             sinks = self.find_sink_nodes()
@@ -1608,24 +1596,29 @@ class BasePipeline(Operator, Generic[OpType]):
         from sklearn.pipeline import FeatureUnion
 
         def convert_data_with_schemas_to_data(node):
-            impl = node._impl
-            for element in dir(impl):#Looking at only 1 level for now.
-                value = getattr(impl,element)
-                if isinstance(value, lale.datasets.data_schemas.NDArrayWithSchema):
-                    modified_value = np.array(value)
-                elif isinstance(value, lale.datasets.data_schemas.DataFrameWithSchema):
-                    modified_value = pd.DataFrame(value)
-                elif isinstance(value, lale.datasets.data_schemas.SeriesWithSchema):
-                    modified_value = pd.Series(value)
-                else:
-                    continue
-                setattr(impl, element, modified_value)
+            for element in dir(node):#Looking at only 1 level for now.
+                try:
+                    value = getattr(node,element)
+                    if isinstance(value, lale.datasets.data_schemas.NDArrayWithSchema):
+                        modified_value = np.array(value)
+                    elif isinstance(value, lale.datasets.data_schemas.DataFrameWithSchema):
+                        modified_value = pd.DataFrame(value)
+                    elif isinstance(value, lale.datasets.data_schemas.SeriesWithSchema):
+                        modified_value = pd.Series(value)
+                    else:
+                        continue
+                    setattr(node, element, modified_value)
+                except BaseException:
+                    #This is an optional processing, so if there is any exception, continue.
+                    #For example, some scikit-learn classes will fail at getattr because they have
+                    #that property defined conditionally. 
+                    pass
 
         def create_pipeline_from_sink_node(sink_node):
             #Ensure that the pipeline is either linear or has a "union followed by concat" construct
             #Translate the "union followed by concat" constructs to "featureUnion"
             #Inspect the node and convert any data with schema objects to original data types
-            convert_data_with_schemas_to_data(sink_node)
+            convert_data_with_schemas_to_data(sink_node._impl)
             if sink_node._impl_class() == ConcatFeaturesImpl:
                 list_of_transformers = []
                 for pred in self._preds[sink_node]:
@@ -1640,11 +1633,12 @@ class BasePipeline(Operator, Generic[OpType]):
                 else:
                     if hasattr(sink_node._impl_instance(), '_sklearn_model'):
                         sklearn_op = sink_node._impl_instance()._sklearn_model
+                        convert_data_with_schemas_to_data(sklearn_op)#This case needs one more level of conversion
                     else:
                         sklearn_op = sink_node._impl_instance()
                     sklearn_op = copy.deepcopy(sklearn_op)
                     if preds is None or len(preds) == 0:
-                        return sklearn_op       
+                        return sklearn_op
                     else:
                         previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
                         if isinstance(previous_sklearn_op, list):

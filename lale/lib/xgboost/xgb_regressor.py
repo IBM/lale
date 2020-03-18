@@ -56,19 +56,19 @@ class XGBRegressorImpl(BaseEstimator):
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
                 self.seed, self.missing, self.importance_type)
-        result._xgboost_model = XGBoostRegressor(
+        result._sklearn_model = XGBoostRegressor(
                     **self.get_params())
         if fit_params is None:
-            result._xgboost_model.fit(X, y)
+            result._sklearn_model.fit(X, y)
         else:
-            result._xgboost_model.fit(X, y, **fit_params)
+            result._sklearn_model.fit(X, y, **fit_params)
         return result
 
     def predict(self, X):
-        return self._xgboost_model.predict(X)
+        return self._sklearn_model.predict(X)
 
     def predict_proba(self, X):
-        return self._xgboost_model.predict_proba(X)
+        return self._sklearn_model.predict_proba(X)
 
 _hyperparams_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -372,6 +372,24 @@ _output_predict_schema = {
   'type': 'array',
   'items': {'type': 'number'}}
 
+_input_predict_proba_schema = {
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {
+                    'type': 'number'},
+            }}}}
+
+_output_predict_probaschema = {
+    'type': 'array',
+    'items': {
+        'type': 'array',
+        'items': {'type': 'number'}}}
+
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
@@ -384,7 +402,9 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema}}
+        'output_predict': _output_predict_schema,
+        'input_predict_proba': _input_predict_schema,
+        'output_predict_proba': _output_predict_schema}}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

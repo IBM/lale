@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from sklearn.base import BaseEstimator
+
 class XGBClassifierImpl(BaseEstimator):
     def __init__(self, max_depth=3, learning_rate=0.1, n_estimators=100, verbosity=1, 
                 objective='binary:logistic', booster='gbtree', n_jobs=1, 
@@ -51,19 +52,19 @@ class XGBClassifierImpl(BaseEstimator):
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
                 self.seed, self.missing, self.silent)
-        result._xgboost_model = XGBoostClassifier(
+        result._sklearn_model = XGBoostClassifier(
                     **self.get_params())
         if fit_params is None:
-            result._xgboost_model.fit(X, y)
+            result._sklearn_model.fit(X, y)
         else:
-            result._xgboost_model.fit(X, y, **fit_params)
+            result._sklearn_model.fit(X, y, **fit_params)
         return result
 
     def predict(self, X):
-        return self._xgboost_model.predict(X)
+        return self._sklearn_model.predict(X)
 
     def predict_proba(self, X):
-        return self._xgboost_model.predict_proba(X)
+        return self._sklearn_model.predict_proba(X)
 
 from xgboost import XGBClassifier as XGBoostClassifier
 import lale.helpers
@@ -342,6 +343,7 @@ _input_fit_schema = {
             'description': 'List of callback functions that are applied at each iteration. '}
     }
 }
+
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict with `data`.',
@@ -377,6 +379,17 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'number'}},
         {'type': 'array', 'items': {'type': 'string'}}]}
 
+_input_predict_proba_schema = {
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {
+                    'type': 'number'}}}}}
+
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability of the sample for each class in the model.',
@@ -399,6 +412,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
+        'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
 
 if (__name__ == '__main__'):
