@@ -14,7 +14,6 @@
 
 import aif360.algorithms.preprocessing
 import aif360.datasets
-import lale.helpers
 import lale.operators
 import numpy as np
 import pandas as pd
@@ -109,6 +108,7 @@ _combined_schemas = {
     'output_transform': _output_transform_schema}}
 
 if __name__ == "__main__":
+    import lale.helpers
     lale.helpers.validate_is_schema(_combined_schemas)
 
 DisparateImpactRemover = lale.operators.make_operator(DisparateImpactRemoverImpl, _combined_schemas)

@@ -13,9 +13,7 @@
 # limitations under the License.
 
 import ast
-import functools
 import jsonschema
-import jsonsubschema
 import numpy as np
 import pandas as pd
 import os
@@ -23,7 +21,6 @@ import re
 import sys
 import time
 import traceback
-import warnings
 import scipy.sparse
 import importlib
 from sklearn.model_selection import StratifiedKFold
@@ -32,7 +29,6 @@ from sklearn.metrics.scorer import check_scoring
 from sklearn.utils.metaestimators import _safe_split
 import copy
 import logging
-import inspect
 import h5py
 from typing import Any, Dict, List, Optional, Union
 import lale.datasets.data_schemas
@@ -87,6 +83,9 @@ def data_to_json(data, subsample_array:bool=True) -> Union[list, dict]:
     else:
         return data
 
+def is_empty_dict(val) -> bool:
+    return isinstance(val, dict) and len(val) == 0
+
 def dict_without(orig_dict: Dict[str, Any], key: str) -> Dict[str, Any]:
     return {k: orig_dict[k] for k in orig_dict if k != key}
 
@@ -121,110 +120,24 @@ def ndarray_to_json(arr, subsample_array:bool=True) -> Union[list, dict]:
                     for i in range(min(num_subsamples[len(indices)], arr.shape[len(indices)]))]
     return subarray_to_json(())
 
-def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
-    json_value = data_to_json(value, subsample_array)
-    jsonschema.validate(json_value, schema, jsonschema.Draft4Validator)
+_JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 
-def validate_schema_or_subschema(part, super_schema):
-    if is_schema(part):
-        sub_schema = part
-    else:
-        try:
-            sub_schema = lale.datasets.data_schemas.to_schema(part)
-        except ValueError as e:
-            sub_schema = None
-    if sub_schema is None:
-        validate_schema(part, super_schema)
-    else:
-        validate_subschema(sub_schema, super_schema)
-
-JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
-
-def json_meta_schema() -> Dict[str, Any]:
+def _json_meta_schema() -> Dict[str, Any]:
     return jsonschema.Draft4Validator.META_SCHEMA
 
 def validate_is_schema(value: Dict[str, Any]):
     if '$schema' in value:
-        assert value['$schema'] == JSON_META_SCHEMA_URL
-    jsonschema.validate(value, json_meta_schema())
+        assert value['$schema'] == _JSON_META_SCHEMA_URL
+    jsonschema.validate(value, _json_meta_schema())
 
 def is_schema(value) -> bool:
     if isinstance(value, dict):
         try:
-            jsonschema.validate(value, json_meta_schema())
+            jsonschema.validate(value, _json_meta_schema())
         except:
             return False
         return True
     return False
-
-def json_replace(subject, old, new):
-    if subject == old:
-        return new
-    if isinstance(subject, list):
-        result = [json_replace(s, old, new) for s in subject]
-        for i in range(len(subject)):
-            if subject[i] != result[i]:
-                return result
-    elif isinstance(subject, tuple):
-        result = tuple([json_replace(s, old, new) for s in subject])
-        for i in range(len(subject)):
-            if subject[i] != result[i]:
-                return result
-    elif isinstance(subject, dict):
-        if isinstance(old, dict):
-            is_sub_dict = True
-            for k, v in old.items():
-                if k not in subject or subject[k] != v:
-                    is_sub_dict = False
-                    break
-            if is_sub_dict:
-                return {**subject, **new}
-        result = {k: json_replace(v, old, new) for k, v in subject.items()}
-        for k in subject:
-            if subject[k] != result[k]:
-                return result
-    return subject #nothing changed so share original object (not a copy)
-
-def is_subschema(sub, sup):
-    new_sub = json_replace(sub, {'laleType': 'Any'}, {'not': {}})
-    try:
-        return jsonsubschema.isSubschema(new_sub, sup)
-    except Exception as e:
-        raise ValueError(f'problem checking ({sub} <: {sup})') from e
-
-class SubschemaError(Exception):
-    def __init__(self, sub, sup, sub_name='sub', sup_name='super'):
-        self.sub = sub
-        self.sup = sup
-        self.sub_name = sub_name
-        self.sup_name = sup_name
-
-    def __str__(self):
-        summary = f'Expected {self.sub_name} to be a subschema of {self.sup_name}.'
-        import lale.pretty_print
-        sub = lale.pretty_print.schema_to_string(self.sub)
-        sup = lale.pretty_print.schema_to_string(self.sup)
-        details = f'\n{self.sub_name} = {sub}\n{self.sup_name} = {sup}'
-        return summary + details
-
-def validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
-    if not is_subschema(sub, sup):
-        raise SubschemaError(sub, sup, sub_name, sup_name)
-
-def join_schemas(*schemas):
-    def join_two_schemas(s_a, s_b):
-        if s_a is None:
-            return s_b
-        s_a = lale.helpers.dict_without(s_a, 'description')
-        s_b = lale.helpers.dict_without(s_b, 'description')
-        if is_subschema(s_a, s_b):
-            return s_b
-        if is_subschema(s_b, s_a):
-            return s_a
-        return jsonsubschema.joinSchemas(s_a, s_b)
-    if len(schemas) == 0:
-        return {'not':{}}
-    return functools.reduce(join_two_schemas, schemas)
 
 def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
     subset_X, subset_y = _safe_split(
@@ -539,65 +452,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     else:
         lale_op_obj = get_equivalent_lale_op(sklearn_pipeline, fitted=fitted)
     return lale_op_obj
-        
-def get_hyperparam_names(op):
-    import inspect
-    if op._impl.__module__.startswith('lale'):
-        hp_schema = op.hyperparam_schema()
-        params = next(iter(hp_schema.get('allOf', []))).get('properties', {})
-        return list(params.keys())
-    else:
-        return inspect.getargspec(op._impl_class().__init__).args
-                
-def validate_method(op, m):
-    if op._impl.__module__.startswith('lale'):
-        assert (m in op._schemas['properties'].keys())
-    else:
-        a = ''
-        if m.startswith('input_'):
-            a = m[len('input_'):]
-        elif m.startswith('output_'):
-            a = m[len('output_'):]
-        if a:
-            assert (hasattr(op._impl, a))
-
-def camelCase_to_snake(name):
-    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
-    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
-
-def signature_to_schema(sig):
-    sig_schema = {'type': 'object', 'properties': {}}
-    for name, param in sig.parameters.items():
-        ignored_kinds = [inspect.Parameter.VAR_POSITIONAL,
-                         inspect.Parameter.VAR_KEYWORD]
-        if name != 'self' and param.kind not in ignored_kinds:
-            param_schema = {}
-            if param.default != inspect.Parameter.empty:
-                param_schema['default'] = param.default
-            sig_schema['properties'][name] = param_schema
-    return sig_schema
-
-def get_default_schema(impl):
-    if hasattr(impl, '__init__'):
-        sig = inspect.signature(impl.__init__)
-        arg_schemas = signature_to_schema(sig)
-    else:
-        arg_schemas = {'type': 'object', 'properties': {}}
-    arg_schemas['relevantToOptimizer'] = []
-    props = {'hyperparams': {'allOf': [arg_schemas]}}
-    if hasattr(impl, 'fit'):
-        props['input_fit'] = {'laleType': 'Any'}
-    for method_name in ['predict', 'predict_proba', 'transform']:
-        if hasattr(impl, method_name):
-            props['input_' + method_name] = {'laleType': 'Any'}
-            props['output_' + method_name] = {'laleType': 'Any'}
-    result = {
-        '$schema': 'http://json-schema.org/draft-04/schema#',
-        'description':
-        'Combined schema for expected data and hyperparameters.',
-        'type': 'object',
-        'properties': props}
-    return result
 
 class val_wrapper():
     """This is used to wrap values that cause problems for hyper-optimizer backends
@@ -709,6 +563,3 @@ def best_estimator(obj):
        obj.get_pipeline() method.
     """
     return obj.get_pipeline()
-
-def is_empty_dict(val) -> bool:
-    return isinstance(val, dict) and len(val) == 0

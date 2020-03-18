@@ -15,6 +15,7 @@
 import lale.docstrings
 import lale.helpers
 import lale.operators
+import lale.type_checking
 import numpy as np
 import pandas as pd
 import scipy.sparse
@@ -69,14 +70,14 @@ class ConcatFeaturesImpl():
                 if isinstance(s_cols, dict):
                     min_c = s_rows['minItems'] if 'minItems' in s_rows else 1
                     max_c = s_rows['maxItems'] if 'maxItems' in s_rows else 'unbounded'
-                    elem_schema = lale.helpers.join_schemas(elem_schema, s_cols)
+                    elem_schema = lale.type_checking.join_schemas(elem_schema, s_cols)
                 else:
                     min_c, max_c = len(s_cols), len(s_cols)
                     for s_col in s_cols:
-                        elem_schema = lale.helpers.join_schemas(elem_schema, s_col)
+                        elem_schema = lale.type_checking.join_schemas(elem_schema, s_col)
                 min_cols, max_cols = add_ranges(min_cols,max_cols,min_c,max_c)
             else:
-                elem_schema = lale.helpers.join_schemas(elem_schema, s_rows)
+                elem_schema = lale.type_checking.join_schemas(elem_schema, s_rows)
                 min_cols, max_cols = add_ranges(min_cols, max_cols, 1, 1)
         s_result = {
             '$schema': 'http://json-schema.org/draft-04/schema#',

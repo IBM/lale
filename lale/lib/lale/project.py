@@ -16,6 +16,7 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.helpers
 import lale.operators
+import lale.type_checking
 import sklearn.compose
 
 class ProjectImpl:
@@ -31,7 +32,7 @@ class ProjectImpl:
             assert n_columns == s_row['maxItems']
             s_cols = s_row['items']
             if isinstance(s_cols, dict):
-                if lale.helpers.is_subschema(s_cols, columns):
+                if lale.type_checking.is_subschema(s_cols, columns):
                     columns = [*range(n_columns)]
                 else:
                     columns = []
@@ -39,7 +40,7 @@ class ProjectImpl:
                 assert isinstance(s_cols, list)
                 columns = [
                     i for i in range(n_columns)
-                    if lale.helpers.is_subschema(s_cols[i], columns)]
+                    if lale.type_checking.is_subschema(s_cols[i], columns)]
         self._col_tfm = sklearn.compose.ColumnTransformer(
             transformers=[('keep', 'passthrough', columns)])
         self._col_tfm.fit(X)
@@ -93,14 +94,14 @@ class ProjectImpl:
         s_row = s_X['items']
         s_cols = s_row['items']
         if isinstance(s_cols, dict):
-            if lale.helpers.is_subschema(s_cols, schema):
+            if lale.type_checking.is_subschema(s_cols, schema):
                 s_row_result = s_row
             else:
                 s_row_result = {'type': 'array', 'minItems': 0, 'maxItems': 0}
         else:
             assert isinstance(s_cols, list)
             s_cols_result = [s for s in s_cols
-                             if lale.helpers.is_subschema(s, schema)]
+                             if lale.type_checking.is_subschema(s, schema)]
             n_columns = len(s_cols_result)
             s_row_result = {
                 'type': 'array',

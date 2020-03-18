@@ -63,7 +63,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_datasets_with_own_schemas(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.helpers import validate_schema
+        from lale.type_checking import validate_schema
         for name in ['irisArr', 'irisDf', 'digits', 'housing', 'creditG', 'movies', 'drugRev']:
             dataset = getattr(self, f'_{name}')
             data_X, data_y = dataset['X'], dataset['y']
@@ -73,7 +73,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_ndarray_to_schema(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.helpers import validate_schema
+        from lale.type_checking import validate_schema
         all_X, all_y = self._irisArr['X'], self._irisArr['y']
         assert not hasattr(all_X, 'json_schema')
         all_X_schema = to_schema(all_X)
@@ -95,7 +95,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_pandas_to_schema(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.helpers import validate_schema
+        from lale.type_checking import validate_schema
         import pandas as pd
         train_X, train_y = self._irisDf['X'], self._irisDf['y']
         assert isinstance(train_X, pd.DataFrame)
@@ -124,7 +124,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_arff_to_schema(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.helpers import validate_schema
+        from lale.type_checking import validate_schema
         train_X, train_y = self._creditG['X'], self._creditG['y']
         assert hasattr(train_X, 'json_schema')
         train_X_schema = to_schema(train_X)
@@ -454,9 +454,10 @@ class TestErrorMessages(unittest.TestCase):
 
 class TestSchemaValidation(unittest.TestCase):
     def test_any(self):
+        from lale.type_checking import is_subschema
         num_schema = {'type': 'number'}
         any_schema = {'laleType': 'Any'}
         jsonschema.validate(42, num_schema)
         jsonschema.validate(42, any_schema)        
-        self.assertTrue(lale.helpers.is_subschema(num_schema, any_schema))
-        self.assertTrue(lale.helpers.is_subschema(any_schema, num_schema))
+        self.assertTrue(is_subschema(num_schema, any_schema))
+        self.assertTrue(is_subschema(any_schema, num_schema))
