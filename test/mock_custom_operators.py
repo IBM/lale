@@ -45,7 +45,7 @@ _input_fit_schema = {
       'type': 'array',
       'items': {'type': 'number'}}}}
 
-_input_transform_transform = {
+_input_transform_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X' ,'y'],
@@ -178,7 +178,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'properties': {
-    'input_fit': _input_schema_fit,
+    'input_fit': _input_fit_schema,
     'input_predict': _input_predict_schema,
     'output_predict': _output_predict_schema,
     'hyperparams': _hyperparams_schema } }

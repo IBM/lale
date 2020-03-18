@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from sklearn.base import BaseEstimator
+
 class XGBClassifierImpl(BaseEstimator):
     def __init__(self, max_depth=3, learning_rate=0.1, n_estimators=100, verbosity=1, 
                 objective='binary:logistic', booster='gbtree', n_jobs=1, 
@@ -342,6 +343,7 @@ _input_fit_schema = {
             'description': 'List of callback functions that are applied at each iteration. '}
     }
 }
+
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict with `data`.',
@@ -377,6 +379,17 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'number'}},
         {'type': 'array', 'items': {'type': 'string'}}]}
 
+_input_predict_proba_schema = {
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {
+                    'type': 'number'}}}}}
+
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability of the sample for each class in the model.',
@@ -399,6 +412,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
+        'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
 
 if (__name__ == '__main__'):

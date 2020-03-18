@@ -833,14 +833,16 @@ class IndividualOp(Operator):
         return op
 
     def validate_schema(self, X, y=None):
-        X = self._validate_input_schema('X', X, 'fit')
+        if hasattr(self._impl, 'fit'):
+            X = self._validate_input_schema('X', X, 'fit')
         method = 'transform' if self.is_transformer() else 'predict'
         self._validate_input_schema('X', X, method)
         if self.is_supervised(default_if_missing=False):
             if y is None:
                 raise ValueError(f'{self.name()}.fit() y cannot be None')
             else:
-                y = self._validate_input_schema('y', y, 'fit')
+                if hasattr(self._impl, 'fit'):
+                    y = self._validate_input_schema('y', y, 'fit')
                 self._validate_input_schema('y', y, method)
 
     def _validate_input_schema(self, arg_name, arg, method):
@@ -853,7 +855,7 @@ class IndividualOp(Operator):
                 schema = self.input_schema_predict_proba()
             elif method == 'transform':
                 schema = self.input_schema_transform()
-            if len(schema) != 0 and arg_name in schema['properties']:
+            if 'properties' in schema and arg_name in schema['properties']:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
                     sup = schema['properties'][arg_name]
@@ -880,12 +882,14 @@ class IndividualOp(Operator):
     def transform_schema(self, s_X):
         if self.is_transformer():
             return self.output_schema_transform()
-        return self.output_schema_predict_proba()
+        if hasattr(self._impl, 'predict_proba'):
+            return self.output_schema_predict_proba()
+        return self.output_schema_predict()
 
     def is_supervised(self, default_if_missing=True)->bool:
-        s = self.input_schema_fit()
-        if s:
-            return lale.helpers.is_subschema(s, _is_supervised_schema)
+        if hasattr(self._impl, 'fit'):
+            schema_fit = self.input_schema_fit()
+            return lale.helpers.is_subschema(schema_fit, _is_supervised_schema)
         return default_if_missing
 
 _is_supervised_schema = {

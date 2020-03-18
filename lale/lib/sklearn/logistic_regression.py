@@ -17,7 +17,7 @@ import lale.helpers
 import lale.operators
 import sklearn.linear_model
 
-_input_schema_fit = {
+_input_fit_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X', 'y'],
@@ -33,7 +33,7 @@ _input_schema_fit = {
             {'type': 'array', 'items': {'type': 'number'}},
             {'type': 'array', 'items': {'type': 'string'}}]}}}
 
-_input_schema_predict = {
+_input_predict_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X'],
@@ -50,6 +50,17 @@ _output_predict_schema = {
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
         {'type': 'array', 'items': {'type': 'string'}}]}
+
+_input_predict_proba_schema = {
+  '$schema': 'http://json-schema.org/draft-04/schema#',
+  'type': 'object',
+  'required': ['X'],
+  'additionalProperties': False,
+  'properties': {
+    'X': {
+      'description': 'Features; the outer array is over samples.',
+      'type': 'array',
+      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
 _output_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -242,9 +253,10 @@ _combined_schemas = {
     'post': ['probabilities']},
   'properties': {
     'hyperparams': _hyperparams_schema,
-    'input_fit': _input_schema_fit,
-    'input_predict': _input_schema_predict,
+    'input_fit': _input_fit_schema,
+    'input_predict': _input_predict_schema,
     'output_predict': _output_predict_schema,
+    'input_predict_proba': _input_predict_proba_schema,
     'output_predict_proba': _output_predict_proba_schema}}
 
 if __name__ == "__main__":
