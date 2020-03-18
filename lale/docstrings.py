@@ -1,5 +1,3 @@
-import lale.helpers
-import lale.pretty_print
 import pprint
 
 def _indent(prefix, string, first_prefix=None):

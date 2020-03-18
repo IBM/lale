@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lale import helpers
+import lale.helpers
+import lale.type_checking
 from abc import ABC, abstractmethod
 import importlib
 import enum
@@ -406,7 +407,7 @@ class IndividualOp(Operator):
         if schemas:
             self._schemas = schemas
         else:
-            self._schemas = helpers.get_default_schema(impl)
+            self._schemas = lale.type_checking.get_default_schema(impl)
 
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1
@@ -807,20 +808,20 @@ class IndividualOp(Operator):
             value = kwargs[arg]
             if arg == 'schemas':
                 value.schema['$schema'] = 'http://json-schema.org/draft-04/schema#'
-                helpers.validate_is_schema(value.schema)
+                lale.helpers.validate_is_schema(value.schema)
                 op._schemas = value.schema
                 break
             elif arg.startswith('input') or arg.startswith('output'):
             # multiple input types (e.g., fit, predict)
-                helpers.validate_method(op, arg)
-                helpers.validate_is_schema(value.schema)
+                lale.type_checking.validate_method(op, arg)
+                lale.helpers.validate_is_schema(value.schema)
                 op._schemas['properties'][arg] = value.schema
             elif arg == 'constraint':
                 op._schemas['properties']['hyperparams']['allOf'].append(value.schema)
             elif arg == 'relevantToOptimizer':
                 assert isinstance(value, list)
                 op._schemas['properties']['hyperparams']['allOf'][0]['relevantToOptimizer'] = value
-            elif arg in helpers.get_hyperparam_names(op):
+            elif arg in lale.type_checking.get_hyperparam_names(op):
                 op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
             elif arg == 'tags':
                 assert isinstance(value, dict)
@@ -859,7 +860,7 @@ class IndividualOp(Operator):
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
                     sup = schema['properties'][arg_name]
-                    lale.helpers.validate_schema_or_subschema(arg, sup)
+                    lale.type_checking.validate_schema_or_subschema(arg, sup)
                 except Exception as e:
                     raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {e}') from e
         return arg
@@ -873,7 +874,7 @@ class IndividualOp(Operator):
             schema = self.output_schema_transform()
         result = lale.datasets.data_schemas.add_schema(result)
         try:
-            lale.helpers.validate_schema_or_subschema(result, schema)
+            lale.type_checking.validate_schema_or_subschema(result, schema)
         except Exception as e:
             print(f'{self.name()}.{method}() invalid result: {e}')
             raise ValueError(f'{self.name()}.{method}() invalid result: {e}') from e
@@ -889,7 +890,7 @@ class IndividualOp(Operator):
     def is_supervised(self, default_if_missing=True)->bool:
         if hasattr(self._impl, 'fit'):
             schema_fit = self.input_schema_fit()
-            return lale.helpers.is_subschema(schema_fit, _is_supervised_schema)
+            return lale.type_checking.is_subschema(schema_fit, _is_supervised_schema)
         return default_if_missing
 
 _is_supervised_schema = {
@@ -919,7 +920,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             
             if k in hyperparams:
                 raise ValueError('Duplicate argument {}.'.format(k))
-            v = helpers.val_wrapper.unwrap(v)
+            v = lale.helpers.val_wrapper.unwrap(v)
             if isinstance(v, enum.Enum):
                 k2, v2 = self._enum_to_strings(v)
                 if k != k2:
@@ -933,7 +934,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         trainable_to_get_params._hyperparams = hyperparams
         params_all = trainable_to_get_params.get_params_all()
         try:
-            helpers.validate_schema(params_all, self.hyperparam_schema())
+            lale.type_checking.validate_schema(params_all, self.hyperparam_schema())
         except jsonschema.ValidationError as e_orig:
             e = e_orig if e_orig.parent is None else e_orig.parent
             lale.helpers.validate_is_schema(e.schema)
@@ -1176,7 +1177,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def set_params(self, **impl_params):
         #TODO: This mutates the operator, should we mark it deprecated?
         filtered_impl_params = fixup_hyperparams_dict(impl_params)
-        self._impl = helpers.create_individual_op_using_reflection(
+        self._impl = lale.helpers.create_individual_op_using_reflection(
             self.class_name(), self._name, filtered_impl_params)
         self._hyperparams = filtered_impl_params
         return self
@@ -1297,7 +1298,7 @@ all_available_operators: List[PlannedOperator] = []
 
 def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
     if name is None:
-        name = helpers.assignee_name()
+        name = lale.helpers.assignee_name()
     if inspect.isclass(impl):
         if hasattr(impl, 'fit'):
             operatorObj = PlannedIndividualOp(name, impl, schemas)
@@ -1556,7 +1557,7 @@ class BasePipeline(Operator, Generic[OpType]):
     def input_schema_fit(self):
         sources = self.find_source_nodes()
         pipeline_inputs = [source.input_schema_fit() for source in sources]
-        result = lale.helpers.join_schemas(*pipeline_inputs)
+        result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
 
     def is_supervised(self)->bool:
@@ -1996,21 +1997,21 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     batch_out_X = batch_output
                     batch_out_y = None
                 if serialize:
-                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), 
+                    output = lale.helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), 
                                 len(inputs_for_transform.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)                            
                 else:
                     if batch_out_y is None:
-                        output = helpers.append_batch(output, (batch_output, batch_y)) 
+                        output = lale.helpers.append_batch(output, (batch_output, batch_y)) 
                     else:
-                        output = helpers.append_batch(output, batch_output) 
+                        output = lale.helpers.append_batch(output, batch_output) 
             if serialize:
                 output.close()
-                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), batch_size=inputs_for_transform.batch_size)
+                output = lale.helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), batch_size=inputs_for_transform.batch_size)
             else: 
                 if isinstance(output, tuple):
-                    output = helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs_for_transform.batch_size)
+                    output = lale.helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs_for_transform.batch_size)
                 else:
-                    output = helpers.create_data_loader(X = output, y = None, batch_size=inputs_for_transform.batch_size)
+                    output = lale.helpers.create_data_loader(X = output, y = None, batch_size=inputs_for_transform.batch_size)
             outputs[operator] = output
             operator_idx += 1
 
@@ -2164,21 +2165,21 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     batch_out_X = batch_output
                     batch_out_y = None
                 if serialize:
-                    output = helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), 
+                    output = lale.helpers.write_batch_output_to_file(output, os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), 
                         len(inputs.dataset), batch_idx, batch_X, batch_y, batch_out_X, batch_out_y)
                 else:
                     if batch_out_y is not None:
-                        output = helpers.append_batch(output, (batch_output, batch_out_y)) 
+                        output = lale.helpers.append_batch(output, (batch_output, batch_out_y)) 
                     else:
-                        output = helpers.append_batch(output, batch_output)
+                        output = lale.helpers.append_batch(output, batch_output)
             if serialize:
                 output.close()
-                output = helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), batch_size=inputs.batch_size)
+                output = lale.helpers.create_data_loader(os.path.join(serialization_out_dir, 'fit_with_batches'+str(operator_idx)+'.hdf5'), batch_size=inputs.batch_size)
             else: 
                 if isinstance(output, tuple):
-                    output = helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs.batch_size)
+                    output = lale.helpers.create_data_loader(X = output[0], y=output[1], batch_size=inputs.batch_size)
                 else:
-                    output = helpers.create_data_loader(X = output, y = None, batch_size=inputs.batch_size)            
+                    output = lale.helpers.create_data_loader(X = output, y = None, batch_size=inputs.batch_size)            
             outputs[operator] = output
             operator_idx += 1
 
@@ -2233,7 +2234,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         #name is not optional as we assume that only make_choice calls this constructor and
         #it will always pass a name, and in case it is passed as None, we assign name as below:
         if name is None or name == '':
-            name = helpers.assignee_name(level=2)
+            name = lale.helpers.assignee_name(level=2)
         if name is None or name == '':
             name = 'OperatorChoice'
 
@@ -2289,12 +2290,12 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
 
     def transform_schema(self, s_X):
         transformed_schemas = [st.transform_schema(s_X) for st in self.steps()]
-        result = lale.helpers.join_schemas(*transformed_schemas)
+        result = lale.type_checking.join_schemas(*transformed_schemas)
         return result
 
     def input_schema_fit(self):
         pipeline_inputs = [s.input_schema_fit() for s in self.steps()]
-        result = lale.helpers.join_schemas(*pipeline_inputs)
+        result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
 
 class PipelineFactory():
@@ -2390,6 +2391,6 @@ def make_choice(*orig_steps:Union[Operator,Any], name:Optional[str]=None)->Opera
 
 def fixup_hyperparams_dict(d):
     d1 = remove_defaults_dict(d)
-    d2 = {k:helpers.val_wrapper.unwrap(v) for k,v in d1.items()}
+    d2 = {k:lale.helpers.val_wrapper.unwrap(v) for k,v in d1.items()}
     return d2
 

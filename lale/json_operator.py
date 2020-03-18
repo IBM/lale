@@ -16,8 +16,8 @@ import importlib
 import inspect
 import jsonschema
 import keyword
-import lale.helpers
 import lale.operators
+import re
 from typing import Any, Dict, Optional, Tuple, cast
 import logging
 
@@ -162,7 +162,8 @@ SCHEMA = {
   '$ref': '#/definitions/operator'}
 
 if __name__ == "__main__":
-    lale.helpers.validate_is_schema(SCHEMA)
+    import lale.type_checking
+    lale.type_checking.validate_is_schema(SCHEMA)
 
 def json_op_kind(jsn: JSON_TYPE) -> str:
     if jsn['class'] == 'lale.operators.OperatorChoice':
@@ -205,6 +206,10 @@ def _get_cls2label(call_depth: int) -> Dict[str, str]:
                 cls2state[cls] = state
     return cls2label
 
+def _camelCase_to_snake(name):
+    s1 = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', s1).lower()
+
 class _GenSym:
     def __init__(self, op: 'lale.operators.Operator', cls2label: Dict[str, str]):
         label2count: Dict[str, int] = {}
@@ -222,7 +227,7 @@ class _GenSym:
             label2count[label] = label2count.get(label, 0) + 1
         populate_label2count(op)
         non_unique_labels = {l for l, c in label2count.items() if c > 1}
-        snakes = {lale.helpers.camelCase_to_snake(l) for l in non_unique_labels}
+        snakes = {_camelCase_to_snake(l) for l in non_unique_labels}
         self._names = ({'lale', 'make_pipeline', 'make_union', 'make_choice'}
                        | set(keyword.kwlist) | non_unique_labels | snakes)
 
@@ -261,7 +266,7 @@ def _op_to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], ge
     if isinstance(op, lale.operators.IndividualOp):
         jsn['operator'] = op.name()
         jsn['label'] = cls2label.get(op.class_name(), op.name())
-        uid = gensym(lale.helpers.camelCase_to_snake(jsn['label']))
+        uid = gensym(_camelCase_to_snake(jsn['label']))
         documentation_url = op.documentation_url()
         if documentation_url is not None:
             jsn['documentation_url'] = documentation_url
@@ -313,7 +318,7 @@ def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
         m = importlib.import_module(impl.__module__)
         return getattr(m, '_combined_schemas')
     module_name = impl.__module__.split('.')[0]
-    class_name = lale.helpers.camelCase_to_snake(impl.__class__.__name__)
+    class_name = _camelCase_to_snake(impl.__class__.__name__)
     try:
         lib_name = '.'.join(['lale.lib', module_name, class_name])
         m = importlib.import_module(lib_name)

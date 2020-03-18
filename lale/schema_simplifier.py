@@ -20,7 +20,6 @@ from .schema_ranges import SchemaRange
 
 from typing import Any, Dict, Generic, List, Set, Iterable, Iterator, Optional, Tuple, TypeVar, Union
 from .schema_utils import Schema, getMinimum, getMaximum, isForOptimizer, makeAllOf, makeAnyOf, makeOneOf, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema
-from lale.helpers import validate_schema
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
