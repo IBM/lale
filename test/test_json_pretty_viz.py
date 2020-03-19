@@ -232,6 +232,20 @@ lr_1 = LR(C=0.19)
 pipeline = PCA >> (lr_0 | NoOp >> lr_1)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_autoai_libs_1(self):
+        from autoai_libs.transformers.exportable import CatEncoder
+        import numpy as np
+        from lale.lib.sklearn import LogisticRegression as LR
+        cat_encoder = CatEncoder(categories='auto', dtype=np.float64, encoding='ordinal', handle_unknown='error')
+        pipeline = cat_encoder >> LR()
+        expected = \
+"""from autoai_libs.transformers.exportable import CatEncoder
+import numpy as np
+from lale.lib.sklearn import LogisticRegression as LR
+cat_encoder = CatEncoder(categories='auto', dtype=np.float64, encoding='ordinal', handle_unknown='error')
+pipeline = cat_encoder >> LR()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):

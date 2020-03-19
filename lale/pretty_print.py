@@ -15,6 +15,7 @@
 import ast
 import astunparse
 import importlib
+import inspect
 import json
 import keyword
 import pprint
@@ -27,7 +28,30 @@ import lale.operators
 
 JSON_TYPE = Dict[str, Any]
 
-def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None) -> str:
+class _CodeGenState:
+    imports: List[str]
+    assigns: List[str]
+    _names: Set[str]
+
+    def __init__(self, names: Set[str]):
+        self.imports = []
+        self.assigns = []
+        self._names = ({'pipeline', 'get_pipeline_of_applicable_type'}
+                       | {'lale', 'make_pipeline', 'make_union', 'make_choice'}
+                       | set(keyword.kwlist) | names)
+
+    def gensym(self, prefix: str) -> str:
+        if prefix in self._names:
+            suffix = 0
+            while f'{prefix}_{suffix}' in self._names:
+                suffix += 1
+            result = f'{prefix}_{suffix}'
+        else:
+            result = prefix
+        self._names |= {result}
+        return result
+
+def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, gen: _CodeGenState=None) -> str:
     def value_to_string(value):
         if isinstance(value, dict):
             if '$ref' in value and steps is not None:
@@ -42,6 +66,15 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None) ->
         elif isinstance(value, list):
             sl = [value_to_string(v) for v in value]
             return '[' + ', '.join(sl) + ']'
+        elif inspect.isclass(value):
+            modules = {'numpy': 'np', 'pandas': 'pd'}
+            module = modules.get(value.__module__, value.__module__)
+            if gen is not None:
+                if value.__module__ == module:
+                    gen.imports.append(f'import {module}')
+                else:
+                    gen.imports.append(f'import {value.__module__} as {module}')
+            return f'{module}.{value.__name__}'
         else:
             return pprint.pformat(value, width=10000, compact=True)
     strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
@@ -74,29 +107,6 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
     if has_op(mod_name_long, unqualified):
         return mod_name_long
     assert False, (op_label, op_name, class_name)
-
-class _CodeGenState:
-    imports: List[str]
-    assigns: List[str]
-    _names: Set[str]
-
-    def __init__(self, names: Set[str]):
-        self.imports = []
-        self.assigns = []
-        self._names = ({'pipeline', 'get_pipeline_of_applicable_type'}
-                       | {'lale', 'make_pipeline', 'make_union', 'make_choice'}
-                       | set(keyword.kwlist) | names)
-
-    def gensym(self, prefix: str) -> str:
-        if prefix in self._names:
-            suffix = 0
-            while f'{prefix}_{suffix}' in self._names:
-                suffix += 1
-            result = f'{prefix}_{suffix}'
-        else:
-            result = prefix
-        self._names |= {result}
-        return result
 
 def op_kind(op: JSON_TYPE) -> str:
     assert isinstance(op, dict)
@@ -280,7 +290,8 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
             for step_uid, step_val in jsn.get('steps', {}).items()}
         if 'hyperparams' in jsn and jsn['hyperparams'] is not None:
-            hp_string = hyperparams_to_string(jsn['hyperparams'], printed_steps)
+            hp_string = hyperparams_to_string(
+                jsn['hyperparams'], printed_steps, gen)
             op_expr = f'{label}({hp_string})'
         else:
             op_expr = label

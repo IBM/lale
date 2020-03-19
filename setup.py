@@ -65,6 +65,7 @@ setup(
             'torch>=1.0',
             'BlackBoxAuditing'],
         'test':[
+            'autoai-libs',
             'jupyter',
             'mypy',
             'flake8',
