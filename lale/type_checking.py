@@ -240,17 +240,29 @@ def validate_method(op: 'lale.operators.IndividualOp', schema_name: str):
         if method_name:
             assert hasattr(op._impl, method_name)
 
-def _signature_to_schema(sig):
-    sig_schema = {'type': 'object', 'properties': {}}
+def _get_args_schema(fun):
+    sig = inspect.signature(fun)
+    result = {'type': 'object', 'properties': {}}
+    required = []
+    additional_properties = False
     for name, param in sig.parameters.items():
         ignored_kinds = [inspect.Parameter.VAR_POSITIONAL,
                          inspect.Parameter.VAR_KEYWORD]
-        if name != 'self' and param.kind not in ignored_kinds:
-            param_schema = {}
-            if param.default != inspect.Parameter.empty:
-                param_schema['default'] = param.default
-            sig_schema['properties'][name] = param_schema
-    return sig_schema
+        if name != 'self':
+            if param.kind in ignored_kinds:
+                additional_properties = True
+            else:
+                if param.default == inspect.Parameter.empty:
+                    param_schema = {'laleType': 'Any'}
+                    required.append(name)
+                else:
+                    param_schema = {'default': param.default}
+                result['properties'][name] = param_schema
+    if not additional_properties:
+        result['additionalProperties'] = False
+    if len(required) > 0:
+        result['required'] = required
+    return result
 
 def get_default_schema(impl):
     """Creates combined schemas for a bare operator implementation class.
@@ -267,22 +279,22 @@ def get_default_schema(impl):
         all applicable method inputs and outputs.
     """
     if hasattr(impl, '__init__'):
-        sig = inspect.signature(impl.__init__)
-        arg_schemas = _signature_to_schema(sig)
+        hyperparams_schema = _get_args_schema(impl.__init__)
     else:
-        arg_schemas = {'type': 'object', 'properties': {}}
-    arg_schemas['relevantToOptimizer'] = []
-    props = {'hyperparams': {'allOf': [arg_schemas]}}
+        hyperparams_schema = {'type': 'object', 'properties': {}}
+    hyperparams_schema['relevantToOptimizer'] = []
+    method_schemas = {'hyperparams': {'allOf': [hyperparams_schema]}}
     if hasattr(impl, 'fit'):
-        props['input_fit'] = {'laleType': 'Any'}
+        method_schemas['input_fit'] = _get_args_schema(impl.fit)
     for method_name in ['predict', 'predict_proba', 'transform']:
         if hasattr(impl, method_name):
-            props['input_' + method_name] = {'laleType': 'Any'}
-            props['output_' + method_name] = {'laleType': 'Any'}
+            method_args_schema = _get_args_schema(getattr(impl, method_name))
+            method_schemas['input_' + method_name] = method_args_schema
+            method_schemas['output_' + method_name] = {'laleType': 'Any'}
     result = {
         '$schema': 'http://json-schema.org/draft-04/schema#',
         'description':
         'Combined schema for expected data and hyperparameters.',
         'type': 'object',
-        'properties': props}
+        'properties': method_schemas}
     return result
