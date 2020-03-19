@@ -32,6 +32,7 @@ class TestCustomSchema(unittest.TestCase):
         from lale.operators import make_operator
         self.sk_pca = make_operator(sklearn.decomposition.PCA, schemas={})
         self.ll_pca = lale.lib.sklearn.PCA
+        self.maxDiff = None
 
     def test_override_schemas(self):
         init_schemas = self.sk_pca._schemas
@@ -218,6 +219,7 @@ class TestCustomSchema(unittest.TestCase):
         init_expected = {'allOf': [
             {   'type': 'object',
                 'relevantToOptimizer': [],
+                'additionalProperties': False,
                 'properties': {
                     'n_components': {'default': None},
                     'copy': {'default': True},
@@ -293,6 +295,7 @@ class TestWrapUnknownOps(unittest.TestCase):
         'allOf': [{
             'type': 'object',
             'relevantToOptimizer': [],
+            'additionalProperties': False,
             'properties': {
                 'n_neighbors': {'default': 5},
                 'algorithm': {'default': 'auto'}}}]}
