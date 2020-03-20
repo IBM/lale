@@ -249,36 +249,36 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             if gen.combinators and _op_kind(step_val) in ['Par', 'OperatorChoice']:
                 return f'({result})'
             return result
-        printed_steps = [printed_seq_item(step_uid, step_val)
-                         for step_uid, step_val in jsn['steps'].items()]
+        printed_steps = {step_uid: printed_seq_item(step_uid, step_val)
+                         for step_uid, step_val in jsn['steps'].items()}
         if gen.combinators:
-            return ' >> '.join(printed_steps)
+            return ' >> '.join(printed_steps.values())
         gen.imports.append(f'from lale.operators import make_pipeline')
-        return 'make_pipeline({})'.format(', '.join(printed_steps))
+        return 'make_pipeline({})'.format(', '.join(printed_steps.values()))
     elif _op_kind(jsn) == 'Par':
         def printed_par_item(step_uid, step_val):
             result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
             if gen.combinators and _op_kind(step_val) in ['Seq', 'OperatorChoice']:
                 return f'({result})'
             return result
-        printed_steps = [printed_par_item(step_uid, step_val)
-                         for step_uid, step_val in jsn['steps'].items()]
+        printed_steps = {step_uid: printed_par_item(step_uid, step_val)
+                         for step_uid, step_val in jsn['steps'].items()}
         if gen.combinators:
-            return ' & '.join(printed_steps)
+            return ' & '.join(printed_steps.values())
         gen.imports.append(f'from lale.operators import make_union_no_concat')
-        return 'make_union_no_concat({})'.format(', '.join(printed_steps))
+        return 'make_union_no_concat({})'.format(', '.join(printed_steps.values()))
     elif _op_kind(jsn) == 'OperatorChoice':
         def printed_choice_item(step_uid, step_val):
             result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
             if gen.combinators and _op_kind(step_val) in ['Seq', 'Par']:
                 return f'({result})'
             return result
-        printed_steps = [printed_choice_item(step_uid, step_val)
-                         for step_uid, step_val in jsn['steps'].items()]
+        printed_steps = {step_uid: printed_choice_item(step_uid, step_val)
+                         for step_uid, step_val in jsn['steps'].items()}
         if gen.combinators:
-            return ' | '.join(printed_steps)
+            return ' | '.join(printed_steps.values())
         gen.imports.append(f'from lale.operators import make_choice')
-        return 'make_choice({})'.format(', '.join(printed_steps))
+        return 'make_choice({})'.format(', '.join(printed_steps.values()))
     elif _op_kind(jsn) == 'IndividualOp':
         label = jsn['label']
         class_name = jsn['class']
