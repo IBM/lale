@@ -39,9 +39,11 @@ class _CodeGenState:
         self.imports = []
         self.assigns = []
         self.combinators = combinators
-        self._names = ({'pipeline', 'get_pipeline_of_applicable_type'}
-                       | {'lale', 'make_pipeline', 'make_union', 'make_choice'}
-                       | set(keyword.kwlist) | names)
+        self._names = (
+            { 'get_pipeline_of_applicable_type', 'lale', 'make_choice',
+              'make_pipeline', 'make_union', 'make_union_no_concat',
+              'np', 'pd', 'pipeline'}
+            | set(keyword.kwlist) | names)
 
     def gensym(self, prefix: str) -> str:
         if prefix in self._names:
@@ -72,7 +74,8 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
         elif isinstance(value, (int, float)) and math.isnan(value):
             return "float('nan')"
         elif isinstance(value, np.dtype):
-            gen.imports.append('import numpy as np')
+            if gen is not None:
+                gen.imports.append('import numpy as np')
             return f'np.{value.__repr__()}'
         elif inspect.isclass(value):
             modules = {'numpy': 'np', 'pandas': 'pd'}
@@ -332,13 +335,19 @@ def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: boo
     if expr != 'pipeline':
         gen.assigns.append(f'pipeline = {expr}')
     if show_imports and len(gen.imports) > 0:
+        if combinators:
+            gen.imports.append('import lale')
         imports_set: Set[str] = set()
         imports_list: List[str] = []
         for imp in gen.imports:
             if imp not in imports_set:
                 imports_set |= {imp}
                 imports_list.append(imp)
-        result = '\n'.join(imports_list) + '\n\n' + '\n'.join(gen.assigns)
+        result = '\n'.join(imports_list)
+        if combinators:
+            result += '\nlale.wrap_imported_operators()'
+        result += '\n\n'
+        result += '\n'.join(gen.assigns)
     else:
         result = '\n'.join(gen.assigns)
     return result
