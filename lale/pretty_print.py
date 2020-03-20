@@ -19,6 +19,7 @@ import inspect
 import json
 import keyword
 import math
+import numpy as np
 import pprint
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
@@ -70,6 +71,9 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
             return '[' + ', '.join(sl) + ']'
         elif isinstance(value, (int, float)) and math.isnan(value):
             return "float('nan')"
+        elif isinstance(value, np.dtype):
+            gen.imports.append('import numpy as np')
+            return f'np.{value.__repr__()}'
         elif inspect.isclass(value):
             modules = {'numpy': 'np', 'pandas': 'pd'}
             module = modules.get(value.__module__, value.__module__)

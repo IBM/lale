@@ -308,6 +308,23 @@ numpy_replace_missing_values = NumpyReplaceMissingValues(filling_values=float('n
 pipeline = numpy_replace_missing_values >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_autoai_libs_tam(self):
+        from autoai_libs.cognito.transforms.transform_utils import TAM
+        import autoai_libs.cognito.transforms.transform_extras
+        import numpy as np
+        from lale.lib.sklearn import LogisticRegression as LR
+        tam = TAM(tans_class=autoai_libs.cognito.transforms.transform_extras.IsolationForestAnomaly, name='isoforestanomaly', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+        pipeline = tam >> LR()
+        expected = \
+"""from autoai_libs.cognito.transforms.transform_utils import TAM
+import autoai_libs.cognito.transforms.transform_extras
+import numpy as np
+from lale.lib.sklearn import LogisticRegression as LR
+
+tam = TAM(tans_class=autoai_libs.cognito.transforms.transform_extras.IsolationForestAnomaly, name='isoforestanomaly', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+pipeline = tam >> LR()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):
