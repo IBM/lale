@@ -18,6 +18,7 @@ import importlib
 import inspect
 import json
 import keyword
+import math
 import pprint
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
@@ -67,6 +68,8 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
         elif isinstance(value, list):
             sl = [value_to_string(v) for v in value]
             return '[' + ', '.join(sl) + ']'
+        elif isinstance(value, (int, float)) and math.isnan(value):
+            return "float('nan')"
         elif inspect.isclass(value):
             modules = {'numpy': 'np', 'pandas': 'pd'}
             module = modules.get(value.__module__, value.__module__)
@@ -324,17 +327,16 @@ def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: boo
     expr = _operator_jsn_to_string_rec('pipeline', jsn, gen)
     if expr != 'pipeline':
         gen.assigns.append(f'pipeline = {expr}')
-    if show_imports:
+    if show_imports and len(gen.imports) > 0:
         imports_set: Set[str] = set()
         imports_list: List[str] = []
         for imp in gen.imports:
             if imp not in imports_set:
                 imports_set |= {imp}
                 imports_list.append(imp)
-        code = imports_list + gen.assigns
+        result = '\n'.join(imports_list) + '\n\n' + '\n'.join(gen.assigns)
     else:
-        code = gen.assigns
-    result = '\n'.join(code)
+        result = '\n'.join(gen.assigns)
     return result
 
 def schema_to_string(schema: JSON_TYPE) -> str:
