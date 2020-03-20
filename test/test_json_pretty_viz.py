@@ -49,6 +49,8 @@ class TestPrettyPrint(unittest.TestCase):
         from lale.lib.sklearn import LogisticRegression
         pipeline = LogisticRegression(solver='saga', C=0.9)
         expected = """from lale.lib.sklearn import LogisticRegression
+import lale
+lale.wrap_imported_operators()
 
 pipeline = LogisticRegression(solver='saga', C=0.9)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -57,6 +59,8 @@ pipeline = LogisticRegression(solver='saga', C=0.9)"""
         from lale.lib.sklearn import LogisticRegression
         pipeline = LogisticRegression()
         expected = """from lale.lib.sklearn import LogisticRegression
+import lale
+lale.wrap_imported_operators()
 
 pipeline = LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -80,6 +84,8 @@ from lale.lib.sklearn import Nystroem
 from lale.lib.lale import ConcatFeatures
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LogisticRegression
+import lale
+lale.wrap_imported_operators()
 
 pca = PCA(copy=False)
 logistic_regression = LogisticRegression(solver='saga', C=0.9)
@@ -125,6 +131,8 @@ pipeline = make_pipeline(make_pipeline(make_choice(MinMaxScaler, NoOp), make_uni
         from lale.lib.sklearn import LogisticRegression as LR
         pipeline = LR(solver='saga', C=0.9)
         expected = """from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
 
 pipeline = LR(solver='saga', C=0.9)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -148,6 +156,8 @@ from lale.lib.sklearn import Nystroem
 from lale.lib.lale import ConcatFeatures as Concat
 from lale.lib.sklearn import KNeighborsClassifier as KNN
 from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
 
 pca = PCA(copy=False)
 lr = LR(solver='saga', C=0.9)
@@ -161,6 +171,8 @@ pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
         expected = \
 """from lale.lib.sklearn import PCA
 from lale.lib.sklearn import MinMaxScaler as Scl
+import lale
+lale.wrap_imported_operators()
 
 pipeline = PCA | Scl"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -173,6 +185,8 @@ pipeline = PCA | Scl"""
         expected = """from lale.lib.lale import Both
 from lale.lib.sklearn import PCA
 from lale.lib.sklearn import Nystroem
+import lale
+lale.wrap_imported_operators()
 
 pca = PCA(n_components=2)
 pipeline = Both(op1=pca, op2=Nystroem)"""
@@ -189,6 +203,8 @@ pipeline = Both(op1=pca, op2=Nystroem)"""
 from lale.lib.sklearn import KNeighborsClassifier as KNN
 from lale.lib.sklearn import PCA
 from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
 
 pipeline = Vote(estimators=[('knn', KNN), ('pipeline', PCA() >> LR)], voting='soft')"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -209,6 +225,8 @@ from lale.lib.sklearn import Normalizer as Norm
 from lale.lib.sklearn import OneHotEncoder as OneHot
 from lale.lib.lale import ConcatFeatures as Cat
 from lale.lib.sklearn import LinearSVC
+import lale
+lale.wrap_imported_operators()
 
 project_0 = Project(columns={'type': 'number'})
 project_1 = Project(columns={'type': 'string'})
@@ -234,6 +252,8 @@ from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import LogisticRegression
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.operators import get_pipeline_of_applicable_type
+import lale
+lale.wrap_imported_operators()
 
 choice = PCA | Nystroem
 pipeline = get_pipeline_of_applicable_type(steps=[choice, MinMaxScaler, LogisticRegression, KNeighborsClassifier], edges=[(choice,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])"""
@@ -257,6 +277,8 @@ from lale.lib.sklearn import KNeighborsClassifier as KNN
 from lale.lib.lale import ConcatFeatures as HStack
 from lale.lib.sklearn import LogisticRegression as LR
 from lale.operators import get_pipeline_of_applicable_type
+import lale
+lale.wrap_imported_operators()
 
 pipeline_0 = HStack >> LR
 pipeline = get_pipeline_of_applicable_type(steps=[PCA, MMS, KNN, pipeline_0], edges=[(PCA,KNN), (PCA,pipeline_0), (MMS,pipeline_0)])"""
@@ -273,6 +295,8 @@ pipeline = get_pipeline_of_applicable_type(steps=[PCA, MMS, KNN, pipeline_0], ed
 """from lale.lib.sklearn import PCA
 from lale.lib.sklearn import LogisticRegression as LR
 from lale.lib.lale import NoOp
+import lale
+lale.wrap_imported_operators()
 
 lr_0 = LR(C=0.09)
 lr_1 = LR(C=0.19)
@@ -289,6 +313,8 @@ pipeline = PCA >> (lr_0 | NoOp >> lr_1)"""
 """from autoai_libs.transformers.exportable import CatEncoder
 import numpy as np
 from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
 
 cat_encoder = CatEncoder(categories='auto', dtype=np.float64, encoding='ordinal', handle_unknown='error')
 pipeline = cat_encoder >> LR()"""
@@ -303,6 +329,8 @@ pipeline = cat_encoder >> LR()"""
         expected = \
 """from autoai_libs.transformers.exportable import NumpyReplaceMissingValues
 from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
 
 numpy_replace_missing_values = NumpyReplaceMissingValues(filling_values=float('nan'), missing_values=['?'])
 pipeline = numpy_replace_missing_values >> LR()"""
@@ -320,6 +348,8 @@ pipeline = numpy_replace_missing_values >> LR()"""
 import autoai_libs.cognito.transforms.transform_extras
 import numpy as np
 from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
 
 tam = TAM(tans_class=autoai_libs.cognito.transforms.transform_extras.IsolationForestAnomaly, name='isoforestanomaly', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
 pipeline = tam >> LR()"""
