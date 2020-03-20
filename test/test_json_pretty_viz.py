@@ -83,6 +83,40 @@ logistic_regression = LogisticRegression(solver='saga', C=0.9)
 pipeline = (MinMaxScaler | NoOp) >> (pca & Nystroem) >> ConcatFeatures >> (KNeighborsClassifier | logistic_regression)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_no_combinators(self):
+        from lale.lib.sklearn import MinMaxScaler
+        from lale.lib.lale import NoOp
+        from lale.operators import make_choice
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import Nystroem
+        from lale.operators import make_union_no_concat
+        from lale.operators import make_pipeline
+        from lale.lib.lale import ConcatFeatures
+        from lale.lib.sklearn import KNeighborsClassifier
+        from lale.lib.sklearn import LogisticRegression
+        pca = PCA(copy=False)
+        logistic_regression = LogisticRegression(solver='saga', C=0.9)
+        pipeline = make_pipeline(
+            make_choice(MinMaxScaler, NoOp),
+            make_union_no_concat(pca, Nystroem),
+            ConcatFeatures,
+            make_choice(KNeighborsClassifier, logistic_regression))
+        expected = \
+"""from lale.lib.sklearn import MinMaxScaler
+from lale.lib.lale import NoOp
+from lale.operators import make_choice
+from lale.lib.sklearn import PCA
+from lale.lib.sklearn import Nystroem
+from lale.operators import make_union_no_concat
+from lale.operators import make_pipeline
+from lale.lib.lale import ConcatFeatures
+from lale.lib.sklearn import KNeighborsClassifier
+from lale.lib.sklearn import LogisticRegression
+pca = PCA(copy=False)
+logistic_regression = LogisticRegression(solver='saga', C=0.9)
+pipeline = make_pipeline(make_pipeline(make_choice(MinMaxScaler, NoOp), make_union_no_concat(pca, Nystroem)), make_pipeline(ConcatFeatures, make_choice(KNeighborsClassifier, logistic_regression)))"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
+
     def test_import_as_1(self):
         from lale.lib.sklearn import LogisticRegression as LR
         pipeline = LR(solver='saga', C=0.9)

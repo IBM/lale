@@ -33,9 +33,10 @@ class _CodeGenState:
     assigns: List[str]
     _names: Set[str]
 
-    def __init__(self, names: Set[str]):
+    def __init__(self, names: Set[str], combinators: bool):
         self.imports = []
         self.assigns = []
+        self.combinators = combinators
         self._names = ({'pipeline', 'get_pipeline_of_applicable_type'}
                        | {'lale', 'make_pipeline', 'make_union', 'make_choice'}
                        | set(keyword.kwlist) | names)
@@ -108,20 +109,14 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
         return mod_name_long
     assert False, (op_label, op_name, class_name)
 
-def op_kind(op: JSON_TYPE) -> str:
+def _op_kind(op: JSON_TYPE) -> str:
     assert isinstance(op, dict)
     if 'kind' in op:
         return op['kind']
     return lale.json_operator.json_op_kind(op)
 
-def _dict_key_at(d: dict, i: int) -> str:
-    return list(d.keys())[i]
-
-def _dict_val_at(d: dict, i: int) -> Any:
-    return list(d.values())[i]
-
 def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
-    assert op_kind(pipeline) == 'Pipeline'
+    assert _op_kind(pipeline) == 'Pipeline'
     def make_graph(pipeline: JSON_TYPE) -> JSON_TYPE:
         steps = pipeline['steps']
         preds: Dict[str, List[str]] = { step: [] for step in steps }
@@ -153,7 +148,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
                                           s1: graph['steps'][s1]}}
         return None
     def replace_seq(old_graph: JSON_TYPE, seq: JSON_TYPE) -> JSON_TYPE:
-        assert op_kind(old_graph) == 'Graph' and op_kind(seq) == 'Seq'
+        assert _op_kind(old_graph) == 'Graph' and _op_kind(seq) == 'Seq'
         old_steps = old_graph['steps']
         old_preds = old_graph['preds']
         old_succs = old_graph['succs']
@@ -161,17 +156,16 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         new_preds: Dict[str, List[str]] = {}
         new_succs: Dict[str, List[str]] = {}
         seq_uid = gen.gensym('pipeline')
+        seq_keys = list(seq['steps'].keys())
         for step_uid in old_graph['steps']: #careful to keep topological order
-            if step_uid == _dict_key_at(seq['steps'], 0):
+            if step_uid == seq_keys[0]:
                 new_steps[seq_uid] = seq
-                new_preds[seq_uid] = old_preds[_dict_key_at(seq['steps'], 0)]
-                new_succs[seq_uid] = old_succs[_dict_key_at(seq['steps'], 1)]
-            elif step_uid != _dict_key_at(seq['steps'], 1):
+                new_preds[seq_uid] = old_preds[seq_keys[0]]
+                new_succs[seq_uid] = old_succs[seq_keys[-1]]
+            elif step_uid not in seq_keys:
                 new_steps[step_uid] = old_steps[step_uid]
                 def map_step(s):
-                    if s in list(seq['steps'].keys()):
-                        return seq_uid
-                    return s
+                    return seq_uid if s in seq_keys else s
                 new_preds[step_uid] = [
                     map_step(pred) for pred in old_preds[step_uid]]
                 new_succs[step_uid] = [
@@ -179,7 +173,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         return {'kind': 'Graph', 'steps': new_steps,
                 'preds': new_preds, 'succs': new_succs}
     def replace_par(old_graph: JSON_TYPE, par: JSON_TYPE) -> JSON_TYPE:
-        assert op_kind(old_graph) == 'Graph' and op_kind(par) == 'Par'
+        assert _op_kind(old_graph) == 'Graph' and _op_kind(par) == 'Par'
         old_steps = old_graph['steps']
         old_preds = old_graph['preds']
         old_succs = old_graph['succs']
@@ -187,24 +181,25 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         new_preds: Dict[str, List[str]] = {}
         new_succs: Dict[str, List[str]] = {}
         par_uid = gen.gensym('pipeline')
+        par_keys = list(par['steps'].keys())
         for step_uid in old_steps: #careful to keep topological order
-            if step_uid == _dict_key_at(par['steps'], 0):
+            if step_uid == par_keys[0]:
                 new_steps[par_uid] = par
                 new_preds[par_uid] = old_preds[step_uid]
                 new_succs[par_uid] = old_succs[step_uid]
-            elif step_uid != _dict_key_at(par['steps'], 1):
+            elif step_uid not in par_keys:
                 new_steps[step_uid] = old_steps[step_uid]
                 new_preds[step_uid] = []
                 for pred in old_preds[step_uid]:
-                    if pred == _dict_key_at(par['steps'], 0):
+                    if pred == par_keys[0]:
                         new_preds[step_uid].append(par_uid)
-                    elif pred != _dict_key_at(par['steps'], 1):
+                    elif pred not in par_keys:
                         new_preds[step_uid].append(pred)
                 new_succs[step_uid] = []
                 for succ in old_succs[step_uid]:
-                    if succ == _dict_key_at(par['steps'], 0):
+                    if succ == par_keys[0]:
                         new_succs[step_uid].append(par_uid)
-                    elif succ != _dict_key_at(par['steps'], 1):
+                    elif succ not in par_keys:
                         new_succs[step_uid].append(succ)
         return {'kind': 'Graph', 'steps': new_steps,
                 'preds': new_preds, 'succs': new_succs}
@@ -219,7 +214,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
                 graph = replace_par(graph, par)
             progress = seq is not None or par is not None
         if len(graph['steps']) == 1:
-            return _dict_val_at(graph['steps'], 0)
+            return list(graph['steps'].values())[0]
         else:
             return graph
     graph = make_graph(pipeline)
@@ -227,10 +222,10 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
     return result
 
 def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) -> str:
-    if op_kind(jsn) == 'Pipeline':
+    if _op_kind(jsn) == 'Pipeline':
         structured = _introduce_structure(jsn, gen)
         return _operator_jsn_to_string_rec(uid, structured, gen)
-    elif op_kind(jsn) == 'Graph':
+    elif _op_kind(jsn) == 'Graph':
         steps, preds, succs = jsn['steps'], jsn['preds'], jsn['succs']
         step2name: Dict[str, str] = {}
         for step_uid, step_val in steps.items():
@@ -248,32 +243,43 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             ', '.join([f'({step2name[src]},{step2name[tgt]})'
                        for src in steps for tgt in succs[src]]))
         return result
-    elif op_kind(jsn) == 'Seq':
-        def parens(step_uid, step_val):
+    elif _op_kind(jsn) == 'Seq':
+        def printed_seq_item(step_uid, step_val):
             result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            if op_kind(step_val) in ['Par', 'OperatorChoice']:
+            if gen.combinators and _op_kind(step_val) in ['Par', 'OperatorChoice']:
                 return f'({result})'
             return result
-        steps = jsn['steps']
-        return f'{parens(_dict_key_at(steps, 0), _dict_val_at(steps, 0))} >> {parens(_dict_key_at(steps, 1), _dict_val_at(steps, 1))}'
-    elif op_kind(jsn) == 'Par':
-        def parens(step_uid, step_val):
-            result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            if op_kind(step_val) in ['Seq', 'OperatorChoice']:
-                return f'({result})'
-            return result
-        steps = jsn['steps']
-        return f'{parens(_dict_key_at(steps, 0), _dict_val_at(steps, 0))} & {parens(_dict_key_at(steps, 1), _dict_val_at(steps, 1))}'
-    elif op_kind(jsn) == 'OperatorChoice':
-        def parens(step_uid, step_val):
-            result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            if op_kind(step_val) in ['Seq', 'Par']:
-                return f'({result})'
-            return result
-        printed_steps = {step_uid: parens(step_uid, step_val)
+        printed_steps = {step_uid: printed_seq_item(step_uid, step_val)
                          for step_uid, step_val in jsn['steps'].items()}
-        return ' | '.join(printed_steps.values())
-    elif op_kind(jsn) == 'IndividualOp':
+        if gen.combinators:
+            return ' >> '.join(printed_steps.values())
+        gen.imports.append(f'from lale.operators import make_pipeline')
+        return 'make_pipeline({})'.format(', '.join(printed_steps.values()))
+    elif _op_kind(jsn) == 'Par':
+        def printed_par_item(step_uid, step_val):
+            result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
+            if gen.combinators and _op_kind(step_val) in ['Seq', 'OperatorChoice']:
+                return f'({result})'
+            return result
+        printed_steps = {step_uid: printed_par_item(step_uid, step_val)
+                         for step_uid, step_val in jsn['steps'].items()}
+        if gen.combinators:
+            return ' & '.join(printed_steps.values())
+        gen.imports.append(f'from lale.operators import make_union_no_concat')
+        return 'make_union_no_concat({})'.format(', '.join(printed_steps.values()))
+    elif _op_kind(jsn) == 'OperatorChoice':
+        def printed_choice_item(step_uid, step_val):
+            result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
+            if gen.combinators and _op_kind(step_val) in ['Seq', 'Par']:
+                return f'({result})'
+            return result
+        printed_steps = {step_uid: printed_choice_item(step_uid, step_val)
+                         for step_uid, step_val in jsn['steps'].items()}
+        if gen.combinators:
+            return ' | '.join(printed_steps.values())
+        gen.imports.append(f'from lale.operators import make_choice')
+        return 'make_choice({})'.format(', '.join(printed_steps.values()))
+    elif _op_kind(jsn) == 'IndividualOp':
         label = jsn['label']
         class_name = jsn['class']
         module_name = _get_module_name(label, jsn['operator'], class_name)
@@ -313,8 +319,8 @@ def _collect_names(jsn: JSON_TYPE) -> Set[str]:
         result |= {jsn['label']}
     return result
 
-def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool) -> str:
-    gen = _CodeGenState(_collect_names(jsn))
+def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: bool) -> str:
+    gen = _CodeGenState(_collect_names(jsn), combinators)
     expr = _operator_jsn_to_string_rec('pipeline', jsn, gen)
     if expr != 'pipeline':
         gen.assigns.append(f'pipeline = {expr}')
@@ -346,17 +352,17 @@ def schema_to_string(schema: JSON_TYPE) -> str:
     s8 = re.sub(r'{\s+}', r'{}', s7)
     return s8
 
-def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, call_depth:int=1) -> str:
+def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, call_depth:int=1) -> str:
     if lale.helpers.is_schema(arg):
         return schema_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
-        return _operator_jsn_to_string(jsn, show_imports)
+        return _operator_jsn_to_string(jsn, show_imports, combinators)
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
 
-def ipython_display(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True):
+def ipython_display(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True):
     import IPython.display
-    pretty_printed = to_string(arg, show_imports, call_depth=3)
+    pretty_printed = to_string(arg, show_imports, combinators, call_depth=3)
     markdown = IPython.display.Markdown(f'```python\n{pretty_printed}\n```')
     IPython.display.display(markdown)
