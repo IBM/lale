@@ -95,21 +95,14 @@ pipeline = (MinMaxScaler | NoOp) >> (pca & Nystroem) >> ConcatFeatures >> (KNeig
     def test_no_combinators(self):
         from lale.lib.sklearn import MinMaxScaler
         from lale.lib.lale import NoOp
-        from lale.operators import make_choice
         from lale.lib.sklearn import PCA
         from lale.lib.sklearn import Nystroem
-        from lale.operators import make_union_no_concat
-        from lale.operators import make_pipeline
         from lale.lib.lale import ConcatFeatures
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.lib.sklearn import LogisticRegression
         pca = PCA(copy=False)
         logistic_regression = LogisticRegression(solver='saga', C=0.9)
-        pipeline = make_pipeline(
-            make_choice(MinMaxScaler, NoOp),
-            make_union_no_concat(pca, Nystroem),
-            ConcatFeatures,
-            make_choice(KNeighborsClassifier, logistic_regression))
+        pipeline = (MinMaxScaler | NoOp) >> (pca & Nystroem & NoOp) >> ConcatFeatures >> (KNeighborsClassifier | logistic_regression)
         expected = \
 """from lale.lib.sklearn import MinMaxScaler
 from lale.lib.lale import NoOp
@@ -117,15 +110,19 @@ from lale.operators import make_choice
 from lale.lib.sklearn import PCA
 from lale.lib.sklearn import Nystroem
 from lale.operators import make_union_no_concat
-from lale.operators import make_pipeline
 from lale.lib.lale import ConcatFeatures
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LogisticRegression
+from lale.operators import make_pipeline
 
+choice_0 = make_choice(MinMaxScaler, NoOp)
 pca = PCA(copy=False)
+union = make_union_no_concat(pca, Nystroem, NoOp)
 logistic_regression = LogisticRegression(solver='saga', C=0.9)
-pipeline = make_pipeline(make_pipeline(make_choice(MinMaxScaler, NoOp), make_union_no_concat(pca, Nystroem)), make_pipeline(ConcatFeatures, make_choice(KNeighborsClassifier, logistic_regression)))"""
-        self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
+choice_1 = make_choice(KNeighborsClassifier, logistic_regression)
+pipeline = make_pipeline(choice_0, union, ConcatFeatures, choice_1)"""
+        printed = lale.pretty_print.to_string(pipeline, combinators=False)
+        self._roundtrip(expected, printed)
 
     def test_import_as_1(self):
         from lale.lib.sklearn import LogisticRegression as LR
