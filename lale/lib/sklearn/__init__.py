@@ -56,3 +56,4 @@ from .voting_classifier import VotingClassifier
 from .quantile_transformer import QuantileTransformer
 from .bagging_classifier import BaggingClassifier
 from .column_transformer import ColumnTransformer
+from .function_transformer import FunctionTransformer

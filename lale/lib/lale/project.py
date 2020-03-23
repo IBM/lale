@@ -18,6 +18,7 @@ import lale.helpers
 import lale.operators
 import lale.type_checking
 import sklearn.compose
+import pandas as pd
 
 class ProjectImpl:
     def __init__(self, columns=None):
@@ -47,7 +48,13 @@ class ProjectImpl:
         return self
 
     def transform(self, X):
-        result = self._col_tfm.transform(X)
+        columns = self._col_tfm.transformers[0][2]
+        if isinstance(X, pd.DataFrame) and isinstance(columns, list):
+            col_names = [
+                X.columns[c] if isinstance(c, int) else c for c in columns]
+            result = X[col_names]
+        else:
+            result = self._col_tfm.transform(X)
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
         return lale.datasets.data_schemas.add_schema(result, s_result)
