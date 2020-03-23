@@ -156,7 +156,7 @@ def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
         lale.datasets.data_schemas.add_schema(subset_y, schema)
     return subset_X, subset_y
 
-def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5):
+def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5, args_to_scorer=None):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
     each of the splits.
@@ -176,7 +176,8 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
         Integer value is used as number of folds in sklearn.model_selection.StratifiedKFold, default is 5.
         Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
-
+    args_to_scorer: A dictionary of additional keyword arguments to pass to the scorer. 
+                Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
     Returns
     -------
         cv_results: a list of scores corresponding to each cross validation fold
@@ -185,6 +186,8 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)
 
+    if args_to_scorer is None:
+        args_to_scorer={}
     scorer = check_scoring(estimator, scoring=scoring)
     cv_results:List[float] = []
     log_loss_results = []
@@ -198,7 +201,7 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
             trained = estimator_copy.fit(X_train, y_train)
         except BaseException: #as clone can either raise a TypeError or RuntimeError
             trained = estimator.fit(X_train, y_train)
-        score_value  = scorer(trained, X_test, y_test)
+        score_value  = scorer(trained, X_test, y_test, **args_to_scorer)
         execution_time = time.time() - start
         # not all estimators have predict probability
         try:

@@ -469,6 +469,22 @@ class TestHyperopt(unittest.TestCase):
         hyperopt_classifier = Hyperopt(estimator=planned, max_evals=1, scoring='r2')
         best_found = hyperopt_classifier.fit(train_X, train_y)
 
+    def test_custom_scorer(self):
+        from sklearn.metrics import f1_score, make_scorer
+        pipeline = PCA() >> LogisticRegression()
+        def custom_scorer(estimator, X, y, factor=0.1):
+            #This is a custom scorer for demonstrating the use of kwargs
+            #Just applies some factor to the accuracy
+            from sklearn.metrics import accuracy_score
+            predictions = estimator.predict(X)
+            self.assertEqual(factor, 0.5)
+            return factor*accuracy_score(y, predictions)
+        clf = Hyperopt(estimator=pipeline, scoring=custom_scorer, cv = 5, max_evals=1, args_to_scorer={'factor':0.5})
+        trained = clf.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+        predictions_1 = clf.predict(self.X_test)
+        assert np.array_equal(predictions_1, predictions)
+
 class TestAutoConfigureClassification(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
