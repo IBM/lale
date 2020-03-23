@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 class HyperoptImpl:
 
-    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None):
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None, args_to_scorer=None):
         self.max_evals = max_evals
         if estimator is None:
             self.estimator = LogisticRegression()
@@ -56,6 +56,10 @@ class HyperoptImpl:
         self._trials = Trials()
         self.max_opt_time = max_opt_time
         self.max_eval_time = max_eval_time
+        if args_to_scorer is not None:
+            self.args_to_scorer = args_to_scorer
+        else:
+            self.args_to_scorer = {}
 
 
     def fit(self, X_train, y_train):
@@ -66,7 +70,7 @@ class HyperoptImpl:
 
             trainable = create_instance_from_hyperopt_search_space(self.estimator, params)
             try:
-                cv_score, logloss, execution_time = cross_val_score_track_trials(trainable, X_train, y_train, cv=self.cv, scoring=self.scoring)
+                cv_score, logloss, execution_time = cross_val_score_track_trials(trainable, X_train, y_train, cv=self.cv, scoring=self.scoring, args_to_scorer=self.args_to_scorer)
                 logger.debug("Successful trial of hyperopt with hyperparameters:{}".format(params))
             except BaseException as e:
                 #If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
@@ -75,7 +79,7 @@ class HyperoptImpl:
                     start = time.time()
                     trained = trainable.fit(X_train_part, y_train_part)
                     scorer = check_scoring(trainable, scoring=self.scoring)
-                    cv_score  = scorer(trained, X_validation, y_validation)
+                    cv_score  = scorer(trained, X_validation, y_validation, **self.args_to_scorer)
                     execution_time = time.time() - start
                     y_pred_proba = trained.predict_proba(X_validation)
                     try:
@@ -100,7 +104,7 @@ class HyperoptImpl:
                 return_dict['status'] = STATUS_OK
                 return_dict['params'] = params_to_save
             except BaseException as e:
-                logger.warning(f"Exception caught in HyperoptCV:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
+                logger.warning(f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
                 return_dict['status'] = STATUS_FAIL
                 return_dict['error_msg'] = f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}"
             
@@ -171,7 +175,7 @@ class HyperoptImpl:
         try:
             predictions = trained.predict(X_eval)
         except ValueError as e:
-            logger.warning("ValueError in predicting using HyperoptCV:{}, the error is:{}".format(trained, e))
+            logger.warning("ValueError in predicting using Hyperopt:{}, the error is:{}".format(trained, e))
             predictions = None
 
         return predictions
@@ -325,7 +329,15 @@ where zero is the best loss.""",
                 'anyOf': [
                 {   'description': 'lale.search.PGO'},
                 {   'enum': [None]}],
-                'default': None}}}]}
+                'default': None},
+            'args_to_scorer':{
+                'anyOf':[
+                    {'type':'object'},#Python dictionary
+                    {'enum':[None]}],
+                'description':"""A dictionary of additional keyword arguments to pass to the scorer. 
+                Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
+                """,
+                'default':None}}}]}
 
 _input_fit_schema = {
     'type': 'object',
@@ -350,7 +362,7 @@ Examples
 --------
 >>> from sklearn.metrics import make_scorer, f1_score, accuracy_score
 >>> lr = LogisticRegression()
->>> clf = HyperoptCV(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
+>>> clf = Hyperopt(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
 >>> from sklearn import datasets
 >>> diabetes = datasets.load_diabetes()
 >>> X = diabetes.data[:150]
@@ -360,7 +372,7 @@ Examples
 
 Other scoring metrics:
 
->>> clf = HyperoptCV(estimator=lr,
+>>> clf = Hyperopt(estimator=lr,
 ...    scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_cv.html',
@@ -375,7 +387,7 @@ Other scoring metrics:
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
 
-lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
+#lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
 
 Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
 
