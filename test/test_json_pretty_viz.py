@@ -109,18 +109,17 @@ from lale.lib.lale import NoOp
 from lale.operators import make_choice
 from lale.lib.sklearn import PCA
 from lale.lib.sklearn import Nystroem
-from lale.operators import make_union_no_concat
-from lale.lib.lale import ConcatFeatures
+from lale.operators import make_union
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LogisticRegression
 from lale.operators import make_pipeline
 
 choice_0 = make_choice(MinMaxScaler, NoOp)
 pca = PCA(copy=False)
-union = make_union_no_concat(pca, Nystroem, NoOp)
+union = make_union(pca, Nystroem, NoOp)
 logistic_regression = LogisticRegression(solver='saga', C=0.9)
 choice_1 = make_choice(KNeighborsClassifier, logistic_regression)
-pipeline = make_pipeline(choice_0, union, ConcatFeatures, choice_1)"""
+pipeline = make_pipeline(choice_0, union, choice_1)"""
         printed = lale.pretty_print.to_string(pipeline, combinators=False)
         self._roundtrip(expected, printed)
 
