@@ -502,6 +502,7 @@ def create_data_loader(X, y = None, batch_size = 1):
     from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
     from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
     from torch.utils.data import DataLoader, TensorDataset
+    from lale.util.batch_data_dictionary_dataset import BatchDataDict
     import torch
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
@@ -516,10 +517,16 @@ def create_data_loader(X, y = None, batch_size = 1):
         dataset = NumpyTorchDataset(X, y)
     elif isinstance(X, str):#Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)
+    elif isinstance(X, BatchDataDict):
+        dataset = X
+        def my_collate_fn(batch):
+            return batch[0]#because BatchDataDict's get_item returns a batch, so no collate is required.
+        return DataLoader(dataset, batch_size=1, collate_fn=my_collate_fn)
     elif isinstance(X, dict): #Assumed that it is data indexed by batch number
-        #dataset = BatchDataDictDataset(X)
-        return X.values()
+        return [X]
     elif isinstance(X, torch.Tensor) and y is not None:
+        if isinstance(y, np.ndarray):
+            y = torch.from_numpy(y)
         dataset = TensorDataset(X, y)
     elif isinstance(X, torch.Tensor):
         dataset = TensorDataset(X)
