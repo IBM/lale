@@ -1184,7 +1184,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 
     def transform_schema(self, s_X):
         if hasattr(self._impl, 'transform_schema'):
-            return self._impl_instance().transform_schema(s_X)
+            try:
+                return self._impl_instance().transform_schema(s_X)
+            except BaseException as e:
+                raise ValueError(f'unexpected error in {self.name()}.transform_schema({lale.pretty_print.to_string(s_X)}') from e                
         else:
             return super(TrainableIndividualOp, self).transform_schema(s_X)
 
