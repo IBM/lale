@@ -38,6 +38,7 @@ import h5py
 import shutil
 import lale.json_operator
 from sklearn.pipeline import if_delegate_has_method
+import sklearn.base
 
 logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
@@ -1019,11 +1020,11 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
         filtered_fit_params = fixup_hyperparams_dict(fit_params)
+        cloned_impl = sklearn.base.clone(self._impl_instance())
         if filtered_fit_params is None:
-            trained_impl = self._impl_instance().fit(X, y)
+            trained_impl = cloned_impl.fit(X, y)
         else:
-            trained_impl = self._impl_instance().fit(
-                X, y, **filtered_fit_params)
+            trained_impl = cloned_impl.fit(X, y, **filtered_fit_params)
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
         self.__trained = result

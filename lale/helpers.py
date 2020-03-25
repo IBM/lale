@@ -195,10 +195,11 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
         X_train, y_train = split_with_schemas(estimator, X, y, train)
         X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         start = time.time()
-        #Removed the sklearn.base.clone, because:
-        #  (1) It does not correctly clone pipelines, since it calls the
-        #      constructor with edges=None.
-        #  (2) Lale operators are immutable so it should not be needed.
+        #Not calling sklearn.base.clone() here, because:
+        #  (1) For Lale pipelines, clone() calls the pipeline constructor
+        #      with edges=None, so the resulting topology is incorrect.
+        #  (2) For Lale individual operators, the fit() method already
+        #      clones the impl object, so cloning again is redundant.
         trained = estimator.fit(X_train, y_train)
         score_value  = scorer(trained, X_test, y_test, **args_to_scorer)
         execution_time = time.time() - start
@@ -418,7 +419,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
 
     def get_equivalent_lale_op(sklearn_obj, fitted):
         module_name = "lale.lib.sklearn"
-        from sklearn.base import clone
         from lale.operators import make_operator, TrainedIndividualOp
 
         lale_wrapper_found = False
