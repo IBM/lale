@@ -182,7 +182,6 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     -------
         cv_results: a list of scores corresponding to each cross validation fold
     """
-    from sklearn.base import clone
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)
 
@@ -196,11 +195,12 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
         X_train, y_train = split_with_schemas(estimator, X, y, train)
         X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         start = time.time()
-        try:
-            estimator_copy = clone(estimator)
-            trained = estimator_copy.fit(X_train, y_train)
-        except BaseException: #as clone can either raise a TypeError or RuntimeError
-            trained = estimator.fit(X_train, y_train)
+        #Not calling sklearn.base.clone() here, because:
+        #  (1) For Lale pipelines, clone() calls the pipeline constructor
+        #      with edges=None, so the resulting topology is incorrect.
+        #  (2) For Lale individual operators, the fit() method already
+        #      clones the impl object, so cloning again is redundant.
+        trained = estimator.fit(X_train, y_train)
         score_value  = scorer(trained, X_test, y_test, **args_to_scorer)
         execution_time = time.time() - start
         # not all estimators have predict probability
@@ -386,9 +386,9 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         #op_map:Dict[PlannedOpType, TrainableOperator] = {}
         op_map = {}
         for op_index, sub_params in enumerate(hyperparams):
-            #TODO: Should ideally check if the class_name is the same as the class name of the op from self.operators() at op_index
             sub_op = steps[op_index]
             op_instance = create_instance_from_hyperopt_search_space(sub_op, sub_params)
+            assert isinstance(sub_op, OperatorChoice) or sub_op.class_name() == op_instance.class_name(), f'sub_op {sub_op.class_name()}, op_instance {op_instance.class_name()}'
             op_instances.append(op_instance)
             op_map[sub_op] = op_instance
 
@@ -419,7 +419,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
 
     def get_equivalent_lale_op(sklearn_obj, fitted):
         module_name = "lale.lib.sklearn"
-        from sklearn.base import clone
         from lale.operators import make_operator, TrainedIndividualOp
 
         lale_wrapper_found = False
