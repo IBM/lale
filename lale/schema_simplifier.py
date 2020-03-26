@@ -141,6 +141,36 @@ def enumValues(es:set_with_str_for_keys[Any], s:Schema)->set_with_str_for_keys[A
 
 extra_field_names:List[str] = ['default', 'description']
 
+def hasAllOperatorSchemas(schemas:List[Schema]):
+    if not schemas:
+        return False
+    for s in schemas:
+        if 'anyOf' in s:
+            if not hasAnyOperatorSchemas(s['anyOf']):
+                return False
+        elif 'allOf' in s:
+            if not hasAllOperatorSchemas(s['allOf']):
+                return False
+        else:
+            to = s.get('laleType', None)
+            if to != 'operator':
+                return False
+    return True
+
+def hasAnyOperatorSchemas(schemas:List[Schema]):
+    for s in schemas:
+        if 'anyOf' in s:
+            if hasAnyOperatorSchemas(s['anyOf']):
+                return True
+        elif 'allOf' in s:
+            if hasAllOperatorSchemas(s['allOf']):
+                return True
+        else:
+            to = s.get('laleType', None)
+            if to == 'operator':
+                return True
+    return False
+
 
 def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     # First, we partition the schemas into the different types
@@ -457,8 +487,8 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
             arr_min_size = arr.get('minItems', 0)
             min_size = max(min_size, arr_min_size)
 
-            arr_min_size_for_optimizr = arr.get('minItemsForOptimizer', 0)
-            min_size_for_optimizer = max(min_size_for_optimizer, arr_min_size_for_optimizr)
+            arr_min_size_for_optimizer = arr.get('minItemsForOptimizer', 0)
+            min_size_for_optimizer = max(min_size_for_optimizer, arr_min_size_for_optimizer)
 
             arr_max_size = arr.get('maxItems', None)
             if arr_max_size is not None:
@@ -500,15 +530,9 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
             ret_arr['laleType'] = 'tuple'
         if min_size > 0:
             ret_arr['minItems'] = min_size
-        if max_size is not None:
-            ret_arr['maxItems'] = max_size
 
         if min_size_for_optimizer > min_size:
             ret_arr['minItemsForOptimizer'] = min_size_for_optimizer
-
-        if max_size_for_optimizer is not None:
-            if max_size is None or max_size_for_optimizer < max_size:
-                ret_arr['maxItemsForOptimizer'] = max_size_for_optimizer
 
         all_items_schema:Optional[Schema] = None
         if items_schemas:
@@ -518,6 +542,14 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
             # there are no list items schemas
             assert longest_item_list == 0
             if all_items_schema:
+                # deal with False schemas
+                if is_false_schema(all_items_schema):
+                    if min_size > 0 or min_size_for_optimizer > 0:
+                        return impossible()
+                    else:
+                        max_size = 0
+                        max_size_for_optimizer = None
+
                 ret_arr['items'] = all_items_schema
         else:
             ret_item_list_list:List[List[Schema]] = [[] for _ in range(longest_item_list)]
@@ -546,8 +578,33 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 if all_items_schema is not None:
                     ret_arr['additionalItems'] = all_items_schema
 
-            ret_item_list:List[Schema] = [simplifyAll(x, floatAny=floatAny) for x in ret_item_list_list]
+            ret_item_list:List[Schema] = [simplifyAll(x, floatAny=True) for x in ret_item_list_list]
+            first_false:Optional[int]=None
+            for i, s in enumerate(ret_item_list):
+                if is_false_schema(s):
+                    first_false = i
+                    break
+            if first_false is not None:
+                if min_size > first_false or min_size_for_optimizer > first_false:
+                    return impossible()
+                else:
+                    if max_size is None:
+                        max_size = first_false
+                    else:
+                        max_size = min(max_size, first_false)
+                    if max_size_for_optimizer is not None:
+                        if max_size_for_optimizer >= max_size:
+                            max_size_for_optimizer = None
+                ret_item_list = ret_item_list[0:first_false]
+
             ret_arr['items'] = ret_item_list
+
+        if max_size is not None:
+            ret_arr['maxItems'] = max_size
+        if max_size_for_optimizer is not None:
+            if max_size is None or max_size_for_optimizer < max_size:
+                ret_arr['maxItemsForOptimizer'] = max_size_for_optimizer
+
         s_typed = [ret_arr]
 
     # TODO: more!
@@ -560,6 +617,18 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     if s_enum:
         # we should simplify these as for s_not_enum
         ret_main['enum']=list(s_enum)
+        # now, we do some extra work to keep 'laleType':'operator' annotations
+        if s_type_for_optimizer is None:
+            from lale.operators import Operator
+            if all(isinstance(x,Operator) for x in s_enum):
+                # All the enumeration values are operators
+                # This means it is probably an operator schema
+                # which might have been missed if
+                # this is being allOf'ed with an anyOfList
+                if s_any and all(hasAnyOperatorSchemas(s) for s in s_any):
+                    ret_main["laleType"] = 'operator'
+                else:
+                    logger.warning(f"[lale schema simplifier]: The enumeration {list(s_enum)} is all lale operators, but the schema fragment {s} it is part of does not stipulate that it should be 'laleType':'operator'.  While legal, this likely indicate an omission in the schema.")
         return ret_main
 
     if ret_main:
