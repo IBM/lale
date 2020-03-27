@@ -332,6 +332,16 @@ def instantiate_from_hyperopt_search_space(obj_hyperparams, new_hyperparams):
                 return tuple(res)
             else:
                 return res
+        # workaround for what seems to be a hyperopt bug
+        # where hyperopt returns a tuple even though the
+        # hyperopt search space specifies a list
+        is_obj_tuple = isinstance(obj_hyperparams, tuple)
+        is_new_tuple = isinstance(new_hyperparams, tuple)
+        if is_obj_tuple != is_new_tuple:
+            if is_obj_tuple:
+                return tuple(new_hyperparams)
+            else:
+                return list(new_hyperparams)
         return None
 
     elif isinstance(new_hyperparams, dict):
