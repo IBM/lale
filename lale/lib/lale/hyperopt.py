@@ -386,7 +386,7 @@ Other scoring metrics:
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
 
-#lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
+lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
 
 Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
 
