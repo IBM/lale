@@ -15,9 +15,9 @@
 import sklearn.feature_selection
 import lale.helpers
 import lale.operators
+import pandas as pd
 
 class SelectKBestImpl():
-
     def __init__(self, score_func=None, k=10):
         if score_func:
             self._hyperparams = {
@@ -34,7 +34,14 @@ class SelectKBestImpl():
         return self
 
     def transform(self, X):
-        return self._sklearn_model.transform(X)
+        if isinstance(X, pd.DataFrame):
+            keep_indices = self._sklearn_model.get_support(indices=True)
+            keep_columns = [X.columns[i] for i in keep_indices]
+            result = X[keep_columns]
+        else:
+            result = self._sklearn_model.transform(X)
+        return result
+
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Select features according to the k highest scores.',
@@ -51,7 +58,7 @@ _hyperparams_schema = {
                 'description': 'Function taking two arrays X and y, and returning a pair of arrays (scores, pvalues) or a single array with scores.'},
             'k': {
                 'anyOf': [{
-                    'type': 'number',
+                    'type': 'integer',
                     'minimumForOptimizer': 2,
                     'maximumForOptimizer': 15}, {
                     'enum': ['all']}],

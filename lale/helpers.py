@@ -156,7 +156,7 @@ def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
         lale.datasets.data_schemas.add_schema(subset_y, schema)
     return subset_X, subset_y
 
-def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5):
+def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5, args_to_scorer=None):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
     each of the splits.
@@ -176,15 +176,17 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
     cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
         Integer value is used as number of folds in sklearn.model_selection.StratifiedKFold, default is 5.
         Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
-
+    args_to_scorer: A dictionary of additional keyword arguments to pass to the scorer. 
+                Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
     Returns
     -------
         cv_results: a list of scores corresponding to each cross validation fold
     """
-    from sklearn.base import clone
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)
 
+    if args_to_scorer is None:
+        args_to_scorer={}
     scorer = check_scoring(estimator, scoring=scoring)
     cv_results:List[float] = []
     log_loss_results = []
@@ -193,12 +195,13 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
         X_train, y_train = split_with_schemas(estimator, X, y, train)
         X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         start = time.time()
-        try:
-            estimator_copy = clone(estimator)
-            trained = estimator_copy.fit(X_train, y_train)
-        except BaseException: #as clone can either raise a TypeError or RuntimeError
-            trained = estimator.fit(X_train, y_train)
-        score_value  = scorer(trained, X_test, y_test)
+        #Not calling sklearn.base.clone() here, because:
+        #  (1) For Lale pipelines, clone() calls the pipeline constructor
+        #      with edges=None, so the resulting topology is incorrect.
+        #  (2) For Lale individual operators, the fit() method already
+        #      clones the impl object, so cloning again is redundant.
+        trained = estimator.fit(X_train, y_train)
+        score_value  = scorer(trained, X_test, y_test, **args_to_scorer)
         execution_time = time.time() - start
         # not all estimators have predict probability
         try:
@@ -329,6 +332,16 @@ def instantiate_from_hyperopt_search_space(obj_hyperparams, new_hyperparams):
                 return tuple(res)
             else:
                 return res
+        # workaround for what seems to be a hyperopt bug
+        # where hyperopt returns a tuple even though the
+        # hyperopt search space specifies a list
+        is_obj_tuple = isinstance(obj_hyperparams, tuple)
+        is_new_tuple = isinstance(new_hyperparams, tuple)
+        if is_obj_tuple != is_new_tuple:
+            if is_obj_tuple:
+                return tuple(new_hyperparams)
+            else:
+                return list(new_hyperparams)
         return None
 
     elif isinstance(new_hyperparams, dict):
@@ -383,9 +396,9 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         #op_map:Dict[PlannedOpType, TrainableOperator] = {}
         op_map = {}
         for op_index, sub_params in enumerate(hyperparams):
-            #TODO: Should ideally check if the class_name is the same as the class name of the op from self.operators() at op_index
             sub_op = steps[op_index]
             op_instance = create_instance_from_hyperopt_search_space(sub_op, sub_params)
+            assert isinstance(sub_op, OperatorChoice) or sub_op.class_name() == op_instance.class_name(), f'sub_op {sub_op.class_name()}, op_instance {op_instance.class_name()}'
             op_instances.append(op_instance)
             op_map[sub_op] = op_instance
 
@@ -416,7 +429,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
 
     def get_equivalent_lale_op(sklearn_obj, fitted):
         module_name = "lale.lib.sklearn"
-        from sklearn.base import clone
         from lale.operators import make_operator, TrainedIndividualOp
 
         lale_wrapper_found = False
@@ -499,6 +511,7 @@ def create_data_loader(X, y = None, batch_size = 1):
     from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
     from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
     from torch.utils.data import DataLoader, TensorDataset
+    from lale.util.batch_data_dictionary_dataset import BatchDataDict
     import torch
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
@@ -513,10 +526,16 @@ def create_data_loader(X, y = None, batch_size = 1):
         dataset = NumpyTorchDataset(X, y)
     elif isinstance(X, str):#Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)
+    elif isinstance(X, BatchDataDict):
+        dataset = X
+        def my_collate_fn(batch):
+            return batch[0]#because BatchDataDict's get_item returns a batch, so no collate is required.
+        return DataLoader(dataset, batch_size=1, collate_fn=my_collate_fn)
     elif isinstance(X, dict): #Assumed that it is data indexed by batch number
-        #dataset = BatchDataDictDataset(X)
-        return X.values()
+        return [X]
     elif isinstance(X, torch.Tensor) and y is not None:
+        if isinstance(y, np.ndarray):
+            y = torch.from_numpy(y)
         dataset = TensorDataset(X, y)
     elif isinstance(X, torch.Tensor):
         dataset = TensorDataset(X)

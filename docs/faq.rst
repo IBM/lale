@@ -12,7 +12,9 @@ Frequently Asked Questions
 
   - Besides classification, we mostly use Lale for regression. That
     said, you can define your own scoring metrics for evaluation, and
-    pass them to automation tools to guide their search.
+    pass them to automation tools to guide their search. The following
+    notebook includes an example ``fairness_scorer``:    
+    https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
 
 - I get an error when I instantiate an operator imported from
   Lale. What's wrong?
@@ -28,13 +30,26 @@ Frequently Asked Questions
   it?
 
   - Some of the features of Lale can be used if the algorithm
-    implementation follows a scikit-learn API of fit/predict or
+    implementation follows the scikit-learn conventions of fit/predict or
     fit/transform. You can cast the operator into a Lale operator
     using ``lale_op = lale.operators.make_operator(non_lale_op)``.  If
     you want to get full Lale support for your own operator, we have a
     separate guide for how to do that:
     https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb
 
+- Can I use Lale for deep learning?
+
+  - There are multiple facets to this question. The Lale library
+    already includes a few DL operators such as a BERT transformer,
+    a ResNet classifier, and an MLP classifier. Lale can perform
+    joint algorithm selection and hyperparameter optimization over
+    pipelines involving these operators. Furthermore, users can wrap
+    additional DL operators as described. On the other hand, Lale does
+    not currently support full-fledged neural architecture
+    search (NAS). It can only perform architecture search when that
+    is exposed through hyperparameters, such as ``hidden_layer_sizes``
+    for MLP.
+    
 - How does the search space generation work?
 
   - Lale includes a search space generator that takes in a planned

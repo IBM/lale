@@ -125,6 +125,16 @@ def _op_kind(op: JSON_TYPE) -> str:
         return op['kind']
     return lale.json_operator.json_op_kind(op)
 
+_OP_KIND_TO_COMBINATOR = {
+    'Seq': '>>',
+    'Par': '&',
+    'OperatorChoice': '|'}
+_OP_KIND_TO_FUNCTION = {
+    'Seq': 'make_pipeline',
+    'Par': 'make_union_no_concat',
+    'OperatorChoice': 'make_choice',
+    'Union': 'make_union'}
+
 def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
     assert _op_kind(pipeline) == 'Pipeline'
     def make_graph(pipeline: JSON_TYPE) -> JSON_TYPE:
@@ -135,16 +145,27 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
             preds[dst].append(src)
             succs[src].append(dst)
         return {'kind':'Graph', 'steps':steps, 'preds':preds, 'succs':succs}
-    def find_seq(graph: JSON_TYPE) -> Optional[JSON_TYPE]:
+    def find_seq(graph: JSON_TYPE) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
         for src in graph['steps']:
             if len(graph['succs'][src]) == 1:
                 dst = graph['succs'][src][0]
                 if len(graph['preds'][dst]) == 1:
-                    return {'kind': 'Seq',
-                            'steps': {src: graph['steps'][src],
-                                      dst: graph['steps'][dst]}}
+                    old = {uid: graph['steps'][uid] for uid in [src, dst]}
+                    new_uid = None
+                    new_steps: Dict[str, JSON_TYPE] = {}
+                    for step_uid, step_jsn in old.items():
+                        if _op_kind(step_jsn) == 'Seq': #flatten
+                            new_steps.update(step_jsn['steps'])
+                            if new_uid is None:
+                                new_uid = step_uid
+                        else:
+                            new_steps[step_uid] = step_jsn
+                    if new_uid is None:
+                        new_uid = gen.gensym('pipeline')
+                    new = {new_uid: {'kind': 'Seq', 'steps': new_steps}}
+                    return old, new
         return None
-    def find_par(graph: JSON_TYPE) -> Optional[JSON_TYPE]:
+    def find_par(graph: JSON_TYPE) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
         step_uids = list(graph['steps'].keys())
         for i0 in range(len(step_uids)):
             for i1 in range(i0 + 1, len(step_uids)):
@@ -153,82 +174,99 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
                 if len(preds0) == len(preds1) and set(preds0) == set(preds1):
                     succs0, succs1 = graph['succs'][s0], graph['succs'][s1]
                     if len(succs0)==len(succs1) and set(succs0)==set(succs1):
-                        return {'kind': 'Par',
-                                'steps': {s0: graph['steps'][s0],
-                                          s1: graph['steps'][s1]}}
+                        old = {uid: graph['steps'][uid] for uid in [s0, s1]}
+                        new_uid = None
+                        new_steps: Dict[str, JSON_TYPE] = {}
+                        for step_uid, step_jsn in old.items():
+                            if _op_kind(step_jsn) == 'Par': #flatten
+                                new_steps.update(step_jsn['steps'])
+                                if new_uid is None:
+                                    new_uid = step_uid
+                            else:
+                                new_steps[step_uid] = step_jsn
+                        if new_uid is None:
+                            new_uid = gen.gensym('union')
+                        new = {new_uid: {'kind': 'Par', 'steps': new_steps}}
+                        return old, new
         return None
-    def replace_seq(old_graph: JSON_TYPE, seq: JSON_TYPE) -> JSON_TYPE:
-        assert _op_kind(old_graph) == 'Graph' and _op_kind(seq) == 'Seq'
-        old_steps = old_graph['steps']
-        old_preds = old_graph['preds']
-        old_succs = old_graph['succs']
-        new_steps: Dict[str, JSON_TYPE] = {}
-        new_preds: Dict[str, List[str]] = {}
-        new_succs: Dict[str, List[str]] = {}
-        seq_uid = gen.gensym('pipeline')
-        seq_keys = list(seq['steps'].keys())
-        for step_uid in old_graph['steps']: #careful to keep topological order
-            if step_uid == seq_keys[0]:
-                new_steps[seq_uid] = seq
-                new_preds[seq_uid] = old_preds[seq_keys[0]]
-                new_succs[seq_uid] = old_succs[seq_keys[-1]]
-            elif step_uid not in seq_keys:
-                new_steps[step_uid] = old_steps[step_uid]
-                def map_step(s):
-                    return seq_uid if s in seq_keys else s
-                new_preds[step_uid] = [
-                    map_step(pred) for pred in old_preds[step_uid]]
-                new_succs[step_uid] = [
-                    map_step(succ) for succ in old_succs[step_uid]]
-        return {'kind': 'Graph', 'steps': new_steps,
-                'preds': new_preds, 'succs': new_succs}
-    def replace_par(old_graph: JSON_TYPE, par: JSON_TYPE) -> JSON_TYPE:
-        assert _op_kind(old_graph) == 'Graph' and _op_kind(par) == 'Par'
-        old_steps = old_graph['steps']
-        old_preds = old_graph['preds']
-        old_succs = old_graph['succs']
-        new_steps: Dict[str, JSON_TYPE] = {}
-        new_preds: Dict[str, List[str]] = {}
-        new_succs: Dict[str, List[str]] = {}
-        par_uid = gen.gensym('pipeline')
-        par_keys = list(par['steps'].keys())
-        for step_uid in old_steps: #careful to keep topological order
-            if step_uid == par_keys[0]:
-                new_steps[par_uid] = par
-                new_preds[par_uid] = old_preds[step_uid]
-                new_succs[par_uid] = old_succs[step_uid]
-            elif step_uid not in par_keys:
-                new_steps[step_uid] = old_steps[step_uid]
-                new_preds[step_uid] = []
-                for pred in old_preds[step_uid]:
-                    if pred == par_keys[0]:
-                        new_preds[step_uid].append(par_uid)
-                    elif pred not in par_keys:
-                        new_preds[step_uid].append(pred)
-                new_succs[step_uid] = []
-                for succ in old_succs[step_uid]:
-                    if succ == par_keys[0]:
-                        new_succs[step_uid].append(par_uid)
-                    elif succ not in par_keys:
-                        new_succs[step_uid].append(succ)
-        return {'kind': 'Graph', 'steps': new_steps,
-                'preds': new_preds, 'succs': new_succs}
-    def replace_reducibles(graph: JSON_TYPE) -> JSON_TYPE:
+    def find_union(graph: JSON_TYPE) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
+        cat_cls = 'lale.lib.lale.concat_features.ConcatFeaturesImpl'
+        for seq_uid, seq_jsn in graph['steps'].items():
+            if _op_kind(seq_jsn) == 'Seq':
+                seq_uids = list(seq_jsn['steps'].keys())
+                for i in range(len(seq_uids) - 1):
+                    src, dst = seq_uids[i], seq_uids[i+1]
+                    src_jsn = seq_jsn['steps'][src]
+                    if _op_kind(src_jsn) == 'Par':
+                        dst_jsn = seq_jsn['steps'][dst]
+                        if dst_jsn.get('class', None) == cat_cls:
+                            old = {seq_uid: seq_jsn}
+                            union = {'kind': 'Union', 'steps': src_jsn['steps']}
+                            if len(seq_uids) == 2:
+                                new = {src: union}
+                            else:
+                                new_steps: Dict[str, JSON_TYPE] = {}
+                                for uid, jsn in seq_jsn['steps'].items():
+                                    if uid == src:
+                                        new_steps[uid] = union
+                                    elif uid != dst:
+                                        new_steps[uid] = jsn
+                                new = {src: {'kind': 'Seq', 'steps': new_steps}}
+                            return old, new
+        return None
+    def replace(subject: JSON_TYPE, old: Dict[str, JSON_TYPE], new: Dict[str, JSON_TYPE]) -> JSON_TYPE:
+        assert _op_kind(subject) == 'Graph'
+        new_uid, new_jsn = list(new.items())[0]
+        assert _op_kind(new_jsn) in ['Seq', 'Par', 'Union']
+        subj_steps = subject['steps']
+        subj_preds = subject['preds']
+        subj_succs = subject['succs']
+        res_steps: Dict[str, JSON_TYPE] = {}
+        res_preds: Dict[str, List[str]] = {}
+        res_succs: Dict[str, List[str]] = {}
+        old_steps_uids = list(old.keys())
+        for step_uid in subj_steps: #careful to keep topological order
+            if step_uid == old_steps_uids[0]:
+                res_steps[new_uid] = new_jsn
+                res_preds[new_uid] = subj_preds[old_steps_uids[0]]
+                res_succs[new_uid] = subj_succs[old_steps_uids[-1]]
+            elif step_uid not in old_steps_uids:
+                res_steps[step_uid] = subj_steps[step_uid]
+                res_preds[step_uid] = []
+                for pred in subj_preds[step_uid]:
+                    if pred == old_steps_uids[-1]:
+                        res_preds[step_uid].append(new_uid)
+                    elif pred not in old_steps_uids:
+                        res_preds[step_uid].append(pred)
+                res_succs[step_uid] = []
+                for succ in subj_succs[step_uid]:
+                    if succ == old_steps_uids[0]:
+                        res_succs[step_uid].append(new_uid)
+                    elif succ not in old_steps_uids:
+                        res_succs[step_uid].append(succ)
+        result = {'kind': 'Graph', 'steps': res_steps,
+                  'preds': res_preds, 'succs': res_succs}
+        return result
+    def find_and_replace(graph: JSON_TYPE) -> JSON_TYPE:
         progress = True
         while progress:
             seq = find_seq(graph)
             if seq is not None:
-                graph = replace_seq(graph, seq)
+                graph = replace(graph, *seq)
             par = find_par(graph)
             if par is not None:
-                graph = replace_par(graph, par)
+                graph = replace(graph, *par)
+            if not gen.combinators:
+                union = find_union(graph)
+                if union is not None:
+                    graph = replace(graph, *union)                
             progress = seq is not None or par is not None
-        if len(graph['steps']) == 1:
+        if len(graph['steps']) == 1: #flatten
             return list(graph['steps'].values())[0]
         else:
             return graph
     graph = make_graph(pipeline)
-    result = replace_reducibles(graph)
+    result = find_and_replace(graph)
     return result
 
 def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) -> str:
@@ -253,42 +291,27 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             ', '.join([f'({step2name[src]},{step2name[tgt]})'
                        for src in steps for tgt in succs[src]]))
         return result
-    elif _op_kind(jsn) == 'Seq':
-        def printed_seq_item(step_uid, step_val):
-            result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            if gen.combinators and _op_kind(step_val) in ['Par', 'OperatorChoice']:
-                return f'({result})'
-            return result
-        printed_steps = {step_uid: printed_seq_item(step_uid, step_val)
-                         for step_uid, step_val in jsn['steps'].items()}
+    elif _op_kind(jsn) in ['Seq', 'Par', 'OperatorChoice', 'Union']:
         if gen.combinators:
-            return ' >> '.join(printed_steps.values())
-        gen.imports.append(f'from lale.operators import make_pipeline')
-        return 'make_pipeline({})'.format(', '.join(printed_steps.values()))
-    elif _op_kind(jsn) == 'Par':
-        def printed_par_item(step_uid, step_val):
-            result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            if gen.combinators and _op_kind(step_val) in ['Seq', 'OperatorChoice']:
-                return f'({result})'
-            return result
-        printed_steps = {step_uid: printed_par_item(step_uid, step_val)
-                         for step_uid, step_val in jsn['steps'].items()}
-        if gen.combinators:
-            return ' & '.join(printed_steps.values())
-        gen.imports.append(f'from lale.operators import make_union_no_concat')
-        return 'make_union_no_concat({})'.format(', '.join(printed_steps.values()))
-    elif _op_kind(jsn) == 'OperatorChoice':
-        def printed_choice_item(step_uid, step_val):
-            result = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            if gen.combinators and _op_kind(step_val) in ['Seq', 'Par']:
-                return f'({result})'
-            return result
-        printed_steps = {step_uid: printed_choice_item(step_uid, step_val)
-                         for step_uid, step_val in jsn['steps'].items()}
-        if gen.combinators:
-            return ' | '.join(printed_steps.values())
-        gen.imports.append(f'from lale.operators import make_choice')
-        return 'make_choice({})'.format(', '.join(printed_steps.values()))
+            def print_for_comb(step_uid, step_val):
+                printed = _operator_jsn_to_string_rec(step_uid, step_val, gen)
+                parens = (_op_kind(step_val) != _op_kind(jsn) and
+                          _op_kind(step_val) in ['Seq','Par','OperatorChoice'])
+                return f'({printed})' if parens else printed
+            printed_steps = {step_uid: print_for_comb(step_uid, step_val)
+                             for step_uid, step_val in jsn['steps'].items()}
+            combinator = _OP_KIND_TO_COMBINATOR[_op_kind(jsn)]
+            return f' {combinator} '.join(printed_steps.values())
+        else:
+            printed_steps = {
+                step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
+                for step_uid, step_val in jsn['steps'].items()}
+            function = _OP_KIND_TO_FUNCTION[_op_kind(jsn)]
+            gen.imports.append(f'from lale.operators import {function}')
+            op_expr = '{}({})'.format(function,
+                                      ', '.join(printed_steps.values()))
+            gen.assigns.append(f'{uid} = {op_expr}')
+            return uid
     elif _op_kind(jsn) == 'IndividualOp':
         label = jsn['label']
         class_name = jsn['class']
