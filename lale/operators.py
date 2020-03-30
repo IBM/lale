@@ -37,6 +37,7 @@ import logging
 import h5py
 import shutil
 import lale.json_operator
+from lale.json_operator import JSON_TYPE
 from sklearn.pipeline import if_delegate_has_method
 import sklearn.base
 
@@ -135,7 +136,8 @@ class Operator(metaclass=AbstractVisitorMeta):
         pass
 
     @abstractmethod
-    def input_schema_fit(self):
+    def input_schema_fit(self) -> JSON_TYPE:
+        """Input schema for the fit method."""
         pass
 
     def to_json(self):
@@ -328,37 +330,67 @@ class TrainableOperator(PlannedOperator):
         pass
 
 class TrainedOperator(TrainableOperator):
-
     @abstractmethod
-    def predict(self, X):
-        """Abstract predict method to be overriden by trained operators as applicable.
+    def transform(self, X, y = None):
+        """Transform the data.
         
         Parameters
         ----------
         X : 
-            The type of X is as per input_predict schema of the operator.
+            Features; see input_transform schema of the operator.
+
+        Returns
+        -------
+        result :
+            Transformed features; see output_transform schema of the operator.
         """
         pass
 
     @abstractmethod
-    def transform(self, X, y = None):
-        """Abstract transform method to be overriden by trained operators as applicable.
+    def predict(self, X):
+        """Make predictions.
         
         Parameters
         ----------
         X : 
-            The type of X is as per input_predict schema of the operator.
+            Features; see input_predict schema of the operator.
+
+        Returns
+        -------
+        result :
+            Predictions; see output_predict schema of the operator.
         """
         pass
 
     @abstractmethod
     def predict_proba(self, X):
-        """Abstract predict method to be overriden by trained operators as applicable.
+        """Probability estimates for all classes.
 
         Parameters
         ----------
         X :
-            The type of X is as per input_predict schema of the operator.
+            Features; see input_predict_proba schema of the operator.
+
+        Returns
+        -------
+        result :
+            Probabilities; see output_predict_proba schema of the operator.
+        """
+        pass
+
+    @abstractmethod
+    def decision_function(self, X):
+        """Confidence scores for all classes.
+
+        Parameters
+        ----------
+        X :
+            Features; see input_decision_function schema of the operator.
+
+        Returns
+        -------
+        result :
+            Confidences; see output_decision_function schema of the operator.
         """
         pass
 
@@ -462,7 +494,7 @@ class IndividualOp(Operator):
         
         Parameters
         ----------
-        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_predict' or 'input_predict_proba' or 'input_transform' 'output_predict' or 'output_predict_proba' or 'output_transform'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
                 Type of the schema to be returned.    
                     
         Returns
@@ -507,84 +539,43 @@ class IndividualOp(Operator):
         tags = [t for l in self.get_tags().values() for t in l]
         return tag in tags
 
-    def input_schema_fit(self):
-        """Returns the schema for fit method's input.
-        
-        Returns
-        -------
-        dict
-            Logical schema describing input required by this 
-            operator's fit method.
-        """
+    def input_schema_fit(self) -> JSON_TYPE:
+        """Input schema for the fit method."""
         return self.get_schema('input_fit')
 
-    def input_schema_predict(self):
-        """Returns the schema for predict method's input.
-        
-        Returns
-        -------
-        dict
-            Logical schema describing input required by this 
-            operator's predict method.
-        """
-        return self.get_schema('input_predict')
-
-    def input_schema_predict_proba(self):
-        """Returns the schema for predict proba method's input.
-
-        Returns
-        -------
-        dict
-            Logical schema describing input required by this
-            operator's predict proba method.
-        """
-        return self.get_schema('input_predict_proba')
-
-    def input_schema_transform(self):
-        """Returns the schema for transform method's input.
-        
-        Returns
-        -------
-        dict
-            Logical schema describing input required by this 
-            operator's transform method.
-        """
+    def input_schema_transform(self) -> JSON_TYPE:
+        """Input schema for the transform method."""
         return self.get_schema('input_transform')
 
-    def output_schema_predict(self):
-        """Returns the schema for predict method's output.
+    def input_schema_predict(self) -> JSON_TYPE:
+        """Input schema for the predict method."""
+        return self.get_schema('input_predict')
 
-        Returns
-        -------
-        dict
-            Logical schema describing output of this
-            operator's predict proba method.
-        """
-        return self.get_schema('output_predict')
+    def input_schema_predict_proba(self) -> JSON_TYPE:
+        """Input schema for the predict_proba method."""
+        return self.get_schema('input_predict_proba')
 
-    def output_schema_predict_proba(self):
-        """Returns the schema for predict_proba method's output.
+    def input_schema_decision_function(self) -> JSON_TYPE:
+        """Input schema for the decision_function method."""
+        return self.get_schema('input_decision_function')
 
-        Returns
-        -------
-        dict
-            Logical schema describing output of this
-            operator's predict_proba method.
-        """
-        return self.get_schema('output_predict_proba')
-
-    def output_schema_transform(self):
-        """Returns the schema for transform method's output.
-
-        Returns
-        -------
-        dict
-            Logical schema describing output of this
-            operator's transform method.
-        """
+    def output_schema_transform(self) -> JSON_TYPE:
+        """Oputput schema for the transform method."""
         return self.get_schema('output_transform')
 
-    def hyperparam_schema(self, name:Optional[str]=None):
+    def output_schema_predict(self) -> JSON_TYPE:
+        """Output schema for the predict method."""
+        return self.get_schema('output_predict')
+
+    def output_schema_predict_proba(self) -> JSON_TYPE:
+        """Output schema for the predict_proba method."""
+        return self.get_schema('output_predict_proba')
+
+    def output_schema_decision_function(self) -> JSON_TYPE:
+        """Output schema for the decision_function method."""
+        return self.get_schema('output_decision_function')
+
+    def hyperparam_schema(self, name:Optional[str]=None) -> JSON_TYPE:
         """Returns the hyperparameter schema for the operator.
         
         Parameters
@@ -857,12 +848,14 @@ class IndividualOp(Operator):
         if not lale.helpers.is_empty_dict(arg):
             if method == 'fit' or method == 'partial_fit':
                 schema = self.input_schema_fit()
+            elif method == 'transform':
+                schema = self.input_schema_transform()
             elif method == 'predict':
                 schema = self.input_schema_predict()
             elif method == 'predict_proba':
                 schema = self.input_schema_predict_proba()
-            elif method == 'transform':
-                schema = self.input_schema_transform()
+            elif method == 'decision_function':
+                schema = self.input_schema_decision_function()
             if 'properties' in schema and arg_name in schema['properties']:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
@@ -873,12 +866,14 @@ class IndividualOp(Operator):
         return arg
 
     def _validate_output_schema(self, result, method):
-        if method == 'predict':
+        if method == 'transform':
+            schema = self.output_schema_transform()
+        elif method == 'predict':
             schema = self.output_schema_predict()
         elif method == 'predict_proba':
             schema = self.output_schema_predict_proba()
-        elif method == 'transform':
-            schema = self.output_schema_transform()
+        elif method == 'decision_function':
+            schema = self.output_schema_decision_function()
         result = lale.datasets.data_schemas.add_schema(result)
         try:
             lale.type_checking.validate_schema_or_subschema(result, schema)
@@ -887,12 +882,15 @@ class IndividualOp(Operator):
             raise ValueError(f'{self.name()}.{method}() invalid result: {e}') from e
         return result
 
-    def transform_schema(self, s_X):
+    def transform_schema(self, s_X) -> JSON_TYPE:
         if self.is_transformer():
             return self.output_schema_transform()
-        if hasattr(self._impl, 'predict_proba'):
+        elif hasattr(self._impl, 'predict_proba'):
             return self.output_schema_predict_proba()
-        return self.output_schema_predict()
+        elif hasattr(self._impl, 'decision_function'):
+            return self.output_schema_decision_function()
+        else:
+            return self.output_schema_predict()
 
     def is_supervised(self, default_if_missing=True)->bool:
         if hasattr(self._impl, 'fit'):
@@ -1056,21 +1054,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return result
 
     @if_delegate_has_method(delegate='_impl')
-    def predict(self, X):
-        """
-        .. deprecated:: 0.0.0
-           The `predict` method is deprecated on a trainable
-           operator, because the learned coefficients could be
-           accidentally overwritten by retraining. Call `predict`
-           on the trained operator returned by `fit` instead.
-        """
-        warnings.warn(_mutation_warning('predict'), DeprecationWarning)
-        try:
-            return self.__trained.predict(X)
-        except AttributeError:
-            raise ValueError('Must call `fit` before `predict`.')
-
-    @if_delegate_has_method(delegate='_impl')
     def transform(self, X, y = None):
         """
         .. deprecated:: 0.0.0
@@ -1086,6 +1069,21 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError('Must call `fit` before `transform`.')
 
     @if_delegate_has_method(delegate='_impl')
+    def predict(self, X):
+        """
+        .. deprecated:: 0.0.0
+           The `predict` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `predict`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning('predict'), DeprecationWarning)
+        try:
+            return self.__trained.predict(X)
+        except AttributeError:
+            raise ValueError('Must call `fit` before `predict`.')
+
+    @if_delegate_has_method(delegate='_impl')
     def predict_proba(self, X):
         """
         .. deprecated:: 0.0.0
@@ -1099,6 +1097,21 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             return self.__trained.predict_proba(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
+
+    @if_delegate_has_method(delegate='_impl')
+    def decision_function(self, X):
+        """
+        .. deprecated:: 0.0.0
+           The `decision_function` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `decision_function`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning('decision_function'), DeprecationWarning)
+        try:
+            return self.__trained.decision_function(X)
+        except AttributeError:
+            raise ValueError('Must call `fit` before `decision_function`.')
 
     def free_hyperparams(self):
         hyperparam_schema = self.hyperparam_schema()
@@ -1201,7 +1214,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         else:
             return super(TrainableIndividualOp, self).transform_schema(s_X)
 
-    def input_schema_fit(self):
+    def input_schema_fit(self) -> JSON_TYPE:
         if hasattr(self._impl, 'input_schema_fit'):
             return self._impl_instance().input_schema_fit()
         else:
@@ -1239,32 +1252,84 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             return self 
 
     @if_delegate_has_method(delegate='_impl')
-    def predict(self, X):
-        X = self._validate_input_schema('X', X, 'predict')
-        result = self._impl_instance().predict(X)
-        self._validate_output_schema(result, 'predict')
-        return result
-
-    @if_delegate_has_method(delegate='_impl')
     def transform(self, X, y = None):
+        """Transform the data.
+        
+        Parameters
+        ----------
+        X : 
+            Features; see input_transform schema of the operator.
+
+        Returns
+        -------
+        result :
+            Transformed features; see output_transform schema of the operator.
+        """
         X = self._validate_input_schema('X', X, 'transform')
         if ('y' in [required_property.lower() for required_property 
                     in self.input_schema_transform().get('required',[])]):
             y = self._validate_input_schema('y', y, 'transform')
-            result = self._impl_instance().transform(X, y)
+            raw_result = self._impl_instance().transform(X, y)
         else:
-            result = self._impl_instance().transform(X)
-        result = self._validate_output_schema(result, 'transform')
+            raw_result = self._impl_instance().transform(X)
+        result = self._validate_output_schema(raw_result, 'transform')
+        return result
+
+    @if_delegate_has_method(delegate='_impl')
+    def predict(self, X):
+        """Make predictions.
+        
+        Parameters
+        ----------
+        X : 
+            Features; see input_predict schema of the operator.
+
+        Returns
+        -------
+        result :
+            Predictions; see output_predict schema of the operator.
+        """
+        X = self._validate_input_schema('X', X, 'predict')
+        raw_result = self._impl_instance().predict(X)
+        result = self._validate_output_schema(raw_result, 'predict')
         return result
 
     @if_delegate_has_method(delegate='_impl')
     def predict_proba(self, X):
+        """Probability estimates for all classes.
+
+        Parameters
+        ----------
+        X :
+            Features; see input_predict_proba schema of the operator.
+
+        Returns
+        -------
+        result :
+            Probabilities; see output_predict_proba schema of the operator.
+        """
         X = self._validate_input_schema('X', X, 'predict_proba')
-        if hasattr(self._impl, 'predict_proba'):
-            result = self._impl_instance().predict_proba(X)
-        else:
-            raise ValueError("The operator {} does not support predict_proba".format(self.name()))
-        result = self._validate_output_schema(result, 'predict_proba')
+        raw_result = self._impl_instance().predict_proba(X)
+        result = self._validate_output_schema(raw_result, 'predict_proba')
+        return result
+
+    @if_delegate_has_method(delegate='_impl')
+    def decision_function(self, X):
+        """Confidence scores for all classes.
+
+        Parameters
+        ----------
+        X :
+            Features; see input_decision_function schema of the operator.
+
+        Returns
+        -------
+        result :
+            Confidences; see output_decision_function schema of the operator.
+        """
+        X = self._validate_input_schema('X', X, 'decision_function')
+        raw_result = self._impl_instance().decision_function(X)
+        result = self._validate_output_schema(raw_result, 'decision_function')
         return result
 
     def freeze_trainable(self)->'TrainedIndividualOp':
@@ -1567,7 +1632,7 @@ class BasePipeline(Operator, Generic[OpType]):
     def transform_schema(self, s_X):
         return self._validate_or_transform_schema(s_X, validate=False)
 
-    def input_schema_fit(self):
+    def input_schema_fit(self) -> JSON_TYPE:
         sources = self.find_source_nodes()
         pipeline_inputs = [source.input_schema_fit() for source in sources]
         result = lale.type_checking.join_schemas(*pipeline_inputs)
@@ -1783,6 +1848,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         # must only be individual operators
                         if hasattr(trained._impl, 'predict_proba'): # type: ignore
                             output = trained.predict_proba(X = inputs)
+                        elif hasattr(trained._impl, 'decision_function'): # type: ignore
+                            output = trained.decision_function(X = inputs)
                         else:
                             output = trained.predict(X = inputs)
                     if hasattr(operator._impl, "get_predict_meta_output"):
@@ -1799,20 +1866,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         self.__trained = result
         return result
 
-    def predict(self, X):
-        """
-        .. deprecated:: 0.0.0
-           The `predict` method is deprecated on a trainable
-           operator, because the learned coefficients could be
-           accidentally overwritten by retraining. Call `predict`
-           on the trained operator returned by `fit` instead.
-        """
-        warnings.warn(_mutation_warning('predict'), DeprecationWarning)
-        try:
-            return self.__trained.predict(X)
-        except AttributeError:
-            raise ValueError('Must call `fit` before `predict`.')
-
     def transform(self, X, y = None):
         """
         .. deprecated:: 0.0.0
@@ -1827,6 +1880,20 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError('Must call `fit` before `transform`.')
 
+    def predict(self, X):
+        """
+        .. deprecated:: 0.0.0
+           The `predict` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `predict`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning('predict'), DeprecationWarning)
+        try:
+            return self.__trained.predict(X)
+        except AttributeError:
+            raise ValueError('Must call `fit` before `predict`.')
+
     def predict_proba(self, X):
         """
         .. deprecated:: 0.0.0
@@ -1840,6 +1907,20 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             return self.__trained.predict_proba(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
+
+    def decision_function(self, X):
+        """
+        .. deprecated:: 0.0.0
+           The `decision_function` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `decision_function`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning('decision_function'), DeprecationWarning)
+        try:
+            return self.__trained.decision_function(X)
+        except AttributeError:
+            raise ValueError('Must call `fit` before `decision_function`.')
 
     def is_frozen_trainable(self)->bool:
         for step in self.steps():
@@ -2002,6 +2083,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         # must only be individual operators
                         if hasattr(trained._impl, 'predict_proba'): # type: ignore
                             batch_output = trained.predict_proba(X = batch_X)
+                        elif hasattr(trained._impl, 'decision_function'): # type: ignore
+                            batch_output = trained.decision_function(X = batch_X)
                         else:
                             batch_output = trained.predict(X = batch_X)
                 if isinstance(batch_output, tuple):
@@ -2077,6 +2160,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     meta_output = operator._impl_instance().get_transform_meta_output()
             elif hasattr(operator._impl, 'predict_proba'):#For estimator as a transformer, use predict_proba if available
                 output = operator.predict_proba(X = inputs)
+            elif hasattr(operator._impl, 'decision_function'):#For estimator as a transformer, use decision_function if available
+                output = operator.decision_function(X = inputs)
             else:
                 output = operator.predict(X = inputs)
                 if hasattr(operator._impl, "get_predict_meta_output"):
@@ -2095,6 +2180,18 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         return self.predict(X, y)
 
     def predict_proba(self, X):
+        """Probability estimates for all classes.
+
+        Parameters
+        ----------
+        X :
+            Features; see input_predict_proba schema of the operator.
+
+        Returns
+        -------
+        result :
+            Probabilities; see output_predict_proba schema of the operator.
+        """
         outputs = { }
         sink_nodes = self.find_sink_nodes()
         for operator in self._steps:
@@ -2116,6 +2213,49 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 else:#this behavior may be different later if we add user input.
                     if hasattr(operator._impl, 'predict_proba'):
                         output = operator.predict_proba(X = inputs)
+                    elif hasattr(operator._impl, 'decision_function'):
+                        output = operator.decision_function(X = inputs)
+                    else:
+                        output = operator.predict(X = inputs)
+            outputs[operator] = output
+        return outputs[self._steps[-1]]
+
+    def decision_function(self, X):
+        """Confidence scores for all classes.
+
+        Parameters
+        ----------
+        X :
+            Features; see input_decision_function schema of the operator.
+
+        Returns
+        -------
+        result :
+            Confidences; see output_decision_function schema of the operator.
+        """
+        outputs = { }
+        sink_nodes = self.find_sink_nodes()
+        for operator in self._steps:
+            preds = self._preds[operator]
+            if len(preds) == 0:
+                inputs = [X]
+            else:
+                inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
+            if len(inputs) == 1:
+                inputs = inputs[0]
+            if operator.is_transformer():
+                output = operator.transform(X = inputs)
+            else:
+                if operator in sink_nodes:
+                    if hasattr(operator._impl, 'decision_function'):
+                        output = operator.decision_function(X = inputs)
+                    else:
+                        raise ValueError("The sink node of the pipeline {} does not support a decision_function method.".format(operator.name()))
+                else:#this behavior may be different later if we add user input.
+                    if hasattr(operator._impl, 'predict_proba'):
+                        output = operator.predict_proba(X = inputs)
+                    elif hasattr(operator._impl, 'decision_function'):
+                        output = operator.decision_function(X = inputs)
                     else:
                         output = operator.predict(X = inputs)
             outputs[operator] = output
@@ -2170,6 +2310,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         # must only be individual operators
                         if hasattr(trained._impl, 'predict_proba'): # type: ignore
                             batch_output = trained.predict_proba(X = batch_X)
+                        elif hasattr(trained._impl, 'decision_function'): # type: ignore
+                            batch_output = trained.decision_function(X = batch_X)
                         else:
                             batch_output = trained.predict(X = batch_X)
                 if isinstance(batch_output, tuple):
@@ -2306,7 +2448,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         result = lale.type_checking.join_schemas(*transformed_schemas)
         return result
 
-    def input_schema_fit(self):
+    def input_schema_fit(self) -> JSON_TYPE:
         pipeline_inputs = [s.input_schema_fit() for s in self.steps()]
         result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result

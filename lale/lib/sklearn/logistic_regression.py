@@ -71,6 +71,21 @@ _output_predict_proba_schema = {
         'items': {
             'type': 'number'}}}
 
+_input_decision_function_schema = {
+  'type': 'object',
+  'required': ['X'],
+  'additionalProperties': False,
+  'properties': {
+    'X': {
+      'description': 'Features; the outer array is over samples.',
+      'type': 'array',
+      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+
+_output_decision_function_schema = {
+    'description': 'Confidence scores for samples for each class in the model.',
+    'type': 'array',
+    'items': {'type': 'array', 'items': {'type': 'number'}}}
+
 _hyperparams_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Hyperparameter schema.',
@@ -243,7 +258,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """`Logistic regression`_ linear model for classification.
 
-.. _`Logistic regression`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
+.. _`Logistic regression`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
 """,
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
   'type': 'object',
@@ -257,7 +272,10 @@ _combined_schemas = {
     'input_predict': _input_predict_schema,
     'output_predict': _output_predict_schema,
     'input_predict_proba': _input_predict_proba_schema,
-    'output_predict_proba': _output_predict_proba_schema}}
+    'output_predict_proba': _output_predict_proba_schema,
+    'input_decision_function': _input_decision_function_schema,
+    'output_decision_function': _output_decision_function_schema,
+}}
 
 if __name__ == "__main__":
     lale.helpers.validate_is_schema(_combined_schemas)
@@ -280,6 +298,9 @@ class LogisticRegressionImpl:
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+    def decision_function(self, X):
+        return self._sklearn_model.decision_function(X)
 
 lale.docstrings.set_docstrings(LogisticRegressionImpl, _combined_schemas)
 

@@ -183,5 +183,11 @@ def set_docstrings(impl_cls, combined_schemas):
         assert impl_cls.predict_proba.__doc__ is None
         impl_cls.predict_proba.__doc__ = _method_docstring(
             'Probability estimates for all classes.',
-            combined_schemas['properties']['input_predict'],
+            combined_schemas['properties']['input_predict_proba'],
             combined_schemas['properties']['output_predict_proba'])
+    if hasattr(impl_cls, 'decision_function'):
+        assert impl_cls.decision_function.__doc__ is None
+        impl_cls.decision_function.__doc__ = _method_docstring(
+            'Confidence scores for all classes.',
+            combined_schemas['properties']['input_decision_function'],
+            combined_schemas['properties']['output_decision_function'])
