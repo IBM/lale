@@ -40,6 +40,7 @@ import scipy.sparse
 import logging
 import inspect
 from typing import Any, Dict, List, Union
+JSON_TYPE = Dict[str, Any]
 import lale.datasets.data_schemas
 
 def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
@@ -166,7 +167,7 @@ def validate_schema_or_subschema(lhs, super_schema):
     else:
         _validate_subschema(sub_schema, super_schema)
 
-def join_schemas(*schemas: list):
+def join_schemas(*schemas: JSON_TYPE) -> JSON_TYPE:
     """Compute the lattice join (union type, disjunction) of the arguments.
 
     Parameters
