@@ -57,6 +57,9 @@ class SGDClassifierImpl():
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
 
+    def decision_function(self, X):
+        return self._sklearn_model.decision_function(X)
+
     def partial_fit(self, X, y=None, classes = None):
       if not hasattr(self, "_sklearn_model"):
         self._sklearn_model = SKLModel(**self._hyperparams)
@@ -341,6 +344,21 @@ _output_predict_proba_schema = {
             'type': 'number'},
     }}
 
+_input_decision_function_schema = {
+  'type': 'object',
+  'required': ['X'],
+  'additionalProperties': False,
+  'properties': {
+    'X': {
+      'description': 'Features; the outer array is over samples.',
+      'type': 'array',
+      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+
+_output_decision_function_schema = {
+    'description': 'Confidence scores for samples for each class in the model.',
+    'type': 'array',
+    'items': {'type': 'array', 'items': {'type': 'number'}}}
+
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
@@ -356,7 +374,10 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema}}
+        'output_predict_proba': _output_predict_proba_schema,
+        'input_decision_function': _input_decision_function_schema,
+        'output_decision_function': _output_decision_function_schema,
+}}
 
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

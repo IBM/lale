@@ -432,7 +432,6 @@ class TestComposition(unittest.TestCase):
         trained = pipeline.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)
 
-    @unittest.skip('#258 - PassiveAggressiveClassifier does not have predict_proba and hence predict gets called, this is valid for iris dataset.')
     def test_two_estimators_predict1(self):
         pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -442,14 +441,12 @@ class TestComposition(unittest.TestCase):
         pipeline.fit(self.X_train, self.y_train)
         pipeline.predict_proba(self.X_test)
 
-    @unittest.skip('#258 - PassiveAggressiveClassifier does not have predict_proba and hence predict gets called, this is valid for iris dataset.')
     def test_two_estimators_predict_proba1(self):
         pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
         pipeline.fit(self.X_train, self.y_train)
         with self.assertRaises(ValueError):
             pipeline.predict_proba(self.X_test)
 
-    @unittest.skip('#258 - LinearSVC does not have predict_proba and hence predict gets called, this is valid for iris dataset.')
     def test_multiple_estimators_predict_predict_proba(self) :
         pipeline = (
             StandardScaler() >>

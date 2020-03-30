@@ -459,6 +459,12 @@ class TestLogisticRegression(unittest.TestCase):
         #with self.assertWarns(DeprecationWarning):
         predicted = trainable_lr.predict_proba(iris.data)
         predicted = trained_lr.predict_proba(iris.data)
+    def test_decision_function(self):
+        import numpy as np
+        trainable_lr = LogisticRegression(n_jobs=1)
+        iris = sklearn.datasets.load_iris()
+        trained_lr = trainable_lr.fit(iris.data, iris.target, sample_weight = np.arange(len(iris.target)))
+        predicted = trained_lr.decision_function(iris.data)
 
     def test_with_sklearn_gridsearchcv(self):
         from sklearn.model_selection import GridSearchCV
