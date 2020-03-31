@@ -38,7 +38,7 @@ _hyperparams_schema = {
     'allOf': [{
         'type': 'object',
         'required': ['copy', 'with_mean', 'with_std'],
-        'relevantToOptimizer': ['copy', 'with_mean', 'with_std'],
+        'relevantToOptimizer': ['with_mean', 'with_std'],
         'additionalProperties': False,
         'properties': {
             'copy': {
@@ -52,9 +52,9 @@ _hyperparams_schema = {
             'with_std': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True, scale the data to unit variance (or equivalently,'},
-        }}],
-}
+                'description': 'If True, scale the data to unit variance (or equivalently, unit standard deviation).'},
+}}]}
+
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the mean and std to be used for later scaling.',
