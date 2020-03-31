@@ -86,7 +86,7 @@ def _json_replace(subject, old, new):
                     is_sub_dict = False
                     break
             if is_sub_dict:
-                return {**subject, **new}
+                return new
         result = {k: _json_replace(v, old, new) for k, v in subject.items()}
         for k in subject:
             if subject[k] != result[k]:
@@ -113,7 +113,7 @@ def is_subschema(sub_schema, super_schema) -> bool:
     try:
         return jsonsubschema.isSubschema(new_sub, super_schema)
     except Exception as e:
-        raise ValueError(f'problem checking ({sub_schema} <: {super_schema})') from e
+        raise ValueError(f'unexpected internal error checking ({new_sub} <: {super_schema})') from e
 
 class SubschemaError(Exception):
     """Raised when a subschema check (sub `<:` sup) failed.

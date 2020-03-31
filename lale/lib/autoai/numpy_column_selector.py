@@ -21,7 +21,7 @@ class NumpyColumnSelectorImpl():
     def __init__(self, columns):
         self._hyperparams = {
             'columns': columns}
-        self._autoai_tfm = sklearn.decomposition.PCA(**self._hyperparams)
+        self._autoai_tfm = autoai_libs.transformers.exportable.NumpyColumnSelector(**self._hyperparams)
 
     def fit(self, X, y=None):
         return self._autoai_tfm.fit(X, y)
@@ -39,29 +39,36 @@ _hyperparams_schema = {
         'properties': {
             'columns': {
                 'description': 'List of indices to select numpy columns.',
-                'type': 'array',
-                'items': {
-                    'type': 'integer',
-                    'minimum': 0}}}}]}
+                'anyOf': [
+                {   'type': 'array',
+                    'items': {'type': 'integer', 'minimum': 0}},
+                {   'enum': [None]}],
+                'default': None}}}]}
 
 _input_fit_schema = {
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
     'properties': {
-        'X': {},
-        'y': {}}}
+        'X': {
+            'type': 'array',
+            'items': {'type': 'array', 'items': {'laleType': 'Any'}}},
+        'y': {
+            'laleType': 'Any'}}}
 
 _input_transform_schema = {
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
     'properties': {
-        'X': {}}}
+        'X': {
+            'type': 'array',
+            'items': {'type': 'array', 'items': {'laleType': 'Any'}}}}}
 
 _output_transform_schema = {
     'description': 'Features; the outer array is over samples.',
-    'laleType': 'Any'}
+    'type': 'array',
+    'items': {'type': 'array', 'items': {'laleType': 'Any'}}}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

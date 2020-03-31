@@ -24,7 +24,7 @@ class OptStandardScalerImpl():
             'num_scaler_copy': num_scaler_copy,
             'num_scaler_with_mean': num_scaler_with_mean,
             'num_scaler_with_std': num_scaler_with_std}
-        self._autoai_tfm = sklearn.decomposition.PCA(**self._hyperparams)
+        self._autoai_tfm = autoai_libs.transformers.exportable.OptStandardScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
         return self._autoai_tfm.fit(X, y)
@@ -44,7 +44,7 @@ _hyperparams_schema = {
                 'type': 'boolean',
                 'default': True,
                 'description': 'If False, return the input array unchanged.'},
-            'copy': {
+            'num_scaler_copy': {
                 'type': 'boolean',
                 'default': True,
                 'description': 'If False, try to avoid a copy and do inplace scaling instead.'},
