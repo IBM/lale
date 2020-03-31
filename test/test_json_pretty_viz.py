@@ -351,6 +351,25 @@ tam = TAM(tans_class=autoai_libs.cognito.transforms.transform_extras.IsolationFo
 pipeline = tam >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_autoai_libs_ta1(self):
+        from autoai_libs.cognito.transforms.transform_utils import TA1
+        import numpy as np
+        import autoai_libs.utils.fc_methods
+        from lale.lib.sklearn import LogisticRegression as LR
+        ta1 = TA1(fun=np.rint, name='round', datatypes=['numeric'], feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical], col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+        pipeline = ta1 >> LR()
+        expected = \
+"""from autoai_libs.cognito.transforms.transform_utils import TA1
+import numpy as np
+import autoai_libs.utils.fc_methods
+from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
+
+ta1 = TA1(fun=np.rint, name='round', datatypes=['numeric'], feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical], col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+pipeline = ta1 >> LR()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):

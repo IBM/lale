@@ -77,7 +77,11 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
             if gen is not None:
                 gen.imports.append('import numpy as np')
             return f'np.{value.__repr__()}'
-        elif inspect.isclass(value):
+        elif isinstance(value, np.ufunc):
+            if gen is not None:
+                gen.imports.append('import numpy as np')
+            return f'np.{value.__name__}'
+        elif hasattr(value, '__module__') and hasattr(value, '__name__'):
             modules = {'numpy': 'np', 'pandas': 'pd'}
             module = modules.get(value.__module__, value.__module__)
             if gen is not None:
