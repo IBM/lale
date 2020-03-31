@@ -715,3 +715,11 @@ class TestTopKVotingClassifier(unittest.TestCase):
         trained = ensemble.fit(self.X_train, self.y_train)
         final_ensemble = trained._impl._best_estimator
         self.assertLessEqual(len(final_ensemble._impl._sklearn_model.estimators), 3)
+
+    def test_fit_default_args(self):
+        from sklearn.datasets import load_iris
+        from lale.lib.lale import TopKVotingClassifier
+        from lale.lib.sklearn import Nystroem
+        from sklearn.metrics import accuracy_score
+        with self.assertRaises(ValueError):
+            ensemble = TopKVotingClassifier()

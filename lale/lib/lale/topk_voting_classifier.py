@@ -25,9 +25,13 @@ logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class TopKVotingClassifierImpl:
-    def __init__(self, estimator=None, optimizer=Hyperopt, args_to_optimizer=None, k=10):
+    def __init__(self, estimator=None, optimizer=None, args_to_optimizer=None, k=10):
         self.estimator = estimator
+        if self.estimator is None:
+            raise ValueError("Estimator is a required argument.")
         self.optimizer = optimizer
+        if self.optimizer is None:
+            self.optimizer = Hyperopt
         self.args_to_optimizer = args_to_optimizer
         if self.args_to_optimizer is None:
             self.args_to_optimizer = {}
@@ -72,37 +76,15 @@ class TopKVotingClassifierImpl:
             predictions = None
         return predictions
 
-    def get_pipeline(self, pipeline_name=None, astype='lale'):
-        """Retrieve one of the trials.
-
-Parameters
-----------
-pipeline_name : union type, default None
-
-    - string
-        Key for table returned by summary(), return a trainable pipeline.
-
-    - None
-        When not specified, return the best trained pipeline found.
-
-astype : 'lale' or 'sklearn', default 'lale'
-    Type of resulting pipeline.
+    def get_pipeline(self):
+        """Get the final trained pipeline containing the VotingClassifier.
 
 Returns
 -------
-result : Trained operator if best, trainable operator otherwise.
+result : Trained operator.
 """
-        if pipeline_name is None:
-            result = getattr(self, '_best_estimator', None)
-        else:
-            tid = int(pipeline_name[1:])
-            params = self._trials.trials[tid]['result']['params']
-            result = create_instance_from_hyperopt_search_space(
-                self.estimator, params)
-        if result is None or astype == 'lale':
-            return result
-        assert astype == 'sklearn', astype
-        return result.export_to_sklearn_pipeline()
+        result = getattr(self, '_best_estimator', None)
+        return result
 
 _hyperparams_schema = {
     'allOf': [
@@ -123,8 +105,8 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'laleType': 'operator',
                     'not': {'enum': [None]}},
-                {   'enum': [Hyperopt]}],
-                'default': Hyperopt},
+                {   'enum': [None]}],
+                'default': None},
             'args_to_optimizer':{
                 'description': """Dictionary of keyword arguments required to be used for the given optimizer
                                 as applicable for the given task. For example, max_evals, cv, scoring etc. for Hyperopt.""",
