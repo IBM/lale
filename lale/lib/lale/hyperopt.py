@@ -187,12 +187,25 @@ Returns
 -------
 result : DataFrame"""
         def make_record(trial_dict):
+            try:
+                loss = trial_dict['result']['loss']
+            except BaseException:
+                loss = np.nan
+            try:
+                time = trial_dict['result']['time']
+            except BaseException:
+                time = '-'
+            try:
+                log_loss = trial_dict['result']['log_loss']
+            except BaseException:
+                log_loss = np.nan
+
             return {
                 'name': f'p{trial_dict["tid"]}',
                 'tid': trial_dict['tid'],
-                'loss': trial_dict['result']['loss'],
-                'time': trial_dict['result']['time'],
-                'log_loss': trial_dict['result']['log_loss'],
+                'loss': loss,
+                'time': time,
+                'log_loss': log_loss,
                 'status': trial_dict['result']['status']}
         records = [make_record(td) for td in self._trials.trials]
         result = pd.DataFrame.from_records(records, index='name')
