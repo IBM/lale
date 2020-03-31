@@ -152,7 +152,8 @@ class SearchSpaceHPExprVisitor(Visitor):
         cp = p + "_"
 
         if space.minimum == space.maximum:
-            return self.array_single_expr_(space, cp, space.minimum)
+            expr = self.array_single_expr_(space, cp, space.minimum)
+            return expr
         else:
             exprs = [self.array_single_expr_(space, cp, x) for x in range(space.minimum, space.maximum+1)]
             res = hp.choice(p, exprs)

@@ -16,6 +16,7 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 import lale.type_checking
+import functools
 import numpy as np
 import pandas as pd
 import scipy.sparse
@@ -31,10 +32,16 @@ class ConcatFeaturesImpl():
         pass
 
     def transform(self, X):
+        def is_pandas(d):
+            return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series)
+        if functools.reduce(lambda accum, d: accum and is_pandas(d), X, True):
+            result = pd.concat(X, axis=1)
+            return result
+
         np_datasets = []
         #Preprocess the datasets to convert them to 2-d numpy arrays
         for dataset in X:
-            if isinstance(dataset, pd.DataFrame) or isinstance(dataset, pd.Series):
+            if is_pandas(dataset):
                 np_dataset = dataset.values
             elif isinstance(dataset, scipy.sparse.csr_matrix):
                 np_dataset = dataset.toarray()

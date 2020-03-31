@@ -40,6 +40,7 @@ import scipy.sparse
 import logging
 import inspect
 from typing import Any, Dict, List, Union
+JSON_TYPE = Dict[str, Any]
 import lale.datasets.data_schemas
 
 def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
@@ -85,7 +86,7 @@ def _json_replace(subject, old, new):
                     is_sub_dict = False
                     break
             if is_sub_dict:
-                return {**subject, **new}
+                return new
         result = {k: _json_replace(v, old, new) for k, v in subject.items()}
         for k in subject:
             if subject[k] != result[k]:
@@ -112,7 +113,7 @@ def is_subschema(sub_schema, super_schema) -> bool:
     try:
         return jsonsubschema.isSubschema(new_sub, super_schema)
     except Exception as e:
-        raise ValueError(f'problem checking ({sub_schema} <: {super_schema})') from e
+        raise ValueError(f'unexpected internal error checking ({new_sub} <: {super_schema})') from e
 
 class SubschemaError(Exception):
     """Raised when a subschema check (sub `<:` sup) failed.
@@ -166,7 +167,7 @@ def validate_schema_or_subschema(lhs, super_schema):
     else:
         _validate_subschema(sub_schema, super_schema)
 
-def join_schemas(*schemas: list):
+def join_schemas(*schemas: JSON_TYPE) -> JSON_TYPE:
     """Compute the lattice join (union type, disjunction) of the arguments.
 
     Parameters

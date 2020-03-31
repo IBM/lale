@@ -95,14 +95,13 @@ class HyperoptImpl:
             
             
         def proc_train_test(params, X_train, y_train, return_dict):
-            params_to_save = copy.deepcopy(params)
+            return_dict['params'] = copy.deepcopy(params)
             try:
                 score, logloss, execution_time = hyperopt_train_test(params, X_train=X_train, y_train=y_train)
                 return_dict['loss'] = self.best_score - score
                 return_dict['time'] = execution_time
                 return_dict['log_loss'] = logloss
                 return_dict['status'] = STATUS_OK
-                return_dict['params'] = params_to_save
             except BaseException as e:
                 logger.warning(f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
                 return_dict['status'] = STATUS_FAIL
@@ -203,9 +202,9 @@ result : DataFrame"""
             return {
                 'name': f'p{trial_dict["tid"]}',
                 'tid': trial_dict['tid'],
-                'loss': loss,
-                'time': time,
-                'log_loss': log_loss,
+                'loss': trial_dict['result'].get('loss', float('nan')),
+                'time': trial_dict['result'].get('time', float('nan')),
+                'log_loss': trial_dict['result'].get('log_loss', float('nan')),
                 'status': trial_dict['result']['status']}
         records = [make_record(td) for td in self._trials.trials]
         result = pd.DataFrame.from_records(records, index='name')
@@ -400,7 +399,7 @@ Other scoring metrics:
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
 
-#lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
+lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
 
 Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
 

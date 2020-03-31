@@ -561,7 +561,8 @@ def unnest_choice(k:str)->str:
 def unnest_HPparams(k:str)->List[str]:
     return k.split("__")    
 
-def clone_op(op: Ops.Operator, name:str=None) -> Ops.Operator:
+OpType = TypeVar('OpType', bound=Ops.Operator)
+def clone_op(op: OpType, name:str=None) -> OpType:
     """ Clone any operator.
     """
     from sklearn.base import clone

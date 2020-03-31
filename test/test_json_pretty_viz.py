@@ -109,18 +109,17 @@ from lale.lib.lale import NoOp
 from lale.operators import make_choice
 from lale.lib.sklearn import PCA
 from lale.lib.sklearn import Nystroem
-from lale.operators import make_union_no_concat
-from lale.lib.lale import ConcatFeatures
+from lale.operators import make_union
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LogisticRegression
 from lale.operators import make_pipeline
 
 choice_0 = make_choice(MinMaxScaler, NoOp)
 pca = PCA(copy=False)
-union = make_union_no_concat(pca, Nystroem, NoOp)
+union = make_union(pca, Nystroem, NoOp)
 logistic_regression = LogisticRegression(solver='saga', C=0.9)
 choice_1 = make_choice(KNeighborsClassifier, logistic_regression)
-pipeline = make_pipeline(choice_0, union, ConcatFeatures, choice_1)"""
+pipeline = make_pipeline(choice_0, union, choice_1)"""
         printed = lale.pretty_print.to_string(pipeline, combinators=False)
         self._roundtrip(expected, printed)
 
@@ -350,6 +349,25 @@ lale.wrap_imported_operators()
 
 tam = TAM(tans_class=autoai_libs.cognito.transforms.transform_extras.IsolationForestAnomaly, name='isoforestanomaly', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
 pipeline = tam >> LR()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_autoai_libs_ta1(self):
+        from autoai_libs.cognito.transforms.transform_utils import TA1
+        import numpy as np
+        import autoai_libs.utils.fc_methods
+        from lale.lib.sklearn import LogisticRegression as LR
+        ta1 = TA1(fun=np.rint, name='round', datatypes=['numeric'], feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical], col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+        pipeline = ta1 >> LR()
+        expected = \
+"""from autoai_libs.cognito.transforms.transform_utils import TA1
+import numpy as np
+import autoai_libs.utils.fc_methods
+from lale.lib.sklearn import LogisticRegression as LR
+import lale
+lale.wrap_imported_operators()
+
+ta1 = TA1(fun=np.rint, name='round', datatypes=['numeric'], feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical], col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+pipeline = ta1 >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
 

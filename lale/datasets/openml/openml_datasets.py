@@ -349,7 +349,7 @@ def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     return train_X, test_X, train_y, test_y
 
 numeric_data_types_list = ['numeric', 'integer', 'real']
-def fetch(dataset_name, task_type, verbose=False, preprocess=True):
+def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.33):
     if verbose:
         print('Loading dataset:', dataset_name)
     #Check that the dataset name exists in experiments_dict
@@ -452,7 +452,7 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True):
     y = labelencoder.fit_transform(y)
 
     X_train, X_test, y_train, y_test = \
-        train_test_split(X, y, test_size = 0.33, random_state = 0)
+        train_test_split(X, y, test_size = test_size, random_state = 0)
     if verbose:
         print(f'training set shapes: X {X_train.shape}, y {y_train.shape}')
         print(f'test set shapes:     X {X_test.shape}, y {y_test.shape}')
