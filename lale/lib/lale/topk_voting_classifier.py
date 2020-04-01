@@ -76,16 +76,6 @@ class TopKVotingClassifierImpl:
             predictions = None
         return predictions
 
-    def get_pipeline(self):
-        """Get the final trained pipeline containing the VotingClassifier.
-
-Returns
--------
-result : Trained operator.
-"""
-        result = getattr(self, '_best_estimator', None)
-        return result
-
 _hyperparams_schema = {
     'allOf': [
     {   'type': 'object',
@@ -101,7 +91,8 @@ _hyperparams_schema = {
                 {   'enum': [None]}],
                 'default': None},
             'optimizer': {
-                'description': 'Optimizer class to be used during the two stages of optimization.',
+                'description': """Optimizer class to be used during the two stages of optimization.
+                Default of None uses Hyperopt internally. Currently, only Hyperopt is supported as an optimizer.""",
                 'anyOf': [
                 {   'laleType': 'operator',
                     'not': {'enum': [None]}},
@@ -109,10 +100,12 @@ _hyperparams_schema = {
                 'default': None},
             'args_to_optimizer':{
                 'description': """Dictionary of keyword arguments required to be used for the given optimizer
-                                as applicable for the given task. For example, max_evals, cv, scoring etc. for Hyperopt.""",
+                                as applicable for the given task. For example, max_evals, cv, scoring etc. for Hyperopt.
+                                If None, default values for the optimizer would be used.""",
                 'anyOf': [
                     {'type':'object'},#Python dictionary
-                    {'enum':[None]}]},
+                    {'enum':[None]}],
+                'default': None},
             'k': {
                 'description': """Number of top pipelines to be used for the voting ensemble. If the number of 
                             successful trials of the optimizer are less than k, the ensemble will use 
@@ -136,14 +129,8 @@ _input_predict_schema = {
 _output_predict_schema:Dict[str, Any] = {}
 
 _combined_schemas = {
-    'description': """This operator uses the given optimizer to find top k performing pipelines
-    from the given planned classification pipeline. It then creates a voting classifier of those top k pipelines.
-    It would use the given optimizer with a modified number of optimization trials to find the best
-    hyperparameter setting for the voting classifier. Calling predict on a trained TopKVotingClassifier uses the
-    final voting ensemble for prediction. Users can access the final trained voting ensemble using 
-    get_pipeline method.
-""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale..html',
+    'description': """This operator creates a voting ensemble from top k performing pipelines from the given planned pipeline.""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.topk_voting_classifier.html',
     'type': 'object',
     'tags': {
         'pre': [],
