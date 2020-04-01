@@ -70,6 +70,11 @@ class ConcatFeaturesImpl():
         for s_dataset in s_X['items']:
             if s_dataset.get('laleType', None) == 'Any':
                 return {'laleType': 'Any'}
+            arr_1d_num = {'type': 'array', 'items': {'type': 'number'}}
+            arr_2d_num = {'type': 'array', 'items': arr_1d_num}
+            s_decision_func = {'anyOf': [arr_1d_num, arr_2d_num]}
+            if lale.type_checking.is_subschema(s_dataset, s_decision_func):
+                s_dataset = arr_2d_num
             assert 'items' in s_dataset, lale.pretty_print.to_string(s_dataset)
             s_rows = s_dataset['items']
             if 'type' in s_rows and 'array' == s_rows['type']:
