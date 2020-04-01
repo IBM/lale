@@ -427,6 +427,13 @@ class TestDatasetSchemas(unittest.TestCase):
             with self.assertRaises(ValueError):
                 TfidfVectorizer.validate_schema(**dataset)
 
+    def test_decision_function_binary(self):
+        from lale.lib.lale import Project
+        train_X, train_y = self._creditG['X'], self._creditG['y']
+        trainable = Project(columns={'type': 'number'}) >> LogisticRegression()
+        trained = trainable.fit(train_X, train_y)
+        decisions = trained.decision_function(train_X)
+
 class TestErrorMessages(unittest.TestCase):
     def test_wrong_cont(self):
         with self.assertRaises(jsonschema.ValidationError) as cm:
