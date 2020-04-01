@@ -14,7 +14,7 @@
 
 # from autoai_libs.transformers.exportable
 from .numpy_column_selector        import NumpyColumnSelector
-# from .compress_strings             import CompressStrings
+from .compress_strings             import CompressStrings
 # from .numpy_replace_missing_values import NumpyReplaceMissingValues
 # from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
 # from .boolean2float                import boolean2float

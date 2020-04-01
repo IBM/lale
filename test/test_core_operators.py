@@ -286,6 +286,7 @@ feature_preprocessors = ['lale.lib.sklearn.PolynomialFeatures',
                          'lale.lib.sklearn.QuantileTransformer',
                          'lale.lib.autoai.NumpyColumnSelector',
                          'lale.lib.autoai.OptStandardScaler',
+                         # 'lale.lib.autoai.CompressStrings',
                          ]
 for fproc in feature_preprocessors:
     setattr(
