@@ -186,6 +186,19 @@ Returns
 -------
 result : DataFrame"""
         def make_record(trial_dict):
+            try:
+                loss = trial_dict['result']['loss']
+            except BaseException:
+                loss = np.nan
+            try:
+                time = trial_dict['result']['time']
+            except BaseException:
+                time = '-'
+            try:
+                log_loss = trial_dict['result']['log_loss']
+            except BaseException:
+                log_loss = np.nan
+
             return {
                 'name': f'p{trial_dict["tid"]}',
                 'tid': trial_dict['tid'],

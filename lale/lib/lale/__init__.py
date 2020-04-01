@@ -27,3 +27,4 @@ with warnings.catch_warnings(record=True) as w:
         from .smac import SMAC
     except ImportError:
         pass
+from .topk_voting_classifier import TopKVotingClassifier
