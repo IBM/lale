@@ -16,11 +16,15 @@ import subprocess
 import tempfile
 import unittest
 import os
-
+import time
 
 class TestNotebooks(unittest.TestCase):
-   pass
+    def setUp(self):
+        self.start_time = time.time()
 
+    def tearDown(self):
+        duration = time.time() - self.start_time
+        print(f'test {self.id()} took {duration:%.3f} seconds')
 
 def create_test(path):
     def exec_notebook(self):
