@@ -441,6 +441,13 @@ class IndividualOp(Operator):
     """
     This is a concrete class that can instantiate a new individual
     operator and provide access to its metadata.
+    The enum property can be used to access enumerations for hyper-parameters,
+    auto-generated from the operator's schema.
+    For example, `LinearRegression.enum.solver.saga`
+    As a short-hand, if the hyper-parameter name does not conflict with 
+    any fields of this class, the auto-generated enums can also be accessed
+    directly.
+    For example, `LinearRegression.solver.saga`
     """
 
     _name:str
