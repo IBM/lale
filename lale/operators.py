@@ -41,7 +41,6 @@ from lale.json_operator import JSON_TYPE
 from sklearn.pipeline import if_delegate_has_method
 import sklearn.base
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 	
 class Operator(metaclass=AbstractVisitorMeta):

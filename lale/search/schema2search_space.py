@@ -30,7 +30,6 @@ from lale.search.PGO import PGO, FrequencyDistribution, Freqs
 
 from lale.operators import *
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)              
 
 def op_to_search_space(op:PlannedOperator, pgo:Optional[PGO]=None)->SearchSpace:

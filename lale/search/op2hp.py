@@ -14,7 +14,6 @@
 
 from typing import Optional, Dict
 import os
-import logging
 
 from lale.search.search_space import *
 from lale.util.Visitor import Visitor
@@ -23,9 +22,6 @@ from lale.search.lale_hyperopt import search_space_to_hp_expr, search_space_to_h
 from lale.search.PGO import PGO
 
 from hyperopt import hp
-
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

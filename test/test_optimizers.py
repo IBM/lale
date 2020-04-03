@@ -393,8 +393,6 @@ class TestHyperopt(unittest.TestCase):
     def test_with_concat_features1(self):
         import warnings
         warnings.filterwarnings("ignore")
-        import logging
-        logging.basicConfig(level=logging.DEBUG)
 
         from sklearn.datasets import load_iris
         from lale.lib.lale import Hyperopt
@@ -415,8 +413,6 @@ class TestHyperopt(unittest.TestCase):
     def test_with_concat_features2(self):
         import warnings
         warnings.filterwarnings("ignore")
-        import logging
-        logging.basicConfig(level=logging.DEBUG)
 
         from sklearn.datasets import load_iris
         from lale.lib.lale import Hyperopt
