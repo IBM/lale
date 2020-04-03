@@ -468,3 +468,20 @@ class TestSchemaValidation(unittest.TestCase):
         jsonschema.validate(42, any_schema)        
         self.assertTrue(is_subschema(num_schema, any_schema))
         self.assertTrue(is_subschema(any_schema, num_schema))
+
+class TestWithScorer(unittest.TestCase):
+    def test_bare_array(self):
+        from lale.datasets.data_schemas import NDArrayWithSchema
+        from numpy import ndarray
+        import sklearn.metrics
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.assertIsInstance(X, ndarray)
+        self.assertIsInstance(y, ndarray)
+        self.assertNotIsInstance(X, NDArrayWithSchema)
+        self.assertNotIsInstance(y, NDArrayWithSchema)
+        trainable = LogisticRegression()
+        trained = trainable.fit(X, y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
+        out = scorer(trained, X, y)
+        self.assertIsInstance(out, float)
+        self.assertNotIsInstance(out, NDArrayWithSchema)

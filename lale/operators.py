@@ -1292,6 +1292,8 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         X = self._validate_input_schema('X', X, 'predict')
         raw_result = self._impl_instance().predict(X)
         result = self._validate_output_schema(raw_result, 'predict')
+        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
+            result = np.array(result) #otherwise scorers return zero-dim array
         return result
 
     @if_delegate_has_method(delegate='_impl')
@@ -2170,7 +2172,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             meta_output.update({key:meta_outputs[pred][key] for pred in preds 
                     if meta_outputs[pred] is not None for key in meta_outputs[pred]})
             meta_outputs[operator] = meta_output
-        return outputs[self._steps[-1]]
+        result = outputs[self._steps[-1]]
+        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
+            result = np.array(result) #otherwise scorers return zero-dim array
+        return result
 
     def transform(self, X, y = None):
         #TODO: What does a transform on a pipeline mean, if the last step is not a transformer
