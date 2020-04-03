@@ -23,7 +23,7 @@ from lale.util.Visitor import Visitor
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
 
-from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer, has_operator, atomize_schema_enumerations
+from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer, has_operator, atomize_schema_enumerations, check_operators_schema
 from lale.search.search_space import *
 from lale.search.lale_hyperopt import search_space_to_str_for_comparison
 from lale.search.PGO import PGO, FrequencyDistribution, Freqs
@@ -422,6 +422,13 @@ class SearchSpaceOperatorVisitor(Visitor):
 
         filtered_schema = filterForOptimizer(simplified_schema)
     #    print(f'SIMPLIFIED_{longName}: {pretty_print.to_string(filtered_schema)}')
+
+        if logger.isEnabledFor(logging.WARNING):
+            op_warnings:List[str] = []
+            check_operators_schema(filtered_schema, op_warnings)
+            if op_warnings:
+                for w in op_warnings:
+                    logger.warning(w)
 
         return (filtered_schema, 
                 self.schemaToSearchSpaceHelper(
