@@ -21,7 +21,6 @@ import copy
 from typing import Any, Dict, Optional
 
 import logging
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class TopKVotingClassifierImpl:

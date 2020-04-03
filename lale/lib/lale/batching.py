@@ -16,9 +16,7 @@ from lale.operators import make_operator
 
 import numpy as np
 import pandas as pd
-import logging
 import lale.helpers as helpers
-logging.basicConfig(level=logging.INFO)
 
 class BatchingImpl():
   """Batching trains the given pipeline using batches.

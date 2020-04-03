@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import math
-import logging
 import numpy
 
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
@@ -22,9 +21,6 @@ from hyperopt.pyll import scope
 from lale.util.VisitorMeta import AbstractVisitorMeta
 from lale.search.PGO import FrequencyDistribution
 import os
-
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
 
 PGO_input_type = Union[FrequencyDistribution, Iterable[Tuple[Any, int]], None]
 class SearchSpace(metaclass=AbstractVisitorMeta):

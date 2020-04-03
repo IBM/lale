@@ -36,7 +36,6 @@ import lale.operators
 from lale.search.lale_smac import lale_op_smac_tae, get_smac_space, lale_trainable_op_from_config
 import lale.sklearn_compat
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class SMACImpl:

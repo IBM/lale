@@ -12,13 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from typing import List, Any, Dict, Optional, Union
 
 from .schema_utils import Schema, getMinimum, getMaximum, getExclusiveMinimum, getExclusiveMaximum
-
-# logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
 
 class SchemaRange(object):
     def __init__(self, minimum=None, maximum=None, exclusive_minimum=False, exclusive_maximum=False, is_integer:bool=False) -> None:
