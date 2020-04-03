@@ -47,7 +47,7 @@ class TestPrettyPrint(unittest.TestCase):
 
     def test_indiv_op_1(self):
         from lale.lib.sklearn import LogisticRegression
-        pipeline = LogisticRegression(solver='saga', C=0.9)
+        pipeline = LogisticRegression(solver=LogisticRegression.enum.solver.saga, C=0.9)
         expected = """from lale.lib.sklearn import LogisticRegression
 import lale
 lale.wrap_imported_operators()

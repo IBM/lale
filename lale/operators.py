@@ -16,7 +16,7 @@ import lale.helpers
 import lale.type_checking
 from abc import ABC, abstractmethod
 import importlib
-import enum
+import enum as enumeration
 import os
 import itertools
 from lale import schema2enums as enum_gen
@@ -415,6 +415,28 @@ class TrainedOperator(TrainableOperator):
 
 _schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
 
+
+class DictionaryObjectForEnum():
+    _d:Dict[str, enumeration.Enum]
+
+    def __init__(self, d:Dict[str, enumeration.Enum]):
+        self._d = d
+
+    def __contains__(self, key:str)->bool:
+        return key in self._d
+
+    def __getattr__(self, key:str)->enumeration.Enum:
+        if key in self._d:
+            return self._d[key]
+        else:
+            raise AttributeError("No enumeration found for hyper-parameter: " + key)
+
+    def __getitem__(self, key:str)->enumeration.Enum:
+        if key in self._d:
+            return self._d[key]
+        else:
+            raise KeyError("No enumeration found for hyper-parameter: " + key)
+
 class IndividualOp(Operator):
     """
     This is a concrete class that can instantiate a new individual
@@ -451,15 +473,16 @@ class IndividualOp(Operator):
         # so that their usage looks like LogisticRegression.penalty.l1
 #        enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
 
-    _enum_attributes:Optional[Dict[str, enum.Enum]]
+    _enum_attributes:Optional[DictionaryObjectForEnum]
 
     @property
-    def enum_attributes(self)->Dict[str, enum.Enum]:
+    def enum(self)->DictionaryObjectForEnum:
         ea = getattr(self, '_enum_attributes', None)
         if ea is None:
             nea = enum_gen.schemaToPythonEnums(self.hyperparam_schema())
-            self._enum_attributes = nea
-            return nea
+            doe = DictionaryObjectForEnum(nea)
+            self._enum_attributes = doe
+            return doe
         else:
             return ea
 
@@ -475,7 +498,7 @@ class IndividualOp(Operator):
         if name in _schema_derived_attributes or name in [
             '__setstate__', '_schemas']:
             raise AttributeError
-        ea = self.enum_attributes
+        ea = self.enum
         if name in ea:
             return ea[name]
         else:
@@ -692,7 +715,7 @@ class IndividualOp(Operator):
                        for hp, s in defaulted.items() if 'enum' in s}
         return autoai_ranges, autoai_cat_idx
 
-    def _enum_to_strings(self, arg:enum.Enum)->Tuple[str, Any]:
+    def _enum_to_strings(self, arg:'enumeration.Enum')->Tuple[str, Any]:
         """[summary]
         
         Parameters
@@ -711,7 +734,7 @@ class IndividualOp(Operator):
             [description]
         """
 
-        if not isinstance(arg, enum.Enum):
+        if not isinstance(arg, enumeration.Enum):
             raise ValueError('Missing keyword on argument {}.'.format(arg))
         return arg.__class__.__name__, arg.value
 
@@ -925,7 +948,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             if k in hyperparams:
                 raise ValueError('Duplicate argument {}.'.format(k))
             v = lale.helpers.val_wrapper.unwrap(v)
-            if isinstance(v, enum.Enum):
+            if isinstance(v, enumeration.Enum):
                 k2, v2 = self._enum_to_strings(v)
                 if k != k2:
                     raise ValueError(
@@ -1540,10 +1563,10 @@ class BasePipeline(Operator, Generic[OpType]):
         return [op for op in self._steps if num_preds[op] == 0]
 
     def sort_topologically(self)->None:
-        class state(enum.Enum):
-            TODO=enum.auto(), 
-            DOING=enum.auto(),
-            DONE=enum.auto()
+        class state(enumeration.Enum):
+            TODO=enumeration.auto(), 
+            DOING=enumeration.auto(),
+            DONE=enumeration.auto()
         
         states:Dict[OpType, state] = { op: state.TODO for op in self._steps }
         result:List[OpType] = [ ]
