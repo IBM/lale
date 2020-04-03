@@ -24,7 +24,7 @@ class TestNotebooks(unittest.TestCase):
 
     def tearDown(self):
         duration = time.time() - self.start_time
-        print(f'test {self.id()} took {duration:,.3f} seconds')
+        print(f'unittest took {duration:5,.1f} seconds for {self.id()}')
 
 def create_test(path):
     def exec_notebook(self):
