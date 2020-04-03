@@ -2193,7 +2193,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         #can it be just the output of predict of the last step?
         # If this implementation changes, check to make sure that the implementation of 
         # self.is_transformer is kept in sync with the new assumptions.
-        return self.predict(X, y)
+        return self._predict(X, y)
 
     def predict_proba(self, X):
         """Probability estimates for all classes.
