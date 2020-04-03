@@ -229,7 +229,7 @@ def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
     if not isinstance(schema, dict):
         return
 
-    for key in ['anyOf', 'allOf', 'oneOf', 'items', 'additionalProperties']:
+    for key in ['anyOf', 'allOf', 'oneOf', 'items', 'additionalProperties', 'not']:
         atomize_schema_enumerations(schema.get(key, None))
 
     for key in ['properties', 'patternProperties', 'dependencies']:
@@ -288,3 +288,38 @@ def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
             else:
                 schema['anyOf'] = complex_evs
 
+def check_operators_schema(schema:Schema, warnings:List[str])->None:
+    """ Given a schema, collect warnings if there
+    are any enumeration with all Operator values
+    that are not marked as `'laleType':'operator'`.
+    This should be called after simplification.
+    """
+    if schema is None:
+        return
+
+    if isinstance(schema, list):
+        for s in schema:
+            check_operators_schema(s, warnings)
+        return
+
+    if not isinstance(schema, dict):
+        return
+
+    for key in ['anyOf', 'allOf', 'oneOf', 'items', 'additionalProperties', 'not']:
+        v = schema.get(key, None)
+        if v is not None:
+            check_operators_schema(v, warnings)
+
+    for key in ['properties', 'patternProperties', 'dependencies']:
+        v = schema.get(key, None)
+        if v is not None:
+            check_operators_schema(list(v.values()), warnings)
+
+    if 'enum' in schema:
+        es = schema['enum']
+        if es:
+            to = schema.get('laleType', None)
+            if to != 'operator':
+                from lale.operators import Operator
+                if all(isinstance(e, Operator) for e in es):
+                    warnings.append(f"The enumeration {[e.name() for e in es]} is all lale operators, but the schema fragment {schema} it is part of does not stipulate that it should be 'laleType':'operator'.  While legal, this likely indicates either an omission in the schema or a bug in the schema simplifier")

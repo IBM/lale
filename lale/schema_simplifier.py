@@ -626,8 +626,6 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 # this is being allOf'ed with an anyOfList
                 if s_any and all(hasAnyOperatorSchemas(s) for s in s_any):
                     ret_main["laleType"] = 'operator'
-                else:
-                    logger.warning(f"[lale schema simplifier]: The enumeration {list(s_enum)} is all lale operators, but the schema fragment {s} it is part of does not stipulate that it should be 'laleType':'operator'.  While legal, this likely indicate an omission in the schema.")
         return ret_main
 
     if ret_main:
