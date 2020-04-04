@@ -59,6 +59,7 @@ needs to be explained is greater than the specified percentage.""",
                 'default': None},
             'copy': {
                 'description': 'If false, overwrite data passed to fit.',
+                'type': 'boolean',
                 'default': True},
             'whiten': {
                 'description': """When true, multiply the components vectors by the square root of
@@ -76,10 +77,11 @@ outputs with unit component-wise variances.""",
                 'minimum': 0.0,
                 'default': 0.0},
             'iterated_power': {
-                'anyOf': [{
-                    'description': 'Number of iterations for the power method computed by svd_solver randomized.',
-                    'type': 'integer'}, {
-                    'description': 'Pick automatically.',
+                'anyOf': [
+                {   'description': 'Number of iterations for the power method computed by svd_solver randomized.',
+                    'type': 'integer',
+                    'minimum': 0},
+                {   'description': 'Pick automatically.',
                     'enum': ['auto']}],
                 'default': 'auto'},
             'random_state': {
@@ -171,7 +173,8 @@ _input_fit_schema = {
                 'type': 'array',
                 'items': {'type': 'number'}}},
         'y': {
-            'description': 'Target for supervised learning (ignored).'}}}
+            'description': 'Target for supervised learning (ignored).',
+            'laleType': 'Any'}}}
 
 _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -198,9 +201,9 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Principal component analysis`_ for linear dimensionality reduction.
 
-.. _`Principal component analysis`: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
+.. _`Principal component analysis`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.PCA.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.PCA.html',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],
