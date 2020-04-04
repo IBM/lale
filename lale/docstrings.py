@@ -42,7 +42,8 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     tags = []
     if 'laleType' in schema:
         tags.append(schema['laleType'])
-    tags.append(_kind_tag(schema))
+    else:
+        tags.append(_kind_tag(schema))
     if 'minimum' in schema:
         op = '>' if schema.get('exclusiveMinimum', False) else '>='
         tags.append(op + _value_docstring(schema['minimum']))
@@ -69,7 +70,7 @@ def _schema_docstring(name, schema, required=True, relevant=True):
                     + ' items for optimizer')
     if not required:
         tags.append('optional')
-    if not relevant or schema.get('forOptimizer', False):
+    if not relevant or schema.get('forOptimizer', True) == False:
         tags.append('not for optimizer')
     if 'default' in schema:
         tags.append('default ' + _value_docstring(schema['default']))
@@ -100,6 +101,8 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     result = name + ' : ' if name else ''
     result += ', '.join(tags)
     assert len(result) > 0 and result.rstrip() == result
+    if result.startswith('-'):
+        result = '\\' + result
     if body is not None and body.find('\n') == -1:
         assert body.startswith('  - ')
         result += ' **of** ' + body[4:]
