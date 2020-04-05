@@ -644,6 +644,14 @@ class TestClone(unittest.TestCase):
         X, y = iris.data, iris.target
         vclf.fit(X, y)
 
+    def test_fit_clones_impl(self):
+        from sklearn.datasets import load_iris
+        lr_trainable = LogisticRegression()
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        lr_trained = lr_trainable.fit(X, y)
+        self.assertIsNot(lr_trainable._impl, lr_trained._impl)
+
 class TestMLPClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
         from sklearn.datasets import make_classification, load_iris
