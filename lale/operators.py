@@ -1055,19 +1055,12 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 
     def _clone_impl(self):
         impl_instance = self._impl_instance()
-        result = None
         if hasattr(impl_instance, 'get_params'):
-            try:
-                result = sklearn.base.clone(impl_instance)
-            except BaseException: #as clone can raise TypeError or RuntimeError
-                pass
-        if result is None:
-            params_all = self.get_params_all()
+            result = sklearn.base.clone(impl_instance)
+        else:
             impl_class = self._impl_class()
-            if len(params_all) == 0:
-                result = impl_class()
-            else:
-                result = impl_class(**params_all)
+            params_all = self.get_params_all()
+            result = impl_class(**params_all)
         return result
 
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
