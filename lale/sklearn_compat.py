@@ -468,10 +468,14 @@ class SKlearnCompatWrapper(object):
     def _final_estimator(self):
         op:Optional[Ops.IndividualOp] = self._final_individual_op()
         model = None
-        if op is None:
-            model = None
-        elif hasattr(op, '_impl') and hasattr(op._impl_instance(), '_sklearn_model'):
-            model = op._impl_instance()._sklearn_model
+        if op is not None:
+            # if fit was called, we want to use trained result
+            # even if the code uses the original operrator
+            # since sklearn assumes that fit mutates the operator
+            if hasattr(op, '_trained'):
+                op = op._trained
+            if hasattr(op, '_impl') and hasattr(op._impl_instance(), '_sklearn_model'):
+                model = op._impl_instance()._sklearn_model
         return 'passthrough' if model is None else model
 
     @property
