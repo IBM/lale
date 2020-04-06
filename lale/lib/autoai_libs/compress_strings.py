@@ -39,7 +39,7 @@ _hyperparams_schema = {
         'type': 'object',
         'additionalProperties': False,
         'required': ['compress_type', 'dtypes_list', 'misslist_list', 'missing_values_reference_list', 'activate_flag'],
-        'relevantToOptimizer': [],
+        'relevantToOptimizer': ['compress_type', 'activate_flag'],
         'properties': {
             'compress_type': {
                 'description': 'Type of string compression: `string` for removing spaces from a string and `hash` for creating an int hash, used when there are columns with strings and cat_imp_strategy=`most_frequent`.',

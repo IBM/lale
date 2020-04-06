@@ -5,7 +5,6 @@ import logging
 import inspect
 import importlib
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 def wrap_imported_operators():

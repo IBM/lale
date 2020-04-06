@@ -21,7 +21,6 @@ from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFiel
 
 from .schema_utils import Schema, SchemaEnum
 
-# logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class DiscoveredEnums(object):

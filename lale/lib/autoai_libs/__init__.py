@@ -15,14 +15,14 @@
 # from autoai_libs.transformers.exportable
 from .numpy_column_selector        import NumpyColumnSelector
 from .compress_strings             import CompressStrings
-# from .numpy_replace_missing_values import NumpyReplaceMissingValues
-# from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
+from .numpy_replace_missing_values import NumpyReplaceMissingValues
+from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
 # from .boolean2float                import boolean2float
 # from .cat_imputer                  import CatImputer
 # from .cat_encoder                  import CatEncoder
 # from .float32_transform            import float32_transform
 # from .float_str2_float             import FloatStr2_Float
-# from .num_imputer                  import NumImputer
+from .num_imputer                  import NumImputer
 from .opt_standard_scaler          import OptStandardScaler
 # from .numpy_permute_array          import NumpyPermuteArray
 

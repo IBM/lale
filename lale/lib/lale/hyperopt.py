@@ -36,9 +36,8 @@ from lale.lib.sklearn import LogisticRegression
 import multiprocessing
 
 SEED=42
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.ERROR)
 
 class HyperoptImpl:
 

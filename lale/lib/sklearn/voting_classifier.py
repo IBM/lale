@@ -218,8 +218,13 @@ _input_decision_function_schema = {
 
 _output_decision_function_schema = {
     'description': 'Confidence scores for samples for each class in the model.',
-    'type': 'array',
-    'items': {'type': 'array', 'items': {'type': 'number'}}}
+    'anyOf': [
+    {   'description': 'In the multi-way case, score per (sample, class) combination.',
+        'type': 'array',
+        'items': {'type': 'array', 'items': {'type': 'number'}}},
+    {   'description': 'In the binary case, score for `self._classes[1]`.',
+        'type': 'array',
+        'items': {'type': 'number'}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

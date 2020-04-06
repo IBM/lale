@@ -16,7 +16,7 @@ import lale.helpers
 import lale.type_checking
 from abc import ABC, abstractmethod
 import importlib
-import enum
+import enum as enumeration
 import os
 import itertools
 from lale import schema2enums as enum_gen
@@ -41,7 +41,6 @@ from lale.json_operator import JSON_TYPE
 from sklearn.pipeline import if_delegate_has_method
 import sklearn.base
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 	
 class Operator(metaclass=AbstractVisitorMeta):
@@ -347,6 +346,10 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
+    def _predict(self, X):
+        pass
+
+    @abstractmethod
     def predict(self, X):
         """Make predictions.
         
@@ -416,10 +419,39 @@ class TrainedOperator(TrainableOperator):
 
 _schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
 
+
+class DictionaryObjectForEnum():
+    _d:Dict[str, enumeration.Enum]
+
+    def __init__(self, d:Dict[str, enumeration.Enum]):
+        self._d = d
+
+    def __contains__(self, key:str)->bool:
+        return key in self._d
+
+    def __getattr__(self, key:str)->enumeration.Enum:
+        if key in self._d:
+            return self._d[key]
+        else:
+            raise AttributeError("No enumeration found for hyper-parameter: " + key)
+
+    def __getitem__(self, key:str)->enumeration.Enum:
+        if key in self._d:
+            return self._d[key]
+        else:
+            raise KeyError("No enumeration found for hyper-parameter: " + key)
+
 class IndividualOp(Operator):
     """
     This is a concrete class that can instantiate a new individual
     operator and provide access to its metadata.
+    The enum property can be used to access enumerations for hyper-parameters,
+    auto-generated from the operator's schema.
+    For example, `LinearRegression.enum.solver.saga`
+    As a short-hand, if the hyper-parameter name does not conflict with 
+    any fields of this class, the auto-generated enums can also be accessed
+    directly.
+    For example, `LinearRegression.solver.saga`
     """
 
     _name:str
@@ -452,15 +484,16 @@ class IndividualOp(Operator):
         # so that their usage looks like LogisticRegression.penalty.l1
 #        enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
 
-    _enum_attributes:Optional[Dict[str, enum.Enum]]
+    _enum_attributes:Optional[DictionaryObjectForEnum]
 
     @property
-    def enum_attributes(self)->Dict[str, enum.Enum]:
+    def enum(self)->DictionaryObjectForEnum:
         ea = getattr(self, '_enum_attributes', None)
         if ea is None:
             nea = enum_gen.schemaToPythonEnums(self.hyperparam_schema())
-            self._enum_attributes = nea
-            return nea
+            doe = DictionaryObjectForEnum(nea)
+            self._enum_attributes = doe
+            return doe
         else:
             return ea
 
@@ -476,7 +509,7 @@ class IndividualOp(Operator):
         if name in _schema_derived_attributes or name in [
             '__setstate__', '_schemas']:
             raise AttributeError
-        ea = self.enum_attributes
+        ea = self.enum
         if name in ea:
             return ea[name]
         else:
@@ -693,7 +726,7 @@ class IndividualOp(Operator):
                        for hp, s in defaulted.items() if 'enum' in s}
         return autoai_ranges, autoai_cat_idx
 
-    def _enum_to_strings(self, arg:enum.Enum)->Tuple[str, Any]:
+    def _enum_to_strings(self, arg:'enumeration.Enum')->Tuple[str, Any]:
         """[summary]
         
         Parameters
@@ -712,7 +745,7 @@ class IndividualOp(Operator):
             [description]
         """
 
-        if not isinstance(arg, enum.Enum):
+        if not isinstance(arg, enumeration.Enum):
             raise ValueError('Missing keyword on argument {}.'.format(arg))
         return arg.__class__.__name__, arg.value
 
@@ -926,7 +959,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             if k in hyperparams:
                 raise ValueError('Duplicate argument {}.'.format(k))
             v = lale.helpers.val_wrapper.unwrap(v)
-            if isinstance(v, enum.Enum):
+            if isinstance(v, enumeration.Enum):
                 k2, v2 = self._enum_to_strings(v)
                 if k != k2:
                     raise ValueError(
@@ -1020,14 +1053,21 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def __init__(self, _name, _impl, _schemas):
         super(TrainableIndividualOp, self).__init__(_name, _impl, _schemas)
 
+    def _clone_impl(self):
+        impl_instance = self._impl_instance()
+        if hasattr(impl_instance, 'get_params'):
+            result = sklearn.base.clone(impl_instance)
+        else:
+            impl_class = self._impl_class()
+            params_all = self.get_params_all()
+            result = impl_class(**params_all)
+        return result
+
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
         filtered_fit_params = fixup_hyperparams_dict(fit_params)
-        try:
-            trainable_impl = sklearn.base.clone(self._impl_instance())
-        except BaseException: #as clone can raise TypeError or RuntimeError
-            trainable_impl = self._impl_instance()
+        trainable_impl = self._clone_impl()
         if filtered_fit_params is None:
             trained_impl = trainable_impl.fit(X, y)
         else:
@@ -1275,6 +1315,12 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result = self._validate_output_schema(raw_result, 'transform')
         return result
 
+    def _predict(self, X):
+        X = self._validate_input_schema('X', X, 'predict')
+        raw_result = self._impl_instance().predict(X)
+        result = self._validate_output_schema(raw_result, 'predict')
+        return result
+
     @if_delegate_has_method(delegate='_impl')
     def predict(self, X):
         """Make predictions.
@@ -1289,9 +1335,9 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Predictions; see output_predict schema of the operator.
         """
-        X = self._validate_input_schema('X', X, 'predict')
-        raw_result = self._impl_instance().predict(X)
-        result = self._validate_output_schema(raw_result, 'predict')
+        result = self._predict(X)
+        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
+            return np.array(result) #otherwise scorers return zero-dim array
         return result
 
     @if_delegate_has_method(delegate='_impl')
@@ -1539,10 +1585,10 @@ class BasePipeline(Operator, Generic[OpType]):
         return [op for op in self._steps if num_preds[op] == 0]
 
     def sort_topologically(self)->None:
-        class state(enum.Enum):
-            TODO=enum.auto(), 
-            DOING=enum.auto(),
-            DONE=enum.auto()
+        class state(enumeration.Enum):
+            TODO=enumeration.auto(), 
+            DOING=enumeration.auto(),
+            DONE=enumeration.auto()
         
         states:Dict[OpType, state] = { op: state.TODO for op in self._steps }
         result:List[OpType] = [ ]
@@ -1842,7 +1888,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         meta_output = operator._impl_instance().get_transform_meta_output()
                 else:
                     if trainable in sink_nodes:
-                        output = trained.predict(X = inputs) #We don't support y for predict yet as there is no compelling case
+                        output = trained._predict(X = inputs) #We don't support y for predict yet as there is no compelling case
                     else:
                         # This is ok because trainable pipelines steps
                         # must only be individual operators
@@ -1851,7 +1897,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         elif hasattr(trained._impl, 'decision_function'): # type: ignore
                             output = trained.decision_function(X = inputs)
                         else:
-                            output = trained.predict(X = inputs)
+                            output = trained._predict(X = inputs)
                     if hasattr(operator._impl, "get_predict_meta_output"):
                         meta_output = operator._impl_instance().get_predict_meta_output()
                 outputs[operator] = output
@@ -2077,7 +2123,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     batch_output = trained.transform(batch_X, batch_y)
                 else:
                     if trainable in sink_nodes:
-                        batch_output = trained.predict(X = batch_X) #We don't support y for predict yet as there is no compelling case
+                        batch_output = trained._predict(X = batch_X) #We don't support y for predict yet as there is no compelling case
                     else:
                         # This is ok because trainable pipelines steps
                         # must only be individual operators
@@ -2086,7 +2132,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         elif hasattr(trained._impl, 'decision_function'): # type: ignore
                             batch_output = trained.decision_function(X = batch_X)
                         else:
-                            batch_output = trained.predict(X = batch_X)
+                            batch_output = trained._predict(X = batch_X)
                 if isinstance(batch_output, tuple):
                     batch_out_X, batch_out_y = batch_output
                 else:
@@ -2131,7 +2177,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         super(TrainedPipeline, self).__init__(steps, edges, ordered=ordered)
 
 
-    def predict(self, X, y = None):
+    def _predict(self, X, y = None):
         outputs = { }
         meta_outputs = {}
         sink_nodes = self.find_sink_nodes()
@@ -2153,7 +2199,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 operator._impl_instance().set_meta_data(meta_data_inputs)
             meta_output = {}
             if operator in sink_nodes and hasattr(operator._impl, 'predict'):#Since this is pipeline's predict, we should invoke predict from sink nodes
-                output = operator.predict(X = inputs)
+                output = operator._predict(X = inputs)
             elif operator.is_transformer():
                 output = operator.transform(X = inputs, y = y)
                 if hasattr(operator._impl, "get_transform_meta_output"):
@@ -2163,21 +2209,28 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             elif hasattr(operator._impl, 'decision_function'):#For estimator as a transformer, use decision_function if available
                 output = operator.decision_function(X = inputs)
             else:
-                output = operator.predict(X = inputs)
+                output = operator._predict(X = inputs)
                 if hasattr(operator._impl, "get_predict_meta_output"):
                     meta_output = operator._impl_instance().get_predict_meta_output()
             outputs[operator] = output
             meta_output.update({key:meta_outputs[pred][key] for pred in preds 
                     if meta_outputs[pred] is not None for key in meta_outputs[pred]})
             meta_outputs[operator] = meta_output
-        return outputs[self._steps[-1]]
+        result = outputs[self._steps[-1]]
+        return result
+
+    def predict(self, X):
+        result = self._predict(X)
+        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
+            return np.array(result) #otherwise scorers return zero-dim array
+        return result
 
     def transform(self, X, y = None):
         #TODO: What does a transform on a pipeline mean, if the last step is not a transformer
         #can it be just the output of predict of the last step?
         # If this implementation changes, check to make sure that the implementation of 
         # self.is_transformer is kept in sync with the new assumptions.
-        return self.predict(X, y)
+        return self._predict(X, y)
 
     def predict_proba(self, X):
         """Probability estimates for all classes.
@@ -2216,7 +2269,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     elif hasattr(operator._impl, 'decision_function'):
                         output = operator.decision_function(X = inputs)
                     else:
-                        output = operator.predict(X = inputs)
+                        output = operator._predict(X = inputs)
             outputs[operator] = output
         return outputs[self._steps[-1]]
 
@@ -2257,7 +2310,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     elif hasattr(operator._impl, 'decision_function'):
                         output = operator.decision_function(X = inputs)
                     else:
-                        output = operator.predict(X = inputs)
+                        output = operator._predict(X = inputs)
             outputs[operator] = output
         return outputs[self._steps[-1]]
 
@@ -2304,7 +2357,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     batch_output = trained.transform(batch_X, batch_y)
                 else:
                     if trained in sink_nodes:
-                        batch_output = trained.predict(X = batch_X) #We don't support y for predict yet as there is no compelling case
+                        batch_output = trained._predict(X = batch_X) #We don't support y for predict yet as there is no compelling case
                     else:
                         # This is ok because trainable pipelines steps
                         # must only be individual operators
@@ -2313,7 +2366,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         elif hasattr(trained._impl, 'decision_function'): # type: ignore
                             batch_output = trained.decision_function(X = batch_X)
                         else:
-                            batch_output = trained.predict(X = batch_X)
+                            batch_output = trained._predict(X = batch_X)
                 if isinstance(batch_output, tuple):
                     batch_out_X, batch_out_y = batch_output
                 else:

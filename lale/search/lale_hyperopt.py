@@ -14,7 +14,6 @@
 
 from typing import Any, Dict, Iterable, List, Optional
 import os
-import logging
 import math
 import re
 
@@ -27,9 +26,6 @@ from lale.operators import Operator
 
 from hyperopt import hp
 from hyperopt.pyll import scope
-
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
 
 def search_space_to_hp_expr(space:SearchSpace, name:str):
     return SearchSpaceHPExprVisitor.run(space, name)

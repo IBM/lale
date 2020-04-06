@@ -427,6 +427,13 @@ class TestDatasetSchemas(unittest.TestCase):
             with self.assertRaises(ValueError):
                 TfidfVectorizer.validate_schema(**dataset)
 
+    def test_decision_function_binary(self):
+        from lale.lib.lale import Project
+        train_X, train_y = self._creditG['X'], self._creditG['y']
+        trainable = Project(columns={'type': 'number'}) >> LogisticRegression()
+        trained = trainable.fit(train_X, train_y)
+        decisions = trained.decision_function(train_X)
+
 class TestErrorMessages(unittest.TestCase):
     def test_wrong_cont(self):
         with self.assertRaises(jsonschema.ValidationError) as cm:
@@ -461,3 +468,20 @@ class TestSchemaValidation(unittest.TestCase):
         jsonschema.validate(42, any_schema)        
         self.assertTrue(is_subschema(num_schema, any_schema))
         self.assertTrue(is_subschema(any_schema, num_schema))
+
+class TestWithScorer(unittest.TestCase):
+    def test_bare_array(self):
+        from lale.datasets.data_schemas import NDArrayWithSchema
+        from numpy import ndarray
+        import sklearn.metrics
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.assertIsInstance(X, ndarray)
+        self.assertIsInstance(y, ndarray)
+        self.assertNotIsInstance(X, NDArrayWithSchema)
+        self.assertNotIsInstance(y, NDArrayWithSchema)
+        trainable = LogisticRegression()
+        trained = trainable.fit(X, y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
+        out = scorer(trained, X, y)
+        self.assertIsInstance(out, float)
+        self.assertNotIsInstance(out, NDArrayWithSchema)

@@ -15,7 +15,6 @@
 
 import random
 import math
-import logging
 import numpy
 import warnings
 
@@ -36,9 +35,6 @@ from smac.configspace import ConfigurationSpace
 from ConfigSpace.hyperparameters import CategoricalHyperparameter, \
     UniformFloatHyperparameter, UniformIntegerHyperparameter, Hyperparameter
 from ConfigSpace.conditions import EqualsCondition
-
-logging.basicConfig(level=logging.WARNING)
-logger = logging.getLogger(__name__)
 
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:

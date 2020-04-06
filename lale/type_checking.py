@@ -192,7 +192,8 @@ def join_schemas(*schemas: JSON_TYPE) -> JSON_TYPE:
         return jsonsubschema.joinSchemas(s_a, s_b)
     if len(schemas) == 0:
         return {'not':{}}
-    return functools.reduce(join_two_schemas, schemas)
+    result = functools.reduce(join_two_schemas, schemas)
+    return result
         
 def get_hyperparam_names(op: 'lale.operators.IndividualOp') -> List[str]:
     """Names of the arguments to the constructor of the impl.

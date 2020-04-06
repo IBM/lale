@@ -39,7 +39,6 @@ try:
 except ImportError:
     torch_installed=False
 
-logging.basicConfig(level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 class NestedHyperoptSpace():

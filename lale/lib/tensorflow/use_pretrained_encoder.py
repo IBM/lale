@@ -14,16 +14,12 @@
 
 import os
 import shutil
-import logging
 import random
 import tensorflow_hub as hub
 import tensorflow as tf
 import numpy as np
 from lale.operators import make_operator
 import lale.helpers
-
-logging.basicConfig(level=logging.INFO)
-
 
 class USEPretrainedEncoderImpl(object):
     """
