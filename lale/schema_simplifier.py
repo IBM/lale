@@ -19,7 +19,7 @@ import jsonschema
 from .schema_ranges import SchemaRange
 
 from typing import Any, Dict, Generic, List, Set, Iterable, Iterator, Optional, Tuple, TypeVar, Union
-from .schema_utils import Schema, getMinimum, getMaximum, isForOptimizer, makeAllOf, makeAnyOf, makeOneOf, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema
+from .schema_utils import Schema, getMinimum, getMaximum, isForOptimizer, makeAllOf, makeAnyOf, makeOneOf, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema, is_lale_any_schema
 
 logger = logging.getLogger(__name__)
 
@@ -208,6 +208,8 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 continue
             if is_false_schema(s):
                 return SFalse
+            if is_lale_any_schema(s):
+                continue
             if 'allOf' in s:
                 s_all.extend(s['allOf'])
             elif 'anyOf' in s:

@@ -30,6 +30,13 @@ def is_true_schema(s:Schema)->bool:
 def is_false_schema(s:Schema)->bool:
     return s is False or s == SFalse
 
+def is_lale_any_schema(s:Schema)->bool:
+    if isinstance(s, dict):
+        t = s.get('laleType', None)
+        return t == 'Any'
+    else:
+        return False
+
 def getForOptimizer(obj, prop:str):
     return obj.get(prop + forOptimizerConstantSuffix, None)
 

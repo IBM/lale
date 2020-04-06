@@ -342,6 +342,8 @@ class SearchSpaceOperatorVisitor(Visitor):
                     combined_sub_schema = SearchSpaceSum(sub_schemas)
                 return SearchSpaceOperator(combined_sub_schema)
 
+            elif typ == "Any":
+                raise ValueError(f"In path: {path}, longName: {longName}: A search space was found with laleType ({typ}), which is not searchable.  Please mark the relevant hyperparameter as not relevant for the optimizer.  schema: {schema}")
             else:
                 raise ValueError(f"An unknown type ({typ}) was found in the schema {schema}")
 
