@@ -1817,7 +1817,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 inputs = [X]
                 meta_data_inputs:Dict[Operator, Any] = {}
             else:
-                inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
+                inputs = [outputs[pred] for pred in preds]
                 #we create meta_data_inputs as a dictionary with metadata from all previous steps
                 #Note that if multiple previous steps generate the same key, it will retain only one of those.
                 
@@ -1830,6 +1830,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 operator._impl_instance().set_meta_data(meta_data_inputs)
             meta_output:Dict[Operator, Any] = {}
             trained:TrainedOperator
+            if isinstance(inputs, tuple):#This is the case for transformers which return X and y, such as resamplers.
+                inputs, y = inputs            
             if trainable.is_supervised():
                 trained = trainable.fit(X = inputs, y = y)
             else:
