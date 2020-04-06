@@ -1053,14 +1053,21 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def __init__(self, _name, _impl, _schemas):
         super(TrainableIndividualOp, self).__init__(_name, _impl, _schemas)
 
+    def _clone_impl(self):
+        impl_instance = self._impl_instance()
+        if hasattr(impl_instance, 'get_params'):
+            result = sklearn.base.clone(impl_instance)
+        else:
+            impl_class = self._impl_class()
+            params_all = self.get_params_all()
+            result = impl_class(**params_all)
+        return result
+
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
         filtered_fit_params = fixup_hyperparams_dict(fit_params)
-        try:
-            trainable_impl = sklearn.base.clone(self._impl_instance())
-        except BaseException: #as clone can raise TypeError or RuntimeError
-            trainable_impl = self._impl_instance()
+        trainable_impl = self._clone_impl()
         if filtered_fit_params is None:
             trained_impl = trainable_impl.fit(X, y)
         else:
