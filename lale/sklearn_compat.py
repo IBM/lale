@@ -388,11 +388,25 @@ class SKlearnCompatWrapper(object):
         else:
             return super().__repr__()
 
-    def __getattr__(self, name):
+    def __getattribute__(self, name):
+        """ Try proxying unknown attributes to the underlying operator
+            getattribute is used instead of getattr to ensure that the 
+            correct underlying error is thrown in case
+            a property (such as classes_) throws an AttributeError
+        """
+
         # This is needed because in python copy skips calling the __init__ method
-        if name == "_base":
-            raise AttributeError
-        return getattr(self._base, name)
+        try:
+            return super(SKlearnCompatWrapper, self).__getattribute__(name)
+        except AttributeError as e:
+            if name == "_base":
+                raise AttributeError
+            try:
+                return getattr(self._base, name)
+            except AttributeError:
+                raise e
+
+
 
     def get_params(self, deep:bool = True)->Dict[str,Any]:
         out:Dict[str,Any] = {}
