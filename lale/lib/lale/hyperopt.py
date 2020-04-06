@@ -41,7 +41,7 @@ logger.setLevel(logging.ERROR)
 
 class HyperoptImpl:
 
-    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None, args_to_scorer=None):
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None, show_progressbar=True, args_to_scorer=None):
         self.max_evals = max_evals
         if estimator is None:
             self.estimator = LogisticRegression()
@@ -55,6 +55,7 @@ class HyperoptImpl:
         self._trials = Trials()
         self.max_opt_time = max_opt_time
         self.max_eval_time = max_eval_time
+        self.show_progressbar = show_progressbar
         if args_to_scorer is not None:
             self.args_to_scorer = args_to_scorer
         else:
@@ -140,7 +141,8 @@ class HyperoptImpl:
             return proc_dict
 
         try :
-            fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self._trials, rstate=np.random.RandomState(SEED))
+            fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self._trials, rstate=np.random.RandomState(SEED),
+            show_progressbar=self.show_progressbar)
         except SystemExit :
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
         except ValueError:
@@ -246,7 +248,7 @@ _hyperparams_schema = {
     {   'type': 'object',
         'required': [
             'estimator', 'max_evals', 'cv', 'handle_cv_failure',
-            'max_opt_time', 'pgo'],
+            'max_opt_time', 'pgo', 'show_progressbar'],
         'relevantToOptimizer': ['estimator'],
         'additionalProperties': False,
         'properties': {
@@ -341,6 +343,10 @@ where zero is the best loss.""",
                 {   'description': 'lale.search.PGO'},
                 {   'enum': [None]}],
                 'default': None},
+            'show_progressbar': {
+                'description': 'Display progress bar during optimization.',
+                'type': 'boolean',
+                'default': True},
             'args_to_scorer':{
                 'anyOf':[
                     {'type':'object'},#Python dictionary
