@@ -1074,7 +1074,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             trained_impl = trainable_impl.fit(X, y, **filtered_fit_params)
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
-        self.__trained = result
+        self._trained = result
         return result
 
     def partial_fit(self, X, y = None, **fit_params)->TrainedOperator:
@@ -1090,7 +1090,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 X, y, **filtered_fit_params)
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
-        self.__trained = result
+        self._trained = result
         return result
 
     @if_delegate_has_method(delegate='_impl')
@@ -1104,7 +1104,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         """
         warnings.warn(_mutation_warning('transform'), DeprecationWarning)
         try:
-            return self.__trained.transform(X, y)
+            return self._trained.transform(X, y)
         except AttributeError:
             raise ValueError('Must call `fit` before `transform`.')
 
@@ -1119,7 +1119,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         """
         warnings.warn(_mutation_warning('predict'), DeprecationWarning)
         try:
-            return self.__trained.predict(X)
+            return self._trained.predict(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `predict`.')
 
@@ -1134,7 +1134,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         """
         warnings.warn(_mutation_warning('predict_proba'), DeprecationWarning)
         try:
-            return self.__trained.predict_proba(X)
+            return self._trained.predict_proba(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
 
@@ -1149,7 +1149,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         """
         warnings.warn(_mutation_warning('decision_function'), DeprecationWarning)
         try:
-            return self.__trained.decision_function(X)
+            return self._trained.decision_function(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `decision_function`.')
 
@@ -1909,7 +1909,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
         trained_steps2:Any = trained_steps
         result:TrainedPipeline = TrainedPipeline(trained_steps2, trained_edges, ordered=True)
-        self.__trained = result
+        self._trained = result
         return result
 
     def transform(self, X, y = None):
@@ -1922,7 +1922,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         """
         warnings.warn(_mutation_warning('transform'), DeprecationWarning)
         try:
-            return self.__trained.transform(X, y = None)
+            return self._trained.transform(X, y = None)
         except AttributeError:
             raise ValueError('Must call `fit` before `transform`.')
 
@@ -1936,7 +1936,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         """
         warnings.warn(_mutation_warning('predict'), DeprecationWarning)
         try:
-            return self.__trained.predict(X)
+            return self._trained.predict(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `predict`.')
 
@@ -1950,7 +1950,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         """
         warnings.warn(_mutation_warning('predict_proba'), DeprecationWarning)
         try:
-            return self.__trained.predict_proba(X)
+            return self._trained.predict_proba(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `predict_proba`.')
 
@@ -1964,7 +1964,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         """
         warnings.warn(_mutation_warning('decision_function'), DeprecationWarning)
         try:
-            return self.__trained.decision_function(X)
+            return self._trained.decision_function(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `decision_function`.')
 
@@ -2163,7 +2163,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
         trained_steps2:Any = trained_steps
         result:TrainedPipeline = TrainedPipeline(trained_steps2, trained_edges, ordered=True)
-        self.__trained = result
+        self._trained = result
         return result
 
 TrainedOpType = TypeVar('TrainedOpType', bound=TrainedIndividualOp)
