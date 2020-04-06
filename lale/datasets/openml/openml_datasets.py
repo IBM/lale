@@ -26,7 +26,8 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
-from lale.lib.sklearn import SimpleImputer, OneHotEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 
 download_data_dir = os.path.join(os.path.dirname(__file__), 'download_data')
@@ -433,7 +434,7 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
         txm2 = ColumnTransformer(transformers2, sparse_threshold=0.0)
         if verbose:
             print("Shape of X before preprocessing", X.shape)
-        from lale.operators import make_pipeline
+        from sklearn.pipeline import make_pipeline
         preprocessing = make_pipeline(txm1, txm2)
 
         X = preprocessing.fit(X).transform(X)
