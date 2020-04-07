@@ -836,26 +836,3 @@ class TestLazyImpl(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         impl = Hyperopt._impl
         self.assertTrue(inspect.isclass(impl))
-
-class TestSMOTE(unittest.TestCase):
-    def setUp(self):
-        from sklearn.datasets import make_classification
-        self.X, self.y = make_classification(n_classes=2, class_sep=2,
-            weights=[0.1, 0.9], n_informative=3, n_redundant=1, flip_y=0,
-            n_features=20, n_clusters_per_class=1, n_samples=1000, random_state=10)
-        
-    def test_fit_predict_in_a_pipeline(self):
-        from lale.lib.imblearn import SMOTE
-        from sklearn.metrics import accuracy_score
-        pipeline = PCA() >> SMOTE() >> LogisticRegression()
-        trained = pipeline.fit(self.X, self.y)
-        predictions = trained.predict(self.X)
-
-    def test_with_hyperopt_in_a_pipeline(self):
-        from lale.lib.imblearn import SMOTE
-        from sklearn.metrics import accuracy_score
-        from lale.lib.lale import Hyperopt
-        pipeline = PCA() >> SMOTE() >> LogisticRegression()
-        optimizer = Hyperopt(estimator=pipeline, max_evals = 1)
-        trained_optimizer = optimizer.fit(self.X, self.y)
-        predictions = trained_optimizer.predict(self.X)
