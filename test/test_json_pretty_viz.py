@@ -410,7 +410,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.min_max_scaler.MinMaxScalerImpl',
               'state': 'planned',
               'operator': 'MinMaxScaler', 'label': 'Scl',
-              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html'}}}
+              'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.MinMaxScaler.html#sklearn-preprocessing-minmaxscaler'}}}
         json = to_json(operator)
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
@@ -506,7 +506,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.nystroem.NystroemImpl',
               'state': 'planned',
               'operator': 'Nystroem', 'label': 'Nystroem',
-              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.kernel_approximation.Nystroem.html'}},
+              'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_approximation.Nystroem.html#sklearn-kernel-approximation-nystroem'}},
           'is_frozen_trainable': False}
         json = operator.to_json()
         self.assertEqual(json, json_expected)
@@ -529,7 +529,7 @@ class TestToAndFromJSON(unittest.TestCase):
           'operator': 'VotingClassifier',
           'is_frozen_trainable': True,
           'label': 'Vote',
-          'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.VotingClassifier.html',
+          'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html#sklearn-ensemble-votingclassifier',
           'hyperparams': {
             'estimators': [
               ('knn', {'$ref': '../steps/knn'}),
@@ -540,7 +540,7 @@ class TestToAndFromJSON(unittest.TestCase):
               'class': 'lale.lib.sklearn.k_neighbors_classifier.KNeighborsClassifierImpl',
               'state': 'planned',
               'operator': 'KNeighborsClassifier', 'label': 'KNN',
-              'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html'},
+              'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn-neighbors-kneighborsclassifier'},
             'pipeline': {
               'class': 'lale.operators.PlannedPipeline',
               'state': 'planned',
