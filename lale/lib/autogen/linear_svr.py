@@ -42,14 +42,14 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0,
                 'description': 'Epsilon parameter in the epsilon-insensitive loss function'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0001,
                 'description': 'Tolerance for stopping criteria.'},
             'C': {
@@ -154,6 +154,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.svm.LinearSVR#sklearn-svm-linearsvr',
     'type': 'object',
     'tags': {
         'pre': [],

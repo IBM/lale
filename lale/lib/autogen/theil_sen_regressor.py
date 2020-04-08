@@ -69,7 +69,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.001,
                 'description': 'Tolerance when calculating spatial median.'},
             'random_state': {
@@ -145,6 +145,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.TheilSenRegressor#sklearn-linear_model-theilsenregressor',
     'type': 'object',
     'tags': {
         'pre': [],

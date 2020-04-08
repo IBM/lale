@@ -80,7 +80,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node:  - If int, then consider `min_samples_split` as the minimum number'},
             'min_samples_leaf': {
@@ -90,7 +90,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node'},
             'min_weight_fraction_leaf': {
@@ -143,7 +143,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.9,
                 'description': 'The alpha-quantile of the huber loss function and the quantile loss function'},
             'verbose': {
@@ -256,6 +256,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingRegressor#sklearn-ensemble-gradientboostingregressor',
     'type': 'object',
     'tags': {
         'pre': [],

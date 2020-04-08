@@ -26,7 +26,6 @@ _hyperparams_schema = {
     'description': 'inherited docstring for LabelEncoder    Encode labels with value between 0 and n_classes-1.',
     'allOf': [{
         'type': 'object',
-        'required': [],
         'relevantToOptimizer': [],
         'additionalProperties': False,
         'properties': {
@@ -69,6 +68,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.LabelEncoder#sklearn-preprocessing-labelencoder',
     'type': 'object',
     'tags': {
         'pre': [],

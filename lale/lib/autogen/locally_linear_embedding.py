@@ -59,14 +59,14 @@ _hyperparams_schema = {
                 'default': 0.001,
                 'description': 'regularization constant, multiplies the trace of the local covariance matrix of the distances.'},
             'eigen_solver': {
-                'enum': ['arpack', 'auto', 'dense'],
+                'enum': ['auto', 'arpack', 'dense'],
                 'default': 'auto',
                 'description': 'auto : algorithm will attempt to choose the best method for input data  arpack : use arnoldi iteration in shift-invert mode'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1e-06,
                 'description': "Tolerance for 'arpack' method Not used if eigen_solver=='dense'."},
             'max_iter': {
@@ -90,7 +90,7 @@ _hyperparams_schema = {
                 'default': 1e-12,
                 'description': 'Tolerance for modified LLE method'},
             'neighbors_algorithm': {
-                'enum': ['auto', 'ball_tree', 'brute', 'kd_tree'],
+                'enum': ['auto', 'brute', 'kd_tree', 'ball_tree'],
                 'default': 'auto',
                 'description': 'algorithm to use for nearest neighbors search, passed to neighbors.NearestNeighbors instance'},
             'random_state': {
@@ -178,6 +178,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.manifold.LocallyLinearEmbedding#sklearn-manifold-locallylinearembedding',
     'type': 'object',
     'tags': {
         'pre': [],

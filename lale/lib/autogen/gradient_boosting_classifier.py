@@ -43,6 +43,9 @@ class GradientBoostingClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+    def decision_function(self, X):
+        return self._sklearn_model.decision_function(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for GradientBoostingClassifier    Gradient Boosting for classification.',
@@ -82,7 +85,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node:  - If int, then consider `min_samples_split` as the minimum number'},
             'min_samples_leaf': {
@@ -262,9 +265,41 @@ _output_predict_proba_schema = {
             'type': 'number'},
     },
 }
+_input_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Compute the decision function of ``X``.',
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {
+                    'type': 'number'},
+            },
+            'description': 'The input samples'},
+    },
+}
+_output_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'The decision function of the input samples',
+    'anyOf': [{
+        'type': 'array',
+        'items': {
+            'type': 'array',
+            'items': {
+                'type': 'number'},
+        }}, {
+        'type': 'array',
+        'items': {
+            'type': 'number'},
+    }],
+}
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingClassifier#sklearn-ensemble-gradientboostingclassifier',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -276,7 +311,9 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema},
+        'output_predict_proba': _output_predict_proba_schema,
+        'input_decision_function': _input_decision_function_schema,
+        'output_decision_function': _output_decision_function_schema},
 }
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

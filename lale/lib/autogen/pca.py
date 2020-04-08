@@ -57,7 +57,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'When True (False by default) the `components_` vectors are multiplied by the square root of n_samples and then divided by the singular values to ensure uncorrelated outputs with unit component-wise variances'},
             'svd_solver': {
-                'enum': ['arpack', 'auto', 'full', 'randomized'],
+                'enum': ['auto', 'full', 'arpack', 'randomized'],
                 'default': 'auto',
                 'description': "auto :     the solver is selected by a default policy based on `X.shape` and     `n_components`: if the input data is larger than 500x500 and the     number of components to extract is lower than 80% of the smallest     dimension of the data, then the more efficient 'randomized'     method is enabled"},
             'tol': {
@@ -134,6 +134,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.PCA#sklearn-decomposition-pca',
     'type': 'object',
     'tags': {
         'pre': [],

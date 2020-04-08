@@ -44,7 +44,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1.0,
                 'description': 'Constant that multiplies the penalty terms'},
             'l1_ratio': {
@@ -84,7 +84,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0001,
                 'description': 'The tolerance for the optimization: if the updates are smaller than ``tol``, the optimization code checks the dual gap for optimality and continues until it is smaller than ``tol``.'},
             'warm_start': {
@@ -160,6 +160,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.ElasticNet#sklearn-linear_model-elasticnet',
     'type': 'object',
     'tags': {
         'pre': [],

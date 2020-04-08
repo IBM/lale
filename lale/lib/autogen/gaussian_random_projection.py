@@ -125,6 +125,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.random_projection.GaussianRandomProjection#sklearn-random_projection-gaussianrandomprojection',
     'type': 'object',
     'tags': {
         'pre': [],

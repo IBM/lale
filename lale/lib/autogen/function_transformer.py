@@ -102,7 +102,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform X using the forward function.',
     'type': 'object',
-    'required': ['X', 'y'],
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -131,6 +131,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer#sklearn-preprocessing-functiontransformer',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -38,6 +38,9 @@ class LogisticRegressionCVImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+    def decision_function(self, X):
+        return self._sklearn_model.decision_function(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for LogisticRegressionCV    Logistic Regression CV (aka logit, MaxEnt) classifier.',
@@ -84,14 +87,14 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'A string (see model evaluation documentation) or a scorer callable object / function with signature ``scorer(estimator, X, y)``'},
             'solver': {
-                'enum': ['lbfgs', 'liblinear', 'newton-cg', 'sag', 'saga'],
+                'enum': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
                 'default': 'lbfgs',
                 'description': 'Algorithm to use in the optimization problem'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0001,
                 'description': 'Tolerance for stopping criteria.'},
             'max_iter': {
@@ -125,7 +128,7 @@ _hyperparams_schema = {
                 'default': 1.0,
                 'description': "Useful only when the solver 'liblinear' is used and self.fit_intercept is set to True"},
             'multi_class': {
-                'enum': ['auto', 'liblinear', 'multinomial', 'ovr'],
+                'enum': ['ovr', 'multinomial', 'auto'],
                 'default': 'ovr',
                 'description': "If the option chosen is 'ovr', then a binary problem is fit for each label"},
             'random_state': {
@@ -220,9 +223,38 @@ _output_predict_proba_schema = {
             'type': 'number'},
     },
 }
+_input_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Predict confidence scores for samples.',
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'anyOf': [{
+                'type': 'array',
+                'items': {
+                    'laleType': 'Any',
+                    'XXX TODO XXX': 'item type'},
+                'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
+                'type': 'array',
+                'items': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'number'},
+                }}],
+            'description': 'Samples.'},
+    },
+}
+_output_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Confidence scores per (sample, class) combination',
+    'laleType': 'Any',
+    'XXX TODO XXX': 'array, shape=(n_samples,) if n_classes == 2 else (n_samples, n_classes)',
+}
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegressionCV#sklearn-linear_model-logisticregressioncv',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -234,7 +266,9 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema},
+        'output_predict_proba': _output_predict_proba_schema,
+        'input_decision_function': _input_decision_function_schema,
+        'output_decision_function': _output_decision_function_schema},
 }
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

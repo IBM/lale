@@ -51,7 +51,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.001,
                 'description': 'Stop the algorithm if w has converged'},
             'alpha_1': {
@@ -142,10 +142,12 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the linear model.',
+    'laleType': 'Any',
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.ARDRegression#sklearn-linear_model-ardregression',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -69,7 +69,7 @@ _input_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform standardization by centering and scaling',
     'type': 'object',
-    'required': ['X', 'y'],
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -94,10 +94,12 @@ _input_transform_schema = {
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform standardization by centering and scaling',
+    'laleType': 'Any',
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.StandardScaler#sklearn-preprocessing-standardscaler',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -99,7 +99,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'type': 'string',
                     'forOptimizer': False}, {
                     'enum': [None]}],
@@ -269,6 +269,7 @@ _output_predict_proba_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesClassifier#sklearn-ensemble-extratreesclassifier',
     'type': 'object',
     'tags': {
         'pre': [],

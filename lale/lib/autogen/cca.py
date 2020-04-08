@@ -61,7 +61,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1e-06},
             'copy': {
                 'type': 'boolean',
@@ -125,7 +125,7 @@ _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Apply the dimension reduction learned on the train data.',
     'laleType': 'Any',
-    'XXX TODO XXX': '',
+    'XXX TODO XXX': 'x_scores if Y is not given, (x_scores, y_scores) otherwise.',
 }
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -150,10 +150,12 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Apply the dimension reduction learned on the train data.',
+    'laleType': 'Any',
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.cross_decomposition.CCA#sklearn-cross_decomposition-cca',
     'type': 'object',
     'tags': {
         'pre': [],

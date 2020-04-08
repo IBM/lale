@@ -45,7 +45,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-10,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'loguniform'}, {
+                    'distribution': 'uniform'}, {
                     'type': 'array',
                     'items': {
                         'laleType': 'Any',
@@ -132,10 +132,12 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the Gaussian process regression model',
+    'laleType': 'Any',
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.gaussian_process.GaussianProcessRegressor#sklearn-gaussian_process-gaussianprocessregressor',
     'type': 'object',
     'tags': {
         'pre': [],

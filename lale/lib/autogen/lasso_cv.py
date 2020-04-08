@@ -47,7 +47,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.001,
                 'description': 'Length of the path'},
             'n_alphas': {
@@ -97,7 +97,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.0001,
                 'description': 'The tolerance for the optimization: if the updates are smaller than ``tol``, the optimization code checks the dual gap for optimality and continues until it is smaller than ``tol``.'},
             'copy_X': {
@@ -198,6 +198,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LassoCV#sklearn-linear_model-lassocv',
     'type': 'object',
     'tags': {
         'pre': [],
