@@ -263,7 +263,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """`Logistic regression`_ linear model for classification.
 
-.. _`Logistic regression`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
+.. _`Logistic regression`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn-linear-model-logisticregression
 """,
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
   'type': 'object',

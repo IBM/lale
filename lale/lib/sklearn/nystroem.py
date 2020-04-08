@@ -171,7 +171,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.kernel_approximation.Nystroem.html',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_approximation.Nystroem.html#sklearn-kernel-approximation-nystroem',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],
