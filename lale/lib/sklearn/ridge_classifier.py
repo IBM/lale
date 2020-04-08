@@ -240,7 +240,7 @@ _output_decision_function_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RidgeClassifier.html',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.RidgeClassifier.html#sklearn-linear-model-ridgeclassifier',
     'type': 'object',
     'tags': {
         'pre': [],
