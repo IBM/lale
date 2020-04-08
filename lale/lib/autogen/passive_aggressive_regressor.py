@@ -65,7 +65,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-08,
                     'maximumForOptimizer': 0.01,
-                    'distribution': 'loguniform'}, {
+                    'distribution': 'uniform'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The stopping criterion'},
@@ -97,7 +97,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.1,
                 'description': 'If the difference between the current prediction and the correct label is below this threshold, the model is not updated.'},
             'random_state': {
@@ -190,12 +190,14 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted target values per element in X.',
-    'laleType': 'Any',
-    'XXX TODO XXX': '',
+    'type': 'array',
+    'items': {
+        'type': 'number'},
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveRegressor#sklearn-linear_model-passiveaggressiveregressor',
     'type': 'object',
     'tags': {
         'pre': [],

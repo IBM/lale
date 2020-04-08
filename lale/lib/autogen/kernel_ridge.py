@@ -59,14 +59,14 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 3,
                 'description': 'Degree of the polynomial kernel'},
             'coef0': {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1,
                 'description': 'Zero coefficient for polynomial and sigmoid kernels'},
             'kernel_params': {
@@ -147,6 +147,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_ridge.KernelRidge#sklearn-kernel_ridge-kernelridge',
     'type': 'object',
     'tags': {
         'pre': [],

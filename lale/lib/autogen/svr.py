@@ -65,7 +65,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.001,
                 'description': 'Tolerance for stopping criterion.'},
             'C': {
@@ -76,7 +76,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.1,
                 'description': 'Epsilon in the epsilon-SVR model'},
             'shrinking': {
@@ -157,6 +157,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVR#sklearn-svm-svr',
     'type': 'object',
     'tags': {
         'pre': [],

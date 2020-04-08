@@ -57,7 +57,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1,
                 'description': 'sparsity controlling parameter'},
             'n_iter': {
@@ -187,6 +187,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.MiniBatchDictionaryLearning#sklearn-decomposition-minibatchdictionarylearning',
     'type': 'object',
     'tags': {
         'pre': [],

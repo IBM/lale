@@ -53,7 +53,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1,
                 'description': 'Sparsity controlling parameter'},
             'ridge_alpha': {
@@ -71,7 +71,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1e-08,
                 'description': 'Tolerance for the stopping condition.'},
             'method': {
@@ -167,11 +167,12 @@ _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transformed data.',
     'laleType': 'Any',
-    'XXX TODO XXX': '',
+    'XXX TODO XXX': 'X_new array, shape (n_samples, n_components)',
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.SparsePCA#sklearn-decomposition-sparsepca',
     'type': 'object',
     'tags': {
         'pre': [],

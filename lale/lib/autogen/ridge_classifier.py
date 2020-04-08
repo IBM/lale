@@ -28,6 +28,9 @@ class RidgeClassifierImpl():
 
     def predict(self, X):
         return self._sklearn_model.predict(X)
+
+    def decision_function(self, X):
+        return self._sklearn_model.decision_function(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for RidgeClassifier    Classifier using Ridge regression.',
@@ -41,7 +44,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1.0,
                 'description': 'Regularization strength; must be a positive float'},
             'fit_intercept': {
@@ -69,7 +72,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0.001,
                 'description': 'Precision of the solution.'},
             'class_weight': {
@@ -149,9 +152,38 @@ _output_predict_schema = {
     'items': {
         'type': 'number'},
 }
+_input_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Predict confidence scores for samples.',
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'anyOf': [{
+                'type': 'array',
+                'items': {
+                    'laleType': 'Any',
+                    'XXX TODO XXX': 'item type'},
+                'XXX TODO XXX': 'array_like or sparse matrix, shape (n_samples, n_features)'}, {
+                'type': 'array',
+                'items': {
+                    'type': 'array',
+                    'items': {
+                        'type': 'number'},
+                }}],
+            'description': 'Samples.'},
+    },
+}
+_output_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Confidence scores per (sample, class) combination',
+    'laleType': 'Any',
+    'XXX TODO XXX': 'array, shape=(n_samples,) if n_classes == 2 else (n_samples, n_classes)',
+}
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.RidgeClassifier#sklearn-linear_model-ridgeclassifier',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -161,7 +193,9 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema},
+        'output_predict': _output_predict_schema,
+        'input_decision_function': _input_decision_function_schema,
+        'output_decision_function': _output_decision_function_schema},
 }
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

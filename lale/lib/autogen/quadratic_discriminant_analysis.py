@@ -27,6 +27,9 @@ class QuadraticDiscriminantAnalysisImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+    def decision_function(self, X):
+        return self._sklearn_model.decision_function(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for QuadraticDiscriminantAnalysis    Quadratic Discriminant Analysis',
@@ -133,9 +136,41 @@ _output_predict_proba_schema = {
             'type': 'number'},
     },
 }
+_input_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Apply decision function to an array of samples.',
+    'type': 'object',
+    'required': ['X'],
+    'properties': {
+        'X': {
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'items': {
+                    'type': 'number'},
+            },
+            'description': 'Array of samples (test vectors).'},
+    },
+}
+_output_decision_function_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'description': 'Decision function values related to each class, per sample',
+    'anyOf': [{
+        'type': 'array',
+        'items': {
+            'type': 'array',
+            'items': {
+                'type': 'number'},
+        }}, {
+        'type': 'array',
+        'items': {
+            'type': 'number'},
+    }],
+}
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis#sklearn-discriminant_analysis-quadraticdiscriminantanalysis',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -147,7 +182,9 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema},
+        'output_predict_proba': _output_predict_proba_schema,
+        'input_decision_function': _input_decision_function_schema,
+        'output_decision_function': _output_decision_function_schema},
 }
 if (__name__ == '__main__'):
     lale.helpers.validate_is_schema(_combined_schemas)

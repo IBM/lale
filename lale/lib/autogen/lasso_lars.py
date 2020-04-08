@@ -42,7 +42,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1.0,
                 'description': 'Constant that multiplies the penalty term'},
             'fit_intercept': {
@@ -81,7 +81,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 2.220446049250313e-16,
                 'description': 'The machine-precision regularization in the computation of the Cholesky diagonal factors'},
             'copy_X': {
@@ -164,6 +164,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LassoLars#sklearn-linear_model-lassolars',
     'type': 'object',
     'tags': {
         'pre': [],

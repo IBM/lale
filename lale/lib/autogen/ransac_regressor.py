@@ -53,7 +53,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None},
             'residual_threshold': {
@@ -88,7 +88,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': inf,
                 'description': 'Maximum number of iterations that can be skipped due to finding zero inliers or invalid data defined by ``is_data_valid`` or invalid models defined by ``is_model_valid``'},
             'stop_n_inliers': {
@@ -98,7 +98,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': inf,
                 'description': 'Stop iteration if at least this number of inliers are found.'},
             'stop_score': {
@@ -201,6 +201,7 @@ _output_predict_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.RANSACRegressor#sklearn-linear_model-ransacregressor',
     'type': 'object',
     'tags': {
         'pre': [],

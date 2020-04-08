@@ -76,6 +76,7 @@ from .birch import Birch
 from .dictionary_learning import DictionaryLearning
 from .factor_analysis import FactorAnalysis
 from .fast_ica import FastICA
+from .feature_agglomeration import FeatureAgglomeration
 from .function_transformer import FunctionTransformer
 from .gaussian_random_projection import GaussianRandomProjection
 from .incremental_pca import IncrementalPCA

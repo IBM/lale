@@ -72,7 +72,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1,
                 'description': 'Independent term in poly and sigmoid kernels'},
             'kernel_params': {
@@ -87,7 +87,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-10,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'loguniform'}],
+                    'distribution': 'uniform'}],
                 'default': 1.0,
                 'description': 'Hyperparameter of the ridge regression that learns the inverse transform (when fit_inverse_transform=True).'},
             'fit_inverse_transform': {
@@ -95,14 +95,14 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Learn the inverse transform for non-precomputed kernels'},
             'eigen_solver': {
-                'enum': ['arpack', 'auto', 'dense'],
+                'enum': ['auto', 'dense', 'arpack'],
                 'default': 'auto',
                 'description': 'Select eigensolver to use'},
             'tol': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 0,
                 'description': 'Convergence tolerance for arpack'},
             'max_iter': {
@@ -181,6 +181,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.KernelPCA#sklearn-decomposition-kernelpca',
     'type': 'object',
     'tags': {
         'pre': [],

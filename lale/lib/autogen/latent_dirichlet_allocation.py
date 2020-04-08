@@ -104,7 +104,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': 1000000.0,
                 'description': 'Total number of documents'},
             'perp_tol': {
@@ -251,6 +251,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.LatentDirichletAllocation#sklearn-decomposition-latentdirichletallocation',
     'type': 'object',
     'tags': {
         'pre': [],

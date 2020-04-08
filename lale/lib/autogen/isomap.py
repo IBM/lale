@@ -68,11 +68,11 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'Maximum number of iterations for the arpack solver'},
             'path_method': {
-                'enum': ['D', 'FW', 'auto'],
+                'enum': ['auto', 'FW', 'D'],
                 'default': 'auto',
                 'description': 'Method to use in finding shortest path'},
             'neighbors_algorithm': {
-                'enum': ['auto', 'ball_tree', 'brute', 'kd_tree'],
+                'enum': ['auto', 'brute', 'kd_tree', 'ball_tree'],
                 'default': 'auto',
                 'description': 'Algorithm to use for nearest neighbors search, passed to neighbors.NearestNeighbors instance.'},
             'n_jobs': {
@@ -128,6 +128,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.manifold.Isomap#sklearn-manifold-isomap',
     'type': 'object',
     'tags': {
         'pre': [],

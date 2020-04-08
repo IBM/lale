@@ -96,6 +96,7 @@ _output_transform_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.PolynomialFeatures#sklearn-preprocessing-polynomialfeatures',
     'type': 'object',
     'tags': {
         'pre': [],

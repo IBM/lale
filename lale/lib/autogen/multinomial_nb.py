@@ -38,7 +38,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1.0,
                 'description': 'Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing).'},
             'fit_prior': {
@@ -136,6 +136,7 @@ _output_predict_proba_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.MultinomialNB#sklearn-naive_bayes-multinomialnb',
     'type': 'object',
     'tags': {
         'pre': [],

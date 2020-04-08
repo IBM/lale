@@ -155,11 +155,12 @@ _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transformed data.',
     'laleType': 'Any',
-    'XXX TODO XXX': '',
+    'XXX TODO XXX': 'X_new array, shape (n_samples, n_components)',
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.MiniBatchSparsePCA#sklearn-decomposition-minibatchsparsepca',
     'type': 'object',
     'tags': {
         'pre': [],
