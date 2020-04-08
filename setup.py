@@ -66,7 +66,8 @@ setup(
             'aif360',
             'numba',
             'torch>=1.0',
-            'BlackBoxAuditing'],
+            'BlackBoxAuditing',
+            'imbalanced-learn==0.4.3'],
         'test':[
             'autoai-libs',
             'jupyter',

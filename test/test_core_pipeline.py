@@ -476,9 +476,9 @@ class TestComposition(unittest.TestCase):
     def test_increase_num_rows(self):
         from test.mock_custom_operators import IncreaseRows
         increase_rows = IncreaseRows()
-        trainable = increase_rows >> NoOp()
+        trainable = increase_rows >> LogisticRegression()
         iris = sklearn.datasets.load_iris()
-        X, y = iris.data[0:10], iris.target[0:10]
+        X, y = iris.data, iris.target
 
         trained = trainable.fit(X, y)
         predicted = trained.transform(X, y)

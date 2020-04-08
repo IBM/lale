@@ -57,8 +57,7 @@ _input_transform_schema = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {}}}
 
-_output_transform_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#'}
+_output_transform_schema = {}
 #,
 #  'type': 'array',
 #  'items': {'type': 'number'}
