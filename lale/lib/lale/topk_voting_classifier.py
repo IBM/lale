@@ -75,6 +75,27 @@ class TopKVotingClassifierImpl:
             predictions = None
         return predictions
 
+    def get_pipeline(self, pipeline_name=None, astype='lale'):
+        """Retrieve one of the trials.
+
+Parameters
+----------
+pipeline_name : None
+
+astype : 'lale' or 'sklearn', default 'lale'
+    Type of resulting pipeline.
+
+Returns
+-------
+result : Trained operator if best, trainable operator otherwise.
+"""
+        assert pipeline_name is None
+        result = self._best_estimator
+        if result is None or astype == 'lale':
+            return result
+        assert astype == 'sklearn', astype
+        return result.export_to_sklearn_pipeline()
+
 _hyperparams_schema = {
     'allOf': [
     {   'type': 'object',
