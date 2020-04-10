@@ -12,4 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
+from .eq_odds_postprocessing import EqOddsPostprocessing
+from .util import BinaryLabelScorer
+from .util import PandasToDatasetConverter
+from .util import dataset_fairness_info
+from .util import dataset_to_pandas
