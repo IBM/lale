@@ -266,3 +266,24 @@ class TestSMOTE(unittest.TestCase):
         optimizer = Hyperopt(estimator=pipeline, max_evals = 1)
         trained_optimizer = optimizer.fit(self.X, self.y)
         predictions = trained_optimizer.predict(self.X)
+
+    def test_with_hyperopt_in_a_pipeline_1(self):
+        from lale.lib.imblearn import SMOTE
+        from lale.lib.lale import ConcatFeatures as concat
+        from sklearn.metrics import accuracy_score
+        from lale.lib.lale import Hyperopt
+        pipeline = SMOTE() >> PCA() >> (Nystroem & NoOp) >> concat >> SMOTE() >> LogisticRegression()
+        optimizer = Hyperopt(estimator=pipeline, max_evals = 1)
+        trained_optimizer = optimizer.fit(self.X, self.y)
+        predictions = trained_optimizer.predict(self.X)
+
+    def test_with_hyperopt_in_a_pipeline_invalid(self):
+        from lale.lib.imblearn import SMOTE
+        from lale.lib.lale import ConcatFeatures as concat
+        from sklearn.metrics import accuracy_score
+        from lale.lib.lale import Hyperopt
+        pipeline = ((PCA >> SMOTE() >> Nystroem()) & (SMOTE() >> Nystroem())) >> concat >> LogisticRegression()
+        optimizer = Hyperopt(estimator=pipeline, max_evals = 1)
+        import hyperopt
+        with self.assertRaises(hyperopt.exceptions.AllTrialsFailed):
+            optimizer.fit(self.X, self.y)
