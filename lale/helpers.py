@@ -211,7 +211,8 @@ def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, c
             logger.debug("Warning, log loss cannot be computed")
         cv_results.append(score_value)
         time_results.append(execution_time)
-    return np.array(cv_results).mean(), np.array(log_loss_results).mean(), np.array(execution_time).mean()
+    result = np.array(cv_results).mean(), np.array(log_loss_results).mean(), np.array(execution_time).mean()
+    return result
 
 
 def cross_val_score(estimator, X, y=None, scoring=accuracy_score, cv=5):

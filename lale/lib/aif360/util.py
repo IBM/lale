@@ -37,7 +37,9 @@ class PandasToDatasetConverter:
     def __call__(self, X, y):
         assert isinstance(X, pd.DataFrame), type(X)
         assert isinstance(y, pd.Series), type(y)
+        assert X.shape[0] == y.shape[0], f'X.shape {X.shape}, y.shape {y.shape}'
         df = pd.concat([X, y], axis=1)
+        assert not df.isna().any().any(), f'df\n{df}\nX\n{X}\ny\n{y}'
         label_names = [y.name]
         result = aif360.datasets.BinaryLabelDataset(
             favorable_label=self.favorable_label,
@@ -47,10 +49,10 @@ class PandasToDatasetConverter:
             label_names=label_names)
         return result
 
-def _make_series(data, dtype, name):
+def _make_series(data, index, dtype, name):
     if isinstance(data, pd.Series):
         return data
-    result = pd.Series(data=data, dtype=dtype, name=name)
+    result = pd.Series(data=data, index=index, dtype=dtype, name=name)
     return result
 
 def dataset_fairness_info(dataset):
@@ -89,7 +91,7 @@ class BinaryLabelScorer:
 
     def __call__(self, estimator, X, y):
         predicted = estimator.predict(X)
-        y_pred = _make_series(predicted, y.dtype, y.name)
+        y_pred = _make_series(predicted, X.index, y.dtype, y.name)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
             dataset_pred, self.unprivileged_groups, self.privileged_groups)
@@ -127,7 +129,7 @@ class _BasePostprocessingImpl:
         y_true = y
         self.estimator = self.estimator.fit(X, y_true)
         predicted = self.estimator.predict(X)
-        y_pred = _make_series(predicted, self.y_dtype, self.y_name)
+        y_pred = _make_series(predicted, X.index, self.y_dtype, self.y_name)
         dataset_true = self.pandas_to_dataset(X, y_true)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
@@ -135,7 +137,7 @@ class _BasePostprocessingImpl:
 
     def predict(self, X):
         predicted = self.estimator.predict(X)
-        y_pred = _make_series(predicted, self.y_dtype, self.y_name)
+        y_pred = _make_series(predicted, X.index, self.y_dtype, self.y_name)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         dataset_out = self.mitigator.predict(dataset_pred)
         _, y_out = dataset_to_pandas(dataset_out)
