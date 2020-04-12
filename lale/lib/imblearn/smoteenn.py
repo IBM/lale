@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from imblearn.over_sampling import SMOTE as OrigModel
+from imblearn.combine import SMOTEENN as OrigModel
 import lale.operators 
 from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schema,\
                                             _input_transform_schema, _output_transform_schema,\
@@ -20,17 +20,17 @@ from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schem
                                             _input_predict_proba_schema, _output_predict_proba_schema,\
                                             _input_decision_function_schema, _output_decision_function_schema
 
-class SMOTEImpl(BaseResamplerImpl):
+class SMOTEENNImpl(BaseResamplerImpl):
 
-    def __init__(self, operator = None, sampling_strategy='auto', random_state=None, k_neighbors=5, n_jobs=1):
+    def __init__(self, operator = None, sampling_strategy='auto', random_state=None, smote=None, enn=None):
         self._hyperparams = {
             'sampling_strategy': sampling_strategy,
             'random_state': random_state,
-            'k_neighbors': k_neighbors,
-            'n_jobs': n_jobs}
+            'smote': smote,
+            'enn': enn}
     
         resampler_instance = OrigModel(**self._hyperparams)
-        super(SMOTEImpl, self).__init__(
+        super(SMOTEENNImpl, self).__init__(
             operator = operator,
             resampler = resampler_instance)
 
@@ -88,19 +88,20 @@ desired number of samples for each class.""",
                 { 'description': 'Random number generator instance.',
                 'laleType':'Any'}],
             'default': None},
-            'k_neighbors':{
-                'description': """If ``int``, number of nearest neighbours to used to construct synthetic samples.  
-If object, an estimator that inherits from
-:class:`sklearn.neighbors.base.KNeighborsMixin` that will be used to
-find the k_neighbors.""",
-                'anyOf': [
+            'smote':{
+                'description':"""The imblearn.over_sampling.SMOTE object to use. 
+If not given, a imblearn.over_sampling.SMOTE object with default parameters will be given.""",
+                'anyOf':[
                     {'laleType':'Any'},
-                    {'type': 'integer'}],
-                'default': 5},
-            'n_jobs': {
-                'description': 'The number of threads to open if possible.',
-                'type': 'integer',
-                'default': 1}}}]}
+                    {'enum':[None]}],
+                'default':None},
+            'enn':{
+                'description':"""The imblearn.under_sampling.EditedNearestNeighbours object to use.
+If not given, a imblearn.under_sampling.EditedNearestNeighbours object with sampling strategy=’all’ will be given.""",
+                'anyOf':[
+                    {'laleType':'Any'},
+                    {'enum':[None]}],
+                'default':None}}}]}
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -124,6 +125,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-lale.docstrings.set_docstrings(SMOTEImpl, _combined_schemas)
+lale.docstrings.set_docstrings(SMOTEENNImpl, _combined_schemas)
 
-SMOTE = lale.operators.make_operator(SMOTEImpl, _combined_schemas)
+SMOTEENN = lale.operators.make_operator(SMOTEENNImpl, _combined_schemas)
