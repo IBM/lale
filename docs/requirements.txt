@@ -17,3 +17,5 @@ lightgbm
 decorator
 h5py
 autoai-libs
+aif360
+imbalanced-learn==0.4.3
