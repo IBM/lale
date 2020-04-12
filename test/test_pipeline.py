@@ -17,7 +17,7 @@ import warnings
 import random
 from lale.lib.lale import Batching, NoOp
 from lale.lib.sklearn import MinMaxScaler
-from lale.lib.sklearn import MLPClassifier, LogisticRegression
+from lale.lib.sklearn import MLPClassifier, LogisticRegression, RandomForestClassifier
 from lale.lib.sklearn import Nystroem
 from lale.lib.sklearn import PCA
 
@@ -253,8 +253,17 @@ class TestSMOTE(unittest.TestCase):
         
     def test_fit_predict_in_a_pipeline(self):
         from lale.lib.imblearn import SMOTE
+        from lale.operators import make_pipeline
         from sklearn.metrics import accuracy_score
-        pipeline = PCA() >> SMOTE() >> LogisticRegression()
+        pipeline = PCA() >> SMOTE(operator=make_pipeline(LogisticRegression()))
+        trained = pipeline.fit(self.X, self.y)
+        predictions = trained.predict(self.X)
+
+    def test_fit_predict_in_a_pipeline1(self):
+        from lale.lib.imblearn import SMOTE
+        from lale.operators import make_pipeline
+        from sklearn.metrics import accuracy_score
+        pipeline = SMOTE(operator=make_pipeline(PCA(), LogisticRegression()))
         trained = pipeline.fit(self.X, self.y)
         predictions = trained.predict(self.X)
 
@@ -262,7 +271,8 @@ class TestSMOTE(unittest.TestCase):
         from lale.lib.imblearn import SMOTE
         from sklearn.metrics import accuracy_score
         from lale.lib.lale import Hyperopt
-        pipeline = PCA() >> SMOTE() >> LogisticRegression()
+        from lale.operators import make_pipeline
+        pipeline = PCA() >> SMOTE(operator=make_pipeline(LogisticRegression()))
         optimizer = Hyperopt(estimator=pipeline, max_evals = 1)
         trained_optimizer = optimizer.fit(self.X, self.y)
         predictions = trained_optimizer.predict(self.X)
@@ -272,18 +282,20 @@ class TestSMOTE(unittest.TestCase):
         from lale.lib.lale import ConcatFeatures as concat
         from sklearn.metrics import accuracy_score
         from lale.lib.lale import Hyperopt
-        pipeline = SMOTE() >> PCA() >> (Nystroem & NoOp) >> concat >> SMOTE() >> LogisticRegression()
+        from lale.operators import make_pipeline
+        pipeline = SMOTE(operator= PCA() >> (Nystroem & NoOp) >> concat >> LogisticRegression())
         optimizer = Hyperopt(estimator=pipeline, max_evals = 1)
         trained_optimizer = optimizer.fit(self.X, self.y)
         predictions = trained_optimizer.predict(self.X)
 
-    def test_with_hyperopt_in_a_pipeline_invalid(self):
+    def test_with_hyperopt_in_a_pipeline_2(self):
         from lale.lib.imblearn import SMOTE
         from lale.lib.lale import ConcatFeatures as concat
         from sklearn.metrics import accuracy_score
         from lale.lib.lale import Hyperopt
-        pipeline = ((PCA >> SMOTE() >> Nystroem()) & (SMOTE() >> Nystroem())) >> concat >> LogisticRegression()
-        optimizer = Hyperopt(estimator=pipeline, max_evals = 1)
-        import hyperopt
-        with self.assertRaises(hyperopt.exceptions.AllTrialsFailed):
-            optimizer.fit(self.X, self.y)
+        from lale.operators import make_pipeline
+        pipeline = (PCA >> SMOTE(operator=make_pipeline(Nystroem())) & SMOTE(operator=make_pipeline(Nystroem()))) >> concat >> LogisticRegression()
+        optimizer = Hyperopt(estimator=pipeline, max_evals = 1, scoring='roc_auc')
+        trained_optimizer = optimizer.fit(self.X, self.y)
+        predictions = trained_optimizer.predict(self.X)
+

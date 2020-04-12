@@ -13,75 +13,36 @@
 # limitations under the License.
 
 from imblearn.over_sampling import SMOTE as OrigModel
-import lale.helpers
-import lale.operators
-from typing import Any, Dict, Optional
+import lale.operators 
+from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schema,\
+                                            _input_transform_schema, _output_transform_schema,\
+                                            _input_predict_schema, _output_predict_schema,\
+                                            _input_predict_proba_schema, _output_predict_proba_schema,\
+                                            _input_decision_function_schema, _output_decision_function_schema
 
-class SMOTEImpl():
+class SMOTEImpl(BaseResamplerImpl):
 
-    def __init__(self, sampling_strategy='auto', random_state=None, k_neighbors=5, n_jobs=1):
+    def __init__(self, operator = None, sampling_strategy='auto', random_state=None, k_neighbors=5, n_jobs=1):
         self._hyperparams = {
             'sampling_strategy': sampling_strategy,
             'random_state': random_state,
             'k_neighbors': k_neighbors,
             'n_jobs': n_jobs}
     
-        self._sklearn_model = OrigModel(**self._hyperparams) #calling it _sklearn_model due to legacy :)
-
-    def fit(self, X, y=None):
-        if (y is not None):
-            self._sklearn_model.fit(X, y)
-        else:
-            self._sklearn_model.fit(X)
-        return self
-
-    def transform(self, X, y=None):
-        if y is None:
-            #If y is not passed, or it is passed as None, we assume this means resampling is not to be applied.
-            return X, y
-        else:
-            #If a not None value is passed for y, this would mean a call during fit, and hence resampling to be done.
-            return self._sklearn_model.fit_resample(X, y)
-
-_input_fit_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
-  'type': 'object',
-  'required': ['X', 'y'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}},
-    'y': {
-      'description': 'Target class labels; the array is over samples.',
-        'anyOf': [
-            {'type': 'array', 'items': {'type': 'number'}},
-            {'type': 'array', 'items': {'type': 'string'}}]}}}
-
-_input_transform_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
-  'type': 'object',
-  'required': ['X', 'y'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}},
-    'y': {
-      'description': 'Target class labels; the array is over samples.',
-      'laleType': 'Any'
-}}}
-
-_output_transform_schema:Dict[str, Any] = {}
+        resampler_instance = OrigModel(**self._hyperparams)
+        super(SMOTEImpl, self).__init__(
+            operator = operator,
+            resampler = resampler_instance)
 
 _hyperparams_schema = {
     'allOf': [
     {   'type': 'object',
-        'relevantToOptimizer': [],
+        'relevantToOptimizer': ['operator'],
         'additionalProperties': False,
         'properties': {
+            'operator':{
+                'laleType':'operator',
+            },
             'sampling_strategy': {
                 'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
 Sampling information to resample the data set.
@@ -155,6 +116,12 @@ _combined_schemas = {
     'input_fit': _input_fit_schema,
     'input_transform': _input_transform_schema,
     'output_transform': _output_transform_schema,
+    'input_predict': _input_predict_schema,
+    'output_predict': _output_predict_schema,
+    'input_predict_proba': _input_predict_proba_schema,
+    'output_predict_proba': _output_predict_proba_schema,
+    'input_decision_function': _input_decision_function_schema,
+    'output_decision_function': _output_decision_function_schema
 }}
 
 SMOTE = lale.operators.make_operator(SMOTEImpl, _combined_schemas)
