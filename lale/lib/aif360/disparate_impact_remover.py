@@ -15,13 +15,9 @@
 import aif360.algorithms.preprocessing
 import aif360.datasets
 import lale.operators
-import numpy as np
 import pandas as pd
 
 class DisparateImpactRemoverImpl:
-    """Scikit-learn compatibility wrapper for the DisparateImpactRemover
-    from AIF360."""
-
     def __init__(self, repair_level=1.0, sensitive_attribute=None):
         self._hyperparams = {
             'repair_level': repair_level,
@@ -94,8 +90,11 @@ _hyperparams_schema = {
           'type': 'string' }}}]}
 
 _combined_schemas = {
-  'description': 'Combined schema for expected data and hyperparameters.',
-  'documentation_url': 'https://aif360.readthedocs.io/en/latest/modules/preprocessing.html#disparate-impact-remover',
+  'description': """`Disparate impact remover`_ preprocessor for fairness mitigation.
+
+.. _`Disparate impact remover`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.DisparateImpactRemover.html
+""",
+  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.disparate_impact_remover.html',
   'type': 'object',
   'tags': {
     'pre': ['~categoricals'],
@@ -110,5 +109,7 @@ _combined_schemas = {
 if __name__ == "__main__":
     import lale.helpers
     lale.helpers.validate_is_schema(_combined_schemas)
+
+lale.docstrings.set_docstrings(DisparateImpactRemoverImpl, _combined_schemas)
 
 DisparateImpactRemover = lale.operators.make_operator(DisparateImpactRemoverImpl, _combined_schemas)
