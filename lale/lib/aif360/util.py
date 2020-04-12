@@ -55,7 +55,7 @@ def dataset_to_pandas(dataset, return_only='Xy'):
         result_y = None
     return result_X, result_y
 
-_dataset_fairness_schema = {
+_dataset_fairness_properties: lale.type_checking.JSON_TYPE = {
     'type': 'object',
     'properties': {
         'favorable_label': {
@@ -84,6 +84,10 @@ _dataset_fairness_schema = {
                 'type': 'object',
                 'additionalProperties': {
                     'type': 'number'}}}}}
+
+_dataset_fairness_schema = {
+    'type': 'object',
+    'properties': _dataset_fairness_properties}
 
 def dataset_fairness_info(dataset):
     """
@@ -155,13 +159,13 @@ def dataset_fairness_info(dataset):
 class _PandasToDatasetConverter:
     def __init__(self, favorable_label, unfavorable_label, protected_attribute_names):
         lale.type_checking.validate_schema(favorable_label,
-            _dataset_fairness_schema['properties']['favorable_label'])
+            _dataset_fairness_properties['favorable_label'])
         self.favorable_label = favorable_label
         lale.type_checking.validate_schema(unfavorable_label,
-            _dataset_fairness_schema['properties']['unfavorable_label'])
+            _dataset_fairness_properties['unfavorable_label'])
         self.unfavorable_label = unfavorable_label
         lale.type_checking.validate_schema(protected_attribute_names,
-            _dataset_fairness_schema['properties']['protected_attribute_names'])
+            _dataset_fairness_properties['protected_attribute_names'])
         self.protected_attribute_names = protected_attribute_names
 
     def __call__(self, X, y):
@@ -300,12 +304,9 @@ _postprocessing_base_hyperparams = {
     'estimator': {
         'description': 'Nested supervised learning operator for which to mitigate fairness.',
         'laleType': 'estimator'},
-    'favorable_label': _dataset_fairness_schema['properties'][
-        'favorable_label'],
-    'unfavorable_label': _dataset_fairness_schema['properties'][
-        'unfavorable_label'],
-    'protected_attribute_names': _dataset_fairness_schema['properties'][
-        'protected_attribute_names']}
+    'favorable_label': _dataset_fairness_properties['favorable_label'],
+    'unfavorable_label': _dataset_fairness_properties['unfavorable_label'],
+    'protected_attribute_names': _dataset_fairness_properties['protected_attribute_names']}
 
 class _BasePostprocessingImpl:
     def __init__(self, mitigator, estimator, favorable_label, unfavorable_label, protected_attribute_names):
