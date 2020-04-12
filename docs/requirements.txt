@@ -1,4 +1,4 @@
-sphinx>=2.2
+sphinx==2.4.4
 sphinx_rtd_theme
 m2r
 sphinxcontrib.apidoc

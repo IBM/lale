@@ -16,7 +16,7 @@ from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
 from .reject_option_classification import RejectOptionClassification
-from .util import BinaryLabelScorer
-from .util import PandasToDatasetConverter
 from .util import dataset_fairness_info
 from .util import dataset_to_pandas
+from .util import disparate_impact
+from .util import statistical_parity_difference

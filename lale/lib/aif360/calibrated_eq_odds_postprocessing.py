@@ -20,24 +20,13 @@ from .util import _numeric_supervised_input_fit_schema
 from .util import _numeric_input_predict_schema
 from .util import _numeric_output_predict_schema
 from .util import _postprocessing_base_hyperparams
+from .util import _dataset_fairness_schema
 
 _additional_hyperparams = {
-    'unprivileged_groups': {
-        'description': 'Representation for unprivileged group.',
-        'type': 'array',
-        'items': {
-            'description': 'Map from feature names to group-indicating values.',
-            'type': 'object',
-            'additionalProperties': {
-                'type': 'number'}}},
-    'privileged_groups': {
-        'description': 'Representation for privileged group.',
-        'type': 'array',
-        'items': {
-            'description': 'Map from feature names to group-indicating values.',
-            'type': 'object',
-            'additionalProperties': {
-                'type': 'number'}}},
+    'unprivileged_groups': _dataset_fairness_schema['properties'][
+        'unprivileged_groups'],
+    'privileged_groups': _dataset_fairness_schema['properties'][
+        'privileged_groups'],
     'cost_constraint': {
         'enum': ['fpr', 'fnr', 'weighted'],
         'default': 'weighted'},
@@ -90,7 +79,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Calibrated equalized odds postprocessing`_ for fairness mitigation.
 
-.. _`Equalized odds postprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.CalibratedEqOddsPostprocessing.html
+.. _`Calibrated equalized odds postprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.CalibratedEqOddsPostprocessing.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.calibrated_eq_odds_postprocessing.html',
     'type': 'object',
