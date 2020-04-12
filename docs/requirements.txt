@@ -17,5 +17,9 @@ lightgbm
 decorator
 h5py
 autoai-libs
+<<<<<<< HEAD
 aif360
 imbalanced-learn==0.4.3
+=======
+liac-arff>=2.4.0
+>>>>>>> ef166b048e238a86bd788cebc224a825a2cfdec2
