@@ -56,34 +56,32 @@ def dataset_to_pandas(dataset, return_only='Xy'):
     return result_X, result_y
 
 _dataset_fairness_properties: lale.type_checking.JSON_TYPE = {
-    'type': 'object',
-    'properties': {
-        'favorable_label': {
-            'description': 'Label value which is considered favorable (i.e. "positive").',
-            'type': 'number'},
-        'unfavorable_label': {
-            'description': 'Label value which is considered unfavorable (i.e. "negative").',
-            'type': 'number'},
-        'protected_attribute_names': {
-            'description': 'Subset of feature names for which fairness is desired.',
-            'type': 'array',
-            'items': {'type': 'string'}},
-        'unprivileged_groups': {
-            'description': 'Representation for unprivileged group.',
-            'type': 'array',
-            'items': {
-                'description': 'Map from feature names to group-indicating values.',
-                'type': 'object',
-                'additionalProperties': {
-                    'type': 'number'}}},
-        'privileged_groups': {
-            'description': 'Representation for privileged group.',
-            'type': 'array',
-            'items': {
-                'description': 'Map from feature names to group-indicating values.',
-                'type': 'object',
-                'additionalProperties': {
-                    'type': 'number'}}}}}
+    'favorable_label': {
+        'description': 'Label value which is considered favorable (i.e. "positive").',
+        'type': 'number'},
+    'unfavorable_label': {
+        'description': 'Label value which is considered unfavorable (i.e. "negative").',
+        'type': 'number'},
+    'protected_attribute_names': {
+        'description': 'Subset of feature names for which fairness is desired.',
+        'type': 'array',
+        'items': {'type': 'string'}},
+    'unprivileged_groups': {
+        'description': 'Representation for unprivileged group.',
+        'type': 'array',
+        'items': {
+            'description': 'Map from feature names to group-indicating values.',
+            'type': 'object',
+            'additionalProperties': {
+                'type': 'number'}}},
+    'privileged_groups': {
+        'description': 'Representation for privileged group.',
+        'type': 'array',
+        'items': {
+            'description': 'Map from feature names to group-indicating values.',
+            'type': 'object',
+            'additionalProperties': {
+                'type': 'number'}}}}
 
 _dataset_fairness_schema = {
     'type': 'object',
