@@ -323,9 +323,9 @@ experiments_dict['breast-cancer']['target'] = 'class'
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
     elems_X = [item_schema for item_schema in schema_orig['items']['items']
-               if item_schema['description'] != target_col]
+               if item_schema['description'].lower() != target_col]
     elem_y = [item_schema for item_schema in schema_orig['items']['items']
-              if item_schema['description'] == target_col][0]
+              if item_schema['description'].lower() == target_col][0]
     if 'enum' in elem_y:
         elem_y['enum'] = [*range(len(elem_y['enum']))]
     ncols_X = len(elems_X)
@@ -442,7 +442,7 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
             print("Shape of X after preprocessing", X.shape)
 
     else:
-        col_names = [attr[0] for attr in dataDictionary['attributes']]
+        col_names = [attr[0].lower() for attr in dataDictionary['attributes']]
         df_all = pd.DataFrame(dataDictionary['data'], columns=col_names)
         y = df_all[target_col]
         y = y.squeeze()
@@ -460,9 +460,9 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
     if preprocess:
         from lale.datasets.data_schemas import add_schema
         X_train = add_schema(X_train.astype(np.number), recalc=True)
-        y_train = add_schema(y_train.astype(np.number), recalc=True)
+        y_train = add_schema(y_train.astype(np.int), recalc=True)
         X_test = add_schema(X_test.astype(np.number), recalc=True)
-        y_test = add_schema(y_test.astype(np.number), recalc=True)
+        y_test = add_schema(y_test.astype(np.int), recalc=True)
     else:
         X_train, X_test, y_train, y_test = add_schemas( \
             schema_orig, target_col, X_train, X_test, y_train, y_test)

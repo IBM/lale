@@ -2305,7 +2305,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     if hasattr(operator._impl, 'decision_function'):
                         output = operator.decision_function(X = inputs)
                     else:
-                        raise ValueError("The sink node of the pipeline {} does not support a decision_function method.".format(operator.name()))
+                        raise AttributeError("The sink node of the pipeline {} does not support a decision_function method.".format(operator.name()))
                 else:#this behavior may be different later if we add user input.
                     if hasattr(operator._impl, 'predict_proba'):
                         output = operator.predict_proba(X = inputs)
