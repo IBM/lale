@@ -166,31 +166,36 @@ def set_docstrings(impl_cls, combined_schemas):
     assert impl_cls.__doc__ is None
     impl_cls.__doc__ = _cls_docstring(impl_cls, combined_schemas)
     if hasattr(impl_cls, 'fit'):
-        assert impl_cls.fit.__doc__ is None
-        impl_cls.fit.__doc__ = _method_docstring(
+        fit_doc = _method_docstring(
             'Train the operator.',
             combined_schemas['properties']['input_fit'])
+        assert impl_cls.fit.__doc__ in [None, fit_doc]
+        impl_cls.fit.__doc__ = fit_doc
     if hasattr(impl_cls, 'transform'):
-        assert impl_cls.transform.__doc__ is None
-        impl_cls.transform.__doc__ = _method_docstring(
+        transform_doc = _method_docstring(
             'Transform the data.',
             combined_schemas['properties']['input_transform'],
             combined_schemas['properties']['output_transform'])
+        assert impl_cls.transform.__doc__ in [None, transform_doc]
+        impl_cls.transform.__doc__ = transform_doc
     if hasattr(impl_cls, 'predict'):
-        assert impl_cls.predict.__doc__ is None
-        impl_cls.predict.__doc__ = _method_docstring(
+        predict_doc = _method_docstring(
             'Make predictions.',
             combined_schemas['properties']['input_predict'],
             combined_schemas['properties']['output_predict'])
+        assert impl_cls.predict.__doc__ in [None, predict_doc]
+        impl_cls.predict.__doc__ = predict_doc
     if hasattr(impl_cls, 'predict_proba'):
-        assert impl_cls.predict_proba.__doc__ is None
-        impl_cls.predict_proba.__doc__ = _method_docstring(
+        predict_proba_doc = _method_docstring(
             'Probability estimates for all classes.',
             combined_schemas['properties']['input_predict_proba'],
             combined_schemas['properties']['output_predict_proba'])
+        assert impl_cls.predict_proba.__doc__ in [None, predict_proba_doc]
+        impl_cls.predict_proba.__doc__ = predict_proba_doc
     if hasattr(impl_cls, 'decision_function'):
-        assert impl_cls.decision_function.__doc__ is None
-        impl_cls.decision_function.__doc__ = _method_docstring(
+        decision_function_doc = _method_docstring(
             'Confidence scores for all classes.',
             combined_schemas['properties']['input_decision_function'],
             combined_schemas['properties']['output_decision_function'])
+        assert impl_cls.decision_function.__doc__ in [None, decision_function_doc]
+        impl_cls.decision_function.__doc__ = decision_function_doc

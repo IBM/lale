@@ -45,12 +45,6 @@ class EqOddsPostprocessingImpl(_BasePostprocessingImpl):
             unfavorable_label=unfavorable_label,
             protected_attribute_names=protected_attribute_names)
 
-    def fit(self, X, y):
-        return super(EqOddsPostprocessingImpl, self).fit(X, y)
-
-    def predict(self, X):
-        return super(EqOddsPostprocessingImpl, self).predict(X)
-
 _input_fit_schema = _numeric_supervised_input_fit_schema
 _input_predict_schema = _numeric_input_predict_schema
 _output_predict_schema = _numeric_output_predict_schema
