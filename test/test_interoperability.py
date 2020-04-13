@@ -127,7 +127,8 @@ def create_function_test_resampler(res_name):
     return test_resampler
 
 resamplers = ['lale.lib.imblearn.SMOTE',
-              'lale.lib.imblearn.SMOTEENN']
+              'lale.lib.imblearn.SMOTEENN',
+              'lale.lib.imblearn.CondensedNearestNeighbour']
 
 for res in resamplers:
     setattr(

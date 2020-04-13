@@ -124,6 +124,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-lale.docstrings.set_docstrings(SMOTEImpl, _combined_schemas)
+#lale.docstrings.set_docstrings(SMOTEImpl, _combined_schemas)
 
 SMOTE = lale.operators.make_operator(SMOTEImpl, _combined_schemas)

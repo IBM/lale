@@ -30,13 +30,13 @@ class BaseResamplerImpl():
     def transform(self, X, y=None):
         return self.trained_operator.transform(X, y)
 
-    def predict(self, X, y=None):
+    def predict(self, X):
         return self.trained_operator.predict(X)
 
-    def predict_proba(self, X, y=None):
+    def predict_proba(self, X):
         return self.trained_operator.predict_proba(X)
 
-    def decision_function(self, X, y=None):
+    def decision_function(self, X):
         return self.trained_operator.decision_function(X)
 
 _input_fit_schema = {
@@ -67,8 +67,10 @@ _input_transform_schema = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {
       'description': 'Target class labels; the array is over samples.',
-      'laleType': 'Any'
-}}}
+      'anyOf': [
+          {'type': 'array', 'items': {'type': 'number'}},
+          {'type': 'array', 'items': {'type': 'string'}},
+          {'enum': [None]}]}}}
 
 _output_transform_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
