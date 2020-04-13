@@ -41,8 +41,7 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'operator':{
-                'laleType':'operator',
-            },
+                'laleType':'operator'},
             'sampling_strategy': {
                 'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
 Sampling information to resample the data set.

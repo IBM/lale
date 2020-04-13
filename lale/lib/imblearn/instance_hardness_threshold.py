@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from imblearn.over_sampling import SMOTE as OrigModel
+from imblearn.under_sampling import InstanceHardnessThreshold as OrigModel
 import lale.operators 
 from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schema,\
                                             _input_transform_schema, _output_transform_schema,\
@@ -20,17 +20,19 @@ from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schem
                                             _input_predict_proba_schema, _output_predict_proba_schema,\
                                             _input_decision_function_schema, _output_decision_function_schema
 
-class SMOTEImpl(BaseResamplerImpl):
+class InstanceHardnessThresholdImpl(BaseResamplerImpl):
 
-    def __init__(self, operator = None, sampling_strategy='auto', random_state=None, k_neighbors=5, n_jobs=1):
+    def __init__(self, operator = None, estimator=None, sampling_strategy='auto', random_state=None, 
+                cv=5, n_jobs=1):
         self._hyperparams = {
+            'estimator': estimator,
             'sampling_strategy': sampling_strategy,
             'random_state': random_state,
-            'k_neighbors': k_neighbors,
+            'cv': cv,
             'n_jobs': n_jobs}
     
         resampler_instance = OrigModel(**self._hyperparams)
-        super(SMOTEImpl, self).__init__(
+        super(InstanceHardnessThresholdImpl, self).__init__(
             operator = operator,
             resampler = resampler_instance)
 
@@ -42,6 +44,19 @@ _hyperparams_schema = {
         'properties': {
             'operator':{
                 'laleType':'operator'},
+            'estimator':{
+                'description':"""Classifier to be used to estimate instance hardness of the samples.
+By default a :class:`sklearn.ensemble.RandomForestClassifer` will be used.
+If ``str``, the choices using a string are the following: ``'knn'``,
+``'decision-tree'``, ``'random-forest'``, ``'adaboost'``,
+``'gradient-boosting'`` and ``'linear-svm'``.  If object, an estimator
+inherited from :class:`sklearn.base.ClassifierMixin` and having an
+attribute :func:`predict_proba`.""",
+                'anyOf':[
+                    {'laleType':'Any'},
+                    {'enum':['knn', 'decision-tree', 'random-forest', 'adaboost', 'gradient-boosting', 'linear-svm']},
+                    {'enum': [None]}],
+                'default': None},
             'sampling_strategy': {
                 'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
 Sampling information to resample the data set.
@@ -68,9 +83,8 @@ Possible choices are:
 ``'auto'``: equivalent to ``'not majority'``.""",
                         'enum': ['minority','not minority','not majority', 'all', 'auto']},
                     {   'description':"""- When ``dict``, the keys correspond to the targeted classes. 
-The values correspond to the desired number of samples for each targeted
-class.""",
-                        'type': 'object'},
+The values correspond to the desired number of samples for each targeted class.""",
+                        'type': 'array'},
                     {   'description':"""When callable, function taking ``y`` and returns a ``dict``. 
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
@@ -87,15 +101,10 @@ desired number of samples for each class.""",
                 { 'description': 'Random number generator instance.',
                 'laleType':'Any'}],
             'default': None},
-            'k_neighbors':{
-                'description': """If ``int``, number of nearest neighbours to used to construct synthetic samples.  
-If object, an estimator that inherits from
-:class:`sklearn.neighbors.base.KNeighborsMixin` that will be used to
-find the k_neighbors.""",
-                'anyOf': [
-                    {'laleType':'Any'},
-                    {'type': 'integer'}],
-                'default': 5},
+            'cv':{
+                'description':'Number of folds to be used when estimating samples’ instance hardness.',
+                'type':'integer',
+                'default':5},
             'n_jobs': {
                 'description': 'The number of threads to open if possible.',
                 'type': 'integer',
@@ -103,7 +112,7 @@ find the k_neighbors.""",
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': """ """,
+  'description': """Class to perform under-sampling based on the instance hardness threshold.""",
   'documentation_url': '',
   'type': 'object',
   'tags': {
@@ -123,6 +132,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-lale.docstrings.set_docstrings(SMOTEImpl, _combined_schemas)
+#lale.docstrings.set_docstrings(InstanceHardnessThresholdImpl, _combined_schemas)
 
-SMOTE = lale.operators.make_operator(SMOTEImpl, _combined_schemas)
+InstanceHardnessThreshold = lale.operators.make_operator(InstanceHardnessThresholdImpl, _combined_schemas)
