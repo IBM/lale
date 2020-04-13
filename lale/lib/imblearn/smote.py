@@ -23,6 +23,9 @@ from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schem
 class SMOTEImpl(BaseResamplerImpl):
 
     def __init__(self, operator = None, sampling_strategy='auto', random_state=None, k_neighbors=5, n_jobs=1):
+        if operator is None:
+            raise ValueError("Operator is a required argument.")
+
         self._hyperparams = {
             'sampling_strategy': sampling_strategy,
             'random_state': random_state,
@@ -37,11 +40,19 @@ class SMOTEImpl(BaseResamplerImpl):
 _hyperparams_schema = {
     'allOf': [
     {   'type': 'object',
+        'required':['operator'],
         'relevantToOptimizer': ['operator'],
         'additionalProperties': False,
         'properties': {
             'operator':{
-                'laleType':'operator'},
+                'description': """Trainable Lale pipeline that is trained using the data obtained from the current resampler.
+Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
+If operator is a Planned pipeline, the current resampler can't be trained without using an optimizer to 
+choose a trainable operator first. Please refer to lale/examples for more examples.""",
+                'anyOf': [
+                {   'laleType': 'operator'},
+                {   'enum': [None]}],
+                'default': None},
             'sampling_strategy': {
                 'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
 Sampling information to resample the data set.
@@ -103,8 +114,8 @@ find the k_neighbors.""",
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': """ """,
-  'documentation_url': '',
+  'description': """Class to perform over-sampling using Synthetic Minority Over-sampling Technique (SMOTE).""",
+  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smote.html',
   'type': 'object',
   'tags': {
     'pre': [],

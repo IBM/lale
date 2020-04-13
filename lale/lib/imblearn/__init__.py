@@ -5,3 +5,7 @@ from .edited_nearest_neighbours import EditedNearestNeighbours
 from .repeated_edited_nearest_neighbours import RepeatedEditedNearestNeighbours
 from .all_knn import AllKNN
 from .instance_hardness_threshold import InstanceHardnessThreshold
+from .adasyn import ADASYN
+from .borderline_smote import BorderlineSMOTE
+from .svm_smote import SVMSMOTE
+from .random_over_sampler import RandomOverSampler

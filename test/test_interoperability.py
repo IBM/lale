@@ -80,14 +80,15 @@ def create_function_test_resampler(res_name):
         module = importlib.import_module(module_name)
 
         class_ = getattr(module, class_name)
-        res = class_()
+        with self.assertRaises(ValueError):
+            res = class_()
 
         #test_schemas_are_schemas
         from lale.helpers import validate_is_schema
-        validate_is_schema(res.input_schema_fit())
-        validate_is_schema(res.input_schema_predict())
-        validate_is_schema(res.output_schema_predict())
-        validate_is_schema(res.hyperparam_schema())
+        validate_is_schema(class_.input_schema_fit())
+        validate_is_schema(class_.input_schema_predict())
+        validate_is_schema(class_.output_schema_predict())
+        validate_is_schema(class_.hyperparam_schema())
 
         #test_init_fit_predict
         from lale.operators import make_pipeline
@@ -101,7 +102,7 @@ def create_function_test_resampler(res_name):
 
         #test_with_hyperopt
         from lale.lib.lale import Hyperopt
-        optimizer = Hyperopt(estimator=pipeline1, max_evals = 1, show_progressbar=False)
+        optimizer = Hyperopt(estimator=PCA >> class_(operator=make_pipeline(LogisticRegression())), max_evals = 1, show_progressbar=False)
         trained_optimizer = optimizer.fit(X_train, y_train)
         predictions = trained_optimizer.predict(X_test)
 
@@ -128,6 +129,10 @@ def create_function_test_resampler(res_name):
 
 resamplers = ['lale.lib.imblearn.SMOTE',
               'lale.lib.imblearn.SMOTEENN',
+              'lale.lib.imblearn.ADASYN',
+              'lale.lib.imblearn.BorderlineSMOTE',
+              'lale.lib.imblearn.SVMSMOTE',
+              'lale.lib.imblearn.RandomOverSampler',
               'lale.lib.imblearn.CondensedNearestNeighbour',
               'lale.lib.imblearn.EditedNearestNeighbours',
               'lale.lib.imblearn.RepeatedEditedNearestNeighbours',
@@ -140,3 +145,22 @@ for res in resamplers:
         'test_{0}'.format(res.split('.')[-1]),
         create_function_test_resampler(res)
     )
+
+class TestImblearn(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import make_classification
+        from sklearn.model_selection import train_test_split
+        X, y = make_classification(n_classes=2, class_sep=2,
+            weights=[0.1, 0.9], n_informative=3, n_redundant=1, flip_y=0,
+            n_features=20, n_clusters_per_class=1, n_samples=1000, random_state=10)
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_decision_function(self):
+        from lale.lib.imblearn import SMOTE
+        from lale.operators import make_pipeline
+        from lale.lib.sklearn import RandomForestClassifier
+        smote = SMOTE(operator=make_pipeline(RandomForestClassifier()))
+        trained = smote.fit(self.X_train, self.y_train)
+        trained.predict(self.X_test)
+        with self.assertRaises(AttributeError):
+            trained.decision_function(self.X_test)

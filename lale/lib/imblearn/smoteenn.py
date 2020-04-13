@@ -23,6 +23,9 @@ from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schem
 class SMOTEENNImpl(BaseResamplerImpl):
 
     def __init__(self, operator = None, sampling_strategy='auto', random_state=None, smote=None, enn=None):
+        if operator is None:
+            raise ValueError("Operator is a required argument.")
+
         self._hyperparams = {
             'sampling_strategy': sampling_strategy,
             'random_state': random_state,
