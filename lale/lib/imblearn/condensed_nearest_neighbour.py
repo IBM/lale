@@ -43,10 +43,9 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'operator':{
-                'laleType':'operator',
-            },
+                'laleType':'operator'},
             'sampling_strategy': {
-                'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
+                'description': """sampling_strategy : str, list or callable, default='auto'. 
 Sampling information to resample the data set.
 """,
                 'anyOf': [
@@ -98,7 +97,7 @@ find the nearest-neighbors. Default of None corresponds to KNeighborsClassifier(
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': """ """,
+  'description': """Class to perform under-sampling based on the condensed nearest neighbour method.""",
   'documentation_url': '',
   'type': 'object',
   'tags': {
