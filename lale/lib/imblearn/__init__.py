@@ -1,3 +1,7 @@
 from .smote import SMOTE
 from .smoteenn import SMOTEENN
 from .condensed_nearest_neighbour import CondensedNearestNeighbour
+from .edited_nearest_neighbours import EditedNearestNeighbours
+from .repeated_edited_nearest_neighbours import RepeatedEditedNearestNeighbours
+from .all_knn import AllKNN
+from .instance_hardness_threshold import InstanceHardnessThreshold

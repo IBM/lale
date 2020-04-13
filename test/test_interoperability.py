@@ -101,17 +101,17 @@ def create_function_test_resampler(res_name):
 
         #test_with_hyperopt
         from lale.lib.lale import Hyperopt
-        optimizer = Hyperopt(estimator=pipeline1, max_evals = 1)
+        optimizer = Hyperopt(estimator=pipeline1, max_evals = 1, show_progressbar=False)
         trained_optimizer = optimizer.fit(X_train, y_train)
         predictions = trained_optimizer.predict(X_test)
 
         pipeline3 = class_(operator= PCA() >> (Nystroem & NoOp) >> ConcatFeatures >> LogisticRegression())
-        optimizer = Hyperopt(estimator=pipeline3, max_evals = 1)
+        optimizer = Hyperopt(estimator=pipeline3, max_evals = 1, show_progressbar=False)
         trained_optimizer = optimizer.fit(X_train, y_train)
         predictions = trained_optimizer.predict(X_test)
 
         pipeline4 = (PCA >> class_(operator=make_pipeline(Nystroem())) & class_(operator=make_pipeline(Nystroem()))) >> ConcatFeatures >> LogisticRegression()
-        optimizer = Hyperopt(estimator=pipeline4, max_evals = 1, scoring='roc_auc')
+        optimizer = Hyperopt(estimator=pipeline4, max_evals = 1, scoring='roc_auc', show_progressbar=False)
         trained_optimizer = optimizer.fit(X_train, y_train)
         predictions = trained_optimizer.predict(X_test)
 
@@ -128,7 +128,11 @@ def create_function_test_resampler(res_name):
 
 resamplers = ['lale.lib.imblearn.SMOTE',
               'lale.lib.imblearn.SMOTEENN',
-              'lale.lib.imblearn.CondensedNearestNeighbour']
+              'lale.lib.imblearn.CondensedNearestNeighbour',
+              'lale.lib.imblearn.EditedNearestNeighbours',
+              'lale.lib.imblearn.RepeatedEditedNearestNeighbours',
+              'lale.lib.imblearn.AllKNN',
+              'lale.lib.imblearn.InstanceHardnessThreshold']
 
 for res in resamplers:
     setattr(
