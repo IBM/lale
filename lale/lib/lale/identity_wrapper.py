@@ -59,7 +59,7 @@ _hyperparams_schema = {
     {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
         'type': 'object',
         'additionalProperties': False,
-        'relevantToOptimizer': ['order', 'op1', 'op2'],
+        'relevantToOptimizer': ['op'],
         'properties': {
             'op': {
                 'laleType': 'operator'
