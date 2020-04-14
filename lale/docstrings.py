@@ -2,12 +2,15 @@ import pprint
 
 def _indent(prefix, string, first_prefix=None):
     lines = string.splitlines()
-    if first_prefix is None:
-        first_prefix = prefix
-    first_indented = (first_prefix + lines[0]).rstrip()
-    rest_indented = [(prefix + line).rstrip() for line in lines[1:]]
-    result = first_indented + '\n' + '\n'.join(rest_indented)
-    return result
+    if lines:
+        if first_prefix is None:
+            first_prefix = prefix
+        first_indented = (first_prefix + lines[0]).rstrip()
+        rest_indented = [(prefix + line).rstrip() for line in lines[1:]]
+        result = first_indented + '\n' + '\n'.join(rest_indented)
+        return result
+    else:
+        return ""
 
 def _value_docstring(value):
     return pprint.pformat(value, width=10000, compact=True)
@@ -87,13 +90,14 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     elif 'not' in schema:
         body = item_docstring(None, schema['not'])
     elif schema.get('type', '') == 'array':
-        items_schemas = schema['items']
-        if isinstance(items_schemas, dict):
-            body = item_docstring('items', items_schemas)
-        else:
-            items_docstrings = [item_docstring(f'item {i}', s)
-                                for i, s in enumerate(items_schemas)]
-            body = '\n\n'.join(items_docstrings)
+        if 'items' in schema:
+            items_schemas = schema['items']
+            if isinstance(items_schemas, dict):
+                body = item_docstring('items', items_schemas)
+            else:
+                items_docstrings = [item_docstring(f'item {i}', s)
+                                    for i, s in enumerate(items_schemas)]
+                body = '\n\n'.join(items_docstrings)
     elif schema.get('type', '') == 'object' and 'properties' in schema:
         item_docstrings = [item_docstring(k, s)
                            for k, s in schema['properties'].items()]
