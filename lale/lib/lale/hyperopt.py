@@ -249,7 +249,7 @@ _hyperparams_schema = {
         'required': [
             'estimator', 'max_evals', 'cv', 'handle_cv_failure',
             'max_opt_time', 'pgo', 'show_progressbar'],
-        'relevantToOptimizer': ['estimator'],
+        'relevantToOptimizer': ['estimator', 'max_evals', 'cv'],
         'additionalProperties': False,
         'properties': {
             'estimator': {
