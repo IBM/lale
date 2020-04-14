@@ -46,7 +46,12 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'operator':{
-                'laleType':'operator'},
+                'description': """Trainable Lale pipeline that is trained using the data obtained from the current imbalance corrector.
+Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
+If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to 
+choose a trainable operator first. Please refer to lale/examples for more examples.""",
+                'anyOf': [
+                {   'laleType': 'operator'}]},
             'estimator':{
                 'description':"""Classifier to be used to estimate instance hardness of the samples.
 By default a :class:`sklearn.ensemble.RandomForestClassifer` will be used.
@@ -87,7 +92,7 @@ Possible choices are:
                         'enum': ['minority','not minority','not majority', 'all', 'auto']},
                     {   'description':"""- When ``dict``, the keys correspond to the targeted classes. 
 The values correspond to the desired number of samples for each targeted class.""",
-                        'type': 'array'},
+                        'type': 'object'},
                     {   'description':"""When callable, function taking ``y`` and returns a ``dict``. 
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
@@ -116,7 +121,7 @@ desired number of samples for each class.""",
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """Class to perform under-sampling based on the instance hardness threshold.""",
-  'documentation_url': '',
+  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.instance_hardness_threshold.html',
   'type': 'object',
   'tags': {
     'pre': [],
@@ -135,6 +140,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-#lale.docstrings.set_docstrings(InstanceHardnessThresholdImpl, _combined_schemas)
+lale.docstrings.set_docstrings(InstanceHardnessThresholdImpl, _combined_schemas)
 
 InstanceHardnessThreshold = lale.operators.make_operator(InstanceHardnessThresholdImpl, _combined_schemas)
