@@ -4,7 +4,8 @@ python:
   - "3.6"
 env:
  - SETUP_TARGET=.[test] TEST_CASES="test.test_core_operators test.test_core_pipeline test.test_custom_schemas test.test_json_pretty_viz"
- - SETUP_TARGET=.[full,test] TEST_CASES="test.test_type_checking test.test_interoperability test.test_optimizers test.test_notebooks test.test_pipeline"
+ - SETUP_TARGET=.[full,test] TEST_CASES="test.test_type_checking test.test_interoperability test.test_optimizers test.test_pipeline"
+ - SETUP_TARGET=.[full,test] TEST_CASES="test.test_notebooks"
 addons:
   apt:
     sources:
