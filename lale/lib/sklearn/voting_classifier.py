@@ -233,7 +233,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['transformer'],
+        'op': ['transformer', 'estimator'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
