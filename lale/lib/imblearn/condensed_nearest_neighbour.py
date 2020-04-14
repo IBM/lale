@@ -46,7 +46,12 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'operator':{
-                'laleType':'operator'},
+                'description': """Trainable Lale pipeline that is trained using the data obtained from the current imbalance corrector.
+Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
+If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to 
+choose a trainable operator first. Please refer to lale/examples for more examples.""",
+                'anyOf': [
+                {   'laleType': 'operator'}]},
             'sampling_strategy': {
                 'description': """sampling_strategy : str, list or callable, default='auto'. 
 Sampling information to resample the data set.
@@ -101,7 +106,7 @@ find the nearest-neighbors. Default of None corresponds to KNeighborsClassifier(
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """Class to perform under-sampling based on the condensed nearest neighbour method.""",
-  'documentation_url': '',
+  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.condensed_nearest_neighbour.html',
   'type': 'object',
   'tags': {
     'pre': [],
