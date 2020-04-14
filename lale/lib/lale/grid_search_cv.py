@@ -18,11 +18,18 @@ import lale.lib.sklearn
 import lale.search.lale_grid_search_cv
 import lale.operators
 import lale.sklearn_compat
+from lale.lib.lale import Observing
+from lale.lib.lale.observing import ObservingImpl
+# from abc import ABC
 
 from typing import Any, Dict
 
 class GridSearchCVImpl:
-    def __init__(self, estimator=None, cv=5, scoring='accuracy', n_jobs=None, lale_num_samples=None, lale_num_grids=None, param_grid=None, pgo=None):
+    def __init__(self, estimator=None, cv=5, scoring='accuracy', n_jobs=None, lale_num_samples=None, lale_num_grids=None, param_grid=None, pgo=None, observer=None):
+        if observer is not None and isinstance(observer, type):
+            # if we are given a class name, instantiate it
+            observer = observer()
+
         self._hyperparams = {
             'estimator': estimator,
             'cv': cv,
@@ -31,32 +38,56 @@ class GridSearchCVImpl:
             'lale_num_samples': lale_num_samples,
             'lale_num_grids': lale_num_grids,
             'pgo': pgo,
-            'hp_grid': param_grid }
+            'hp_grid': param_grid,
+            'observer': observer }
 
     def fit(self, X, y):
         if self._hyperparams['estimator'] is None:
             op = lale.lib.sklearn.LogisticRegression
         else:
             op = self._hyperparams['estimator']
+
+        observed_op = op
+        obs = self._hyperparams['observer']
+        if obs is not None:
+            observed_op = Observing(op=op, observer=obs)
+
         hp_grid = self._hyperparams['hp_grid']
         if hp_grid is None:
             hp_grid = lale.search.lale_grid_search_cv.get_parameter_grids(
-                op,
+                observed_op,
                 num_samples=self._hyperparams['lale_num_samples'],
                 num_grids=self._hyperparams['lale_num_grids'],
                 pgo=self._hyperparams['pgo'])
         if not hp_grid and isinstance(op, lale.operators.IndividualOp):
             hp_grid = [
-                lale.search.lale_grid_search_cv.get_defaults_as_param_grid(op)]
+                lale.search.lale_grid_search_cv.get_defaults_as_param_grid(observed_op)]
         if hp_grid:
-            self.grid = lale.search.lale_grid_search_cv.get_lale_gridsearchcv_op(
-                lale.sklearn_compat.make_sklearn_compat(op),
-                hp_grid,
-                cv=self._hyperparams['cv'],
-                scoring=self._hyperparams['scoring'],
-                n_jobs=self._hyperparams['n_jobs'])
-            self.grid.fit(X, y)
-            self._best_estimator = self.grid.best_estimator_.to_lale()
+            if obs is not None:
+                observed_op._impl.startObserving("optimize", hp_grid=hp_grid, op=op,
+                    num_samples=self._hyperparams['lale_num_samples'],
+                    num_grids=self._hyperparams['lale_num_grids'],
+                    pgo=self._hyperparams['pgo'])
+            try:
+                self.grid = lale.search.lale_grid_search_cv.get_lale_gridsearchcv_op(
+                    lale.sklearn_compat.make_sklearn_compat(observed_op),
+                    hp_grid,
+                    cv=self._hyperparams['cv'],
+                    scoring=self._hyperparams['scoring'],
+                    n_jobs=self._hyperparams['n_jobs'])
+                self.grid.fit(X, y)
+                be = self.grid.best_estimator_.to_lale()
+            except BaseException as e:
+                if obs is not None:
+                    assert isinstance(be._impl, ObservingImpl)
+                    observed_op._impl.failObserving("optimize", e)
+                    raise
+
+            if obs is not None:
+                assert isinstance(be._impl, ObservingImpl)
+                be_base = be._impl.getOp()
+                observed_op._impl.endObserving("optimize", best=be)
+            self._best_estimator = be
         else:
             assert isinstance(op, lale.operators.TrainableOperator)
             self._best_estimator = op
@@ -162,7 +193,12 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'description': 'lale.search.PGO'},
                 {   'enum': [None]}],
-                'default': None}}}]}
+                'default': None},
+            'observer': {
+                'laleType':'Any',
+                'default': None,
+                'description': 'a class or object with callbacks for observing the state of the optimization'}
+                }}]}
 
 _input_fit_schema = {
     'type': 'object',

@@ -16,6 +16,7 @@ from .concat_features import ConcatFeatures
 from .no_op import NoOp
 from .hyperopt import Hyperopt
 from .identity_wrapper import IdentityWrapper
+from .observing import Observing
 from .both import Both
 from .sample_based_voting import SampleBasedVoting
 from .project import Project
