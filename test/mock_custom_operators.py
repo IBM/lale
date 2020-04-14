@@ -80,7 +80,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator'],
+        'op': ['transformer'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparam_schema,
@@ -176,6 +176,10 @@ _hyperparams_schema = {
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
+  'tags': {
+    'pre': [],
+    'op': ['estimator', 'classifier'],
+    'post': []},
   'properties': {
     'input_fit': _input_fit_schema,
     'input_predict': _input_predict_schema,
