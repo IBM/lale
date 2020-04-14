@@ -68,7 +68,9 @@ Possible choices are:
 ``'auto'``: equivalent to ``'not majority'``.""",
                         'enum': ['minority','not minority','not majority', 'all', 'auto']},
                     {   'description':"""- When ``list``, the list contains the classes targeted by the resampling.""",
-                        'type': 'array'},
+                        'anyOf': [
+                            {'type': 'array', 'items': {'type': 'number'}},
+                            {'type': 'array', 'items': {'type': 'string'}}]},
                     {   'description':"""When callable, function taking ``y`` and returns a ``dict``. 
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
@@ -131,6 +133,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-#lale.docstrings.set_docstrings(RepeatedEditedNearestNeighboursImpl, _combined_schemas)
+lale.docstrings.set_docstrings(RepeatedEditedNearestNeighboursImpl, _combined_schemas)
 
 RepeatedEditedNearestNeighbours = lale.operators.make_operator(RepeatedEditedNearestNeighboursImpl, _combined_schemas)
