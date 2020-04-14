@@ -164,3 +164,12 @@ class TestImblearn(unittest.TestCase):
         trained.predict(self.X_test)
         with self.assertRaises(AttributeError):
             trained.decision_function(self.X_test)
+    
+    def test_string_labels(self):
+        from lale.lib.imblearn import CondensedNearestNeighbour
+        print(type(CondensedNearestNeighbour))
+        from lale.operators import make_pipeline
+        y_train = ['low' if label==0 else 'high' for label in self.y_train]
+        pipeline = CondensedNearestNeighbour(operator=make_pipeline(PCA(), LogisticRegression()), sampling_strategy=['high'])
+        trained = pipeline.fit(self.X_train, y_train)
+        predictions = trained.predict(self.X_test)
