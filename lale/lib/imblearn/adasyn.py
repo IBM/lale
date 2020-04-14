@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from imblearn.under_sampling import InstanceHardnessThreshold as OrigModel
+from imblearn.over_sampling import ADASYN as OrigModel
 import lale.operators 
 from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schema,\
                                             _input_transform_schema, _output_transform_schema,\
@@ -20,24 +20,28 @@ from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schem
                                             _input_predict_proba_schema, _output_predict_proba_schema,\
                                             _input_decision_function_schema, _output_decision_function_schema
 
-class InstanceHardnessThresholdImpl(BaseResamplerImpl):
+class ADASYNImpl(BaseResamplerImpl):
 
-    def __init__(self, operator = None, estimator=None, sampling_strategy='auto', random_state=None, 
-                cv=5, n_jobs=1):
+    def __init__(self, operator = None, sampling_strategy='auto', random_state=None, n_neighbors=5, n_jobs=1):
         if operator is None:
             raise ValueError("Operator is a required argument.")
 
         self._hyperparams = {
-            'estimator': estimator,
             'sampling_strategy': sampling_strategy,
             'random_state': random_state,
-            'cv': cv,
+            'n_neighbors': n_neighbors,
             'n_jobs': n_jobs}
     
         resampler_instance = OrigModel(**self._hyperparams)
-        super(InstanceHardnessThresholdImpl, self).__init__(
+        super(ADASYNImpl, self).__init__(
             operator = operator,
             resampler = resampler_instance)
+
+    def fit(self, X, y=None):
+        import numpy as np
+        X, y = self.resampler.fit_resample(X, np.array(y))
+        self.trained_operator = self.operator.fit(X, y)
+        return self
 
 _hyperparams_schema = {
     'allOf': [
@@ -47,19 +51,6 @@ _hyperparams_schema = {
         'properties': {
             'operator':{
                 'laleType':'operator'},
-            'estimator':{
-                'description':"""Classifier to be used to estimate instance hardness of the samples.
-By default a :class:`sklearn.ensemble.RandomForestClassifer` will be used.
-If ``str``, the choices using a string are the following: ``'knn'``,
-``'decision-tree'``, ``'random-forest'``, ``'adaboost'``,
-``'gradient-boosting'`` and ``'linear-svm'``.  If object, an estimator
-inherited from :class:`sklearn.base.ClassifierMixin` and having an
-attribute :func:`predict_proba`.""",
-                'anyOf':[
-                    {'laleType':'Any'},
-                    {'enum':['knn', 'decision-tree', 'random-forest', 'adaboost', 'gradient-boosting', 'linear-svm']},
-                    {'enum': [None]}],
-                'default': None},
             'sampling_strategy': {
                 'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
 Sampling information to resample the data set.
@@ -86,8 +77,9 @@ Possible choices are:
 ``'auto'``: equivalent to ``'not majority'``.""",
                         'enum': ['minority','not minority','not majority', 'all', 'auto']},
                     {   'description':"""- When ``dict``, the keys correspond to the targeted classes. 
-The values correspond to the desired number of samples for each targeted class.""",
-                        'type': 'array'},
+The values correspond to the desired number of samples for each targeted
+class.""",
+                        'type': 'object'},
                     {   'description':"""When callable, function taking ``y`` and returns a ``dict``. 
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
@@ -104,10 +96,15 @@ desired number of samples for each class.""",
                 { 'description': 'Random number generator instance.',
                 'laleType':'Any'}],
             'default': None},
-            'cv':{
-                'description':'Number of folds to be used when estimating samples’ instance hardness.',
-                'type':'integer',
-                'default':5},
+            'n_neighbors':{
+                'description': """If ``int``, number of nearest neighbours to used to construct synthetic samples.  
+If object, an estimator that inherits from
+:class:`sklearn.neighbors.base.KNeighborsMixin` that will be used to
+find the n_neighbors.""",
+                'anyOf': [
+                    {'laleType':'Any'},
+                    {'type': 'integer'}],
+                'default': 5},
             'n_jobs': {
                 'description': 'The number of threads to open if possible.',
                 'type': 'integer',
@@ -115,7 +112,7 @@ desired number of samples for each class.""",
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': """Class to perform under-sampling based on the instance hardness threshold.""",
+  'description': """Perform over-sampling using Adaptive Synthetic (ADASYN) sampling approach for imbalanced datasets.""",
   'documentation_url': '',
   'type': 'object',
   'tags': {
@@ -135,6 +132,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-#lale.docstrings.set_docstrings(InstanceHardnessThresholdImpl, _combined_schemas)
+#lale.docstrings.set_docstrings(ADASYNImpl, _combined_schemas)
 
-InstanceHardnessThreshold = lale.operators.make_operator(InstanceHardnessThresholdImpl, _combined_schemas)
+ADASYN = lale.operators.make_operator(ADASYNImpl, _combined_schemas)

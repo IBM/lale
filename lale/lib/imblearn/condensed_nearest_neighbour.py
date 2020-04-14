@@ -24,6 +24,9 @@ class CondensedNearestNeighbourImpl(BaseResamplerImpl):
 
     def __init__(self, operator = None, sampling_strategy='auto', random_state=None, 
                 n_neighbors=None, n_seeds_S=1, n_jobs=1):
+        if operator is None:
+            raise ValueError("Operator is a required argument.")
+
         self._hyperparams = {
             'sampling_strategy': sampling_strategy,
             'random_state': random_state,
