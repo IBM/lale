@@ -47,7 +47,12 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'operator':{
-                'laleType':'operator'},
+                'description': """Trainable Lale pipeline that is trained using the data obtained from the current imbalance corrector.
+Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
+If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to 
+choose a trainable operator first. Please refer to lale/examples for more examples.""",
+                'anyOf': [
+                {   'laleType': 'operator'}]},
             'sampling_strategy': {
                 'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
 Sampling information to resample the data set.
@@ -121,8 +126,9 @@ If object, an estimator that inherits from
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': """ """,
-  'documentation_url': '',
+  'description': """Over-sampling using Borderline SMOTE, which is a variant of the original SMOTE algorithm.
+Borderline samples will be detected and used to generate new synthetic samples.""",
+  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.borderline_smote.html',
   'type': 'object',
   'tags': {
     'pre': [],
@@ -141,6 +147,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-#lale.docstrings.set_docstrings(BorderlineSMOTEImpl, _combined_schemas)
+lale.docstrings.set_docstrings(BorderlineSMOTEImpl, _combined_schemas)
 
 BorderlineSMOTE = lale.operators.make_operator(BorderlineSMOTEImpl, _combined_schemas)

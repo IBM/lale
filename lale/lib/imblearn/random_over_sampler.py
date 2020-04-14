@@ -43,14 +43,12 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'operator':{
-                'description': """Trainable Lale pipeline that is trained using the data obtained from the current resampler.
+                'description': """Trainable Lale pipeline that is trained using the data obtained from the current imbalance corrector.
 Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
-If operator is a Planned pipeline, the current resampler can't be trained without using an optimizer to 
+If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to 
 choose a trainable operator first. Please refer to lale/examples for more examples.""",
                 'anyOf': [
-                {   'laleType': 'operator'},
-                {   'enum': [None]}],
-                'default': None},
+                {   'laleType': 'operator'}]},
             'sampling_strategy': {
                 'description': """sampling_strategy : float, str, dict or callable, default='auto'. 
 Sampling information to resample the data set.
@@ -119,6 +117,6 @@ _combined_schemas = {
     'output_decision_function': _output_decision_function_schema
 }}
 
-#lale.docstrings.set_docstrings(RandomOverSamplerImpl, _combined_schemas)
+lale.docstrings.set_docstrings(RandomOverSamplerImpl, _combined_schemas)
 
 RandomOverSampler = lale.operators.make_operator(RandomOverSamplerImpl, _combined_schemas)
