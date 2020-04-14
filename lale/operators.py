@@ -479,7 +479,7 @@ class IndividualOp(Operator):
             self._schemas = schemas
         else:
             self._schemas = lale.type_checking.get_default_schema(impl)
-        if self._impl is not None:
+        if self._impl is not None and not self.class_name().startswith('lale.lib.autogen'):
             self._check_schemas()
 
     def _check_schemas(self):
