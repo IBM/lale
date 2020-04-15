@@ -15,7 +15,8 @@
 import logging
 from spacy.lang.en import English
 import numpy as np
-from lale.operators import make_operator
+import lale.docstrings
+import lale.operators
 from sklearn.utils.validation import _is_arraylike
 import urllib.request
 import os
@@ -174,4 +175,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-GloveEmbeddingEncoder = make_operator(GloveEmbeddingEncoderImpl(), _combined_schemas)
+lale.docstrings.set_docstrings(GloveEmbeddingEncoderImpl, _combined_schemas)
+
+GloveEmbeddingEncoder = lale.operators.make_operator(GloveEmbeddingEncoderImpl(), _combined_schemas)

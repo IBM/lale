@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.docstrings
 import lale.operators
-import pandas as pd
 
 class IdentityWrapperImpl():
     # This should be equivalent to:
@@ -108,5 +108,7 @@ _combined_schemas = {
         'output_predict_proba': _output_schema,
         'input_transform': _input_predict_transform_schema,
         'output_transform': _output_schema}}
+
+lale.docstrings.set_docstrings(IdentityWrapperImpl, _combined_schemas)
 
 IdentityWrapper = lale.operators.make_operator(IdentityWrapperImpl, _combined_schemas)

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from sklearn.ensemble.weight_boosting import AdaBoostRegressor as SKLModel
+import lale.docstrings
 import lale.operators
-from numpy import nan, inf
 
 class AdaBoostRegressorImpl():
 
@@ -149,6 +149,8 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(AdaBoostRegressorImpl, _combined_schemas)
 
 AdaBoostRegressor = lale.operators.make_operator(AdaBoostRegressorImpl, _combined_schemas)
 

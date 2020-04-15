@@ -35,6 +35,7 @@ from lale.lib.sklearn import LogisticRegression
 import lale.operators
 from lale.search.lale_smac import lale_op_smac_tae, get_smac_space, lale_trainable_op_from_config
 import lale.sklearn_compat
+import lale.docstrings
 
 logger = logging.getLogger(__name__)
 
@@ -301,6 +302,7 @@ _output_predict_schema = {
 
 _combined_schemas = {
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_cv.html',
+    'description': 'SMAC, the optimizer used inside auto-weka and auto-sklearn.',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -311,5 +313,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(SMACImpl, _combined_schemas)
 
 SMAC = lale.operators.make_operator(SMACImpl, _combined_schemas)

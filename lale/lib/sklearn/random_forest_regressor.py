@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.ensemble.forest
+import lale.docstrings
 import lale.operators
 
 class RandomForestRegressorImpl():
@@ -226,5 +227,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(RandomForestRegressorImpl, _combined_schemas)
 
 RandomForestRegressor = lale.operators.make_operator(RandomForestRegressorImpl, _combined_schemas)

@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.docstrings
 import lale.operators
-import pandas as pd
-
 from functools import wraps
 import logging
 
@@ -42,12 +41,6 @@ end_prefix = "end_"
 fail_prefix = "fail_"
 
 class ObservingImpl():
-    """
-    This should functionally be identical to the identity wrapper, except
-    that it calls methods on the observer (if they exist)
-    before and after calls to the underlying wrapper.
-    This is similar to AOP
-    """
     def __init__(self, op=None, observer=None):
         if observer is not None and isinstance(observer, type):
             # if we are given a class name, instantiate it
@@ -146,7 +139,7 @@ _output_schema = { #TODO: separate predict vs. predict_proba vs. transform
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
+    'description': """This should functionally be identical to the identity wrapper, except that it calls methods on the observer (if they exist) before and after calls to the underlying wrapper. This is similar to aspect-oriented programming.""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.identity.html',
     'type': 'object',
     'tags': {
@@ -162,6 +155,8 @@ _combined_schemas = {
         'output_predict_proba': _output_schema,
         'input_transform': _input_predict_transform_schema,
         'output_transform': _output_schema}}
+
+lale.docstrings.set_docstrings(ObservingImpl, _combined_schemas)
 
 Observing = lale.operators.make_operator(ObservingImpl, _combined_schemas)
 

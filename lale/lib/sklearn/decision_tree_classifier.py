@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.tree.tree
+import lale.docstrings
 import lale.operators
 
 _hyperparams_schema = {
@@ -268,5 +269,7 @@ class DecisionTreeClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+lale.docstrings.set_docstrings(DecisionTreeClassifierImpl, _combined_schemas)
 
 DecisionTreeClassifier = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)

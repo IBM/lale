@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from sklearn.linear_model.stochastic_gradient import SGDRegressor as SKLModel
+import lale.docstrings
 import lale.operators
 
 class SGDRegressorImpl():
@@ -303,6 +304,8 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(SGDRegressorImpl, _combined_schemas)
 
 SGDRegressor = lale.operators.make_operator(SGDRegressorImpl, _combined_schemas)
 

@@ -18,7 +18,8 @@ import random
 import tensorflow_hub as hub
 import tensorflow as tf
 import numpy as np
-from lale.operators import make_operator
+import lale.docstrings
+import lale.operators
 
 class USEPretrainedEncoderImpl(object):
     """
@@ -230,4 +231,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-USEPretrainedEncoder = make_operator(USEPretrainedEncoderImpl, _combined_schemas)
+lale.docstrings.set_docstrings(USEPretrainedEncoderImpl, _combined_schemas)
+
+USEPretrainedEncoder = lale.operators.make_operator(USEPretrainedEncoderImpl, _combined_schemas)

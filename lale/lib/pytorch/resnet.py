@@ -25,7 +25,8 @@ from torch.autograd import Variable
 import sys
 import numpy as np
 import math
-from lale.operators import make_operator
+import lale.operators
+import lale.docstrings
 
 class ResNet50Impl():
     def __init__(self, num_classes=10, model = None, 
@@ -223,7 +224,9 @@ _combined_schemas = {
     'input_predict': _input_predict_schema,
     'output_predict': _output_predict_schema}}
 
-ResNet50 = make_operator(ResNet50Impl, _combined_schemas)
+lale.docstrings.set_docstrings(ResNet50Impl, _combined_schemas)
+
+ResNet50 = lale.operators.make_operator(ResNet50Impl, _combined_schemas)
 
 if __name__ == "__main__":
     import torchvision.datasets as datasets

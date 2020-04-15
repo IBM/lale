@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import lale.operators
+import lale.docstrings
 import sklearn.neural_network.multilayer_perceptron
 
 class MLPClassifierImpl():
@@ -480,5 +481,7 @@ _combined_schemas = {
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
+
+lale.docstrings.set_docstrings(MLPClassifierImpl, _combined_schemas)
 
 MLPClassifier = lale.operators.make_operator(MLPClassifierImpl, _combined_schemas)

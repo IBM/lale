@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from sklearn.base import BaseEstimator
+import lale.docstrings
 
 class XGBClassifierImpl(BaseEstimator):
     def __init__(self, max_depth=3, learning_rate=0.1, n_estimators=100, verbosity=1, 
@@ -413,5 +414,7 @@ _combined_schemas = {
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
+
+lale.docstrings.set_docstrings(XGBClassifierImpl, _combined_schemas)
 
 XGBClassifier = lale.operators.make_operator(XGBClassifierImpl, _combined_schemas)

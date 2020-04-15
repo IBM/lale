@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import lale.operators
+import lale.docstrings
 import sklearn.preprocessing
 
 class MinMaxScalerImpl:
@@ -106,5 +107,7 @@ _combined_schemas = {
     'input_fit': _input_schema_fit,
     'input_transform': _input_transform_schema,
     'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(MinMaxScalerImpl, _combined_schemas)
 
 MinMaxScaler = lale.operators.make_operator(MinMaxScalerImpl, _combined_schemas)

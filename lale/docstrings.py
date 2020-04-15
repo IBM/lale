@@ -19,6 +19,8 @@ def _kind_tag(schema):
     if 'type' in schema:
         if schema['type'] == 'object':
             return 'dict'
+        elif isinstance(schema['type'], list):
+            return ' or '.join(schema['type'])
         else:
             return schema['type']
     elif 'enum' in schema:
@@ -103,7 +105,10 @@ def _schema_docstring(name, schema, required=True, relevant=True):
                            for k, s in schema['properties'].items()]
         body = '\n\n'.join(item_docstrings)
     result = name + ' : ' if name else ''
-    result += ', '.join(tags)
+    try:
+        result += ', '.join(tags)
+    except BaseException as e:
+        raise ValueError(f'Unexpected internal error for {schema}.') from e
     assert len(result) > 0 and result.rstrip() == result
     if result.startswith('-'):
         result = '\\' + result

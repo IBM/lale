@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.linear_model.base
+import lale.docstrings
 import lale.operators
 
 class LinearRegressionImpl():
@@ -155,5 +156,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(LinearRegressionImpl, _combined_schemas)
 
 LinearRegression = lale.operators.make_operator(LinearRegressionImpl, _combined_schemas)

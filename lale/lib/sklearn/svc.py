@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import sklearn.svm.classes
+import lale.docstrings
 import lale.operators
-
 
 class SVCImpl():
 
@@ -264,5 +263,7 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema,
 }}
+
+lale.docstrings.set_docstrings(SVCImpl, _combined_schemas)
 
 SVC = lale.operators.make_operator(SVCImpl, _combined_schemas)

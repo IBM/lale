@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lale.operators import make_operator
+import lale.docstrings
+import lale.operators
 import torch
 from pytorch_pretrained_bert import BertTokenizer, BertModel, BertForMaskedLM
 import numpy as np
@@ -168,4 +169,6 @@ _combined_schemas = {
     'input_transform': _input_transform_schema,
     'output_transform': _output_transform_schema}}
 
-BertPretrainedEncoder = make_operator(BertPretrainedEncoderImpl, _combined_schemas)
+lale.docstrings.set_docstrings(BertPretrainedEncoderImpl, _combined_schemas)
+
+BertPretrainedEncoder = lale.operators.make_operator(BertPretrainedEncoderImpl, _combined_schemas)

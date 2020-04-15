@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import sklearn.linear_model.passive_aggressive
+import lale.docstrings
 import lale.operators
 
 class PassiveAggressiveClassifierImpl():
@@ -254,6 +254,8 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema,
 }}
+
+lale.docstrings.set_docstrings(PassiveAggressiveClassifierImpl, _combined_schemas)
 
 PassiveAggressiveClassifier = lale.operators.make_operator(PassiveAggressiveClassifierImpl, _combined_schemas)
 
