@@ -24,9 +24,9 @@ import pprint
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
-import lale.helpers
 import lale.json_operator
 import lale.operators
+import lale.type_checking
 
 JSON_TYPE = Dict[str, Any]
 
@@ -395,7 +395,7 @@ def schema_to_string(schema: JSON_TYPE) -> str:
     return s8
 
 def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, call_depth:int=1) -> str:
-    if lale.helpers.is_schema(arg):
+    if lale.type_checking.is_schema(arg):
         return schema_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)

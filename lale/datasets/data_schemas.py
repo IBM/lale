@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.helpers
+import lale.type_checking
 import numpy as np
 import pandas as pd
 import scipy.sparse
@@ -103,7 +103,7 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
         if schema is None:
             result.json_schema = to_schema(obj)
         else:
-            lale.helpers.validate_is_schema(schema)
+            lale.type_checking.validate_is_schema(schema)
             result.json_schema = schema
     return result
 
@@ -131,7 +131,7 @@ def dtype_to_schema(typ):
             assert False, f'unexpected dtype {typ}'
     else:
         assert False, f'unexpected non-dtype {typ}'
-    lale.helpers.validate_is_schema(result)
+    lale.type_checking.validate_is_schema(result)
     return result
 
 def shape_and_dtype_to_schema(shape, dtype):
@@ -142,7 +142,7 @@ def shape_and_dtype_to_schema(shape, dtype):
             'minItems': dim,
             'maxItems': dim,
             'items': result}
-    lale.helpers.validate_is_schema(result)
+    lale.type_checking.validate_is_schema(result)
     return result
 
 def ndarray_to_schema(array):
@@ -173,7 +173,7 @@ def dataframe_to_schema(df):
             'minItems': n_columns,
             'maxItems': n_columns,
             'items': items}}
-    lale.helpers.validate_is_schema(result)
+    lale.type_checking.validate_is_schema(result)
     return result
 
 def series_to_schema(series):
@@ -188,7 +188,7 @@ def series_to_schema(series):
         'items': {
             'description': str(series.name),
             **dtype_to_schema(series.dtype)}}
-    lale.helpers.validate_is_schema(result)
+    lale.type_checking.validate_is_schema(result)
     return result
 
 def torch_tensor_to_schema(tensor):
@@ -248,7 +248,7 @@ or with
             'minItems': n_columns,
             'maxItems': n_columns,
             'items': items}}
-    lale.helpers.validate_is_schema(result)
+    lale.type_checking.validate_is_schema(result)
     return result
 
 def to_schema(obj):
@@ -266,9 +266,9 @@ def to_schema(obj):
         result = torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
-    elif lale.helpers.is_schema(obj):
+    elif lale.type_checking.is_schema(obj):
         result = obj
     else:
         raise ValueError(f'to_schema(obj), type {type(obj)}, value {obj}')
-    lale.helpers.validate_is_schema(result)
+    lale.type_checking.validate_is_schema(result)
     return result

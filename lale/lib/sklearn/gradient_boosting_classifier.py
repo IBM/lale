@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.ensemble.gradient_boosting
-import lale.helpers
 import lale.operators
 
 class GradientBoostingClassifierImpl():
@@ -335,6 +334,4 @@ _combined_schemas = {
         'output_decision_function': _output_decision_function_schema,
 }}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 GradientBoostingClassifier = lale.operators.make_operator(GradientBoostingClassifierImpl, _combined_schemas)

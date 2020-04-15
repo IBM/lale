@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.helpers
 import lale.operators
 import pandas as pd
 
@@ -163,9 +162,6 @@ _combined_schemas = {
         'output_predict_proba': _output_schema,
         'input_transform': _input_predict_transform_schema,
         'output_transform': _output_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 Observing = lale.operators.make_operator(ObservingImpl, _combined_schemas)
 

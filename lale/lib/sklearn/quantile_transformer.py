@@ -13,9 +13,7 @@
 # limitations under the License.
 
 from sklearn.preprocessing import QuantileTransformer as SKLModel
-import lale.helpers
 import lale.operators
-from numpy import nan, inf
 
 class QuantileTransformerImpl():
 
@@ -138,7 +136,5 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 QuantileTransformer = lale.operators.make_operator(QuantileTransformerImpl, _combined_schemas)
 

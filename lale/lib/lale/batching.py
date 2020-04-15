@@ -16,7 +16,6 @@ from lale.operators import make_operator
 
 import numpy as np
 import pandas as pd
-import lale.helpers as helpers
 
 class BatchingImpl():
   """Batching trains the given pipeline using batches.
@@ -170,8 +169,5 @@ _combined_schemas = {
     'output_predict': _output_schema,
     'input_transform': _input_predict_transform_schema,
     'output_transform': _output_schema}}
-
-if __name__ == "__main__":
-    helpers.validate_is_schema(_combined_schemas)
 
 Batching = make_operator(BatchingImpl, _combined_schemas)

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.svm.classes
-import lale.helpers
 import lale.operators
 
 class LinearSVCImpl():
@@ -265,8 +264,5 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema,
 }}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 LinearSVC = lale.operators.make_operator(LinearSVCImpl, _combined_schemas)

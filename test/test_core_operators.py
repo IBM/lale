@@ -42,6 +42,9 @@ from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.sklearn_compat import make_sklearn_compat
 
 import lale.operators as Ops
+
+import lale.type_checking
+
 class TestClassification(unittest.TestCase):
 
     def setUp(self):
@@ -64,11 +67,10 @@ def create_function_test_classifier(clf_name):
         clf = class_()
 
         #test_schemas_are_schemas
-        from lale.helpers import validate_is_schema
-        validate_is_schema(clf.input_schema_fit())
-        validate_is_schema(clf.input_schema_predict())
-        validate_is_schema(clf.output_schema_predict())
-        validate_is_schema(clf.hyperparam_schema())
+        lale.type_checking.validate_is_schema(clf.input_schema_fit())
+        lale.type_checking.validate_is_schema(clf.input_schema_predict())
+        lale.type_checking.validate_is_schema(clf.output_schema_predict())
+        lale.type_checking.validate_is_schema(clf.hyperparam_schema())
 
         #test_init_fit_predict
         trained = clf.fit(self.X_train, self.y_train)
@@ -163,11 +165,10 @@ def create_function_test_regressor(clf_name):
         regr = class_()
 
         #test_schemas_are_schemas
-        from lale.helpers import validate_is_schema
-        validate_is_schema(regr.input_schema_fit())
-        validate_is_schema(regr.input_schema_predict())
-        validate_is_schema(regr.output_schema_predict())
-        validate_is_schema(regr.hyperparam_schema())
+        lale.type_checking.validate_is_schema(regr.input_schema_fit())
+        lale.type_checking.validate_is_schema(regr.input_schema_predict())
+        lale.type_checking.validate_is_schema(regr.output_schema_predict())
+        lale.type_checking.validate_is_schema(regr.hyperparam_schema())
 
         #test_init_fit_predict
         trained = regr.fit(self.X_train, self.y_train)
@@ -240,11 +241,10 @@ def create_function_test_feature_preprocessor(fproc_name):
             #remove the hack when this is fixed
             fproc = PCA()
         #test_schemas_are_schemas
-        from lale.helpers import validate_is_schema
-        validate_is_schema(fproc.input_schema_fit())
-        validate_is_schema(fproc.input_schema_transform())
-        validate_is_schema(fproc.output_schema_transform())
-        validate_is_schema(fproc.hyperparam_schema())
+        lale.type_checking.validate_is_schema(fproc.input_schema_fit())
+        lale.type_checking.validate_is_schema(fproc.input_schema_transform())
+        lale.type_checking.validate_is_schema(fproc.output_schema_transform())
+        lale.type_checking.validate_is_schema(fproc.hyperparam_schema())
 
         #test_init_fit_transform
         trained = fproc.fit(self.X_train, self.y_train)

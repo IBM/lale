@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.linear_model
-import lale.helpers
 import lale.operators
 
 class RidgeClassifierImpl():
@@ -255,6 +254,4 @@ _combined_schemas = {
         'output_decision_function': _output_decision_function_schema,
 }}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 RidgeClassifier = lale.operators.make_operator(RidgeClassifierImpl, _combined_schemas)

@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.helpers
 import lale.operators
 import sklearn.preprocessing
 
@@ -107,8 +106,5 @@ _combined_schemas = {
     'input_fit': _input_schema_fit,
     'input_transform': _input_transform_schema,
     'output_transform': _output_transform_schema}}
-
-if __name__ == "__main__":
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 MinMaxScaler = lale.operators.make_operator(MinMaxScalerImpl, _combined_schemas)

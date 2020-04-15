@@ -21,7 +21,6 @@ from sklearn import preprocessing
 import warnings
 import collections
 import pickle
-import lale.helpers
 import lale.operators
 import numpy as np
 from collections import Counter
@@ -447,7 +446,5 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 TimeFreqEigenVectors = lale.operators.make_operator(TimeFreqEigenVectorsImpl, _combined_schemas)
 

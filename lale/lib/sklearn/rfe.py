@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from sklearn.feature_selection import RFE as SKLModel
-import lale.helpers
 import lale.operators
 
 class RFEImpl():
@@ -120,8 +119,5 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 RFE = lale.operators.make_operator(RFEImpl, _combined_schemas)

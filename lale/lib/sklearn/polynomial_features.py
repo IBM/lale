@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.preprocessing.data
-import lale.helpers
 import lale.operators
 
 class PolynomialFeaturesImpl():
@@ -115,6 +114,4 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 PolynomialFeatures = lale.operators.make_operator(PolynomialFeaturesImpl, _combined_schemas)

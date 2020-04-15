@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import lale.docstrings
-import lale.helpers
 import lale.operators
 import lale.type_checking
 import functools
@@ -100,7 +99,7 @@ class ConcatFeaturesImpl():
                 'items': elem_schema}}
         if max_cols != 'unbounded':
             s_result['items']['maxItems'] = max_cols
-        lale.helpers.validate_is_schema(s_result)
+        lale.type_checking.validate_is_schema(s_result)
         return s_result
     
 _hyperparams_schema = {
@@ -169,9 +168,6 @@ NDArrayWithSchema([[11, 12, 13, 14, 15],
         'hyperparams': _hyperparams_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 lale.docstrings.set_docstrings(ConcatFeaturesImpl, _combined_schemas)
 

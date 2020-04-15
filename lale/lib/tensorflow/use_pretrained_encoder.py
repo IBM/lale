@@ -19,7 +19,6 @@ import tensorflow_hub as hub
 import tensorflow as tf
 import numpy as np
 from lale.operators import make_operator
-import lale.helpers
 
 class USEPretrainedEncoderImpl(object):
     """
@@ -230,8 +229,5 @@ _combined_schemas = {
         'input_fit': _input_schema_fit,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if __name__ == "__main__":
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 USEPretrainedEncoder = make_operator(USEPretrainedEncoderImpl, _combined_schemas)

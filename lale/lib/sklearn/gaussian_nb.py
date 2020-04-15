@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.naive_bayes
-import lale.helpers
 import lale.operators
 
 class GaussianNBImpl():
@@ -150,6 +149,4 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 GaussianNB = lale.operators.make_operator(GaussianNBImpl, _combined_schemas)

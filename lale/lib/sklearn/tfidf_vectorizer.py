@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.helpers
 import lale.operators
 import numpy as np
 import pandas as pd
@@ -233,8 +232,5 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 TfidfVectorizer = lale.operators.make_operator(TfidfVectorizerImpl, _combined_schemas)

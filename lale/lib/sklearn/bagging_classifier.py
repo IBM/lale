@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from sklearn.ensemble.bagging import BaggingClassifier as SKLModel
-import lale.helpers
 import lale.operators
 from lale.sklearn_compat import make_sklearn_compat
 
@@ -236,6 +235,4 @@ _combined_schemas = {
         'output_decision_function': _output_decision_function_schema,
 }}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 BaggingClassifier = lale.operators.make_operator(BaggingClassifierImpl, _combined_schemas)

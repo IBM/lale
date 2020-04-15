@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.feature_selection
-import lale.helpers
 import lale.operators
 import pandas as pd
 
@@ -122,6 +121,4 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 SelectKBest = lale.operators.make_operator(SelectKBestImpl, _combined_schemas)

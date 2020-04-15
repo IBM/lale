@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import lale.docstrings
-import lale.helpers
 import lale.operators
 import sklearn.linear_model
 
@@ -281,9 +280,6 @@ _combined_schemas = {
     'input_decision_function': _input_decision_function_schema,
     'output_decision_function': _output_decision_function_schema,
 }}
-
-if __name__ == "__main__":
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 class LogisticRegressionImpl:
     def __init__(self, **hyperparams):

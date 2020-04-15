@@ -14,7 +14,6 @@
 
 from sklearn.base import BaseEstimator
 from xgboost import XGBRegressor as XGBoostRegressor
-import lale.helpers
 import lale.operators
 
 class XGBRegressorImpl(BaseEstimator):
@@ -405,8 +404,5 @@ _combined_schemas = {
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_schema,
         'output_predict_proba': _output_predict_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 XGBRegressor = lale.operators.make_operator(XGBRegressorImpl, _combined_schemas)

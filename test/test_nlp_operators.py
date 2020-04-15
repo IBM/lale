@@ -1,4 +1,5 @@
 import unittest
+import lale.type_checking
 
 class TestTextEncoders(unittest.TestCase):
 
@@ -24,11 +25,10 @@ def create_function_test_encoder(encoder_name):
         encoder = class_()
 
         #test_schemas_are_schemas
-        from lale.helpers import validate_is_schema
-        validate_is_schema(encoder.input_schema_fit())
-        validate_is_schema(encoder.input_schema_transform())
-        validate_is_schema(encoder.output_schema_transform())
-        validate_is_schema(encoder.hyperparam_schema())
+        lale.type_checking.validate_is_schema(encoder.input_schema_fit())
+        lale.type_checking.validate_is_schema(encoder.input_schema_transform())
+        lale.type_checking.validate_is_schema(encoder.output_schema_transform())
+        lale.type_checking.validate_is_schema(encoder.hyperparam_schema())
 
         #test_init_fit_transform
         trained = encoder.fit(self.X_train, self.y_train)

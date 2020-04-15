@@ -36,6 +36,7 @@ from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
 from lale.lib.sklearn import FeatureAgglomeration
 from typing import List
+import lale.type_checking
 
 import sklearn.datasets
 
@@ -84,11 +85,10 @@ def create_function_test_resampler(res_name):
             res = class_()
 
         #test_schemas_are_schemas
-        from lale.helpers import validate_is_schema
-        validate_is_schema(class_.input_schema_fit())
-        validate_is_schema(class_.input_schema_predict())
-        validate_is_schema(class_.output_schema_predict())
-        validate_is_schema(class_.hyperparam_schema())
+        lale.type_checking.validate_is_schema(class_.input_schema_fit())
+        lale.type_checking.validate_is_schema(class_.input_schema_predict())
+        lale.type_checking.validate_is_schema(class_.output_schema_predict())
+        lale.type_checking.validate_is_schema(class_.hyperparam_schema())
 
         #test_init_fit_predict
         from lale.operators import make_pipeline

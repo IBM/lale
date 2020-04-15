@@ -67,7 +67,6 @@ class XGBClassifierImpl(BaseEstimator):
         return self._sklearn_model.predict_proba(X)
 
 from xgboost import XGBClassifier as XGBoostClassifier
-import lale.helpers
 import lale.operators
 
 _hyperparams_schema = {
@@ -414,8 +413,5 @@ _combined_schemas = {
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 XGBClassifier = lale.operators.make_operator(XGBClassifierImpl, _combined_schemas)

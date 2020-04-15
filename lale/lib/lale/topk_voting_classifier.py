@@ -15,7 +15,6 @@
 from hyperopt import STATUS_OK
 from lale.lib.sklearn import VotingClassifier
 from lale.lib.lale import Hyperopt
-import lale.helpers
 import lale.operators
 import copy
 from typing import Any, Dict, Optional

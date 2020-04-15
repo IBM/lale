@@ -186,7 +186,4 @@ _combined_schemas = {
     'output_predict': _output_predict_schema,
     'hyperparams': _hyperparams_schema } }
 
-import lale.helpers
-lale.helpers.validate_is_schema(_combined_schemas)
-
 MyLR = lale.operators.make_operator(MyLRImpl, _combined_schemas)
