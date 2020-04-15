@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.cluster.hierarchical
-import lale.helpers
 import lale.operators
 import numpy as np
 
@@ -184,6 +183,4 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 FeatureAgglomeration = lale.operators.make_operator(FeatureAgglomerationImpl, _combined_schemas)

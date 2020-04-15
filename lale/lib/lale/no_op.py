@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import lale.docstrings
-import lale.helpers
 import lale.operators
 
 class NoOpImpl():
@@ -61,9 +60,6 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 lale.docstrings.set_docstrings(NoOpImpl, _combined_schemas)
 

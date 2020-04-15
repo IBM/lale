@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from imblearn.over_sampling import SMOTE as OrigModel
-import lale.helpers
 import lale.operators
 
 class BaseResamplerImpl():

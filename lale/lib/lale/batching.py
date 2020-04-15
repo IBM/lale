@@ -13,10 +13,9 @@
 # limitations under the License.
 
 from lale.operators import make_operator
-
+import lale.helpers
 import numpy as np
 import pandas as pd
-import lale.helpers as helpers
 
 class BatchingImpl():
   """Batching trains the given pipeline using batches.
@@ -48,13 +47,13 @@ class BatchingImpl():
   def fit(self, X, y = None):
     if self.operator is None:
       raise ValueError("The pipeline object can't be None at the time of fit.")
-    data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
+    data_loader = lale.helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
     classes = np.unique(y)
     self.operator = self.operator.fit_with_batches(data_loader, y = classes, serialize = self.inmemory)
     return self
 
   def transform(self, X, y = None):
-    data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
+    data_loader = lale.helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
     transformed_data = self.operator.transform_with_batches(data_loader, serialize = self.inmemory)
     return transformed_data
 
@@ -170,8 +169,5 @@ _combined_schemas = {
     'output_predict': _output_schema,
     'input_transform': _input_predict_transform_schema,
     'output_transform': _output_schema}}
-
-if __name__ == "__main__":
-    helpers.validate_is_schema(_combined_schemas)
 
 Batching = make_operator(BatchingImpl, _combined_schemas)

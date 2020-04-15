@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.preprocessing
-import lale.helpers
 import lale.operators
 
 class FunctionTransformerImpl():
@@ -140,9 +139,6 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 lale.docstrings.set_docstrings(FunctionTransformerImpl, _combined_schemas)
 

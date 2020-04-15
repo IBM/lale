@@ -14,7 +14,6 @@
 
 import lale.datasets.data_schemas
 import lale.docstrings
-import lale.helpers
 import lale.operators
 import lale.type_checking
 import sklearn.compose
@@ -26,7 +25,7 @@ class ProjectImpl:
 
     def fit(self, X, y=None):
         columns = self._hyperparams['columns']
-        if lale.helpers.is_schema(columns):
+        if lale.type_checking.is_schema(columns):
             s_all = lale.datasets.data_schemas.to_schema(X)
             s_row = s_all['items']
             n_columns = s_row['minItems']
@@ -64,9 +63,9 @@ class ProjectImpl:
         if hasattr(self, '_col_tfm'):
             return self._transform_schema_col_tfm(s_X, self._col_tfm)
         columns = self._hyperparams['columns']
-        if lale.helpers.is_schema(columns):
+        if lale.type_checking.is_schema(columns):
             return self._transform_schema_schema(s_X, columns)
-        if not lale.helpers.is_schema(s_X):
+        if not lale.type_checking.is_schema(s_X):
             X = lale.datasets.data_schemas.add_schema(s_X)
             self.fit(X)
             return self._transform_schema_col_tfm(X.json_schema, self._col_tfm)
@@ -208,9 +207,6 @@ NDArrayWithSchema([[1, 3],
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 lale.docstrings.set_docstrings(ProjectImpl, _combined_schemas)
 

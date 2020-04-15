@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import sklearn.discriminant_analysis
-import lale.helpers
 import lale.operators
 
 class QuadraticDiscriminantAnalysisImpl():
@@ -186,6 +185,4 @@ _combined_schemas = {
         'output_decision_function': _output_decision_function_schema,
 }}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 QuadraticDiscriminantAnalysis = lale.operators.make_operator(QuadraticDiscriminantAnalysisImpl, _combined_schemas)

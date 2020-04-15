@@ -106,10 +106,6 @@ _combined_schemas = {
     'input_transform': _input_transform_schema,
     'output_transform': _output_transform_schema}}
 
-if __name__ == "__main__":
-    import lale.helpers
-    lale.helpers.validate_is_schema(_combined_schemas)
-
 lale.docstrings.set_docstrings(DisparateImpactRemoverImpl, _combined_schemas)
 
 DisparateImpactRemover = lale.operators.make_operator(DisparateImpactRemoverImpl, _combined_schemas)

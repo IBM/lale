@@ -14,7 +14,6 @@
 
 
 import sklearn.svm.classes
-import lale.helpers
 import lale.operators
 
 
@@ -266,6 +265,4 @@ _combined_schemas = {
         'output_decision_function': _output_decision_function_schema,
 }}
 
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 SVC = lale.operators.make_operator(SVCImpl, _combined_schemas)

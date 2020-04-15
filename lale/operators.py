@@ -485,6 +485,7 @@ class IndividualOp(Operator):
             self._check_schemas()
 
     def _check_schemas(self):
+        lale.type_checking.validate_is_schema(self._schemas)
         from lale.pretty_print import schema_to_string
         assert self.has_tag('transformer') == self.is_transformer(), (
             f'{self.class_name()}: {schema_to_string(self._schemas)}')
@@ -853,13 +854,13 @@ class IndividualOp(Operator):
             value = kwargs[arg]
             if arg == 'schemas':
                 value.schema['$schema'] = 'http://json-schema.org/draft-04/schema#'
-                lale.helpers.validate_is_schema(value.schema)
+                lale.type_checking.validate_is_schema(value.schema)
                 op._schemas = value.schema
                 break
             elif arg.startswith('input') or arg.startswith('output'):
             # multiple input types (e.g., fit, predict)
                 lale.type_checking.validate_method(op, arg)
-                lale.helpers.validate_is_schema(value.schema)
+                lale.type_checking.validate_is_schema(value.schema)
                 op._schemas['properties'][arg] = value.schema
             elif arg == 'constraint':
                 op._schemas['properties']['hyperparams']['allOf'].append(value.schema)
@@ -989,7 +990,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             lale.type_checking.validate_schema(params_all, self.hyperparam_schema())
         except jsonschema.ValidationError as e_orig:
             e = e_orig if e_orig.parent is None else e_orig.parent
-            lale.helpers.validate_is_schema(e.schema)
+            lale.type_checking.validate_is_schema(e.schema)
             schema = lale.pretty_print.to_string(e.schema)
             if [*e.schema_path][:3] == ['allOf', 0, 'properties']:
                 arg = e.schema_path[3]

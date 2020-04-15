@@ -41,9 +41,8 @@ import logging
 import inspect
 from typing import Any, Dict, List, Union
 JSON_TYPE = Dict[str, Any]
-import lale.datasets.data_schemas
 
-def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
+def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
     """Validate that the value is an instance of the schema.
 
     Parameters
@@ -64,6 +63,18 @@ def validate_schema(value, schema: Dict[str, Any], subsample_array:bool=True):
     """
     json_value = lale.helpers.data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema, jsonschema.Draft4Validator)
+
+def validate_is_schema(value: JSON_TYPE):
+    lale.helpers.validate_is_schema(value)
+
+def is_schema(value) -> bool:
+    if isinstance(value, dict):
+        try:
+            jsonschema.validate(value, lale.helpers._json_meta_schema())
+        except:
+            return False
+        return True
+    return False
 
 def _json_replace(subject, old, new):
     if subject == old:
@@ -155,9 +166,10 @@ def validate_schema_or_subschema(lhs, super_schema):
     SubschemaError
         The lhs was or had a schema that was not a subschema of super_schema.
     """
-    if lale.helpers.is_schema(lhs):
+    if is_schema(lhs):
         sub_schema = lhs
     else:
+        import lale.datasets.data_schemas
         try:
             sub_schema = lale.datasets.data_schemas.to_schema(lhs)
         except ValueError as e:

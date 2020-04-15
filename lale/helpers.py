@@ -125,18 +125,10 @@ def _json_meta_schema() -> Dict[str, Any]:
     return jsonschema.Draft4Validator.META_SCHEMA
 
 def validate_is_schema(value: Dict[str, Any]):
+    #TODO: move this function to lale.type_checking
     if '$schema' in value:
         assert value['$schema'] == _JSON_META_SCHEMA_URL
     jsonschema.validate(value, _json_meta_schema())
-
-def is_schema(value) -> bool:
-    if isinstance(value, dict):
-        try:
-            jsonschema.validate(value, _json_meta_schema())
-        except:
-            return False
-        return True
-    return False
 
 def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
     subset_X, subset_y = _safe_split(

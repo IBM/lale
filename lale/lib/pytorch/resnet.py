@@ -227,8 +227,6 @@ ResNet50 = make_operator(ResNet50Impl, _combined_schemas)
 
 if __name__ == "__main__":
     import torchvision.datasets as datasets
-    from lale.helpers import validate_is_schema
-    validate_is_schema(_combined_schemas)
 
     transform_train = transforms.Compose([
         transforms.RandomCrop(32, padding=4),

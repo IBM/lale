@@ -131,9 +131,6 @@ _combined_schemas = {
         'output_predict': _output_predict_schema,
 }}
 
-if __name__ == "__main__":
-    lale.helpers.validate_is_schema(_combined_schemas)
-
 lale.docstrings.set_docstrings(RejectOptionClassificationImpl, _combined_schemas)
 
 RejectOptionClassification = lale.operators.make_operator(RejectOptionClassificationImpl, _combined_schemas)

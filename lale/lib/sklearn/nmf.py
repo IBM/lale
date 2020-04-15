@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from sklearn.decomposition import NMF as SKLModel
-import lale.helpers
 import lale.operators
 
 class NMFImpl():
@@ -188,8 +187,5 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
-
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
 
 NMF = lale.operators.make_operator(NMFImpl, _combined_schemas)
