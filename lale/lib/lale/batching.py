@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from lale.operators import make_operator
-
+import lale.helpers
 import numpy as np
 import pandas as pd
 
@@ -47,13 +47,13 @@ class BatchingImpl():
   def fit(self, X, y = None):
     if self.operator is None:
       raise ValueError("The pipeline object can't be None at the time of fit.")
-    data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
+    data_loader = lale.helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
     classes = np.unique(y)
     self.operator = self.operator.fit_with_batches(data_loader, y = classes, serialize = self.inmemory)
     return self
 
   def transform(self, X, y = None):
-    data_loader = helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
+    data_loader = lale.helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
     transformed_data = self.operator.transform_with_batches(data_loader, serialize = self.inmemory)
     return transformed_data
 

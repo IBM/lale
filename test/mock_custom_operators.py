@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lale.operators import make_operator
+import lale.operators
 import numpy as np
 
 class IncreaseRowsImpl():
@@ -88,7 +88,7 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-IncreaseRows = make_operator(IncreaseRowsImpl, _combined_schemas)
+IncreaseRows = lale.operators.make_operator(IncreaseRowsImpl, _combined_schemas)
 
 import sklearn.linear_model
 
