@@ -2,6 +2,7 @@
 from sklearn.svm.classes import LinearSVR as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class LinearSVRImpl():
@@ -166,7 +167,6 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(LinearSVRImpl, _combined_schemas)
 LinearSVR = lale.operators.make_operator(LinearSVRImpl, _combined_schemas)
 

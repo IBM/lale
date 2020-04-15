@@ -2,6 +2,7 @@
 from sklearn.neighbors.classification import KNeighborsClassifier as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class KNeighborsClassifierImpl():
@@ -166,7 +167,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator'],
+        'op': ['estimator', 'classifier'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
@@ -176,7 +177,6 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(KNeighborsClassifierImpl, _combined_schemas)
 KNeighborsClassifier = lale.operators.make_operator(KNeighborsClassifierImpl, _combined_schemas)
 

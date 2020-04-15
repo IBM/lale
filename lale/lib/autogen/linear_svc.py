@@ -2,6 +2,7 @@
 from sklearn.svm.classes import LinearSVC as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class LinearSVCImpl():
@@ -81,7 +82,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1,
                 'description': 'When self.fit_intercept is True, instance vector x becomes ``[x, self.intercept_scaling]``, i.e'},
             'class_weight': {
@@ -212,7 +213,6 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(LinearSVCImpl, _combined_schemas)
 LinearSVC = lale.operators.make_operator(LinearSVCImpl, _combined_schemas)
 

@@ -2,6 +2,7 @@
 from sklearn.preprocessing.label import LabelBinarizer as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class LabelBinarizerImpl():
@@ -119,7 +120,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(LabelBinarizerImpl, _combined_schemas)
 LabelBinarizer = lale.operators.make_operator(LabelBinarizerImpl, _combined_schemas)
 

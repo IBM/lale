@@ -2,6 +2,7 @@
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class LinearDiscriminantAnalysisImpl():
@@ -242,7 +243,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['transformer'],
+        'op': ['transformer', 'estimator'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
@@ -256,7 +257,6 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(LinearDiscriminantAnalysisImpl, _combined_schemas)
 LinearDiscriminantAnalysis = lale.operators.make_operator(LinearDiscriminantAnalysisImpl, _combined_schemas)
 

@@ -2,6 +2,7 @@
 from sklearn.kernel_approximation import SkewedChi2Sampler as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class SkewedChi2SamplerImpl():
@@ -108,7 +109,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(SkewedChi2SamplerImpl, _combined_schemas)
 SkewedChi2Sampler = lale.operators.make_operator(SkewedChi2SamplerImpl, _combined_schemas)
 

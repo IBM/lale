@@ -2,6 +2,7 @@
 from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class GradientBoostingClassifierImpl():
@@ -85,7 +86,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
-                    'distribution': 'loguniform'}],
+                    'distribution': 'uniform'}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node:  - If int, then consider `min_samples_split` as the minimum number'},
             'min_samples_leaf': {
@@ -95,7 +96,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node'},
             'min_weight_fraction_leaf': {
@@ -138,7 +139,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'type': 'string',
                     'forOptimizer': False}, {
                     'enum': [None]}],
@@ -303,7 +304,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator'],
+        'op': ['estimator', 'classifier'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
@@ -315,7 +316,6 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(GradientBoostingClassifierImpl, _combined_schemas)
 GradientBoostingClassifier = lale.operators.make_operator(GradientBoostingClassifierImpl, _combined_schemas)
 

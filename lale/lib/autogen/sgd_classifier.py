@@ -2,6 +2,7 @@
 from sklearn.linear_model.stochastic_gradient import SGDClassifier as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class SGDClassifierImpl():
@@ -336,7 +337,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator'],
+        'op': ['estimator', 'classifier'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
@@ -348,7 +349,6 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(SGDClassifierImpl, _combined_schemas)
 SGDClassifier = lale.operators.make_operator(SGDClassifierImpl, _combined_schemas)
 

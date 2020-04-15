@@ -2,6 +2,7 @@
 from sklearn.ensemble.forest import RandomForestRegressor as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class RandomForestRegressorImpl():
@@ -95,7 +96,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'loguniform'}, {
+                    'distribution': 'uniform'}, {
                     'type': 'string',
                     'forOptimizer': False}, {
                     'enum': [None]}],
@@ -236,7 +237,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator'],
+        'op': ['estimator', 'regressor'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
@@ -244,7 +245,6 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(RandomForestRegressorImpl, _combined_schemas)
 RandomForestRegressor = lale.operators.make_operator(RandomForestRegressorImpl, _combined_schemas)
 

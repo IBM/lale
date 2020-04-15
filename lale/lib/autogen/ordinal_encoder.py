@@ -2,6 +2,7 @@
 from sklearn.preprocessing._encoders import OrdinalEncoder as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class OrdinalEncoderImpl():
@@ -94,7 +95,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(OrdinalEncoderImpl, _combined_schemas)
 OrdinalEncoder = lale.operators.make_operator(OrdinalEncoderImpl, _combined_schemas)
 

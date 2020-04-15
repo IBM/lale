@@ -2,6 +2,7 @@
 from sklearn.decomposition.sparse_pca import SparsePCA as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class SparsePCAImpl():
@@ -184,7 +185,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(SparsePCAImpl, _combined_schemas)
 SparsePCA = lale.operators.make_operator(SparsePCAImpl, _combined_schemas)
 

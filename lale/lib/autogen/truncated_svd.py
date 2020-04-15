@@ -2,6 +2,7 @@
 from sklearn.decomposition.truncated_svd import TruncatedSVD as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class TruncatedSVDImpl():
@@ -126,7 +127,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(TruncatedSVDImpl, _combined_schemas)
 TruncatedSVD = lale.operators.make_operator(TruncatedSVDImpl, _combined_schemas)
 
