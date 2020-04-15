@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import ast
-import jsonschema
 import numpy as np
 import pandas as pd
 import os
@@ -118,17 +117,6 @@ def ndarray_to_json(arr, subsample_array:bool=True) -> Union[list, dict]:
             return [subarray_to_json(indices + (i,))
                     for i in range(min(num_subsamples[len(indices)], arr.shape[len(indices)]))]
     return subarray_to_json(())
-
-_JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
-
-def _json_meta_schema() -> Dict[str, Any]:
-    return jsonschema.Draft4Validator.META_SCHEMA
-
-def validate_is_schema(value: Dict[str, Any]):
-    #TODO: move this function to lale.type_checking
-    if '$schema' in value:
-        assert value['$schema'] == _JSON_META_SCHEMA_URL
-    jsonschema.validate(value, _json_meta_schema())
 
 def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
     subset_X, subset_y = _safe_split(
