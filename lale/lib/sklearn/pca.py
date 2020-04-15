@@ -146,18 +146,7 @@ outputs with unit component-wise variances.""",
                 'svd_solver': {
                     'enum': ['randomized']},
             }}]},
-    {   'description': 'Option random_state can be set for svd_solver arpack or randomized.',
-        'anyOf': [
-        {   'type': 'object',
-            'properties': {
-                'random_state': {
-                    'enum': [None]},
-            }},
-        {   'type': 'object',
-            'properties': {
-                'svd_solver': {
-                    'enum': ['arpack', 'randomized']},
-            }}]}]}
+]}
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
