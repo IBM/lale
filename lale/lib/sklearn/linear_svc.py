@@ -151,14 +151,6 @@ _hyperparams_schema = {
             { 'type': 'object',
               'properties': {'fit_intercept': {'enum': [True]}}}]},
     {   'description':
-            'When dual=False the underlying implementation of LinearSVC is '
-            'not random and random_state has no effect on the results.',
-        'anyOf': [
-            { 'type': 'object',
-              'properties': {'dual': {'enum': [True]}}},
-            { 'type': 'object',
-              'properties': {'random_state': {'enum': [None]}}}]},
-    {   'description':
             'The combination of penalty=`l1` and loss=`hinge` is not supported',
         'anyOf': [
             { 'type': 'object',

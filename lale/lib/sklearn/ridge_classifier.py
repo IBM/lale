@@ -126,18 +126,6 @@ _hyperparams_schema = {
                 'normalize': {
                     'enum': [False]},
             }}]},
-        {
-        'description': 'random_state is used when solver == ‘sag’',
-        'anyOf': [
-        {   'type': 'object',
-            'properties': {
-                'solver': {'enum': ['sag']},
-            }},
-        {   'type': 'object',
-            'properties': {
-                'random_state': {
-                    'enum': [None]},
-            }}]},
         {'description': 'Maximum number of iterations for conjugate gradient solver',
         'anyOf': [
         {   'type': 'object',
