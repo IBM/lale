@@ -2,6 +2,7 @@
 from sklearn.svm.classes import SVC as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class SVCImpl():
@@ -242,7 +243,6 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(SVCImpl, _combined_schemas)
 SVC = lale.operators.make_operator(SVCImpl, _combined_schemas)
 

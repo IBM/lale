@@ -2,6 +2,7 @@
 from sklearn.linear_model.base import LinearRegression as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class LinearRegressionImpl():
@@ -132,7 +133,6 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(LinearRegressionImpl, _combined_schemas)
 LinearRegression = lale.operators.make_operator(LinearRegressionImpl, _combined_schemas)
 

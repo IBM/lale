@@ -2,6 +2,7 @@
 from sklearn.decomposition.pca import PCA as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class PCAImpl():
@@ -42,7 +43,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'type': 'string',
                     'forOptimizer': False}, {
                     'enum': [None]}],
@@ -146,7 +147,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(PCAImpl, _combined_schemas)
 PCA = lale.operators.make_operator(PCAImpl, _combined_schemas)
 

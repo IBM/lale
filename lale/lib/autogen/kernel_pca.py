@@ -2,6 +2,7 @@
 from sklearn.decomposition.kernel_pca import KernelPCA as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class KernelPCAImpl():
@@ -72,7 +73,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1,
                 'description': 'Independent term in poly and sigmoid kernels'},
             'kernel_params': {
@@ -193,7 +194,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(KernelPCAImpl, _combined_schemas)
 KernelPCA = lale.operators.make_operator(KernelPCAImpl, _combined_schemas)
 

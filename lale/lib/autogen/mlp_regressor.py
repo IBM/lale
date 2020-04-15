@@ -2,6 +2,7 @@
 from sklearn.neural_network.multilayer_perceptron import MLPRegressor as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class MLPRegressorImpl():
@@ -363,7 +364,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator'],
+        'op': ['estimator', 'regressor'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
@@ -371,7 +372,6 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(MLPRegressorImpl, _combined_schemas)
 MLPRegressor = lale.operators.make_operator(MLPRegressorImpl, _combined_schemas)
 

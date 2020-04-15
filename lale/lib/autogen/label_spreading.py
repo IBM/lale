@@ -2,6 +2,7 @@
 from sklearn.semi_supervised.label_propagation import LabelSpreading as SKLModel
 import lale.helpers
 import lale.operators
+import lale.docstrings
 from numpy import nan, inf
 
 class LabelSpreadingImpl():
@@ -172,7 +173,6 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema},
 }
-if (__name__ == '__main__'):
-    lale.helpers.validate_is_schema(_combined_schemas)
+lale.docstrings.set_docstrings(LabelSpreadingImpl, _combined_schemas)
 LabelSpreading = lale.operators.make_operator(LabelSpreadingImpl, _combined_schemas)
 
