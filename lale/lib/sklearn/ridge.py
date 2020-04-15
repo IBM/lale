@@ -103,30 +103,7 @@ _hyperparams_schema = {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The seed of the pseudo random number generator to use when shuffling'},
-        }}, {
-        'description': 'Normalize is ignored when fit_intercept is set to False.',
-        'anyOf': [
-        {   'type': 'object',
-            'properties': {
-                'fit_intercept': {
-                    'enum': [True]},
-            }},
-        {   'type': 'object',
-            'properties': {
-                'normalize': {
-                    'enum': [False]},
-            }}]},
-        {'description': 'Maximum number of iterations for conjugate gradient solver',
-        'anyOf': [
-        {   'type': 'object',
-            'properties': {
-                'solver': {'enum': ['sparse_cg', 'lsqr', 'sag', 'saga']},
-            }},
-        {   'type': 'object',
-            'properties': {
-                'max_iter': {
-                    'enum': [None]},
-            }}]}]}
+        }}]}
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -204,5 +181,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(RidgeImpl, _combined_schemas)
 
 Ridge = lale.operators.make_operator(RidgeImpl, _combined_schemas)
