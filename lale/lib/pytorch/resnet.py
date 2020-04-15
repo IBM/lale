@@ -59,20 +59,6 @@ class ResNet50Impl():
             return self.learning_rate_init*math.pow(0.2, optim_factor)
 
     def fit(self, X, y = None):
-        """Fit method for ResNet50.
-        
-        Parameters
-        ----------
-        X : Pytorch Dataset object.
-          Pytorch dataset that contains the training data and targets.
-        y : optional
-          This is ignored.
-        
-        Returns
-        -------
-        ResNet50Impl
-          A new object that is trained.
-        """
         trainloader = torch.utils.data.DataLoader(X, batch_size=self.batch_size, shuffle=True, num_workers=2)
         net = self.model.to(self.device)
         net.train()
