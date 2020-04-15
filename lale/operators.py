@@ -849,6 +849,13 @@ class IndividualOp(Operator):
             Copy of the operator with a customized schema
         """
         op = copy.deepcopy(self)
+        methods = [
+            'fit',
+            'transform',
+            'predict',
+            'predict_proba',
+            'decision_function'
+        ]
         for arg in kwargs:
             value = kwargs[arg]
             if arg == 'schemas':
@@ -856,7 +863,7 @@ class IndividualOp(Operator):
                 lale.type_checking.validate_is_schema(value.schema)
                 op._schemas = value.schema
                 break
-            elif arg.startswith('input') or arg.startswith('output'):
+            elif arg in [p+n for p in ['input_', 'output_'] for n in methods]:
             # multiple input types (e.g., fit, predict)
                 lale.type_checking.validate_method(op, arg)
                 lale.type_checking.validate_is_schema(value.schema)
