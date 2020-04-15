@@ -64,13 +64,21 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
     json_value = lale.helpers.data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema, jsonschema.Draft4Validator)
 
-def validate_is_schema(value: JSON_TYPE):
-    lale.helpers.validate_is_schema(value)
+_JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
+
+def _json_meta_schema() -> Dict[str, Any]:
+    return jsonschema.Draft4Validator.META_SCHEMA
+
+def validate_is_schema(value: Dict[str, Any]):
+    #TODO: move this function to lale.type_checking
+    if '$schema' in value:
+        assert value['$schema'] == _JSON_META_SCHEMA_URL
+    jsonschema.validate(value, _json_meta_schema())
 
 def is_schema(value) -> bool:
     if isinstance(value, dict):
         try:
-            jsonschema.validate(value, lale.helpers._json_meta_schema())
+            jsonschema.validate(value, _json_meta_schema())
         except:
             return False
         return True
