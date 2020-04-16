@@ -204,16 +204,8 @@ _hyperparams_schema = {
                 'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Tolerance for the early stopping. When the loss is not improving'},
-        }}, {
-        'description': 'validation_fraction, only used if n_iter_no_change is set to an integer',
-        'anyOf': [
-        { 'type': 'object',
-            'properties': {
-            'n_iter_no_change': {'not': {'enum': ['None']}}}},
-        { 'type': 'object',
-            'properties': {
-            'validation_fraction':{'enum':[0.1]}}}]}]
-}
+        }}]}
+
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the gradient boosting model.',
