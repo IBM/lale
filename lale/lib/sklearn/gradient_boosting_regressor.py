@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.ensemble.gradient_boosting
+import lale.docstrings
 import lale.operators
 
 class GradientBoostingRegressorImpl():
@@ -297,5 +298,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(GradientBoostingRegressorImpl, _combined_schemas)
 
 GradientBoostingRegressor = lale.operators.make_operator(GradientBoostingRegressorImpl, _combined_schemas)

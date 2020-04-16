@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.preprocessing.data
+import lale.docstrings
 import lale.operators
 
 class NormalizerImpl():
@@ -108,5 +109,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(NormalizerImpl, _combined_schemas)
 
 Normalizer = lale.operators.make_operator(NormalizerImpl, _combined_schemas)

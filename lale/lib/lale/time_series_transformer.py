@@ -21,6 +21,7 @@ from sklearn import preprocessing
 import warnings
 import collections
 import pickle
+import lale.docstrings
 import lale.operators
 import numpy as np
 from collections import Counter
@@ -445,6 +446,8 @@ _combined_schemas = {
         'hyperparams': _hyperparams_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(TimeFreqEigenVectorsImpl, _combined_schemas)
 
 TimeFreqEigenVectors = lale.operators.make_operator(TimeFreqEigenVectorsImpl, _combined_schemas)
 

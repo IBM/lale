@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import lale.operators
+import lale.docstrings
 import sklearn.preprocessing
 
 class OrdinalEncoderImpl():
@@ -115,5 +116,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema }}
+
+lale.docstrings.set_docstrings(OrdinalEncoderImpl, _combined_schemas)
 
 OrdinalEncoder = lale.operators.make_operator(OrdinalEncoderImpl, _combined_schemas)

@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from sklearn.ensemble.weight_boosting import AdaBoostClassifier as SKLModel
+import lale.docstrings
 import lale.operators
-from numpy import nan, inf
 
 class AdaBoostClassifierImpl():
 
@@ -206,6 +206,8 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema,
 }}
+
+lale.docstrings.set_docstrings(AdaBoostClassifierImpl, _combined_schemas)
 
 AdaBoostClassifier = lale.operators.make_operator(AdaBoostClassifierImpl, _combined_schemas)
 

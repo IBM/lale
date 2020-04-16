@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.cluster.hierarchical
+import lale.docstrings
 import lale.operators
 import numpy as np
 
@@ -182,5 +183,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(FeatureAgglomerationImpl, _combined_schemas)
 
 FeatureAgglomeration = lale.operators.make_operator(FeatureAgglomerationImpl, _combined_schemas)

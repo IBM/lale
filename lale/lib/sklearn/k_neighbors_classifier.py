@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import lale.operators
+import lale.docstrings
 import sklearn.neighbors
 
 _hyperparams_schema = {
@@ -204,5 +205,7 @@ class KNeighborsClassifierImpl():
 
     def predict_proba(self, X):
         return self._sklearn_model.predict_proba(X)
+
+lale.docstrings.set_docstrings(KNeighborsClassifierImpl, _combined_schemas)
 
 KNeighborsClassifier = lale.operators.make_operator(KNeighborsClassifierImpl, _combined_schemas)

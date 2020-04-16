@@ -14,6 +14,7 @@
 
 
 import sklearn.impute
+import lale.docstrings
 import lale.operators
 import numpy as np
 
@@ -147,5 +148,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(SimpleImputerImpl, _combined_schemas)
 
 SimpleImputer = lale.operators.make_operator(SimpleImputerImpl, _combined_schemas)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.ensemble.forest
+import lale.docstrings
 import lale.operators
 
 class RandomForestClassifierImpl():
@@ -264,5 +265,7 @@ _combined_schemas = {
         'output_predict': _output_predict_schema,
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
+
+lale.docstrings.set_docstrings(RandomForestClassifierImpl, _combined_schemas)
 
 RandomForestClassifier = lale.operators.make_operator(RandomForestClassifierImpl, _combined_schemas)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import lale.operators
+import lale.docstrings
 import sklearn.preprocessing
 
 class OneHotEncoderImpl():
@@ -127,5 +128,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(OneHotEncoderImpl, _combined_schemas)
 
 OneHotEncoder = lale.operators.make_operator(OneHotEncoderImpl, _combined_schemas)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.feature_selection
+import lale.docstrings
 import lale.operators
 import pandas as pd
 
@@ -120,5 +121,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(SelectKBestImpl, _combined_schemas)
 
 SelectKBest = lale.operators.make_operator(SelectKBestImpl, _combined_schemas)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import lale.operators
+import lale.docstrings
 import sklearn.kernel_approximation
 
 class NystroemImpl():
@@ -181,5 +182,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
+
+lale.docstrings.set_docstrings(NystroemImpl, _combined_schemas)
 
 Nystroem = lale.operators.make_operator(NystroemImpl, _combined_schemas)

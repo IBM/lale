@@ -25,7 +25,8 @@ from torch.autograd import Variable
 import sys
 import numpy as np
 import math
-from lale.operators import make_operator
+import lale.operators
+import lale.docstrings
 
 class ResNet50Impl():
     def __init__(self, num_classes=10, model = None, 
@@ -58,20 +59,6 @@ class ResNet50Impl():
             return self.learning_rate_init*math.pow(0.2, optim_factor)
 
     def fit(self, X, y = None):
-        """Fit method for ResNet50.
-        
-        Parameters
-        ----------
-        X : Pytorch Dataset object.
-          Pytorch dataset that contains the training data and targets.
-        y : optional
-          This is ignored.
-        
-        Returns
-        -------
-        ResNet50Impl
-          A new object that is trained.
-        """
         trainloader = torch.utils.data.DataLoader(X, batch_size=self.batch_size, shuffle=True, num_workers=2)
         net = self.model.to(self.device)
         net.train()
@@ -223,7 +210,9 @@ _combined_schemas = {
     'input_predict': _input_predict_schema,
     'output_predict': _output_predict_schema}}
 
-ResNet50 = make_operator(ResNet50Impl, _combined_schemas)
+lale.docstrings.set_docstrings(ResNet50Impl, _combined_schemas)
+
+ResNet50 = lale.operators.make_operator(ResNet50Impl, _combined_schemas)
 
 if __name__ == "__main__":
     import torchvision.datasets as datasets

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from sklearn.linear_model.stochastic_gradient import SGDClassifier as SKLModel
+import lale.docstrings
 import lale.operators
 
 class SGDClassifierImpl():
@@ -381,6 +382,8 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema,
 }}
+
+lale.docstrings.set_docstrings(SGDClassifierImpl, _combined_schemas)
 
 SGDClassifier = lale.operators.make_operator(SGDClassifierImpl, _combined_schemas)
 

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.tree.tree
+import lale.docstrings
 import lale.operators
 
 class DecisionTreeRegressorImpl():
@@ -223,5 +224,7 @@ _combined_schemas = {
         'input_fit': _input_fit_schema,
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
+
+lale.docstrings.set_docstrings(DecisionTreeRegressorImpl, _combined_schemas)
 
 DecisionTreeRegressor = lale.operators.make_operator(DecisionTreeRegressorImpl, _combined_schemas)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from sklearn.ensemble import VotingClassifier as SKLModel
+import lale.docstrings
 import lale.operators
 
 class VotingClassifierImpl():
@@ -246,5 +247,7 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema,
 }}
+
+lale.docstrings.set_docstrings(VotingClassifierImpl, _combined_schemas)
 
 VotingClassifier = lale.operators.make_operator(VotingClassifierImpl, _combined_schemas)

@@ -14,6 +14,7 @@
 
 from sklearn.ensemble.bagging import BaggingClassifier as SKLModel
 import lale.operators
+import lale.docstrings
 from lale.sklearn_compat import make_sklearn_compat
 
 class BaggingClassifierImpl():
@@ -234,5 +235,7 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema,
 }}
+
+lale.docstrings.set_docstrings(BaggingClassifierImpl, _combined_schemas)
 
 BaggingClassifier = lale.operators.make_operator(BaggingClassifierImpl, _combined_schemas)
