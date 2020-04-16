@@ -117,7 +117,7 @@ _combined_schemas = {
   'type': 'object',
   'tags': {
     'pre': [],
-    'op': ['resampler'],
+    'op': ['transformer', 'estimator', 'resampler'],#transformer and estimator both as a higher-order operator
     'post': []},
   'properties': {
     'hyperparams': _hyperparams_schema,

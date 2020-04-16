@@ -140,7 +140,7 @@ Variant of SMOTE algorithm which use an SVM algorithm to detect sample to use fo
   'type': 'object',
   'tags': {
     'pre': [],
-    'op': ['resampler'],
+    'op': ['transformer', 'estimator', 'resampler'],#transformer and estimator both as a higher-order operator
     'post': []},
   'properties': {
     'hyperparams': _hyperparams_schema,
