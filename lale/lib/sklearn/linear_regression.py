@@ -35,6 +35,7 @@ class LinearRegressionImpl():
 
     def predict(self, X):
         return self._sklearn_model.predict(X)
+
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Ordinary least squares Linear Regression.',
@@ -62,19 +63,7 @@ _hyperparams_schema = {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The number of jobs to use for the computation. This will only provide'},
-        }}, {
-        'description': 'Normalize is ignored when fit_intercept is set to False.',
-        'anyOf': [
-        {   'type': 'object',
-            'properties': {
-                'fit_intercept': {
-                    'enum': [True]},
-            }},
-        {   'type': 'object',
-            'properties': {
-                'normalize': {
-                    'enum': [False]},
-            }}]}]}
+        }}]}
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

@@ -229,25 +229,6 @@ _hyperparams_schema = {
               'penalty': {'enum': ['l2']},
               'solver': {'enum': ['liblinear']}}}]},
       { 'description':
-          'Setting intercept_scaling is useful only when the solver is '
-          'liblinear and fit_intercept is true.',
-        'anyOf': [
-          { 'type': 'object',
-            'properties': {'intercept_scaling': {'enum': [1.0]}}},
-          { 'type': 'object',
-            'properties': {
-              'fit_intercept': {'enum': [True]},
-              'solver': {'enum': ['liblinear']}}}]},
-      { 'description':
-          'Setting max_iter is only useful for the newton-cg, sag, '
-          'lbfgs solvers.',
-        'anyOf': [
-          { 'type': 'object',
-            'properties': {'max_iter': {'enum': [100]}}},
-          { 'type': 'object',
-            'properties': {
-              'solver': {'enum': ['newton-cg', 'sag', 'lbfgs']}}}]},
-      { 'description':
           'The multi_class multinomial option is unavailable when the '
           'solver is liblinear.',
         'anyOf': [

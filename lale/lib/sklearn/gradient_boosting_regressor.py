@@ -53,6 +53,7 @@ class GradientBoostingRegressorImpl():
 
     def predict(self, X):
         return self._sklearn_model.predict(X)
+
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Gradient Boosting for regression.',
@@ -219,16 +220,8 @@ _hyperparams_schema = {
             'properties': {
                 'alpha': {
                     'enum': [0.9]},
-            }}]}, {
-        'description': 'validation_fraction, only used if n_iter_no_change is set to an integer',
-        'anyOf': [
-        { 'type': 'object',
-            'properties': {
-            'n_iter_no_change': {'not': {'enum': ['None']}}}},
-        { 'type': 'object',
-            'properties': {
-            'validation_fraction':{'enum':[0.1]}}}]}],
-}
+            }}]}]}
+
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the gradient boosting model.',
