@@ -12,38 +12,52 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.docstrings
-import lale.operators
 import autoai_libs.transformers.exportable
+import lale.datasets.data_schemas
+import lale.docstrings
+import lale.helpers
+import lale.operators
 
-class NumpyColumnSelectorImpl():
-    def __init__(self, columns):
+class float32_transformImpl():
+    def __init__(self, activate_flag):
         self._hyperparams = {
-            'columns': columns}
-        self._autoai_tfm = autoai_libs.transformers.exportable.NumpyColumnSelector(**self._hyperparams)
+            'activate_flag': activate_flag}
+        self._autoai_tfm = autoai_libs.transformers.exportable.float32_transform(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._autoai_tfm.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._autoai_tfm.transform(X)
+        raw = self._autoai_tfm.transform(X)
+        s_X = lale.datasets.data_schemas.to_schema(X)
+        s_result = self.transform_schema(s_X)
+        result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)
+        assert result.json_schema == s_result
+        return result
+
+    def transform_schema(self, s_X):
+        """Used internally by Lale for type-checking downstream operators."""
+        if self._hyperparams['activate_flag']:
+            result = {
+                'type': 'array',
+                'items': {'type': 'array', 'items': {'type': 'number'}}}
+        else:
+            result = s_X
+        return result
 
 _hyperparams_schema = {
     'allOf': [{
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['columns'],
+        'required': ['activate_flag'],
         'relevantToOptimizer': [],
         'properties': {
-            'columns': {
-                'description': 'List of indices to select numpy columns.',
-                'anyOf': [
-                {   'type': 'array',
-                    'items': {'type': 'integer', 'minimum': 0}},
-                {   'enum': [None]}],
-                'default': None}}}]}
+            'activate_flag': {
+                'description': 'If False, transform(X) outputs the input numpy array X unmodified.',
+                'type': 'boolean',
+                'default': True}}}]}
 
 _input_fit_schema = {
     'type': 'object',
@@ -72,10 +86,10 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Selects a subset of columns of a numpy array.
+    'description': """Operator from `autoai_libs`_. Transforms a numpy array to float32.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.numpy_column_selector.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.float32_transform.html',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -87,6 +101,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(NumpyColumnSelectorImpl, _combined_schemas)
+lale.docstrings.set_docstrings(float32_transformImpl, _combined_schemas)
 
-NumpyColumnSelector = lale.operators.make_operator(NumpyColumnSelectorImpl, _combined_schemas)
+float32_transform = lale.operators.make_operator(float32_transformImpl, _combined_schemas)

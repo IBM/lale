@@ -26,7 +26,8 @@ class OptStandardScalerImpl():
         self._autoai_tfm = autoai_libs.transformers.exportable.OptStandardScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
-        return self._autoai_tfm.fit(X, y)
+        self._autoai_tfm.fit(X, y)
+        return self
 
     def transform(self, X):
         return self._autoai_tfm.transform(X)
