@@ -215,12 +215,12 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.nystroem import NystroemImpl
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
-        self.assertEquals(lale_pipeline.edges()[0][0]._impl_class(), PCAImpl)
-        self.assertEquals(lale_pipeline.edges()[0][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[1][0]._impl_class(), NystroemImpl)
-        self.assertEquals(lale_pipeline.edges()[1][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[2][0]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[2][1]._impl_class(), KNeighborsClassifierImpl)
+        self.assertEqual(lale_pipeline.edges()[0][0]._impl_class(), PCAImpl)
+        self.assertEqual(lale_pipeline.edges()[0][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[1][0]._impl_class(), NystroemImpl)
+        self.assertEqual(lale_pipeline.edges()[1][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[2][0]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[2][1]._impl_class(), KNeighborsClassifierImpl)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
     def test_import_from_sklearn_pipeline_nested_pipeline(self):
@@ -240,14 +240,14 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
         from lale.lib.sklearn.select_k_best import SelectKBestImpl
         #These assertions assume topological sort
-        self.assertEquals(lale_pipeline.edges()[0][0]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[0][1]._impl_class(), PCAImpl)
-        self.assertEquals(lale_pipeline.edges()[1][0]._impl_class(), PCAImpl)
-        self.assertEquals(lale_pipeline.edges()[1][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[2][0]._impl_class(), NystroemImpl)
-        self.assertEquals(lale_pipeline.edges()[2][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[3][0]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[3][1]._impl_class(), KNeighborsClassifierImpl)
+        self.assertEqual(lale_pipeline.edges()[0][0]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[0][1]._impl_class(), PCAImpl)
+        self.assertEqual(lale_pipeline.edges()[1][0]._impl_class(), PCAImpl)
+        self.assertEqual(lale_pipeline.edges()[1][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[2][0]._impl_class(), NystroemImpl)
+        self.assertEqual(lale_pipeline.edges()[2][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[3][0]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[3][1]._impl_class(), KNeighborsClassifierImpl)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
     def test_import_from_sklearn_pipeline_nested_pipeline1(self):
@@ -260,7 +260,6 @@ class TestImportExport(unittest.TestCase):
         union = FeatureUnion([("selectkbest_pca", make_pipeline(SelectKBest(k=3), FeatureUnion([('pca', PCA(n_components=1)), ('nested_pipeline', make_pipeline(SelectKBest(k=2), Nystroem()))]))), ("nys", Nystroem(n_components=2, random_state=42))])        
         sklearn_pipeline = make_pipeline(union, KNeighborsClassifier())
         lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
-        print(lale_pipeline.to_json())
         self.assertEqual(len(lale_pipeline.edges()), 8)
         #These assertions assume topological sort, which may not be unique. So the assertions are brittle.
         from lale.lib.sklearn.pca import PCAImpl
@@ -268,22 +267,22 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
         from lale.lib.sklearn.select_k_best import SelectKBestImpl
-        self.assertEquals(lale_pipeline.edges()[0][0]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[0][1]._impl_class(), PCAImpl)
-        self.assertEquals(lale_pipeline.edges()[1][0]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[1][1]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[2][0]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[2][1]._impl_class(), NystroemImpl)
-        self.assertEquals(lale_pipeline.edges()[3][0]._impl_class(), PCAImpl)
-        self.assertEquals(lale_pipeline.edges()[3][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[4][0]._impl_class(), NystroemImpl)
-        self.assertEquals(lale_pipeline.edges()[4][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[5][0]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[5][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[6][0]._impl_class(), NystroemImpl)
-        self.assertEquals(lale_pipeline.edges()[6][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[7][0]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[7][1]._impl_class(), KNeighborsClassifierImpl)
+        self.assertEqual(lale_pipeline.edges()[0][0]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[0][1]._impl_class(), PCAImpl)
+        self.assertEqual(lale_pipeline.edges()[1][0]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[1][1]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[2][0]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[2][1]._impl_class(), NystroemImpl)
+        self.assertEqual(lale_pipeline.edges()[3][0]._impl_class(), PCAImpl)
+        self.assertEqual(lale_pipeline.edges()[3][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[4][0]._impl_class(), NystroemImpl)
+        self.assertEqual(lale_pipeline.edges()[4][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[5][0]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[5][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[6][0]._impl_class(), NystroemImpl)
+        self.assertEqual(lale_pipeline.edges()[6][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[7][0]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[7][1]._impl_class(), KNeighborsClassifierImpl)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
     def test_import_from_sklearn_pipeline_nested_pipeline2(self):
@@ -302,16 +301,16 @@ class TestImportExport(unittest.TestCase):
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
         from lale.lib.sklearn.select_k_best import SelectKBestImpl
-        self.assertEquals(lale_pipeline.edges()[0][0]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[0][1]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[1][0]._impl_class(), SelectKBestImpl)
-        self.assertEquals(lale_pipeline.edges()[1][1]._impl_class(), PCAImpl)
-        self.assertEquals(lale_pipeline.edges()[2][0]._impl_class(), PCAImpl)
-        self.assertEquals(lale_pipeline.edges()[2][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[3][0]._impl_class(), NystroemImpl)
-        self.assertEquals(lale_pipeline.edges()[3][1]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[4][0]._impl_class(), ConcatFeaturesImpl)
-        self.assertEquals(lale_pipeline.edges()[4][1]._impl_class(), KNeighborsClassifierImpl)
+        self.assertEqual(lale_pipeline.edges()[0][0]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[0][1]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[1][0]._impl_class(), SelectKBestImpl)
+        self.assertEqual(lale_pipeline.edges()[1][1]._impl_class(), PCAImpl)
+        self.assertEqual(lale_pipeline.edges()[2][0]._impl_class(), PCAImpl)
+        self.assertEqual(lale_pipeline.edges()[2][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[3][0]._impl_class(), NystroemImpl)
+        self.assertEqual(lale_pipeline.edges()[3][1]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[4][0]._impl_class(), ConcatFeaturesImpl)
+        self.assertEqual(lale_pipeline.edges()[4][1]._impl_class(), KNeighborsClassifierImpl)
 
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
@@ -420,6 +419,42 @@ class TestImportExport(unittest.TestCase):
         with self.assertRaises(ValueError):#fitted=False returns a Trainable, so calling predict is invalid.
             lale_pipeline.predict(self.X_test)
 
+    def test_export_to_sklearn_pipeline_with_noop_1(self):
+        from lale.lib.sklearn import PCA, KNeighborsClassifier
+        from lale.lib.lale import NoOp
+        from sklearn.pipeline import make_pipeline
+        lale_pipeline = NoOp() >> PCA(n_components=3) >>  KNeighborsClassifier()
+        trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
+        sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
+        self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
+
+    def test_export_to_sklearn_pipeline_with_noop_2(self):
+        from lale.lib.sklearn import PCA, KNeighborsClassifier
+        from lale.lib.lale import NoOp
+        from sklearn.pipeline import make_pipeline
+        lale_pipeline =  PCA(n_components=3) >> NoOp() >> KNeighborsClassifier()
+        trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
+        sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
+        self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
+
+    def test_export_to_sklearn_pipeline_with_noop_3(self):
+        from lale.lib.sklearn import PCA, KNeighborsClassifier
+        from lale.lib.lale import NoOp
+        from sklearn.pipeline import make_pipeline
+        # This test is probably unnecessary, but doesn't harm at this point
+        lale_pipeline =  PCA(n_components=3) >> KNeighborsClassifier() >> NoOp() 
+        trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
+        sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
+
+    def test_export_to_sklearn_pipeline_with_noop_4(self):
+        from lale.lib.sklearn import KNeighborsClassifier
+        from lale.lib.lale import NoOp
+        from sklearn.pipeline import make_pipeline
+        lale_pipeline =  NoOp() >> KNeighborsClassifier()
+        trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
+        sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
+        self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
+
 class TestComposition(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
@@ -438,8 +473,8 @@ class TestComposition(unittest.TestCase):
         trained.predict(self.X_test)
     def test_two_estimators_predict_proba(self):
         pipeline = StandardScaler()  >> ( PCA() & Nystroem() & LogisticRegression() )>>ConcatFeatures() >> NoOp() >> LogisticRegression()
-        pipeline.fit(self.X_train, self.y_train)
-        pipeline.predict_proba(self.X_test)
+        trained = pipeline.fit(self.X_train, self.y_train)
+        trained.predict_proba(self.X_test)
 
     def test_two_estimators_predict_proba1(self):
         pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()

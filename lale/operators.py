@@ -1733,6 +1733,7 @@ class BasePipeline(Operator, Generic[OpType]):
         from sklearn.pipeline import make_pipeline
         from sklearn.base import clone
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
+        from lale.lib.lale.no_op import NoOpImpl
         from sklearn.pipeline import FeatureUnion
 
         def convert_data_with_schemas_to_data(node):
@@ -1766,7 +1767,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     list_of_transformers.append((pred.name()+"_"+str(id(pred)), make_pipeline(*pred_transformer) if isinstance(pred_transformer, list) else pred_transformer))
                 return FeatureUnion(list_of_transformers)
             else:
-                preds = self._preds[sink_node]                    
+                preds = self._preds[sink_node]
                 if preds is not None and len(preds) > 1:
                     raise ValueError("A pipeline graph that has operators other than ConcatFeatures with "
                     "multiple incoming edges is not a valid scikit-learn pipeline:{}".format(self.to_json()))
@@ -1780,12 +1781,16 @@ class BasePipeline(Operator, Generic[OpType]):
                     if preds is None or len(preds) == 0:
                         return sklearn_op
                     else:
+                        output_pipeline_steps = []
                         previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
-                        if isinstance(previous_sklearn_op, list):
-                            previous_sklearn_op.append(sklearn_op)
-                            return previous_sklearn_op
-                        else:
-                            return [previous_sklearn_op, sklearn_op]
+                        if not isinstance(previous_sklearn_op, NoOpImpl):
+                            if isinstance(previous_sklearn_op, list):
+                                output_pipeline_steps = previous_sklearn_op
+                            else:
+                                output_pipeline_steps.append(previous_sklearn_op)
+                        if not isinstance(sklearn_op, NoOpImpl):#Append the current op only if not NoOp
+                            output_pipeline_steps.append(sklearn_op)
+                        return output_pipeline_steps
 
         sklearn_steps_list = []
         #Finding the sink node so that we can do a backward traversal
@@ -1796,6 +1801,7 @@ class BasePipeline(Operator, Generic[OpType]):
             " valid scikit-learn pipeline:{}".format(self.to_json()))
         else:
             sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
+            #not checking for isinstance(sklearn_steps_list, NoOpImpl) here as there is no valid sklearn pipeline with just one NoOp.
         try:
             sklearn_pipeline = make_pipeline(*sklearn_steps_list) \
                     if isinstance(sklearn_steps_list, list) else make_pipeline(sklearn_steps_list)

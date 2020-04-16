@@ -19,9 +19,6 @@ class NoOpImpl():
     def __init__(self):
         pass
 
-    def fit(self, X, y=None):
-        return self
-
     def transform(self, X):
         return X
 
@@ -38,13 +35,6 @@ _hyperparams_schema = {
       'additionalProperties': False,
       'relevantToOptimizer': [],
       'properties': {}}]}
-
-_input_fit_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {'description': 'Features; no restrictions on data type.'}}}
 
 _input_transform_schema = {
     'type': 'object',
@@ -68,7 +58,6 @@ _combined_schemas = {
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
