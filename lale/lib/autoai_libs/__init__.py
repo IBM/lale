@@ -17,23 +17,29 @@ Schema-enhanced versions of a subset of the operators from `autoai_libs`_ to ena
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 
-Operators:
-==========
+Operators
+=========
 
-* `NumpyColumnSelector`_
-* `CompressStrings`_
-* `NumpyReplaceMissingValues`_
-* `NumpyReplaceUnknownValues`_
-* `float32_transform`_
-* `NumImputer`_
-* `OptStandardScaler`_
-* `CatEncoder`_
+* lale.lib.autoai_libs.`NumpyColumnSelector`_
+* lale.lib.autoai_libs.`CompressStrings`_
+* lale.lib.autoai_libs.`NumpyReplaceMissingValues`_
+* lale.lib.autoai_libs.`NumpyReplaceUnknownValues`_
+* lale.lib.autoai_libs.`boolean2float`_
+* lale.lib.autoai_libs.`CatImputer`_
+* lale.lib.autoai_libs.`float32_transform`_
+* lale.lib.autoai_libs.`FloatStr2Float`_
+* lale.lib.autoai_libs.`NumImputer`_
+* lale.lib.autoai_libs.`OptStandardScaler`_
+* lale.lib.autoai_libs.`CatEncoder`_
 
 .. _`NumpyColumnSelector`: lale.lib.autoai_libs.numpy_column_selector.html
 .. _`CompressStrings`: lale.lib.autoai_libs.compress_strings.html
 .. _`NumpyReplaceMissingValues`: lale.lib.autoai_libs.numpy_replace_missing_values.html
 .. _`NumpyReplaceUnknownValues`: lale.lib.autoai_libs.numpy_replace_unknown_values.html
+.. _`boolean2float`: lale.lib.autoai_libs.boolean2float.html
+.. _`CatImputer`: lale.lib.autoai_libs.cat_imputer.html
 .. _`float32_transform`: lale.lib.autoai_libs.float32_transform.html
+.. _`FloatStr2Float`: lale.lib.autoai_libs.float_str2_float.html
 .. _`NumImputer`: lale.lib.autoai_libs.num_imputer.html
 .. _`OptStandardScaler`: lale.lib.autoai_libs.opt_standard_scaler.html
 .. _`CatEncoder`: lale.lib.autoai_libs.cat_encoder.html
@@ -44,11 +50,11 @@ from .numpy_column_selector        import NumpyColumnSelector
 from .compress_strings             import CompressStrings
 from .numpy_replace_missing_values import NumpyReplaceMissingValues
 from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
-# from .boolean2float                import boolean2float
-# from .cat_imputer                  import CatImputer
+from .boolean2float                import boolean2float
+from .cat_imputer                  import CatImputer
 from .cat_encoder                  import CatEncoder
 from .float32_transform            import float32_transform
-# from .float_str2_float             import FloatStr2_Float
+from .float_str2_float             import FloatStr2Float
 from .num_imputer                  import NumImputer
 from .opt_standard_scaler          import OptStandardScaler
 # from .numpy_permute_array          import NumpyPermuteArray

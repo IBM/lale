@@ -12,47 +12,48 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import autoai_libs.transformers.exportable
-import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+import autoai_libs.transformers.exportable
 
-class float32_transformImpl():
-    def __init__(self, activate_flag):
+class FloatStr2FloatImpl():
+    def __init__(self, dtypes_list, missing_values_reference_list, activate_flag):
         self._hyperparams = {
+            'dtypes_list': dtypes_list,
+            'missing_values_reference_list': missing_values_reference_list,
             'activate_flag': activate_flag}
-        self._autoai_tfm = autoai_libs.transformers.exportable.float32_transform(**self._hyperparams)
+        self._autoai_tfm = autoai_libs.transformers.exportable.FloatStr2Float(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._autoai_tfm.fit(X, y)
         return self
 
     def transform(self, X):
-        raw = self._autoai_tfm.transform(X)
-        s_X = lale.datasets.data_schemas.to_schema(X)
-        s_result = self.transform_schema(s_X)
-        result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)
-        assert result.json_schema == s_result
-        return result
-
-    def transform_schema(self, s_X):
-        """Used internally by Lale for type-checking downstream operators."""
-        if self._hyperparams['activate_flag']:
-            result = {
-                'type': 'array',
-                'items': {'type': 'array', 'items': {'type': 'number'}}}
-        else:
-            result = s_X
-        return result
+        return self._autoai_tfm.transform(X)
 
 _hyperparams_schema = {
     'allOf': [{
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['activate_flag'],
+        'required': ['dtypes_list', 'missing_values_reference_list', 'activate_flag'],
         'relevantToOptimizer': [],
         'properties': {
+            'dtypes_list': {
+                'description': 'Strings that denote the type of each column of the input numpy array X.',
+                'type': 'array',
+                'items': {
+                    'enum': ['char_str', 'int_str', 'float_str', 'float_num', 'float_int_num', 'int_num', 'boolean', 'Unknown']},
+                'default': None},
+            'missing_values_reference_list': {
+                'anyOf': [
+                {   'description': 'Reference list of missing values in the input numpy array X.',
+
+                    'type': 'array',
+                    'items': {'laleType': 'Any'}},
+                {   'description': "If None, default to ``['?', '', '-', np.nan]``.",
+                    'enum': [None]}],
+                'default': None},
             'activate_flag': {
                 'description': 'If False, transform(X) outputs the input numpy array X unmodified.',
                 'type': 'boolean',
@@ -85,10 +86,10 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Transforms a numpy array to float32.
+    'description': """Operator from `autoai_libs`_. Replaces columns of strings that represent floats (type ``float_str`` in dtypes_list) to columns of floats and replaces their missing values with np.nan.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.float32_transform.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.float_str2_float.html',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -100,6 +101,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(float32_transformImpl, _combined_schemas)
+lale.docstrings.set_docstrings(FloatStr2FloatImpl, _combined_schemas)
 
-float32_transform = lale.operators.make_operator(float32_transformImpl, _combined_schemas)
+FloatStr2Float = lale.operators.make_operator(FloatStr2FloatImpl, _combined_schemas)
