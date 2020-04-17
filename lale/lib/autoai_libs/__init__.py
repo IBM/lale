@@ -27,6 +27,7 @@ Operators:
 * `float32_transform`_
 * `NumImputer`_
 * `OptStandardScaler`_
+* `CatEncoder`_
 
 .. _`NumpyColumnSelector`: lale.lib.autoai_libs.numpy_column_selector.html
 .. _`CompressStrings`: lale.lib.autoai_libs.compress_strings.html
@@ -35,6 +36,7 @@ Operators:
 .. _`float32_transform`: lale.lib.autoai_libs.float32_transform.html
 .. _`NumImputer`: lale.lib.autoai_libs.num_imputer.html
 .. _`OptStandardScaler`: lale.lib.autoai_libs.opt_standard_scaler.html
+.. _`CatEncoder`: lale.lib.autoai_libs.cat_encoder.html
 """
 
 # from autoai_libs.transformers.exportable
@@ -44,7 +46,7 @@ from .numpy_replace_missing_values import NumpyReplaceMissingValues
 from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
 # from .boolean2float                import boolean2float
 # from .cat_imputer                  import CatImputer
-# from .cat_encoder                  import CatEncoder
+from .cat_encoder                  import CatEncoder
 from .float32_transform            import float32_transform
 # from .float_str2_float             import FloatStr2_Float
 from .num_imputer                  import NumImputer

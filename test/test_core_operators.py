@@ -850,3 +850,71 @@ class TestLazyImpl(unittest.TestCase):
         from lale.lib.lale import Hyperopt
         impl = Hyperopt._impl
         self.assertTrue(inspect.isclass(impl))
+
+class TestOrdinalEncoder(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_with_hyperopt(self):
+        from lale.lib.sklearn import OrdinalEncoder
+        X_train, y_train = self.X_train, self.y_train
+        X_test, y_test = self.X_test, self.y_test
+
+        fproc = OrdinalEncoder()
+        from lale.lib.sklearn import LogisticRegression
+        pipeline = fproc >> LogisticRegression()
+
+        #Tune the pipeline with LR using Hyperopt
+        from lale.lib.lale import Hyperopt
+        hyperopt = Hyperopt(estimator=pipeline, max_evals=1)
+        trained = hyperopt.fit(self.X_train, self.y_train)
+        predictions = trained.predict(self.X_test)
+
+    def test_inverse_transform(self):
+        from lale.lib.sklearn import OrdinalEncoder, OneHotEncoder
+        X_train, y_train = self.X_train, self.y_train
+        X_test, y_test = self.X_test, self.y_test
+
+        fproc_ohe = OneHotEncoder(handle_unknown="ignore")
+        #test_init_fit_transform
+        trained_ohe = fproc_ohe.fit(self.X_train, self.y_train)
+        transformed_X = trained_ohe.transform(self.X_test)
+        orig_X_ohe = trained_ohe._impl._sklearn_model.inverse_transform(transformed_X)
+
+        fproc_oe = OrdinalEncoder(handle_unknown="ignore")
+        #test_init_fit_transform
+        trained_oe = fproc_oe.fit(self.X_train, self.y_train)
+        transformed_X = trained_oe.transform(self.X_test)
+        orig_X_oe = trained_oe._impl._sklearn_model.inverse_transform(transformed_X)
+
+        self.assertEqual(orig_X_ohe.all(), orig_X_oe.all())
+
+    def test_handle_unknown_error(self):
+        from lale.lib.sklearn import OrdinalEncoder
+        X_train, y_train = self.X_train, self.y_train
+        X_test, y_test = self.X_test, self.y_test
+
+        fproc_oe = OrdinalEncoder(handle_unknown="error")
+        #test_init_fit_transform
+        trained_oe = fproc_oe.fit(self.X_train, self.y_train)
+        with self.assertRaises(ValueError):#This is repying on the train_test_split, so may fail randomly
+            transformed_X = trained_oe.transform(self.X_test)
+
+    def test_encode_unknown_with(self):
+        from lale.lib.sklearn import OrdinalEncoder
+        import numpy as np
+        X_train, y_train = self.X_train, self.y_train
+        X_test, y_test = self.X_test, self.y_test
+
+        fproc_oe = OrdinalEncoder(handle_unknown="ignore", encode_unknown_with=1000)
+        #test_init_fit_transform
+        trained_oe = fproc_oe.fit(self.X_train, self.y_train)
+        transformed_X = trained_oe.transform(self.X_test)
+        #This is repying on the train_test_split, so may fail randomly
+        self.assertTrue(1000 in transformed_X)
+        #orig_X_oe = trained_oe._impl._sklearn_model.inverse_transform(transformed_X)
+

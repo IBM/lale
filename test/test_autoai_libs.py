@@ -74,3 +74,7 @@ class TestAutoaiLibs(unittest.TestCase):
     def test_NumImputer(self):
         trainable = lale.lib.autoai_libs.NumImputer()
         self.doTest(trainable, **self._iris)
+
+    def test_CatEncoder(self):
+        trainable = lale.lib.autoai_libs.CatEncoder()
+        self.doTest(trainable, **self._iris)
