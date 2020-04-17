@@ -12,17 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import autoai_libs.transformers.exportable
 import lale.docstrings
 import lale.operators
-import autoai_libs.transformers.exportable
+import numpy as np
 
-class NumImputerImpl():
-    def __init__(self, strategy, missing_values, activate_flag):
+class CatImputerImpl():
+    def __init__(self, strategy, missing_values, sklearn_version_family, activate_flag):
         self._hyperparams = {
             'strategy': strategy,
             'missing_values': missing_values,
+            'sklearn_version_family': sklearn_version_family,
             'activate_flag': activate_flag}
-        self._autoai_tfm = autoai_libs.transformers.exportable.NumImputer(**self._hyperparams)
+        self._autoai_tfm = autoai_libs.transformers.exportable.CatImputer(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._autoai_tfm.fit(X, y)
@@ -41,15 +43,28 @@ _hyperparams_schema = {
         'properties': {
             'strategy': {
                 'description': 'The imputation strategy.',
-                'enum': ['mean', 'median', 'most_frequent'],
+                'anyOf': [
+                {   'enum': ['mean'],
+                    'description': 'Replace using the mean along each column. Can only be used with numeric data.'},
+                {   'enum': ['median'],
+                    'description': 'Replace using the median along each column. Can only be used with numeric data.'},
+                {   'enum': ['most_frequent'],
+                    'description': 'Replace using most frequent value each column. Used with strings or numeric data.'},
+                {   'enum': ['constant'],
+                    'description': 'Replace with fill_value. Can be used with strings or numeric data.'}],
                 'default': 'mean'},
             'missing_values': {
                 'description': 'The placeholder for the missing values. All occurrences of missing_values will be imputed.',
                 'anyOf': [
-                {   'type': 'integer'},
-                {   'description': 'For missing values encoded as np.nan.',
-                    'enum': ['NaN']}],
-                'default': 'NaN'},
+                {   'type': 'number'},
+                {   'type': 'string'},
+                {   'enum': [np.nan]},
+                {   'enum': [None]}],
+                'default': np.nan},
+            'sklearn_version_family': {
+                'description': 'The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.',
+                'enum': ['20', None],
+                'default': None},
             'activate_flag': {
                 'description': 'If False, transform(X) outputs the input numpy array X unmodified.',
                 'type': 'boolean',
@@ -82,11 +97,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Currently internally uses the sklearn Imputer_.
+    'description': """Operator from `autoai_libs`_. Currently internally uses the sklearn SimpleImputer_.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
-.. _Imputer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Imputer.html#sklearn-preprocessing-imputer""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.num_imputer.html',
+.. _SimpleImputer: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.cat_imputer.html',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -98,6 +113,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(NumImputerImpl, _combined_schemas)
+lale.docstrings.set_docstrings(CatImputerImpl, _combined_schemas)
 
-NumImputer = lale.operators.make_operator(NumImputerImpl, _combined_schemas)
+CatImputer = lale.operators.make_operator(CatImputerImpl, _combined_schemas)

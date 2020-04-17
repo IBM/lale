@@ -63,8 +63,22 @@ class TestAutoaiLibs(unittest.TestCase):
             filling_values=42.0)
         self.doTest(trainable, **self._iris)
 
+    def test_boolean2float(self):
+        trainable = lale.lib.autoai_libs.boolean2float()
+        self.doTest(trainable, **self._iris)
+
+    def test_CatImputer(self):
+        trainable = lale.lib.autoai_libs.CatImputer()
+        self.doTest(trainable, **self._iris)
+
     def test_float32_transform(self):
         trainable = lale.lib.autoai_libs.float32_transform()
+        self.doTest(trainable, **self._iris)
+
+    def test_FloatStr2Float(self):
+        n_columns = self._iris['train_X'].shape[1]
+        trainable = lale.lib.autoai_libs.FloatStr2Float(
+            dtypes_list=['int_num' for i in range(n_columns)])
         self.doTest(trainable, **self._iris)
 
     def test_OptStandardScaler(self):

@@ -17,11 +17,11 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
-class float32_transformImpl():
+class boolean2floatImpl():
     def __init__(self, activate_flag):
         self._hyperparams = {
             'activate_flag': activate_flag}
-        self._autoai_tfm = autoai_libs.transformers.exportable.float32_transform(**self._hyperparams)
+        self._autoai_tfm = autoai_libs.transformers.exportable.boolean2float(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._autoai_tfm.fit(X, y)
@@ -85,10 +85,10 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Transforms a numpy array to float32.
+    'description': """Operator from `autoai_libs`_. Converts strings that represent booleans to floats and replaces missing values with np.nan.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.float32_transform.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.boolean2float.html',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -100,6 +100,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(float32_transformImpl, _combined_schemas)
+lale.docstrings.set_docstrings(boolean2floatImpl, _combined_schemas)
 
-float32_transform = lale.operators.make_operator(float32_transformImpl, _combined_schemas)
+boolean2float = lale.operators.make_operator(boolean2floatImpl, _combined_schemas)
