@@ -25,9 +25,13 @@ class OrdinalEncoderImpl():
         self.handle_unknown = handle_unknown
         self.encode_unknown_with = encode_unknown_with
         self._sklearn_model = sklearn.preprocessing.OrdinalEncoder(**self._hyperparams)
+        self.unknown_categories_mapping = [] #used during inverse transform to keep track of mapping of unknown categories
 
     def fit(self, X, y=None):
         self._sklearn_model.fit(X, y)
+        n_features = len(self._sklearn_model.categories_)
+        for i in range(n_features):
+            self.unknown_categories_mapping.append({})
         return self
 
     def transform(self, X):
@@ -41,15 +45,36 @@ class OrdinalEncoderImpl():
                 # that indicates which values were unknown.
                 n_features = transformed_X.shape[1]
                 for i in range(n_features):
+                    dict_categories = self.unknown_categories_mapping[i]
                     if self.encode_unknown_with == 'auto':
                         transformed_X[:, i][~X_mask[:, i]] = len(self._sklearn_model.categories_[i])
+                        dict_categories[len(self._sklearn_model.categories_[i])] = None
                     else:
                         transformed_X[:, i][~X_mask[:, i]] = self.encode_unknown_with
-                    self._sklearn_model.categories_[i] = np.append(self._sklearn_model.categories_[i], [None])
+                        dict_categories[self.encode_unknown_with] = None
+                    self.unknown_categories_mapping[i] = dict_categories
                     transformed_X[:, i] = transformed_X[:, i].astype(self._sklearn_model.categories_[i].dtype)
                 return transformed_X
             else:
                 raise e
+
+    def inverse_transform(self, X):
+        try:
+            X_tr =  self._sklearn_model.inverse_transform(X)
+        except IndexError: #which means the original inverse transform failed during the last step
+            n_samples, _ = X.shape
+            n_features = len(self._sklearn_model.categories_)
+            #dtype=object in order to insert None values
+            X_tr = np.empty((n_samples, n_features), dtype=object)
+
+            for i in range(n_features):
+                for j in range(n_samples):
+                    label = X[j, i].astype('int64', copy=False)
+                    try:
+                        X_tr[j, i] = self._sklearn_model.categories_[i][label]
+                    except IndexError:
+                        X_tr[j, i] = self.unknown_categories_mapping[i][label]
+        return X_tr
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

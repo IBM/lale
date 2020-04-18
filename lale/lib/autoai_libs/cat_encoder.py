@@ -49,7 +49,6 @@ class CatEncoderImpl():
                         transformed_X[:, i][~X_mask[:, i]] = len(self._autoai_tfm.encoder.categories_[i])
                     else:
                         transformed_X[:, i][~X_mask[:, i]] = self.encode_unknown_with
-                    #self._autoai_tfm.encoder.categories_[i] = np.append(self._autoai_tfm.encoder.categories_[i], [None])
                     transformed_X[:, i] = transformed_X[:, i].astype(self._autoai_tfm.encoder.categories_[i].dtype)
                 return transformed_X
             else:

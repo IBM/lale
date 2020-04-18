@@ -889,8 +889,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         #test_init_fit_transform
         trained_oe = fproc_oe.fit(self.X_train, self.y_train)
         transformed_X = trained_oe.transform(self.X_test)
-        orig_X_oe = trained_oe._impl._sklearn_model.inverse_transform(transformed_X)
-
+        orig_X_oe = trained_oe._impl.inverse_transform(transformed_X)
         self.assertEqual(orig_X_ohe.all(), orig_X_oe.all())
 
     def test_handle_unknown_error(self):
@@ -916,5 +915,6 @@ class TestOrdinalEncoder(unittest.TestCase):
         transformed_X = trained_oe.transform(self.X_test)
         #This is repying on the train_test_split, so may fail randomly
         self.assertTrue(1000 in transformed_X)
-        #orig_X_oe = trained_oe._impl._sklearn_model.inverse_transform(transformed_X)
+        #Testing that inverse_transform works even for encode_unknown_with=1000
+        orig_X_oe = trained_oe._impl.inverse_transform(transformed_X)
 
