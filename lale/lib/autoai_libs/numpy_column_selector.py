@@ -75,7 +75,7 @@ _combined_schemas = {
     'description': """Operator from `autoai_libs`_. Selects a subset of columns of a numpy array.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.numpy_column_selector.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.numpy_column_selector.html',
     'type': 'object',
     'tags': {
         'pre': [],

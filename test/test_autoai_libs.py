@@ -15,7 +15,9 @@
 from lale.lib.autoai_libs import float32_transform
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import LogisticRegression as LR
+import autoai_libs.utils.fc_methods
 import lale.lib.autoai_libs
+import numpy as np
 import sklearn.datasets
 import sklearn.model_selection
 import unittest
@@ -91,4 +93,14 @@ class TestAutoaiLibs(unittest.TestCase):
 
     def test_CatEncoder(self):
         trainable = lale.lib.autoai_libs.CatEncoder()
+        self.doTest(trainable, **self._iris)
+        
+    def test_NumpyPermuteArray(self):
+        trainable = lale.lib.autoai_libs.NumpyPermuteArray(
+            axis=0, permutation_indices=[2,0,1,3])
+        self.doTest(trainable, **self._iris)
+
+    def test_TA1(self):
+        trainable = lale.lib.autoai_libs.TA1(
+            fun=np.rint, name='round', datatypes=['numeric'], feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical], col_names=['a', 'b', 'c', 'd'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
         self.doTest(trainable, **self._iris)

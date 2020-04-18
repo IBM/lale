@@ -80,7 +80,7 @@ _combined_schemas = {
     'description': """Operator from `autoai_libs`_. Given a numpy array and a reference list of missing values for it, replaces missing values with a special value (typically a special missing value such as np.nan).
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.numpy_replace_missing_values.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.numpy_replace_missing_values.html',
     'type': 'object',
     'tags': {
         'pre': [],

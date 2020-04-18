@@ -89,7 +89,7 @@ _combined_schemas = {
     'description': """Operator from `autoai_libs`_. Replaces columns of strings that represent floats (type ``float_str`` in dtypes_list) to columns of floats and replaces their missing values with np.nan.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.float_str2_float.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.float_str2_float.html',
     'type': 'object',
     'tags': {
         'pre': [],

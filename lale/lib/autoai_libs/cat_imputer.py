@@ -101,7 +101,7 @@ _combined_schemas = {
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 .. _SimpleImputer: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.cat_imputer.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.cat_imputer.html',
     'type': 'object',
     'tags': {
         'pre': [],
