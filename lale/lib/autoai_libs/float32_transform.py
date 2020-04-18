@@ -88,7 +88,7 @@ _combined_schemas = {
     'description': """Operator from `autoai_libs`_. Transforms a numpy array to float32.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.float32_transform.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.float32_transform.html',
     'type': 'object',
     'tags': {
         'pre': [],

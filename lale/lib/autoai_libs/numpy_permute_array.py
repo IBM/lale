@@ -16,13 +16,12 @@ import lale.docstrings
 import lale.operators
 import autoai_libs.transformers.exportable
 
-class NumImputerImpl():
-    def __init__(self, strategy, missing_values, activate_flag):
+class NumpyPermuteArrayImpl():
+    def __init__(self, permutation_indices, axis):
         self._hyperparams = {
-            'strategy': strategy,
-            'missing_values': missing_values,
-            'activate_flag': activate_flag}
-        self._autoai_tfm = autoai_libs.transformers.exportable.NumImputer(**self._hyperparams)
+            'permutation_indices': permutation_indices,
+            'axis': axis}
+        self._autoai_tfm = autoai_libs.transformers.exportable.NumpyPermuteArray(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._autoai_tfm.fit(X, y)
@@ -36,24 +35,23 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['strategy', 'missing_values', 'activate_flag'],
-        'relevantToOptimizer': ['strategy'],
+        'required': ['permutation_indices', 'axis'],
+        'relevantToOptimizer': [],
         'properties': {
-            'strategy': {
-                'description': 'The imputation strategy.',
-                'enum': ['mean', 'median', 'most_frequent'],
-                'default': 'mean'},
-            'missing_values': {
-                'description': 'The placeholder for the missing values. All occurrences of missing_values will be imputed.',
+            'permutation_indices': {
+                'description': 'List of indexes based on which columns will be rearranged.',
                 'anyOf': [
-                {   'type': 'integer'},
-                {   'description': 'For missing values encoded as np.nan.',
-                    'enum': ['NaN']}],
-                'default': 'NaN'},
-            'activate_flag': {
-                'description': 'If False, transform(X) outputs the input numpy array X unmodified.',
-                'type': 'boolean',
-                'default': True}}}]}
+                {   'type': 'array',
+                    'items': {'type': 'integer', 'minimum': 0}},
+                {   'enum': [None]}],
+                'default': None},
+            'axis': {
+                'anyOf': [
+                {   'enum': [0, None],
+                    'description': 'Permute along columns.'},
+                {   'enum': [1],
+                    'description': 'Permute along rows.'}],
+                'default': None}}}]}
 
 _input_fit_schema = {
     'type': 'object',
@@ -62,7 +60,7 @@ _input_fit_schema = {
     'properties': {
         'X': {
             'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}}},
+            'items': {'type': 'array', 'items': {'laleType': 'Any'}}},
         'y': {
             'laleType': 'Any'}}}
 
@@ -73,20 +71,19 @@ _input_transform_schema = {
     'properties': {
         'X': {
             'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+            'items': {'type': 'array', 'items': {'laleType': 'Any'}}}}}
 
 _output_transform_schema = {
     'description': 'Features; the outer array is over samples.',
     'type': 'array',
-    'items': {'type': 'array', 'items': {'type': 'number'}}}
+    'items': {'type': 'array', 'items': {'laleType': 'Any'}}}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Currently internally uses the sklearn Imputer_.
+    'description': """Operator from `autoai_libs`_. Rearranges columns or rows of a numpy array based on a list of indices.
 
-.. _`autoai_libs`: https://pypi.org/project/autoai-libs
-.. _Imputer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Imputer.html#sklearn-preprocessing-imputer""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.num_imputer.html',
+.. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.numpy_permute_array.html',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -98,6 +95,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(NumImputerImpl, _combined_schemas)
+lale.docstrings.set_docstrings(NumpyPermuteArrayImpl, _combined_schemas)
 
-NumImputer = lale.operators.make_operator(NumImputerImpl, _combined_schemas)
+NumpyPermuteArray = lale.operators.make_operator(NumpyPermuteArrayImpl, _combined_schemas)

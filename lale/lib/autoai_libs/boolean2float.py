@@ -88,7 +88,7 @@ _combined_schemas = {
     'description': """Operator from `autoai_libs`_. Converts strings that represent booleans to floats and replaces missing values with np.nan.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.boolean2float.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.boolean2float.html',
     'type': 'object',
     'tags': {
         'pre': [],
