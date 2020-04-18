@@ -88,3 +88,8 @@ class TestAutoaiLibs(unittest.TestCase):
     def test_NumImputer(self):
         trainable = lale.lib.autoai_libs.NumImputer()
         self.doTest(trainable, **self._iris)
+
+    def test_NumpyPermuteArray(self):
+        trainable = lale.lib.autoai_libs.NumpyPermuteArray(
+            axis=0, permutation_indices=[2,0,1,3])
+        self.doTest(trainable, **self._iris)

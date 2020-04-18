@@ -106,7 +106,7 @@ _combined_schemas = {
     'description': """Operator from `autoai_libs`_. Removes spaces and special characters from string columns of a numpy array.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.compress_strings.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.compress_strings.html',
     'type': 'object',
     'tags': {
         'pre': [],

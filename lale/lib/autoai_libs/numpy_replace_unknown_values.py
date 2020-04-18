@@ -88,7 +88,7 @@ _combined_schemas = {
     'description': """Operator from `autoai_libs`_. Given a numpy array and a reference list of known values for each column, replaces values that are not part of a reference list with a special value (typically np.nan). This is typically used to remove labels for columns in a test dataset that have not been seen in the corresponding columns of the training dataset.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.numpy_replace_unknown_values.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.numpy_replace_unknown_values.html',
     'type': 'object',
     'tags': {
         'pre': [],
