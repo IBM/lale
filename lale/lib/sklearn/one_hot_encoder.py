@@ -64,7 +64,7 @@ _hyperparams_schema = {
                 'default': True},
             'dtype': {
                 'description': 'Desired dtype of output, must be number. See https://docs.scipy.org/doc/numpy-1.14.0/reference/arrays.scalars.html#arrays-scalars-built-in',
-                'enum': ['byte', 'short', 'intc', 'int_', 'longlong', 'intp', 'int8', 'int16', 'int32', 'int64', 'ubyte', 'ushort', 'uintc', 'uint', 'ulonglong', 'uintp', 'uint16', 'uint32', 'uint64', 'half', 'single', 'double', 'float_', 'longfloat', 'float16', 'float32', 'float64', 'float96', 'float128'],
+                'laleType':'Any',
                 'default': 'float64'},
             'handle_unknown': {
                 'description': 'Whether to raise an error or ignore if an unknown categorical feature is present during transform.',
