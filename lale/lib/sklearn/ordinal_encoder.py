@@ -18,7 +18,7 @@ import sklearn.preprocessing
 import numpy as np
 
 class OrdinalEncoderImpl():
-    def __init__(self, categories='auto', dtype=np.float64, handle_unknown='ignore', encode_unknown_with='auto'):
+    def __init__(self, categories='auto', dtype='float64', handle_unknown='ignore', encode_unknown_with='auto'):
         self._hyperparams = {
             'categories': categories,
             'dtype': dtype}
