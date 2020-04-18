@@ -17,7 +17,7 @@ import lale.docstrings
 import lale.operators
 
 class TA1Impl():
-    def __init__(self, fun, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
+    def __init__(self, fun, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes):
         self._hyperparams = {
             'fun': fun,
             'name': name,
@@ -26,8 +26,7 @@ class TA1Impl():
             'tgraph': tgraph,
             'apply_all': apply_all,
             'col_names': col_names,
-            'col_dtypes': col_dtypes,
-            'col_as_json_objects': col_as_json_objects}
+            'col_dtypes': col_dtypes}
         self._autoai_tfm = autoai_libs.cognito.transforms.transform_utils.TA1(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -43,7 +42,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['activate_flag'],
+        'required': ['fun', 'name', 'datatypes', 'feat_constraints', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
         'relevantToOptimizer': [],
         'properties': {
             'fun': {
@@ -59,7 +58,7 @@ _hyperparams_schema = {
             'datatypes': {
                 'description': 'List of datatypes that are valid input to the transformer function (numeric, float, int, etc.).',
                 'anyOf': [
-                {   'type': 'array', 'items': {'laleType': 'Any'}},
+                {   'type': 'array', 'items': {'type': 'string'}},
                 {   'enum': [None]}],
                 'default': None},
             'feat_constraints': {
