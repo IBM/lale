@@ -91,6 +91,10 @@ class TestAutoaiLibs(unittest.TestCase):
         trainable = lale.lib.autoai_libs.NumImputer()
         self.doTest(trainable, **self._iris)
 
+    def test_CatEncoder(self):
+        trainable = lale.lib.autoai_libs.CatEncoder()
+        self.doTest(trainable, **self._iris)
+        
     def test_NumpyPermuteArray(self):
         trainable = lale.lib.autoai_libs.NumpyPermuteArray(
             axis=0, permutation_indices=[2,0,1,3])

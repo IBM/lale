@@ -20,6 +20,7 @@ Schema-enhanced versions of a subset of the operators from `autoai_libs`_ to ena
 Operators
 =========
 
+
 * lale.lib.autoai_libs. `NumpyColumnSelector`_
 * lale.lib.autoai_libs. `CompressStrings`_
 * lale.lib.autoai_libs. `NumpyReplaceMissingValues`_
@@ -32,6 +33,7 @@ Operators
 * lale.lib.autoai_libs. `OptStandardScaler`_
 * lale.lib.autoai_libs. `NumpyPermuteArray`_
 * lale.lib.autoai_libs. `TA1`_
+* lale.lib.autoai_libs.`CatEncoder`_
 
 .. _`NumpyColumnSelector`: lale.lib.autoai_libs.numpy_column_selector.html
 .. _`CompressStrings`: lale.lib.autoai_libs.compress_strings.html
@@ -45,6 +47,7 @@ Operators
 .. _`OptStandardScaler`: lale.lib.autoai_libs.opt_standard_scaler.html
 .. _`NumpyPermuteArray`: lale.lib.autoai_libs.numpy_permute_array.html
 .. _`TA1`: lale.lib.autoai_libs.ta1.html
+.. _`CatEncoder`: lale.lib.autoai_libs.cat_encoder.html
 """
 
 # from autoai_libs.transformers.exportable
@@ -54,7 +57,7 @@ from .numpy_replace_missing_values import NumpyReplaceMissingValues
 from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
 from .boolean2float                import boolean2float
 from .cat_imputer                  import CatImputer
-# from .cat_encoder                  import CatEncoder
+from .cat_encoder                  import CatEncoder
 from .float32_transform            import float32_transform
 from .float_str2_float             import FloatStr2Float
 from .num_imputer                  import NumImputer
