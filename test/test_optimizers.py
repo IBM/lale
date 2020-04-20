@@ -710,7 +710,7 @@ class TestTopKVotingClassifier(unittest.TestCase):
         ensemble = TopKVotingClassifier(estimator=(PCA() | Nystroem()) >> (LogisticRegression()|KNeighborsClassifier()), args_to_optimizer={'max_evals':3}, k=20)
         trained = ensemble.fit(self.X_train, self.y_train)
         final_ensemble = trained._impl._best_estimator
-        self.assertLessEqual(len(final_ensemble._impl._sklearn_model.estimators), 3)
+        self.assertLessEqual(len(final_ensemble._impl._wrapped_model.estimators), 3)
 
     def test_fit_default_args(self):
         from sklearn.datasets import load_iris

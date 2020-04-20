@@ -1777,8 +1777,8 @@ class BasePipeline(Operator, Generic[OpType]):
                     raise ValueError("A pipeline graph that has operators other than ConcatFeatures with "
                     "multiple incoming edges is not a valid scikit-learn pipeline:{}".format(self.to_json()))
                 else:
-                    if hasattr(sink_node._impl_instance(), '_sklearn_model'):
-                        sklearn_op = sink_node._impl_instance()._sklearn_model
+                    if hasattr(sink_node._impl_instance(), '_wrapped_model'):
+                        sklearn_op = sink_node._impl_instance()._wrapped_model
                         convert_data_with_schemas_to_data(sklearn_op)#This case needs one more level of conversion
                     else:
                         sklearn_op = sink_node._impl_instance()
@@ -2041,7 +2041,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             except AttributeError:
                 class_ = make_operator(sklearn_obj.__class__, name=class_name)
             class_ = class_(**sklearn_obj.get_params())
-            class_._impl_instance()._sklearn_model =  clone(sklearn_obj)
+            class_._impl_instance()._wrapped_model =  clone(sklearn_obj)
             return class_         
 
         from sklearn.pipeline import FeatureUnion, Pipeline

@@ -23,14 +23,14 @@ class StandardScalerImpl():
             'copy': copy,
             'with_mean': with_mean,
             'with_std': with_std}
-        self._sklearn_model = sklearn.preprocessing.data.StandardScaler(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.data.StandardScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X, copy=None):
-        return self._sklearn_model.transform(X, copy)
+        return self._wrapped_model.transform(X, copy)
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

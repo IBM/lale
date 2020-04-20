@@ -56,19 +56,19 @@ class XGBRegressorImpl(BaseEstimator):
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
                 self.seed, self.missing, self.importance_type)
-        result._sklearn_model = XGBoostRegressor(
+        result._wrapped_model = XGBoostRegressor(
                     **self.get_params())
         if fit_params is None:
-            result._sklearn_model.fit(X, y)
+            result._wrapped_model.fit(X, y)
         else:
-            result._sklearn_model.fit(X, y, **fit_params)
+            result._wrapped_model.fit(X, y, **fit_params)
         return result
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
 _hyperparams_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',

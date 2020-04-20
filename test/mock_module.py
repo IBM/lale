@@ -26,8 +26,8 @@ class UnknownOp:
         return self._hyperparams
 
     def fit(self, X, y):
-        self._sklearn_model = sklearn.neighbors.KNeighborsClassifier(
+        self._wrapped_model = sklearn.neighbors.KNeighborsClassifier(
             **self._hyperparams)
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)

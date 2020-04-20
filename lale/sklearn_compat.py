@@ -474,8 +474,8 @@ class SKlearnCompatWrapper(object):
             # since sklearn assumes that fit mutates the operator
             if hasattr(op, '_trained'):
                 op = op._trained
-            if hasattr(op, '_impl') and hasattr(op._impl_instance(), '_sklearn_model'):
-                model = op._impl_instance()._sklearn_model
+            if hasattr(op, '_impl') and hasattr(op._impl_instance(), '_wrapped_model'):
+                model = op._impl_instance()._wrapped_model
         return 'passthrough' if model is None else model
 
     @property

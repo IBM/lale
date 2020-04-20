@@ -19,21 +19,21 @@ import sklearn.preprocessing
 class MinMaxScalerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._sklearn_model = sklearn.preprocessing.MinMaxScaler(
+        self._wrapped_model = sklearn.preprocessing.MinMaxScaler(
             **self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X)
+        self._wrapped_model.fit(X)
         return self
 
     def transform(self, X):
-        return self._sklearn_model.transform(X)
+        return self._wrapped_model.transform(X)
 
     def partial_fit(self, X, y=None):
-      if not hasattr(self, "_sklearn_model"):
-        self._sklearn_model = sklearn.preprocessing.MinMaxScaler(
+      if not hasattr(self, "_wrapped_model"):
+        self._wrapped_model = sklearn.preprocessing.MinMaxScaler(
             **self._hyperparams)
-      self._sklearn_model.partial_fit(X)
+      self._wrapped_model.partial_fit(X)
       return self
 
 _input_schema_fit = {

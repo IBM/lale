@@ -883,7 +883,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         #test_init_fit_transform
         trained_ohe = fproc_ohe.fit(self.X_train, self.y_train)
         transformed_X = trained_ohe.transform(self.X_test)
-        orig_X_ohe = trained_ohe._impl._sklearn_model.inverse_transform(transformed_X)
+        orig_X_ohe = trained_ohe._impl._wrapped_model.inverse_transform(transformed_X)
 
         fproc_oe = OrdinalEncoder(handle_unknown="ignore")
         #test_init_fit_transform

@@ -46,23 +46,23 @@ class LGBMClassifierImpl():
             'silent': silent,
             'importance_type': importance_type
         }
-        self._sklearn_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
+        self._wrapped_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
 
     def fit(self, X, y=None, **fit_params):
         try:
             if fit_params is None:
-                self._sklearn_model.fit(X, y)
+                self._wrapped_model.fit(X, y)
             else:
-                self._sklearn_model.fit(X, y, **fit_params)
+                self._wrapped_model.fit(X, y, **fit_params)
         except Exception as e:
             raise RuntimeError(str(self._hyperparams)) from e
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

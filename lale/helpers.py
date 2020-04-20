@@ -425,8 +425,8 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             lale_op = TrainedIndividualOp(class_._name, class_._impl, class_._schemas)
         class_ = lale_op(**sklearn_obj.get_params())
         if lale_wrapper_found:
-            class_._impl_instance()._sklearn_model =  copy.deepcopy(sklearn_obj)
-        else:# If there is no lale wrapper, there is no _sklearn_model
+            class_._impl_instance()._wrapped_model =  copy.deepcopy(sklearn_obj)
+        else:# If there is no lale wrapper, there is no _wrapped_model
             class_._impl = copy.deepcopy(sklearn_obj) 
         return class_
 
