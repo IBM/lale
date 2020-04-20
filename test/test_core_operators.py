@@ -918,3 +918,31 @@ class TestOrdinalEncoder(unittest.TestCase):
         #Testing that inverse_transform works even for encode_unknown_with=1000
         orig_X_oe = trained_oe._impl.inverse_transform(transformed_X)
 
+class TestOperatorErrors(unittest.TestCase):
+
+    def test_trainable_get_pipeline_fail(self):
+        try:
+            x = LogisticRegression().get_pipeline
+            self.fail("get_pipeline did not fail")
+        except AttributeError as e:
+            msg:str = str(e)
+            self.assertRegex(msg, "TrainedOperators")
+            self.assertRegex(msg, "meant to train")
+        
+    def test_trained_get_pipeline_fail(self):
+        try:
+            x = NoOp().get_pipeline
+            self.fail("get_pipeline did not fail")
+        except AttributeError as e:
+            msg:str = str(e)
+            self.assertRegex(msg, "underlying operator")
+ 
+    def test_trained_get_pipeline_success(self):
+        from lale.lib.lale import GridSearchCV
+        from sklearn.datasets import load_iris
+        iris_data = load_iris()
+        op = GridSearchCV(estimator=LogisticRegression(), lale_num_samples=1, lale_num_grids=1, n_jobs=1)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            op2 = op.fit(iris_data.data[10:], iris_data.target[10:])
+            x = op2.get_pipeline
