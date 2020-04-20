@@ -81,7 +81,7 @@ class GridSearchCVImpl:
                 if obs is not None:
                     assert isinstance(be._impl, ObservingImpl)
                     observed_op._impl.failObserving("optimize", e)
-                    raise
+                raise
 
             if obs is not None:
                 assert isinstance(be._impl, ObservingImpl)
