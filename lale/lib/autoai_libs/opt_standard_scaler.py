@@ -41,19 +41,27 @@ _hyperparams_schema = {
         'relevantToOptimizer': ['use_scaler_flag', 'num_scaler_with_mean', 'num_scaler_with_std'],
         'properties': {
             'use_scaler_flag': {
-                'type': 'boolean',
+                'anyOf':[
+                    {'type': 'boolean'},
+                    {'enum':[None]}],
                 'default': True,
                 'description': 'If False, return the input array unchanged.'},
             'num_scaler_copy': {
-                'type': 'boolean',
+                'anyOf':[
+                    {'type': 'boolean'},
+                    {'enum':[None]}],
                 'default': True,
                 'description': 'If False, try to avoid a copy and do inplace scaling instead.'},
             'num_scaler_with_mean': {
-                'type': 'boolean',
+                'anyOf':[
+                    {'type': 'boolean'},
+                    {'enum':[None]}],
                 'default': True,
                 'description': 'If True, center the data before scaling.'},
             'num_scaler_with_std': {
-                'type': 'boolean',
+                'anyOf':[
+                    {'type': 'boolean'},
+                    {'enum':[None]}],
                 'default': True,
                 'description': 'If True, scale the data to unit variance (or equivalently, unit standard deviation).'},
 }}]}
@@ -81,8 +89,9 @@ _input_transform_schema = {
 
 _output_transform_schema = {
     'description': 'Features; the outer array is over samples.',
-    'type': 'array',
-    'items': {'type': 'array', 'items': {'type': 'number'}}}
+    'anyOf': [
+        {'type': 'array', 'items': {'type':'number'}},
+        {'type': 'array', 'items': {'type': 'array', 'items': {'type':'number'}}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

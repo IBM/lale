@@ -46,7 +46,7 @@ _hyperparams_schema = {
             'missing_values': {
                 'description': 'The placeholder for the missing values. All occurrences of missing_values will be imputed.',
                 'anyOf': [
-                {   'type': 'integer'},
+                {   'laleType': 'Any'},
                 {   'description': 'For missing values encoded as np.nan.',
                     'enum': ['NaN']}],
                 'default': 'NaN'},
