@@ -17,11 +17,13 @@ import lale.operators
 import autoai_libs.transformers.exportable
 
 class NumpyReplaceUnknownValuesImpl():
-    def __init__(self, known_values_list, filling_values, missing_values_reference_list):
+    def __init__(self, known_values_list=None, filling_values=None, missing_values_reference_list=None, 
+                filling_values_list=None):
         self._hyperparams = {
             'known_values_list': known_values_list,
             'filling_values': filling_values,
-            'missing_values_reference_list': missing_values_reference_list}
+            'missing_values_reference_list': missing_values_reference_list,
+            'filling_values_list': filling_values_list}
         self._autoai_tfm = autoai_libs.transformers.exportable.NumpyReplaceUnknownValues(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -52,6 +54,13 @@ _hyperparams_schema = {
                 'default': None},
             'missing_values_reference_list': {
                 'description': 'Reference list of missing values.',
+                'anyOf': [
+                {   'type': 'array',
+                    'items': {'laleType': 'Any'}},
+                {   'enum': [None]}],
+                'default': None},
+            'filling_values_list': {
+                'description': 'list of special value assigned to unknown values.',
                 'anyOf': [
                 {   'type': 'array',
                     'items': {'laleType': 'Any'}},
