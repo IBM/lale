@@ -408,25 +408,30 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     #if not, call make operator on sklearn classes and create a lale pipeline.
 
     def get_equivalent_lale_op(sklearn_obj, fitted):
-        module_name = "lale.lib.sklearn"
+        module_names = ["lale.lib.sklearn", "lale.lib.autoai_libs"]
         from lale.operators import make_operator, TrainedIndividualOp
 
         lale_wrapper_found = False
         class_name = sklearn_obj.__class__.__name__
-        module = importlib.import_module(module_name)
-        try:
-            class_ = getattr(module, class_name)
-            lale_wrapper_found  = True
-        except AttributeError:
+        for module_name in module_names:
+            module = importlib.import_module(module_name)
+            try:
+                class_ = getattr(module, class_name)
+                lale_wrapper_found  = True
+                break
+            except AttributeError:
+                continue
+        else:
             class_ = make_operator(sklearn_obj, name=class_name)
+
         if not fitted:#If fitted is False, we do not want to return a Trained operator.
             lale_op = class_
         else:
             lale_op = TrainedIndividualOp(class_._name, class_._impl, class_._schemas)
         class_ = lale_op(**sklearn_obj.get_params())
         if lale_wrapper_found:
-            class_._impl_instance()._sklearn_model =  copy.deepcopy(sklearn_obj)
-        else:# If there is no lale wrapper, there is no _sklearn_model
+            class_._impl_instance()._wrapped_model =  copy.deepcopy(sklearn_obj)
+        else:# If there is no lale wrapper, there is no _wrapped_model
             class_._impl = copy.deepcopy(sklearn_obj) 
         return class_
 

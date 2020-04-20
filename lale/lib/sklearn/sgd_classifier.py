@@ -41,28 +41,28 @@ class SGDClassifierImpl():
             'class_weight': class_weight,
             'warm_start': warm_start,
             'average': average}
-        self._sklearn_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
-            self._sklearn_model.fit(X, y)
+            self._wrapped_model.fit(X, y)
         else:
-            self._sklearn_model.fit(X)
+            self._wrapped_model.fit(X)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
     def decision_function(self, X):
-        return self._sklearn_model.decision_function(X)
+        return self._wrapped_model.decision_function(X)
 
     def partial_fit(self, X, y=None, classes = None):
-      if not hasattr(self, "_sklearn_model"):
-        self._sklearn_model = SKLModel(**self._hyperparams)
-      self._sklearn_model.partial_fit(X, y, classes = classes)
+      if not hasattr(self, "_wrapped_model"):
+        self._wrapped_model = SKLModel(**self._hyperparams)
+      self._wrapped_model.partial_fit(X, y, classes = classes)
       return self
 
 _hyperparams_schema = {

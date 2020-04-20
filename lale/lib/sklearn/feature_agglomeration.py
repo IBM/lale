@@ -28,14 +28,14 @@ class FeatureAgglomerationImpl():
             'compute_full_tree': compute_full_tree,
             'linkage': linkage,
             'pooling_func': pooling_func}
-        self._sklearn_model = sklearn.cluster.hierarchical.FeatureAgglomeration(**self._hyperparams)
+        self._wrapped_model = sklearn.cluster.hierarchical.FeatureAgglomeration(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._sklearn_model.transform(X)
+        return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

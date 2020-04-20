@@ -19,14 +19,14 @@ import sklearn.preprocessing
 class OneHotEncoderImpl():
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._sklearn_model = sklearn.preprocessing.OneHotEncoder(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.OneHotEncoder(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._sklearn_model.transform(X)
+        return self._wrapped_model.transform(X)
 
 
 _hyperparams_schema = {

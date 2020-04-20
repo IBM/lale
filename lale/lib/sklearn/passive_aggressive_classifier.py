@@ -38,17 +38,17 @@ class PassiveAggressiveClassifierImpl():
             'warm_start': warm_start,
             'class_weight': class_weight,
             'average': average}
-        self._sklearn_model = sklearn.linear_model.passive_aggressive.PassiveAggressiveClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.linear_model.passive_aggressive.PassiveAggressiveClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def decision_function(self, X):
-        return self._sklearn_model.decision_function(X)
+        return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

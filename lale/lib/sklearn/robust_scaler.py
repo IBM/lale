@@ -24,14 +24,14 @@ class RobustScalerImpl():
             'with_scaling': with_scaling,
             'quantile_range': quantile_range,
             'copy': copy}
-        self._sklearn_model = sklearn.preprocessing.data.RobustScaler(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.data.RobustScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._sklearn_model.transform(X)
+        return self._wrapped_model.transform(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Scale features using statistics that are robust to outliers.',

@@ -21,7 +21,7 @@ class AdaBoostClassifierImpl():
     def __init__(self, base_estimator=None, n_estimators=50, learning_rate=1.0, algorithm='SAMME.R', random_state=None):
         if isinstance(base_estimator, lale.operators.Operator):
             if isinstance(base_estimator, lale.operators.IndividualOp):
-                base_estimator = base_estimator._impl_instance()._sklearn_model
+                base_estimator = base_estimator._impl_instance()._wrapped_model
             else:
                 raise ValueError("If base_estimator is a Lale operator, it needs to be an individual operator. ")
         self._hyperparams = {
@@ -30,23 +30,23 @@ class AdaBoostClassifierImpl():
             'learning_rate': learning_rate,
             'algorithm': algorithm,
             'random_state': random_state}
-        self._sklearn_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
-            self._sklearn_model.fit(X, y)
+            self._wrapped_model.fit(X, y)
         else:
-            self._sklearn_model.fit(X)
+            self._wrapped_model.fit(X)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
     def decision_function(self, X):
-        return self._sklearn_model.decision_function(X)
+        return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from lale.lib.autoai_libs import float32_transform
-from lale.lib.lale import Hyperopt
+from lale.lib.lale import Hyperopt, ConcatFeatures, NoOp
 from lale.lib.sklearn import LogisticRegression as LR
 import autoai_libs.utils.fc_methods
 import lale.lib.autoai_libs
@@ -45,9 +45,21 @@ class TestAutoaiLibs(unittest.TestCase):
         trained_hyperopt = hyperopt.fit(train_X, train_y)
         trained_hyperopt.predict(test_X)
 
+    def do1DTest(self, trainable, train_X, train_y, test_X, test_y):
+        #Test for 1-D array as input to the transformers
+        train_X = train_X[:,0]
+        test_X = test_X[:,0]
+        trainable_pipeline = (trainable & NoOp()) >> ConcatFeatures() >> float32_transform() >> LR()
+        trained_pipeline = trainable_pipeline.fit(train_X, train_y)
+        trained_pipeline.predict(test_X)
+        hyperopt = Hyperopt(estimator=trainable_pipeline, max_evals=1)
+        trained_hyperopt = hyperopt.fit(train_X, train_y)
+        trained_hyperopt.predict(test_X)
+
     def test_NumpyColumnSelector(self):
         trainable = lale.lib.autoai_libs.NumpyColumnSelector()
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_CompressStrings(self):
         n_columns = self._iris['train_X'].shape[1]
@@ -55,50 +67,61 @@ class TestAutoaiLibs(unittest.TestCase):
             dtypes_list=['int_num' for i in range(n_columns)],
             misslist_list=[[] for i in range(n_columns)])
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)        
 
     def test_NumpyReplaceMissingValues(self):
         trainable = lale.lib.autoai_libs.NumpyReplaceMissingValues()
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_NumpyReplaceUnknownValues(self):
         trainable = lale.lib.autoai_libs.NumpyReplaceUnknownValues(
             filling_values=42.0)
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_boolean2float(self):
         trainable = lale.lib.autoai_libs.boolean2float()
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_CatImputer(self):
         trainable = lale.lib.autoai_libs.CatImputer()
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_float32_transform(self):
         trainable = lale.lib.autoai_libs.float32_transform()
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_FloatStr2Float(self):
         n_columns = self._iris['train_X'].shape[1]
         trainable = lale.lib.autoai_libs.FloatStr2Float(
             dtypes_list=['int_num' for i in range(n_columns)])
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_OptStandardScaler(self):
         trainable = lale.lib.autoai_libs.OptStandardScaler()
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_NumImputer(self):
         trainable = lale.lib.autoai_libs.NumImputer()
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_CatEncoder(self):
         trainable = lale.lib.autoai_libs.CatEncoder()
         self.doTest(trainable, **self._iris)
-        
+        self.do1DTest(trainable, **self._iris)
+
     def test_NumpyPermuteArray(self):
         trainable = lale.lib.autoai_libs.NumpyPermuteArray(
             axis=0, permutation_indices=[2,0,1,3])
         self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_TA1(self):
         trainable = lale.lib.autoai_libs.TA1(

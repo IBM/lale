@@ -24,22 +24,22 @@ class OrdinalEncoderImpl():
             'dtype': dtype}
         self.handle_unknown = handle_unknown
         self.encode_unknown_with = encode_unknown_with
-        self._sklearn_model = sklearn.preprocessing.OrdinalEncoder(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.OrdinalEncoder(**self._hyperparams)
         self.unknown_categories_mapping = [] #used during inverse transform to keep track of mapping of unknown categories
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
-        n_features = len(self._sklearn_model.categories_)
+        self._wrapped_model.fit(X, y)
+        n_features = len(self._wrapped_model.categories_)
         for i in range(n_features):
             self.unknown_categories_mapping.append({})
         return self
 
     def transform(self, X):
         try:
-            return self._sklearn_model.transform(X)
+            return self._wrapped_model.transform(X)
         except ValueError as e:
             if self.handle_unknown == 'ignore':
-                (transformed_X, X_mask) = self._sklearn_model._transform(X, handle_unknown="ignore")
+                (transformed_X, X_mask) = self._wrapped_model._transform(X, handle_unknown="ignore")
                 #transformed_X is output with the encoding of the unknown category in column i set to be same 
                 # as encoding of the first element in categories_[i] and X_mask is a boolean mask
                 # that indicates which values were unknown.
@@ -47,23 +47,23 @@ class OrdinalEncoderImpl():
                 for i in range(n_features):
                     dict_categories = self.unknown_categories_mapping[i]
                     if self.encode_unknown_with == 'auto':
-                        transformed_X[:, i][~X_mask[:, i]] = len(self._sklearn_model.categories_[i])
-                        dict_categories[len(self._sklearn_model.categories_[i])] = None
+                        transformed_X[:, i][~X_mask[:, i]] = len(self._wrapped_model.categories_[i])
+                        dict_categories[len(self._wrapped_model.categories_[i])] = None
                     else:
                         transformed_X[:, i][~X_mask[:, i]] = self.encode_unknown_with
                         dict_categories[self.encode_unknown_with] = None
                     self.unknown_categories_mapping[i] = dict_categories
-                    transformed_X[:, i] = transformed_X[:, i].astype(self._sklearn_model.categories_[i].dtype)
+                    transformed_X[:, i] = transformed_X[:, i].astype(self._wrapped_model.categories_[i].dtype)
                 return transformed_X
             else:
                 raise e
 
     def inverse_transform(self, X):
         try:
-            X_tr =  self._sklearn_model.inverse_transform(X)
+            X_tr =  self._wrapped_model.inverse_transform(X)
         except IndexError: #which means the original inverse transform failed during the last step
             n_samples, _ = X.shape
-            n_features = len(self._sklearn_model.categories_)
+            n_features = len(self._wrapped_model.categories_)
             #dtype=object in order to insert None values
             X_tr = np.empty((n_samples, n_features), dtype=object)
 
@@ -71,7 +71,7 @@ class OrdinalEncoderImpl():
                 for j in range(n_samples):
                     label = X[j, i].astype('int64', copy=False)
                     try:
-                        X_tr[j, i] = self._sklearn_model.categories_[i][label]
+                        X_tr[j, i] = self._wrapped_model.categories_[i][label]
                     except IndexError:
                         X_tr[j, i] = self.unknown_categories_mapping[i][label]
         return X_tr

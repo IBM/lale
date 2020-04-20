@@ -39,6 +39,8 @@ class CatEncoderImpl():
             return self._autoai_tfm.transform(X)
         except ValueError as e:
             if self._autoai_tfm.encoding == 'ordinal':
+                if X.ndim == 1:
+                    X = X.reshape(-1, 1)
                 (transformed_X, X_mask) = self._autoai_tfm.encoder._transform(X, handle_unknown="ignore")
                 #transformed_X is output with the encoding of the unknown category in column i set to be same 
                 # as encoding of the first element in categories_[i] and X_mask is a boolean mask
@@ -50,6 +52,13 @@ class CatEncoderImpl():
                     else:
                         transformed_X[:, i][~X_mask[:, i]] = self.encode_unknown_with
                     transformed_X[:, i] = transformed_X[:, i].astype(self._autoai_tfm.encoder.categories_[i].dtype)
+                #Following lines are borrowed from CatEncoder as is:
+                if isinstance(transformed_X[0], np.ndarray) and transformed_X[0].shape[0] == 1:
+                    # this is a numpy array whose elements are numpy arrays (arises from string targets)
+                    transformed_X = np.concatenate(transformed_X).ravel()
+                    if transformed_X.ndim > 1 and transformed_X.shape[1] == 1:
+                        transformed_X = transformed_X.reshape(-1, 1)
+                transformed_X = transformed_X.reshape(transformed_X.shape[0], -1)
                 return transformed_X
             else:
                 raise e
@@ -119,9 +128,10 @@ _input_fit_schema = {
     'required': ['X'],
     'additionalProperties': False,
     'properties': {
-        'X': {
-            'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}}},
+        'X': {#Handles 1-D arrays as well
+            'anyOf': [
+                {'type': 'array', 'items': {'laleType': 'Any'}},
+                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType': 'Any'}}}]},
         'y': {
             'laleType': 'Any'}}}
 
@@ -130,9 +140,10 @@ _input_transform_schema = {
     'required': ['X'],
     'additionalProperties': False,
     'properties': {
-        'X': {
-            'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+        'X': {#Handles 1-D arrays as well
+            'anyOf': [
+                {'type': 'array', 'items': {'laleType': 'Any'}},
+                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType': 'Any'}}}]}}}
 
 _output_transform_schema = {
     'description': 'Features; the outer array is over samples.',
