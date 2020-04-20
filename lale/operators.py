@@ -522,6 +522,13 @@ class IndividualOp(Operator):
         if name in _schema_derived_attributes or name in [
             '__setstate__', '_schemas']:
             raise AttributeError
+
+        if name == "get_pipeline":
+            if isinstance(self, TrainedIndividualOp):
+                raise AttributeError("The underlying operator impl does not define get_pipeline")
+            else:
+                raise AttributeError("get_pipeline is defined only on TrainedOperators.  Perhaps you meant to train this operator first?")
+
         ea = self.enum
         if name in ea:
             return ea[name]
@@ -2629,4 +2636,3 @@ def fixup_hyperparams_dict(d):
     d1 = remove_defaults_dict(d)
     d2 = {k:lale.helpers.val_wrapper.unwrap(v) for k,v in d1.items()}
     return d2
-
