@@ -12,17 +12,17 @@ class StandardScalerImpl():
             'copy': copy,
             'with_mean': with_mean,
             'with_std': with_std}
-        self._sklearn_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
-            self._sklearn_model.fit(X, y)
+            self._wrapped_model.fit(X, y)
         else:
-            self._sklearn_model.fit(X)
+            self._wrapped_model.fit(X)
         return self
 
     def transform(self, X):
-        return self._sklearn_model.transform(X)
+        return self._wrapped_model.transform(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for StandardScaler    Standardize features by removing the mean and scaling to unit variance',

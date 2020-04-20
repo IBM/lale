@@ -18,14 +18,14 @@ import sklearn.compose
 
 class ColumnTransformerImpl:
     def __init__(self, **hyperparams):
-        self._sklearn_model = sklearn.compose.ColumnTransformer(**hyperparams)
+        self._wrapped_model = sklearn.compose.ColumnTransformer(**hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        result = self._sklearn_model.transform(X)
+        result = self._wrapped_model.transform(X)
         return result
 
 _hyperparams_schema = {

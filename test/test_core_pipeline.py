@@ -184,7 +184,7 @@ class TestImportExport(unittest.TestCase):
         lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
             sklearn_step_params = sklearn_pipeline.named_steps[pipeline_step].get_params()
-            lale_sklearn_params = lale_pipeline.steps()[i]._impl._sklearn_model.get_params()
+            lale_sklearn_params = lale_pipeline.steps()[i]._impl._wrapped_model.get_params()
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
@@ -197,7 +197,7 @@ class TestImportExport(unittest.TestCase):
         lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
             sklearn_step_params = sklearn_pipeline.named_steps[pipeline_step].get_params()
-            lale_sklearn_params = lale_pipeline.steps()[i]._impl._sklearn_model.get_params()
+            lale_sklearn_params = lale_pipeline.steps()[i]._impl._wrapped_model.get_params()
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
@@ -323,7 +323,7 @@ class TestImportExport(unittest.TestCase):
         sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
             sklearn_step_params = sklearn_pipeline.named_steps[pipeline_step].get_params()
-            lale_sklearn_params = trained_lale_pipeline.steps()[i]._impl._sklearn_model.get_params()
+            lale_sklearn_params = trained_lale_pipeline.steps()[i]._impl._wrapped_model.get_params()
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
 
@@ -337,7 +337,7 @@ class TestImportExport(unittest.TestCase):
         sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
             sklearn_step_params = type(sklearn_pipeline.named_steps[pipeline_step])
-            lale_sklearn_params = type(trained_lale_pipeline.steps()[i]._impl._sklearn_model) if hasattr(trained_lale_pipeline.steps()[i]._impl, '_sklearn_model') else type(trained_lale_pipeline.steps()[i]._impl)                
+            lale_sklearn_params = type(trained_lale_pipeline.steps()[i]._impl._wrapped_model) if hasattr(trained_lale_pipeline.steps()[i]._impl, '_wrapped_model') else type(trained_lale_pipeline.steps()[i]._impl)                
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
 

@@ -36,17 +36,17 @@ class RandomForestRegressorImpl():
             'random_state': random_state,
             'verbose': verbose,
             'warm_start': warm_start}
-        self._sklearn_model = sklearn.ensemble.forest.RandomForestRegressor(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.forest.RandomForestRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:
-            self._sklearn_model.fit(X, y)
+            self._wrapped_model.fit(X, y)
         else:
-            self._sklearn_model.fit(X, y, **fit_params)
+            self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'A random forest regressor.',

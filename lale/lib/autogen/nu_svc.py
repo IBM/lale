@@ -23,23 +23,23 @@ class NuSVCImpl():
             'max_iter': max_iter,
             'decision_function_shape': decision_function_shape,
             'random_state': random_state}
-        self._sklearn_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
-            self._sklearn_model.fit(X, y)
+            self._wrapped_model.fit(X, y)
         else:
-            self._sklearn_model.fit(X)
+            self._wrapped_model.fit(X)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
     def decision_function(self, X):
-        return self._sklearn_model.decision_function(X)
+        return self._wrapped_model.decision_function(X)
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for NuSVC    Nu-Support Vector Classification.',

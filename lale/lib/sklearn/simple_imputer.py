@@ -28,14 +28,14 @@ class SimpleImputerImpl():
             'fill_value': fill_value,
             'verbose': verbose,
             'copy': copy}
-        self._sklearn_model = sklearn.impute.SimpleImputer(**self._hyperparams)
+        self._wrapped_model = sklearn.impute.SimpleImputer(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._sklearn_model.transform(X)
+        return self._wrapped_model.transform(X)
 
     def transform_schema(self, s_X):
         return s_X

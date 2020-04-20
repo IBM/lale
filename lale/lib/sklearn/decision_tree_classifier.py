@@ -255,20 +255,20 @@ class DecisionTreeClassifierImpl():
             'min_impurity_split': min_impurity_split,
             'class_weight': class_weight,
             'presort': presort}
-        self._sklearn_model = sklearn.tree.tree.DecisionTreeClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.tree.tree.DecisionTreeClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:
-            self._sklearn_model.fit(X, y)
+            self._wrapped_model.fit(X, y)
         else:
-            self._sklearn_model.fit(X, y, **fit_params)
+            self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
 lale.docstrings.set_docstrings(DecisionTreeClassifierImpl, _combined_schemas)
 

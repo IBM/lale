@@ -22,17 +22,17 @@ class GaussianNBImpl():
         self._hyperparams = {
             'priors': priors,
             'var_smoothing': var_smoothing}
-        self._sklearn_model = sklearn.naive_bayes.GaussianNB(**self._hyperparams)
+        self._wrapped_model = sklearn.naive_bayes.GaussianNB(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

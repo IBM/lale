@@ -53,19 +53,19 @@ class XGBClassifierImpl(BaseEstimator):
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
                 self.seed, self.missing, self.silent)
-        result._sklearn_model = XGBoostClassifier(
+        result._wrapped_model = XGBoostClassifier(
                     **self.get_params())
         if fit_params is None:
-            result._sklearn_model.fit(X, y)
+            result._wrapped_model.fit(X, y)
         else:
-            result._sklearn_model.fit(X, y, **fit_params)
+            result._wrapped_model.fit(X, y, **fit_params)
         return result
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
 from xgboost import XGBClassifier as XGBoostClassifier
 import lale.operators

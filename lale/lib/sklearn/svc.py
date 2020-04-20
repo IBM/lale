@@ -34,20 +34,20 @@ class SVCImpl():
             'max_iter': max_iter,
             'decision_function_shape': decision_function_shape,
             'random_state': random_state}
-        self._sklearn_model = sklearn.svm.classes.SVC(**self._hyperparams)
+        self._wrapped_model = sklearn.svm.classes.SVC(**self._hyperparams)
 
     def fit(self, X, y=None, sample_weight=None):
-        self._sklearn_model.fit(X, y, sample_weight)
+        self._wrapped_model.fit(X, y, sample_weight)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
     def decision_function(self, X):
-        return self._sklearn_model.decision_function(X)
+        return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

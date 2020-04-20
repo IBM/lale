@@ -19,23 +19,23 @@ import sklearn.neural_network.multilayer_perceptron
 class MLPClassifierImpl():
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._sklearn_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
     def predict_proba(self, X):
-        return self._sklearn_model.predict_proba(X)
+        return self._wrapped_model.predict_proba(X)
 
     def partial_fit(self, X, y=None, classes = None):
-      if not hasattr(self, "_sklearn_model"):
-        self._sklearn_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(
+      if not hasattr(self, "_wrapped_model"):
+        self._wrapped_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(
             **self._hyperparams)
-      self._sklearn_model.partial_fit(X, y, classes = classes)
+      self._wrapped_model.partial_fit(X, y, classes = classes)
       return self
 
 _hyperparams_schema = {

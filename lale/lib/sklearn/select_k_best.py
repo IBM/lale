@@ -27,19 +27,19 @@ class SelectKBestImpl():
             self._hyperparams = {
                 'k': k
             }
-        self._sklearn_model = sklearn.feature_selection.SelectKBest(**self._hyperparams)
+        self._wrapped_model = sklearn.feature_selection.SelectKBest(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._sklearn_model.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
         if isinstance(X, pd.DataFrame):
-            keep_indices = self._sklearn_model.get_support(indices=True)
+            keep_indices = self._wrapped_model.get_support(indices=True)
             keep_columns = [X.columns[i] for i in keep_indices]
             result = X[keep_columns]
         else:
-            result = self._sklearn_model.transform(X)
+            result = self._wrapped_model.transform(X)
         return result
 
 _hyperparams_schema = {

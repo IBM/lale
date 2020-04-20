@@ -100,13 +100,13 @@ class MyLRImpl:
         
     def fit(self, X, y):
         result = MyLRImpl(self.penalty, self.solver, self.C)
-        result._sklearn_model = sklearn.linear_model.LogisticRegression(
+        result._wrapped_model = sklearn.linear_model.LogisticRegression(
             penalty = self.penalty, solver=self.solver, C = self.C)
-        result._sklearn_model.fit(X, y)
+        result._wrapped_model.fit(X, y)
         return result
 
     def predict(self, X):
-        return self._sklearn_model.predict(X)
+        return self._wrapped_model.predict(X)
 
 _input_fit_schema = {
   'type': 'object',
