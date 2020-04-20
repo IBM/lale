@@ -140,7 +140,7 @@ _output_transform_schema = {
       'description': 'Outer array dimension is over samples (aka rows).',
       'items': {
         'description': 'Inner array dimension is over features (aka columns).',
-        'type': 'number'}}}
+        'laleType': 'Any'}}}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

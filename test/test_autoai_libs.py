@@ -78,7 +78,7 @@ class TestAutoaiLibs(unittest.TestCase):
         trainable = lale.lib.autoai_libs.NumpyReplaceUnknownValues(
             filling_values=42.0)
         self.doTest(trainable, **self._iris)
-        #self.do1DTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
 
     def test_boolean2float(self):
         trainable = lale.lib.autoai_libs.boolean2float()
