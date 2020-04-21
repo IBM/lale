@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Schema-enhanced versions of a subset of the operators from `autoai_libs`_ to enable hyperparameter tuning.
+Schema-enhanced versions of the operators from `autoai_libs`_ to enable hyperparameter tuning.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 
@@ -46,9 +46,11 @@ Feature transformation:
 * lale.lib.autoai_libs. `TA1`_
 * lale.lib.autoai_libs. `TA2`_
 * lale.lib.autoai_libs. `TB1`_
+* lale.lib.autoai_libs. `TB2`_
 * lale.lib.autoai_libs. `TAM`_
 * lale.lib.autoai_libs. `TGen`_
 * lale.lib.autoai_libs. `FS1`_
+* lale.lib.autoai_libs. `FS2`_
 
 .. _`NumpyColumnSelector`: lale.lib.autoai_libs.numpy_column_selector.html
 .. _`CompressStrings`: lale.lib.autoai_libs.compress_strings.html
@@ -65,9 +67,11 @@ Feature transformation:
 .. _`TA1`: lale.lib.autoai_libs.ta1.html
 .. _`TA2`: lale.lib.autoai_libs.ta2.html
 .. _`TB1`: lale.lib.autoai_libs.tb1.html
+.. _`TB2`: lale.lib.autoai_libs.tb2.html
 .. _`TAM`: lale.lib.autoai_libs.tam.html
 .. _`TGen`: lale.lib.autoai_libs.tgen.html
 .. _`FS1`: lale.lib.autoai_libs.fs1.html
+.. _`FS2`: lale.lib.autoai_libs.fs2.html
 """
 
 # from autoai_libs.transformers.exportable
@@ -88,8 +92,8 @@ from .numpy_permute_array          import NumpyPermuteArray
 from .ta1  import TA1
 from .ta2  import TA2
 from .tb1  import TB1
-# from .tb2  import TB2
+from .tb2  import TB2
 from .tam  import TAM
 from .tgen import TGen
 from .fs1  import FS1
-# from .fs2  import FS2
+from .fs2  import FS2

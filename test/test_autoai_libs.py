@@ -158,6 +158,9 @@ class TestAutoaiLibs(unittest.TestCase):
         )
         self.doTest(trainable, **self._iris)
 
+    def test_TB2(self):
+        pass #TODO: not sure how to instantiate, what to pass for tans_class
+
     def test_TAM(self):
         from autoai_libs.cognito.transforms.transform_extras import IsolationForestAnomaly
         float32 = np.dtype('float32')
@@ -186,5 +189,15 @@ class TestAutoaiLibs(unittest.TestCase):
             cols_ids_must_keep=[1],
             additional_col_count_to_keep=3,
             ptype='classification',
+        )
+        self.doTest(trainable, **self._iris)
+
+    def test_FS2(self):
+        from sklearn.ensemble import ExtraTreesClassifier
+        trainable = lale.lib.autoai_libs.FS2(
+            cols_ids_must_keep=[1],
+            additional_col_count_to_keep=3,
+            ptype='classification',
+            eval_algo=ExtraTreesClassifier,
         )
         self.doTest(trainable, **self._iris)
