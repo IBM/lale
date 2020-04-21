@@ -63,7 +63,7 @@ _input_fit_schema = {
             'items': {'type': 'array', 'items': {'laleType': 'Any'}}},
         'y': {
             'type': 'array',
-            'items': {'type': 'number'},
+            'items': {'laleType': 'Any'},
             'description': 'Target values.'}}}
 
 _input_transform_schema = {

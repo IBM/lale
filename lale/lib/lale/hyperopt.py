@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from hyperopt import fmin, tpe, hp, STATUS_OK, STATUS_FAIL, Trials, space_eval
+from hyperopt.exceptions import AllTrialsFailed
 from lale.helpers import cross_val_score_track_trials, create_instance_from_hyperopt_search_space
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.PGO import PGO
@@ -145,10 +146,10 @@ class HyperoptImpl:
             show_progressbar=self.show_progressbar)
         except SystemExit :
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
-        except ValueError:
+        except AllTrialsFailed:
             self._best_estimator = None
             if STATUS_OK not in self._trials.statuses():
-                raise ValueError('ValueError from hyperopt, none of the trials succeeded.')
+                raise ValueError('Error from hyperopt, none of the trials succeeded.')
 
         try :
             best_params = space_eval(self.search_space, self._trials.argmin)
