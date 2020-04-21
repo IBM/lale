@@ -62,8 +62,8 @@ _input_fit_schema = {
     'properties': {
         'X': {#Handles 1-D arrays as well
             'anyOf': [
-                {'type': 'array', 'items': {'type':'number'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'type':'number'}}}]},
+                {'type': 'array', 'items': {'laleType':'Any'}},
+                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType':'Any'}}}]},
         'y': {
             'laleType': 'Any'}}}
 
@@ -74,14 +74,14 @@ _input_transform_schema = {
     'properties': {
         'X': {#Handles 1-D arrays as well
             'anyOf': [
-                {'type': 'array', 'items': {'type':'number'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'type':'number'}}}]}}}
+                {'type': 'array', 'items': {'laleType':'Any'}},
+                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType':'Any'}}}]}}}
 
 _output_transform_schema = {
     'description': 'Features; the outer array is over samples.',
     'anyOf': [
-        {'type': 'array', 'items': {'type':'number'}},
-        {'type': 'array', 'items': {'type': 'array', 'items': {'type':'number'}}}]}
+        {'type': 'array', 'items': {'laleType':'Any'}},
+        {'type': 'array', 'items': {'type': 'array', 'items': {'laleType':'Any'}}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
