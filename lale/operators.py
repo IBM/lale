@@ -523,11 +523,11 @@ class IndividualOp(Operator):
             '__setstate__', '_schemas']:
             raise AttributeError
 
-        if name == "get_pipeline":
+        if name in ["get_pipeline", "summary"]:
             if isinstance(self, TrainedIndividualOp):
-                raise AttributeError("The underlying operator impl does not define get_pipeline")
+                raise AttributeError(f"The underlying operator impl does not define {name}")
             else:
-                raise AttributeError("get_pipeline is defined only on TrainedOperators.  Perhaps you meant to train this operator first?")
+                raise AttributeError(f"{name} is defined only on TrainedOperators.  Perhaps you meant to train this operator first?")
 
         ea = self.enum
         if name in ea:

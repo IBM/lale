@@ -938,11 +938,38 @@ class TestOperatorErrors(unittest.TestCase):
             self.assertRegex(msg, "underlying operator")
  
     def test_trained_get_pipeline_success(self):
-        from lale.lib.lale import GridSearchCV
+        from lale.lib.lale import Hyperopt
         from sklearn.datasets import load_iris
         iris_data = load_iris()
-        op = GridSearchCV(estimator=LogisticRegression(), lale_num_samples=1, lale_num_grids=1, n_jobs=1)
+        op = Hyperopt(estimator=LogisticRegression(), max_evals=1)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             op2 = op.fit(iris_data.data[10:], iris_data.target[10:])
             x = op2.get_pipeline
+
+    def test_trainable_summary_fail(self):
+        try:
+            x = LogisticRegression().summary
+            self.fail("summary did not fail")
+        except AttributeError as e:
+            msg:str = str(e)
+            self.assertRegex(msg, "TrainedOperators")
+            self.assertRegex(msg, "meant to train")
+
+    def test_trained_summary_fail(self):
+        try:
+            x = NoOp().summary
+            self.fail("summary did not fail")
+        except AttributeError as e:
+            msg:str = str(e)
+            self.assertRegex(msg, "underlying operator")
+
+    def test_trained_summary_success(self):
+        from lale.lib.lale import Hyperopt
+        from sklearn.datasets import load_iris
+        iris_data = load_iris()
+        op = Hyperopt(estimator=LogisticRegression(), max_evals=1, show_progressbar=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            op2 = op.fit(iris_data.data[10:], iris_data.target[10:])
+            x = op2.summary
