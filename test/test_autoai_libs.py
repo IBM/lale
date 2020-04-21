@@ -167,3 +167,24 @@ class TestAutoaiLibs(unittest.TestCase):
             col_dtypes=[float32, float32, float32, float32],
         )
         self.doTest(trainable, **self._iris)
+
+    def test_TGen(self):
+        from autoai_libs.cognito.transforms.transform_extras import NXOR
+        from autoai_libs.utils.fc_methods import is_not_categorical
+        float32 = np.dtype('float32')
+        trainable = lale.lib.autoai_libs.TGen(
+            fun=NXOR, name='nxor', arg_count=2,
+            datatypes_list=[['numeric'], ['numeric']],
+            feat_constraints_list=[[is_not_categorical], [is_not_categorical]],
+            col_names=['a', 'b', 'c', 'd'],
+            col_dtypes=[float32, float32, float32, float32],
+        )
+        self.doTest(trainable, **self._iris)
+
+    def test_FS1(self):
+        trainable = lale.lib.autoai_libs.FS1(
+            cols_ids_must_keep=[1],
+            additional_col_count_to_keep=3,
+            ptype='classification',
+        )
+        self.doTest(trainable, **self._iris)

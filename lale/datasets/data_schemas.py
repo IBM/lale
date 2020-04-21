@@ -21,6 +21,7 @@ try:
     torch_installed=True
 except ImportError:
     torch_installed=False
+
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 class NDArrayWithSchema(np.ndarray):
@@ -105,6 +106,20 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
         else:
             lale.type_checking.validate_is_schema(schema)
             result.json_schema = schema
+    return result
+
+def strip_schema(obj):
+    if isinstance(obj, NDArrayWithSchema):
+        result = np.array(obj)
+        assert type(result) == np.ndarray
+    elif isinstance(obj, SeriesWithSchema):
+        result = pd.Series(obj)
+        assert type(result) == pd.Series
+    elif isinstance(obj, DataFrameWithSchema):
+        result = pd.DataFrame(obj)
+        assert type(result) == pd.DataFrame
+    else:
+        result = obj
     return result
 
 def dtype_to_schema(typ):
