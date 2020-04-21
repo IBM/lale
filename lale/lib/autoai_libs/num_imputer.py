@@ -22,14 +22,14 @@ class NumImputerImpl():
             'strategy': strategy,
             'missing_values': missing_values,
             'activate_flag': activate_flag}
-        self._autoai_tfm = autoai_libs.transformers.exportable.NumImputer(**self._hyperparams)
+        self._wrapped_model = autoai_libs.transformers.exportable.NumImputer(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._autoai_tfm.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._autoai_tfm.transform(X)
+        return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
     'allOf': [{

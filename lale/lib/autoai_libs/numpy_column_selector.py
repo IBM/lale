@@ -20,14 +20,14 @@ class NumpyColumnSelectorImpl():
     def __init__(self, columns):
         self._hyperparams = {
             'columns': columns}
-        self._autoai_tfm = autoai_libs.transformers.exportable.NumpyColumnSelector(**self._hyperparams)
+        self._wrapped_model = autoai_libs.transformers.exportable.NumpyColumnSelector(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._autoai_tfm.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._autoai_tfm.transform(X)
+        return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
     'allOf': [{

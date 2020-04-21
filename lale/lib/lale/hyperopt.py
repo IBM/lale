@@ -106,7 +106,6 @@ class HyperoptImpl:
                 logger.warning(f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
                 return_dict['status'] = STATUS_FAIL
                 return_dict['error_msg'] = f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}"
-                print(return_dict['error_msg'])
                 
         def get_final_trained_estimator(params, X_train, y_train):
             warnings.filterwarnings("ignore")

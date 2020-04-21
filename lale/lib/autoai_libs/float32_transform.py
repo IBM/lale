@@ -21,14 +21,14 @@ class float32_transformImpl():
     def __init__(self, activate_flag):
         self._hyperparams = {
             'activate_flag': activate_flag}
-        self._autoai_tfm = autoai_libs.transformers.exportable.float32_transform(**self._hyperparams)
+        self._wrapped_model = autoai_libs.transformers.exportable.float32_transform(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._autoai_tfm.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        raw = self._autoai_tfm.transform(X)
+        raw = self._wrapped_model.transform(X)
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
         result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)
