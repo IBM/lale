@@ -22,14 +22,14 @@ class NumImputerImpl():
             'strategy': strategy,
             'missing_values': missing_values,
             'activate_flag': activate_flag}
-        self._autoai_tfm = autoai_libs.transformers.exportable.NumImputer(**self._hyperparams)
+        self._wrapped_model = autoai_libs.transformers.exportable.NumImputer(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._autoai_tfm.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        return self._autoai_tfm.transform(X)
+        return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
     'allOf': [{
@@ -62,8 +62,8 @@ _input_fit_schema = {
     'properties': {
         'X': {#Handles 1-D arrays as well
             'anyOf': [
-                {'type': 'array', 'items': {'type':'number'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'type':'number'}}}]},
+                {'type': 'array', 'items': {'laleType':'Any'}},
+                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType':'Any'}}}]},
         'y': {
             'laleType': 'Any'}}}
 
@@ -74,14 +74,14 @@ _input_transform_schema = {
     'properties': {
         'X': {#Handles 1-D arrays as well
             'anyOf': [
-                {'type': 'array', 'items': {'type':'number'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'type':'number'}}}]}}}
+                {'type': 'array', 'items': {'laleType':'Any'}},
+                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType':'Any'}}}]}}}
 
 _output_transform_schema = {
     'description': 'Features; the outer array is over samples.',
     'anyOf': [
-        {'type': 'array', 'items': {'type':'number'}},
-        {'type': 'array', 'items': {'type': 'array', 'items': {'type':'number'}}}]}
+        {'type': 'array', 'items': {'laleType':'Any'}},
+        {'type': 'array', 'items': {'type': 'array', 'items': {'laleType':'Any'}}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

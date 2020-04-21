@@ -30,16 +30,16 @@ class TGenImpl():
             'apply_all': apply_all,
             'col_names': col_names,
             'col_dtypes': col_dtypes}
-        self._autoai_tfm = autoai_libs.cognito.transforms.transform_utils.TGen(**self._hyperparams)
+        self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TGen(**self._hyperparams)
 
     def fit(self, X, y=None):
         stripped_X = lale.datasets.data_schemas.strip_schema(X)
-        self._autoai_tfm.fit(stripped_X, y)
+        self._wrapped_model.fit(stripped_X, y)
         return self
 
     def transform(self, X):
         stripped_X = lale.datasets.data_schemas.strip_schema(X)
-        result = self._autoai_tfm.transform(stripped_X)
+        result = self._wrapped_model.transform(stripped_X)
         return result
 
 _hyperparams_schema = {

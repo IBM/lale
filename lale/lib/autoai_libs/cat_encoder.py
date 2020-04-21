@@ -28,30 +28,30 @@ class CatEncoderImpl():
             'sklearn_version_family': sklearn_version_family,
             'activate_flag': activate_flag}
         self.encode_unknown_with = encode_unknown_with
-        self._autoai_tfm = autoai_libs.transformers.exportable.CatEncoder(**self._hyperparams)
+        self._wrapped_model = autoai_libs.transformers.exportable.CatEncoder(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._autoai_tfm.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
         try:
-            return self._autoai_tfm.transform(X)
+            return self._wrapped_model.transform(X)
         except ValueError as e:
-            if self._autoai_tfm.encoding == 'ordinal':
+            if self._wrapped_model.encoding == 'ordinal':
                 if X.ndim == 1:
                     X = X.reshape(-1, 1)
-                (transformed_X, X_mask) = self._autoai_tfm.encoder._transform(X, handle_unknown="ignore")
+                (transformed_X, X_mask) = self._wrapped_model.encoder._transform(X, handle_unknown="ignore")
                 #transformed_X is output with the encoding of the unknown category in column i set to be same 
                 # as encoding of the first element in categories_[i] and X_mask is a boolean mask
                 # that indicates which values were unknown.
                 n_features = transformed_X.shape[1]
                 for i in range(n_features):
                     if self.encode_unknown_with == 'auto':
-                        transformed_X[:, i][~X_mask[:, i]] = len(self._autoai_tfm.encoder.categories_[i])
+                        transformed_X[:, i][~X_mask[:, i]] = len(self._wrapped_model.encoder.categories_[i])
                     else:
                         transformed_X[:, i][~X_mask[:, i]] = self.encode_unknown_with
-                    transformed_X[:, i] = transformed_X[:, i].astype(self._autoai_tfm.encoder.categories_[i].dtype)
+                    transformed_X[:, i] = transformed_X[:, i].astype(self._wrapped_model.encoder.categories_[i].dtype)
                 #Following lines are borrowed from CatEncoder as is:
                 if isinstance(transformed_X[0], np.ndarray) and transformed_X[0].shape[0] == 1:
                     # this is a numpy array whose elements are numpy arrays (arises from string targets)
