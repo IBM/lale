@@ -16,18 +16,16 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
-class TA1Impl():
-    def __init__(self, fun, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes):
+class TAMImpl():
+    def __init__(self, tans_class, name, tgraph, apply_all, col_names, col_dtypes):
         self._hyperparams = {
-            'fun': fun,
+            'tans_class': tans_class,
             'name': name,
-            'datatypes': datatypes,
-            'feat_constraints': feat_constraints,
             'tgraph': tgraph,
             'apply_all': apply_all,
             'col_names': col_names,
             'col_dtypes': col_dtypes}
-        self._autoai_tfm = autoai_libs.cognito.transforms.transform_utils.TA1(**self._hyperparams)
+        self._autoai_tfm = autoai_libs.cognito.transforms.transform_utils.TAM(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._autoai_tfm.fit(X, y)
@@ -42,11 +40,11 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['fun', 'name', 'datatypes', 'feat_constraints', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
+        'required': ['tans_class', 'name', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
         'relevantToOptimizer': [],
         'properties': {
-            'fun': {
-                'description': 'The function pointer.',
+            'tans_class': {
+                'description': 'A class that implements fit() and transform() in accordance with the transformation function definition.',
                 'laleType': 'Any',
                 'default': None},
             'name': {
@@ -54,16 +52,6 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'type': 'string'},
                 {   'enum': [None]}],
-                'default': None},
-            'datatypes': {
-                'description': 'List of datatypes that are valid input to the transformer function (numeric, float, int, etc.).',
-                'anyOf': [
-                {   'type': 'array', 'items': {'type': 'string'}},
-                {   'enum': [None]}],
-                'default': None},
-            'feat_constraints': {
-                'description': 'All constraints that must be satisfied by a column to be considered a valid input to this transform.',
-                'laleType': 'Any',
                 'default': None},
             'tgraph': {
                 'description': 'Should be the invoking TGraph() object.',
@@ -116,10 +104,10 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Feature transformation for unary stateless functions, such as square, log, etc.
+    'description': """Operator from `autoai_libs`_. Feature transformation that applies at the data level, such as PCA.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.ta1.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.tam.html',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -131,6 +119,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(TA1Impl, _combined_schemas)
+lale.docstrings.set_docstrings(TAMImpl, _combined_schemas)
 
-TA1 = lale.operators.make_operator(TA1Impl, _combined_schemas)
+TAM = lale.operators.make_operator(TAMImpl, _combined_schemas)

@@ -20,20 +20,33 @@ Schema-enhanced versions of a subset of the operators from `autoai_libs`_ to ena
 Operators
 =========
 
+Preprocessing any columns:
 
 * lale.lib.autoai_libs. `NumpyColumnSelector`_
-* lale.lib.autoai_libs. `CompressStrings`_
 * lale.lib.autoai_libs. `NumpyReplaceMissingValues`_
+* lale.lib.autoai_libs. `float32_transform`_
+* lale.lib.autoai_libs. `NumpyPermuteArray`_
+
+Preprocessing categorical columns:
+
+* lale.lib.autoai_libs. `CompressStrings`_
 * lale.lib.autoai_libs. `NumpyReplaceUnknownValues`_
 * lale.lib.autoai_libs. `boolean2float`_
 * lale.lib.autoai_libs. `CatImputer`_
-* lale.lib.autoai_libs. `float32_transform`_
+* lale.lib.autoai_libs. `CatEncoder`_
+
+Preprocessing numeric columns:
+
 * lale.lib.autoai_libs. `FloatStr2Float`_
 * lale.lib.autoai_libs. `NumImputer`_
 * lale.lib.autoai_libs. `OptStandardScaler`_
-* lale.lib.autoai_libs. `NumpyPermuteArray`_
+
+Feature transformation:
+
 * lale.lib.autoai_libs. `TA1`_
-* lale.lib.autoai_libs.`CatEncoder`_
+* lale.lib.autoai_libs. `TA2`_
+* lale.lib.autoai_libs. `TB1`_
+* lale.lib.autoai_libs. `TAM`_
 
 .. _`NumpyColumnSelector`: lale.lib.autoai_libs.numpy_column_selector.html
 .. _`CompressStrings`: lale.lib.autoai_libs.compress_strings.html
@@ -41,13 +54,16 @@ Operators
 .. _`NumpyReplaceUnknownValues`: lale.lib.autoai_libs.numpy_replace_unknown_values.html
 .. _`boolean2float`: lale.lib.autoai_libs.boolean2float.html
 .. _`CatImputer`: lale.lib.autoai_libs.cat_imputer.html
+.. _`CatEncoder`: lale.lib.autoai_libs.cat_encoder.html
 .. _`float32_transform`: lale.lib.autoai_libs.float32_transform.html
 .. _`FloatStr2Float`: lale.lib.autoai_libs.float_str2_float.html
 .. _`NumImputer`: lale.lib.autoai_libs.num_imputer.html
 .. _`OptStandardScaler`: lale.lib.autoai_libs.opt_standard_scaler.html
 .. _`NumpyPermuteArray`: lale.lib.autoai_libs.numpy_permute_array.html
 .. _`TA1`: lale.lib.autoai_libs.ta1.html
-.. _`CatEncoder`: lale.lib.autoai_libs.cat_encoder.html
+.. _`TA2`: lale.lib.autoai_libs.ta2.html
+.. _`TB1`: lale.lib.autoai_libs.tab.html
+.. _`TAM`: lale.lib.autoai_libs.tam.html
 """
 
 # from autoai_libs.transformers.exportable
@@ -66,10 +82,10 @@ from .numpy_permute_array          import NumpyPermuteArray
 
 # from autoai_libs.cognito.transforms.transform_utils
 from .ta1  import TA1
-# from .ta2  import TA2
-# from .tb1  import TB1
+from .ta2  import TA2
+from .tb1  import TB1
 # from .tb2  import TB2
-# from .tam  import TAM
+from .tam  import TAM
 # from .tgen import TGen
 # from .fs1  import FS1
 # from .fs2  import FS2

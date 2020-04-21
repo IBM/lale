@@ -16,18 +16,20 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 
-class TA1Impl():
-    def __init__(self, fun, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes):
+class TA2Impl():
+    def __init__(self, fun, name, datatypes1, feat_constraints1, datatypes2, feat_constraints2, tgraph, apply_all, col_names, col_dtypes):
         self._hyperparams = {
             'fun': fun,
             'name': name,
-            'datatypes': datatypes,
-            'feat_constraints': feat_constraints,
+            'datatypes1': datatypes1,
+            'feat_constraints1': feat_constraints1,
+            'datatypes2': datatypes2,
+            'feat_constraints2': feat_constraints2,
             'tgraph': tgraph,
             'apply_all': apply_all,
             'col_names': col_names,
             'col_dtypes': col_dtypes}
-        self._autoai_tfm = autoai_libs.cognito.transforms.transform_utils.TA1(**self._hyperparams)
+        self._autoai_tfm = autoai_libs.cognito.transforms.transform_utils.TA2(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._autoai_tfm.fit(X, y)
@@ -42,7 +44,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['fun', 'name', 'datatypes', 'feat_constraints', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
+        'required': ['fun', 'name', 'datatypes1', 'feat_constraints1', 'datatypes2', 'feat_constraints2', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
         'relevantToOptimizer': [],
         'properties': {
             'fun': {
@@ -55,14 +57,24 @@ _hyperparams_schema = {
                 {   'type': 'string'},
                 {   'enum': [None]}],
                 'default': None},
-            'datatypes': {
-                'description': 'List of datatypes that are valid input to the transformer function (numeric, float, int, etc.).',
+            'datatypes1': {
+                'description': 'List of datatypes that are valid input to the first argument of the transformer function (numeric, float, int, etc.).',
                 'anyOf': [
                 {   'type': 'array', 'items': {'type': 'string'}},
                 {   'enum': [None]}],
                 'default': None},
-            'feat_constraints': {
-                'description': 'All constraints that must be satisfied by a column to be considered a valid input to this transform.',
+            'feat_constraints1': {
+                'description': 'All constraints that must be satisfied by a column to be considered a valid first argument to this transform.',
+                'laleType': 'Any',
+                'default': None},
+            'datatypes2': {
+                'description': 'List of datatypes that are valid input to the second argument of the transformer function (numeric, float, int, etc.).',
+                'anyOf': [
+                {   'type': 'array', 'items': {'type': 'string'}},
+                {   'enum': [None]}],
+                'default': None},
+            'feat_constraints2': {
+                'description': 'All constraints that must be satisfied by a column to be considered a valid second argument to this transform.',
                 'laleType': 'Any',
                 'default': None},
             'tgraph': {
@@ -116,10 +128,10 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Feature transformation for unary stateless functions, such as square, log, etc.
+    'description': """Operator from `autoai_libs`_. Feature transformation for binary stateless functions, such as sum or product.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.ta1.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.ta2.html',
     'type': 'object',
     'tags': {
         'pre': [],
@@ -131,6 +143,6 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(TA1Impl, _combined_schemas)
+lale.docstrings.set_docstrings(TA2Impl, _combined_schemas)
 
-TA1 = lale.operators.make_operator(TA1Impl, _combined_schemas)
+TA2 = lale.operators.make_operator(TA2Impl, _combined_schemas)
