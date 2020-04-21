@@ -67,7 +67,7 @@ class TestAutoaiLibs(unittest.TestCase):
             dtypes_list=['int_num' for i in range(n_columns)],
             misslist_list=[[] for i in range(n_columns)])
         self.doTest(trainable, **self._iris)
-        self.do1DTest(trainable, **self._iris)        
+        self.do1DTest(trainable, **self._iris)
 
     def test_NumpyReplaceMissingValues(self):
         trainable = lale.lib.autoai_libs.NumpyReplaceMissingValues()
@@ -87,6 +87,11 @@ class TestAutoaiLibs(unittest.TestCase):
 
     def test_CatImputer(self):
         trainable = lale.lib.autoai_libs.CatImputer()
+        self.doTest(trainable, **self._iris)
+        self.do1DTest(trainable, **self._iris)
+
+    def test_CatEncoder(self):
+        trainable = lale.lib.autoai_libs.CatEncoder()
         self.doTest(trainable, **self._iris)
         self.do1DTest(trainable, **self._iris)
 
@@ -112,11 +117,6 @@ class TestAutoaiLibs(unittest.TestCase):
         self.doTest(trainable, **self._iris)
         self.do1DTest(trainable, **self._iris)
 
-    def test_CatEncoder(self):
-        trainable = lale.lib.autoai_libs.CatEncoder()
-        self.doTest(trainable, **self._iris)
-        self.do1DTest(trainable, **self._iris)
-
     def test_NumpyPermuteArray(self):
         trainable = lale.lib.autoai_libs.NumpyPermuteArray(
             axis=0, permutation_indices=[2,0,1,3])
@@ -124,6 +124,46 @@ class TestAutoaiLibs(unittest.TestCase):
         self.do1DTest(trainable, **self._iris)
 
     def test_TA1(self):
+        from autoai_libs.utils.fc_methods import is_not_categorical
+        float32 = np.dtype('float32')
         trainable = lale.lib.autoai_libs.TA1(
-            fun=np.rint, name='round', datatypes=['numeric'], feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical], col_names=['a', 'b', 'c', 'd'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+            fun=np.rint, name='round',
+            datatypes=['numeric'], feat_constraints=[is_not_categorical],
+            col_names=['a', 'b', 'c', 'd'],
+            col_dtypes=[float32, float32, float32, float32],
+        )
+        self.doTest(trainable, **self._iris)
+
+    def test_TA2(self):
+        from autoai_libs.utils.fc_methods import is_not_categorical
+        float32 = np.dtype('float32')
+        trainable = lale.lib.autoai_libs.TA2(
+            fun=np.add, name='sum',
+            datatypes1=['numeric'], feat_constraints1=[is_not_categorical],
+            datatypes2=['numeric'], feat_constraints2=[is_not_categorical],
+            col_names=['a', 'b', 'c', 'd'],
+            col_dtypes=[float32, float32, float32, float32],
+        )
+        self.doTest(trainable, **self._iris)
+
+    def test_TB1(self):
+        from sklearn.preprocessing import StandardScaler
+        from autoai_libs.utils.fc_methods import is_not_categorical
+        float32 = np.dtype('float32')
+        trainable = lale.lib.autoai_libs.TB1(
+            tans_class=StandardScaler, name='stdscaler',
+            datatypes=['numeric'], feat_constraints=[is_not_categorical],
+            col_names=['a', 'b', 'c', 'd'],
+            col_dtypes=[float32, float32, float32, float32],
+        )
+        self.doTest(trainable, **self._iris)
+
+    def test_TAM(self):
+        from autoai_libs.cognito.transforms.transform_extras import IsolationForestAnomaly
+        float32 = np.dtype('float32')
+        trainable = lale.lib.autoai_libs.TAM(
+            tans_class=IsolationForestAnomaly, name='isoforestanomaly',
+            col_names=['a', 'b', 'c', 'd'],
+            col_dtypes=[float32, float32, float32, float32],
+        )
         self.doTest(trainable, **self._iris)
