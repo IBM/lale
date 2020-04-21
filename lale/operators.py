@@ -1364,7 +1364,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         """
         result = self._predict(X)
         if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
-            return np.array(result) #otherwise scorers return zero-dim array
+            return lale.datasets.data_schemas.strip_schema(result) #otherwise scorers return zero-dim array
         return result
 
     @if_delegate_has_method(delegate='_impl')
@@ -1752,15 +1752,10 @@ class BasePipeline(Operator, Generic[OpType]):
             for element in dir(node):#Looking at only 1 level for now.
                 try:
                     value = getattr(node,element)
-                    if isinstance(value, lale.datasets.data_schemas.NDArrayWithSchema):
-                        modified_value = np.array(value)
-                    elif isinstance(value, lale.datasets.data_schemas.DataFrameWithSchema):
-                        modified_value = pd.DataFrame(value)
-                    elif isinstance(value, lale.datasets.data_schemas.SeriesWithSchema):
-                        modified_value = pd.Series(value)
-                    else:
+                    stripped = lale.datasets.data_schemas.strip_schema(value)
+                    if value is stripped:
                         continue
-                    setattr(node, element, modified_value)
+                    setattr(node, element, stripped)
                 except BaseException:
                     #This is an optional processing, so if there is any exception, continue.
                     #For example, some scikit-learn classes will fail at getattr because they have
@@ -2257,7 +2252,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
     def predict(self, X):
         result = self._predict(X)
         if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
-            return np.array(result) #otherwise scorers return zero-dim array
+            return lale.datasets.data_schemas.strip_schema(result) #otherwise scorers return zero-dim array
         return result
 
     def transform(self, X, y = None):
