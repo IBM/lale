@@ -42,8 +42,7 @@ _hyperparams_schema = {
         'properties': {
             'cols_ids_must_keep': {
                 'description': 'Serial numbers of the columns that must be kept irrespective of their feature importance.',
-                'type': 'array',
-                'items': {'type': 'integer', 'minimum': 0},
+                'laleType':'Any',#Found a value `range(0, 20)` 
                 'default': []},
             'additional_col_count_to_keep': {
                 'description': 'How many columns need to be retained.',
