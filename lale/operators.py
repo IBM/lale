@@ -479,8 +479,6 @@ class IndividualOp(Operator):
             self._schemas = schemas
         else:
             self._schemas = lale.type_checking.get_default_schema(impl)
-        if self._impl is not None:
-            self._check_schemas()
 
     def _check_schemas(self):
         lale.type_checking.validate_is_schema(self._schemas)
@@ -1462,6 +1460,7 @@ def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
             operatorObj = TrainedIndividualOp(name, impl, schemas)
         if hasattr(impl, 'get_params'):
             operatorObj._hyperparams = {**impl.get_params()}
+    operatorObj._check_schemas()
     all_available_operators.append(operatorObj)
     return operatorObj
 
