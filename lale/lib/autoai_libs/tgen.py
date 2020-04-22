@@ -63,7 +63,7 @@ _hyperparams_schema = {
                 'default': None},
             'arg_count': {
                 'description': 'Number of arguments to the function, e.g., 1 for unary, 2 for binary, and so on.',
-                'laleType': 'integer',
+                'type': 'integer',
                 'minimum': 1,
                 'default': 1},
             'datatypes_list': {
