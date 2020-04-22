@@ -19,7 +19,7 @@ import lale.helpers
 import lale.operators
 
 class TGenImpl():
-    def __init__(self, fun, name, arg_count, datatypes_list, feat_constraints_list, tgraph, apply_all, col_names, col_dtypes):
+    def __init__(self, fun, name, arg_count, datatypes_list, feat_constraints_list, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
         self._hyperparams = {
             'fun': fun,
             'name': name,
@@ -29,7 +29,8 @@ class TGenImpl():
             'tgraph': tgraph,
             'apply_all': apply_all,
             'col_names': col_names,
-            'col_dtypes': col_dtypes}
+            'col_dtypes': col_dtypes,
+            'col_as_json_objects': col_as_json_objects}
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TGen(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -47,7 +48,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['fun', 'name', 'arg_count', 'datatypes_list', 'feat_constraints_list', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
+        'required': ['fun', 'name', 'arg_count', 'datatypes_list', 'feat_constraints_list', 'tgraph', 'apply_all', 'col_names', 'col_dtypes', 'col_as_json_objects'],
         'relevantToOptimizer': [],
         'properties': {
             'fun': {
@@ -105,6 +106,12 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'type': 'array', 'items': {'laleType': 'Any'}},
                 {   'enum': [None]}],
+                'default': None},
+            'col_as_json_objects': {
+                'description': 'Names of the feature columns in a json dict.',
+                'anyOf': [
+                {   'type': 'object'},
+                {   'enum': [None]}],
                 'default': None}}}]}
 
 _input_fit_schema = {
@@ -134,7 +141,7 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Feature transformation for unary stateless functions, such as square, log, etc.
+    'description': """Operator from `autoai_libs`_. Feature transformation via a general wrapper that can be used for most functions (may not be most efficient though).
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.ta1.html',

@@ -38,7 +38,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['strategy', 'missing_values', 'activate_flag'],
+        'required': ['strategy', 'missing_values', 'sklearn_version_family', 'activate_flag'],
         'relevantToOptimizer': ['strategy'],
         'properties': {
             'strategy': {
@@ -100,7 +100,7 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Currently internally uses the sklearn SimpleImputer_.
+    'description': """Operator from `autoai_libs`_. Missing value imputation for categorical features, currently internally uses the sklearn SimpleImputer_.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 .. _SimpleImputer: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer""",

@@ -17,7 +17,7 @@ import lale.docstrings
 import lale.operators
 
 class TB1Impl():
-    def __init__(self, tans_class, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes):
+    def __init__(self, tans_class, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
         self._hyperparams = {
             'tans_class': tans_class,
             'name': name,
@@ -26,7 +26,8 @@ class TB1Impl():
             'tgraph': tgraph,
             'apply_all': apply_all,
             'col_names': col_names,
-            'col_dtypes': col_dtypes}
+            'col_dtypes': col_dtypes,
+            'col_as_json_objects': col_as_json_objects}
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TB1(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -42,7 +43,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['tans_class', 'name', 'datatypes', 'feat_constraints', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
+        'required': ['tans_class', 'name', 'datatypes', 'feat_constraints', 'tgraph', 'apply_all', 'col_names', 'col_dtypes', 'col_as_json_objects'],
         'relevantToOptimizer': [],
         'properties': {
             'tans_class': {
@@ -86,6 +87,12 @@ _hyperparams_schema = {
                 'description': 'List of the datatypes of the feature columns.',
                 'anyOf': [
                 {   'type': 'array', 'items': {'laleType': 'Any'}},
+                {   'enum': [None]}],
+                'default': None},
+            'col_as_json_objects': {
+                'description': 'Names of the feature columns in a json dict.',
+                'anyOf': [
+                {   'type': 'object'},
                 {   'enum': [None]}],
                 'default': None}}}]}
 
