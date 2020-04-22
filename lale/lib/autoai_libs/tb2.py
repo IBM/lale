@@ -27,14 +27,14 @@ class TB2Impl():
             'feat_constraints2': feat_constraints2,
             'tgraph': tgraph,
             'apply_all': apply_all}
-        self._autoai_tfm = autoai_libs.cognito.transforms.transform_utils.TB2(**self._hyperparams)
+        self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TB2(**self._hyperparams)
 
     def fit(self, X, y=None):
-        self._autoai_tfm.fit(X, y)
+        self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
-        result = self._autoai_tfm.transform(X)
+        result = self._wrapped_model.transform(X)
         return result
 
 _hyperparams_schema = {
