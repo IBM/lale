@@ -109,8 +109,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.SelectKBest.html#sklearn-feature-selection-selectkbest',
+    'description': """`Select k best`_ feature selection transformer from scikit-learn.
+
+.. _`Select k best`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.SelectKBest.html#sklearn-feature-selection-selectkbest
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.select_k_best.html',
     'type': 'object',
     'tags': {
         'pre': [],

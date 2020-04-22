@@ -292,8 +292,11 @@ _output_predict_schema = {
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDRegressor.html#sklearn-linear-model-sgdregressor',
+    'description': """`SGD regressor`_ from scikit-learn uses linear regressors (SVM, logistic regression, a.o.) with stochastic gradient descent training.
+
+.. _`SGD regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDRegressor.html#sklearn-linear-model-sgdregressor
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.sgd_regressor.html',
     'type': 'object',
     'tags': {
         'pre': [],

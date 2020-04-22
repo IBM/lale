@@ -467,8 +467,11 @@ _output_predict_proba_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn-neural-network-mlpclassifier',
+    'description': """`Multi-layer perceptron`_ dense deep neural network from scikit-learn for classification.
+
+.. _`Multi-layer perceptron`: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn-neural-network-mlpclassifier
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.mlp_classifier.html',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

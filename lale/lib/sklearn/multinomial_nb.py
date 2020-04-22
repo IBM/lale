@@ -127,8 +127,11 @@ _output_predict_proba_schema = {
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.MultinomialNB.html#sklearn-naive-bayes-multinomialnb',
+    'description': """`Multinomial Naive Bayes`_ classifier from scikit-learn.
+
+.. _`Multinomial Naive Bayes`: https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.MultinomialNB.html#sklearn-naive-bayes-multinomialnb
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.multinomial_naive_bayes.html',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -102,8 +102,11 @@ _output_transform_schema = {
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn-preprocessing-standardscaler',
+    'description': """`Standard scaler`_ transformer from scikit-learn.
+
+.. _`Standard scaler`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn-preprocessing-standardscaler
+""",
+  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.standard_scaler.html',
     'type': 'object',
     'tags': {
         'pre': [],
