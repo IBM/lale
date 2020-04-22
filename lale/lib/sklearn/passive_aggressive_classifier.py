@@ -239,8 +239,11 @@ _output_decision_function_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html#sklearn-linear-model-passiveaggressiveclassifier',
+    'description': """`Passive aggressive`_ classifier from scikit-learn.
+
+.. _`Passive aggressive`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html#sklearn-linear-model-passiveaggressiveclassifier
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.passive_aggressive_classifier.html',
     'type': 'object',
     'tags': {
         'pre': [],

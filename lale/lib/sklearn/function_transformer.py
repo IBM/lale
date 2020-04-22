@@ -124,11 +124,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """FunctionTransformer_ constructs a transformer from an arbitrary callable.
+    'description': """FunctionTransformer_ from scikit-learn constructs a transformer from an arbitrary callable that operates at the level of an entire dataset.
 
 .. _FunctionTransformer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer.html
 """,
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.function_transformer.html',
     'type': 'object',
     'tags': {
         'pre': [],

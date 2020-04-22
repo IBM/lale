@@ -251,8 +251,11 @@ _output_predict_proba_schema = {
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html#sklearn-ensemble-extratreesclassifier',
+    'description': """`Extra trees classifier`_ random forest from scikit-learn.
+
+.. _`Extra trees classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html#sklearn-ensemble-extratreesclassifier
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.extra_trees_classifier.html',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -138,7 +138,7 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """ColumnTransformer_ applies transformers to columns of an array or pandas DataFrame.
+    'description': """ColumnTransformer_ from scikit-learn applies transformers to columns of an array or pandas DataFrame.
 
 .. _ColumnTransformer: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html#sklearn-compose-columntransformer
 """,

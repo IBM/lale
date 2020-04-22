@@ -176,8 +176,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html#sklearn-decomposition-nmf',
+    'description': """`Non-negative matrix factorization`_ transformer from scikit-learn for linear dimensionality reduction.
+
+.. _`Non-negative matrix factorization`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html#sklearn-decomposition-nmf
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.nmf.html',
     'type': 'object',
     'tags': {
         'pre': [],

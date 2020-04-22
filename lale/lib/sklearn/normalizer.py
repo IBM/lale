@@ -97,8 +97,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Normalizer.html#sklearn-preprocessing-normalizer',
+    'description': """`Normalizer`_ transformer from scikit-learn.
+
+.. _`Normalizer`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Normalizer.html#sklearn-preprocessing-normalizer
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.normalizer.html',
     'type': 'object',
     'tags': {
         'pre': [],

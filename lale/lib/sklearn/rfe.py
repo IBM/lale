@@ -108,8 +108,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.RFE.html#sklearn-feature-selection-rfe',
+    'description': """`Recursive feature elimination`_ transformer from scikit-learn.
+
+.. _`Recursive feature elimination`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.RFE.html#sklearn-feature-selection-rfe
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.rfe.html',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -218,8 +218,11 @@ _output_decision_function_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.BaggingClassifier.html#sklearn-ensemble-baggingclassifier',
+    'description': """`Bagging classifier`_ from scikit-learn for bagging ensemble.
+
+.. _`Bagging classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.BaggingClassifier.html#sklearn-ensemble-baggingclassifier
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.bagging_classifier.html',
     'type': 'object',
     'tags': {
         'pre': [],

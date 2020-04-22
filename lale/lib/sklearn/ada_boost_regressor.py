@@ -137,8 +137,11 @@ _output_predict_schema = {
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.AdaBoostRegressor.html#sklearn-ensemble-adaboostregressor',
+    'description': """`AdaBoost regressor`_ from scikit-learn for boosting ensemble.
+
+.. _`AdaBoost regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.AdaBoostRegressor.html#sklearn-ensemble-adaboostregressor
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ada_boost_regressor.html',
     'type': 'object',
     'tags': {
         'pre': [],

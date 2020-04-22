@@ -168,8 +168,11 @@ _output_decision_function_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis.html#sklearn-discriminant-analysis-quadraticdiscriminantanalysis',
+    'description': """`Quadratic discriminant analysis`_ classifier with a quadratic decision boundary from scikit-learn.
+
+.. _`Quadratic discriminant analysis`: https://scikit-learn.org/0.20/modules/generated/sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis.html#sklearn-discriminant-analysis-quadraticdiscriminantanalysis 
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.quadratic_discriminant_analysis.html',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -122,8 +122,11 @@ _output_transform_schema = {
 }
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://scikit-learn.org/0.20/modules/generated/sklearn.impute.MissingIndicator.html#sklearn-impute-missingindicator',
+    'description': """`Missing values indicator`_ transformer from scikit-learn.
+
+.. _`Missing values indicator`: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.MissingIndicator.html#sklearn-impute-missingindicator
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.missing_indicator.html',
     'type': 'object',
     'tags': {
         'pre': [],
