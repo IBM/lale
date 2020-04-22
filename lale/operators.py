@@ -2026,39 +2026,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         else:
             pass #TODO
         return out
-
-    @classmethod
-    def import_from_sklearn_pipeline(cls, sklearn_pipeline):
-        #For all pipeline steps, identify equivalent lale wrappers if present,
-        #if not, call make operator on sklearn classes and create a lale pipeline.
-
-        def get_equivalent_lale_op(sklearn_obj):
-            module_name = "lale.lib.sklearn"
-            from sklearn.base import clone
-
-            class_name = sklearn_obj.__class__.__name__
-            module = importlib.import_module(module_name)
-            try:
-                class_ = getattr(module, class_name)
-            except AttributeError:
-                class_ = make_operator(sklearn_obj.__class__, name=class_name)
-            class_ = class_(**sklearn_obj.get_params())
-            class_._impl_instance()._wrapped_model =  clone(sklearn_obj)
-            return class_         
-
-        from sklearn.pipeline import FeatureUnion, Pipeline
-        from sklearn.base import BaseEstimator
-        if isinstance(sklearn_pipeline, Pipeline):
-            nested_pipeline_steps = sklearn_pipeline.named_steps.values()
-            nested_pipeline_lale_objects = [cls.import_from_sklearn_pipeline(nested_pipeline_step) for nested_pipeline_step in nested_pipeline_steps]
-            lale_op_obj = make_pipeline(*nested_pipeline_lale_objects)
-        elif isinstance(sklearn_pipeline, FeatureUnion):
-            transformer_list = sklearn_pipeline.transformer_list
-            concat_predecessors = [cls.import_from_sklearn_pipeline(transformer[1]) for transformer in transformer_list]
-            lale_op_obj = make_union(*concat_predecessors)
-        else:
-            lale_op_obj = get_equivalent_lale_op(sklearn_pipeline)
-        return lale_op_obj
     
     def fit_with_batches(self, X, y=None, serialize=True):
         """[summary]
