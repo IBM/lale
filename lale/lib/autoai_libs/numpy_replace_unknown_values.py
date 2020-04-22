@@ -38,7 +38,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['known_values_list', 'filling_values', 'missing_values_reference_list'],
+        'required': ['known_values_list', 'filling_values', 'missing_values_reference_list', 'filling_values_list'],
         'relevantToOptimizer': [],
         'properties': {
             'known_values_list': {

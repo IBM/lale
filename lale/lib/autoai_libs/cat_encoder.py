@@ -68,7 +68,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['encoding', 'categories', 'dtype', 'handle_unknown'],
+        'required': ['encoding', 'categories', 'dtype', 'handle_unknown', 'sklearn_version_family', 'activate_flag', 'encode_unknown_with'],
         'relevantToOptimizer': ['encoding'],
         'properties': {
             'encoding': {
@@ -152,7 +152,8 @@ _output_transform_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Currently internally uses the sklearn OneHotEncoder_ and OrdinalEncoder_.
+    'description': """Operator from `autoai_libs`_. Encoding of categorical features as numbers, currently internally uses the sklearn OneHotEncoder_ and OrdinalEncoder_.
+
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 .. _OneHotEncoder: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html#sklearn.preprocessing.OneHotEncoder
 .. _OrdinalEncoder: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OrdinalEncoder.html#sklearn.preprocessing.OrdinalEncoder""",

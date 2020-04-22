@@ -41,7 +41,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['tans_class', 'name', 'tgraph', 'apply_all', 'col_names', 'col_dtypes'],
+        'required': ['tans_class', 'name', 'tgraph', 'apply_all', 'col_names', 'col_dtypes', 'col_as_json_objects'],
         'relevantToOptimizer': [],
         'properties': {
             'tans_class': {
@@ -77,7 +77,7 @@ _hyperparams_schema = {
                 {   'type': 'array', 'items': {'laleType': 'Any'}},
                 {   'enum': [None]}],
                 'default': None},
-            'col_as_json_objects':{
+            'col_as_json_objects': {
                 'description': 'Names of the feature columns in a json dict.',
                 'anyOf': [
                 {   'type': 'object'},
