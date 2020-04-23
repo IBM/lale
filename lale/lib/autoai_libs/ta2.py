@@ -32,8 +32,11 @@ class TA2Impl():
             'col_as_json_objects': col_as_json_objects}
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TA2(**self._hyperparams)
 
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
+    def fit(self, X, y=None, **fit_params):
+        if fit_params is None:
+            self._wrapped_model.fit(X, y)
+        else:
+            self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def transform(self, X):
@@ -59,7 +62,7 @@ _hyperparams_schema = {
                 {   'enum': [None]}],
                 'default': None},
             'datatypes1': {
-                'description': 'List of datatypes that are valid input to the first argument of the transformer function (numeric, float, int, etc.).',
+                'description': 'List of datatypes that are valid input to the first argument of the transformer function (`numeric`, `float`, `int`, `integer`).',
                 'anyOf': [
                 {   'type': 'array', 'items': {'type': 'string'}},
                 {   'enum': [None]}],
