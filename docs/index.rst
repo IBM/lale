@@ -5,69 +5,61 @@
 
 :github_url: https://github.com/IBM/lale
 
-Welcome to LALE's documentation!
-================================
+Welcome to LALE's API documentation!
+====================================
 
 .. image:: img/lale_logo.jpg
   :width: 50
   :alt: logo
 
-Lale is a Python library for semi-automated data science.
-Lale makes it easy to automatically select algorithms and tune
-hyperparameters of pipelines that are compatible with
-`scikit-learn <https://scikit-learn.org>`_, in a type-safe fashion.  If
-you are a data scientist who wants to experiment with automated
-machine learning, this library is for you!
-Lale adds value beyond scikit-learn along three dimensions:
-automation, correctness checks, and interoperability.
-For *automation*, Lale provides a consistent high-level interface to
-existing pipeline search tools including GridSearchCV, SMAC, and
-Hyperopt.
-For *correctness checks*, Lale uses JSON Schema to catch mistakes when
-there is a mismatch between hyperparameters and their type, or between
-data and operators.
-And for *interoperability*, Lale has a growing library of transformers
-and estimators from popular libraries such as scikit-learn, XGBoost,
-PyTorch etc.
-Lale can be installed just like any other Python package and can be
-edited with off-the-shelf Python tools such as Jupyter notebooks.
+These pages show API documentation for Lale, which is auto-generated
+from docstrings, many of which are themselves auto-generated from
+schemas.  For an introductory overview, installation instructions,
+examples, talks, code, a paper, etc., please check the Lale github
+page: https://github.com/IBM/lale .
 
-Lale is distributed under the terms of the Apache 2.0 License, see
-`LICENSE.txt <https://github.com/IBM/lale/blob/master/LICENSE.txt>`_. It is currently in an **Alpha release**,
-without warranties of any kind.
+Core Modules
+------------
 
-.. toctree::
-   :maxdepth: 1
-   :caption: Contents:
+* `lale.operators`_ Classes for operators including pipelines.
+* `lale.datasets`_ Schema-augmented datasets.
+* `lale.grammar`_ Pipeline topology search syntax.
+* `lale.json_operator`_ Includes a from_json() function.
+* `lale.schemas`_ Python API for writing JSON schemas.
 
-   installation
+.. _`lale.operators`: modules/lale.operators.html
+.. _`lale.datasets`: modules/lale.datasets.html
+.. _`lale.grammar`: modules/lale.grammar.html
+.. _`lale.json_operator`: modules/lale.json_operator.html
+.. _`lale.schemas`: modules/lale.schemas.html
 
+Operator libraries
+------------------
 
-The name Lale, pronounced *laleh*, comes from the Persian word for
-tulip. Similarly to popular machine-learning libraries such as
-scikit-learn, Lale is also just a Python library, not a new stand-alone
-programming language. It does not require users to install new tools
-nor learn new syntax.
+* `lale.lib.sklearn`_ based on `scikit-learn 0.20`_
+* `lale.lib.lale`_ containing Lale-specific operators
+* `lale.lib.aif360`_ based on `AI Fairness 360`_
+* `lale.lib.autoai_libs`_ based on `autoai-libs`_
+* `lale.lib.imblearn`_ based on `imbalanced-learn`_
+* `lale.lib.lightgbm`_ based on `LightGBM`_
+* `lale.lib.xgboost`_ based on `XGBoost`_
 
-The following paper has a technical deep-dive::
-
-
-        @Article{arxiv19-lale,
-        author = "Hirzel, Martin and Kate, Kiran and Shinnar, Avraham and Roy, Subhrajit and Ram, Parikshit",
-        title = "Type-Driven Automated Learning with {Lale}",
-        journal = "CoRR",
-        volume = "abs/1906.03957",
-        year = 2019,
-        month = may,
-        url = "https://arxiv.org/abs/1906.03957" }
-
-
-Contributors are expected to submit a "Developer's Certificate of
-Origin", which can be found in `DCO1.1.txt <https://github.com/IBM/lale/blob/master/DCO1.1.txt>`_.
-
+.. _`lale.lib.sklearn`: modules/lale.lib.sklearn.html#module-lale.lib.sklearn
+.. _`scikit-learn 0.20`: https://scikit-learn.org/0.20/
+.. _`lale.lib.lale`: modules/lale.lib.lale.html#module-lale.lib.lale
+.. _`lale.lib.aif360`: modules/lale.lib.aif360.html#module-lale.lib.aif360
+.. _`AI Fairness 360`: https://github.com/IBM/AIF360
+.. _`lale.lib.autoai_libs`: modules/lale.lib.autoai_libs.html#module-lale.lib.autoai_libs
+.. _`autoai-libs`: https://pypi.org/project/autoai-libs/
+.. _`lale.lib.imblearn`: modules/lale.lib.imblearn.html#module-lale.lib.imblearn
+.. _`imbalanced-learn`: https://imbalanced-learn.readthedocs.io/en/stable/index.html
+.. _`lale.lib.lightgbm`: modules/lale.lib.lightgbm.html#module-lale.lib.lightgbm
+.. _`LightGBM`: https://lightgbm.readthedocs.io/en/latest/Python-API.html
+.. _`lale.lib.xgboost`: modules/lale.lib.xgboost.html#module-lale.lib.xgboost
+.. _`XGBoost`: https://xgboost.readthedocs.io/en/latest/python/python_api.html
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

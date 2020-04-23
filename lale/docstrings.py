@@ -19,6 +19,8 @@ def _kind_tag(schema):
     if 'type' in schema:
         if schema['type'] == 'object':
             return 'dict'
+        elif schema['type'] == 'number':
+            return 'float'
         elif isinstance(schema['type'], list):
             return ' or '.join(schema['type'])
         else:

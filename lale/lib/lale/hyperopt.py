@@ -306,15 +306,20 @@ better. Since Hyperopt solves a minimization problem, we pass
 .. _`model_evaluation`: https://scikit-learn.org/stable/modules/model_evaluation.html
 """,
                      'not': {'type': 'string'}},
-                {   'description': 'A string from sklearn.metrics.SCORERS.keys().',
+                {   'description': 'Known scorer for classification task.',
                     'enum': [
                         'accuracy', 'explained_variance', 'max_error',
                         'roc_auc', 'roc_auc_ovr', 'roc_auc_ovo',
                         'roc_auc_ovr_weighted', 'roc_auc_ovo_weighted',
                         'balanced_accuracy', 'average_precision',
-                        'neg_log_loss', 'neg_brier_score', 'r2', 'neg_mean_squared_error', 'neg_mean_absolute_error',
-                         'neg_root_mean_squared_error', 'neg_mean_squared_log_error',
-                         'neg_median_absolute_error']}],
+                        'neg_log_loss', 'neg_brier_score']},
+                {   'description': 'Known scorer for regression task.',
+                    'enum': [
+                        'r2', 'neg_mean_squared_error',
+                        'neg_mean_absolute_error',
+                        'neg_root_mean_squared_error',
+                        'neg_mean_squared_log_error',
+                        'neg_median_absolute_error']}],
                 'default': 'accuracy'},
             'best_score': {
                 'description': """The best score for the specified scorer.
@@ -393,7 +398,7 @@ Other scoring metrics:
 >>> clf = Hyperopt(estimator=lr,
 ...    scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt_cv.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt.html',
     'type': 'object',
     'tags': {
         'pre': [],
