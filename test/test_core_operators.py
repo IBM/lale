@@ -928,7 +928,7 @@ class TestOperatorErrors(unittest.TestCase):
             self.fail("get_pipeline did not fail")
         except AttributeError as e:
             msg:str = str(e)
-            self.assertRegex(msg, "TrainedOperators")
+            self.assertRegex(msg, "TrainableOperator is deprecated")
             self.assertRegex(msg, "meant to train")
         
     def test_trained_get_pipeline_fail(self):
@@ -955,7 +955,7 @@ class TestOperatorErrors(unittest.TestCase):
             self.fail("summary did not fail")
         except AttributeError as e:
             msg:str = str(e)
-            self.assertRegex(msg, "TrainedOperators")
+            self.assertRegex(msg, "TrainableOperator is deprecated")
             self.assertRegex(msg, "meant to train")
 
     def test_trained_summary_fail(self):

@@ -521,11 +521,13 @@ class IndividualOp(Operator):
             '__setstate__', '_schemas']:
             raise AttributeError
 
-        if name in ["get_pipeline", "summary"]:
+        if name in ["get_pipeline", "summary", "transform", "predict", "predict_proba", "decision_function"]:
             if isinstance(self, TrainedIndividualOp):
                 raise AttributeError(f"The underlying operator impl does not define {name}")
+            elif isinstance(self, TrainableIndividualOp):
+                raise AttributeError(f"The underlying operator impl does not define {name}.  Also, calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}.")
             else:
-                raise AttributeError(f"{name} is defined only on TrainedOperators.  Perhaps you meant to train this operator first?")
+                raise AttributeError(f"Calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}.")
 
         ea = self.enum
         if name in ea:
@@ -1117,6 +1119,53 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         result._hyperparams = self._hyperparams
         self._trained = result
         return result
+
+    def freeze_trained(self)->'TrainedIndividualOp':
+        """
+        .. deprecated:: 0.0.0
+           The `freeze_trained` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `freeze_trained`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning('freeze_trained'), DeprecationWarning)
+        try:
+            return self._trained.freeze_trained()
+        except AttributeError:
+            raise ValueError('Must call `fit` before `freeze_trained`.')
+
+    def is_frozen_trained(self)->bool:
+        return False
+
+    @if_delegate_has_method(delegate='_impl')
+    def get_pipeline(self, pipeline_name=None, astype='lale')->Optional[TrainableOperator]:
+        """
+        .. deprecated:: 0.0.0
+           The `get_pipeline` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `get_pipeline`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning('get_pipeline'), DeprecationWarning)
+        try:
+            return self._trained.get_pipeline(pipeline_name, astype)
+        except AttributeError:
+            raise ValueError('Must call `fit` before `get_pipeline`.')
+
+    @if_delegate_has_method(delegate='_impl')
+    def summary(self)->pd.DataFrame:
+        """
+        .. deprecated:: 0.0.0
+           The `summary` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `summary`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning('summary'), DeprecationWarning)
+        try:
+            return self._trained.summary()
+        except AttributeError:
+            raise ValueError('Must call `fit` before `summary`.')
 
     @if_delegate_has_method(delegate='_impl')
     def transform(self, X, y = None):
