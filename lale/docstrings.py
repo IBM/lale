@@ -124,11 +124,12 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     return result.rstrip()
 
 def _params_docstring(params_schema):
-    if len(params_schema['properties']) == 0:
+    params = params_schema.get('properties', {})
+    if len(params) == 0:
         result = ''
     else:
         result = 'Parameters\n----------\n'
-    for param_name, param_schema in params_schema['properties'].items():
+    for param_name, param_schema in params.items():
         required = param_name in params_schema.get('required', {})
         relevant = ('relevantToOptimizer' not in params_schema
                     or param_name in params_schema['relevantToOptimizer'])
