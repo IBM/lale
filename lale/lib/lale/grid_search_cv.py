@@ -18,8 +18,8 @@ import lale.lib.sklearn
 import lale.search.lale_grid_search_cv
 import lale.operators
 import lale.sklearn_compat
-from lale.lib.lale import Observing
-from lale.lib.lale.observing import ObservingImpl
+from .observing import Observing
+from .observing import ObservingImpl
 # from abc import ABC
 
 from typing import Any, Dict
