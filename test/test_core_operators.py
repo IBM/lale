@@ -118,7 +118,8 @@ def create_function_test_classifier(clf_name):
     test_classifier.__name__ = 'test_{0}'.format(clf.split('.')[-1])
     return test_classifier
 
-classifiers = ['lale.lib.sklearn.RandomForestClassifier',
+classifiers = ['lale.lib.lale.BaselineClassifier',
+               'lale.lib.sklearn.RandomForestClassifier',
                'lale.lib.sklearn.DecisionTreeClassifier',
                'lale.lib.sklearn.ExtraTreesClassifier',
                'lale.lib.sklearn.GradientBoostingClassifier',
@@ -197,7 +198,8 @@ def create_function_test_regressor(clf_name):
     test_regressor.__name__ = 'test_{0}'.format(clf_name.split('.')[-1])
     return test_regressor
 
-regressors = ['lale.lib.sklearn.RandomForestRegressor',
+regressors = ['lale.lib.lale.BaselineRegressor',
+              'lale.lib.sklearn.RandomForestRegressor',
               'lale.lib.sklearn.DecisionTreeRegressor',
               'lale.lib.sklearn.ExtraTreesRegressor',
               'lale.lib.sklearn.GradientBoostingRegressor',
