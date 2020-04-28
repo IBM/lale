@@ -332,7 +332,7 @@ numpy_replace_missing_values = NumpyReplaceMissingValues(filling_values=float('n
 pipeline = numpy_replace_missing_values >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
-    def test_autoai_libs_tam(self):
+    def test_autoai_libs_tam_1(self):
         from autoai_libs.cognito.transforms.transform_utils import TAM
         import autoai_libs.cognito.transforms.transform_extras
         import numpy as np
@@ -350,6 +350,29 @@ lale.wrap_imported_operators()
 tam = TAM(tans_class=autoai_libs.cognito.transforms.transform_extras.IsolationForestAnomaly, name='isoforestanomaly', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
 pipeline = tam >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_autoai_libs_tam_2(self):
+        from lale.lib.autoai_libs import TAM
+        import numpy as np
+        from lightgbm import LGBMClassifier
+        from sklearn.decomposition import PCA
+        from lale.operators import make_pipeline
+        pca = PCA(copy=False)
+        tam = TAM(tans_class=pca, name='pca', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+        lgbm_classifier = LGBMClassifier(class_weight='balanced', learning_rate=0.18)
+        pipeline = make_pipeline(tam, lgbm_classifier)
+        import lale.helpers
+        expected = \
+"""from lale.lib.autoai_libs import TAM
+import sklearn.decomposition.pca
+import numpy as np
+from lightgbm import LGBMClassifier
+from lale.operators import make_pipeline
+
+tam = TAM(tans_class=sklearn.decomposition.pca.PCA(copy=False, iterated_power='auto', n_components=None, random_state=None,   svd_solver='auto', tol=0.0, whiten=False), name='pca', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+lgbm_classifier = LGBMClassifier(class_weight='balanced', learning_rate=0.18)
+pipeline = make_pipeline(tam, lgbm_classifier)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
 
     def test_autoai_libs_ta1(self):
         from autoai_libs.cognito.transforms.transform_utils import TA1

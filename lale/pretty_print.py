@@ -90,6 +90,14 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
                 else:
                     gen.imports.append(f'import {value.__module__} as {module}')
             return f'{module}.{value.__name__}'
+        elif hasattr(value, 'get_params'):
+            module = value.__module__
+            name = value.__class__.__name__
+            if gen is not None:
+                gen.imports.append(f'import {module}')
+            printed = pprint.pformat(value, width=10000, compact=True)
+            compacted = printed.replace('\n', ' ')
+            return f'{module}.{compacted}'
         else:
             return pprint.pformat(value, width=10000, compact=True)
     strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
