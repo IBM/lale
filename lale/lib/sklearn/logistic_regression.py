@@ -150,7 +150,7 @@ _hyperparams_schema = {
             'Append a constant feature with constant value '
             'intercept_scaling to the instance vector.',
           'type': 'number',
-          'distribution': 'loguniform',
+          'distribution': 'uniform',
           'minimum': 0.0,
           'exclusiveMinimum': True,
           'default': 1.0},
@@ -178,7 +178,7 @@ _hyperparams_schema = {
           'description':
             'Maximum number of iterations for solvers to converge.',
           'type': 'integer',
-          'distribution': 'loguniform',
+          'distribution': 'uniform',
           'minimum': 1,
           'default': 100},
         'multi_class': {
