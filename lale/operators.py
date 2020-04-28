@@ -14,13 +14,10 @@
 
 import lale.helpers
 import lale.type_checking
-from abc import ABC, abstractmethod
-import importlib
+from abc import abstractmethod
 import enum as enumeration
 import os
-import itertools
 from lale import schema2enums as enum_gen
-import numpy as np
 import pandas as pd
 import lale.datasets.data_schemas
 
@@ -34,7 +31,6 @@ from lale.schemas import Schema
 import jsonschema
 import lale.pretty_print
 import logging
-import h5py
 import shutil
 import lale.json_operator
 from lale.json_operator import JSON_TYPE
@@ -49,6 +45,8 @@ class Operator(metaclass=AbstractVisitorMeta):
     Pipelines and individual operators extend this.
     
     """
+
+    _name:str
 
     def __and__(self, other:'Operator')->'Operator':
         """Overloaded `and` operator. 
@@ -110,21 +108,17 @@ class Operator(metaclass=AbstractVisitorMeta):
     def __ror__(self, other:'Operator')->'Operator':
         return make_choice(other, self)
 
-    @abstractmethod
-    def name(self)->str:
-        """Returns the name of the operator.        
+    def name(self) -> str:
+        return self._name
+
+    def _set_name(self, name:str):
+        """Sets the name of the operator.        
         """
-        pass
+        self._name = name
 
     def class_name(self)->str:
         cls = self.__class__
         return cls.__module__ + '.' + cls.__name__
-
-    @abstractmethod
-    def set_name(self, name:str):
-        """Sets the name of the operator.        
-        """
-        pass
 
     @abstractmethod
     def validate_schema(self, X, y=None):
@@ -191,7 +185,7 @@ class Operator(metaclass=AbstractVisitorMeta):
             return IPython.display.display(markdown)
 
     @abstractmethod
-    def has_same_impl(self, other:'Operator')->bool:
+    def _has_same_impl(self, other:'Operator')->bool:
         """Checks if the type of the operator implementations are compatible
         """
         pass
@@ -209,64 +203,6 @@ class Operator(metaclass=AbstractVisitorMeta):
         pass
 
 class PlannedOperator(Operator):
-
-    @abstractmethod
-    def configure(self, *args, **kwargs)->'TrainableOperator':
-        """Bind hyperparameters (for individual operators) and operator choices (for pipelines).
-
-        Usually, this will be invoked via `__call__`, to conform to
-        the look-and-feel of scikit-learn's `__init__` convention.
-        Not all hyperparameters need to be explicitly specified. If
-        some of the hyperparameters are not specified, then a
-        subsequent `fit` invocation will bind them to their default
-        values.  On the other hand, if some hyperparameters are still
-        free and the operator is not marked as `is_frozen_trainable`,
-        then a subsequent `auto_configure` search will include those
-        free hyperparameters in its search space, to be tuned and then
-        bound to the best found values.
-
-        Parameters
-        ----------
-        args:
-            The non-keyword arguments must be valid enumeration constants
-            for hyperparameters of this operator that accepts categoricals,
-            according to the `hyperparam_schema` of this operator.
-        kwargs:
-            Keyword arguments must be valid according to the
-            `hyperparam_schema` of this operator, and can be categorical
-            or continuous.
-
-        Returns
-        -------
-        TrainableOperator
-            A new copy of this operator that is the same except that some
-            of its hyperparameters are bound to the specified values.
-
-        """
-        pass
-
-    @abstractmethod
-    def __call__(self, *args, **kwargs)->'TrainableOperator':
-        """Abstract method to make Planned objects callable.
-
-        Operators in a Planned states are made callable by overriding 
-        the __call__ method (https://docs.python.org/3/reference/datamodel.html#special-method-names).
-        It is supposed to return an operator in a Trainable state.
-
-        Parameters
-        ----------
-        args, kwargs: 
-            The arguments are used to configure an operator in a Planned
-            state to bind hyper-parameter values such that it becomes Trainable.
-
-        Returns
-        -------
-        TrainableOperator
-            A new copy of this operator that is the same except that some
-            of its hyperparameters are bound to the specified values.
-        """
-        pass
-
     def auto_configure(self, X, y = None, optimizer = None, cv = None, scoring = None, **kwargs)->'TrainableOperator':
         """
         Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
@@ -793,20 +729,6 @@ class IndividualOp(Operator):
             raise ValueError('Missing keyword on argument {}.'.format(arg))
         return arg.__class__.__name__, arg.value
 
-    def name(self)->str:
-        """[summary]
-        
-        Returns
-        -------
-        [type]
-            [description]
-        """
-
-        return self._name
-
-    def set_name(self, name):
-        self._name = name
-
     def _impl_class(self):
         if inspect.isclass(self._impl):
             return self._impl
@@ -836,7 +758,7 @@ class IndividualOp(Operator):
     def __str__(self)->str:
         return self.name()
 
-    def has_same_impl(self, other:Operator)->bool:
+    def _has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator implementations are compatible
         """
         if not isinstance(other, IndividualOp):
@@ -1066,9 +988,6 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
 
     def __call__(self, *args, **kwargs)->'TrainableIndividualOp':
         return self._configure(*args, **kwargs)
-
-    def configure(self, *args, **kwargs)->'TrainableIndividualOp':
-        return self.__call__(*args, **kwargs)
 
     def is_transformer(self)->bool:
         """ Checks if the operator is a transformer
@@ -1708,13 +1627,7 @@ class BasePipeline(Operator, Generic[OpType]):
                 dfs(operator)
         self._steps = result
 
-    def name(self)->str:            
-        return self._name
-
-    def set_name(self, name):
-        self._name = name
-
-    def has_same_impl(self, other:Operator)->bool:
+    def _has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
         """
         if not isinstance(other, BasePipeline):
@@ -1725,7 +1638,7 @@ class BasePipeline(Operator, Generic[OpType]):
             return False
 
         for (m,o) in zip(my_steps, other_steps):
-            if not m.has_same_impl(o):
+            if not m._has_same_impl(o):
                 return False
         return True
 
@@ -1896,44 +1809,6 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
                  edges:Optional[Iterable[Tuple[PlannedOpType, PlannedOpType]]], 
                  ordered:bool=False) -> None:
         super(PlannedPipeline, self).__init__(steps, edges, ordered=ordered)
-
-    def configure(self, *args, **kwargs)->'TrainablePipeline':
-        """
-        Make sure the args i.e. operators form a trainable pipeline and
-        return it. It takes only one argument which is a list of steps
-        like make_pipeline so, need to check that it is consistent
-        with the steps and edges already present
-        """
-        steps:List[TrainableIndividualOp] = args[0]
-        if len(steps) != len(self._steps):
-            raise ValueError("Please make sure that you pass a list of trainable individual operators with the same length as the operator instances in the current pipeline")
-
-        num_steps:int = len(steps)
-        edges:List[Tuple[PlannedOpType, PlannedOpType]] = self.edges()
-        
-        op_map:Dict[PlannedOpType, TrainableIndividualOp] = {}
-        #for (i, orig_op, op) in enumerate(zip(self.steps(), steps))
-        for i in range(num_steps):
-            orig_op = self.steps()[i]
-            op = steps[i]
-            if not isinstance(op, TrainableIndividualOp):
-                raise ValueError(f"Please make sure that you pass a list of trainable individual operators ({i}th element is incompatible)")
-            if not orig_op.has_same_impl(op):
-                raise ValueError(f"Please make sure that you pass a list of trainable individual operators with the same type as operator instances in the current pipeline ({i}th element is incompatible)")
-
-            op_map[orig_op] = op
-
-        trainable_edges:List[Tuple[TrainableIndividualOp, TrainableIndividualOp]]
-        try:
-            trainable_edges = [(op_map[x], op_map[y]) for (x, y) in edges]
-        except KeyError as e:
-            raise ValueError("An edge was found with an endpoint that is not a step (" + str(e) + ")")
-        
-        return TrainablePipeline(steps, trainable_edges, ordered=self.is_in_topological_order())
-
-    def __call__(self, *args, **kwargs):
-        self.configure(args, kwargs)
-    
 
 TrainableOpType = TypeVar('TrainableOpType', bound=TrainableIndividualOp)
 
@@ -2504,7 +2379,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
 
 OperatorChoiceType = TypeVar('OperatorChoiceType', bound=Operator)
 class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
-    _name:str
     _steps:List[OperatorChoiceType]
 
     def __init__(self, steps, name:Optional[str]) -> None:
@@ -2521,26 +2395,12 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
     def steps(self)->List[OperatorChoiceType]:
         return self._steps
 
-    def name(self)->str:
-        return self._name
-
-    def set_name(self, name):
-        self._name = name
-
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
         new_steps:List[OperatorChoiceType] = [s._lale_clone(cloner) for s in steps]
         return self.__class__(new_steps, self._name)
-       
-    def configure(self, *args, **kwargs):
-        return self.__call__(args, kwargs)
 
-    def __call__(self, *args, **kwargs):
-        operator = args[0]
-        #TODO: schemas = None below is not correct. What are the right schemas to use?
-        return TrainableIndividualOp(name=operator.name(), impl=operator, schemas = None)
-
-    def has_same_impl(self, other:Operator)->bool:
+    def _has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
         """
         if not isinstance(other, OperatorChoice):
@@ -2551,7 +2411,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
             return False
 
         for (m,o) in zip(my_steps, other_steps):
-            if not m.has_same_impl(o):
+            if not m._has_same_impl(o):
                 return False
         return True
 
@@ -2584,7 +2444,7 @@ class PipelineFactory():
             op = steps[i]
             if isinstance(op, tuple):
                 assert isinstance(op[1], Operator)
-                op[1].set_name(op[0])
+                op[1]._set_name(op[0])
                 steps[i] = op[1]
         return make_pipeline(*steps)
 

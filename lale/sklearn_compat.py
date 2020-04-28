@@ -586,5 +586,5 @@ def clone_op(op: OpType, name:str=None) -> OpType:
     from sklearn.base import clone
     nop = clone(make_sklearn_compat(op)).to_lale()
     if name:
-        nop.set_name(name)
+        nop._set_name(name)
     return nop
