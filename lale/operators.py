@@ -151,6 +151,30 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     def pretty_print(self, show_imports:bool=True, combinators:bool=True, ipython_display:Union[bool,str]=False):
         """Returns the Python source code representation of the operator.
+
+        Parameters
+        ----------
+        show_imports : bool, default True
+
+            Whether to include import statements in the pretty-printed code.
+
+        combinators : bool, default True
+
+            If True, pretty-print with combinators (`>>`, `|`, `&`). Otherwise, pretty-print with functions (`make_pipeline`, `make_choice`, `make_union`) instead.
+
+        ipython_display : union type, default False
+
+            - False
+
+              Return the pretty-printed code as a plain old Python string.
+
+            - True:
+
+              Pretty-print in notebook cell output with syntax highlighting.
+
+            - 'input'
+
+              Create a new notebook cell with pretty-printed code as input.
         """
         result = lale.pretty_print.to_string(self, show_imports, combinators, call_depth=2)
         if ipython_display == False:
