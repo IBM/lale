@@ -81,7 +81,7 @@ _hyperparams_schema = {
                 'type': 'integer',
                 'default': 100,
                 'minimum': 1,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 256},
             'random_state': {

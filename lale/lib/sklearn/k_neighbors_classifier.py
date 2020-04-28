@@ -34,7 +34,7 @@ _hyperparams_schema = {
             'n_neighbors': {
                 'description': 'Number of neighbors to use by default for kneighbors queries.',
                 'type': 'integer',
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'minimum': 1,
                 'default': 5,
                 'maximumForOptimizer': 100},
@@ -49,7 +49,7 @@ _hyperparams_schema = {
             'leaf_size': {
                 'description': 'Leaf size passed to BallTree or KDTree.',
                 'type': 'integer',
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'minimum': 1,
                 'default': 30},
             'p': {
