@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing.label import MultiLabelBinarizer as SKLModel
+from sklearn.preprocessing.label import MultiLabelBinarizer as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -11,7 +11,7 @@ class MultiLabelBinarizerImpl():
         self._hyperparams = {
             'classes': classes,
             'sparse_output': sparse_output}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

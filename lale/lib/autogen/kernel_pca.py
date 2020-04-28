@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.kernel_pca import KernelPCA as SKLModel
+from sklearn.decomposition.kernel_pca import KernelPCA as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -24,7 +24,7 @@ class KernelPCAImpl():
             'random_state': random_state,
             'copy_X': copy_X,
             'n_jobs': n_jobs}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -88,7 +88,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-10,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}],
+                    'distribution': 'loguniform'}],
                 'default': 1.0,
                 'description': 'Hyperparameter of the ridge regression that learns the inverse transform (when fit_inverse_transform=True).'},
             'fit_inverse_transform': {
@@ -103,7 +103,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0,
                 'description': 'Convergence tolerance for arpack'},
             'max_iter': {

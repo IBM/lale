@@ -1,5 +1,5 @@
 
-from sklearn.naive_bayes import MultinomialNB as SKLModel
+from sklearn.naive_bayes import MultinomialNB as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -12,7 +12,7 @@ class MultinomialNBImpl():
             'alpha': alpha,
             'fit_prior': fit_prior,
             'class_prior': class_prior}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -39,7 +39,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1.0,
                 'description': 'Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing).'},
             'fit_prior': {

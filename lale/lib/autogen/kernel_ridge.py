@@ -1,5 +1,5 @@
 
-from sklearn.kernel_ridge import KernelRidge as SKLModel
+from sklearn.kernel_ridge import KernelRidge as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -15,7 +15,7 @@ class KernelRidgeImpl():
             'degree': degree,
             'coef0': coef0,
             'kernel_params': kernel_params}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -67,7 +67,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.0,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
+                'distribution': 'uniform',
                 'default': 1,
                 'description': 'Zero coefficient for polynomial and sigmoid kernels'},
             'kernel_params': {

@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing.data import RobustScaler as SKLModel
+from sklearn.preprocessing.data import RobustScaler as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -13,7 +13,7 @@ class RobustScalerImpl():
             'with_scaling': with_scaling,
             'quantile_range': quantile_range,
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

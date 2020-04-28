@@ -1,5 +1,5 @@
 
-from sklearn.impute import MissingIndicator as SKLModel
+from sklearn.impute import MissingIndicator as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -13,7 +13,7 @@ class MissingIndicatorImpl():
             'features': features,
             'sparse': sparse,
             'error_on_new': error_on_new}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

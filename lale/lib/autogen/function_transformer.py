@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing._function_transformer import FunctionTransformer as SKLModel
+from sklearn.preprocessing._function_transformer import FunctionTransformer as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -17,7 +17,7 @@ class FunctionTransformerImpl():
             'check_inverse': check_inverse,
             'kw_args': kw_args,
             'inv_kw_args': inv_kw_args}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

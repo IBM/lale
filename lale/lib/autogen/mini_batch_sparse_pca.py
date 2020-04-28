@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.sparse_pca import MiniBatchSparsePCA as SKLModel
+from sklearn.decomposition.sparse_pca import MiniBatchSparsePCA as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class MiniBatchSparsePCAImpl():
             'method': method,
             'random_state': random_state,
             'normalize_components': normalize_components}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

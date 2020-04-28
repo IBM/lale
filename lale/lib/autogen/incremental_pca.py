@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.incremental_pca import IncrementalPCA as SKLModel
+from sklearn.decomposition.incremental_pca import IncrementalPCA as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -13,7 +13,7 @@ class IncrementalPCAImpl():
             'whiten': whiten,
             'copy': copy,
             'batch_size': batch_size}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

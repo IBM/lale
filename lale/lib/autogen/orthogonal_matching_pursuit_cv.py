@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.omp import OrthogonalMatchingPursuitCV as SKLModel
+from sklearn.linear_model.omp import OrthogonalMatchingPursuitCV as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -16,7 +16,7 @@ class OrthogonalMatchingPursuitCVImpl():
             'cv': cv,
             'n_jobs': n_jobs,
             'verbose': verbose}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -78,7 +78,7 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Sets the verbosity amount'},
         }}, {
-        'XXX TODO XXX': 'Parameter: copy > only helpful if x is already fortran-ordered'}],
+        'XXX TODO XXX': 'Parameter: copy > only helpful if x is already fortran-ordered, otherwise a copy is made anyway'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

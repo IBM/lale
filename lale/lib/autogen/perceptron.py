@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.perceptron import Perceptron as SKLModel
+from sklearn.linear_model.perceptron import Perceptron as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -25,7 +25,7 @@ class PerceptronImpl():
             'class_weight': class_weight,
             'warm_start': warm_start,
             'n_iter': n_iter}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -57,7 +57,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Constant that multiplies the regularization term if regularization is used'},
             'fit_intercept': {
@@ -78,7 +78,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-08,
                     'maximumForOptimizer': 0.01,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The stopping criterion'},
@@ -94,7 +94,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.01,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1.0,
                 'description': 'Constant by which the updates are multiplied'},
             'n_jobs': {
@@ -141,7 +141,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of passes over the training data (aka epochs)'},
         }}, {
-        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
+        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method, and not the partial_fit'}, {
         'description': 'validation_fraction, only used if early_stopping is true',
         'anyOf': [{
             'type': 'object',

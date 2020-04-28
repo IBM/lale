@@ -1,5 +1,5 @@
 
-from sklearn.cross_decomposition.pls_ import PLSSVD as SKLModel
+from sklearn.cross_decomposition.pls_ import PLSSVD as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -12,7 +12,7 @@ class PLSSVDImpl():
             'n_components': n_components,
             'scale': scale,
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

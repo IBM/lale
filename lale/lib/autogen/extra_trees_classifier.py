@@ -1,5 +1,5 @@
 
-from sklearn.ensemble.forest import ExtraTreesClassifier as SKLModel
+from sklearn.ensemble.forest import ExtraTreesClassifier as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -26,7 +26,7 @@ class ExtraTreesClassifierImpl():
             'verbose': verbose,
             'warm_start': warm_start,
             'class_weight': class_weight}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

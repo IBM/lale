@@ -1,5 +1,5 @@
 
-from sklearn.ensemble.forest import ExtraTreesRegressor as SKLModel
+from sklearn.ensemble.forest import ExtraTreesRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -25,7 +25,7 @@ class ExtraTreesRegressorImpl():
             'random_state': random_state,
             'verbose': verbose,
             'warm_start': warm_start}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

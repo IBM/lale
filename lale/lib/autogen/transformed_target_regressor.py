@@ -1,5 +1,5 @@
 
-from sklearn.compose._target import TransformedTargetRegressor as SKLModel
+from sklearn.compose._target import TransformedTargetRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -14,7 +14,7 @@ class TransformedTargetRegressorImpl():
             'func': func,
             'inverse_func': inverse_func,
             'check_inverse': check_inverse}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

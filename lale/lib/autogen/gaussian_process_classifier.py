@@ -1,5 +1,5 @@
 
-from sklearn.gaussian_process.gpc import GaussianProcessClassifier as SKLModel
+from sklearn.gaussian_process.gpc import GaussianProcessClassifier as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -18,7 +18,7 @@ class GaussianProcessClassifierImpl():
             'random_state': random_state,
             'multi_class': multi_class,
             'n_jobs': n_jobs}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

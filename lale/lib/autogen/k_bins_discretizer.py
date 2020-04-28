@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing._discretization import KBinsDiscretizer as SKLModel
+from sklearn.preprocessing._discretization import KBinsDiscretizer as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -12,7 +12,7 @@ class KBinsDiscretizerImpl():
             'n_bins': n_bins,
             'encode': encode,
             'strategy': strategy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.factor_analysis import FactorAnalysis as SKLModel
+from sklearn.decomposition.factor_analysis import FactorAnalysis as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -17,7 +17,7 @@ class FactorAnalysisImpl():
             'svd_method': svd_method,
             'iterated_power': iterated_power,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -45,7 +45,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.01,
                 'description': 'Stopping tolerance for EM algorithm.'},
             'copy': {

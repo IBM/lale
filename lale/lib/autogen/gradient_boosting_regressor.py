@@ -1,5 +1,5 @@
 
-from sklearn.ensemble.gradient_boosting import GradientBoostingRegressor as SKLModel
+from sklearn.ensemble.gradient_boosting import GradientBoostingRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -31,7 +31,7 @@ class GradientBoostingRegressorImpl():
             'validation_fraction': validation_fraction,
             'n_iter_no_change': n_iter_no_change,
             'tol': tol}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -91,7 +91,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
-                    'distribution': 'loguniform'}],
+                    'distribution': 'uniform'}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node'},
             'min_weight_fraction_leaf': {
@@ -144,7 +144,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.9,
                 'description': 'The alpha-quantile of the huber loss function and the quantile loss function'},
             'verbose': {

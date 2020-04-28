@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.coordinate_descent import MultiTaskElasticNet as SKLModel
+from sklearn.linear_model.coordinate_descent import MultiTaskElasticNet as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -19,7 +19,7 @@ class MultiTaskElasticNetImpl():
             'warm_start': warm_start,
             'random_state': random_state,
             'selection': selection}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -43,7 +43,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1.0,
                 'description': 'Constant that multiplies the L1/L2 term'},
             'l1_ratio': {
@@ -73,7 +73,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'The tolerance for the optimization: if the updates are smaller than ``tol``, the optimization code checks the dual gap for optimality and continues until it is smaller than ``tol``.'},
             'warm_start': {

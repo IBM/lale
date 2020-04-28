@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing.data import MaxAbsScaler as SKLModel
+from sklearn.preprocessing.data import MaxAbsScaler as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -10,7 +10,7 @@ class MaxAbsScalerImpl():
     def __init__(self, copy=True):
         self._hyperparams = {
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

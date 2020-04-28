@@ -1,5 +1,5 @@
 
-from sklearn.ensemble.weight_boosting import AdaBoostClassifier as SKLModel
+from sklearn.ensemble.weight_boosting import AdaBoostClassifier as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -14,7 +14,7 @@ class AdaBoostClassifierImpl():
             'learning_rate': learning_rate,
             'algorithm': algorithm,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

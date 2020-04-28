@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.huber import HuberRegressor as SKLModel
+from sklearn.linear_model.huber import HuberRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -15,7 +15,7 @@ class HuberRegressorImpl():
             'warm_start': warm_start,
             'fit_intercept': fit_intercept,
             'tol': tol}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -41,7 +41,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1.35},
             'max_iter': {
                 'type': 'integer',
@@ -54,7 +54,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Regularization parameter.'},
             'warm_start': {
@@ -69,7 +69,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-05,
                 'description': 'The iteration will stop when ``max{|proj g_i | i = 1, '},
         }}],

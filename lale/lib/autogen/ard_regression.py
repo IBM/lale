@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.bayes import ARDRegression as SKLModel
+from sklearn.linear_model.bayes import ARDRegression as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class ARDRegressionImpl():
             'normalize': normalize,
             'copy_X': copy_X,
             'verbose': verbose}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -52,7 +52,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.001,
                 'description': 'Stop the algorithm if w has converged'},
             'alpha_1': {

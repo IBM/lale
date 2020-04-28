@@ -1,5 +1,5 @@
 
-from sklearn.kernel_approximation import AdditiveChi2Sampler as SKLModel
+from sklearn.kernel_approximation import AdditiveChi2Sampler as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -11,7 +11,7 @@ class AdditiveChi2SamplerImpl():
         self._hyperparams = {
             'sample_steps': sample_steps,
             'sample_interval': sample_interval}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

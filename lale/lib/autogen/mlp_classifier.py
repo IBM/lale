@@ -1,5 +1,5 @@
 
-from sklearn.neural_network.multilayer_perceptron import MLPClassifier as SKLModel
+from sklearn.neural_network.multilayer_perceptron import MLPClassifier as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -31,7 +31,7 @@ class MLPClassifierImpl():
             'beta_2': beta_2,
             'epsilon': epsilon,
             'n_iter_no_change': n_iter_no_change}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -72,7 +72,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'L2 penalty (regularization term) parameter.'},
             'batch_size': {
@@ -118,7 +118,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Tolerance for the optimization'},
             'verbose': {
@@ -157,7 +157,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-08,
                 'description': 'Value for numerical stability in adam'},
             'n_iter_no_change': {
