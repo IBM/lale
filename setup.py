@@ -43,7 +43,7 @@ else:
 
 setup(
     name='lale',
-    version='0.3.8',
+    version='0.3.9',
     author="Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar",
     description="Library for Semi-Automated Data Science",
     long_description=long_description,
