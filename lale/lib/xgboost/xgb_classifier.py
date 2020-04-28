@@ -17,7 +17,7 @@ import lale.docstrings
 
 class XGBClassifierImpl(BaseEstimator):
     def __init__(self, max_depth=3, learning_rate=0.1, n_estimators=100, verbosity=1, 
-                objective='binary:logistic', booster='gbtree', n_jobs=1, 
+                objective='binary:logistic', booster='gbtree', tree_method='auto', n_jobs=1, 
                 nthread=None, gamma=0, min_child_weight=1, max_delta_step=0, subsample=1, 
                 colsample_bytree=1, colsample_bylevel=1, colsample_bynode=1, reg_alpha=0, 
                 reg_lambda=1, scale_pos_weight=1, base_score=0.5, random_state=0, 
@@ -28,6 +28,7 @@ class XGBClassifierImpl(BaseEstimator):
         self.verbosity = verbosity
         self.objective = objective
         self.booster = booster
+        self.tree_method = tree_method
         self.n_jobs = n_jobs
         self.nthread = nthread
         self.gamma = gamma
@@ -48,7 +49,7 @@ class XGBClassifierImpl(BaseEstimator):
 
     def fit(self, X, y, **fit_params):
         result = XGBClassifierImpl(self.max_depth, self.learning_rate, self.n_estimators, 
-                self.verbosity, self.objective, self.booster, self.n_jobs, 
+                self.verbosity, self.objective, self.booster, self.tree_method, self.n_jobs, 
                 self.nthread, self.gamma, self.min_child_weight, self.max_delta_step, self.subsample, 
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
@@ -80,7 +81,7 @@ _hyperparams_schema = {
       'type': 'object',
       'additionalProperties': False,
       'required': ['max_depth', 'learning_rate','n_estimators',
-      'verbosity', 'objective', 'booster', 'n_jobs', 'gamma','min_child_weight',
+      'verbosity', 'objective', 'booster', 'tree_method', 'n_jobs', 'gamma','min_child_weight',
       'max_delta_step', 'subsample', 'colsample_bytree', 'colsample_bylevel',
       'colsample_bynode', 'reg_alpha', 'reg_lambda', 'scale_pos_weight',
       'base_score', 'random_state', 'missing'],
@@ -127,6 +128,12 @@ _hyperparams_schema = {
           'enum': ['gbtree', 'gblinear', 'dart'],
           'default': 'gbtree'
         },
+        'tree_method':{
+          'description': """Specify which tree method to use. 
+Default to auto. If this parameter is set to default, XGBoost will choose the most conservative option available.
+Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
+          'enum':['auto', 'exact','approx', 'hist', 'gpu_hist'],
+          'default':'auto'},
         'n_jobs': {
             'type': 'integer',
             'description': 'Number of parallel threads used to run xgboost.  (replaces ``nthread``)',

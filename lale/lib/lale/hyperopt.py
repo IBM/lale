@@ -42,7 +42,10 @@ logger.setLevel(logging.ERROR)
 
 class HyperoptImpl:
 
-    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None, show_progressbar=True, args_to_scorer=None):
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, 
+                scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, 
+                pgo:Optional[PGO]=None, show_progressbar=True, args_to_scorer=None,
+                verbose=False):
         self.max_evals = max_evals
         if estimator is None:
             self.estimator = LogisticRegression()
@@ -61,6 +64,7 @@ class HyperoptImpl:
             self.args_to_scorer = args_to_scorer
         else:
             self.args_to_scorer = {}
+        self.verbose = verbose
 
 
     def fit(self, X_train, y_train):
@@ -107,7 +111,9 @@ class HyperoptImpl:
                 logger.warning(f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
                 return_dict['status'] = STATUS_FAIL
                 return_dict['error_msg'] = f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}"
-                
+                if self.verbose:
+                    print(return_dict['error_msg'])
+
         def get_final_trained_estimator(params, X_train, y_train):
             warnings.filterwarnings("ignore")
             trainable = create_instance_from_hyperopt_search_space(self.estimator, params)
@@ -138,7 +144,7 @@ class HyperoptImpl:
                     proc_dict['status'] = STATUS_FAIL
             else:
                 proc_dict = {}
-                proc_train_test(params, X_train, y_train, proc_dict)    
+                proc_train_test(params, X_train, y_train, proc_dict)
             return proc_dict
 
         try :
@@ -360,7 +366,12 @@ where zero is the best loss.""",
                 'description':"""A dictionary of additional keyword arguments to pass to the scorer. 
                 Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
                 """,
-                'default':None}}}]}
+                'default':None},
+            'verbose':{
+                'description':"""Whether to print errors from each of the trials if any. 
+This is also logged using logger.warning.""",
+                'type':'boolean',
+                'default':False}}}]}
 
 _input_fit_schema = {
     'type': 'object',
