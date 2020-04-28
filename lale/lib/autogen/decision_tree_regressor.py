@@ -1,5 +1,5 @@
 
-from sklearn.tree.tree import DecisionTreeRegressor as SKLModel
+from sklearn.tree.tree import DecisionTreeRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class DecisionTreeRegressorImpl():
             'min_impurity_decrease': min_impurity_decrease,
             'min_impurity_split': min_impurity_split,
             'presort': presort}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

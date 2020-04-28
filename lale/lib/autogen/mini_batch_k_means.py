@@ -1,5 +1,5 @@
 
-from sklearn.cluster.k_means_ import MiniBatchKMeans as SKLModel
+from sklearn.cluster.k_means_ import MiniBatchKMeans as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class MiniBatchKMeansImpl():
             'init_size': init_size,
             'n_init': n_init,
             'reassignment_ratio': reassignment_ratio}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -90,7 +90,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0,
                 'description': 'Control early stopping based on the relative center changes as measured by a smoothed, variance-normalized of the mean center squared position changes'},
             'max_no_improvement': {
@@ -118,7 +118,7 @@ _hyperparams_schema = {
                 'description': 'Control the fraction of the maximum number of counts for a center to be reassigned'},
         }}, {
         'XXX TODO XXX': 'Parameter: init_size > only algorithm is initialized by running a batch kmeans on a random subset of the data'}, {
-        'XXX TODO XXX': 'Parameter: n_init > only run once'}],
+        'XXX TODO XXX': 'Parameter: n_init > only run once, using the best of the n_init initializations as measured by inertia'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

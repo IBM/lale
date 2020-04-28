@@ -1,5 +1,5 @@
 
-from sklearn.cluster.hierarchical import FeatureAgglomeration as SKLModel
+from sklearn.cluster.hierarchical import FeatureAgglomeration as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -16,7 +16,7 @@ class FeatureAgglomerationImpl():
             'compute_full_tree': compute_full_tree,
             'linkage': linkage,
             'pooling_func': pooling_func}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

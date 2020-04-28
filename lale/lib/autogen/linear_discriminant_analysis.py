@@ -1,5 +1,5 @@
 
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as SKLModel
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -15,7 +15,7 @@ class LinearDiscriminantAnalysisImpl():
             'n_components': n_components,
             'store_covariance': store_covariance,
             'tol': tol}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -77,7 +77,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Threshold used for rank estimation in SVD solver'},
         }}, {

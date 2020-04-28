@@ -1,5 +1,5 @@
 
-from sklearn.svm.classes import LinearSVC as SKLModel
+from sklearn.svm.classes import LinearSVC as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class LinearSVCImpl():
             'verbose': verbose,
             'random_state': random_state,
             'max_iter': max_iter}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -62,7 +62,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Tolerance for stopping criteria.'},
             'C': {

@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.passive_aggressive import PassiveAggressiveClassifier as SKLModel
+from sklearn.linear_model.passive_aggressive import PassiveAggressiveClassifier as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -25,7 +25,7 @@ class PassiveAggressiveClassifierImpl():
             'class_weight': class_weight,
             'average': average,
             'n_iter': n_iter}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -70,7 +70,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-08,
                     'maximumForOptimizer': 0.01,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The stopping criterion'},
@@ -136,7 +136,7 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of passes over the training data (aka epochs)'},
         }}, {
-        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
+        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method, and not the partial_fit'}, {
         'description': 'validation_fraction, only used if early_stopping is true',
         'anyOf': [{
             'type': 'object',

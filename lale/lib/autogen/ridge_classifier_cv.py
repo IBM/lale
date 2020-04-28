@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.ridge import RidgeClassifierCV as SKLModel
+from sklearn.linear_model.ridge import RidgeClassifierCV as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -16,7 +16,7 @@ class RidgeClassifierCVImpl():
             'cv': cv,
             'class_weight': class_weight,
             'store_cv_values': store_cv_values}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

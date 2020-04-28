@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.ridge import RidgeClassifier as SKLModel
+from sklearn.linear_model.ridge import RidgeClassifier as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -18,7 +18,7 @@ class RidgeClassifierImpl():
             'class_weight': class_weight,
             'solver': solver,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -45,7 +45,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1.0,
                 'description': 'Regularization strength; must be a positive float'},
             'fit_intercept': {
@@ -73,7 +73,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.001,
                 'description': 'Precision of the solution.'},
             'class_weight': {

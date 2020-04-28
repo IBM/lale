@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.fastica_ import FastICA as SKLModel
+from sklearn.decomposition.fastica_ import FastICA as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -18,7 +18,7 @@ class FastICAImpl():
             'tol': tol,
             'w_init': w_init,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -76,7 +76,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Tolerance on update at each iteration.'},
             'w_init': {

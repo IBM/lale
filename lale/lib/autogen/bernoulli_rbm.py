@@ -1,5 +1,5 @@
 
-from sklearn.neural_network.rbm import BernoulliRBM as SKLModel
+from sklearn.neural_network.rbm import BernoulliRBM as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -15,7 +15,7 @@ class BernoulliRBMImpl():
             'n_iter': n_iter,
             'verbose': verbose,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

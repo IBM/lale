@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing._encoders import OneHotEncoder as SKLModel
+from sklearn.preprocessing._encoders import OneHotEncoder as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -15,7 +15,7 @@ class OneHotEncoderImpl():
             'handle_unknown': handle_unknown,
             'n_values': n_values,
             'categorical_features': categorical_features}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

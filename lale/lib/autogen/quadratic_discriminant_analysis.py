@@ -1,5 +1,5 @@
 
-from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis as SKLModel
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -14,7 +14,7 @@ class QuadraticDiscriminantAnalysisImpl():
             'store_covariance': store_covariance,
             'tol': tol,
             'store_covariances': store_covariances}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -57,7 +57,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Threshold used for rank estimation'},
             'store_covariances': {

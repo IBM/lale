@@ -1,5 +1,5 @@
 
-from sklearn.kernel_approximation import RBFSampler as SKLModel
+from sklearn.kernel_approximation import RBFSampler as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -12,7 +12,7 @@ class RBFSamplerImpl():
             'gamma': gamma,
             'n_components': n_components,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

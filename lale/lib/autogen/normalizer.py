@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing.data import Normalizer as SKLModel
+from sklearn.preprocessing.data import Normalizer as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -11,7 +11,7 @@ class NormalizerImpl():
         self._hyperparams = {
             'norm': norm,
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

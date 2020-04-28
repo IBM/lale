@@ -1,5 +1,5 @@
 
-from sklearn.cross_decomposition.cca_ import CCA as SKLModel
+from sklearn.cross_decomposition.cca_ import CCA as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -14,7 +14,7 @@ class CCAImpl():
             'max_iter': max_iter,
             'tol': tol,
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -62,7 +62,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-06},
             'copy': {
                 'type': 'boolean',

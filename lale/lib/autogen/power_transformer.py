@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing.data import PowerTransformer as SKLModel
+from sklearn.preprocessing.data import PowerTransformer as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -12,7 +12,7 @@ class PowerTransformerImpl():
             'method': method,
             'standardize': standardize,
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
