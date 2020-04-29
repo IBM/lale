@@ -292,7 +292,7 @@ def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
             n,i = get_name_and_index(k)
             assert n in found_names and i <= found_names[n]
         if step_map:
-            op.subst_steps(step_map)
+            op._subst_steps(step_map)
             if not isinstance(op, Ops.TrainablePipeline):
                 # As a result of choices made, we may now be a TrainableIndividualOp
                 ret = Ops.get_pipeline_of_applicable_type(op.steps(), op.edges(), ordered=True)
@@ -459,7 +459,7 @@ class SKlearnCompatWrapper(object):
     def _final_individual_op(self)->Optional[Ops.IndividualOp]:
         op:Optional[Ops.Operator] = self.to_lale()
         while op is not None and isinstance(op, Ops.BasePipeline):
-            op = op.get_last()
+            op = op._get_last()
         if op is not None and not isinstance(op, Ops.IndividualOp):
             op = None
         return op
