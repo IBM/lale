@@ -64,7 +64,7 @@ _hyperparams_schema = {
                 'default': 10,
                 'description': 'The number of trees in the forest.'},
             'criterion': {
-                'enum': ['mae', 'mse'],
+                'enum': ['mae', 'mse', 'friedman_mse'],
                 'default': 'mse',
                 'description': 'The function to measure the quality of a split. Supported criteria'},
             'max_depth': {
