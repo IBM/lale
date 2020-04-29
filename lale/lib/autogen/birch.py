@@ -1,5 +1,5 @@
 
-from sklearn.cluster.birch import Birch as SKLModel
+from sklearn.cluster.birch import Birch as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -14,7 +14,7 @@ class BirchImpl():
             'n_clusters': n_clusters,
             'compute_labels': compute_labels,
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

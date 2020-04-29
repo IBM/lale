@@ -1,5 +1,5 @@
 
-from sklearn.svm.classes import NuSVC as SKLModel
+from sklearn.svm.classes import NuSVC as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -23,7 +23,7 @@ class NuSVCImpl():
             'max_iter': max_iter,
             'decision_function_shape': decision_function_shape,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -87,7 +87,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.001,
                 'description': 'Tolerance for stopping criterion.'},
             'cache_size': {

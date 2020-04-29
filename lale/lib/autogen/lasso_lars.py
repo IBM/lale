@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.least_angle import LassoLars as SKLModel
+from sklearn.linear_model.least_angle import LassoLars as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -19,7 +19,7 @@ class LassoLarsImpl():
             'copy_X': copy_X,
             'fit_path': fit_path,
             'positive': positive}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -43,7 +43,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1.0,
                 'description': 'Constant that multiplies the penalty term'},
             'fit_intercept': {
@@ -82,7 +82,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.001,
                 'maximumForOptimizer': 0.1,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 2.220446049250313e-16,
                 'description': 'The machine-precision regularization in the computation of the Cholesky diagonal factors'},
             'copy_X': {

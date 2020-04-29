@@ -1,5 +1,5 @@
 
-from sklearn.impute import SimpleImputer as SKLModel
+from sklearn.impute import SimpleImputer as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -14,7 +14,7 @@ class SimpleImputerImpl():
             'fill_value': fill_value,
             'verbose': verbose,
             'copy': copy}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

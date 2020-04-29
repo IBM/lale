@@ -1,5 +1,5 @@
 
-from sklearn.neighbors.regression import RadiusNeighborsRegressor as SKLModel
+from sklearn.neighbors.regression import RadiusNeighborsRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -17,7 +17,7 @@ class RadiusNeighborsRegressorImpl():
             'metric': metric,
             'metric_params': metric_params,
             'n_jobs': n_jobs}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

@@ -1,5 +1,5 @@
 
-from sklearn.semi_supervised.label_propagation import LabelSpreading as SKLModel
+from sklearn.semi_supervised.label_propagation import LabelSpreading as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -16,7 +16,7 @@ class LabelSpreadingImpl():
             'max_iter': max_iter,
             'tol': tol,
             'n_jobs': n_jobs}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -62,7 +62,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.2,
                 'description': 'Clamping factor'},
             'max_iter': {
@@ -76,7 +76,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.001,
                 'description': 'Convergence tolerance: threshold to consider the system at steady state'},
             'n_jobs': {

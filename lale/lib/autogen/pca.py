@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.pca import PCA as SKLModel
+from sklearn.decomposition.pca import PCA as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -16,7 +16,7 @@ class PCAImpl():
             'tol': tol,
             'iterated_power': iterated_power,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -43,7 +43,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'loguniform'}, {
+                    'distribution': 'uniform'}, {
                     'type': 'string',
                     'forOptimizer': False}, {
                     'enum': [None]}],
@@ -67,7 +67,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0},
             'iterated_power': {
                 'XXX TODO XXX': "int >= 0, or 'auto', (default 'auto')",

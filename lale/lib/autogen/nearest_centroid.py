@@ -1,5 +1,5 @@
 
-from sklearn.neighbors.nearest_centroid import NearestCentroid as SKLModel
+from sklearn.neighbors.nearest_centroid import NearestCentroid as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -11,7 +11,7 @@ class NearestCentroidImpl():
         self._hyperparams = {
             'metric': metric,
             'shrink_threshold': shrink_threshold}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

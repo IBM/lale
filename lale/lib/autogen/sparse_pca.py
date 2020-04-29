@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.sparse_pca import SparsePCA as SKLModel
+from sklearn.decomposition.sparse_pca import SparsePCA as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class SparsePCAImpl():
             'verbose': verbose,
             'random_state': random_state,
             'normalize_components': normalize_components}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -54,7 +54,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1,
                 'description': 'Sparsity controlling parameter'},
             'ridge_alpha': {
@@ -72,7 +72,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-08,
                 'description': 'Tolerance for the stopping condition.'},
             'method': {

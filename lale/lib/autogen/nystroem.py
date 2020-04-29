@@ -1,5 +1,5 @@
 
-from sklearn.kernel_approximation import Nystroem as SKLModel
+from sklearn.kernel_approximation import Nystroem as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -16,7 +16,7 @@ class NystroemImpl():
             'kernel_params': kernel_params,
             'n_components': n_components,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

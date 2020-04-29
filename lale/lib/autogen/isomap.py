@@ -1,5 +1,5 @@
 
-from sklearn.manifold.isomap import Isomap as SKLModel
+from sklearn.manifold.isomap import Isomap as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -17,7 +17,7 @@ class IsomapImpl():
             'path_method': path_method,
             'neighbors_algorithm': neighbors_algorithm,
             'n_jobs': n_jobs}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

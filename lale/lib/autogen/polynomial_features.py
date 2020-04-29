@@ -1,5 +1,5 @@
 
-from sklearn.preprocessing.data import PolynomialFeatures as SKLModel
+from sklearn.preprocessing.data import PolynomialFeatures as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -12,7 +12,7 @@ class PolynomialFeaturesImpl():
             'degree': degree,
             'interaction_only': interaction_only,
             'include_bias': include_bias}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -48,7 +48,7 @@ _hyperparams_schema = {
                 'default': True,
                 'description': 'If True (default), then include a bias column, the feature in which all polynomial powers are zero (i.e'},
         }}, {
-        'XXX TODO XXX': 'Parameter: interaction_only > only interaction features are produced: features that are products of at most degree *distinct* input features (so not x[1] ** 2'}],
+        'XXX TODO XXX': 'Parameter: interaction_only > only interaction features are produced: features that are products of at most degree *distinct* input features (so not x[1] ** 2, x[0] * x[2] ** 3, etc'}],
 }
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

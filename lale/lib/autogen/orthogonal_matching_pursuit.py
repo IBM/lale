@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.omp import OrthogonalMatchingPursuit as SKLModel
+from sklearn.linear_model.omp import OrthogonalMatchingPursuit as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -14,7 +14,7 @@ class OrthogonalMatchingPursuitImpl():
             'fit_intercept': fit_intercept,
             'normalize': normalize,
             'precompute': precompute}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -48,7 +48,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-08,
                     'maximumForOptimizer': 0.01,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'Maximum norm of the residual'},

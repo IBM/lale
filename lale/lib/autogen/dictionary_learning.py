@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.dict_learning import DictionaryLearning as SKLModel
+from sklearn.decomposition.dict_learning import DictionaryLearning as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -25,7 +25,7 @@ class DictionaryLearningImpl():
             'random_state': random_state,
             'positive_code': positive_code,
             'positive_dict': positive_dict}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -58,7 +58,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1,
                 'description': 'sparsity controlling parameter'},
             'max_iter': {
@@ -72,7 +72,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-08,
                 'description': 'tolerance for numerical error'},
             'fit_algorithm': {

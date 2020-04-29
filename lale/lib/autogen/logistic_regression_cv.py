@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.logistic import LogisticRegressionCV as SKLModel
+from sklearn.linear_model.logistic import LogisticRegressionCV as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -25,7 +25,7 @@ class LogisticRegressionCVImpl():
             'intercept_scaling': intercept_scaling,
             'multi_class': multi_class,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -95,7 +95,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Tolerance for stopping criteria.'},
             'max_iter': {
@@ -142,7 +142,7 @@ _hyperparams_schema = {
         }}, {
         'XXX TODO XXX': 'Parameter: dual > only implemented for l2 penalty with liblinear solver'}, {
         'XXX TODO XXX': 'Parameter: penalty > only l2 penalties'}, {
-        'XXX TODO XXX': "Parameter: solver > only 'newton-cg'"}, {
+        'XXX TODO XXX': "Parameter: solver > only 'newton-cg', 'sag', 'saga' and 'lbfgs' handle multinomial loss; 'liblinear' is limited to one-versus-rest schemes"}, {
         'XXX TODO XXX': "Parameter: intercept_scaling > only when the solver 'liblinear' is used and self"}],
 }
 _input_fit_schema = {

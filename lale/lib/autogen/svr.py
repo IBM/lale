@@ -1,5 +1,5 @@
 
-from sklearn.svm.classes import SVR as SKLModel
+from sklearn.svm.classes import SVR as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -20,7 +20,7 @@ class SVRImpl():
             'cache_size': cache_size,
             'verbose': verbose,
             'max_iter': max_iter}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -66,7 +66,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.001,
                 'description': 'Tolerance for stopping criterion.'},
             'C': {
@@ -77,7 +77,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.1,
                 'description': 'Epsilon in the epsilon-SVR model'},
             'shrinking': {

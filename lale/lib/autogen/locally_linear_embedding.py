@@ -1,5 +1,5 @@
 
-from sklearn.manifold.locally_linear import LocallyLinearEmbedding as SKLModel
+from sklearn.manifold.locally_linear import LocallyLinearEmbedding as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class LocallyLinearEmbeddingImpl():
             'neighbors_algorithm': neighbors_algorithm,
             'random_state': random_state,
             'n_jobs': n_jobs}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -67,7 +67,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 1e-06,
                 'description': "Tolerance for 'arpack' method Not used if eigen_solver=='dense'."},
             'max_iter': {

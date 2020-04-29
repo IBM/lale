@@ -1,5 +1,5 @@
 
-from sklearn.naive_bayes import ComplementNB as SKLModel
+from sklearn.naive_bayes import ComplementNB as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -13,7 +13,7 @@ class ComplementNBImpl():
             'fit_prior': fit_prior,
             'class_prior': class_prior,
             'norm': norm}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):

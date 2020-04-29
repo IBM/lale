@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.stochastic_gradient import SGDRegressor as SKLModel
+from sklearn.linear_model.stochastic_gradient import SGDRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -29,7 +29,7 @@ class SGDRegressorImpl():
             'warm_start': warm_start,
             'average': average,
             'n_iter': n_iter}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -62,7 +62,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Constant that multiplies the regularization term'},
             'l1_ratio': {
@@ -87,7 +87,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-08,
                     'maximumForOptimizer': 0.01,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'enum': [None]}],
                 'default': None,
                 'description': 'The stopping criterion'},
@@ -103,7 +103,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 1.35,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.1,
                 'description': "Epsilon in the epsilon-insensitive loss functions; only if `loss` is 'huber', 'epsilon_insensitive', or 'squared_epsilon_insensitive'"},
             'random_state': {
@@ -121,7 +121,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 0.01,
                 'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.01,
                 'description': "The initial learning rate for the 'constant', 'invscaling' or 'adaptive' schedules"},
             'power_t': {
@@ -160,8 +160,8 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of passes over the training data (aka epochs)'},
         }}, {
-        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method'}, {
-        'description': "epsilon, only if loss is 'huber'",
+        'XXX TODO XXX': 'Parameter: max_iter > only impacts the behavior in the fit method, and not the partial_fit'}, {
+        'description': "epsilon, only if loss is 'huber', 'epsilon_insensitive', or 'squared_epsilon_insensitive'",
         'anyOf': [{
             'type': 'object',
             'properties': {
@@ -171,7 +171,7 @@ _hyperparams_schema = {
             'type': 'object',
             'properties': {
                 'loss': {
-                    'enum': ['huber']},
+                    'enum': ['huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']},
             }}]}, {
         'description': 'validation_fraction, only used if early_stopping is true',
         'anyOf': [{

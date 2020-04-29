@@ -1,5 +1,5 @@
 
-from sklearn.linear_model.ransac import RANSACRegressor as SKLModel
+from sklearn.linear_model.ransac import RANSACRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -21,7 +21,7 @@ class RANSACRegressorImpl():
             'stop_probability': stop_probability,
             'loss': loss,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -89,7 +89,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'loguniform'}],
+                    'distribution': 'uniform'}],
                 'default': inf,
                 'description': 'Maximum number of iterations that can be skipped due to finding zero inliers or invalid data defined by ``is_data_valid`` or invalid models defined by ``is_model_valid``'},
             'stop_n_inliers': {
@@ -99,7 +99,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'loguniform'}],
+                    'distribution': 'uniform'}],
                 'default': inf,
                 'description': 'Stop iteration if at least this number of inliers are found.'},
             'stop_score': {

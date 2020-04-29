@@ -1,5 +1,5 @@
 
-from sklearn.gaussian_process.gpr import GaussianProcessRegressor as SKLModel
+from sklearn.gaussian_process.gpr import GaussianProcessRegressor as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -16,7 +16,7 @@ class GaussianProcessRegressorImpl():
             'normalize_y': normalize_y,
             'copy_X_train': copy_X_train,
             'random_state': random_state}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -46,7 +46,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 1e-10,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'loguniform'}, {
                     'type': 'array',
                     'items': {
                         'laleType': 'Any',

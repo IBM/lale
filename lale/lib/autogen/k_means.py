@@ -1,5 +1,5 @@
 
-from sklearn.cluster.k_means_ import KMeans as SKLModel
+from sklearn.cluster.k_means_ import KMeans as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -20,7 +20,7 @@ class KMeansImpl():
             'copy_x': copy_x,
             'n_jobs': n_jobs,
             'algorithm': algorithm}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -72,7 +72,7 @@ _hyperparams_schema = {
                 'type': 'number',
                 'minimumForOptimizer': 1e-08,
                 'maximumForOptimizer': 0.01,
-                'distribution': 'uniform',
+                'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Relative tolerance with regards to inertia to declare convergence'},
             'precompute_distances': {

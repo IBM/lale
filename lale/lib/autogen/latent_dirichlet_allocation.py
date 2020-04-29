@@ -1,5 +1,5 @@
 
-from sklearn.decomposition.online_lda import LatentDirichletAllocation as SKLModel
+from sklearn.decomposition.online_lda import LatentDirichletAllocation as Op
 import lale.helpers
 import lale.operators
 import lale.docstrings
@@ -26,7 +26,7 @@ class LatentDirichletAllocationImpl():
             'verbose': verbose,
             'random_state': random_state,
             'n_topics': n_topics}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -105,7 +105,7 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimumForOptimizer': 0.0,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'loguniform'}],
+                    'distribution': 'uniform'}],
                 'default': 1000000.0,
                 'description': 'Total number of documents'},
             'perp_tol': {
