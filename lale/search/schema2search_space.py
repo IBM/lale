@@ -122,7 +122,7 @@ class SearchSpaceOperatorVisitor(Visitor):
         self.pgo = pgo
     
     def visitPlannedIndividualOp(self, op:PlannedIndividualOp)->SearchSpace:
-        schema = op.hyperparam_schema_with_hyperparams()
+        schema = op._hyperparam_schema_with_hyperparams()
         module = op._impl.__module__
         if module is None or module == str.__class__.__module__:
             long_name = op.name()

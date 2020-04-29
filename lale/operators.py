@@ -14,13 +14,10 @@
 
 import lale.helpers
 import lale.type_checking
-from abc import ABC, abstractmethod
-import importlib
+from abc import abstractmethod
 import enum as enumeration
 import os
-import itertools
 from lale import schema2enums as enum_gen
-import numpy as np
 import pandas as pd
 import lale.datasets.data_schemas
 
@@ -34,7 +31,6 @@ from lale.schemas import Schema
 import jsonschema
 import lale.pretty_print
 import logging
-import h5py
 import shutil
 import lale.json_operator
 from lale.json_operator import JSON_TYPE
@@ -49,6 +45,8 @@ class Operator(metaclass=AbstractVisitorMeta):
     Pipelines and individual operators extend this.
     
     """
+
+    _name:str
 
     def __and__(self, other:'Operator')->'Operator':
         """Overloaded `and` operator. 
@@ -110,21 +108,17 @@ class Operator(metaclass=AbstractVisitorMeta):
     def __ror__(self, other:'Operator')->'Operator':
         return make_choice(other, self)
 
-    @abstractmethod
-    def name(self)->str:
-        """Returns the name of the operator.        
+    def name(self) -> str:
+        return self._name
+
+    def _set_name(self, name:str):
+        """Sets the name of the operator.        
         """
-        pass
+        self._name = name
 
     def class_name(self)->str:
         cls = self.__class__
         return cls.__module__ + '.' + cls.__name__
-
-    @abstractmethod
-    def set_name(self, name:str):
-        """Sets the name of the operator.        
-        """
-        pass
 
     @abstractmethod
     def validate_schema(self, X, y=None):
@@ -191,7 +185,7 @@ class Operator(metaclass=AbstractVisitorMeta):
             return IPython.display.display(markdown)
 
     @abstractmethod
-    def has_same_impl(self, other:'Operator')->bool:
+    def _has_same_impl(self, other:'Operator')->bool:
         """Checks if the type of the operator implementations are compatible
         """
         pass
@@ -209,64 +203,6 @@ class Operator(metaclass=AbstractVisitorMeta):
         pass
 
 class PlannedOperator(Operator):
-
-    @abstractmethod
-    def configure(self, *args, **kwargs)->'TrainableOperator':
-        """Bind hyperparameters (for individual operators) and operator choices (for pipelines).
-
-        Usually, this will be invoked via `__call__`, to conform to
-        the look-and-feel of scikit-learn's `__init__` convention.
-        Not all hyperparameters need to be explicitly specified. If
-        some of the hyperparameters are not specified, then a
-        subsequent `fit` invocation will bind them to their default
-        values.  On the other hand, if some hyperparameters are still
-        free and the operator is not marked as `is_frozen_trainable`,
-        then a subsequent `auto_configure` search will include those
-        free hyperparameters in its search space, to be tuned and then
-        bound to the best found values.
-
-        Parameters
-        ----------
-        args:
-            The non-keyword arguments must be valid enumeration constants
-            for hyperparameters of this operator that accepts categoricals,
-            according to the `hyperparam_schema` of this operator.
-        kwargs:
-            Keyword arguments must be valid according to the
-            `hyperparam_schema` of this operator, and can be categorical
-            or continuous.
-
-        Returns
-        -------
-        TrainableOperator
-            A new copy of this operator that is the same except that some
-            of its hyperparameters are bound to the specified values.
-
-        """
-        pass
-
-    @abstractmethod
-    def __call__(self, *args, **kwargs)->'TrainableOperator':
-        """Abstract method to make Planned objects callable.
-
-        Operators in a Planned states are made callable by overriding 
-        the __call__ method (https://docs.python.org/3/reference/datamodel.html#special-method-names).
-        It is supposed to return an operator in a Trainable state.
-
-        Parameters
-        ----------
-        args, kwargs: 
-            The arguments are used to configure an operator in a Planned
-            state to bind hyper-parameter values such that it becomes Trainable.
-
-        Returns
-        -------
-        TrainableOperator
-            A new copy of this operator that is the same except that some
-            of its hyperparameters are bound to the specified values.
-        """
-        pass
-
     def auto_configure(self, X, y = None, optimizer = None, cv = None, scoring = None, **kwargs)->'TrainableOperator':
         """
         Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
@@ -352,6 +288,12 @@ class TrainableOperator(PlannedOperator):
         """
         pass
 
+    @abstractmethod
+    def is_transformer(self)->bool:
+        """ Checks if the operator is a transformer
+        """
+        pass
+
 class TrainedOperator(TrainableOperator):
     @abstractmethod
     def transform(self, X, y = None):
@@ -432,12 +374,6 @@ class TrainedOperator(TrainableOperator):
     def freeze_trained(self)->'TrainedOperator':
         """Return a copy of this trainable operator that is the same except
            that all learnable coefficients are bound and thus fit is a no-op.
-        """
-        pass
-    
-    @abstractmethod
-    def is_transformer(self)->bool:
-        """ Checks if the operator is a transformer
         """
         pass
 
@@ -793,20 +729,6 @@ class IndividualOp(Operator):
             raise ValueError('Missing keyword on argument {}.'.format(arg))
         return arg.__class__.__name__, arg.value
 
-    def name(self)->str:
-        """[summary]
-        
-        Returns
-        -------
-        [type]
-            [description]
-        """
-
-        return self._name
-
-    def set_name(self, name):
-        self._name = name
-
     def _impl_class(self):
         if inspect.isclass(self._impl):
             return self._impl
@@ -836,7 +758,7 @@ class IndividualOp(Operator):
     def __str__(self)->str:
         return self.name()
 
-    def has_same_impl(self, other:Operator)->bool:
+    def _has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator implementations are compatible
         """
         if not isinstance(other, IndividualOp):
@@ -982,6 +904,11 @@ class IndividualOp(Operator):
             return lale.type_checking.is_subschema(schema_fit, _is_supervised_schema)
         return default_if_missing
 
+    def is_transformer(self)->bool:
+        """ Checks if the operator is a transformer
+        """
+        return hasattr(self._impl, 'transform')
+
 _is_supervised_schema = {
     'type': 'object',
     'required': ['y']
@@ -1005,7 +932,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         for arg in args:
             k, v = self._enum_to_strings(arg)
             hyperparams[k] = v
-        for k, v in fixup_hyperparams_dict(kwargs).items():
+        for k, v in _fixup_hyperparams_dict(kwargs).items():
             
             if k in hyperparams:
                 raise ValueError('Duplicate argument {}.'.format(k))
@@ -1021,7 +948,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         #using params_all instead of hyperparams to ensure the construction is consistent with schema
         trainable_to_get_params = TrainableIndividualOp(_name=self.name(), _impl=None, _schemas=self._schemas)
         trainable_to_get_params._hyperparams = hyperparams
-        params_all = trainable_to_get_params.get_params_all()
+        params_all = trainable_to_get_params._get_params_all()
         try:
             lale.type_checking.validate_schema(params_all, self.hyperparam_schema())
         except jsonschema.ValidationError as e_orig:
@@ -1067,15 +994,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     def __call__(self, *args, **kwargs)->'TrainableIndividualOp':
         return self._configure(*args, **kwargs)
 
-    def configure(self, *args, **kwargs)->'TrainableIndividualOp':
-        return self.__call__(*args, **kwargs)
-
-    def is_transformer(self)->bool:
-        """ Checks if the operator is a transformer
-        """
-        return hasattr(self._impl, 'transform')
-
-    def hyperparam_schema_with_hyperparams(self):
+    def _hyperparam_schema_with_hyperparams(self):
         schema = self.hyperparam_schema()
         params = None
         try:
@@ -1089,6 +1008,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         obj['relevantToOptimizer'] = list(params.keys())
         top = {'allOf':[schema, obj]}
         return top
+
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
         return self._configure(**impl_params)
@@ -1110,14 +1030,14 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             result = sklearn.base.clone(impl_instance)
         else:
             impl_class = self._impl_class()
-            params_all = self.get_params_all()
+            params_all = self._get_params_all()
             result = impl_class(**params_all)
         return result
 
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
-        filtered_fit_params = fixup_hyperparams_dict(fit_params)
+        filtered_fit_params = _fixup_hyperparams_dict(fit_params)
         trainable_impl = self._clone_impl()
         if filtered_fit_params is None:
             trained_impl = trainable_impl.fit(X, y)
@@ -1133,7 +1053,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise AttributeError(f'{self.name()} has no partial_fit implemented.')
         X = self._validate_input_schema('X', X, 'partial_fit')
         y = self._validate_input_schema('y', y, 'partial_fit')
-        filtered_fit_params = fixup_hyperparams_dict(fit_params)
+        filtered_fit_params = _fixup_hyperparams_dict(fit_params)
         if filtered_fit_params is None:
             trained_impl = self._impl_instance().partial_fit(X, y)
         else:
@@ -1310,12 +1230,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             out.update((self._name + '__' + k, val) for k, val in deep_items)
         return out
 
-    def get_params_set_by_user(self):
-        #also to make sure that self._hyperparams is a dictionary?
-        if self._hyperparams is None:
-            return None
-        return {**self._hyperparams}
-
     def hyperparams(self):
         if self._hyperparams is None:
             return None
@@ -1323,11 +1237,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return {k: actuals[k] for k in actuals if
                 k not in defaults or actuals[k] != defaults[k]}
 
-    def get_params_all(self):
+    def _get_params_all(self):
         output = {}
-        result = self.get_params_set_by_user()
-        if result is not None:
-            output.update(result)
+        if self._hyperparams is not None:
+            output.update(self._hyperparams)
         defaults = self.hyperparam_defaults()
         for k in defaults.keys():
             if k not in output:
@@ -1337,7 +1250,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
         #TODO: This mutates the operator, should we mark it deprecated?
-        filtered_impl_params = fixup_hyperparams_dict(impl_params)
+        filtered_impl_params = _fixup_hyperparams_dict(impl_params)
         self._impl = lale.helpers.create_individual_op_using_reflection(
             self.class_name(), self._name, filtered_impl_params)
         self._hyperparams = filtered_impl_params
@@ -1375,7 +1288,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         self._frozen_trained = not hasattr(self._impl, 'fit')
 
     def __call__(self, *args, **kwargs)->'TrainedIndividualOp':
-        filtered_kwargs_params = fixup_hyperparams_dict(kwargs)
+        filtered_kwargs_params = _fixup_hyperparams_dict(kwargs)
 
         trainable = self._configure(*args, **filtered_kwargs_params)
         instance = TrainedIndividualOp(trainable._name, trainable._impl, trainable._schemas)
@@ -1384,7 +1297,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
         if hasattr(self._impl, "fit") and not self.is_frozen_trained():
-            filtered_fit_params = fixup_hyperparams_dict(fit_params)
+            filtered_fit_params = _fixup_hyperparams_dict(fit_params)
             return super(TrainedIndividualOp, self).fit(X, y, **filtered_fit_params)
         else:
             return self 
@@ -1516,7 +1429,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             cp._hyperparams = self._hyperparams
         return cp
 
-all_available_operators: List[PlannedOperator] = []
+_all_available_operators: List[PlannedOperator] = []
 
 def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
     if name is None:
@@ -1534,7 +1447,7 @@ def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
         if hasattr(impl, 'get_params'):
             operatorObj._hyperparams = {**impl.get_params()}
     operatorObj._check_schemas()
-    all_available_operators.append(operatorObj)
+    _all_available_operators.append(operatorObj)
     return operatorObj
 
 def get_available_operators(tag: str, more_tags: AbstractSet[str] = None) -> List[PlannedOperator]:
@@ -1546,7 +1459,7 @@ def get_available_operators(tag: str, more_tags: AbstractSet[str] = None) -> Lis
             return False
         tags_set = {tag for prefix in tags_dict for tag in tags_dict[prefix]}
         return tags.issubset(tags_set)
-    return [op for op in all_available_operators if filter(op)]
+    return [op for op in _all_available_operators if filter(op)]
 
 def get_available_estimators(tags: AbstractSet[str] = None) -> List[PlannedOperator]:
     return get_available_operators('estimator', tags)
@@ -1584,7 +1497,7 @@ class BasePipeline(Operator, Generic[OpType]):
         if edges is None: 
             #Which means there is a linear pipeline #TODO:Test extensively with clone and get_params
             #This constructor is mostly called due to cloning. Make sure the objects are kept the same.
-            self.constructor_for_cloning(steps)
+            self.__constructor_for_cloning(steps)
         else:
             self._steps = []
             
@@ -1597,7 +1510,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     self._steps.extend(step.steps())
                     #from step's edges, find out all the source and sink nodes
                     source_nodes = [dst for dst in step.steps() if (step._preds[dst] is None or step._preds[dst] == [])]
-                    sink_nodes = step.find_sink_nodes()                  
+                    sink_nodes = step._find_sink_nodes()                  
                     #Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
                     new_edges = step.edges()
                     #list comprehension at the cost of iterating edges thrice
@@ -1611,10 +1524,10 @@ class BasePipeline(Operator, Generic[OpType]):
             for (src, dst) in edges:
                 self._preds[dst].append(src)
             if not ordered:
-                self.sort_topologically()
-            assert self.is_in_topological_order()
+                self.__sort_topologically()
+            assert self.__is_in_topological_order()
 
-    def constructor_for_cloning(self, steps:List[OpType]):
+    def __constructor_for_cloning(self, steps:List[OpType]):
         edges:List[Tuple[OpType, OpType]] = []
         prev_op:Optional[OpType] = None
         #This is due to scikit base's clone method that needs the same list object
@@ -1624,11 +1537,11 @@ class BasePipeline(Operator, Generic[OpType]):
 
         for curr_op in self._steps:
             if isinstance(prev_op, BasePipeline):
-                prev_leaves = prev_op.get_leaves()
+                prev_leaves = prev_op._find_sink_nodes()
             else:
                 prev_leaves = [] if prev_op is None else [prev_op]
             if isinstance(curr_op, BasePipeline):
-                curr_roots = curr_op.get_roots()
+                curr_roots = curr_op._find_source_nodes()
                 self._steps.extend(curr_op.steps())
                 edges.extend(curr_op.edges())
             else:
@@ -1647,12 +1560,12 @@ class BasePipeline(Operator, Generic[OpType]):
             self._preds[dst].append(src)
         #Since this case is only allowed for linear pipelines, it is always
         #expected to be in topological order
-        assert self.is_in_topological_order()
+        assert self.__is_in_topological_order()
 
     def edges(self)->List[Tuple[OpType, OpType]]:
         return [(src, dst) for dst in self._steps for src in self._preds[dst]]
 
-    def is_in_topological_order(self)->bool:
+    def __is_in_topological_order(self)->bool:
         seen:Dict[OpType, bool] = { }
         for operator in self._steps:
             for pred in self._preds[operator]:
@@ -1664,26 +1577,14 @@ class BasePipeline(Operator, Generic[OpType]):
     def steps(self)->List[OpType]:
         return self._steps
 
-    def subst_steps(self, m:Dict[OpType,OpType])->None:
+    def _subst_steps(self, m:Dict[OpType,OpType])->None:
         if dict:
             # for i, s in enumerate(self._steps):
             #     self._steps[i] = m.get(s,s)
             self._steps = [m.get(s, s) for s in self._steps]
             self._preds = {m.get(k,k):[m.get(s,s) for s in v] for k,v in self._preds.items()}
 
-    def get_leaves(self)->List[OpType]:
-        num_succs:Dict[OpType, int] = { operator: 0 for operator in self._steps }
-        for src, _ in self.edges():
-            num_succs[src] += 1
-        return [op for op in self._steps if num_succs[op] == 0]
-
-    def get_roots(self)->List[OpType]:
-        num_preds:Dict[OpType, int] = { op: 0 for op in self._steps }
-        for _, tgt in self.edges():
-            num_preds[tgt] += 1
-        return [op for op in self._steps if num_preds[op] == 0]
-
-    def sort_topologically(self)->None:
+    def __sort_topologically(self)->None:
         class state(enumeration.Enum):
             TODO=enumeration.auto(), 
             DOING=enumeration.auto(),
@@ -1708,13 +1609,7 @@ class BasePipeline(Operator, Generic[OpType]):
                 dfs(operator)
         self._steps = result
 
-    def name(self)->str:            
-        return self._name
-
-    def set_name(self, name):
-        self._name = name
-
-    def has_same_impl(self, other:Operator)->bool:
+    def _has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
         """
         if not isinstance(other, BasePipeline):
@@ -1725,18 +1620,18 @@ class BasePipeline(Operator, Generic[OpType]):
             return False
 
         for (m,o) in zip(my_steps, other_steps):
-            if not m.has_same_impl(o):
+            if not m._has_same_impl(o):
                 return False
         return True
 
-    def find_sink_nodes(self) -> List[OpType]:
+    def _find_sink_nodes(self) -> List[OpType]:
         is_sink = {s: True for s in self.steps()}
         for src, _ in self.edges():
             is_sink[src] = False
         result = [s for s in self.steps() if is_sink[s]]
         return result
 
-    def find_source_nodes(self) -> List[OpType]:
+    def _find_source_nodes(self) -> List[OpType]:
         is_source = {s: True for s in self.steps()}
         for _, dst in self.edges():
             is_source[dst] = False
@@ -1767,7 +1662,7 @@ class BasePipeline(Operator, Generic[OpType]):
             output = operator.transform_schema(inputs)
             outputs[operator] = output
         if not validate:
-            sinks = self.find_sink_nodes()
+            sinks = self._find_sink_nodes()
             pipeline_outputs = [outputs[sink] for sink in sinks]
             return combine_schemas(pipeline_outputs)
 
@@ -1778,7 +1673,7 @@ class BasePipeline(Operator, Generic[OpType]):
         return self._validate_or_transform_schema(s_X, validate=False)
 
     def input_schema_fit(self) -> JSON_TYPE:
-        sources = self.find_source_nodes()
+        sources = self._find_source_nodes()
         pipeline_inputs = [source.input_schema_fit() for source in sources]
         result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
@@ -1790,7 +1685,7 @@ class BasePipeline(Operator, Generic[OpType]):
         return self.steps()[-1].is_supervised()
 
     def remove_last(self, inplace=False):
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         if len(sink_nodes) > 1:
             raise ValueError("This pipeline has more than 1 sink nodes, can not remove last step meaningfully.")
         elif not inplace:
@@ -1805,8 +1700,8 @@ class BasePipeline(Operator, Generic[OpType]):
             del self._preds[old_clf]
             return self
 
-    def get_last(self)->Optional[OpType]:
-        sink_nodes = self.find_sink_nodes()
+    def _get_last(self)->Optional[OpType]:
+        sink_nodes = self._find_sink_nodes()
         if len(sink_nodes) > 1:
             return None
         else:
@@ -1873,7 +1768,7 @@ class BasePipeline(Operator, Generic[OpType]):
 
         sklearn_steps_list = []
         #Finding the sink node so that we can do a backward traversal
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         #For a trained pipeline that is scikit compatible, there should be only one sink node
         if len(sink_nodes) != 1:
             raise ValueError("A pipeline graph that ends with more than one estimator is not a"
@@ -1897,44 +1792,6 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
                  ordered:bool=False) -> None:
         super(PlannedPipeline, self).__init__(steps, edges, ordered=ordered)
 
-    def configure(self, *args, **kwargs)->'TrainablePipeline':
-        """
-        Make sure the args i.e. operators form a trainable pipeline and
-        return it. It takes only one argument which is a list of steps
-        like make_pipeline so, need to check that it is consistent
-        with the steps and edges already present
-        """
-        steps:List[TrainableIndividualOp] = args[0]
-        if len(steps) != len(self._steps):
-            raise ValueError("Please make sure that you pass a list of trainable individual operators with the same length as the operator instances in the current pipeline")
-
-        num_steps:int = len(steps)
-        edges:List[Tuple[PlannedOpType, PlannedOpType]] = self.edges()
-        
-        op_map:Dict[PlannedOpType, TrainableIndividualOp] = {}
-        #for (i, orig_op, op) in enumerate(zip(self.steps(), steps))
-        for i in range(num_steps):
-            orig_op = self.steps()[i]
-            op = steps[i]
-            if not isinstance(op, TrainableIndividualOp):
-                raise ValueError(f"Please make sure that you pass a list of trainable individual operators ({i}th element is incompatible)")
-            if not orig_op.has_same_impl(op):
-                raise ValueError(f"Please make sure that you pass a list of trainable individual operators with the same type as operator instances in the current pipeline ({i}th element is incompatible)")
-
-            op_map[orig_op] = op
-
-        trainable_edges:List[Tuple[TrainableIndividualOp, TrainableIndividualOp]]
-        try:
-            trainable_edges = [(op_map[x], op_map[y]) for (x, y) in edges]
-        except KeyError as e:
-            raise ValueError("An edge was found with an endpoint that is not a step (" + str(e) + ")")
-        
-        return TrainablePipeline(steps, trainable_edges, ordered=self.is_in_topological_order())
-
-    def __call__(self, *args, **kwargs):
-        self.configure(args, kwargs)
-    
-
 TrainableOpType = TypeVar('TrainableOpType', bound=TrainableIndividualOp)
 
 class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
@@ -1955,7 +1812,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         edges:List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
         trained_map:Dict[TrainableOpType, TrainedOperator] = {}
 
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -2124,7 +1981,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             if not os.path.exists(serialization_out_dir):
                 os.mkdir(serialization_out_dir)
 
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         operator_idx = 0
         for operator in self._steps:
             preds = self._preds[operator]
@@ -2235,6 +2092,12 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         self._trained = result
         return result
 
+    def is_transformer(self)->bool:
+        """ Checks if the operator is a transformer
+        """
+        # Currently, all TrainedPipelines implement transform
+        return True
+
 TrainedOpType = TypeVar('TrainedOpType', bound=TrainedIndividualOp)
 
 class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
@@ -2249,7 +2112,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
     def _predict(self, X, y = None):
         outputs = { }
         meta_outputs = {}
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -2315,7 +2178,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Probabilities; see output_predict_proba schema of the operator.
         """
         outputs = { }
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -2356,7 +2219,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Confidences; see output_decision_function schema of the operator.
         """
         outputs = { }
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -2404,7 +2267,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             if not os.path.exists(serialization_out_dir):
                 os.mkdir(serialization_out_dir)
 
-        sink_nodes = self.find_sink_nodes()
+        sink_nodes = self._find_sink_nodes()
         operator_idx = 0
         for operator in self._steps:
             preds = self._preds[operator]
@@ -2496,15 +2359,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         op = super()._lale_clone(cloner)
         return TrainedPipeline(op._steps, op._preds, True)
 
-    def is_transformer(self)->bool:
-        """ Checks if the operator is a transformer
-        """
-        # Currently, all TrainedPipelines implement transform
-        return True
-
 OperatorChoiceType = TypeVar('OperatorChoiceType', bound=Operator)
 class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
-    _name:str
     _steps:List[OperatorChoiceType]
 
     def __init__(self, steps, name:Optional[str]) -> None:
@@ -2521,26 +2377,12 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
     def steps(self)->List[OperatorChoiceType]:
         return self._steps
 
-    def name(self)->str:
-        return self._name
-
-    def set_name(self, name):
-        self._name = name
-
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
         new_steps:List[OperatorChoiceType] = [s._lale_clone(cloner) for s in steps]
         return self.__class__(new_steps, self._name)
-       
-    def configure(self, *args, **kwargs):
-        return self.__call__(args, kwargs)
 
-    def __call__(self, *args, **kwargs):
-        operator = args[0]
-        #TODO: schemas = None below is not correct. What are the right schemas to use?
-        return TrainableIndividualOp(name=operator.name(), impl=operator, schemas = None)
-
-    def has_same_impl(self, other:Operator)->bool:
+    def _has_same_impl(self, other:Operator)->bool:
         """Checks if the type of the operator imnplementations are compatible
         """
         if not isinstance(other, OperatorChoice):
@@ -2551,7 +2393,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
             return False
 
         for (m,o) in zip(my_steps, other_steps):
-            if not m.has_same_impl(o):
+            if not m._has_same_impl(o):
                 return False
         return True
 
@@ -2584,7 +2426,7 @@ class PipelineFactory():
             op = steps[i]
             if isinstance(op, tuple):
                 assert isinstance(op[1], Operator)
-                op[1].set_name(op[0])
+                op[1]._set_name(op[0])
                 steps[i] = op[1]
         return make_pipeline(*steps)
 
@@ -2619,11 +2461,11 @@ def make_pipeline(*orig_steps:Union[Operator,Any])->PlannedPipeline:
     prev_op = None
     for curr_op in orig_steps:
         if isinstance(prev_op, BasePipeline):
-            prev_leaves: Any = prev_op.get_leaves()
+            prev_leaves: Any = prev_op._find_sink_nodes()
         else:
             prev_leaves = [] if prev_op is None else [prev_op]
         if isinstance(curr_op, BasePipeline):
-            curr_roots = curr_op.get_roots()
+            curr_roots = curr_op._find_source_nodes()
             steps.extend(curr_op.steps())
             edges.extend(curr_op.edges())
         else:
@@ -2666,7 +2508,7 @@ def make_choice(*orig_steps:Union[Operator,Any], name:Optional[str]=None)->Opera
         name_ = name_ + " | " + operator.name()
     return OperatorChoice(steps, name_[3:])
 
-def fixup_hyperparams_dict(d):
+def _fixup_hyperparams_dict(d):
     d1 = remove_defaults_dict(d)
     d2 = {k:lale.helpers.val_wrapper.unwrap(v) for k,v in d1.items()}
     return d2
