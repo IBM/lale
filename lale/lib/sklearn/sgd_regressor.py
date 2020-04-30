@@ -166,42 +166,6 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'When set to True, computes the averaged SGD weights and stores the'}
         }}, {
-        'description': 'l1_ratio is the Elastic Net mixing parameter',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'l1_ratio': {
-                    'enum': [0.15]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'penalty': {
-                    'enum': ['elasticnet']},
-            }}]}, {
-        'description': "epsilon, only if loss is 'huber', 'epsilon_insensitive', or 'squared_epsilon_insensitive",
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'epsilon': {
-                    'enum': [0.1]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'loss': {
-                    'enum': ['huber', 'epsilon_insensitive', 'squared_epsilon_insensitive']},
-            }}]},{
-        'description': 'eta0 is not used by the default schedule ‘optimal’.',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'eta0': {
-                    'enum': [0.0]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'learning_rate': {
-                    'enum': ['constant', 'invscaling', 'adaptive']},
-            }}]},{
         'description': 'eta0 must be greater than 0 if the learning_rate is not ‘optimal’.',
         'anyOf': [{
             'type': 'object',
@@ -215,20 +179,8 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimum': 0.0, 
                     'exclusiveMinimum': True },
-            }}]}, {
-        'description': 'validation_fraction, only used if early_stopping is true',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'validation_fraction': {
-                    'enum': [0.1]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'early_stopping': {
-                    'enum': [True]},
-            }}]}],
-}
+            }}]}]}
+
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Stochastic Gradient Descent.',

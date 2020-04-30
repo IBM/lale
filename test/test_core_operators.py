@@ -1002,3 +1002,75 @@ class TestFriedmanMSE(unittest.TestCase):
             min_impurity_split=None, min_samples_leaf=3, min_samples_split=2, min_weight_fraction_leaf=0.0, 
             n_estimators=29, n_jobs=4, oob_score=False, random_state=33, verbose=0, warm_start=False)        
         reg.fit(self.X_train, self.y_train)
+
+class TestSpuriousSideConstraintsRegression(unittest.TestCase):
+    #This was prompted buy a bug, keeping it as it may help with support for other sklearn versions
+    def setUp(self):
+        from sklearn.datasets import make_regression
+        from sklearn.model_selection import train_test_split
+        X, y = make_regression(n_features=4, n_informative=2,
+                               random_state=0, shuffle=False)
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_gradient_boost_regressor(self):
+        from lale.lib.sklearn import GradientBoostingRegressor
+
+        reg = GradientBoostingRegressor(alpha=0.9789984970831765, criterion='friedman_mse', init=None, learning_rate=0.1, loss='ls')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_sgd_regressor(self):
+        from lale.lib.sklearn import SGDRegressor
+
+        reg = SGDRegressor(loss='squared_loss', epsilon=0.2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_sgd_regressor_1(self):
+        from lale.lib.sklearn import SGDRegressor
+
+        reg = SGDRegressor(learning_rate='optimal', eta0=0.2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_sgd_regressor_2(self):
+        from lale.lib.sklearn import SGDRegressor
+
+        reg = SGDRegressor(early_stopping=False, validation_fraction=0.2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_sgd_regressor_3(self):
+        from sklearn.linear_model import SGDRegressor
+
+        reg = SGDRegressor(l1_ratio=0.2, penalty='l1')
+        reg.fit(self.X_train, self.y_train)
+
+class TestSpuriousSideConstraintsClassification(unittest.TestCase):
+    #This was prompted buy a bug, keeping it as it may help with support for other sklearn versions
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_sgd_regressor(self):
+        from lale.lib.sklearn import SGDClassifier
+
+        reg = SGDClassifier(loss='squared_loss', epsilon=0.2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_sgd_regressor_1(self):
+        from lale.lib.sklearn import SGDClassifier
+
+        reg = SGDClassifier(learning_rate='optimal', eta0=0.2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_sgd_regressor_2(self):
+        from lale.lib.sklearn import SGDClassifier
+
+        reg = SGDClassifier(early_stopping=False, validation_fraction=0.2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_sgd_regressor_3(self):
+        from sklearn.linear_model import SGDClassifier
+
+        reg = SGDClassifier(l1_ratio=0.2, penalty='l1')
+        reg.fit(self.X_train, self.y_train)

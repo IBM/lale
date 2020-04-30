@@ -207,20 +207,7 @@ _hyperparams_schema = {
                 'distribution': 'loguniform',
                 'default': 0.0001,
                 'description': 'Tolerance for the early stopping. When the loss is not improving'},
-        }}, {
-        'description': "alpha, only if loss='huber' or loss='quantile'",
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                        'loss': {
-                            'enum': ['huber', 'quantile']},
-                    },
-        }, {
-            'type': 'object',
-            'properties': {
-                'alpha': {
-                    'enum': [0.9]},
-            }}]}]}
+        }}]}
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
