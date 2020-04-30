@@ -1194,3 +1194,4 @@ class TestSpuriousSideConstraintsClassification(unittest.TestCase):
 
         reg = RidgeClassifier(solver='svd', max_iter=10)
         reg.fit(self.X_train, self.y_train)
+        
