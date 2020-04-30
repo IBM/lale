@@ -76,20 +76,8 @@ _hyperparams_schema = {
                 'type': 'boolean',
                 'default': True,
                 'description': 'If True, a copy of X will be created. If False, imputation will'},
-        }},
-        {'description': "fill_value, only used when strategy='constant'",
-         'anyOf': [{
-             'type': 'object',
-             'properties': {
-                 'strategy': {
-                     'enum': ['constant']},
-             }}, {
-             'type': 'object',
-             'properties': {
-                 'fill_value': {
-                     'enum': [None]},
-             }}]}]
-}
+        }}]}
+
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the imputer on X.',

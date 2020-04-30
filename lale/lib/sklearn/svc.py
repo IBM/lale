@@ -137,18 +137,6 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The seed of the pseudo random number generator used when shuffling'},
         }},
-        {'description': 'gamma only used when kernel is ‘rbf’, ‘poly’ or ‘sigmoid’',
-         'anyOf': [{
-             'type': 'object',
-             'properties': {
-                 'kernel': {
-                     'enum': ['rbf', 'poly', 'sigmoid']},
-             }}, {
-             'type': 'object',
-             'properties': {
-                 'gamma': {
-                     'enum': ['auto_deprecated']}, #this needs to be the default value of gamma, changes with sklearn versions.
-             }}]},
         {'description': 'coef0 only significant in kernel ‘poly’ and ‘sigmoid’.',
          'anyOf': [{
              'type': 'object',
