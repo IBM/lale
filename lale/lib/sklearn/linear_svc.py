@@ -132,26 +132,6 @@ _hyperparams_schema = {
                 'default': 1000,
                 'description': 'The maximum number of iterations to be run.'}}},
     {   'description':
-            'If "crammer_singer" is chosen, the options loss, penalty and '
-            'dual will be ignored.',
-        'anyOf': [
-        {   'type': 'object',
-            'properties': {
-                'multi_class': {'not': {'enum': ['crammer_singer']}}}},
-        {   'type': 'object',
-            'properties': {
-                'loss': {'enum': ['squared_hinge']},
-                'penalty': {'enum': ['l2']},
-                'dual': {'enum': [True]}}}]},
-    {   'description':
-            'Setting intercept_scaling is useful only when '
-            'fit_intercept is true.',
-        'anyOf': [
-            { 'type': 'object',
-              'properties': {'intercept_scaling': {'enum': [1.0]}}},
-            { 'type': 'object',
-              'properties': {'fit_intercept': {'enum': [True]}}}]},
-    {   'description':
             'The combination of penalty=`l1` and loss=`hinge` is not supported',
         'anyOf': [
             { 'type': 'object',

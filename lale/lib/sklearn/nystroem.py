@@ -92,43 +92,7 @@ _hyperparams_schema = {
                     'description': 'Explicit seed.',
                     'type': 'integer'}],
                 'default': None},
-        }},
-    {   'description': 'Gamma is ignored by other kernels.',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'gamma': {
-                    'enum': [None]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'kernel': {
-                    'enum': ['rbf', 'laplacian', 'polynomial', 'additive_chi2', 'sigmoid']},
-            }}]},
-    {   'description': 'Zero coefficient ignored by other kernels.',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'coef0': {
-                    'enum': [None]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'kernel': {
-                    'enum': ['polynomial', 'sigmoid']},
-            }}]},
-    {   'description': 'Degree ignored by other kernels.',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'degree': {
-                    'enum': [None]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'kernel': {
-                    'enum': ['polynomial']},
-            }}]}]}
+        }}]}
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

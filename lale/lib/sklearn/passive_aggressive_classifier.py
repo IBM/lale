@@ -151,19 +151,7 @@ _hyperparams_schema = {
                     'forOptimizer': False}],
                 'default': False,
                 'description': 'When set to True, computes the averaged SGD weights and stores the'}
-        }},
-        {'description': 'validation_fraction, only used if early_stopping is true',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'early_stopping': {
-                    'enum': [True]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'validation_fraction': {
-                    'enum': [0.1]}, #i.e. it should not have a value other than its default.
-            }}]}]}
+        }}]}
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

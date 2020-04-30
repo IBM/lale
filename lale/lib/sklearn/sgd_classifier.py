@@ -191,18 +191,6 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'When set to True, computes the averaged SGD weights and stores the'}
         }}, {
-        'description': 'l1_ratio is the Elastic Net mixing parameter',
-        'anyOf': [{
-            'type': 'object',
-            'properties': {
-                'l1_ratio': {
-                    'enum': [0.15]},
-            }}, {
-            'type': 'object',
-            'properties': {
-                'penalty': {
-                    'enum': ['elasticnet']},
-            }}]}, {
         'description': 'eta0 must be greater than 0 if the learning_rate is not ‘optimal’.',
         'anyOf': [{
             'type': 'object',

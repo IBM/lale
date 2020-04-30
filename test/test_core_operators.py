@@ -1051,26 +1051,146 @@ class TestSpuriousSideConstraintsClassification(unittest.TestCase):
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
 
-    def test_sgd_regressor(self):
+    def test_sgd_classifier(self):
         from lale.lib.sklearn import SGDClassifier
 
         reg = SGDClassifier(loss='squared_loss', epsilon=0.2)
         reg.fit(self.X_train, self.y_train)
 
-    def test_sgd_regressor_1(self):
+    def test_sgd_classifier_1(self):
         from lale.lib.sklearn import SGDClassifier
 
         reg = SGDClassifier(learning_rate='optimal', eta0=0.2)
         reg.fit(self.X_train, self.y_train)
 
-    def test_sgd_regressor_2(self):
+    def test_sgd_classifier_2(self):
         from lale.lib.sklearn import SGDClassifier
 
         reg = SGDClassifier(early_stopping=False, validation_fraction=0.2)
         reg.fit(self.X_train, self.y_train)
 
-    def test_sgd_regressor_3(self):
-        from sklearn.linear_model import SGDClassifier
+    def test_sgd_classifier_3(self):
+        from lale.lib.sklearn import SGDClassifier
 
         reg = SGDClassifier(l1_ratio=0.2, penalty='l1')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(early_stopping=False, validation_fraction=0.2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_1(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(beta_1=0.8, solver='sgd')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_2(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(beta_2=0.8, solver='sgd')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_2(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(epsilon=0.8, solver='sgd')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_3(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(n_iter_no_change=100, solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_4(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(early_stopping=True, solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_5(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(nesterovs_momentum=False, solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_6(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(momentum=0.8, solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_7(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(shuffle=False, solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_8(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(learning_rate='invscaling', solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_9(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(learning_rate_init=0.002, solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_mlp_classifier_10(self):
+        from lale.lib.sklearn import MLPClassifier
+
+        reg = MLPClassifier(learning_rate='invscaling', power_t = 0.4, solver='lbfgs')
+        reg.fit(self.X_train, self.y_train)
+
+    def test_passive_aggressive_classifier(self):
+        from lale.lib.sklearn import PassiveAggressiveClassifier
+
+        reg = PassiveAggressiveClassifier(validation_fraction=0.4, early_stopping=False)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_svc(self):
+        from lale.lib.sklearn import SVC
+
+        reg = SVC(kernel='linear', gamma=1)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_simple_imputer(self):
+        from lale.lib.sklearn import SimpleImputer
+
+        reg = SimpleImputer(strategy='mean', fill_value=10)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_nystroem(self):
+        from lale.lib.sklearn import Nystroem
+
+        reg = Nystroem(kernel='cosine', gamma=0.1)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_nystroem_1(self):
+        from lale.lib.sklearn import Nystroem
+
+        reg = Nystroem(kernel='cosine', coef0=0.1)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_nystroem_2(self):
+        from lale.lib.sklearn import Nystroem
+
+        reg = Nystroem(kernel='cosine', degree=2)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_ridge_classifier(self):
+        from lale.lib.sklearn import RidgeClassifier
+
+        reg = RidgeClassifier(fit_intercept=False, normalize=True)
+        reg.fit(self.X_train, self.y_train)
+
+    def test_ridge_classifier_1(self):
+        from lale.lib.sklearn import RidgeClassifier
+
+        reg = RidgeClassifier(solver='svd', max_iter=10)
         reg.fit(self.X_train, self.y_train)
