@@ -26,8 +26,18 @@ import os
 PGO_input_type = Union[FrequencyDistribution, Iterable[Tuple[Any, int]], None]
 
 class SearchSpaceError(VisitorPathError):
-    def __init__(self, path:Any, message:Optional[str]=None):
-        super().__init__([path], message)
+    def __init__(self, sub_path:Any, message:Optional[str]=None):
+        super().__init__([], message)
+
+        self.sub_path = sub_path
+
+    def get_message_str(self)->str:
+        msg = super().get_message_str()
+        if self.sub_path is None:
+            return msg
+        else:
+            return f"for path {self.sub_path}: {msg}"
+
 
 class SearchSpace(metaclass=AbstractVisitorMeta):
     def __init__(self, default:Optional[Any]=None):

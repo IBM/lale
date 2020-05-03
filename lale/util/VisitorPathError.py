@@ -30,6 +30,9 @@ class VisitorPathError(ValueError):
     def path(self)->Iterator[Any]:
         return reversed(self._path)
 
+    def get_message_str(self)->str:
+        return super().__str__()
+
     def __str__(self):
         pstr = "->".join(map(str, self.path))
-        return f"[{pstr}]: {super().__str__()}" 
+        return f"[{pstr}]: {self.get_message_str()}"
