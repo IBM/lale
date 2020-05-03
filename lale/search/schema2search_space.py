@@ -19,6 +19,7 @@ import jsonschema
 import os
 
 from lale.util.Visitor import Visitor
+from lale.util import VisitorPathError
 
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
@@ -141,13 +142,13 @@ class SearchSpaceOperatorVisitor(Visitor):
                     add_sub_space(space, k, v)
         return space
 
+
     visitTrainableIndividualOp = visitPlannedIndividualOp
     visitTrainedIndividualOp = visitPlannedIndividualOp
     
     def visitPlannedPipeline(self, op:'PlannedPipeline')->SearchSpace:
         spaces:List[Tuple[str, SearchSpace]] = [
             (s.name(), s.accept(self)) for s in op.steps()]
-
         return SearchSpaceProduct(spaces)
     
     visitTrainablePipeline = visitPlannedPipeline
@@ -242,7 +243,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 elif laleType == "integer":
                     discrete = True
                 else:
-                    raise NotImplementedError()
+                    raise SearchSpaceError(path, f"specified laleType should be a number or integer, not: {laleType}.")
                 
                 pgo:Freqs
 
@@ -274,7 +275,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 if items_schema is None:
                     items_schema = schema.get('items', None)
                     if items_schema is None:
-                        raise ValueError(f"an array type was found without a provided schema for the items in the schema {schema}.  Please provide a schema for the items (consider using itemsForOptimizer)")
+                        raise SearchSpaceError(path, f"An array type was found without a provided schema for the items in the schema {schema}. Please provide a schema for the items (consider using itemsForOptimizer)")
 
                 # we can search an empty list even without schemas
                 if max_items == 0:
@@ -299,7 +300,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                         additional_items_schema = schema.get('additionalItems', None)
                     if additional_items_schema is None:
                         if max_items is None or max_items > prefix_len:
-                            raise ValueError(f"an array type was found with provided schemas for {prefix_len} elements, but either an unspecified or too high a maxItems, and no schema for the additionalItems.  Please constraing maxItems to <= {prefix_len} (you can set maxItemsForOptimizer), or provide a schema for additionalItems")
+                            raise SearchSpaceError(path, f"An array type was found with provided schemas for {prefix_len} elements, but either an unspecified or too high a maxItems, and no schema for the additionalItems.  Please constraing maxItems to <= {prefix_len} (you can set maxItemsForOptimizer), or provide a schema for additionalItems")
                     elif additional_items_schema == False:
                         if max_items is None:
                             max_items = prefix_len
@@ -313,7 +314,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                     additional = self.schemaToSearchSpaceHelper_(longName, path + "-", items_schema, relevantFields)
 
                 if max_items is None:
-                    raise ValueError(f"an array type was found without a provided maximum number of items in the schema {schema}, and it is not a list with 'additionalItems' set to False.  Please provide a maximum (consider using maxItemsForOptimizer), or, if you are using a list, set additionalItems to False")
+                    raise SearchSpaceError(path, f"An array type was found without a provided maximum number of items in the schema {schema}, and it is not a list with 'additionalItems' set to False.  Please provide a maximum (consider using maxItemsForOptimizer), or, if you are using a list, set additionalItems to False")
 
                 return SearchSpaceArray(prefix=prefix, minimum=min_items, maximum=max_items, additional=additional, is_tuple=is_tuple)
 
@@ -343,9 +344,9 @@ class SearchSpaceOperatorVisitor(Visitor):
                 return SearchSpaceOperator(combined_sub_schema)
 
             elif typ == "Any":
-                raise ValueError(f"In path: {path}, longName: {longName}: A search space was found with laleType ({typ}), which is not searchable.  Please mark the relevant hyperparameter as not relevant for the optimizer.  schema: {schema}")
+                raise SearchSpaceError(path, f"A search space was found with laleType ({typ}), which is not searchable.  Please mark the relevant hyperparameter as not relevant for the optimizer.  schema: {schema}")
             else:
-                raise ValueError(f"An unknown type ({typ}) was found in the schema {schema}")
+                raise SearchSpaceError(path, f"An unknown type ({typ}) was found in the schema {schema}")
 
         if 'anyOf' in schema:
             objs = []
@@ -384,18 +385,18 @@ class SearchSpaceOperatorVisitor(Visitor):
                     pos_sub_schema.append(sub_schema)
 
             if len(pos_sub_schema) > 1:
-                raise ValueError(f"schemaToSearchSpaceHelper does not yet know how to compile the given schema {schema} for {longName}, because it is an allOf with more than one non-negated schemas ({pos_sub_schema})")
+                raise SearchSpaceError(path, f"schemaToSearchSpaceHelper does not yet know how to compile the given schema {schema}, because it is an allOf with more than one non-negated schemas ({pos_sub_schema})")
             if len(pos_sub_schema) == 0:
-                raise ValueError(f"schemaToSearchSpaceHelper does not yet know how to compile the given schema {schema} for {longName}, because it is an allOf with only negated schemas")
+                raise SearchSpaceError(path, f"schemaToSearchSpaceHelper does not yet know how to compile the given schema {schema}, because it is an allOf with only negated schemas")
             
-            logger.debug(f"schemaToSearchSpaceHelper: ignoring negated schemas in the conjunction {schema} for {longName}")
+            logger.debug(f"[{path}]: schemaToSearchSpaceHelper: ignoring negated schemas in the conjunction {schema}")
             return self.schemaToSearchSpaceHelper_(longName, 
                                     path,
                                     pos_sub_schema[0], 
                                     relevantFields,
                                     pgo_freqs=pgo_freqs)
         # TODO: handle degenerate cases
-        raise ValueError(f"schemaToSearchSpaceHelper does not yet know how to compile the given schema {schema} for {longName}")
+        raise SearchSpaceError(path, f"schemaToSearchSpaceHelper does not yet know how to compile the given schema {schema}")
 
     def schemaToSearchSpaceHelper(self,
                                 longName, 

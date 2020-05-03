@@ -204,7 +204,7 @@ class SearchSpaceHPExprVisitor(Visitor):
         return scope.make_nested_hyperopt(accept(op.sub_space, self, path))
 
     def visitSearchSpaceEmpty(self, op:SearchSpaceEmpty, path:str, counter=None):
-        raise NotImplementedError("The hyperopt backend can't compile an empty (sub-) search space")
+        raise NotImplementedError(f"The hyperopt backend can't compile an empty (sub-) search space for {path}")
 
 class SearchSpaceHPStrVisitor(Visitor):
     pgo_dict:Dict[str, FrequencyDistribution]

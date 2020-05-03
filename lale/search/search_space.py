@@ -18,11 +18,17 @@ import numpy
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from hyperopt import hp
 from hyperopt.pyll import scope
+from lale.util import VisitorPathError
 from lale.util.VisitorMeta import AbstractVisitorMeta
 from lale.search.PGO import FrequencyDistribution
 import os
 
 PGO_input_type = Union[FrequencyDistribution, Iterable[Tuple[Any, int]], None]
+
+class SearchSpaceError(VisitorPathError):
+    def __init__(self, path:Any, message:Optional[str]=None):
+        super().__init__([path], message)
+
 class SearchSpace(metaclass=AbstractVisitorMeta):
     def __init__(self, default:Optional[Any]=None):
         self._default = default
