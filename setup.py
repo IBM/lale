@@ -19,6 +19,16 @@ import logging
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 
+try:
+    import builtins
+    # This trick is borrowed from scikit-learn
+    # This is a bit (!) hackish: we are setting a global variable so that the
+    # main lale __init__ can detect if it is being loaded by the setup
+    # routine, to avoid attempting to import components before installation.
+    builtins.__LALE_SETUP__ = True
+except ImportError:
+    pass
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
