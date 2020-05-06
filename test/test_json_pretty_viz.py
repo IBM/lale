@@ -361,7 +361,6 @@ pipeline = tam >> LR()"""
         tam = TAM(tans_class=pca, name='pca', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
         lgbm_classifier = LGBMClassifier(class_weight='balanced', learning_rate=0.18)
         pipeline = make_pipeline(tam, lgbm_classifier)
-        import lale.helpers
         expected = \
 """from lale.lib.autoai_libs import TAM
 import sklearn.decomposition.pca
@@ -392,6 +391,23 @@ lale.wrap_imported_operators()
 ta1 = TA1(fun=np.rint, name='round', datatypes=['numeric'], feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical], col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
 pipeline = ta1 >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_autoai_libs_t_no_op(self):
+        from lale.lib.autoai_libs import TNoOp
+        from lightgbm import LGBMClassifier
+        from lale.operators import make_pipeline
+        t_no_op = TNoOp(name='no_action', datatypes='x', feat_constraints=[])
+        lgbm_classifier = LGBMClassifier(class_weight='balanced', learning_rate=0.18)
+        pipeline = make_pipeline(t_no_op, lgbm_classifier)
+        expected = \
+"""from lale.lib.autoai_libs import TNoOp
+from lightgbm import LGBMClassifier
+from lale.operators import make_pipeline
+
+t_no_op = TNoOp(name='no_action', datatypes='x', feat_constraints=[])
+lgbm_classifier = LGBMClassifier(class_weight='balanced', learning_rate=0.18)
+pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
 
 
 class TestToAndFromJSON(unittest.TestCase):

@@ -14,13 +14,13 @@
 
 import sys
 
-__version__ = '0.3.11'
+__version__ = '0.3.12'
 
 try:
     # This variable is injected in the __builtins__ by the build
     # process. It is used to not try to import rest of the lale packages when 
     # it is being installed.
-    __LALE_SETUP__
+    __LALE_SETUP__ # type: ignore
 except NameError:
     __LALE_SETUP__ = False
 

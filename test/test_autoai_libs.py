@@ -123,6 +123,15 @@ class TestAutoaiLibs(unittest.TestCase):
         self.doTest(trainable, **self._iris)
         self.do1DTest(trainable, **self._iris)
 
+    def test_TNoOp(self):
+        from autoai_libs.utils.fc_methods import is_not_categorical
+        trainable = lale.lib.autoai_libs.TNoOp(
+            fun=np.rint,
+            name='do nothing',
+            datatypes=['numeric'], feat_constraints=[is_not_categorical],
+        )
+        self.doTest(trainable, **self._iris)
+
     def test_TA1(self):
         from autoai_libs.utils.fc_methods import is_not_categorical
         float32 = np.dtype('float32')

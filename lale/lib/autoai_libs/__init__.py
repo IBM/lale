@@ -43,6 +43,7 @@ Preprocessing numeric columns:
 
 Feature transformation:
 
+* lale.lib.autoai_libs. `TNoOp`_
 * lale.lib.autoai_libs. `TA1`_
 * lale.lib.autoai_libs. `TA2`_
 * lale.lib.autoai_libs. `TB1`_
@@ -64,6 +65,7 @@ Feature transformation:
 .. _`NumImputer`: lale.lib.autoai_libs.num_imputer.html
 .. _`OptStandardScaler`: lale.lib.autoai_libs.opt_standard_scaler.html
 .. _`NumpyPermuteArray`: lale.lib.autoai_libs.numpy_permute_array.html
+.. _`TNoOp`: lale.lib.autoai_libs.t_no_op.html
 .. _`TA1`: lale.lib.autoai_libs.ta1.html
 .. _`TA2`: lale.lib.autoai_libs.ta2.html
 .. _`TB1`: lale.lib.autoai_libs.tb1.html
@@ -89,6 +91,7 @@ from .opt_standard_scaler          import OptStandardScaler
 from .numpy_permute_array          import NumpyPermuteArray
 
 # from autoai_libs.cognito.transforms.transform_utils
+from .t_no_op import TNoOp
 from .ta1  import TA1
 from .ta2  import TA2
 from .tb1  import TB1

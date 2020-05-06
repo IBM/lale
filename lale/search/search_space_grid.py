@@ -20,7 +20,7 @@ import math
 from collections import ChainMap
 
 from lale.util.Visitor import Visitor, accept
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceOperator, should_print_search_space
+from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceOperator, should_print_search_space, SearchSpaceEmpty, SearchSpaceError
 from lale.search.schema2search_space import op_to_search_space
 from lale.search.PGO import PGO
 from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUMMY_SEARCH_SPACE_GRID_PARAM_NAME, discriminant_name, make_indexed_name, make_array_index_name, structure_type_name, structure_type_list, structure_type_tuple, structure_type_dict
@@ -207,3 +207,6 @@ class SearchSpaceToGridVisitor(Visitor):
 
     def visitSearchSpaceOperator(self, op:SearchSpaceOperator)->SearchSpaceGridInternalType:
         return accept(op.sub_space, self)
+
+    def visitSearchSpaceEmpty(self, op:SearchSpaceEmpty):
+        raise SearchSpaceError(None, "Grid based backends can't compile an empty (sub-) search space")

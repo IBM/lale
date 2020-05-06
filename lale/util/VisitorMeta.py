@@ -21,7 +21,16 @@ class VisitorMeta(object):
     """
     def __init__(cls, *args, **kwargs):
         super(VisitorMeta, cls).__init__(*args, **kwargs)
-        selector = 'return visitor.visit{}(self, *args, **kwargs)'.format(cls.__name__)
+        selector = """
+        from lale.util import VisitorPathError
+        try:
+            return visitor.visit{}(self, *args, **kwargs)
+        except VisitorPathError as e:
+            e.push_parent_path(self)
+            raise
+        except BaseException as e:
+            raise VisitorPathError([self]) from e
+        """.format(cls.__name__)
         accept_code = "def accept(self, visitor, *args, **kwargs):\n\t{}".format(selector)
         l = {}
         exec(accept_code, globals(), l)
