@@ -243,6 +243,38 @@ def run_hyperopt_on_planned_pipeline(planned_pipeline, max_iters=1) :
     # run optimizer
     res = opt.fit(features, labels)    
 
+import lale.schemas as schemas
+
+class TestVisitorErrors(unittest.TestCase) :
+    def test_empty_schema(self) :
+        pca = PCA().customize_schema(whiten=schemas.Schema())
+        plan = (
+            ( pca & ( MinMaxScaler | Normalizer ) ) >> ConcatFeatures() >>
+            ( MinMaxScaler | Normalizer ) >>
+            ( LogisticRegression | KNeighborsClassifier)
+        )
+        from lale.search.schema2search_space import OperatorSchemaError
+        with self.assertRaises(OperatorSchemaError) as ctxt:
+            run_hyperopt_on_planned_pipeline(plan)
+#        print(str(ctxt.exception))
+
+    def test_no_max_schema(self) :
+        pca = PCA().customize_schema(n_components=schemas.Float(min=0.0))
+        plan = (
+            ( pca & ( MinMaxScaler | Normalizer ) ) >> ConcatFeatures() >>
+            ( MinMaxScaler | Normalizer ) >>
+            ( LogisticRegression | KNeighborsClassifier)
+        )
+        from lale.search.search_space import SearchSpaceError
+        with self.assertRaises(SearchSpaceError) as ctxt:
+            run_hyperopt_on_planned_pipeline(plan)
+
+#        print(str(ctxt.exception))
+
+        
+
+
+
 class TestHyperoptOperatorDuplication(unittest.TestCase) :
     def test_planned_pipeline_1(self) :
         plan = (

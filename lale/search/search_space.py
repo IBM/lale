@@ -15,6 +15,7 @@
 import math
 import numpy
 
+import abc
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from hyperopt import hp
 from hyperopt.pyll import scope
@@ -30,6 +31,9 @@ class SearchSpaceError(VisitorPathError):
         super().__init__([], message)
 
         self.sub_path = sub_path
+
+    def path_string(self)->str:
+        return SearchSpace.focused_path_string(list(self.path))
 
     def get_message_str(self)->str:
         msg = super().get_message_str()
@@ -52,11 +56,42 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
         """
         return self._default
 
+    @classmethod
+    def focused_path_string(cls, path:List['SearchSpace'])->str:
+        if path:
+            return path[0].str_with_focus(path, default="")
+        else:
+            return ""
+
+    def str_with_focus(self, path:Optional[List['SearchSpace']]=None, default:Any=None)->Union[str,Any]:
+        """ Given a path list, returns a string for the focused path.
+            If the path is None, returns everything, without focus.
+            If the path does not start with self, returns None
+        """
+        if path is None:
+            return self._focused_str(path=None)
+        elif path and path[0] is self:
+            return self._focused_str(path=path[1:])
+        else:
+            return default
+
+    @abc.abstractmethod
+    def _focused_str(self, path:Optional[List['SearchSpace']]=None)->str:
+        """ Given the continuation path list, returns a string for the focused path.
+            If the path is None, returns everything, without focus.
+            Otherwise, the path is for children
+        """
+        pass
+
+    def __str__(self)->str:
+        return self.str_with_focus(path=None, default="")
+
+
 class SearchSpaceEmpty(SearchSpace):
     def __init__(self):
         super(SearchSpaceEmpty, self).__init__()
 
-    def __str__(sefl):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         return "***EMPTY***"
 
 class SearchSpacePrimitive(SearchSpace):
@@ -77,14 +112,14 @@ class SearchSpaceEnum(SearchSpacePrimitive):
         else:
             self.pgo = FrequencyDistribution.asEnumValues(pgo, self.vals)
 
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         return "<" + ",".join(map(str, self.vals)) + ">"
 
 class SearchSpaceConstant(SearchSpaceEnum):
     def __init__(self, v, pgo:PGO_input_type=None):
         super(SearchSpaceConstant, self).__init__([v], pgo=pgo, default=v)
 
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         return str(self.vals[0])
 
 class SearchSpaceBool(SearchSpaceEnum):
@@ -147,7 +182,7 @@ class SearchSpaceNumber(SearchSpacePrimitive):
                 min = numpy.nextafter(min, float('+inf'))
         return min
 
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         ret:str = ""
         if self.exclusiveMinimum or self.minimum is None:
              ret += "("
@@ -191,7 +226,7 @@ class SearchSpaceArray(SearchSpace):
         self.additional = additional
         self.is_tuple = is_tuple
     
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         ret:str = ""
         ret += f"Array<{self.minimum}, {self.maximum}>"
         if self.is_tuple:
@@ -200,12 +235,12 @@ class SearchSpaceArray(SearchSpace):
             ret += "["
 
         if self.prefix is not None:
-            ret += ",".join(map(str,self.prefix))
+            ret += ",".join(p.str_with_focus(path=path, default="") for p in self.prefix)
             if self.additional is not None:
                 ret += ","
         if self.additional is not None:
             ret += "...,"
-            ret += str(self.additional)
+            ret += self.additional.str_with_focus(path=path, default="")
 
         if self.is_tuple:
             ret += ")"
@@ -238,7 +273,7 @@ class SearchSpaceObject(SearchSpace):
         self.keys = keys
         self.choices = choices
 
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         ret:str = ""
         ret += f"Object<{self.longName}>["
 
@@ -246,9 +281,14 @@ class SearchSpaceObject(SearchSpace):
         for c in self.choices:
             opts:List[str] = []
             for k,v in zip(self.keys, c):
-                opts.append(k + "->" + str(v))
-            l = ";".join(opts)
-            choice_strs.append("{" + l + "}")
+                vv = v.str_with_focus(path=path, default=None)
+                if vv is not None:
+                    opts.append(k + "->" + vv)
+            if opts:
+                l = ";".join(opts)
+                choice_strs.append("{" + l + "}")
+            else:
+                choice_strs.append("")
 
         ret += ",".join(choice_strs) + "]"
 
@@ -262,9 +302,9 @@ class SearchSpaceSum(SearchSpace):
         super(SearchSpaceSum, self).__init__(default=default)
         self.sub_spaces = sub_spaces
 
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         ret:str = "\u2211["
-        ret += "|".join(map(str, self.sub_spaces))
+        ret += "|".join(p.str_with_focus(path=path, default="") for p in self.sub_spaces)
         ret += "]"
         return ret
 
@@ -276,9 +316,9 @@ class SearchSpaceOperator(SearchSpace):
         super(SearchSpaceOperator, self).__init__(default=default)
         self.sub_space = sub_space
 
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         ret:str = "\u00AB"
-        ret += str(self.sub_space)
+        ret += self.sub_space.str_with_focus(path=path, default="")
         ret += "\u00BB"
         return ret
 
@@ -305,12 +345,14 @@ class SearchSpaceProduct(SearchSpace):
         
         return [enhance_tuple(make_indexed(name), space) for name,space in self.sub_spaces]
 
-    def __str__(self):
+    def _focused_str(self, path:Optional[List[SearchSpace]]=None)->str:
         ret:str = "\u220F{"
-
+        vv:Optional[str]
         parts:List[str] = []
         for k,v in self.sub_spaces:
-            parts.append(k + "->" + str(v))
+            vv = v.str_with_focus(path=path, default=None)
+            if vv is not None:
+                parts.append(k + "->" + vv)
         ret = ";".join(parts)
 
         ret += "}"
