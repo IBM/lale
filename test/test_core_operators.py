@@ -1195,3 +1195,7 @@ class TestSpuriousSideConstraintsClassification(unittest.TestCase):
         reg = RidgeClassifier(solver='svd', max_iter=10)
         reg.fit(self.X_train, self.y_train)
         
+class TestLaleVersion(unittest.TestCase):
+    def test_version_exists(self):
+        import lale
+        self.assertIsNot(lale.__version__, None)

@@ -41,9 +41,12 @@ else:
         'decorator',
         'h5py']
 
+import lale
+VERSION=lale.__version__
+
 setup(
     name='lale',
-    version='0.3.11',
+    version=VERSION,
     author="Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar",
     description="Library for Semi-Automated Data Science",
     long_description=long_description,
