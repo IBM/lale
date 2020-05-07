@@ -20,7 +20,7 @@ import warnings
 import lale.operators as Ops
 from lale.pretty_print import hyperparams_to_string
 from lale.search.PGO import remove_defaults_dict
-from lale.util.Visitor import Visitor
+from lale.util.Visitor import Visitor, accept
 
 # We support an argument encoding schema intended to be a 
 # conservative extension to sklearn's encoding schema
@@ -503,8 +503,7 @@ class DefaultsVisitor(Visitor):
     @classmethod
     def run(cls, op:Ops.Operator)->Dict[str,Any]:
         visitor = cls()
-        accepting_op:Any = op
-        return accepting_op.accept(visitor)
+        return accept(op, visitor)
 
     def __init__(self):
         super(DefaultsVisitor, self).__init__()
@@ -519,7 +518,7 @@ class DefaultsVisitor(Visitor):
     def visitPipeline(self, op:Ops.PlannedPipeline)->Dict[str,Any]:
 
         defaults_list:Iterable[Dict[str,Any]] = (
-            nest_HPparams(s.name(), s.accept(self)) for s in op.steps())
+            nest_HPparams(s.name(), accept(s, self)) for s in op.steps())
 
         defaults:Dict[str,Any] = {}
         for d in defaults_list:
@@ -534,7 +533,7 @@ class DefaultsVisitor(Visitor):
     def visitOperatorChoice(self, op:Ops.OperatorChoice)->Dict[str,Any]:
 
         defaults_list:Iterable[Dict[str,Any]] = (
-            s.accept(self) for s in op.steps())
+            accept(s, self) for s in op.steps())
 
         defaults : Dict[str,Any] = {}
         for d in defaults_list:
