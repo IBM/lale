@@ -87,8 +87,7 @@ class SearchSpaceToGridVisitor(Visitor):
     @classmethod
     def run(cls, space:SearchSpace)->List[SearchSpaceGrid]:
         visitor = cls()
-        space_:Any = space
-        grids:SearchSpaceGridInternalType = space_.accept(visitor)
+        grids:SearchSpaceGridInternalType = accept(space, visitor)
         fixed_grids = cls.fixupDegenerateSearchSpaces(grids)
         return fixed_grids
 
@@ -150,7 +149,7 @@ class SearchSpaceToGridVisitor(Visitor):
             kvs_complex:List[List[SearchSpaceGrid]] = []
             kvs_simple:SearchSpaceGrid = {}
             for k,v in zip(keys, c):
-                vspace:Union[List[SearchSpaceGrid],SearchSpacePrimitive] = v.accept(self)
+                vspace:Union[List[SearchSpaceGrid],SearchSpacePrimitive] = accept(v, self)
                 if isinstance(vspace, SearchSpacePrimitive):
                     kvs_simple[k] = vspace
                 else:

@@ -18,7 +18,7 @@ import numpy
 import jsonschema
 import os
 
-from lale.util.Visitor import Visitor
+from lale.util.Visitor import Visitor, accept
 from lale.util import VisitorPathError
 
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
@@ -128,8 +128,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     @classmethod
     def run(cls, op:PlannedOperator, pgo:Optional[PGO]=None)->SearchSpace:
         visitor = cls(pgo=pgo)
-        accepting_op:Any = op
-        return accepting_op.accept(visitor)
+        return accept(op, visitor)
 
     def __init__(self, pgo:Optional[PGO]=None):
         super(SearchSpaceOperatorVisitor, self).__init__()
@@ -161,7 +160,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     
     def visitPlannedPipeline(self, op:'PlannedPipeline')->SearchSpace:
         spaces:List[Tuple[str, SearchSpace]] = [
-            (s.name(), s.accept(self)) for s in op.steps()]
+            (s.name(), accept(s, self)) for s in op.steps()]
         return SearchSpaceProduct(spaces)
     
     visitTrainablePipeline = visitPlannedPipeline
@@ -169,7 +168,7 @@ class SearchSpaceOperatorVisitor(Visitor):
 
     def visitOperatorChoice(self, op:'OperatorChoice')->SearchSpace:
         spaces:List[SearchSpace] = [
-            s.accept(self) for s in op.steps()]
+            accept(s, self) for s in op.steps()]
 
         return SearchSpaceSum(spaces)
 
@@ -348,7 +347,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                     logger.error(f"An operator is required by the schema but was not provided")
                     return None
                 
-                sub_schemas = [op.accept(self) for op in vals]
+                sub_schemas = [accept(op, self) for op in vals]
                 combined_sub_schema:SearchSpace
                 if len(sub_schemas) == 1:
                     combined_sub_schema = sub_schemas[0]

@@ -15,9 +15,10 @@
 from abc import ABCMeta
 
 class VisitorMeta(object):
-    """ This meta class adds an accept method that calls visitCLASSNAME on the visitor.
+    """ This meta class adds a private _accept method that calls visitCLASSNAME on the visitor.
         It does not currently support inheritance: you need to define the visitC method for subclasses
-        explicitly
+        explicitly.
+        The private _accept method should be called via the Visitor#acccept method
     """
     def __init__(cls, *args, **kwargs):
         super(VisitorMeta, cls).__init__(*args, **kwargs)
@@ -31,10 +32,10 @@ class VisitorMeta(object):
         except BaseException as e:
             raise VisitorPathError([self]) from e
         """.format(cls.__name__)
-        accept_code = "def accept(self, visitor, *args, **kwargs):\n\t{}".format(selector)
+        _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(selector)
         l = {}
-        exec(accept_code, globals(), l)
-        setattr(cls, "accept", l["accept"])
+        exec(_accept_code, globals(), l)
+        setattr(cls, "_accept", l["_accept"])
 
 # A shim for compatibility across 3.7.
 # pre 3.7, we need to inherit from the GenericMeta class (which inherits from ABCmeta)
@@ -48,9 +49,10 @@ else:
     GenericMeta = ABCMeta # type: ignore 
 
 class AbstractVisitorMeta(VisitorMeta, GenericMeta):
-    """ This meta class adds an accept method that calls visitCLASSNAME on the visitor.
+    """ This meta class adds an _accept method that calls visitCLASSNAME on the visitor.
         It does not currently support inheritance: you need to define the visitC method for subclasses
-        explicitly
+        explicitly.
+        The private _accept method should be called via the Visitor#acccept method.
     """
     def __init__(cls, *args, **kwargs):
         super(AbstractVisitorMeta, cls).__init__(*args, **kwargs)
