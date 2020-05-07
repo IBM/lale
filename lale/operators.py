@@ -1843,8 +1843,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             if trainable not in sink_nodes:#There is no need to transform/predict on the last node during fit
                 if trained.is_transformer():
                     output = trained.transform(X = inputs, y = y)
-                    if hasattr(operator._impl, "get_transform_meta_output"):
-                        meta_output = operator._impl_instance().get_transform_meta_output()
+                    if hasattr(trained._impl, "get_transform_meta_output"):
+                        meta_output = trained._impl_instance().get_transform_meta_output()
                 else:
                     if trainable in sink_nodes:
                         output = trained._predict(X = inputs) #We don't support y for predict yet as there is no compelling case
@@ -1857,8 +1857,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                             output = trained.decision_function(X = inputs)
                         else:
                             output = trained._predict(X = inputs)
-                    if hasattr(operator._impl, "get_predict_meta_output"):
-                        meta_output = operator._impl_instance().get_predict_meta_output()
+                    if hasattr(trained._impl, "get_predict_meta_output"):
+                        meta_output = trained._impl_instance().get_predict_meta_output()
                 outputs[operator] = output
                 meta_output.update({key:meta_outputs[pred][key] for pred in preds 
                         if meta_outputs[pred] is not None for key in meta_outputs[pred]})
