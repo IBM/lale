@@ -428,9 +428,26 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             lale_op = class_
         else:
             lale_op = TrainedIndividualOp(class_._name, class_._impl, class_._schemas)
-        class_ = lale_op(**sklearn_obj.get_params())
+
+        orig_hyperparams = sklearn_obj.get_params()
+        higher_order = False
+        for hp_name, hp_val in orig_hyperparams.items():
+            higher_order = higher_order or hasattr(hp_val, 'get_params')
+        if higher_order:
+            hyperparams = {}
+            for hp_name, hp_val in orig_hyperparams.items():
+                if hasattr(hp_val, 'get_params'):
+                    nested_op = get_equivalent_lale_op(hp_val, fitted)
+                    hyperparams[hp_name] = nested_op
+                else:
+                    hyperparams[hp_name] = hp_val
+        else:
+            hyperparams = orig_hyperparams
+
+        class_ = lale_op(**hyperparams)
         if lale_wrapper_found:
-            class_._impl_instance()._wrapped_model =  copy.deepcopy(sklearn_obj)
+            wrapped_model = copy.deepcopy(sklearn_obj)
+            class_._impl_instance()._wrapped_model = wrapped_model
         else:# If there is no lale wrapper, there is no _wrapped_model
             class_._impl = copy.deepcopy(sklearn_obj) 
         return class_
