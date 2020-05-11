@@ -25,13 +25,10 @@ PyTorch etc.
 Lale can be installed just like any other Python package and can be
 edited with off-the-shelf Python tools such as Jupyter notebooks.
 
-Lale is distributed under the terms of the Apache 2.0 License, see
-[LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt). It is currently in an **Alpha release**,
-without warranties of any kind.
-
 * [Introductory guide](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) for scikit-learn users
 * [Installation instructions](https://github.com/IBM/lale/blob/master/docs/installation.rst)
 * Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), and [video](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
+* IBM's [AutoAI SDK](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca) uses Lale
 * Guide for wrapping [new operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/new_operators.ipynb)
 * [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
@@ -54,6 +51,11 @@ The following paper has a technical deep-dive:
   month = may,
   url = "https://arxiv.org/abs/1906.03957" }
 ```
+
+Lale is distributed under the terms of the Apache 2.0 License, see
+[LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt).
+It is currently in an **Alpha release**, without warranties of any
+kind.
 
 Contributors are expected to submit a "Developer's Certificate of
 Origin", which can be found in [DCO1.1.txt](https://github.com/IBM/lale/blob/master/DCO1.1.txt).
