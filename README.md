@@ -29,7 +29,7 @@ edited with off-the-shelf Python tools such as Jupyter notebooks.
 * [Installation instructions](https://github.com/IBM/lale/blob/master/docs/installation.rst)
 * Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), and [video](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
 * IBM's [AutoAI SDK](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca) uses Lale
-* Guide for wrapping [new operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/new_operators.ipynb)
+* Guide for wrapping [new operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
 * [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
 * arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
