@@ -373,6 +373,29 @@ lgbm_classifier = LGBMClassifier(class_weight='balanced', learning_rate=0.18)
 pipeline = make_pipeline(tam, lgbm_classifier)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
 
+    def test_autoai_libs_tam_3(self):
+        import autoai_libs.cognito.transforms.transform_utils
+        import lale.helpers
+        import numpy as np
+        import sklearn.cluster.hierarchical
+        import sklearn.linear_model
+        import sklearn.pipeline
+        sklearn_pipeline = sklearn.pipeline.make_pipeline(
+            autoai_libs.cognito.transforms.transform_utils.TAM(tans_class=sklearn.cluster.hierarchical.FeatureAgglomeration(affinity='euclidean', compute_full_tree='auto', connectivity=None, linkage='ward', memory=None, n_clusters=2, pooling_func=np.mean), name='featureagglomeration', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')]),
+            sklearn.linear_model.LogisticRegression(solver='liblinear', multi_class='ovr'))
+        pipeline = lale.helpers.import_from_sklearn_pipeline(sklearn_pipeline)
+        expected = \
+"""from lale.lib.autoai_libs import TAM
+from lale.lib.sklearn import FeatureAgglomeration
+import numpy as np
+from lale.lib.sklearn import LogisticRegression
+import lale
+lale.wrap_imported_operators()
+
+tam = TAM(tans_class=FeatureAgglomeration(), name='featureagglomeration', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+pipeline = tam >> LogisticRegression()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
     def test_autoai_libs_ta1(self):
         from autoai_libs.cognito.transforms.transform_utils import TA1
         import numpy as np

@@ -56,8 +56,7 @@ class SearchSpaceHPExprVisitor(Visitor):
     @classmethod
     def run(cls, space:SearchSpace, name:str):
         visitor = cls(name)
-        space_:Any = space
-        return space_.accept(visitor, name)
+        return accept(space, visitor, name)
 
     def __init__(self, name:str):
         super(SearchSpaceHPExprVisitor, self).__init__()
@@ -167,7 +166,7 @@ class SearchSpaceHPExprVisitor(Visitor):
             if e is None:
                 return None
             else:
-                ee = e.accept(self, path + "_" + key, counter=child_counter)
+                ee = accept(e, self, path + "_" + key, counter=child_counter)
                 if child_counter is None:
                     child_counter = 1
                 else:
@@ -217,9 +216,8 @@ class SearchSpaceHPStrVisitor(Visitor):
     @classmethod
     def run(cls, space:SearchSpace, name:str, counter=None, useCounter=True):
         visitor = cls(name)
-        space_:Any = space
         ret:str = ""
-        body = space_.accept(visitor, name, counter=counter, useCounter=useCounter)
+        body = accept(space, visitor, name, counter=counter, useCounter=useCounter)
         if visitor.pgo_header is not None:
             ret += visitor.pgo_header
         if visitor.nested_header is not None:
@@ -361,7 +359,7 @@ class SearchSpaceHPStrVisitor(Visitor):
             if x is None:
                 return "None"
             else:
-                s = s = x.accept(self, path + "_" + key, child_counter, useCounter=useCounter)
+                s = accept(x, self, path + "_" + key, child_counter, useCounter=useCounter)
                 if child_counter is None:
                     child_counter = 1
                 else:
