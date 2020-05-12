@@ -163,10 +163,16 @@ _input_predict_schema = {
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Returns predicted values.',
-    'type': 'array',
-    'items': {
-        'type': 'number'},
-}
+    'anyOf': [{
+        'type': 'array',
+        'items': {'type': 'number'}}, {#There was a case where Ridge returned 2-d predictions for a single target.
+        'type': 'array',
+        'items': {
+            'type': 'array',
+            'items': {
+                'type': 'number'},
+        }}]}
+
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Ridge`_ regression estimator from scikit-learn.
