@@ -16,6 +16,8 @@ import autoai_libs.transformers.exportable
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+import numpy as np
+import pandas as pd
 
 class boolean2floatImpl():
     def __init__(self, activate_flag):
@@ -29,10 +31,13 @@ class boolean2floatImpl():
 
     def transform(self, X):
         raw = self._wrapped_model.transform(X)
-        s_X = lale.datasets.data_schemas.to_schema(X)
-        s_result = self.transform_schema(s_X)
-        result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)
-        assert result.json_schema == s_result
+        if isinstance(raw, np.ndarray) or isinstance(raw, pd.DataFrame):
+            s_X = lale.datasets.data_schemas.to_schema(X)
+            s_result = self.transform_schema(s_X)
+            result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)
+            assert result.json_schema == s_result
+        else:
+            result = raw
         return result
 
     def transform_schema(self, s_X):
