@@ -34,7 +34,9 @@ class TAMImpl():
         else:
             self._wrapped_model.fit(X, y, **fit_params)
         cands = self._wrapped_model.get_candidates(X, self._wrapped_model.col_names, self._wrapped_model.col_dtypes)
-        self._wrapped_model.trans_class_obj_ = self._wrapped_model.trans_class_obj_.fit(X[:, list(cands[0])])
+        trained_obj = self._wrapped_model.trans_class_obj_.fit(X[:, list(cands[0])])
+        if trained_obj is not None:
+            self._wrapped_model.trans_class_obj_ = trained_obj
         return self
 
     def transform(self, X):
