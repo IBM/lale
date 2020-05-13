@@ -157,7 +157,7 @@ _combined_schemas = {
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 .. _OneHotEncoder: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html#sklearn.preprocessing.OneHotEncoder
 .. _OrdinalEncoder: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OrdinalEncoder.html#sklearn.preprocessing.OrdinalEncoder""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai.cat_encoder.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.cat_encoder.html',
     'type': 'object',
     'tags': {
         'pre': [],

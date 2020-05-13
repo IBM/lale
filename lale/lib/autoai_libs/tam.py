@@ -33,6 +33,8 @@ class TAMImpl():
             self._wrapped_model.fit(X, y)
         else:
             self._wrapped_model.fit(X, y, **fit_params)
+        cands = self._wrapped_model.get_candidates(X, self._wrapped_model.col_names, self._wrapped_model.col_dtypes)
+        self._wrapped_model.trans_class_obj_ = self._wrapped_model.trans_class_obj_.fit(X[:, list(cands[0])])
         return self
 
     def transform(self, X):
