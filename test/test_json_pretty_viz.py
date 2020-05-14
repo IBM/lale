@@ -396,6 +396,34 @@ tam = TAM(tans_class=FeatureAgglomeration(), name='featureagglomeration', col_na
 pipeline = tam >> LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_autoai_libs_tam_4(self):
+        import autoai_libs.cognito.transforms.transform_utils
+        import lale.helpers
+        import numpy as np
+        import sklearn.cluster.hierarchical
+        import sklearn.linear_model
+        import sklearn.pipeline
+        sklearn_pipeline = sklearn.pipeline.make_pipeline(
+            autoai_libs.cognito.transforms.transform_utils.TAM(tans_class=sklearn.decomposition.PCA(), name='pca', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')]),
+            sklearn.linear_model.LogisticRegression(solver='liblinear', multi_class='ovr'))
+        pipeline = lale.helpers.import_from_sklearn_pipeline(sklearn_pipeline, fitted=False)
+        expected = \
+"""from lale.lib.autoai_libs import TAM
+from lale.lib.sklearn import PCA
+import numpy as np
+from lale.lib.sklearn import LogisticRegression
+import lale
+lale.wrap_imported_operators()
+
+tam = TAM(tans_class=PCA(), name='pca', col_names=['a', 'b', 'c'], col_dtypes=[np.dtype('float32'), np.dtype('float32'), np.dtype('float32')])
+pipeline = tam >> LogisticRegression()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+        import pandas as pd
+        import numpy as np
+        test = pd.DataFrame(np.random.randint(0,100,size=(15, 3)), columns=['a','b','c'], dtype=np.dtype('float32'))
+        trained = pipeline.fit(test.to_numpy(), [0,1,1,0,0,0,1,1,1,1,0,0,1,0,1])
+        trained.predict(test.to_numpy())
+
     def test_autoai_libs_ta1(self):
         from autoai_libs.cognito.transforms.transform_utils import TA1
         import numpy as np
