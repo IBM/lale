@@ -283,7 +283,9 @@ If integer: number of folds in sklearn.model_selection.StratifiedKFold.
 If object with split function: generator yielding (train, test) splits
 as arrays of indices. Can use any of the iterators from
 https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
-                'type': 'integer',
+                'anyOf':[
+                    {'type': 'integer'},
+                    {'laleType':'Any', 'forOptimizer':False}],
                 'minimum': 1,
                 'default': 5},
             'handle_cv_failure': {
