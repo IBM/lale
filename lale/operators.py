@@ -1957,7 +1957,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             pass #TODO
         return out
     
-    def fit_with_batches(self, X, y=None, serialize=True):
+    def fit_with_batches(self, X, y=None, serialize=True, num_epochs_batching=None):
         """[summary]
         
         Parameters
@@ -1998,8 +1998,11 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 try:
                     num_epochs = trainable._impl_instance().num_epochs
                 except AttributeError:
-                    warnings.warn("Operator {} does not have num_epochs, using 1 as a default".format(trainable.name()))
-                    num_epochs = 1
+                    if num_epochs_batching is None:
+                        warnings.warn("Operator {} does not have num_epochs and none given to Batching operator, using 1 as a default".format(trainable.name()))
+                        num_epochs = 1
+                    else:
+                        num_epochs = num_epochs_batching
             else:
                 raise AttributeError("All operators to be trained with batching need to implement partial_fit. {} doesn't.".format(operator.name()))
             inputs_for_transform = inputs
