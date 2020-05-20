@@ -519,6 +519,12 @@ def create_data_loader(X, y = None, batch_size = 1):
         X = X.to_numpy()
         if isinstance(y, pd.Series):
             y = y.to_numpy()
+    elif isinstance(X, scipy.sparse.csr.csr_matrix):
+        #unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
+        X = X.toarray()
+        if isinstance(y, lale.datasets.data_schemas.NDArrayWithSchema):
+            y = y.view(np.ndarray)
+        dataset = NumpyTorchDataset(X, y)
     elif isinstance(X, np.ndarray):
         #unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
         if isinstance(X, lale.datasets.data_schemas.NDArrayWithSchema):
