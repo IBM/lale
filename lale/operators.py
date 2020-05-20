@@ -1054,10 +1054,11 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         X = self._validate_input_schema('X', X, 'partial_fit')
         y = self._validate_input_schema('y', y, 'partial_fit')
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
+        trainable_impl = self._clone_impl()
         if filtered_fit_params is None:
-            trained_impl = self._impl_instance().partial_fit(X, y)
+            trained_impl = trainable_impl.partial_fit(X, y)
         else:
-            trained_impl = self._impl_instance().partial_fit(
+            trained_impl = trainable_impl.partial_fit(
                 X, y, **filtered_fit_params)
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
@@ -2016,21 +2017,11 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         batch_y = None
                     if trainable.is_supervised():
                         try:
-                            loss = trainable.partial_fit(batch_X, batch_y, classes = y)
+                            trained = trainable.partial_fit(batch_X, batch_y, classes = y)
                         except TypeError:
-                            loss = trainable.partial_fit(batch_X, batch_y)
+                            trained = trainable.partial_fit(batch_X, batch_y)
                     else:
-                        loss = trainable.partial_fit(batch_X)
-                    if type(loss) == float:#This is very brittle, but it is a practice to report loss per epoch or 
-                        #per few epochs in DL, how to achieve it better?
-                        training_loss +=loss
-                        nb_tr_examples += len(batch_data)
-                        nb_tr_steps += 1
-                        print("Train loss of {} at epoch {}: {}".format(trainable.name(), epoch, (training_loss/nb_tr_steps)))
-            try:
-                trained = copy.deepcopy(trainable)
-            except BaseException: #Deepcopy fails for models implemented in tensorflow/keras.
-                trained = trainable
+                        trained = trainable.partial_fit(batch_X)
             trained = TrainedIndividualOp(trained.name(), trained._impl, trained._schemas)                
             trained_map[operator] = trained
             trained_steps.append(trained)
