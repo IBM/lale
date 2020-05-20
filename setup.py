@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from setuptools import setup, find_packages
+from datetime import datetime
 import os
 import sys
 import logging
@@ -53,8 +54,8 @@ else:
 
 import lale
 if "TRAVIS" in os.environ:
-    SHA = os.environ['TRAVIS_COMMIT']
-    VERSION=f'{lale.__version__}-{SHA[:8]}'
+    now = datetime.now().strftime("%m%d%H%M")
+    VERSION=f'{lale.__version__}-{now}'
 else:
     VERSION=lale.__version__
 
