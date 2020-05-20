@@ -52,7 +52,11 @@ else:
         'h5py']
 
 import lale
-VERSION=lale.__version__
+if "TRAVIS" in os.environ:
+    SHA = os.environ['TRAVIS_COMMIT']
+    VERSION=f'{lale.__version__}-{SHA[:8]}'
+else:
+    VERSION=lale.__version__
 
 setup(
     name='lale',

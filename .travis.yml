@@ -32,3 +32,19 @@ script:
   - echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
   - python -m unittest $TEST_CASES
   - echo -en 'travis_fold:end:tests\\r'
+stages:
+  - test
+  - deploy
+jobs:
+  include:
+    - stage: deploy
+      install: skip
+      script: skip
+      deploy:
+          provider: pypi
+          server: https://test.pypi.org/legacy/
+          user: __token__
+          password: $PYPI_TOKEN
+          skip_existing: true
+          on:
+              fork: false
