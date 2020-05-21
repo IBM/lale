@@ -18,19 +18,20 @@ import lale.operators
 import numpy as np
 
 class BatchingImpl():
-  def __init__(self, operator = None, batch_size = 32, shuffle = True, num_workers = 0, inmemory=False):    
+  def __init__(self, operator = None, batch_size = 32, shuffle = True, num_workers = 0, inmemory=False, num_epochs=None):    
     self.operator = operator
     self.batch_size = batch_size
     self.shuffle = shuffle
     self.num_workers = num_workers
     self.inmemory = inmemory
+    self.num_epochs = num_epochs
 
   def fit(self, X, y = None):
     if self.operator is None:
       raise ValueError("The pipeline object can't be None at the time of fit.")
     data_loader = lale.helpers.create_data_loader(X = X, y = y, batch_size = self.batch_size)
     classes = np.unique(y)
-    self.operator = self.operator.fit_with_batches(data_loader, y = classes, serialize = self.inmemory)
+    self.operator = self.operator.fit_with_batches(data_loader, y = classes, serialize = self.inmemory, num_epochs_batching=self.num_epochs)
     return self
 
   def transform(self, X, y = None):
@@ -130,6 +131,13 @@ _hyperparams_schema = {
           'type':'boolean',
           'default': False,
           'description': 'Whether all the computations are done in memory or intermediate outputs are serialized.'
+          },
+        'num_epochs':{
+          'anyOf':[
+            {'type':'integer'},
+            {'enum':[None]}],
+          'default':None,
+          'description': 'Number of epochs. If the operator has `num_epochs` as a parameter, that takes precedence.'
           }
           }}]}
 
