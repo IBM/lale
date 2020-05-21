@@ -54,7 +54,7 @@ else:
 
 import lale
 if "TRAVIS" in os.environ:
-    now = datetime.now().strftime("%m%d%H%M")
+    now = datetime.now().strftime("%y%m%d%H%M")
     VERSION=f'{lale.__version__}-{now}'
 else:
     VERSION=lale.__version__
