@@ -442,14 +442,14 @@ class IndividualOp(Operator):
 
     def _check_schemas(self):
         lale.type_checking.validate_is_schema(self._schemas)
-        from lale.pretty_print import schema_to_string
+        from lale.pretty_print import json_to_string
         assert self.has_tag('transformer') == self.is_transformer(), (
-            f'{self.class_name()}: {schema_to_string(self._schemas)}')
+            f'{self.class_name()}: {json_to_string(self._schemas)}')
         assert self.has_tag('estimator') == hasattr(self._impl, 'predict'), (
-            f'{self.class_name()}: {schema_to_string(self._schemas)}')
+            f'{self.class_name()}: {json_to_string(self._schemas)}')
         if self.has_tag('classifier') or self.has_tag('regressor'):
             assert self.has_tag('estimator'), (
-                f'{self.class_name()}: {schema_to_string(self._schemas)}')
+                f'{self.class_name()}: {json_to_string(self._schemas)}')
 
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1

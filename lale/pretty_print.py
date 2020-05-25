@@ -387,7 +387,7 @@ def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: boo
         result = '\n'.join(gen.assigns)
     return result
 
-def schema_to_string(schema: JSON_TYPE) -> str:
+def json_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
     s2 = ast.parse(s1)
     s3 = astunparse.unparse(s2).strip()
@@ -404,7 +404,7 @@ def schema_to_string(schema: JSON_TYPE) -> str:
 
 def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, call_depth:int=1) -> str:
     if lale.type_checking.is_schema(arg):
-        return schema_to_string(cast(JSON_TYPE, arg))
+        return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
         return _operator_jsn_to_string(jsn, show_imports, combinators)
