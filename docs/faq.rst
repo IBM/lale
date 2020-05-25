@@ -64,3 +64,20 @@ Frequently Asked Questions
     done a little bit of work on computational performance. However,
     it has not been a major focus. If you encounter pain-points,
     please reach out to us.
+
+- What is the relationship between Lale and IBM products?
+
+  - Lale is free and open-source and does not depend on any commercial
+    products. It is available under the `Apache`_ license and only
+    requires the other open-source packages listed in `setup.py`_.
+    Lale is used by IBM's `AutoAI SDK`_. The AutoAI SDK provides API
+    access to various services on IBM cloud, including advanced
+    pipeline search optimizers, cloud-hosted notebooks in Watson
+    Studio, storage for datasets and historical pipelines in Cloud
+    Object Storage, deploying trained pipelines for as a scoring
+    service in Watson Machine Learning, etc. You can use Lale without
+    the AutoAI SDK, Lale does not require the AutoAI SDK to run.
+
+    .. _`Apache`: https://github.com/IBM/lale/blob/master/LICENSE.txt
+    .. _`setup.py`: https://github.com/IBM/lale/blob/master/setup.py
+    .. _`AutoAI SDK`: https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca

@@ -153,21 +153,3 @@ MacOS 10.15 Catalina:
 .. code:: Bash
 
     CFLAGS=-stdlib=libc++  pip install smac
-
-
-For Developers
---------------
-
-If you want to develop Lale itself, we recommend you create a fork
-with a feature branch. This is the typical workflow for open-source
-projects on github. In addition, we expect contributors to submit a
-"Developer's Certificate of Origin" by signing the following form:
-`DCO1.1.txt <https://github.com/IBM/lale/blob/master/DCO1.1.txt>`_.
-Below is a visualization of the workflow.
-
-.. image:: img/repositories.png
-
-Italics in the visualization indicate parts you have to substitute:
-*user* (your user name), *email* (your email associated with github),
-*feature* (the name of the feature branch you are working on), and
-*message* (a description of your commit).
