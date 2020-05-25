@@ -13,7 +13,7 @@ Frequently Asked Questions
   - Besides classification, we mostly use Lale for regression. That
     said, you can define your own scoring metrics for evaluation, and
     pass them to automation tools to guide their search. The following
-    notebook includes an example ``fairness_scorer``:    
+    notebook includes an example ``disparate_impact_scorer``:    
     https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
 
 - I get an error when I instantiate an operator imported from
@@ -31,7 +31,7 @@ Frequently Asked Questions
 
   - Some of the features of Lale can be used if the algorithm
     implementation follows the scikit-learn conventions of fit/predict or
-    fit/transform. You can cast the operator into a Lale operator
+    fit/transform. You can turn any such operator into a Lale operator
     using ``lale_op = lale.operators.make_operator(non_lale_op)``.  If
     you want to get full Lale support for your own operator, we have a
     separate guide for how to do that:
@@ -73,10 +73,10 @@ Frequently Asked Questions
     Lale is used by IBM's `AutoAI SDK`_. The AutoAI SDK provides API
     access to various services on IBM cloud, including advanced
     pipeline search optimizers, cloud-hosted notebooks in Watson
-    Studio, storage for datasets and historical pipelines in Cloud
-    Object Storage, deploying trained pipelines for as a scoring
-    service in Watson Machine Learning, etc. You can use Lale without
-    the AutoAI SDK, Lale does not require the AutoAI SDK to run.
+    Studio, storage for datasets in Cloud Object Storage, storage for
+    historical pipelines, deploying trained pipelines as a scoring
+    service in Watson Machine Learning, etc. Lale does not require
+    the AutoAI SDK to run, you can use it without the AutoAI SDK.
 
     .. _`Apache`: https://github.com/IBM/lale/blob/master/LICENSE.txt
     .. _`setup.py`: https://github.com/IBM/lale/blob/master/setup.py

@@ -146,8 +146,8 @@ class SubschemaError(Exception):
     def __str__(self):
         summary = f'Expected {self.sub_name} to be a subschema of {self.sup_name}.'
         import lale.pretty_print
-        sub = lale.pretty_print.schema_to_string(self.sub)
-        sup = lale.pretty_print.schema_to_string(self.sup)
+        sub = lale.pretty_print.json_to_string(self.sub)
+        sup = lale.pretty_print.json_to_string(self.sup)
         details = f'\n{self.sub_name} = {sub}\n{self.sup_name} = {sup}'
         return summary + details
 
