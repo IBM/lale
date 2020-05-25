@@ -12,6 +12,93 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Classes for Lale operators including individual operators, pipelines, and operator choice.
+
+This module declares several functions for constructing individual
+operators, pipelines, and operator choices.
+
+- Function `make_operator`_ creates an individual Lale operator from a
+  schema and an implementation class or object. This typically gets
+  called when they are imported.
+
+- Functions `get_available_operators`_, `get_available_estimators`_,
+  and `get_available_transformers`_ return lists of individual
+  operators previously registered by `make_operator`.
+
+- Functions `make_pipeline`_ and `Pipeline`_ compose linear sequential
+  pipelines, where each step has an edge to the next step. Instead of
+  these functions you can also use the `>>` combinator.
+
+- Functions `make_union_no_concat`_ and `make_union`_ compose
+  pipelines that operate over the same data without edges between
+  their steps. Instead of these functions you can also use the `&`
+  combinator.
+
+- Function `make_choice` creates an operator choice. Instead of this
+  function you can also use the `|` combinator.
+
+- Function `get_pipeline_of_applicable_type`_ creates a pipeline from
+  steps and edges, thus supporting any arbitrary acyclic directed
+  graph topology.
+
+.. _make_operator: lale.operators.html#lale.operators.make_operator
+.. _get_available_operators: lale.operators.html#lale.operators.get_available_operators
+.. _get_available_estimators: lale.operators.html#lale.operators.get_available_estimators
+.. _get_available_transformers: lale.operators.html#lale.operators.get_available_transformers
+.. _get_pipeline_of_applicable_type: lale.operators.html#lale.operators.get_pipeline_of_applicable_type
+.. _make_pipeline: lale.operators.html#lale.operators.make_pipeline
+.. _Pipeline: Lale.Operators.Html#Lale.Operators.Pipeline
+.. _make_union_no_concat: lale.operators.html#lale.operators.make_union_no_concat
+.. _make_union: lale.operators.html#lale.operators.make_union
+.. _make_choice: lale.operators.html#lale.operators.make_choice
+
+The root of the hierarchy is the abstract class Operator_, all other
+Lale operators inherit from this class, either directly or indirectly.
+
+- The abstract classes Operator_, PlannedOperator_,
+  TrainableOperator_, and TrainedOperator_ correspond to lifecycle
+  states.
+
+- The concrete classes IndividualOp_, PlannedIndividualOp_,
+  TrainableIndividualOp_, and TrainedIndividualOp_ inherit from the
+  corresponding abstract operator classes and encapsulate
+  implementations of individual operators from machine-learning
+  libraries such as scikit-learn.
+
+- The concrete classes BasePipeline_, PlannedPipeline_,
+  TrainablePipeline_, and TrainedPipeline_ inherit from the
+  corresponding abstract operator classes and represent directed
+  acyclic graphs of operators. The steps of a pipeline can be any
+  operators, including individual operators, other pipelines, or
+  operator choices, whose lifecycle state is at least that of the
+  pipeline.
+
+- The concrete class OperatorChoice_ represents a planned operator
+  that offers a choice for automated algorithm selection. The steps of
+  a choice can be any planned operators, including individual
+  operators, pipelines, or other operator choices.
+
+The following picture illustrates the core operator class hierarchy.
+
+.. image:: ../../docs/img/operator_classes.png
+  :alt: operators class hierarchy
+
+.. _BasePipeline: lale.operators.html#lale.operators.BasePipeline
+.. _IndividualOp: lale.operators.html#lale.operators.IndividualOp
+.. _Operator: lale.operators.html#lale.operators.Operator
+.. _OperatorChoice: lale.operators.html#lale.operators.OperatorChoice
+.. _PlannedIndividualOp: lale.operators.html#lale.operators.PlannedIndividualOp
+.. _PlannedOperator: lale.operators.html#lale.operators.PlannedOperator
+.. _PlannedPipeline: lale.operators.html#lale.operators.PlannedPipeline
+.. _TrainableIndividualOp: lale.operators.html#lale.operators.TrainableIndividualOp
+.. _TrainableOperator: lale.operators.html#lale.operators.TrainableOperator
+.. _TrainablePipeline: lale.operators.html#lale.operators.TrainablePipeline
+.. _TrainedIndividualOp: lale.operators.html#lale.operators.TrainedIndividualOp
+.. _TrainedOperator: lale.operators.html#lale.operators.TrainedOperator
+.. _TrainedPipeline: lale.operators.html#lale.operators.TrainedPipeline
+
+"""
+
 import lale.helpers
 import lale.type_checking
 from abc import abstractmethod
@@ -380,7 +467,7 @@ class TrainedOperator(TrainableOperator):
 _schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
 
 
-class DictionaryObjectForEnum():
+class _DictionaryObjectForEnum():
     _d:Dict[str, enumeration.Enum]
 
     def __init__(self, d:Dict[str, enumeration.Enum]):
@@ -455,14 +542,14 @@ class IndividualOp(Operator):
         # so that their usage looks like LogisticRegression.penalty.l1
 #        enum_gen.addSchemaEnumsAsFields(self, self.hyperparam_schema())
 
-    _enum_attributes:Optional[DictionaryObjectForEnum]
+    _enum_attributes:Optional[_DictionaryObjectForEnum]
 
     @property
-    def enum(self)->DictionaryObjectForEnum:
+    def enum(self)->_DictionaryObjectForEnum:
         ea = getattr(self, '_enum_attributes', None)
         if ea is None:
             nea = enum_gen.schemaToPythonEnums(self.hyperparam_schema())
-            doe = DictionaryObjectForEnum(nea)
+            doe = _DictionaryObjectForEnum(nea)
             self._enum_attributes = doe
             return doe
         else:
@@ -2411,7 +2498,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
 
-class PipelineFactory():
+class _PipelineFactory:
     def __init__(self):
         pass
 
@@ -2424,7 +2511,7 @@ class PipelineFactory():
                 steps[i] = op[1]
         return make_pipeline(*steps)
 
-Pipeline = PipelineFactory()
+Pipeline = _PipelineFactory()
 
 def get_pipeline_of_applicable_type(steps, edges, ordered=False)->PlannedPipeline:
     """
