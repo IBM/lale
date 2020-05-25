@@ -14,8 +14,7 @@ machine learning, this library is for you!
 Lale adds value beyond scikit-learn along three dimensions:
 automation, correctness checks, and interoperability.
 For *automation*, Lale provides a consistent high-level interface to
-existing pipeline search tools including GridSearchCV, SMAC, and
-Hyperopt.
+existing pipeline search tools including Hyperopt, GridSearchCV, and SMAC.
 For *correctness checks*, Lale uses JSON Schema to catch mistakes when
 there is a mismatch between hyperparameters and their type, or between
 data and operators.
@@ -30,6 +29,7 @@ edited with off-the-shelf Python tools such as Jupyter notebooks.
 * Technical overview [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), and [video](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
 * IBM's [AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only) uses Lale, see demo [notebook](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
 * Guide for wrapping [new operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
+* Guide for [contributing](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) to Lale
 * [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
 * arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
@@ -56,6 +56,3 @@ Lale is distributed under the terms of the Apache 2.0 License, see
 [LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt).
 It is currently in an **Alpha release**, without warranties of any
 kind.
-
-Contributors are expected to submit a "Developer's Certificate of
-Origin", which can be found in [DCO1.1.txt](https://github.com/IBM/lale/blob/master/DCO1.1.txt).
