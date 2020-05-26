@@ -17,14 +17,6 @@
 This module declares several functions for constructing individual
 operators, pipelines, and operator choices.
 
-- Function `make_operator`_ creates an individual Lale operator from a
-  schema and an implementation class or object. This typically gets
-  called when they are imported.
-
-- Functions `get_available_operators`_, `get_available_estimators`_,
-  and `get_available_transformers`_ return lists of individual
-  operators previously registered by `make_operator`.
-
 - Functions `make_pipeline`_ and `Pipeline`_ compose linear sequential
   pipelines, where each step has an edge to the next step. Instead of
   these functions you can also use the `>>` combinator.
@@ -40,6 +32,14 @@ operators, pipelines, and operator choices.
 - Function `get_pipeline_of_applicable_type`_ creates a pipeline from
   steps and edges, thus supporting any arbitrary acyclic directed
   graph topology.
+
+- Function `make_operator`_ creates an individual Lale operator from a
+  schema and an implementation class or object. This is called for each
+  of the operators in module lale.lib when it is being imported.
+
+- Functions `get_available_operators`_, `get_available_estimators`_,
+  and `get_available_transformers`_ return lists of individual
+  operators previously registered by `make_operator`.
 
 .. _make_operator: lale.operators.html#lale.operators.make_operator
 .. _get_available_operators: lale.operators.html#lale.operators.get_available_operators
@@ -114,7 +114,7 @@ import copy
 from lale.util.VisitorMeta import AbstractVisitorMeta
 from lale.search.PGO import remove_defaults_dict
 import inspect
-from lale.schemas import Schema 
+from lale.schemas import Schema
 import jsonschema
 import lale.pretty_print
 import logging
@@ -125,94 +125,127 @@ from sklearn.pipeline import if_delegate_has_method
 import sklearn.base
 
 logger = logging.getLogger(__name__)
-	
-class Operator(metaclass=AbstractVisitorMeta):
-    """Abstract base class for a LALE operator.
 
-    Pipelines and individual operators extend this.
-    
-    """
+_combinators_docstrings = """
+    Methods
+    -------
+
+    step_1 >> step_2 -> PlannedPipeline
+        Pipe combinator, create two-step pipeline with edge from step_1 to step_2.
+
+        If step_1 is a pipeline, create edges from all of its sinks.
+        If step_2 is a pipeline, create edges to all of its sources.
+
+        Parameters
+        ^^^^^^^^^^
+        step_1 : Operator
+            The origin of the edge(s).
+        step_2 : Operator
+            The destination of the edge(s).
+
+        Returns
+        ^^^^^^^
+        BasePipeline
+            Pipeline with edge from step_1 to step_2.
+
+    step_1 & step_2 -> PlannedPipeline
+        And combinator, create two-step pipeline without an edge between step_1 and step_2.
+
+        Parameters
+        ^^^^^^^^^^
+        step_1 : Operator
+            The first step.
+        step_2 : Operator
+            The second step.
+
+        Returns
+        ^^^^^^^
+        BasePipeline
+            Pipeline without any additional edges beyond those already inside of step_1 or step_2.
+
+    step_1 | step_2 -> OperatorChoice
+        Or combinator, create operator choice between step_1 and step_2.
+
+        Parameters
+        ^^^^^^^^^^
+        step_1 : Operator
+            The first step.
+        step_2 : Operator
+            The second step.
+
+        Returns
+        ^^^^^^^
+        OperatorChoice
+            Algorithmic coice between step_1 or step_2."""
+
+class Operator(metaclass=AbstractVisitorMeta):
+    """Abstract base class for all Lale operators.
+
+    Pipelines and individual operators extend this."""
 
     _name:str
 
-    def __and__(self, other:'Operator')->'Operator':
-        """Overloaded `and` operator. 
-        
-        Creates a union of the two operators.
-        TODO:Explain more.
-
-        Parameters
-        ----------
-        other : Operator
-        
-        Returns
-        -------
-        Pipeline
-            Returns a pipeline that consists of union of self and other.
-        """
+    def __and__(self, other:'Operator')->'PlannedPipeline':
         return make_union_no_concat(self, other)
 
-    def __rand__(self, other:'Operator')->'Operator':
+    def __rand__(self, other:'Operator')->'PlannedPipeline':
         return make_union_no_concat(other, self)
 
-    def __rshift__(self, other:'Operator')->'Operator':
-        """Overloaded `>>` operator. 
-        
-        Creates a pipeline of the two operators, current operator followed
-        by the operator passed as parameter.
-
-        Parameters
-        ----------
-        other : Operator
-        
-        Returns
-        -------
-        Pipeline
-            Returns a pipeline that contains `self` followed by `other`.
-        """
+    def __rshift__(self, other:'Operator')->'PlannedPipeline':
         return make_pipeline(self, other)
 
-    def __rrshift__(self, other:'Operator')->'Operator':
+    def __rrshift__(self, other:'Operator')->'PlannedPipeline':
         return make_pipeline(other, self)
 
-    def __or__(self, other:'Operator')->'Operator':
-        """Overloaded `or` operator. 
-        
-        Creates an OperatorChoice consisting of the two operators, current operator followed
-        by the operator passed as parameter.
-
-        Parameters
-        ----------
-        other : Operator
-        
-        Returns
-        -------
-        OperatorChoice
-            Returns an OperatorChoice object that contains `self` and `other`.
-        """
+    def __or__(self, other:'Operator')->'OperatorChoice':
         return make_choice(self, other)
 
-    def __ror__(self, other:'Operator')->'Operator':
+    def __ror__(self, other:'Operator')->'OperatorChoice':
         return make_choice(other, self)
 
     def name(self) -> str:
+        """Get the name of this operator instance."""
         return self._name
 
     def _set_name(self, name:str):
-        """Sets the name of the operator.        
-        """
+        """Set the name of this operator instance."""
         self._name = name
 
     def class_name(self)->str:
+        """Fully qualified Python class name of this operator."""
         cls = self.__class__
         return cls.__module__ + '.' + cls.__name__
 
     @abstractmethod
     def validate_schema(self, X, y=None):
+        """Validate that X and y are valid with respect to the input schema of this operator.
+
+        Parameters
+        ----------
+        X :
+            Features.
+        y :
+            Target class labels or None for unsupervised operators.
+
+        Raises
+        ------
+        ValueError
+            If X or y are invalid as inputs."""
         pass
 
     @abstractmethod
-    def transform_schema(self, s_X):
+    def transform_schema(self, s_X) -> JSON_TYPE:
+        """Return the output schema given the input schema.
+
+        Parameters
+        ----------
+        s_X :
+            Input dataset or schema.
+
+        Returns
+        -------
+        JSON schema
+            Schema of the output data given the input data schema."""
         pass
 
     @abstractmethod
@@ -220,13 +253,30 @@ class Operator(metaclass=AbstractVisitorMeta):
         """Input schema for the fit method."""
         pass
 
-    def to_json(self):
-        """Returns the json representation of the operator.
+    def to_json(self) -> JSON_TYPE:
+        """Returns the JSON representation of the operator.
+
+        Returns
+        -------
+        JSON document
+            JSON representation that describes this operator and is valid with respect to lale.json_operator.SCHEMA.
         """
         return lale.json_operator.to_json(self, call_depth=2)
 
     def visualize(self, ipython_display:bool=True):
         """Visualize the operator using graphviz (use in a notebook).
+
+        Parameters
+        ----------
+        ipython_display : bool, default True
+            If True, proactively ask Jupyter to render the graph.
+            Otherwise, the graph will only be rendered when visualize()
+            was called in the last statement in a notebook cell.
+
+        Returns
+        -------
+        Digraph
+            Digraph object from the graphviz package.
         """
         return lale.helpers.to_graphviz(self, ipython_display, call_depth=2)
 
@@ -256,6 +306,11 @@ class Operator(metaclass=AbstractVisitorMeta):
             - 'input'
 
               Create a new notebook cell with pretty-printed code as input.
+
+        Returns
+        -------
+        str or None
+            If called with ipython_display=False, return pretty-printed Python source code as a Python string.
         """
         result = lale.pretty_print.to_string(self, show_imports, combinators, call_depth=2)
         if ipython_display == False:
@@ -285,16 +340,24 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     @abstractmethod
     def is_supervised(self)->bool:
-        """Checks if this operator needs labeled data for learning (the `y' argument for fit)
+        """Checks if this operator needs labeled data for learning.
+
+        Returns
+        -------
+        bool
+            True if the fit method requires a y argument.
         """
         pass
 
+Operator.__doc__ = cast(str, Operator.__doc__) + '\n' + _combinators_docstrings
+
 class PlannedOperator(Operator):
+    """Abstract class for Lale operators in the planned lifecycle state."""
+
     def auto_configure(self, X, y = None, optimizer = None, cv = None, scoring = None, **kwargs)->'TrainableOperator':
         """
-        Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
-        operator. The output is a trainable/trained operator chosen by the optimizer.
-        
+        Perform combined algorithm selection and hyperparameter tuning on this planned operator.
+
         Parameters
         ----------
         X:
@@ -307,16 +370,17 @@ class PlannedOperator(Operator):
             default is None.
         cv:
             cross-validation option that is valid for the optimizer.
-            default is None, which will use the optimizer's default value.
+            Default is None, which will use the optimizer's default value.
         scoring:
             scoring option that is valid for the optimizer.
-            default is None, which will use the optimizer's default value.
+            Default is None, which will use the optimizer's default value.
         kwargs:
-            other keyword arguments to be passed to the optimizer.
-        
+            Other keyword arguments to be passed to the optimizer.
+
         Returns
         -------
-        Trainable that is chosen after performing CASH.
+        TrainableOperator
+            Best operator discovered by the optimizer.
         """
         if optimizer is None:
             raise ValueError("Please provide a valid optimizer for auto_configure.")
@@ -330,7 +394,10 @@ class PlannedOperator(Operator):
         trained = optimizer_obj.fit(X, y)
         return trained.get_pipeline()
 
+PlannedOperator.__doc__ = cast(str, PlannedOperator.__doc__) + '\n' + _combinators_docstrings
+
 class TrainableOperator(PlannedOperator):
+    """Abstract class for Lale operators in the trainable lifecycle state."""
 
     @abstractmethod
     def fit(self, X, y=None, **fit_params)->'TrainedOperator':
@@ -381,14 +448,18 @@ class TrainableOperator(PlannedOperator):
         """
         pass
 
+TrainableOperator.__doc__ = cast(str, TrainableOperator.__doc__) + '\n' + _combinators_docstrings
+
 class TrainedOperator(TrainableOperator):
+    """Abstract class for Lale operators in the trained lifecycle state."""
+
     @abstractmethod
     def transform(self, X, y = None):
         """Transform the data.
-        
+
         Parameters
         ----------
-        X : 
+        X :
             Features; see input_transform schema of the operator.
 
         Returns
@@ -405,10 +476,10 @@ class TrainedOperator(TrainableOperator):
     @abstractmethod
     def predict(self, X):
         """Make predictions.
-        
+
         Parameters
         ----------
-        X : 
+        X :
             Features; see input_predict schema of the operator.
 
         Returns
@@ -464,6 +535,8 @@ class TrainedOperator(TrainableOperator):
         """
         pass
 
+TrainedOperator.__doc__ = cast(str, TrainedOperator.__doc__) + '\n' + _combinators_docstrings
+
 _schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
 
 
@@ -495,29 +568,27 @@ class IndividualOp(Operator):
     The enum property can be used to access enumerations for hyper-parameters,
     auto-generated from the operator's schema.
     For example, `LinearRegression.enum.solver.saga`
-    As a short-hand, if the hyper-parameter name does not conflict with 
+    As a short-hand, if the hyper-parameter name does not conflict with
     any fields of this class, the auto-generated enums can also be accessed
     directly.
-    For example, `LinearRegression.solver.saga`
-    """
+    For example, `LinearRegression.solver.saga`"""
 
     _name:str
     _impl:Any
 
     def __init__(self, name:str, impl, schemas) -> None:
         """Create a new IndividualOp.
-        
+
         Parameters
         ----------
         name : String
             Name of the operator.
-        impl : 
+        impl :
             An instance of operator implementation class. This is a class that
             contains fit, predict/transform methods implementing an underlying
             algorithm.
         schemas : dict
             This is a dictionary of json schemas for the operator.
-        
         """
         self._impl = impl
         self._name = name
@@ -2558,7 +2629,7 @@ def make_pipeline(*orig_steps:Union[Operator,Any])->PlannedPipeline:
         prev_op = curr_op
     return get_pipeline_of_applicable_type(steps, edges, ordered=True)
 
-def make_union_no_concat(*orig_steps:Union[Operator,Any])->Operator:
+def make_union_no_concat(*orig_steps:Union[Operator,Any])->PlannedPipeline:
     steps, edges = [], []
     for curr_op in orig_steps:
         if isinstance(curr_op, BasePipeline):
@@ -2570,7 +2641,7 @@ def make_union_no_concat(*orig_steps:Union[Operator,Any])->Operator:
             steps.append(curr_op)
     return get_pipeline_of_applicable_type(steps, edges, ordered=True)
 
-def make_union(*orig_steps:Union[Operator,Any])->Operator:
+def make_union(*orig_steps:Union[Operator,Any])->PlannedPipeline:
     from lale.lib.lale import ConcatFeatures
     return make_union_no_concat(*orig_steps) >> ConcatFeatures()
 
