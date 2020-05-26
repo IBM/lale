@@ -349,7 +349,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
-Operator.__doc__ += '\n' + _combinators_docstrings
+Operator.__doc__ = cast(str, Operator.__doc__) + '\n' + _combinators_docstrings
 
 class PlannedOperator(Operator):
     """Abstract class for Lale operators in the planned lifecycle state."""
@@ -394,7 +394,7 @@ class PlannedOperator(Operator):
         trained = optimizer_obj.fit(X, y)
         return trained.get_pipeline()
 
-PlannedOperator.__doc__ += '\n' + _combinators_docstrings
+PlannedOperator.__doc__ = cast(str, PlannedOperator.__doc__) + '\n' + _combinators_docstrings
 
 class TrainableOperator(PlannedOperator):
     """Abstract class for Lale operators in the trainable lifecycle state."""
@@ -448,7 +448,7 @@ class TrainableOperator(PlannedOperator):
         """
         pass
 
-TrainableOperator.__doc__ += '\n' + _combinators_docstrings
+TrainableOperator.__doc__ = cast(str, TrainableOperator.__doc__) + '\n' + _combinators_docstrings
 
 class TrainedOperator(TrainableOperator):
     """Abstract class for Lale operators in the trained lifecycle state."""
@@ -535,7 +535,7 @@ class TrainedOperator(TrainableOperator):
         """
         pass
 
-TrainedOperator.__doc__ += '\n' + _combinators_docstrings
+TrainedOperator.__doc__ = cast(str, TrainedOperator.__doc__) + '\n' + _combinators_docstrings
 
 _schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
 
