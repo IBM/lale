@@ -114,7 +114,7 @@ import copy
 from lale.util.VisitorMeta import AbstractVisitorMeta
 from lale.search.PGO import remove_defaults_dict
 import inspect
-from lale.schemas import Schema 
+from lale.schemas import Schema
 import jsonschema
 import lale.pretty_print
 import logging
@@ -125,14 +125,11 @@ from sklearn.pipeline import if_delegate_has_method
 import sklearn.base
 
 logger = logging.getLogger(__name__)
-	
-class Operator(metaclass=AbstractVisitorMeta):
-    """Abstract base class for all Lale operators.
 
-    Pipelines and individual operators extend this.
-
+_combinators_docstrings = """
     Methods
     -------
+
     step_1 >> step_2 -> PlannedPipeline
         Pipe combinator, create two-step pipeline with edge from step_1 to step_2.
 
@@ -179,8 +176,12 @@ class Operator(metaclass=AbstractVisitorMeta):
         Returns
         ^^^^^^^
         OperatorChoice
-            Algorithmic coice between step_1 or step_2.
-    """
+            Algorithmic coice between step_1 or step_2."""
+
+class Operator(metaclass=AbstractVisitorMeta):
+    """Abstract base class for all Lale operators.
+
+    Pipelines and individual operators extend this."""
 
     _name:str
 
@@ -348,12 +349,15 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
+Operator.__doc__ += '\n' + _combinators_docstrings
+
 class PlannedOperator(Operator):
+    """Abstract class for Lale operators in the planned lifecycle state."""
+
     def auto_configure(self, X, y = None, optimizer = None, cv = None, scoring = None, **kwargs)->'TrainableOperator':
         """
-        Perform CASH (Combined algorithm selection and hyper-parameter tuning) on the planned
-        operator. The output is a trainable/trained operator chosen by the optimizer.
-        
+        Perform combined algorithm selection and hyperparameter tuning on this planned operator.
+
         Parameters
         ----------
         X:
@@ -366,16 +370,17 @@ class PlannedOperator(Operator):
             default is None.
         cv:
             cross-validation option that is valid for the optimizer.
-            default is None, which will use the optimizer's default value.
+            Default is None, which will use the optimizer's default value.
         scoring:
             scoring option that is valid for the optimizer.
-            default is None, which will use the optimizer's default value.
+            Default is None, which will use the optimizer's default value.
         kwargs:
-            other keyword arguments to be passed to the optimizer.
-        
+            Other keyword arguments to be passed to the optimizer.
+
         Returns
         -------
-        Trainable that is chosen after performing CASH.
+        TrainableOperator
+            Best operator discovered by the optimizer.
         """
         if optimizer is None:
             raise ValueError("Please provide a valid optimizer for auto_configure.")
@@ -389,7 +394,10 @@ class PlannedOperator(Operator):
         trained = optimizer_obj.fit(X, y)
         return trained.get_pipeline()
 
+PlannedOperator.__doc__ += '\n' + _combinators_docstrings
+
 class TrainableOperator(PlannedOperator):
+    """Abstract class for Lale operators in the trainable lifecycle state."""
 
     @abstractmethod
     def fit(self, X, y=None, **fit_params)->'TrainedOperator':
@@ -440,14 +448,18 @@ class TrainableOperator(PlannedOperator):
         """
         pass
 
+TrainableOperator.__doc__ += '\n' + _combinators_docstrings
+
 class TrainedOperator(TrainableOperator):
+    """Abstract class for Lale operators in the trained lifecycle state."""
+
     @abstractmethod
     def transform(self, X, y = None):
         """Transform the data.
-        
+
         Parameters
         ----------
-        X : 
+        X :
             Features; see input_transform schema of the operator.
 
         Returns
@@ -464,10 +476,10 @@ class TrainedOperator(TrainableOperator):
     @abstractmethod
     def predict(self, X):
         """Make predictions.
-        
+
         Parameters
         ----------
-        X : 
+        X :
             Features; see input_predict schema of the operator.
 
         Returns
@@ -523,6 +535,8 @@ class TrainedOperator(TrainableOperator):
         """
         pass
 
+TrainedOperator.__doc__ += '\n' + _combinators_docstrings
+
 _schema_derived_attributes = ['_enum_attributes', '_hyperparam_defaults']
 
 
@@ -554,29 +568,27 @@ class IndividualOp(Operator):
     The enum property can be used to access enumerations for hyper-parameters,
     auto-generated from the operator's schema.
     For example, `LinearRegression.enum.solver.saga`
-    As a short-hand, if the hyper-parameter name does not conflict with 
+    As a short-hand, if the hyper-parameter name does not conflict with
     any fields of this class, the auto-generated enums can also be accessed
     directly.
-    For example, `LinearRegression.solver.saga`
-    """
+    For example, `LinearRegression.solver.saga`"""
 
     _name:str
     _impl:Any
 
     def __init__(self, name:str, impl, schemas) -> None:
         """Create a new IndividualOp.
-        
+
         Parameters
         ----------
         name : String
             Name of the operator.
-        impl : 
+        impl :
             An instance of operator implementation class. This is a class that
             contains fit, predict/transform methods implementing an underlying
             algorithm.
         schemas : dict
             This is a dictionary of json schemas for the operator.
-        
         """
         self._impl = impl
         self._name = name
