@@ -31,7 +31,25 @@ class FS2Impl():
 
     def transform(self, X):
         result = self._wrapped_model.transform(X)
+        if hasattr(self, 'column_names'):
+            self.column_names = [self.column_names[i] for i in self._wrapped_model.cols_to_keep_final_]
+        if hasattr(self, 'column_dtypes'):
+            self.column_dtypes = [self.column_dtypes[i] for i in self._wrapped_model.cols_to_keep_final_]
         return result
+
+    def set_meta_data(self, meta_data_dict):
+        if 'column_names' in meta_data_dict.keys():
+            self.column_names = meta_data_dict['column_names']
+        if 'column_dtypes' in meta_data_dict.keys():
+            self.column_dtypes = meta_data_dict['column_dtypes']
+
+    def get_transform_meta_output(self):
+        return_dict = {}
+        if hasattr(self, 'column_names'):
+            return_dict['column_names'] = self.column_names
+        if hasattr(self, 'column_dtypes'):
+            return_dict['column_dtypes'] = self.column_dtypes
+        return return_dict
 
 _hyperparams_schema = {
     'allOf': [{
