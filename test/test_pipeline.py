@@ -296,5 +296,4 @@ pipeline = make_pipeline(union, numpy_permute_array, ta1_0, fs1_0, ta1_1, fs1_1,
         exec(pipeline_str, globals2)
         pipeline2 = globals2['pipeline']
         sklearn_pipeline =  pipeline2.export_to_sklearn_pipeline()
-        import helpers
         new_pipeline = helpers.import_from_sklearn_pipeline(sklearn_pipeline)
