@@ -14,6 +14,7 @@
 
 import unittest
 import jsonschema
+import os
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
@@ -485,3 +486,59 @@ class TestWithScorer(unittest.TestCase):
         out = scorer(trained, X, y)
         self.assertIsInstance(out, float)
         self.assertNotIsInstance(out, NDArrayWithSchema)
+
+class TestDisablingSchemaValidation(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)
+
+    def test_disable_schema_validation_individual_op(self):
+        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"]='True'
+        from lale.lib.sklearn import PCA
+        import lale.schemas as schemas
+
+        pca_input = schemas.Object(X=schemas.AnyOf([
+            schemas.Array(
+                schemas.Array(
+                    schemas.String())),
+            schemas.Array(
+                schemas.String())]))
+
+        foo = PCA.customize_schema(input_fit=pca_input)
+
+        pca_output = schemas.Object(X=schemas.AnyOf([
+            schemas.Array(
+                schemas.Array(
+                    schemas.String())),
+            schemas.Array(
+                schemas.String())]))
+
+        foo = foo.customize_schema(output_transform=pca_output)
+
+        abc = foo()
+        trained_pca = abc.fit(self.X_train)
+        trained_pca.transform(self.X_test)
+        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"]='False'
+
+    def test_disable_schema_validation_pipeline(self):
+        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"]='True'
+        from lale.lib.sklearn import PCA, LogisticRegression
+        import lale.schemas as schemas
+
+        lr_input = schemas.Object(required=['X', 'y'], X=schemas.AnyOf([
+            schemas.Array(
+                schemas.Array(
+                    schemas.String())),
+            schemas.Array(
+                schemas.String())]),
+            y=schemas.Array(schemas.String()))
+
+        foo = LogisticRegression.customize_schema(input_fit=lr_input)
+        abc = foo()
+        pipeline = PCA() >> abc
+        trained_pipeline = pipeline.fit(self.X_train, self.y_train)
+        trained_pipeline.predict(self.X_test)
+        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"]='False'

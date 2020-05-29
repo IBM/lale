@@ -35,6 +35,7 @@ import jsonschema
 import jsonsubschema
 import lale.helpers
 import numpy as np
+import os
 import pandas as pd
 import scipy.sparse
 import logging
@@ -61,6 +62,9 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
     jsonschema.ValidationError
         The value was invalid for the schema.
     """
+    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
+    if disable_schema is not None and disable_schema.lower()=='true':
+        return True #If schema validation is disabled, always return as valid    
     json_value = lale.helpers.data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema, jsonschema.Draft4Validator)
 
@@ -174,6 +178,9 @@ def validate_schema_or_subschema(lhs, super_schema):
     SubschemaError
         The lhs was or had a schema that was not a subschema of super_schema.
     """
+    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
+    if disable_schema is not None and disable_schema.lower()=='true':
+        return True #If schema validation is disabled, always return as valid
     if is_schema(lhs):
         sub_schema = lhs
     else:

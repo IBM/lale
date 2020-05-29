@@ -185,3 +185,11 @@ class Object(Schema):
         self.set('required', required)
         self.set('additionalProperties', additionalProperties)
         self.set('properties', {k: p.schema for (k, p) in kwargs.items()})
+
+class String(Schema):
+    def __init__(self,
+                desc: Option[str] = undefined,
+                default: Option[str] = undefined,
+                forOptimizer: bool = False):
+        super().__init__(desc, default, forOptimizer)
+        self.set('type', 'string')

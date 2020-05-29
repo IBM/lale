@@ -14,6 +14,7 @@
 
 import lale.type_checking
 import numpy as np
+import os
 import pandas as pd
 import scipy.sparse
 try:
@@ -77,6 +78,9 @@ def is_list_tensor(obj):
     return False
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
+    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
+    if disable_schema is not None and disable_schema.lower()=='true':
+        return obj
     if obj is None:
         return None
     if isinstance(obj, NDArrayWithSchema):
