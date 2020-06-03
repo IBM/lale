@@ -9,7 +9,7 @@ from sklearn.tree import DecisionTreeClassifier as Tree
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
 
-class TestLaleContract(unittest.TestCase):
+class TestAutoAIOutputConsumption(unittest.TestCase):
 
     pickled_model_path = "credit_risk.pickle"
     pickled_model_url = "https://github.com/pmservice/wml-sample-models/raw/master/autoai/credit-risk-prediction/model/credit_risk.pickle"
