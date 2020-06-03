@@ -221,12 +221,12 @@ _input_fit_schema = {
             },
             'description': 'The input samples. Internally, it will be converted to'},
         'y': {
-            'type': 'array',
-            'items': {
-                'anyOf':[
-                {'type': 'number'},
-                {'type': 'string'}]},
-            'description': 'Target values (strings or integers in classification, real numbers'},
+            'anyOf': [
+                {'type': 'array', 'items': {'type': 'number'}},
+                {'type': 'array', 'items': {'type': 'string'}},
+                {'type': 'array', 'items': {'type': 'boolean'}}],
+            'description': 'Labels',
+        },
         'sample_weight': {
             'anyOf': [{
                 'type': 'array',
@@ -346,15 +346,15 @@ _input_predict_schema = {
             'description': 'Whether to predict feature contributions.'},
     },
 }
+
 _output_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return the predicted value for each sample.',
-    'type': 'array',
-    'items': {
-        'anyOf':[
-        {'type': 'number'},
-        {'type': 'string'}]},
-}
+    'anyOf': [
+        {'type': 'array', 'items': {'type': 'number'}},
+        {'type': 'array', 'items': {'type': 'string'}},
+        {'type': 'array', 'items': {'type': 'boolean'}}]}
+
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return the predicted probability for each class for each sample.',
