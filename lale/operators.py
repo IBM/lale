@@ -1187,10 +1187,12 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if hasattr(impl_instance, 'get_params'):
             result = sklearn.base.clone(impl_instance)
         else:
-            # impl_class = self._impl_class()
-            # params_all = self._get_params_all()
-            # result = impl_class(**params_all)
-            result = copy.deepcopy(impl_instance)
+            try:
+                result = copy.deepcopy(impl_instance)
+            except:
+                impl_class = self._impl_class()
+                params_all = self._get_params_all()
+                result = impl_class(**params_all)
         return result
 
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
