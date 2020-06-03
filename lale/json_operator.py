@@ -189,8 +189,8 @@ def _get_cls2label(call_depth: int) -> Dict[str, str]:
     frame = inspect.stack()[call_depth][0]
     cls2label: Dict[str, str] = {}
     cls2state: Dict[str, str] = {}
-    all_items = [*frame.f_locals.items(), *frame.f_globals.items()]
-    for label, op in all_items:
+    all_items: Dict[str, Any] = {**frame.f_locals, **frame.f_globals}
+    for label, op in all_items.items():
         if isinstance(op, lale.operators.IndividualOp):
             state = _get_state(op)
             cls = op.class_name()

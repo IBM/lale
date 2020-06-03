@@ -169,7 +169,8 @@ _input_fit_schema = {
             'description': 'Target values',
             'anyOf': [
                 {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}}]
+                {'type': 'array', 'items': {'type': 'string'}},
+                {'type': 'array', 'items': {'type': 'boolean'}}]
             },
         'coef_init': {
             'type': 'array',
@@ -203,7 +204,8 @@ _output_predict_schema = {
     'description': 'Predict class labels for samples in X.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}}]}
+        {'type': 'array', 'items': {'type': 'string'}},
+        {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_decision_function_schema = {
   'type': 'object',

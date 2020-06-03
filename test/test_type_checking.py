@@ -470,6 +470,27 @@ class TestSchemaValidation(unittest.TestCase):
         self.assertTrue(is_subschema(num_schema, any_schema))
         self.assertTrue(is_subschema(any_schema, num_schema))
 
+    def test_bool_label(self):
+        import pandas as pd
+        data_records = [
+            {'IS_TENT':False, 'GENDER':'M', 'AGE':20, 'MARITAL_STATUS':'Single',  'PROFESSION':'Sales'},
+            {'IS_TENT':False, 'GENDER':'M', 'AGE':20, 'MARITAL_STATUS':'Single',  'PROFESSION':'Sales'},
+            {'IS_TENT':False, 'GENDER':'F', 'AGE':37, 'MARITAL_STATUS':'Single',  'PROFESSION':'Other'},
+            {'IS_TENT':False, 'GENDER':'M', 'AGE':42, 'MARITAL_STATUS':'Married', 'PROFESSION':'Other'},
+            {'IS_TENT':True,  'GENDER':'F', 'AGE':24, 'MARITAL_STATUS':'Married', 'PROFESSION':'Retail'},
+            {'IS_TENT':False, 'GENDER':'F', 'AGE':24, 'MARITAL_STATUS':'Married', 'PROFESSION':'Retail'},
+            {'IS_TENT':False, 'GENDER':'M', 'AGE':29, 'MARITAL_STATUS':'Single',  'PROFESSION':'Retail'},
+            {'IS_TENT':False, 'GENDER':'M', 'AGE':29, 'MARITAL_STATUS':'Single',  'PROFESSION':'Retail'},
+            {'IS_TENT':True,  'GENDER':'M', 'AGE':43, 'MARITAL_STATUS':'Married', 'PROFESSION':'Trades'},
+            {'IS_TENT':False, 'GENDER':'M', 'AGE':43, 'MARITAL_STATUS':'Married', 'PROFESSION':'Trades'}]
+        df = pd.DataFrame.from_records(data_records)
+        X = df.drop(['IS_TENT'], axis=1).values
+        y = df['IS_TENT'].values
+        from lale.lib.sklearn import OneHotEncoder as Enc
+        from lale.lib.sklearn import GradientBoostingClassifier as Clf
+        trainable = Enc() >> Clf()
+        trained = trainable.fit(X, y)
+
 class TestWithScorer(unittest.TestCase):
     def test_bare_array(self):
         from lale.datasets.data_schemas import NDArrayWithSchema

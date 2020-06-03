@@ -95,7 +95,8 @@ _input_fit_schema = {
         'y': {
             'anyOf': [
                 {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}}],
+                {'type': 'array', 'items': {'type': 'string'}},
+                {'type': 'array', 'items': {'type': 'boolean'}}],
             'description': 'Target values (integers)'},
     },
 }
@@ -118,7 +119,8 @@ _output_predict_schema = {
     'description': 'Perform classification on an array of test vectors X.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}}]}
+        {'type': 'array', 'items': {'type': 'string'}},
+        {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

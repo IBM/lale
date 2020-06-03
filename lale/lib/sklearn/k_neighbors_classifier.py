@@ -129,7 +129,8 @@ _input_fit_schema = {
                 {'type': 'array', 'items': {'type': 'number'}},
                 {'type': 'array', 'items': {
                     'type': 'array', 'items': {'type': 'number'}}},
-                {'type': 'array', 'items': {'type': 'string'}}]}}}
+                {'type': 'array', 'items': {'type': 'string'}},
+                {'type': 'array', 'items': {'type': 'boolean'}}]}}}
 
 _input_predict_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -152,7 +153,8 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'number'}},
         {'type': 'array', 'items': {
             'type': 'array', 'items': {'type': 'number'}}},
-        {'type': 'array', 'items': {'type': 'string'}}]}
+        {'type': 'array', 'items': {'type': 'string'}},
+        {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',

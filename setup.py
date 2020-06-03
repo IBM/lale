@@ -81,7 +81,7 @@ setup(
             'tensorflow_hub',
             'spacy',
             'smac<=0.10.0',
-            'aif360',
+            'aif360<=0.2.3',
             'numba',
             'torch>=1.0',
             'BlackBoxAuditing',
