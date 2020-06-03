@@ -128,7 +128,7 @@ def strip_schema(obj):
 
 def dtype_to_schema(typ):
     result = None
-    if typ is bool or typ is np.bool_:
+    if typ is bool or np.issubdtype(typ, np.bool_):
         result = {'type': 'boolean'}
     elif np.issubdtype(typ, np.unsignedinteger):
         result = {'type': 'integer', 'minimum': 0}
