@@ -43,7 +43,7 @@ class VisitorMeta(object):
 # post 3.7, GenericMeta no longer exists
 import sys
 if sys.version_info < (3, 7, 0):
-    from typing import GenericMeta
+    from typing import GenericMeta # type: ignore 
 else:
     global GenericMeta 
     GenericMeta = ABCMeta # type: ignore 
