@@ -15,7 +15,7 @@
 import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
-
+import numpy as np
 class TA1Impl():
     def __init__(self, fun, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
         self._hyperparams = {
@@ -31,6 +31,22 @@ class TA1Impl():
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TA1(**self._hyperparams)
 
     def fit(self, X, y=None, **fit_params):
+        num_columns = X.shape[1]
+        col_dtypes = self._hyperparams['col_dtypes']
+        if len(col_dtypes) < num_columns:
+            if hasattr(self, 'column_names'):
+                col_names = self.column_names
+            else:
+                col_names = self._hyperparams['col_names']
+                for i in range(num_columns-len(col_dtypes)):
+                    col_names.append("col"+str(i))
+            if hasattr(self, 'column_dtypes'):
+                col_dtypes = self.column_dtypes
+            else:
+                for i in range(num_columns-len(col_dtypes)):            
+                    col_dtypes.append(np.float32)
+            fit_params['col_names'] = col_names    
+            fit_params['col_dtypes'] = col_dtypes
         if fit_params is None:
             self._wrapped_model.fit(X, y)
         else:
@@ -40,6 +56,26 @@ class TA1Impl():
     def transform(self, X):
         result = self._wrapped_model.transform(X)
         return result
+
+    def get_transform_meta_output(self):
+        return_meta_data_dict = {}
+        if self._wrapped_model.new_column_names_ is not None:
+            final_column_names = []
+            final_column_names.extend(self._wrapped_model.col_names_)
+            final_column_names.extend(self._wrapped_model.new_column_names_)
+            return_meta_data_dict['column_names'] = final_column_names
+        if self._wrapped_model.new_column_dtypes_ is not None:
+            final_column_dtypes = []
+            final_column_dtypes.extend(self._wrapped_model.col_dtypes)
+            final_column_dtypes.extend(self._wrapped_model.new_column_dtypes_)
+            return_meta_data_dict['column_dtypes'] = final_column_dtypes
+        return return_meta_data_dict
+
+    def set_meta_data(self, meta_data_dict):
+        if 'column_names' in meta_data_dict.keys():
+            self.column_names = meta_data_dict['column_names']
+        if 'column_dtypes' in meta_data_dict.keys():
+            self.column_dtypes = meta_data_dict['column_dtypes']
 
 _hyperparams_schema = {
     'allOf': [{

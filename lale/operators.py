@@ -1187,9 +1187,12 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if hasattr(impl_instance, 'get_params'):
             result = sklearn.base.clone(impl_instance)
         else:
-            impl_class = self._impl_class()
-            params_all = self._get_params_all()
-            result = impl_class(**params_all)
+            try:
+                result = copy.deepcopy(impl_instance)
+            except:
+                impl_class = self._impl_class()
+                params_all = self._get_params_all()
+                result = impl_class(**params_all)
         return result
 
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
@@ -2019,9 +2022,10 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     if hasattr(trained._impl, "get_predict_meta_output"):
                         meta_output = trained._impl_instance().get_predict_meta_output()
                 outputs[operator] = output
-                meta_output.update({key:meta_outputs[pred][key] for pred in preds 
-                        if meta_outputs[pred] is not None for key in meta_outputs[pred]})
-                meta_outputs[operator] = meta_output
+                meta_output_so_far = {key:meta_outputs[pred][key] for pred in preds 
+                        if meta_outputs[pred] is not None for key in meta_outputs[pred]}
+                meta_output_so_far.update(meta_output)#So newest gets preference in case of collisions
+                meta_outputs[operator] = meta_output_so_far
 
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
