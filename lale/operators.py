@@ -2301,9 +2301,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 if hasattr(operator._impl, "get_predict_meta_output"):
                     meta_output = operator._impl_instance().get_predict_meta_output()
             outputs[operator] = output
-            meta_output.update({key:meta_outputs[pred][key] for pred in preds 
-                    if meta_outputs[pred] is not None for key in meta_outputs[pred]})
-            meta_outputs[operator] = meta_output
+            meta_output_so_far = {key:meta_outputs[pred][key] for pred in preds 
+                        if meta_outputs[pred] is not None for key in meta_outputs[pred]}
+            meta_output_so_far.update(meta_output)#So newest gets preference in case of collisions
+            meta_outputs[operator] = meta_output_so_far
         result = outputs[self._steps[-1]]
         return result
 
