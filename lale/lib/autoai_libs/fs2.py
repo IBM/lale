@@ -31,10 +31,13 @@ class FS2Impl():
 
     def transform(self, X):
         result = self._wrapped_model.transform(X)
-        if hasattr(self, 'column_names'):
-            self.column_names = [self.column_names[i] for i in self._wrapped_model.cols_to_keep_final_]
-        if hasattr(self, 'column_dtypes'):
-            self.column_dtypes = [self.column_dtypes[i] for i in self._wrapped_model.cols_to_keep_final_]
+        try:
+            if hasattr(self, 'column_names'):
+                self.column_names = [self.column_names[i] for i in self._wrapped_model.cols_to_keep_final_]
+            if hasattr(self, 'column_dtypes'):
+                self.column_dtypes = [self.column_dtypes[i] for i in self._wrapped_model.cols_to_keep_final_]
+        except:
+            pass
         return result
 
     def set_meta_data(self, meta_data_dict):
