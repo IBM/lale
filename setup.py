@@ -95,6 +95,8 @@ setup(
             'sphinx',
             'm2r',
             'sphinx_rtd_theme',
-            'sphinxcontrib.apidoc'
+            'sphinxcontrib.apidoc',
+            'pytest-cov',
+            'codecov'
         ]}
 )

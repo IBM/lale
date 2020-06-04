@@ -39,8 +39,12 @@ stages:
 jobs:
   include:
     - stage: deploy
-      install: skip
-      script: skip
+      install:
+        - pip install .[full,test]
+      script: 
+        - py.test --cov-report=xml --cov=lale test/
+      after_success:
+        - codecov
       deploy:
           provider: pypi
           server: https://test.pypi.org/legacy/
