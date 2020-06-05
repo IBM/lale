@@ -67,7 +67,7 @@ class Grammar(Operator):
     def input_schema_fit(self):
         raise NotImplementedError() #TODO
 
-    def _unfold(self, op: Operator, n: int) -> Optional[PlannedOperator]:
+    def _unfold(self, op: Operator, n: int) -> Optional[Operator]:
         """ Unroll all possible operators from the grammar `g` starting from    non-terminal `op` after `n` derivations.
         
         Parameters
@@ -117,7 +117,7 @@ class Grammar(Operator):
         op = self._unfold(self.start, n)
         return make_pipeline(op) if op else NoOp
     
-    def _sample(self, op: Operator, n: int) -> Optional[PlannedOperator]:
+    def _sample(self, op: Operator, n: int) -> Optional[Operator]:
         """
         Sample the grammar `g` starting from `g.start`, that is, choose one element at random for each possible choices.
         
