@@ -17,6 +17,8 @@ addons:
     - graphviz
     - r-base
     - swig
+before_install:
+  - pip install -U numpy
 install:
   - pip install $SETUP_TARGET
   - export PYTHONPATH=`pwd`
