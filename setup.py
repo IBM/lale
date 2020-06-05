@@ -38,12 +38,12 @@ if on_rtd:
     install_requires = []
 else:
     install_requires=[
+        'numpy',
         'astunparse',
         'graphviz',
         'hyperopt==0.2.3',
         'jsonschema',
         'jsonsubschema',
-        'numpy',
         'scikit-learn==0.20.3',
         'scipy',
         'pandas<=0.25.3',
