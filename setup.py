@@ -43,7 +43,7 @@ else:
         'hyperopt==0.2.3',
         'jsonschema',
         'jsonsubschema',
-        'numpy==1.18.4',
+        'numpy',
         'scikit-learn==0.20.3',
         'scipy',
         'pandas<=0.25.3',
