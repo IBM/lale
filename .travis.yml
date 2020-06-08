@@ -33,7 +33,7 @@ script:
   - mypy -p lale
   - echo -en 'travis_fold:end:mypy\\r'
   - echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
-  - py.test --cov-report=xml --cov=lale $TEST_CASES
+  - py.test -v --cov-report=xml --cov=lale $TEST_CASES
   - bash <(curl -s https://codecov.io/bash)
   - echo -en 'travis_fold:end:tests\\r'
 
