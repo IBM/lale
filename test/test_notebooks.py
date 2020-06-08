@@ -27,13 +27,13 @@ class TestNotebooks(unittest.TestCase):
         print(f'unittest took {duration:5,.1f} seconds for {self.id()}')
 
 def create_test(path):
-    def exec_notebook(self):
+    def test_exec_notebook(self):
         with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
             args = ["jupyter", "nbconvert", "--to", "notebook", "--execute",
                     "--ExecutePreprocessor.timeout=1000",
                     "--output", fout.name, path]
             subprocess.check_call(args)
-    return exec_notebook
+    return test_exec_notebook
 
 for filename in os.listdir('examples'):
     if filename.lower().endswith('.ipynb'):
