@@ -22,21 +22,15 @@ class TestNotebooks(unittest.TestCase):
     def setUp(self):
         self.start_time = time.time()
 
-    def tearDown(self):
-        duration = time.time() - self.start_time
-        print(f'unittest took {duration:5,.1f} seconds for {self.id()}')
-
 def create_test(path):
-    def exec_notebook(self):
+    def test_exec_notebook(self):
         with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
             args = ["jupyter", "nbconvert", "--to", "notebook", "--execute",
                     "--ExecutePreprocessor.timeout=1000",
                     "--output", fout.name, path]
             subprocess.check_call(args)
-    return exec_notebook
+    return test_exec_notebook
 
 for filename in os.listdir('examples'):
     if filename.lower().endswith('.ipynb'):
-        test_name = 'test_notebook_{0}'.format(filename[:-len('.ipynb')])
-        test_method = create_test('examples/'+filename)
-        setattr(TestNotebooks, test_name, test_method)
+        setattr(TestNotebooks, 'test_notebook_{0}'.format(filename[:-len('.ipynb')]), create_test('examples/'+filename))

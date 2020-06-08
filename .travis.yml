@@ -3,10 +3,10 @@ language: python
 python:
   - "3.6"
 env:
- - SETUP_TARGET=.[test] TEST_CASES="test.test_core_operators test.test_core_pipeline test.test_custom_schemas test.test_json_pretty_viz test.test_grammar"
- - SETUP_TARGET=.[full,test] TEST_CASES="test.test_type_checking test.test_interoperability test.test_optimizers test.test_pipeline test.test_autoai_libs"
- - SETUP_TARGET=.[full,test] TEST_CASES="test.test_notebooks"
- - SETUP_TARGET=.[test] TEST_CASES="test.test_autoai_output_consumption"
+ - SETUP_TARGET=.[test] TEST_CASES="test/test_core_operators.py test/test_core_pipeline.py test/test_custom_schemas.py test/test_json_pretty_viz.py"
+ - SETUP_TARGET=.[full,test] TEST_CASES="test/test_type_checking.py test/test_interoperability.py test/test_optimizers.py test/test_pipeline.py test/test_autoai_libs.py"
+ - SETUP_TARGET=.[full,test] TEST_CASES="test/test_notebooks.py"
+ - SETUP_TARGET=.[test] TEST_CASES="test/test_autoai_output_consumption.py"
 addons:
   apt:
     sources:
@@ -33,8 +33,10 @@ script:
   - mypy -p lale
   - echo -en 'travis_fold:end:mypy\\r'
   - echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
-  - python -m unittest $TEST_CASES
+  - py.test -v --cov-report=xml --cov=lale $TEST_CASES
+  - bash <(curl -s https://codecov.io/bash)
   - echo -en 'travis_fold:end:tests\\r'
+
 stages:
   - test
   - deploy
