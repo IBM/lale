@@ -117,7 +117,7 @@ class Grammar(Operator):
         op = self._unfold(self.start, n)
         return make_pipeline(op) if op else NoOp
     
-    def _sample(self, op, n):
+    def _sample(self, op: Operator, n: int) -> Optional[Operator]:
         """
         Sample the grammar `g` starting from `g.start`, that is, choose one element at random for each possible choices.
         
@@ -130,7 +130,7 @@ class Grammar(Operator):
         
         Returns
         -------
-        PlannedOperator
+        Optional[Operator]
         """
         if isinstance(op, BasePipeline):
             steps = op.steps()
