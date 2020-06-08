@@ -33,6 +33,4 @@ def create_test(path):
 
 for filename in os.listdir('examples'):
     if filename.lower().endswith('.ipynb'):
-        test_name = 'test_notebook_{0}'.format(filename[:-len('.ipynb')])
-        test_method = create_test('examples/'+filename)
-        setattr(TestNotebooks, test_name, test_method)
+        setattr(TestNotebooks, 'test_notebook_{0}'.format(filename[:-len('.ipynb')]), create_test('examples/'+filename))
