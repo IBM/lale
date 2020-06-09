@@ -4,7 +4,7 @@
 [![Documentation Status](https://readthedocs.org/projects/lale/badge/?version=latest)](https://lale.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/lale)](https://pypi.python.org/pypi/lale/)
-
+[![codecov](https://codecov.io/gh/IBM/lale/branch/master/graph/badge.svg)](https://codecov.io/gh/IBM/lale)
 <br />
 <img src="https://github.com/IBM/lale/raw/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
