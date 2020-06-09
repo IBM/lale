@@ -794,7 +794,7 @@ class TestVotingClassifier(unittest.TestCase):
         from lale.lib.sklearn import VotingClassifier
         from lale.lib.lale import GridSearchCV
         from sklearn.metrics import accuracy_score, make_scorer
-        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
+        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('rc', RidgeClassifier())], voting='hard')
         trained = clf.auto_configure(self.X_train, self.y_train, GridSearchCV, lale_num_samples=1, lale_num_grids=1, cv=2, scoring=make_scorer(accuracy_score))
 
     def test_with_observed_gridsearch(self):
@@ -804,7 +804,7 @@ class TestVotingClassifier(unittest.TestCase):
         from lale.lib.lale.observing import LoggingObserver
 
         from sklearn.metrics import accuracy_score, make_scorer
-        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
+        clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('rc', RidgeClassifier())], voting='hard')
         trained = clf.auto_configure(self.X_train, self.y_train, GridSearchCV, lale_num_samples=1, lale_num_grids=1, cv=2, scoring=make_scorer(accuracy_score), observer=LoggingObserver)
 
 class TestBaggingClassifier(unittest.TestCase):
