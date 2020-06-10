@@ -190,6 +190,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     s_typed = []
     s_other = []
     s_not_for_optimizer:List[Schema] = []
+    s_extra:Dict[str,Any] = {}
 
     while s_all:
         l = s_all
@@ -228,10 +229,16 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 else:
                     s_not.append(s)
             elif 'enum' in s:
-                # TODO: copy over extra fields (description...)
                 ev = enumValues(set_with_str_for_keys(s['enum']), combined_original_schema)
                 if ev:
                     s_enum_list.append(ev)
+                    for k in extra_field_names:
+                        if k in s:
+                            d = s[k]
+                            if k in s_extra and s_extra[k] != d:
+                                logger.info(f"mergeAll: conflicting {k} fields: {s_extra[k]} and {d} found when merging schemas {schemas}")
+                            else:
+                                s_extra[k] = d
                 else:
                     logger.info(f"simplifyAll: {schemas} is not a satisfiable list of conjoined schemas because the enumeration {list(s['enum'])} has no elements that are satisfiable by the conjoined schemas")
                     return impossible()
