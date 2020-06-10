@@ -386,6 +386,11 @@ class TestImportExport(unittest.TestCase):
         self.assertIsInstance(sklearn_pipeline.named_steps['logisticregression'], LogisticRegression)
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
 
+    def test_export_to_sklearn_pipeline5(self):
+        lale_pipeline = PCA() >> (XGBClassifier() | SGDClassifier())
+        with self.assertRaises(ValueError):
+            sklearn_pipeline = lale_pipeline.export_to_sklearn_pipeline()
+
     def test_export_to_pickle(self):
         from lale.lib.sklearn import LogisticRegression
         from lale.operators import make_pipeline
