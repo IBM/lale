@@ -408,6 +408,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     #if not, call make operator on sklearn classes and create a lale pipeline.
 
     def get_equivalent_lale_op(sklearn_obj, fitted):
+        #Validate that the sklearn_obj is a valid sklearn-compatible object
+        if sklearn_obj is None or not hasattr(sklearn_obj, 'get_params'):
+            raise ValueError("The input pipeline has a step that is not scikit-learn compatible.")
         module_names = ["lale.lib.sklearn", "lale.lib.autoai_libs"]
         from lale.operators import make_operator, TrainedIndividualOp
 

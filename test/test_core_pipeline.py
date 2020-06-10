@@ -188,7 +188,6 @@ class TestImportExport(unittest.TestCase):
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
-
     def test_import_from_sklearn_pipeline1(self):
         from sklearn.decomposition import PCA
         from sklearn.neighbors import KNeighborsClassifier
@@ -313,6 +312,22 @@ class TestImportExport(unittest.TestCase):
         self.assertEqual(lale_pipeline.edges()[4][1]._impl_class(), KNeighborsClassifierImpl)
 
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
+
+    def test_import_from_sklearn_pipeline_noop(self):
+        from sklearn.pipeline import Pipeline
+        from sklearn.ensemble import GradientBoostingClassifier
+        from lale.helpers import import_from_sklearn_pipeline
+        pipe = Pipeline([('noop', None), ('gbc', GradientBoostingClassifier())])
+        with self.assertRaises(ValueError):
+            imported_pipeline = import_from_sklearn_pipeline(pipe)
+
+    def test_import_from_sklearn_pipeline_noop1(self):
+        from sklearn.pipeline import Pipeline
+        from sklearn.ensemble import GradientBoostingClassifier
+        from lale.lib.lale import NoOp
+        from lale.helpers import import_from_sklearn_pipeline
+        pipe = Pipeline([('noop', NoOp()), ('gbc', GradientBoostingClassifier())])
+        imported_pipeline = import_from_sklearn_pipeline(pipe)
 
     def test_export_to_sklearn_pipeline(self):
         from lale.lib.sklearn import PCA
