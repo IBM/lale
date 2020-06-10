@@ -14,23 +14,15 @@
 
 import subprocess
 import tempfile
-import unittest
 import os
 import time
+import pytest
 
-class TestNotebooks(unittest.TestCase):
-    def setUp(self):
-        self.start_time = time.time()
-
-def create_test(path):
-    def test_exec_notebook(self):
-        with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
-            args = ["jupyter", "nbconvert", "--to", "notebook", "--execute",
-                    "--ExecutePreprocessor.timeout=1000",
-                    "--output", fout.name, path]
-            subprocess.check_call(args)
-    return test_exec_notebook
-
-for filename in os.listdir('examples'):
-    if filename.lower().endswith('.ipynb'):
-        setattr(TestNotebooks, 'test_notebook_{0}'.format(filename[:-len('.ipynb')]), create_test('examples/'+filename))
+@pytest.mark.parametrize('filename', [f for f in os.listdir('examples') if f.endswith('.ipynb')])
+def test_notebook(filename):
+    path = os.path.join('examples', filename)
+    with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
+        args = ["jupyter", "nbconvert", "--to", "notebook", "--execute",
+                "--ExecutePreprocessor.timeout=1000",
+                "--output", fout.name, path]
+        subprocess.check_call(args)
