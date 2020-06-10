@@ -1913,6 +1913,12 @@ class BasePipeline(Operator, Generic[OpType]):
                 else:
                     if hasattr(sink_node._impl_instance(), '_wrapped_model'):
                         sklearn_op = sink_node._impl_instance()._wrapped_model
+                        #Find if any of the parameters are Lale operators, convert them as well
+                        if hasattr(sklearn_op, 'get_params') and sklearn_op.get_params() is not None:
+                            for hp_name, hp_val in sklearn_op.get_params().items():
+                                if isinstance(hp_val, Operator) and hasattr(hp_val._impl_instance(), '_wrapped_model'):
+                                    #sklearn_op is a higher order operator, the assumption is that get_params returns the correct attribute name
+                                    setattr(sklearn_op, hp_name, hp_val._impl_instance()._wrapped_model)
                         convert_data_with_schemas_to_data(sklearn_op)#This case needs one more level of conversion
                     else:
                         sklearn_op = sink_node._impl_instance()
