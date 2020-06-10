@@ -322,8 +322,6 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         s_enum = s_enum_diff
         s_not_enum = None
 
-    s_extra:Dict[str,Any] = {}
-
     # break out, combine, and keep 'extra' fields, like description
     if s_typed:
         s_typed = [s.copy() for s in s_typed]
