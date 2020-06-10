@@ -1895,6 +1895,9 @@ class BasePipeline(Operator, Generic[OpType]):
             #Ensure that the pipeline is either linear or has a "union followed by concat" construct
             #Translate the "union followed by concat" constructs to "featureUnion"
             #Inspect the node and convert any data with schema objects to original data types
+            if isinstance(sink_node, OperatorChoice):
+                raise ValueError("A pipeline that has an OperatorChoice can not be converted to "
+                " a scikit-learn pipeline:{}".format(self.to_json()))
             convert_data_with_schemas_to_data(sink_node._impl)
             if sink_node._impl_class() == ConcatFeaturesImpl:
                 list_of_transformers = []
