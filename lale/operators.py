@@ -1877,10 +1877,14 @@ class BasePipeline(Operator, Generic[OpType]):
         from lale.lib.lale.no_op import NoOpImpl
         from sklearn.pipeline import FeatureUnion
 
-        def convert_data_with_schemas_to_data(node):
+        def convert_nested_objects(node):
             for element in dir(node):#Looking at only 1 level for now.
                 try:
                     value = getattr(node,element)
+                    if isinstance(value, Operator) and hasattr(value._impl_instance(), '_wrapped_model'):
+                        #node is a higher order operator
+                        setattr(node, element, value._impl_instance()._wrapped_model)
+
                     stripped = lale.datasets.data_schemas.strip_schema(value)
                     if value is stripped:
                         continue
@@ -1898,7 +1902,7 @@ class BasePipeline(Operator, Generic[OpType]):
             if isinstance(sink_node, OperatorChoice):
                 raise ValueError("A pipeline that has an OperatorChoice can not be converted to "
                 " a scikit-learn pipeline:{}".format(self.to_json()))
-            convert_data_with_schemas_to_data(sink_node._impl)
+            convert_nested_objects(sink_node._impl)
             if sink_node._impl_class() == ConcatFeaturesImpl:
                 list_of_transformers = []
                 for pred in self._preds[sink_node]:
@@ -1913,13 +1917,7 @@ class BasePipeline(Operator, Generic[OpType]):
                 else:
                     if hasattr(sink_node._impl_instance(), '_wrapped_model'):
                         sklearn_op = sink_node._impl_instance()._wrapped_model
-                        #Find if any of the parameters are Lale operators, convert them as well
-                        if hasattr(sklearn_op, 'get_params') and sklearn_op.get_params() is not None:
-                            for hp_name, hp_val in sklearn_op.get_params().items():
-                                if isinstance(hp_val, Operator) and hasattr(hp_val._impl_instance(), '_wrapped_model'):
-                                    #sklearn_op is a higher order operator, the assumption is that get_params returns the correct attribute name
-                                    setattr(sklearn_op, hp_name, hp_val._impl_instance()._wrapped_model)
-                        convert_data_with_schemas_to_data(sklearn_op)#This case needs one more level of conversion
+                        convert_nested_objects(sklearn_op)#This case needs one more level of conversion
                     else:
                         sklearn_op = sink_node._impl_instance()
                     sklearn_op = copy.deepcopy(sklearn_op)
