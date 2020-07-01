@@ -10,13 +10,8 @@ env:
  - SETUP_TARGET=.[test] TEST_CASES="test/test_autogen_lib.py"
 addons:
   apt:
-    sources:
-    - sourceline: 'ppa:mhier/graphviz-latest'
-    - sourceline: deb http://cloud.r-project.org/bin/linux/ubuntu xenial/
-      key_url: http://keyserver.ubuntu.com/pks/lookup?op=get&search=0x51716619E084DAB9
     packages:
     - graphviz
-    - r-base
     - swig
 before_install:
   - pip install -U numpy

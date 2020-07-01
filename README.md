@@ -55,6 +55,16 @@ The following paper has a technical deep-dive:
   url = "https://arxiv.org/abs/1906.03957" }
 ```
 
+The schemas of the operators defined in the `lale.lib.autogen` module were automatically generated from the source code of 115 scikit-learn operators. The following paper describes the schema extractor:
+```
+@InProceedings{baudart_et_al_2020,
+  title = "Mining Documentation to Extract Hyperparameter Schemas",
+  author = "Baudart, Guillaume and Kirchner, Peter and Hirzel, Martin and Kate, Kiran",
+  booktitle = "ICML Workshop on Automated Machine Learning (AutoML@ICML)",
+  year = 2020,
+  url = "https://arxiv.org/abs/2006.16984" }
+```
+
 Lale is distributed under the terms of the Apache 2.0 License, see
 [LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt).
 It is currently in an **Alpha release**, without warranties of any
