@@ -12,6 +12,7 @@ addons:
   apt:
     packages:
     - graphviz
+    - swig
 before_install:
   - pip install -U numpy
 install:
