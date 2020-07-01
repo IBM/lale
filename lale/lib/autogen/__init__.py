@@ -5,13 +5,11 @@ The resulting schemas are all valid and usable to build Lale pipelines.
 
 The following paper describes the schema extractor:
 ```
-@Article{arxiv20-docminer,
-  author = "Guillaume Baudart, Peter D. Kirchner, Martin Hirzel, Kiran Kate",
+@InProceedings{baudart_et_al_2020,
   title = "Mining Documentation to Extract Hyperparameter Schemas",
-  journal = "CoRR",
-  volume = "abs/2006.16984",
+  author = "Baudart, Guillaume and Kirchner, Peter and Hirzel, Martin and Kate, Kiran",
+  booktitle = "ICML Workshop on Automated Machine Learning (AutoML@ICML)",
   year = 2020,
-  month = Jul,
   url = "https://arxiv.org/abs/2006.16984" }
 ```
 """
