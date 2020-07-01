@@ -1,3 +1,21 @@
+""" Lale autogen schemas
+
+The JSON schemas of the operators defined in this module were automatically generated from the source code of 115 scikit-learn operators.
+The resulting schemas are all valid and usable to build Lale pipelines.
+
+The following paper describes the schema extractor:
+```
+@Article{arxiv20-docminer,
+  author = "Guillaume Baudart, Peter D. Kirchner, Martin Hirzel, Kiran Kate",
+  title = "Mining Documentation to Extract Hyperparameter Schemas",
+  journal = "CoRR",
+  volume = "abs/2006.16984",
+  year = 2020,
+  month = Jul,
+  url = "https://arxiv.org/abs/2006.16984" }
+```
+"""
+
 from .ard_regression import ARDRegression
 from .ada_boost_classifier import AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor
