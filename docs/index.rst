@@ -40,6 +40,7 @@ Operator libraries
 * `lale.lib.lale`_ containing Lale-specific operators
 * `lale.lib.aif360`_ based on `AI Fairness 360`_
 * `lale.lib.autoai_libs`_ based on `autoai-libs`_
+* `lale.lib.autogen`_ auto-generated based on `scikit-learn 0.20`_
 * `lale.lib.imblearn`_ based on `imbalanced-learn`_
 * `lale.lib.lightgbm`_ based on `LightGBM`_
 * `lale.lib.xgboost`_ based on `XGBoost`_
@@ -51,6 +52,8 @@ Operator libraries
 .. _`AI Fairness 360`: https://github.com/IBM/AIF360
 .. _`lale.lib.autoai_libs`: modules/lale.lib.autoai_libs.html#module-lale.lib.autoai_libs
 .. _`autoai-libs`: https://pypi.org/project/autoai-libs/
+.. _`lale.lib.autogen`: modules/lale.lib.autogen.html#module-lale.lib.autogen
+.. _`scikit-learn 0.20`: https://scikit-learn.org/0.20/
 .. _`lale.lib.imblearn`: modules/lale.lib.imblearn.html#module-lale.lib.imblearn
 .. _`imbalanced-learn`: https://imbalanced-learn.readthedocs.io/en/stable/index.html
 .. _`lale.lib.lightgbm`: modules/lale.lib.lightgbm.html#module-lale.lib.lightgbm
@@ -62,5 +65,4 @@ Indices and tables
 ------------------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`
