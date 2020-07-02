@@ -3,15 +3,15 @@
 The JSON schemas of the operators defined in this module were automatically generated from the source code of 115 scikit-learn operators.
 The resulting schemas are all valid and usable to build Lale pipelines.
 
-The following paper describes the schema extractor:
-```
-@InProceedings{baudart_et_al_2020,
-  title = "Mining Documentation to Extract Hyperparameter Schemas",
-  author = "Baudart, Guillaume and Kirchner, Peter and Hirzel, Martin and Kate, Kiran",
-  booktitle = "ICML Workshop on Automated Machine Learning (AutoML@ICML)",
-  year = 2020,
-  url = "https://arxiv.org/abs/2006.16984" }
-```
+The following paper describes the schema extractor::
+
+  @InProceedings{baudart_et_al_2020,
+    title = "Mining Documentation to Extract Hyperparameter Schemas",
+    author = "Baudart, Guillaume and Kirchner, Peter and Hirzel, Martin and Kate, Kiran",
+    booktitle = "ICML Workshop on Automated Machine Learning (AutoML@ICML)",
+    year = 2020,
+    url = "https://arxiv.org/abs/2006.16984" }
+
 """
 
 from .ard_regression import ARDRegression
