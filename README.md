@@ -35,7 +35,6 @@ edited with off-the-shelf Python tools such as Jupyter notebooks.
 * Guide for [contributing](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) to Lale
 * [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
-* arXiv [paper](https://arxiv.org/pdf/1906.03957.pdf)
 
 The name Lale, pronounced *laleh*, comes from the Persian word for
 tulip. Similarly to popular machine-learning libraries such as
@@ -45,22 +44,22 @@ nor learn new syntax.
 
 The following paper has a technical deep-dive:
 ```
-@Article{arxiv19-lale,
-  author = "Hirzel, Martin and Kate, Kiran and Shinnar, Avraham and Roy, Subhrajit and Ram, Parikshit",
-  title = "Type-Driven Automated Learning with {Lale}",
-  journal = "CoRR",
-  volume = "abs/1906.03957",
-  year = 2019,
-  month = may,
-  url = "https://arxiv.org/abs/1906.03957" }
+@InProceedings{baudart_et_al_2020-automl_kdd,
+  title = "Lale: Consistent Automated Machine Learning",
+  author = "Baudart, Guillaume and Hirzel, Martin and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham",
+  booktitle = "KDD Workshop on Automation in Machine Learning (AutoML@KDD)",
+  year = 2020,
+  month = aug,
+  url = "https://arxiv.org/abs/2007.01977" }
 ```
 
 The schemas of the operators defined in the `lale.lib.autogen` module were automatically generated from the source code of 115 scikit-learn operators. The following paper describes the schema extractor:
 ```
-@InProceedings{baudart_et_al_2020,
+@InProceedings{baudart_et_al_2020_automl_icml,
   title = "Mining Documentation to Extract Hyperparameter Schemas",
   author = "Baudart, Guillaume and Kirchner, Peter and Hirzel, Martin and Kate, Kiran",
   booktitle = "ICML Workshop on Automated Machine Learning (AutoML@ICML)",
+  month = jul,
   year = 2020,
   url = "https://arxiv.org/abs/2006.16984" }
 ```
