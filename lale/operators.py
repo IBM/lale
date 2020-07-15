@@ -123,6 +123,7 @@ import lale.json_operator
 from lale.json_operator import JSON_TYPE
 from sklearn.pipeline import if_delegate_has_method
 import sklearn.base
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -1196,6 +1197,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return result
 
     def fit(self, X, y = None, **fit_params)->'TrainedIndividualOp':
+        logger.info('%s enter fit %s', time.asctime(), self.name())
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
@@ -1207,6 +1209,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
         self._trained = result
+        logger.info('%s exit  fit %s', time.asctime(), self.name())
         return result
 
     def partial_fit(self, X, y = None, **fit_params)->TrainedOperator:
@@ -1478,6 +1481,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Transformed features; see output_transform schema of the operator.
         """
+        logger.info('%s enter transform %s', time.asctime(), self.name())
         X = self._validate_input_schema('X', X, 'transform')
         if ('y' in [required_property.lower() for required_property 
                     in self.input_schema_transform().get('required',[])]):
@@ -1486,6 +1490,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         else:
             raw_result = self._impl_instance().transform(X)
         result = self._validate_output_schema(raw_result, 'transform')
+        logger.info('%s exit  transform %s', time.asctime(), self.name())
         return result
 
     def _predict(self, X):
@@ -1508,7 +1513,9 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Predictions; see output_predict schema of the operator.
         """
+        logger.info('%s enter predict %s', time.asctime(), self.name())
         result = self._predict(X)
+        logger.info('%s exit  predict %s', time.asctime(), self.name())
         if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
             return lale.datasets.data_schemas.strip_schema(result) #otherwise scorers return zero-dim array
         return result
@@ -1527,9 +1534,11 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Probabilities; see output_predict_proba schema of the operator.
         """
+        logger.info('%s enter predict_proba %s', time.asctime(), self.name())
         X = self._validate_input_schema('X', X, 'predict_proba')
         raw_result = self._impl_instance().predict_proba(X)
         result = self._validate_output_schema(raw_result, 'predict_proba')
+        logger.info('%s exit  predict_proba %s', time.asctime(), self.name())
         return result
 
     @if_delegate_has_method(delegate='_impl')
@@ -1546,9 +1555,11 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Confidences; see output_decision_function schema of the operator.
         """
+        logger.info('%s enter decision_function %s', time.asctime(), self.name())
         X = self._validate_input_schema('X', X, 'decision_function')
         raw_result = self._impl_instance().decision_function(X)
         result = self._validate_output_schema(raw_result, 'decision_function')
+        logger.info('%s exit  decision_function %s', time.asctime(), self.name())
         return result
 
     def freeze_trainable(self)->'TrainedIndividualOp':

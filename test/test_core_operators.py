@@ -17,6 +17,8 @@ import jsonschema
 import warnings
 import sklearn.datasets
 import inspect
+import logging
+import io
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
@@ -1199,3 +1201,29 @@ class TestLaleVersion(unittest.TestCase):
     def test_version_exists(self):
         import lale
         self.assertIsNot(lale.__version__, None)
+
+class TestOperatorLogging(unittest.TestCase):
+    def setUp(self):
+        self.old_level = Ops.logger.level
+        Ops.logger.setLevel(logging.INFO)
+        self.stream = io.StringIO()
+        self.handler = logging.StreamHandler(self.stream)
+        Ops.logger.addHandler(self.handler)
+
+    def test_log_fit_predict(self):
+        import lale.datasets
+        trainable = LogisticRegression()
+        (X_train, y_train), (X_test, y_test) = lale.datasets.load_iris_df()
+        trained = trainable.fit(X_train, y_train)
+        predicted = trained.predict(X_test)
+        self.handler.flush()
+        s1, s2, s3, s4 = self.stream.getvalue().strip().split('\n')
+        self.assertTrue(s1.endswith('enter fit LogisticRegression'))
+        self.assertTrue(s2.endswith('exit  fit LogisticRegression'))
+        self.assertTrue(s3.endswith('enter predict LogisticRegression'))
+        self.assertTrue(s4.endswith('exit  predict LogisticRegression'))
+
+    def tearDown(self):
+        Ops.logger.removeHandler(self.handler)
+        Ops.logger.setLevel(self.old_level)
+        self.handler.close()
