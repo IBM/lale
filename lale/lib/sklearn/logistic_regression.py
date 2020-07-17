@@ -120,17 +120,17 @@ _hyperparams_schema = {
 - 'newton-cg', 'lbfgs', 'sag' and 'saga' handle L2 or no penalty
 - 'liblinear' and 'saga' also handle L1 penalty
 - 'saga' also supports 'elasticnet' penalty
-- 'liblinear' does not support setting ``penalty='none'``
+- 'liblinear' does not support setting penalty='none'
 Note that 'sag' and 'saga' fast convergence is only guaranteed on
 features with approximately the same scale. You can
 preprocess the data with a scaler from sklearn.preprocessing.""",
           'enum': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
           'default': 'liblinear'},
         'penalty': {
-          'description': """Norm used in the penalization.  The 'newton-cg',
-        'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
-        only supported by the 'saga' solver. If 'none' (not supported by the
-        liblinear solver), no regularization is applied.""",
+          'description': """Norm used in the penalization.  
+The 'newton-cg', 'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
+only supported by the 'saga' solver. If 'none' (not supported by the
+liblinear solver), no regularization is applied.""",
           'enum': ['l1', 'l2'],
           'default': 'l2'},
         'dual': {
@@ -166,11 +166,11 @@ Dual formulation is only implemented for l2 penalty with liblinear solver. Prefe
           'default': True},
         'intercept_scaling': {
           'description':"""Useful only when the solver 'liblinear' is used
-and self.fit_intercept is set to True. In this case, x becomes
-[x, self.intercept_scaling],
+and self.fit_intercept is set to True. In this case, X becomes
+[X, self.intercept_scaling],
 i.e. a "synthetic" feature with constant value equal to
 intercept_scaling is appended to the instance vector.
-The intercept becomes ``intercept_scaling * synthetic_feature_weight``.
+The intercept becomes "intercept_scaling * synthetic_feature_weight".
 Note! the synthetic feature weight is subject to l1/l2 regularization
 as all other features.
 To lessen the effect of regularization on synthetic feature weight
@@ -184,11 +184,10 @@ To lessen the effect of regularization on synthetic feature weight
           'anyOf': [
             { 'description': 'By default, all classes have weight 1.',
               'enum': [None]},
-            { 'description': """Uses the values of y to automatically adjust
-        weights inversely proportional to class frequencies in the input data
-        as ``n_samples / (n_classes * np.bincount(y))``.""",
+            { 'description': """Uses the values of y to automatically adjust weights inversely 
+proportional to class frequencies in the input data as "n_samples / (n_classes * np.bincount(y))".""",
               'enum': ['balanced']},
-            { 'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
+            { 'description': 'Weights associated with classes in the form "{class_label: weight}".',
               'type': 'object',
               'propertyNames': {'pattern': '^.+$', 'type': 'number'},
               'forOptimizer': False}],
@@ -232,7 +231,7 @@ Useless for liblinear solver.""",
           'default': False},
         'n_jobs': {
           'description':"""Number of CPU cores when parallelizing over classes if 
-multi_class is ovr.  This parameter is ignored when the ``solver`` is
+multi_class is ovr.  This parameter is ignored when the "solver" is
 set to 'liblinear' regardless of whether 'multi_class' is specified or
 not.""",
           'anyOf': [
