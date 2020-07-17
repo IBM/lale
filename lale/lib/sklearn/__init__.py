@@ -50,6 +50,7 @@ Regressors:
 * lale.lib.sklearn. `RandomForestRegressor`_
 * lale.lib.sklearn. `Ridge`_
 * lale.lib.sklearn. `SGDRegressor`_
+* lale.lib.sklearn. `KNeighborsRegressor`_
 
 Transformers:
 
@@ -88,6 +89,7 @@ Transformers:
 .. _`GradientBoostingClassifier`: lale.lib.sklearn.gradient_boosting_classifier.html
 .. _`GradientBoostingRegressor`: lale.lib.sklearn.gradient_boosting_regressor.html
 .. _`KNeighborsClassifier`: lale.lib.sklearn.k_neighbors_classifier.html
+.. _`KNeighborsRegressor`: lale.lib.sklearn.k_neighbors_regressor.html
 .. _`LinearRegression`: lale.lib.sklearn.linear_regression.html
 .. _`LinearSVC`: lale.lib.sklearn.linear_svc.html
 .. _`LogisticRegression`: lale.lib.sklearn.logistic_regression.html
@@ -135,6 +137,7 @@ from .gaussian_nb import GaussianNB
 from .gradient_boosting_classifier import GradientBoostingClassifier
 from .gradient_boosting_regressor import GradientBoostingRegressor
 from .k_neighbors_classifier import KNeighborsClassifier
+from .k_neighbors_regressor import KNeighborsRegressor
 from .linear_regression import LinearRegression
 from .linear_svc import LinearSVC
 from .logistic_regression import LogisticRegression

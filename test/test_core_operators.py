@@ -151,7 +151,7 @@ class TestRegression(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import make_regression
         from sklearn.model_selection import train_test_split
-        X, y = make_regression(n_features=4, n_informative=2,
+        X, y = make_regression(n_samples=200, n_features=4, n_informative=2,
                                random_state=0, shuffle=False)
         self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
 
@@ -210,7 +210,8 @@ regressors = ['lale.lib.lale.BaselineRegressor',
               'lale.lib.lightgbm.LGBMRegressor',
               'lale.lib.xgboost.XGBRegressor',
               'lale.lib.sklearn.AdaBoostRegressor',
-              'lale.lib.sklearn.SGDRegressor']
+              'lale.lib.sklearn.SGDRegressor',
+              'lale.lib.sklearn.KNeighborsRegressor']
 for clf in regressors:
     setattr(
         TestRegression,

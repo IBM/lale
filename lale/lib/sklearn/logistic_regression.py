@@ -110,15 +110,32 @@ _hyperparams_schema = {
         'solver', 'multi_class'],
       'properties': {
         'solver': {
-          'description': 'Algorithm for optimization problem.',
+          'description': """Algorithm for optimization problem.
+
+- For small datasets, 'liblinear' is a good choice, whereas 'sag' and
+  'saga' are faster for large ones.
+- For multiclass problems, only 'newton-cg', 'sag', 'saga' and 'lbfgs'
+  handle multinomial loss; 'liblinear' is limited to one-versus-rest
+  schemes.
+- 'newton-cg', 'lbfgs', 'sag' and 'saga' handle L2 or no penalty
+- 'liblinear' and 'saga' also handle L1 penalty
+- 'saga' also supports 'elasticnet' penalty
+- 'liblinear' does not support setting ``penalty='none'``
+Note that 'sag' and 'saga' fast convergence is only guaranteed on
+features with approximately the same scale. You can
+preprocess the data with a scaler from sklearn.preprocessing.""",
           'enum': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
           'default': 'liblinear'},
         'penalty': {
-          'description': 'Norm used in the penalization.',
+          'description': """Norm used in the penalization.  The 'newton-cg',
+        'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
+        only supported by the 'saga' solver. If 'none' (not supported by the
+        liblinear solver), no regularization is applied.""",
           'enum': ['l1', 'l2'],
           'default': 'l2'},
         'dual': {
-          'description': 'Dual or primal formulation.',
+          'description': """Dual or primal formulation. 
+Dual formulation is only implemented for l2 penalty with liblinear solver. Prefer dual=False when n_samples > n_features.""",
           'type': 'boolean',
           'default': False},
         'C': {
@@ -148,9 +165,16 @@ _hyperparams_schema = {
           'type': 'boolean',
           'default': True},
         'intercept_scaling': {
-          'description':
-            'Append a constant feature with constant value '
-            'intercept_scaling to the instance vector.',
+          'description':"""Useful only when the solver 'liblinear' is used
+and self.fit_intercept is set to True. In this case, x becomes
+[x, self.intercept_scaling],
+i.e. a "synthetic" feature with constant value equal to
+intercept_scaling is appended to the instance vector.
+The intercept becomes ``intercept_scaling * synthetic_feature_weight``.
+Note! the synthetic feature weight is subject to l1/l2 regularization
+as all other features.
+To lessen the effect of regularization on synthetic feature weight
+(and therefore on the intercept) intercept_scaling has to be increased.""",
           'type': 'number',
           'distribution': 'uniform',
           'minimum': 0.0,
@@ -160,16 +184,18 @@ _hyperparams_schema = {
           'anyOf': [
             { 'description': 'By default, all classes have weight 1.',
               'enum': [None]},
-            { 'description': 'Adjust weights by inverse frequency.',
+            { 'description': """Uses the values of y to automatically adjust
+        weights inversely proportional to class frequencies in the input data
+        as ``n_samples / (n_classes * np.bincount(y))``.""",
               'enum': ['balanced']},
-            { 'description': 'Dictionary mapping class labels to weights.',
+            { 'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
               'type': 'object',
               'propertyNames': {'pattern': '^.+$', 'type': 'number'},
               'forOptimizer': False}],
           'default': None},
         'random_state': {
           'description':
-            'Seed of pseudo-random number generator for shuffling data.',
+            'Seed of pseudo-random number generator for shuffling data when solver == ‘sag’, ‘saga’ or ‘liblinear’.',
           'anyOf': [
             { 'description': 'RandomState used by np.random',
               'enum': [None]},
@@ -184,8 +210,13 @@ _hyperparams_schema = {
           'minimum': 1,
           'default': 100},
         'multi_class': {
-          'description':
-            'Approach for more than two classes (not binary classifier).',
+          'description':"""Approach for handling a multi-class problem.
+If the option chosen is 'ovr', then a binary problem is fit for each
+label. For 'multinomial' the loss minimised is the multinomial loss fit
+across the entire probability distribution, *even when the data is
+binary*. 'multinomial' is unavailable when solver='liblinear'.
+'auto' selects 'ovr' if the data is binary, or if solver='liblinear',
+and otherwise selects 'multinomial'.""",
           'enum': ['ovr', 'multinomial', 'auto'],
           'default': 'ovr'},
         'verbose': {
@@ -195,14 +226,15 @@ _hyperparams_schema = {
           'type': 'integer',
           'default': 0},
         'warm_start': {
-          'description':
-            'If true, initialize with solution of previous call to fit.',
+          'description':"""When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution.
+Useless for liblinear solver.""",
           'type': 'boolean',
           'default': False},
         'n_jobs': {
-          'description':
-            'Number of CPU cores when parallelizing over classes if '
-            'multi_class is ovr.',
+          'description':"""Number of CPU cores when parallelizing over classes if 
+multi_class is ovr.  This parameter is ignored when the ``solver`` is
+set to 'liblinear' regardless of whether 'multi_class' is specified or
+not.""",
           'anyOf': [
             { 'description': '1 unless in joblib.parallel_backend context.',
               'enum': [None]},
