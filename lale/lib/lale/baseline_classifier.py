@@ -64,7 +64,14 @@ _input_predict_schema = {
             'description': 'Features; the outer array is over samples.',
             'type': 'array',
             'items': {
-                'type': 'array'}}}}
+                'type': 'array',
+                'items': {
+                    'laleType': 'Any'
+                }
+            }
+        }
+    }
+}
 
 _output_predict_schema = {
     'description': 'Predicted class label per sample.',

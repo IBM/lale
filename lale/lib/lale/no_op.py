@@ -41,7 +41,12 @@ _input_transform_schema = {
     'required': ['X'],
     'additionalProperties': False,
     'properties': {
-        'X': {'description': 'Features; no restrictions on data type.'}}}
+        'X': {
+            'description': 'Features; no restrictions on data type.',
+            'laleType': 'Any'
+        }
+    }
+}
 
 _output_transform_schema = {
     'description': 'Features; no restrictions on data type.',

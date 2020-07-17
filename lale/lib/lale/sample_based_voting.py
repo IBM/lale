@@ -66,7 +66,9 @@ _input_transform_schema = {
     'properties': {
         'X': {
             'description': 'Labels from the previous component in a pipeline.',
-            'type': 'array'},
+            'type': 'array',
+            'items': {'laleType': 'Any'}
+        },
         'end_index_list': {
             'laleType': 'Any',
             'description': 'For each output label to be produced, end_index_list is supposed to contain the index of the last element corresponding to the original input.'}}}
