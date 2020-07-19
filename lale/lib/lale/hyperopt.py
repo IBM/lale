@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from hyperopt import fmin, tpe, hp, STATUS_OK, STATUS_FAIL, Trials, space_eval
+import hyperopt
+from hyperopt import hp, STATUS_OK, STATUS_FAIL, Trials, space_eval
 from hyperopt.exceptions import AllTrialsFailed
 from lale.helpers import cross_val_score_track_trials, create_instance_from_hyperopt_search_space
 from lale.search.op2hp import hyperopt_search_space
@@ -42,16 +43,18 @@ logger.setLevel(logging.ERROR)
 
 class HyperoptImpl:
 
-    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, 
-                scoring='accuracy', best_score=0.0, max_opt_time=None, max_eval_time=None, 
-                pgo:Optional[PGO]=None, show_progressbar=True, args_to_scorer=None,
-                verbose=False):
+    def __init__(self, estimator=None, max_evals=50, algo='tpe',
+                 cv=5, handle_cv_failure=False,
+                 scoring='accuracy', best_score=0.0,
+                 max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None,
+                 show_progressbar=True, args_to_scorer=None, verbose=False):
         self.max_evals = max_evals
         if estimator is None:
             self.estimator = LogisticRegression()
         else:
             self.estimator = estimator
         self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
+        self.algo = algo
         self.scoring = scoring
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
@@ -147,8 +150,9 @@ class HyperoptImpl:
                 proc_train_test(params, X_train, y_train, proc_dict)
             return proc_dict
 
+        algo = getattr(hyperopt, self.algo)
         try :
-            fmin(f, self.search_space, algo=tpe.suggest, max_evals=self.max_evals, trials=self._trials, rstate=np.random.RandomState(SEED),
+            hyperopt.fmin(f, self.search_space, algo=algo.suggest, max_evals=self.max_evals, trials=self._trials, rstate=np.random.RandomState(SEED),
             show_progressbar=self.show_progressbar)
         except SystemExit :
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
@@ -266,6 +270,15 @@ _hyperparams_schema = {
                     'not': {'enum': [None]}},
                 {   'enum': [None]}],
                 'default': None},
+            'algo': {
+                'description': """Algorithm for searching the space.
+
+Use 'rand' for random search,
+'tpe' for tree of parzen estimators,
+'atpe' for adaptive TPE,
+'anneal' for variant on random search that takes some advantage of a smooth response surface.""",
+                'enum': ['rand', 'tpe', 'atpe', 'anneal'],
+                'default': 'tpe'},
             'max_evals': {
                 'description': 'Number of trials of Hyperopt search.',
                 'type': 'integer',
