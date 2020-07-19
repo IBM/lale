@@ -221,24 +221,6 @@ def cross_val_score(estimator, X, y=None, scoring=accuracy_score, cv=5):
 
     return cv_results
 
-def create_operator_using_reflection(class_name, operator_name, param_dict):
-    instance = None
-    if class_name is not None:
-        class_name_parts = class_name.split(".")
-        assert(len(class_name_parts)) >1, "The class name needs to be fully qualified, i.e. module name + class name"
-        module_name = ".".join(class_name_parts[0:-1])
-        class_name = class_name_parts[-1]
-
-        module = importlib.import_module(module_name)
-
-        class_ = getattr(module, class_name)
-        
-        if param_dict is None:
-            instance = class_.create(name=operator_name)
-        else:
-            instance = class_.create(name=operator_name, kwargs = param_dict)
-    return instance
-
 def create_individual_op_using_reflection(class_name, operator_name, param_dict):
     instance = None
     if class_name is not None:
@@ -585,11 +567,3 @@ def write_batch_output_to_file(file_obj, file_path, total_len, batch_idx, batch_
         else:
             labels[batch_idx*len(batch_y):(batch_idx+1)*len(batch_y)] = batch_y
     return file_obj
-
-def best_estimator(obj):
-    """
-    .. deprecated:: 0.3.3
-       The best_estimator(obj) function has been replaced by the
-       obj.get_pipeline() method.
-    """
-    return obj.get_pipeline()

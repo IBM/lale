@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import hyperopt
-from hyperopt import hp, STATUS_OK, STATUS_FAIL, Trials, space_eval
 from hyperopt.exceptions import AllTrialsFailed
 from lale.helpers import cross_val_score_track_trials, create_instance_from_hyperopt_search_space
 from lale.search.op2hp import hyperopt_search_space
@@ -53,13 +52,13 @@ class HyperoptImpl:
             self.estimator = LogisticRegression()
         else:
             self.estimator = estimator
-        self.search_space = hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
+        self.search_space = hyperopt.hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
         self.algo = algo
         self.scoring = scoring
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
-        self._trials = Trials()
+        self._trials = hyperopt.Trials()
         self.max_opt_time = max_opt_time
         self.max_eval_time = max_eval_time
         self.show_progressbar = show_progressbar
@@ -109,10 +108,10 @@ class HyperoptImpl:
                 return_dict['loss'] = self.best_score - score
                 return_dict['time'] = execution_time
                 return_dict['log_loss'] = logloss
-                return_dict['status'] = STATUS_OK
+                return_dict['status'] = hyperopt.STATUS_OK
             except BaseException as e:
                 logger.warning(f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
-                return_dict['status'] = STATUS_FAIL
+                return_dict['status'] = hyperopt.STATUS_FAIL
                 return_dict['error_msg'] = f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}"
                 if self.verbose:
                     print(return_dict['error_msg'])
@@ -141,10 +140,10 @@ class HyperoptImpl:
                     p.terminate()
                     p.join()
                     logger.warning(f"Maximum alloted evaluation time exceeded. with hyperparams: {params}, setting status to FAIL")
-                    proc_dict['status'] = STATUS_FAIL
+                    proc_dict['status'] = hyperopt.STATUS_FAIL
                 if 'status' not in proc_dict:
                     logger.warning(f"Corrupted results, setting status to FAIL")
-                    proc_dict['status'] = STATUS_FAIL
+                    proc_dict['status'] = hyperopt.STATUS_FAIL
             else:
                 proc_dict = {}
                 proc_train_test(params, X_train, y_train, proc_dict)
@@ -158,11 +157,11 @@ class HyperoptImpl:
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
         except AllTrialsFailed:
             self._best_estimator = None
-            if STATUS_OK not in self._trials.statuses():
+            if hyperopt.STATUS_OK not in self._trials.statuses():
                 raise ValueError('Error from hyperopt, none of the trials succeeded.')
 
         try :
-            best_params = space_eval(self.search_space, self._trials.argmin)
+            best_params = hyperopt.space_eval(self.search_space, self._trials.argmin)
             logger.info(
                 'best score: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(
                     self.best_score - self._trials.average_best_error(), self.max_evals, best_params
@@ -409,9 +408,8 @@ _combined_schemas = {
 
 Examples
 --------
->>> from sklearn.metrics import make_scorer, f1_score, accuracy_score
->>> lr = LogisticRegression()
->>> clf = Hyperopt(estimator=lr, scoring='accuracy', cv=5, max_evals=2)
+>>> from lale.lib.sklearn import LogisticRegression as LR
+>>> clf = Hyperopt(estimator=LR, cv=3, max_evals=5)
 >>> from sklearn import datasets
 >>> diabetes = datasets.load_diabetes()
 >>> X = diabetes.data[:150]
@@ -421,8 +419,9 @@ Examples
 
 Other scoring metrics:
 
->>> clf = Hyperopt(estimator=lr,
-...    scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=2)
+>>> from sklearn.metrics import make_scorer, f1_score
+>>> clf = Hyperopt(estimator=LR,
+...    scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=5)
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt.html',
     'type': 'object',
@@ -439,27 +438,3 @@ Other scoring metrics:
 lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
 
 Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
-
-if __name__ == '__main__':
-    from lale.lib.lale import ConcatFeatures
-    from lale.lib.sklearn import Nystroem
-    from lale.lib.sklearn import PCA
-    pca = PCA(n_components=10)
-    nys = Nystroem(n_components=10)
-    concat = ConcatFeatures()
-    lr = LogisticRegression(random_state=42, C=0.1)
-
-    trainable = (pca & nys) >> concat >> lr
-
-    import sklearn.datasets
-    from lale.helpers import cross_val_score
-    digits = sklearn.datasets.load_iris()
-    X, y = sklearn.utils.shuffle(digits.data, digits.target, random_state=42)
-
-    hp_n = Hyperopt(estimator=trainable, max_evals=2)
-
-    hp_n_trained = hp_n.fit(X, y)
-    predictions = hp_n_trained.predict(X)
-    from sklearn.metrics import accuracy_score
-    accuracy = accuracy_score(y, [round(pred) for pred in predictions])
-    print(accuracy)

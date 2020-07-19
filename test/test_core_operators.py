@@ -31,6 +31,10 @@ from lale.lib.sklearn import MLPClassifier
 from lale.lib.sklearn import Nystroem
 from lale.lib.sklearn import OneHotEncoder
 from lale.lib.sklearn import PCA
+from lale.lib.sklearn import NMF
+from lale.lib.sklearn import FunctionTransformer
+from lale.lib.sklearn import MissingIndicator
+from lale.lib.sklearn import RFE
 from lale.lib.sklearn import TfidfVectorizer
 from lale.lib.sklearn import MultinomialNB
 from lale.lib.sklearn import SimpleImputer
@@ -296,6 +300,62 @@ for fproc in feature_preprocessors:
         'test_{0}'.format(fproc.split('.')[-1]),
         create_function_test_feature_preprocessor(fproc)
     )
+
+class TestNMF(unittest.TestCase):
+    def test_init_fit_predict(self):
+        import lale.datasets
+        nmf = NMF()
+        lr = LogisticRegression()
+        trainable = nmf >> lr
+        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        predicted = trained.predict(test_X)
+
+class TestFunctionTransformer(unittest.TestCase):
+    def test_init_fit_predict(self):
+        import numpy as np
+        import lale.datasets
+        ft = FunctionTransformer(func=np.log1p)
+        lr = LogisticRegression()
+        trainable = ft >> lr
+        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        predicted = trained.predict(test_X)
+
+class TestMissingIndicator(unittest.TestCase):
+    def test_init_fit_transform(self):
+        import numpy as np
+        X1 = np.array([[np.nan, 1, 3], [4, 0, np.nan], [8, 1, 0]])
+        X2 = np.array([[5, 1, np.nan], [np.nan, 2, 3], [2, 4, 0]])
+        trainable = MissingIndicator()
+        trained = trainable.fit(X1)
+        transformed = trained.transform(X2)
+        expected = np.array([[False, True], [True, False], [False, False]])
+        self.assertTrue((transformed == expected).all())
+
+class TestRFE(unittest.TestCase):
+    def test_init_fit_predict(self):
+        import sklearn.datasets
+        import sklearn.svm
+        svm = sklearn.svm.SVR(kernel='linear')
+        rfe = RFE(estimator=svm, n_features_to_select=2)
+        lr = LogisticRegression()
+        trainable = rfe >> lr
+        data = sklearn.datasets.load_iris()
+        X, y = data.data, data.target
+        trained = trainable.fit(X, y)
+        predicted = trained.predict(X)
+
+class TestBoth(unittest.TestCase):
+    def test_init_fit_transform(self):
+        import lale.datasets
+        from lale.lib.lale import Both
+        nmf = NMF()
+        pca = PCA()
+        trainable = Both(op1=nmf, op2=pca)
+        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        transformed = trained.transform(test_X)
 
 class TestConcatFeatures(unittest.TestCase):
     def test_hyperparam_defaults(self):

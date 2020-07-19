@@ -708,6 +708,3 @@ class TestToAndFromJSON(unittest.TestCase):
         operator_2 = from_json(json)
         json_2 = to_json(operator_2)
         self.assertEqual(json, json_2)
-
-if __name__ == '__main__':
-    unittest.main()

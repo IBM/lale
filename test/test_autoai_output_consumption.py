@@ -124,7 +124,3 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
                 x), f"Prediction on refined model has returned unexpected number of rows {len(pred)} - expected {len(x)}"
         except Exception as e:
             assert False, f"Exception was thrown during refined model prediction: {e}"
-
-
-if __name__ == '__main__':
-    unittest.main()

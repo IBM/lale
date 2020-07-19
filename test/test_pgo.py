@@ -97,6 +97,3 @@ class TestPGOHyperopt(unittest.TestCase):
         trainable = PCA() >> LogisticRegression() 
         parameters = get_grid_search_parameter_grids(trainable,num_samples=2, pgo=pgo)
         # print(parameters)
-
-if __name__ == '__main__':
-    unittest.main()
