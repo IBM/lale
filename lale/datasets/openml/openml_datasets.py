@@ -468,15 +468,3 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
             schema_orig, target_col, X_train, X_test, y_train, y_test)
     return (X_train, y_train), (X_test, y_test)
 
-if __name__ == "__main__":
-    datasets = ['spectf', 'diabetes', 'breast-cancer', 'hill-valley']
-    from lale.lib.sklearn import LogisticRegression
-    for dataset_name in datasets:
-        try:
-            (X_train, y_train), (X_test, y_test) = fetch(dataset_name, 'classification')
-            trained = LogisticRegression().fit(X_train, y_train)
-            trained.predict(X_test)
-        except BaseException as e:
-            import traceback
-            traceback.print_exc()
-
