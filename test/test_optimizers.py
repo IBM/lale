@@ -513,6 +513,15 @@ class TestHyperopt(unittest.TestCase):
         predictions_1 = clf.predict(self.X_test)
         assert np.array_equal(predictions_1, predictions)
 
+    def test_other_algorithms(self):
+        for alg in ['rand', 'tpe', 'atpe', 'anneal']:
+            hyperopt = Hyperopt(estimator=LogisticRegression, algo=alg,
+                                cv=3, max_evals=3)
+            trained = hyperopt.fit(self.X_train, self.y_train)
+            predictions = trained.predict(self.X_test)
+            predictions_1 = hyperopt.predict(self.X_test)
+            self.assertTrue(np.array_equal(predictions_1, predictions), alg)
+
 class TestAutoConfigureClassification(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
