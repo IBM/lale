@@ -8,6 +8,8 @@
 <br />
 <img src="https://github.com/IBM/lale/raw/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
+[中文README请按此处](README-cn.md)
+
 Lale is a Python library for semi-automated data science.
 Lale makes it easy to automatically select algorithms and tune
 hyperparameters of pipelines that are compatible with
