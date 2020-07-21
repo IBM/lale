@@ -191,16 +191,16 @@ _hyperparams_schema = {
                     'The proportion of training data to set aside as '
                     'validation set for early stopping.',
                 'type': 'number',
-                'minimum': 0,
-                'maximum': 1,
+                'minimum': 0.0,
+                'maximum': 1.0,
                 'default': 0.1},
             'beta_1': {
                 'description':
                     'Exponential decay rate for estimates of first moment '
                     'vector in adam.',
                 'type': 'number',
-                'minimum': 0,
-                'maximum': 1,
+                'minimum': 0.0,
+                'maximum': 1.0,
                 'exclusiveMaximum': True,
                 'default': 0.9},
             'beta_2': {
@@ -208,8 +208,8 @@ _hyperparams_schema = {
                     'Exponential decay rate for estimates of second moment '
                     'vector in adam.',
                 'type': 'number',
-                'minimum': 0,
-                'maximum': 1,
+                'minimum': 0.0,
+                'maximum': 1.0,
                 'exclusiveMaximum': True,
                 'default': 0.999},
             'epsilon': {

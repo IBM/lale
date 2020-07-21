@@ -794,7 +794,8 @@ class IndividualOp(Operator):
 
         The cat_idx dictionary has (min, max, default) entries of indices
         into the corresponding list of values.
-        """
+
+        Warning: ignores side constraints and unions."""
 
         hyperparam_obj = next(iter(self.hyperparam_schema().get('allOf',[])))
         original = hyperparam_obj.get('properties')
@@ -864,6 +865,45 @@ class IndividualOp(Operator):
         autoai_cat_idx = {hp: get_cat_idx(s)
                        for hp, s in defaulted.items() if 'enum' in s}
         return autoai_ranges, autoai_cat_idx
+
+    def get_param_dist(self, size=10) -> Dict[str, List[Any]]:
+        """Returns a dictionary for discretized hyperparameters.
+
+        Each entry is a list of values. For continuous hyperparameters,
+        it returns up to `size` uniformly distributed values.
+
+        Warning: ignores side constraints, unions, and distributions."""
+        autoai_ranges, autoai_cat_idx = self.get_param_ranges()
+        def one_dist(key: str) -> List[Any]:
+            one_range = autoai_ranges[key]
+            if isinstance(one_range, tuple):
+                minimum, maximum, default = one_range
+                if minimum is None:
+                    dist = [default]
+                elif isinstance(minimum, bool):
+                    if minimum == maximum:
+                        dist = [minimum]
+                    else:
+                        dist = [minimum, maximum]
+                elif isinstance(minimum, int) and isinstance(maximum, int):
+                    step = float(maximum - minimum) / (size - 1)
+                    fdist = [minimum + i * step for i in range(size)]
+                    dist = list(set([round(f) for f in fdist]))
+                    dist.sort()
+                elif isinstance(minimum, (int,float)):
+                    #just in case the minimum or maximum is exclusive
+                    epsilon = (maximum - minimum) / (100 * size)
+                    minimum += epsilon
+                    maximum -= epsilon
+                    step = (maximum - minimum) / (size - 1)
+                    dist = [minimum + i * step for i in range(size)]
+                else:
+                    assert False, f'key {key}, one_range {one_range}'
+            else:
+                dist = [*one_range]
+            return dist
+        autoai_dists = {k: one_dist(k) for k in autoai_ranges.keys()}
+        return autoai_dists
 
     def _enum_to_strings(self, arg:'enumeration.Enum')->Tuple[str, Any]:
         """[summary]

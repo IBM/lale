@@ -452,30 +452,47 @@ class TestConcatFeatures(unittest.TestCase):
         clf.predict(iris_data.data)
 
 class TestHyperparamRanges(unittest.TestCase):
-    def validate_get_param_ranges(self, operator):
-        # there are ranges for exactly the relevantToOptimizer properties
+    def exactly_relevant_properties(self, keys1, operator):
         def sorted(l):
             l_copy = [*l]
             l_copy.sort()
             return l_copy
-        ranges, cat_idx = operator.get_param_ranges()
-        keys1 = ranges.keys()
         keys2 = operator.hyperparam_schema()['allOf'][0]['relevantToOptimizer']
         self.assertEqual(sorted(keys1), sorted(keys2))
+
+    def validate_get_param_ranges(self, operator):
+        ranges, cat_idx = operator.get_param_ranges()
+        self.exactly_relevant_properties(ranges.keys(), operator)
         # all defaults are in-range
         hp_defaults = operator.hyperparam_defaults()
         for hp, r in ranges.items():
-            if type(r) == tuple:
+            if isinstance(r, tuple):
                 minimum, maximum, default = r
                 if minimum != None and maximum != None and default != None:
                     assert minimum <= default and default <= maximum
             else:
                 minimum, maximum, default = cat_idx[hp]
                 assert minimum == 0 and len(r) - 1 == maximum
-    def test_get_param_ranges(self):
+
+    def validate_get_param_dist(self, operator):
+        size = 5
+        dist = operator.get_param_dist(size)
+        self.exactly_relevant_properties(dist.keys(), operator)
+        for hp, d in dist.items():
+            self.assertTrue(len(d) > 0)
+            if isinstance(d[0], int):
+                self.assertTrue(len(d) <= size)
+            elif isinstance(d[0], float):
+                self.assertTrue(len(d) == size)
+            schema = operator.hyperparam_schema(hp)
+            for v in d:
+                lale.type_checking.validate_schema(v, schema)
+
+    def test_get_param_ranges_and_dist(self):
         for op in [ConcatFeatures, KNeighborsClassifier, LogisticRegression,
                    MLPClassifier, Nystroem, OneHotEncoder, PCA]:
             self.validate_get_param_ranges(op)
+            self.validate_get_param_dist(op)
 
 class TestKNeighborsClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
