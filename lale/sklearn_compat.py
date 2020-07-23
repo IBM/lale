@@ -490,6 +490,37 @@ class SKlearnCompatWrapper(object):
     def _estimator_type(self):
         return self._final_estimator._estimator_type
 
+    def get_param_ranges(self)->Tuple[Dict[str,Any], Dict[str,Any]]:
+        """Returns two dictionaries, ranges and cat_idx, for hyperparameters.
+
+        The ranges dictionary has two kinds of entries. Entries for
+        numeric and Boolean hyperparameters are tuples of the form
+        (min, max, default). Entries for categorical hyperparameters
+        are lists of their values.
+
+        The cat_idx dictionary has (min, max, default) entries of indices
+        into the corresponding list of values.
+
+        Warning: ignores side constraints and unions."""
+        op:Optional[Ops.IndividualOp] = self._final_individual_op()
+        if op is None:
+            raise ValueError("This pipeline does not end with an individual operator")
+        else:
+            return op.get_param_ranges()
+
+    def get_param_dist(self, size=10) -> Dict[str, List[Any]]:
+        """Returns a dictionary for discretized hyperparameters.
+
+        Each entry is a list of values. For continuous hyperparameters,
+        it returns up to `size` uniformly distributed values.
+
+        Warning: ignores side constraints, unions, and distributions."""
+        op:Optional[Ops.IndividualOp] = self._final_individual_op()
+        if op is None:
+            raise ValueError("This pipeline does not end with an individual operator")
+        else:
+            return op.get_param_dist(size=size)
+
     # sklearn compatibility
     # @property
     # def _final_estimator(self):
