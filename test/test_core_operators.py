@@ -494,6 +494,13 @@ class TestHyperparamRanges(unittest.TestCase):
             self.validate_get_param_ranges(op)
             self.validate_get_param_dist(op)
 
+    def test_sklearn_get_param_ranges_and_dist(self):
+        for op in [ConcatFeatures, KNeighborsClassifier, LogisticRegression,
+                   MLPClassifier, Nystroem, OneHotEncoder, PCA]:
+            skop = make_sklearn_compat(op)
+            self.validate_get_param_ranges(skop)
+            self.validate_get_param_dist(skop)
+
 class TestKNeighborsClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
         from sklearn.datasets import make_classification, load_iris
