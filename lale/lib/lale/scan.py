@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import lale.docstrings
 import lale.operators
 from lale.expressions import Expr
@@ -22,6 +23,9 @@ class ScanImpl:
 
     def transform(self, X):
         raise NotImplementedError()
+
+    def viz_label(self) -> str:
+        return '*' + self._hyperparams['table']._expr.attr
 
 _hyperparams_schema = {
   'allOf': [

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
+import ast #see also https://greentreesnakes.readthedocs.io/
 import astunparse
 from typing import Union
 
@@ -22,12 +22,9 @@ class Expr:
     def __init__(self, expr : ast.Expr):
         self._expr = expr
 
-    def __and__(self, other) -> 'Expr':
-        if isinstance(other, Expr):
-            boolOp = ast.BoolOp(op=ast.And, values=[self._expr, other._expr])
-            return Expr(boolOp)
-        else:
-            raise NotImplementedError()
+    def __bool__(self) -> bool:
+        raise TypeError(f'Cannot convert expression e1=`{str(self)}` to bool.'
+                        'Instead of `e1 and e2`, try writing `[e1, e2]`.')
 
     def __eq__(self, other) -> 'Expr':
         if isinstance(other, Expr):
