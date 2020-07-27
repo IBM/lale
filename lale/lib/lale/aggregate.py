@@ -23,6 +23,15 @@ class AggregateImpl:
     def transform(self, X):
         raise NotImplementedError()
 
+    def viz_label(self) -> str:
+        import ast
+        def render(rhs):
+            fun = rhs._expr.func.id
+            attr = rhs._expr.args[0].attr
+            return f'{fun} {attr}'
+        rendered = [render(rhs) for lhs, rhs in self._assign.items()]
+        return 'Aggregate:\n' + ', '.join(rendered)
+
 _hyperparams_schema = {
   'allOf': [
     { 'description':

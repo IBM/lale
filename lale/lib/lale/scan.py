@@ -25,7 +25,7 @@ class ScanImpl:
         raise NotImplementedError()
 
     def viz_label(self) -> str:
-        return '*' + self._hyperparams['table']._expr.attr
+        return 'Scan:\n' + self._hyperparams['table']._expr.attr
 
 _hyperparams_schema = {
   'allOf': [

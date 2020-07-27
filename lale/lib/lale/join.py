@@ -23,8 +23,8 @@ class JoinImpl:
     def transform(self, X):
         raise NotImplementedError()
 
-    def viz_label(self) -> str:
-        return '⋈'
+    # def viz_label(self) -> str:
+    #     return '⋈'
 
 _hyperparams_schema = {
   'allOf': [
