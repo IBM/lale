@@ -30,7 +30,7 @@ class AggregateImpl:
             attr = rhs._expr.args[0].attr
             return f'{fun} {attr}'
         rendered = [render(rhs) for lhs, rhs in self._assign.items()]
-        return 'Aggregate:\n' + ', '.join(rendered)
+        return 'Aggregate:\n' + '\n'.join(rendered)
 
 _hyperparams_schema = {
   'allOf': [

@@ -34,6 +34,14 @@ class Expr:
         else:
             return False
 
+    def __ge__(self, other) -> 'Expr':
+        if isinstance(other, Expr):
+            comp = ast.Compare(left=self._expr, ops=[ast.GtE()],
+                               comparators=[other._expr])
+            return Expr(comp)
+        else:
+            return False
+
     def __getattr__(self, name : str) -> 'Expr':
         attr = ast.Attribute(value=self._expr, attr=name)
         return Expr(attr)
@@ -51,13 +59,16 @@ class Expr:
     def __str__(self) -> str:
         return astunparse.unparse(self._expr).strip()
 
-def Sum(group: Expr) -> Expr:
-    call = ast.Call(func=ast.Name(id='Sum'), args=[group._expr], keywords=[])
+def count(group: Expr) -> Expr:
+    call = ast.Call(func=ast.Name(id='count'), args=[group._expr], keywords=[])
     return Expr(call)
 
-def DistinctCount(group: Expr) -> Expr:
-    call = ast.Call(func=ast.Name(id='DistinctCount'),
-                    args=[group._expr], keywords=[])
+def max(group: Expr) -> Expr:
+    call = ast.Call(func=ast.Name(id='max'), args=[group._expr], keywords=[])
+    return Expr(call)
+
+def sum(group: Expr) -> Expr:
+    call = ast.Call(func=ast.Name(id='sum'), args=[group._expr], keywords=[])
     return Expr(call)
 
 it = Expr(ast.Name(id='it'))
