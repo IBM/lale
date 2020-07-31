@@ -536,7 +536,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
 
         planned_pipeline = (PCA | NoOp) >> LogisticRegression
         best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
-            scoring='accuracy', max_evals=1)
+            scoring='accuracy', max_evals=10)
         predictions = best_pipeline.predict(self.X_test)
         from lale.operators import TrainedPipeline
         assert isinstance(best_pipeline, TrainedPipeline)
@@ -549,6 +549,17 @@ class TestAutoConfigureClassification(unittest.TestCase):
         best = choice.auto_configure(self.X_train, self.y_train,
                                      optimizer=Hyperopt, cv=3, max_evals=3)
         predictions = best.predict(self.X_test)
+
+    def test_with_Hyperopt_3(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.lib.lale import NoOp, Hyperopt
+
+        planned_pipeline = (PCA() | Nystroem()) >> (LogisticRegression()|KNeighborsClassifier())
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
+            scoring='accuracy', max_evals=10, frac_evals_with_defaults=0.2)
+        predictions = best_pipeline.predict(self.X_test)
+        from lale.operators import TrainedPipeline
+        assert isinstance(best_pipeline, TrainedPipeline)
 
     def test_with_gridsearchcv(self):
         from lale.lib.sklearn import PCA, LogisticRegression

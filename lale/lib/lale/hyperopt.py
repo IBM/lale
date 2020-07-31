@@ -42,7 +42,7 @@ logger.setLevel(logging.ERROR)
 
 class HyperoptImpl:
 
-    def __init__(self, estimator=None, max_evals=50, algo='tpe',
+    def __init__(self, estimator=None, max_evals=50, frac_evals_with_defaults = 0.1, algo='tpe',
                  cv=5, handle_cv_failure=False,
                  scoring='accuracy', best_score=0.0,
                  max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None,
@@ -53,12 +53,18 @@ class HyperoptImpl:
         else:
             self.estimator = estimator
         self.search_space = hyperopt.hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
+        self.search_space_with_defaults = hyperopt.hp.choice('meta_model', [hyperopt_search_space(self.estimator.freeze_trainable(), pgo=pgo)])
         self.algo = algo
+        if frac_evals_with_defaults > 0:
+            self.evals_with_defaults = int(frac_evals_with_defaults*max_evals)
+        else:
+            self.evals_with_defaults = 0
         self.scoring = scoring
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
         self._trials = hyperopt.Trials()
+        self._default_trials = hyperopt.Trials()        
         self.max_opt_time = max_opt_time
         self.max_eval_time = max_eval_time
         self.show_progressbar = show_progressbar
@@ -122,6 +128,25 @@ class HyperoptImpl:
             trained = trainable.fit(X_train, y_train)
             return trained
 
+        def merge_trials(trials1, trials2):
+            max_tid = max([trial['tid'] for trial in trials1.trials])
+
+            for trial in trials2:
+                tid = trial['tid'] + max_tid + 1
+                hyperopt_trial = hyperopt.Trials().new_trial_docs(
+                        tids=[None],
+                        specs=[None],
+                        results=[None],
+                        miscs=[None])
+                hyperopt_trial[0] = trial
+                hyperopt_trial[0]['tid'] = tid
+                hyperopt_trial[0]['misc']['tid'] = tid
+                for key in hyperopt_trial[0]['misc']['idxs'].keys():
+                    hyperopt_trial[0]['misc']['idxs'][key] = [tid]
+                trials1.insert_trial_docs(hyperopt_trial) 
+                trials1.refresh()
+            return trials1
+
         def f(params):
             current_time = time.time()
             if (self.max_opt_time is not None) and ((current_time - opt_start_time) > self.max_opt_time) :
@@ -150,8 +175,19 @@ class HyperoptImpl:
             return proc_dict
 
         algo = getattr(hyperopt, self.algo)
+        if self.evals_with_defaults > 0:
+            try:
+                hyperopt.fmin(f, self.search_space_with_defaults, algo=algo.suggest, max_evals=self.evals_with_defaults, trials=self._default_trials, rstate=np.random.RandomState(SEED),
+                show_progressbar=self.show_progressbar)
+            except SystemExit :
+                logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
+            except AllTrialsFailed:
+                self._best_estimator = None
+                if hyperopt.STATUS_OK not in self._trials.statuses():
+                    raise ValueError('Error from hyperopt, none of the trials succeeded.')
+
         try :
-            hyperopt.fmin(f, self.search_space, algo=algo.suggest, max_evals=self.max_evals, trials=self._trials, rstate=np.random.RandomState(SEED),
+            hyperopt.fmin(f, self.search_space, algo=algo.suggest, max_evals=self.max_evals-self.evals_with_defaults, trials=self._trials, rstate=np.random.RandomState(SEED),
             show_progressbar=self.show_progressbar)
         except SystemExit :
             logger.warning('Maximum alloted optimization time exceeded. Optimization exited prematurely')
@@ -160,8 +196,11 @@ class HyperoptImpl:
             if hyperopt.STATUS_OK not in self._trials.statuses():
                 raise ValueError('Error from hyperopt, none of the trials succeeded.')
 
+        self._trials = merge_trials(self._trials, self._default_trials)# hyperopt.trials_from_docs(list(self._trials) + list(self._default_trials))
         try :
-            best_params = hyperopt.space_eval(self.search_space, self._trials.argmin)
+            best_trials = sorted(self._trials.results, key=lambda x: x['loss'], reverse=False)
+            best_trial = best_trials[0]
+            best_params = best_trial['params']
             logger.info(
                 'best score: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(
                     self.best_score - self._trials.average_best_error(), self.max_evals, best_params
@@ -283,6 +322,13 @@ Use 'rand' for random search,
                 'type': 'integer',
                 'minimum': 1,
                 'default': 50},
+            'frac_evals_with_defaults':{
+                'description': '''Sometimes, using default values of hyperparameters works quite well.
+This value would allow a fraction of the trials to use default values. Hyperopt searches the entire search space
+for (1-frac_evals_with_defaults) fraction of max_evals.''',
+                'type':'number',
+                'minimum':0.0,
+                'default':0.1},
             'cv': {
                 'description': """Cross-validation as integer or as object that has a split function.
 

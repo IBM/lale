@@ -350,6 +350,21 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
+    @abstractmethod
+    def freeze_trainable(self)->'Operator':
+        """Return a copy of the trainable parts of this operator that is the same except
+           that all hyperparameters are bound and none are free to be tuned.
+           If there is an operator choice, it is kept as is.
+        """
+        pass
+
+    @abstractmethod
+    def is_frozen_trainable(self)->bool:
+        """Return true if all hyperparameters are bound, in other words,
+           search spaces contain no free hyperparameters to be tuned.
+        """
+        pass
+
 Operator.__doc__ = cast(str, Operator.__doc__) + '\n' + _combinators_docstrings
 
 class PlannedOperator(Operator):
@@ -426,20 +441,6 @@ class TrainableOperator(PlannedOperator):
             A new copy of this operators that is the same except that its
             learnable coefficients are bound to their trained values.
 
-        """
-        pass
-
-    @abstractmethod
-    def is_frozen_trainable(self)->bool:
-        """Return true if all hyperparameters are bound, in other words,
-           search spaces contain no free hyperparameters to be tuned.
-        """
-        pass
-
-    @abstractmethod
-    def freeze_trainable(self)->'TrainableOperator':
-        """Return a copy of this trainable operator that is the same except
-           that all hyperparameters are bound and none are free to be tuned.
         """
         pass
 
@@ -1211,6 +1212,26 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
         return self._configure(**impl_params)
+
+    def freeze_trainable(self)->'TrainableIndividualOp':
+        return self._configure().freeze_trainable()
+
+    def free_hyperparams(self):
+        hyperparam_schema = self.hyperparam_schema()
+        if 'allOf' in hyperparam_schema and \
+           'relevantToOptimizer' in hyperparam_schema['allOf'][0]:
+            to_bind = hyperparam_schema['allOf'][0]['relevantToOptimizer']
+        else:
+            to_bind = []
+        if self._hyperparams:
+            bound = self._hyperparams.keys()
+        else:
+            bound = []
+        return set(to_bind) - set(bound)
+
+    def is_frozen_trainable(self)->bool:
+        free = self.free_hyperparams()
+        return len(free) == 0
 
 def _mutation_warning(method_name:str)->str:
     msg = str("The `{}` method is deprecated on a trainable "
@@ -2012,6 +2033,25 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
                  ordered:bool=False) -> None:
         super(PlannedPipeline, self).__init__(steps, edges, ordered=ordered)
 
+    def freeze_trainable(self)->'PlannedPipeline':
+        frozen_steps = []
+        frozen_map = {}
+        for liquid in self._steps:
+            frozen = liquid.freeze_trainable()
+            frozen_map[liquid] = frozen
+            frozen_steps.append(frozen)
+        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
+        result = get_pipeline_of_applicable_type(
+            frozen_steps, frozen_edges, ordered=True)
+        assert result.is_frozen_trainable()
+        return result
+
+    def is_frozen_trainable(self)->bool:
+        for step in self.steps():
+            if not step.is_frozen_trainable():
+                return False
+        return True
+
 TrainableOpType = TypeVar('TrainableOpType', bound=TrainableIndividualOp)
 
 class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
@@ -2147,12 +2187,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             return self._trained.decision_function(X)
         except AttributeError:
             raise ValueError('Must call `fit` before `decision_function`.')
-
-    def is_frozen_trainable(self)->bool:
-        for step in self.steps():
-            if not step.is_frozen_trainable():
-                return False
-        return True
 
     def freeze_trainable(self)->'TrainablePipeline':
         frozen_steps = []
@@ -2631,6 +2665,24 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         pipeline_inputs = [s.input_schema_fit() for s in self.steps()]
         result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
+
+    def freeze_trainable(self)->'OperatorChoice':
+        frozen_steps = []
+        frozen_map = {}
+        for liquid in self._steps:
+            frozen = liquid.freeze_trainable()
+            frozen_map[liquid] = frozen
+            frozen_steps.append(frozen)
+        result:'OperatorChoice' = OperatorChoice(
+            frozen_steps, self._name)
+        assert result.is_frozen_trainable()
+        return result
+
+    def is_frozen_trainable(self)->bool:
+        for step in self.steps():
+            if not step.is_frozen_trainable():
+                return False
+        return True
 
 class _PipelineFactory:
     def __init__(self):
