@@ -128,25 +128,6 @@ class HyperoptImpl:
             trained = trainable.fit(X_train, y_train)
             return trained
 
-        def merge_trials(trials1, trials2):
-            max_tid = max([trial['tid'] for trial in trials1.trials])
-
-            for trial in trials2:
-                tid = trial['tid'] + max_tid + 1
-                hyperopt_trial = hyperopt.Trials().new_trial_docs(
-                        tids=[None],
-                        specs=[None],
-                        results=[None],
-                        miscs=[None])
-                hyperopt_trial[0] = trial
-                hyperopt_trial[0]['tid'] = tid
-                hyperopt_trial[0]['misc']['tid'] = tid
-                for key in hyperopt_trial[0]['misc']['idxs'].keys():
-                    hyperopt_trial[0]['misc']['idxs'][key] = [tid]
-                trials1.insert_trial_docs(hyperopt_trial) 
-                trials1.refresh()
-            return trials1
-
         def f(params):
             current_time = time.time()
             if (self.max_opt_time is not None) and ((current_time - opt_start_time) > self.max_opt_time) :
@@ -175,6 +156,7 @@ class HyperoptImpl:
             return proc_dict
 
         algo = getattr(hyperopt, self.algo)
+        #Search in the search space with defaults
         if self.evals_with_defaults > 0:
             try:
                 hyperopt.fmin(f, self.search_space_with_defaults, algo=algo.suggest, max_evals=self.evals_with_defaults, trials=self._default_trials, rstate=np.random.RandomState(SEED),
@@ -185,7 +167,7 @@ class HyperoptImpl:
                 self._best_estimator = None
                 if hyperopt.STATUS_OK not in self._trials.statuses():
                     raise ValueError('Error from hyperopt, none of the trials succeeded.')
-
+        
         try :
             hyperopt.fmin(f, self.search_space, algo=algo.suggest, max_evals=self.max_evals-self.evals_with_defaults, trials=self._trials, rstate=np.random.RandomState(SEED),
             show_progressbar=self.show_progressbar)
@@ -196,7 +178,7 @@ class HyperoptImpl:
             if hyperopt.STATUS_OK not in self._trials.statuses():
                 raise ValueError('Error from hyperopt, none of the trials succeeded.')
 
-        self._trials = merge_trials(self._trials, self._default_trials)# hyperopt.trials_from_docs(list(self._trials) + list(self._default_trials))
+        self._trials = hyperopt.trials_from_docs(list(self._trials) + list(self._default_trials))
         try :
             best_trials = sorted(self._trials.results, key=lambda x: x['loss'], reverse=False)
             best_trial = best_trials[0]
