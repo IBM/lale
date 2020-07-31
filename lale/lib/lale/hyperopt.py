@@ -53,6 +53,8 @@ class HyperoptImpl:
         else:
             self.estimator = estimator
         self.search_space = hyperopt.hp.choice('meta_model', [hyperopt_search_space(self.estimator, pgo=pgo)])
+        #Create a search space with default hyperparameters for all trainable parts of the pipeline. 
+        #This search space is used for `frac_evals_with_defaults` fraction of the total trials. 
         self.search_space_with_defaults = hyperopt.hp.choice('meta_model', [hyperopt_search_space(self.estimator.freeze_trainable(), pgo=pgo)])
         self.algo = algo
         if frac_evals_with_defaults > 0:
