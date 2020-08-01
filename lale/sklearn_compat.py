@@ -409,17 +409,15 @@ class SKlearnCompatWrapper(object):
 
 
     def get_params(self, deep:bool = True)->Dict[str,Any]:
+        # TODO: We currently ignore deep
         out:Dict[str,Any] = {}
-        if not deep:
-            if self._old_params_for_clone is not None:
-                # lie to clone to make it happy
-                params = self._old_params_for_clone
-                self._old_params_for_clone = None
-                return params
-            else:
-                self.get_params_internal(out)
+        if self._old_params_for_clone is not None:
+            # lie to clone to make it happy
+            params = self._old_params_for_clone
+            self._old_params_for_clone = None
+            return params
         else:
-            pass #TODO
+            self.get_params_internal(out)
         return out
 
     def fit(self, X, y=None, **fit_params):
