@@ -118,9 +118,12 @@ _hyperparams_schema = {
           'maximum': 3},
         'objective': {
           'description': 'Specify the learning task and the corresponding '
-           'learning objective or a custom objective function to be used.'
-           ' string or callable.',
-          'enum': ['binary:logistic', 'binary:logitraw', 'binary:hinge', 'multi:softprob','multi:softmax'],
+            'learning objective or a custom objective function to be used.',
+          'anyOf': [
+          {   'enum': [
+                 'binary:logistic', 'binary:logitraw', 'binary:hinge',
+                 'multi:softprob','multi:softmax']},
+          {   'laleType': 'callable'}],
           'default': 'binary:logistic'},
         'booster': {
           'description':

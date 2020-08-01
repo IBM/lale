@@ -150,6 +150,11 @@ class TestFunctionTransformer(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         predicted = trained.predict(test_X)
 
+    def test_not_callable(self):
+        import numpy as np
+        with self.assertRaises(jsonschema.ValidationError):
+            ft = FunctionTransformer(func='"not callable"')
+
 class TestMissingIndicator(unittest.TestCase):
     def test_init_fit_transform(self):
         import numpy as np

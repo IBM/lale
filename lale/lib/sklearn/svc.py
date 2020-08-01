@@ -67,11 +67,12 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 32768},
             'kernel': {
                 'anyOf': [
-                    {'enum':['precomputed'], 'forOptimizer': False}, 
-                    {'enum': ['linear', 'poly', 'rbf', 'sigmoid']}],
-                    #support for callable is missing as of now.               
+                {   'enum':['precomputed'], 'forOptimizer': False}, 
+                {   'enum': ['linear', 'poly', 'rbf', 'sigmoid']},
+                {   'laleType': 'callable', 'forOptimizer': False}],
                 'default': 'rbf',
-                'description': 'Specifies the kernel type to be used in the algorithm.'},
+                'description':
+                    'Specifies the kernel type to be used in the algorithm.'},
             'degree': {
                 'type': 'integer',
                 'minimumForOptimizer': 2,
