@@ -96,7 +96,7 @@ The values correspond to the desired number of samples for each targeted class."
                     {   'description':"""When callable, function taking ``y`` and returns a ``dict``. 
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
-                        'laleType': 'Any'}],
+                        'laleType': 'callable'}],
                 'default': 'auto'},
             'random_state': {
             'description':

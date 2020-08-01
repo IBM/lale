@@ -53,11 +53,11 @@ _hyperparams_schema = {
                 'default': 2,
                 'description': 'The number of clusters to find.'},
             'affinity': {
-                'anyOf': [{
-                    'enum': ['euclidean', 'l1', 'l2', 'manhattan', 'cosine',
-                    'precomputed']}, {
-                    'forOptimizer':False,
-                    'type': 'object' }],#callable
+                'anyOf': [
+                {   'enum': ['euclidean', 'l1', 'l2', 'manhattan', 'cosine',
+                    'precomputed']},
+                {   'forOptimizer': False,
+                    'laleType': 'callable' }],
                 'default': 'euclidean',
                 'description': 'Metric used to compute the linkage. Can be "euclidean", "l1", "l2",'},
             'memory': {
@@ -69,15 +69,16 @@ _hyperparams_schema = {
                 'default': None,             
                 'description': 'Used to cache the output of the computation of the tree.'},
             'connectivity': {
-                'anyOf': [{
-                    'type': 'array',
-                    'items': { 'type': 'array', 'items': { 'type': 'number' }}}, {
-                    'forOptimizer':False,
-                    'type': 'object' #a callable that transforms the data into a connectivity matrix, 
-                                     #such as derived from kneighbors_graph
-                    }, {'enum': [None]}],
+                'anyOf': [
+                {   'type': 'array',
+                    'items': {
+                        'type': 'array', 'items': { 'type': 'number' }}},
+                {   'laleType': 'callable',
+                    'forOptimizer': False,
+                    'description': 'A callable that transforms the data into a connectivity matrix, such as derived from kneighbors_graph.'},
+                {'enum': [None]}],
                 'default': None,
-                'description': 'Connectivity matrix. Defines for each feature the neighboring'},
+                'description': 'Connectivity matrix. Defines for each feature the neighboring features following a given structure of the data.'},
             'compute_full_tree': {
                 'anyOf':[{
                     'type': 'boolean'

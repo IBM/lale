@@ -62,16 +62,18 @@ _hyperparams_schema = {
                 'default': True},
             'preprocessor': {
                 'anyOf': [
-                {},
+                {   'laleType': 'callable'},
                 {   'enum': [None]}],
                 'default': None},
             'tokenizer': {
                 'anyOf': [
-                {},
+                {   'laleType': 'callable'},
                 {   'enum': [None]}],
                 'default': None},
             'analyzer': {
-                'enum': ['word', 'char', 'char_wb'], #Need to support callable
+                'anyOf': [
+                {   'enum': ['word', 'char', 'char_wb']},
+                {   'laleType': 'callable'}],
                 'default': 'word'},
             'stop_words': {
                 'anyOf': [{

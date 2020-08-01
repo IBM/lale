@@ -32,6 +32,8 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import jsonschema
+import jsonschema.exceptions
+import jsonschema.validators
 import jsonsubschema
 import lale.helpers
 import numpy as np
@@ -42,6 +44,18 @@ import logging
 import inspect
 from typing import Any, Dict, List, Union
 JSON_TYPE = Dict[str, Any]
+
+def _validate_lale_type(validator, laleType, instance, schema):
+    #https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
+    if laleType == 'callable':
+        if not callable(instance):
+            yield jsonschema.exceptions.ValidationError(
+                f'expected callable, got {instance}')
+
+# https://github.com/Julian/jsonschema/blob/master/jsonschema/validators.py
+_lale_validator = jsonschema.validators.extend(
+    validator=jsonschema.Draft4Validator,
+    validators={u'laleType': _validate_lale_type})
 
 def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
     """Validate that the value is an instance of the schema.
@@ -64,9 +78,9 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
     """
     disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
     if disable_schema is not None and disable_schema.lower()=='true':
-        return True #If schema validation is disabled, always return as valid    
+        return True #if schema validation is disabled, always return as valid
     json_value = lale.helpers.data_to_json(value, subsample_array)
-    jsonschema.validate(json_value, schema, jsonschema.Draft4Validator)
+    jsonschema.validate(json_value, schema, _lale_validator)
 
 _JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 

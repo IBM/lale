@@ -122,9 +122,11 @@ _hyperparams_schema = {
           'description':'Whether to print messages while running boosting. Deprecated.'},
         'objective': {
           'description': 'Specify the learning task and the corresponding '
-           'learning objective or a custom objective function to be used.'
-           ' string or callable.',
-          'enum': ['reg:linear', 'reg:logistic', 'reg:gamma','reg:tweedie'],
+            'learning objective or a custom objective function to be used.',
+          'anyOf': [
+          {   'enum': [
+                  'reg:linear', 'reg:logistic', 'reg:gamma','reg:tweedie']},
+          {   'laleType': 'callable'}],
           'default': 'reg:linear'},
         'booster': {
           'description':

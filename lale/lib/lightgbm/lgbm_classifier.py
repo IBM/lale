@@ -271,11 +271,11 @@ _input_fit_schema = {
             'default': None,
             'description': 'Group data of eval data.'},
         'eval_metric': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {'type':'string'}}, {
-                'enum': ['logloss', None]},{
-                'type': 'object'}],
+            'anyOf': [
+            {   'type': 'array',
+                'items': {'type':'string'}},
+            {   'enum': ['logloss', None]},
+            {   'laleType': 'callable'}],
             'default': None,
             'description': 'string, list of strings, callable or None, optional (default=None).'},
         'early_stopping_rounds': {
