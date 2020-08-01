@@ -153,18 +153,19 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'If int, random_state is the seed used by the random number generator;'},
             'max_features': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'forOptimizer': False}, {
-                    'type': 'number',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 1,
+                    'forOptimizer': False},
+                {   'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
-                    'minimumForOptimizer': 0.0,
-                    'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
-                    'enum': ['auto', 'sqrt', 'log2', None]}],
+                    'maximum': 1.0,
+                    'exclusiveMaximum': True,
+                    'distribution': 'uniform'},
+                {   'enum': ['auto', 'sqrt', 'log2', None]}],
                 'default': None,
-                'description': 'The number of features to consider when looking for the best split:'},
+                'description': 'The number of features to consider when looking for the best split.'},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
@@ -236,8 +237,11 @@ _input_fit_schema = {
             'default': None,
             'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
         'monitor': {
-            'type': 'object', #callable, optional
-            'description': 'The monitor is called after each iteration with the current'},
+            'anyOf': [
+            {   'laleType': 'callable'},
+            {   'enum': [None]}],
+            'default': None,
+            'description': 'The monitor is called after each iteration with the current the current iteration, a reference to the estimator and the local variables of _fit_stages as keyword arguments callable(i, self, locals()).'},
     },
 }
 _input_predict_schema = {

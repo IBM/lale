@@ -39,8 +39,15 @@ _hyperparams_schema = {
         'relevantToOptimizer': ['kernel', 'gamma', 'coef0', 'degree', 'n_components'],
         'properties': {
             'kernel': {
-                'description': 'Kernel map to be approximated. In the scikit learn version, this can be a string or a callable. To keep arguments as plain JSON documents, the wrapper only allows an enum of the keys of sklearn.metrics.pairwise.KERNEL_PARAMS.',
-                'enum': ['additive_chi2', 'chi2', 'cosine', 'linear', 'poly', 'polynomial', 'rbf', 'laplacian', 'sigmoid'],
+                'description': 'Kernel map to be approximated.',
+                'anyOf': [
+                {   'description':
+                        'keys of sklearn.metrics.pairwise.KERNEL_PARAMS',
+                     'enum': [
+                         'additive_chi2', 'chi2', 'cosine', 'linear',
+                         'poly', 'polynomial', 'rbf', 'laplacian', 'sigmoid']},
+                {   'laleType': 'callable',
+                    'forOptimizer': False}],
                 'default': 'rbf'},
             'gamma': {
                 'description': 'Gamma parameter.',
