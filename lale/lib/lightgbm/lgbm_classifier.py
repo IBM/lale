@@ -169,9 +169,10 @@ _hyperparams_schema = {
                 'default': 0.0,
                 'description': 'L2 regularization term on weights.'},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'},{
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
                 'description': 'Random number seed. If None, default seeds in C++ code will be used.'},
             'n_jobs': {

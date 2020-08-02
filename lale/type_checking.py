@@ -47,10 +47,24 @@ JSON_TYPE = Dict[str, Any]
 
 def _validate_lale_type(validator, laleType, instance, schema):
     #https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
-    if laleType == 'callable':
+    if laleType == 'Any':
+        return
+    elif laleType == 'callable':
         if not callable(instance):
             yield jsonschema.exceptions.ValidationError(
-                f'expected callable, got {instance}')
+                f'expected {laleType}, got {type(instance)}')
+    elif laleType == 'operator':
+        import lale.operators
+        import sklearn.base
+        if not (isinstance(instance, lale.operators.Operator) or
+                isinstance(instance, sklearn.base.BaseEstimator)):
+            yield jsonschema.exceptions.ValidationError(
+                f'expected {laleType}, got {type(instance)}')
+    elif laleType == 'numpy.random.RandomState':
+        import numpy.random
+        if not isinstance(instance, numpy.random.RandomState):
+            yield jsonschema.exceptions.ValidationError(
+                f'expected {laleType}, got {type(instance)}')
 
 # https://github.com/Julian/jsonschema/blob/master/jsonschema/validators.py
 _lale_validator = jsonschema.validators.extend(

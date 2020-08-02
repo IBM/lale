@@ -107,7 +107,7 @@ desired number of samples for each class.""",
                 { 'description': 'The seed used by the random number generator',
                 'type': 'integer'},
                 { 'description': 'Random number generator instance.',
-                'laleType':'Any'}],
+                'laleType':'numpy.random.RandomState'}],
             'default': None},
             'cv':{
                 'description':'Number of folds to be used when estimating samples’ instance hardness.',

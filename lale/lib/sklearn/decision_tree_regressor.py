@@ -113,7 +113,7 @@ _hyperparams_schema = {
             'random_state': {
                 'anyOf': [
                 {   'type': 'integer'},
-                {   'type': 'object'},
+                {   'laleType': 'numpy.random.RandomState'},
                 {   'enum': [None]}],
                 'default': None},
             'max_leaf_nodes': {

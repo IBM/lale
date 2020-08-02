@@ -81,10 +81,10 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of features to consider when looking for the best split:'},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
                 'description': 'If int, random_state is the seed used by the random number generator;'},
             'max_leaf_nodes': {

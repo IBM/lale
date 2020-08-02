@@ -150,10 +150,10 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The number of jobs to run in parallel for both `fit` and `predict`.'},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
                 'description': 'If int, random_state is the seed used by the random number generator;'},
             'verbose': {

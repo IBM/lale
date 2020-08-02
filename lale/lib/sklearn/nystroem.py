@@ -93,11 +93,10 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 256},
             'random_state': {
                 'description': 'Seed of pseudo-random number generator.',
-                'anyOf': [{
-                    'description': 'RandomState used by np.random',
-                    'enum': [None]}, {
-                    'description': 'Explicit seed.',
-                    'type': 'integer'}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None},
         }}]}
 

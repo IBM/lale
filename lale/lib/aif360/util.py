@@ -301,7 +301,7 @@ def statistical_parity_difference(favorable_label, unfavorable_label, protected_
 _postprocessing_base_hyperparams = {
     'estimator': {
         'description': 'Nested supervised learning operator for which to mitigate fairness.',
-        'laleType': 'estimator'},
+        'laleType': 'operator'},
     'favorable_label': _dataset_fairness_properties['favorable_label'],
     'unfavorable_label': _dataset_fairness_properties['unfavorable_label'],
     'protected_attribute_names': _dataset_fairness_properties['protected_attribute_names']}
