@@ -85,11 +85,13 @@ outputs with unit component-wise variances.""",
                 'default': 'auto'},
             'random_state': {
                 'description': 'Seed of pseudo-random number generator for shuffling data.',
-                'anyOf': [{
-                    'description': 'RandomState used by np.random',
-                    'enum': [None]}, {
-                    'description': 'Explicit seed.',
-                    'type': 'integer'}],
+                'anyOf': [
+                { 'description': 'RandomState used by np.random',
+                  'enum': [None]},
+                { 'description': 'Use the provided random state, only affecting other users of that same random state instance.',
+                  'laleType': 'numpy.random.RandomState' },
+                { 'description': 'Explicit seed.',
+                  'type': 'integer'}],
                 'default': None},
         }},
     {   'description': 'Option n_components mle can only be set for svd_solver full or auto.',

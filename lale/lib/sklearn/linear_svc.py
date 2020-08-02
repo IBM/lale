@@ -120,6 +120,7 @@ _hyperparams_schema = {
                 'description':
                 'Seed of pseudo-random number generator for shuffling data.',
                 'anyOf': [
+                    { 'laleType': 'numpy.random.RandomState'},
                     { 'description': 'RandomState used by np.random',
                       'enum': [None]},
                     { 'description': 'Explicit seed.',

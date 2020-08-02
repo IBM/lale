@@ -131,10 +131,10 @@ _hyperparams_schema = {
                 'default': 'ovr',
                 'description': "Whether to return a one-vs-rest ('ovr') decision function of shape"},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
                 'description': 'The seed of the pseudo random number generator used when shuffling'},
         }},

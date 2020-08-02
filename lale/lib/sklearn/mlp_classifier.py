@@ -138,7 +138,7 @@ _hyperparams_schema = {
                     'description': 'seed used by the random number generators',
                     'type': 'integer'}, {
                     'description': 'Random number generator',
-                    'type': 'object'}, {
+                    'laleType': 'numpy.random.RandomState'}, {
                     'description': 'RandomState instance used by np.random',
                     'enum': [None]}],
                 'default': None},

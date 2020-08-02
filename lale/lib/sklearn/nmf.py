@@ -92,12 +92,12 @@ _hyperparams_schema = {
                 'default': 200,
                 'description': 'Maximum number of iterations before timing out.'},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'Used for initialization and in coordinate descent.'},
             'alpha': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,

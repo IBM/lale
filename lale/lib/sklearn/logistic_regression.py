@@ -198,6 +198,8 @@ proportional to class frequencies in the input data as "n_samples / (n_classes *
           'anyOf': [
             { 'description': 'RandomState used by np.random',
               'enum': [None]},
+            { 'description': 'Use the provided random state, only affecting other users of that same random state instance.',
+              'laleType': 'numpy.random.RandomState' },
             { 'description': 'Explicit seed.',
               'type': 'integer'}],
           'default': None},
