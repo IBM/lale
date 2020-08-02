@@ -139,6 +139,10 @@ class TestNMF(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         predicted = trained.predict(test_X)
 
+    def test_not_randome_state(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            nmf = NMF(random_state='"not RandomState"')
+
 class TestFunctionTransformer(unittest.TestCase):
     def test_init_fit_predict(self):
         import numpy as np
@@ -151,7 +155,6 @@ class TestFunctionTransformer(unittest.TestCase):
         predicted = trained.predict(test_X)
 
     def test_not_callable(self):
-        import numpy as np
         with self.assertRaises(jsonschema.ValidationError):
             ft = FunctionTransformer(func='"not callable"')
 
@@ -178,6 +181,10 @@ class TestRFE(unittest.TestCase):
         X, y = data.data, data.target
         trained = trainable.fit(X, y)
         predicted = trained.predict(X)
+
+    def test_not_operator(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            rfe = RFE(estimator='"not an operator"', n_features_to_select=2)
 
 class TestBoth(unittest.TestCase):
     def test_init_fit_transform(self):

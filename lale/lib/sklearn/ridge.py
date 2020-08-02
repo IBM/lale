@@ -97,10 +97,10 @@ _hyperparams_schema = {
                 'default': 'auto',
                 'description': 'Solver to use in the computational routines.'},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
                 'description': 'The seed of the pseudo random number generator to use when shuffling'},
         }}]}

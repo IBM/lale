@@ -98,7 +98,7 @@ desired number of samples for each class.""",
                 { 'description': 'The seed used by the random number generator',
                 'type': 'integer'},
                 { 'description': 'Random number generator instance.',
-                'laleType':'Any'}],
+                'laleType':'numpy.random.RandomState'}],
             'default': None},
             'k_neighbors':{
                 'description': """If ``int``, number of nearest neighbours to used to construct synthetic samples.  

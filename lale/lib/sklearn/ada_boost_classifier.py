@@ -81,10 +81,10 @@ _hyperparams_schema = {
                 'default': 'SAMME.R',
                 'description': "If 'SAMME.R' then use the SAMME.R real boosting algorithm."},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
                 'description': 'If int, random_state is the seed used by the random number generator;'},
         }}],

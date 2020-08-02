@@ -84,7 +84,7 @@ desired number of samples for each class.""",
                 { 'description': 'The seed used by the random number generator',
                 'type': 'integer'},
                 { 'description': 'Random number generator instance.',
-                'laleType':'Any'}],
+                'laleType':'numpy.random.RandomState'}],
             'default': None},
             'n_neighbors':{
                 'description': """If ``int``, size of the neighbourhood to consider to compute the nearest neighbors.  
