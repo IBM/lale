@@ -14,7 +14,8 @@
 
 import ast #see also https://greentreesnakes.readthedocs.io/
 import astunparse
-from typing import Union
+import pprint
+from typing import Any, Dict, Union
 
 class Expr:
     _expr : ast.Expr
@@ -65,6 +66,13 @@ def count(group: Expr) -> Expr:
 
 def max(group: Expr) -> Expr:
     call = ast.Call(func=ast.Name(id='max'), args=[group._expr], keywords=[])
+    return Expr(call)
+
+def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
+    old2new_str = pprint.pformat(old2new)
+    old2new_ast = ast.parse(old2new_str)
+    call = ast.Call(func=ast.Name(id='replace'),
+                    args=[subject._expr, old2new_ast], keywords=[])
     return Expr(call)
 
 def sum(group: Expr) -> Expr:

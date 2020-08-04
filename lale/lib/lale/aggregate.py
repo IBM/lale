@@ -17,47 +17,50 @@ import lale.operators
 from lale.expressions import Expr
 
 class AggregateImpl:
-    def __init__(self, **assign):
-        self._assign = assign
+    def __init__(self, columns):
+        self._hyperparams = { 'columns': columns }
 
     def transform(self, X):
         raise NotImplementedError()
 
-    def viz_label(self) -> str:
-        import ast
-        def render(rhs):
-            fun = rhs._expr.func.id
-            attr = rhs._expr.args[0].attr
-            return f'{fun} {attr}'
-        rendered = [render(rhs) for lhs, rhs in self._assign.items()]
-        return 'Aggregate:\n' + '\n'.join(rendered)
-
 _hyperparams_schema = {
-  'allOf': [
-    { 'description':
-        'This first sub-object lists all constructor arguments with their '
-        'types, one at a time, omitting cross-argument constraints, if any.',
-      'type': 'object',
-      'relevantToOptimizer': [],
-      'properties': {},
-      'additionalProperties': True}]}
+    'allOf': [
+    {   'description': 'This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints, if any.',
+        'type': 'object',
+        'additionalProperties': False,
+        'relevantToOptimizer': [],
+        'properties': {
+            'columns': {
+                'description': 'Aggregations for producing output columns.',
+                'anyOf': [
+                {   'description': 'Dictionary of output column names and aggregation expressions.',
+                    'type': 'object',
+                    'additionalProperties': {'laleType': 'expression'}},
+                {   'description': 'List of aggregation expressions. The output column name is determined by a heuristic based on the input column name and the transformation function.',
+                    'type': 'array',
+                    'items': {'laleType': 'expression'}}],
+                'default': []}}}]}
 
 _input_transform_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'List of tables.',
-      'type': 'array',
-      'items': {
-          'type': 'array',
-          'items': {'laleType': 'Any'}},
-      'minItems': 1 }}}
+    'type': 'object',
+    'required': ['X'],
+    'additionalProperties': False,
+    'properties': {
+        'X': {
+            'description': 'The outer array is over rows.',
+            'type': 'array',
+            'items': {
+                'description': 'The inner array is over columns.',
+                'type': 'array',
+                'items': {'laleType': 'Any'}}}}}
 
 _output_transform_schema = {
-  'description': 'Features; no restrictions on data type.',
-  'laleType': 'Any'}
+    'description': 'The outer array is over rows.',
+    'type': 'array',
+    'items': {
+        'description': 'The inner array is over columns.',
+        'type': 'array',
+        'items': {'laleType': 'Any'}}}
 
 _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',

@@ -60,6 +60,11 @@ def _validate_lale_type(validator, laleType, instance, schema):
                 isinstance(instance, sklearn.base.BaseEstimator)):
             yield jsonschema.exceptions.ValidationError(
                 f'expected {laleType}, got {type(instance)}')
+    elif laleType == 'expression':
+        import lale.expressions
+        if not isinstance(instance, lale.expressions.Expr):
+            yield jsonschema.exceptions.ValidationError(
+                f'expected {laleType}, got {type(instance)}')
     elif laleType == 'numpy.random.RandomState':
         import numpy.random
         if not isinstance(instance, numpy.random.RandomState):
