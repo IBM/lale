@@ -18,7 +18,7 @@ def load_iris():
 def load_regression():
     return datasets.make_regression(n_features=4, n_informative=2, random_state=0, shuffle=False)
 
-def base_test(name, pipeline, data_loader, max_evals=250, scoring='accuracy'):
+def base_test(name, pipeline, data_loader, max_evals=50, scoring='accuracy'):
     def test(i):
         if i > max_evals:
             assert False
