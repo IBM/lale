@@ -21,27 +21,5 @@ Lale是一个半自动化数据科学的Python库. 通过Lale，您可以简单�
 
 Lale这个名字的发音为*laleh*，来自波斯语，意为郁金香。和热门的机器学习库如scikit-learn一样，Lale也是一个Python库而不是一个新的独立编程语言。用户不需要安装新工具也不需要学习新的语法。
 
-以下的论文在技术上对Lale作出了深度讨论:
-```
-@InProceedings{baudart_et_al_2020-automl_kdd,
-  title = "Lale: Consistent Automated Machine Learning",
-  author = "Baudart, Guillaume and Hirzel, Martin and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham",
-  booktitle = "KDD Workshop on Automation in Machine Learning (AutoML@KDD)",
-  year = 2020,
-  month = aug,
-  url = "https://arxiv.org/abs/2007.01977" }
-```
-
-在`lale.lib.autogen`模块中定义的运算符模式是根据115个scikit-learn运算符的源代码自动生成的。以下论文描述了模式提取器： 
-```
-@InProceedings{baudart_et_al_2020_automl_icml,
-  title = "Mining Documentation to Extract Hyperparameter Schemas",
-  author = "Baudart, Guillaume and Kirchner, Peter and Hirzel, Martin and Kate, Kiran",
-  booktitle = "ICML Workshop on Automated Machine Learning (AutoML@ICML)",
-  month = jul,
-  year = 2020,
-  url = "https://arxiv.org/abs/2006.16984" }
-```
-
 Lale根据Apache 2.0许可的条款分发，请参阅[LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt).
 目前处于**Alpha release**, 没有任何保证。 
