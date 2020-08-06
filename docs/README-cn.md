@@ -17,6 +17,7 @@ Lale是一个半自动化数据科学的Python库. 通过Lale，您可以简单�
 * 包装指南[新运算符](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
 * [贡献]指南(https://github.com/IBM/lale/blob/master/CONTRIBUTING.md)
 * [常问问题](https://github.com/IBM/lale/blob/master/docs/faq.rst)
+* [Papers](https://github.com/IBM/lale/blob/master/docs/papers.rst)
 * Python [API文档](https://lale.readthedocs.io/en/latest/)
 
 Lale这个名字的发音为*laleh*，来自波斯语，意为郁金香。和热门的机器学习库如scikit-learn一样，Lale也是一个Python库而不是一个新的独立编程语言。用户不需要安装新工具也不需要学习新的语法。
