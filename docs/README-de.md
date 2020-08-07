@@ -34,6 +34,7 @@ Python-Werkzeugen, so wie Jupyter Notebooks, editiert werden.
 * IBM's [AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only) benutzt Lale, siehe [Demonstrationsnotebook](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
 * Anleitung zur Einbeziehung [neuer Operatoren](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
 * Leitfaden für [Beiträge](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) zu Lale
+* [Veröffentlichungen](https://github.com/IBM/lale/blob/master/docs/papers.rst)
 * [Häufig gestellte Fragen](https://github.com/IBM/lale/blob/master/docs/faq.rst)
 * Python [API Dokumentation](https://lale.readthedocs.io/en/latest/)
 
