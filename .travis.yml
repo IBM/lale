@@ -24,6 +24,7 @@ env:
     - SETUP_TARGET=.[full,test] TEST_CASES="test/test_notebooks.py"
     - SETUP_TARGET=.[test] TEST_CASES="test/test_autoai_output_consumption.py"
     - SETUP_TARGET=.[test] TEST_CASES="test/test_autogen_lib.py"
+    - SETUP_TARGET=.[test] TEST_CASES="test/test_snap_ml.py"
 addons:
   apt:
     packages:
@@ -32,6 +33,22 @@ addons:
 before_install:
   - pip install -U numpy
 install:
+  - |
+    if [ "z${TEST_CASES}" == z"test/test_snap_ml.py" ]; then
+      echo -e "${ANSI_GREEN}Installing SnapML...${ANSI_RESET}" && echo -en 'travis_fold:start:compile\\r'
+      wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+      bash Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
+      source "$HOME/miniconda/etc/profile.d/conda.sh"
+      hash -r
+      conda config --set always_yes yes --set changeps1 no
+      conda update -q conda
+      conda info -a
+      conda config --prepend channels https://public.dhe.ibm.com/ibmdl/export/pub/software/server/ibm-ai/conda/
+      conda create -q --name conda-snapml-env python="3.6"
+      conda activate conda-snapml-env
+      export IBM_POWERAI_LICENSE_ACCEPT=yes
+      conda install pai4sk
+    fi
   - pip install $SETUP_TARGET
   - export PYTHONPATH=`pwd`
 script:
