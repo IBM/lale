@@ -17,12 +17,24 @@ import sklearn.datasets
 import sklearn.metrics
 
 class TestSnapML(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_breast_cancer
+        from sklearn.model_selection import train_test_split
+        X, y = load_breast_cancer(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)    
+
     def test_without_lale(self):
         import pai4sk
-        X, y = sklearn.datasets.load_breast_cancer(return_X_y=True)
         clf = pai4sk.RandomForestClassifier()
         self.assertIsInstance(clf, pai4sk.RandomForestClassifier)
-        fit_result = clf.fit(X, y)
+        fit_result = clf.fit(self.train_X, self.train_y)
         self.assertIsNone(fit_result)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        accuracy = scorer(clf, X, y)
+        accuracy = scorer(clf, self.test_X, self.test_y)
+
+    def test_random_forest_classifier(self):
+        import lale.lib.pai4sk
+        trainable = lale.lib.pai4sk.RandomForestClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
+        accuracy = scorer(trained, self.test_X, self.test_y)
