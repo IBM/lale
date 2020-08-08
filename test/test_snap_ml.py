@@ -15,6 +15,7 @@
 import unittest
 import sklearn.datasets
 import sklearn.metrics
+import lale.sklearn_compat
 
 class TestSnapML(unittest.TestCase):
     def setUp(self):
@@ -36,5 +37,13 @@ class TestSnapML(unittest.TestCase):
         import lale.lib.pai4sk
         trainable = lale.lib.pai4sk.RandomForestClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
+        accuracy = scorer(trained, self.test_X, self.test_y)
+
+    def test_sklearn_compat(self):
+        import lale.lib.pai4sk
+        trainable = lale.lib.pai4sk.RandomForestClassifier()
+        compat = lale.sklearn_compat.make_sklearn_compat(trainable)
+        trained = compat.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         accuracy = scorer(trained, self.test_X, self.test_y)
