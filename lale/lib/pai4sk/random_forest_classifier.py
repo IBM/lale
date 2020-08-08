@@ -18,7 +18,7 @@ import lale.operators
 import lale.datasets.data_schemas
 
 class RandomForestClassifierImpl():
-    def __init__(self, n_estimators=10, criterion='gini', max_depth=None, min_samples_leaf=1, max_features='auto', bootstrap=True, n_jobs=None, random_state=None, verbose=False, use_histograms=False, hist_nbins=256, use_gpu=False, gpu_ids=[0]):
+    def __init__(self, n_estimators=10, criterion='gini', max_depth=None, min_samples_leaf=1, max_features='auto', bootstrap=True, n_jobs=None, random_state=None, verbose=False, use_histograms=False, hist_nbins=256, use_gpu=False, gpu_ids=None):
         self._hyperparams = {
             'n_estimators': n_estimators,
             'criterion': criterion,
@@ -33,7 +33,10 @@ class RandomForestClassifierImpl():
             'hist_nbins': hist_nbins,
             'use_gpu': use_gpu,
             'gpu_ids': gpu_ids}
-        self._wrapped_model = pai4sk.RandomForestClassifier(**self._hyperparams)
+        modified_hps = {**self._hyperparams}
+        if modified_hps['gpu_ids'] is None:
+            modified_hps['gpu_ids'] = [0] #TODO: support list as default
+        self._wrapped_model = pai4sk.RandomForestClassifier(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -147,9 +150,12 @@ _hyperparams_schema = {
                 'default': False,
                 'description': 'Use GPU acceleration (only supported for histogram-based splits).'},
             'gpu_ids': {
-                'type': 'array',
-                'items': {'type': 'integer'},
-                'default': [0],
+                'anyOf': [
+                {   'description': 'Use [0].',
+                    'enum': [None]},
+                {   'type': 'array',
+                    'items': {'type': 'integer'}}],
+                'default': None,
                 'description': 'Device IDs of the GPUs which will be used when GPU acceleration is enabled.'}}},
     {   'description': 'Only need hist_nbins when use_histograms is true.',
         'anyOf': [
@@ -162,7 +168,7 @@ _hyperparams_schema = {
         {   'type': 'object',
             'properties': {'use_gpu': {'enum': [True]}}},
         {   'type': 'object',
-            'properties': {'gpu_ids': {'enum': [[0]]}}}]}]}
+            'properties': {'gpu_ids': {'enum': [None]}}}]}]}
 
 _input_fit_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
