@@ -17,7 +17,6 @@ import lale.docstrings
 import lale.operators
 
 class RandomForestRegressorImpl():
-
     def __init__(self, n_estimators=10, criterion='mse', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, bootstrap=True, oob_score=False, n_jobs=None, random_state=None, verbose=0, warm_start=False):
         self._hyperparams = {
             'n_estimators': n_estimators,
@@ -47,8 +46,8 @@ class RandomForestRegressorImpl():
 
     def predict(self, X):
         return self._wrapped_model.predict(X)
+
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'A random forest regressor.',
     'allOf': [{
         'type': 'object',
@@ -65,92 +64,111 @@ _hyperparams_schema = {
             'criterion': {
                 'enum': ['mse', 'mae', 'friedman_mse'],
                 'default': 'mse',
-                'description': 'The function to measure the quality of a split. Supported criteria'},
+                'description': 'The function to measure the quality of a split.'},
             'max_depth': {
-                'anyOf': [{
-                    'type': 'integer',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 1,
                     'minimumForOptimizer': 3,
-                    'maximumForOptimizer': 5}, {
-                    'enum': [None]}],
+                    'maximumForOptimizer': 5},
+                {   'enum': [None],
+                    'description': 'Nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_split samples.'}],
                 'default': None,
-                'description': 'The maximum depth of the tree. If None, then nodes are expanded until'},
+                'description': 'The maximum depth of the tree.'},
             'min_samples_split': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 2,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 2,
+                    'forOptimizer': False,
+                    'description': 'Consider min_samples_split as the minimum number.'},
+                {   'type': 'number',
+                    'minimum': 0.0,
+                    'exclusiveMinimum': True,
+                    'maximum': 1.0,
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'description': 'min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.'}],
                 'default': 2,
-                'description': 'The minimum number of samples required to split an internal node:'},
+                'description': 'The minimum number of samples required to split an internal node.'},
             'min_samples_leaf': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 1,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 1,
+                    'forOptimizer': False,
+                    'description': 'Consider min_samples_leaf as the minimum number.'},
+                {   'type': 'number',
+                    'minimum': 0.0,
+                    'exclusiveMinimum': True,
+                    'maximum': 0.5,
+                    'description': 'min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.'}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node.'},
             'min_weight_fraction_leaf': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all'},
+                'description': 'The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.'},
             'max_features': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'forOptimizer': False}, {
-                    'type': 'number',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 2,
+                    'forOptimizer': False,
+                    'description': 'Consider max_features features at each split.'},
+                {   'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
-                    'minimumForOptimizer': 0.0,
-                    'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
-                    'enum': ['auto', 'sqrt', 'log2', None]}],
+                    'maximum': 1.0,
+                    'distribution': 'uniform',
+                    'description': 'max_features is a fraction and int(max_features * n_features) features are considered at each split.'},
+                {   'enum': ['auto', 'sqrt', 'log2', None]}],
                 'default': 'auto',
-                'description': 'The number of features to consider when looking for the best split:'},
+                'description': 'The number of features to consider when looking for the best split.'},
             'max_leaf_nodes': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'enum': [None],
+                    'description': 'Unlimited number of leaf nodes.'}],
                 'default': None,
-                'description': 'Grow trees with ``max_leaf_nodes`` in best-first fashion.'},
+                'description': 'Grow trees with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity.'},
             'min_impurity_decrease': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity'},
+                'description': 'A node will be split if this split induces a decrease of the impurity greater than or equal to this value.'},
             'min_impurity_split': {
-                'anyOf':[
-                {'type': 'number'},{
-                    'enum': [None]
-                }],
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0},
+                {   'enum': [None]}],
                 'default': None,
-                'description': 'Threshold for early stopping in tree growth. A node will split'},
+                'description': 'Threshold for early stopping in tree growth.'},
             'bootstrap': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether bootstrap samples are used when building trees. If False, the'},
+                'description': 'Whether bootstrap samples are used when building trees. If False, the whole datset is used to build each tree.'},
             'oob_score': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'whether to use out-of-bag samples to estimate'},
+                'description': 'Whether to use out-of-bag samples to estimate the generalization accuracy.'},
             'n_jobs': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'The number of jobs to run in parallel for both `fit` and `predict`.'},
-            'random_state': {
                 'anyOf': [
-                {   'type': 'integer'},
-                {   'laleType': 'numpy.random.RandomState'},
-                {   'enum': [None]}],
+                {   'description': '1 unless in joblib.parallel_backend context.',
+                    'enum': [None]},
+                {   'description': 'Use all processors.',
+                    'enum': [-1]},
+                {   'description': 'Number of CPU cores.',
+                    'type': 'integer',
+                    'minimum': 1}],
                 'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description': 'The number of jobs to run in parallel for both fit and predict.'},
+            'random_state': {
+                'description':
+                'Seed of pseudo-random number generator.',
+                'anyOf': [
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'description': 'RandomState used by np.random',
+                    'enum': [None]},
+                {   'description': 'Explicit seed.',
+                    'type': 'integer'}],
+                'default': None},
             'verbose': {
                 'type': 'integer',
                 'default': 0,
@@ -158,61 +176,52 @@ _hyperparams_schema = {
             'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to ``True``, reuse the solution of the previous call to fit'},
-        }}]
-}
+                'description': 'When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just fit a whole new forest.'}}}]}
+
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a forest of trees from the training set (X, y).',
     'type': 'object',
     'required': ['X', 'y'],
     'properties': {
         'X': {
-            'anyOf': [{
+            'type': 'array',
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
                 'type': 'array',
+                'description': 'The inner array is over features aka columns.',
                 'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'},
-                }}],
-            'description': 'The training input samples. Internally, its dtype will be converted'},
+                    'type': 'number'}}},
         'y': {
+            'description': 'The predicted classes.',
             'type': 'array',
             'items': {
-                'type': 'number'},
-            'description': 'The target values (class labels in classification, real numbers in'},
+                'type': 'number'}},
         'sample_weight': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }, {
-                'enum': [None]}],
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
-    },
-}
+            'anyOf': [
+            {   'type': 'array',
+                'items': {'type': 'number'}},
+            {   'enum': [None],
+                'description': 'Samples are equally weighted.'}],
+            'description': 'Sample weights.'}}}
+
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Predict regression target for X.',
     'type': 'object',
     'properties': {
         'X': {
             'type': 'array',
+            'description': 'The outer array is over samples aka rows.',
             'items': {
                 'type': 'array',
+                'description': 'The inner array is over features aka columns.',
                 'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, its dtype will be converted to'},
-    },
-}
+                    'type': 'number'}}}}}
+
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted values.',
     'type': 'array',
     'items': {
-        'type': 'number'},
-}
+        'type': 'number'}}
+
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Random forest regressor`_ from scikit-learn.
