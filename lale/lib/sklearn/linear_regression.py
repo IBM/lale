@@ -12,19 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.linear_model.base
+import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
 class LinearRegressionImpl():
-
     def __init__(self, fit_intercept=True, normalize=False, copy_X=True, n_jobs=None):
         self._hyperparams = {
             'fit_intercept': fit_intercept,
             'normalize': normalize,
             'copy_X': copy_X,
             'n_jobs': n_jobs}
-        self._wrapped_model = sklearn.linear_model.base.LinearRegression(**self._hyperparams)
+        self._wrapped_model = sklearn.linear_model.LinearRegression(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:
@@ -37,8 +36,6 @@ class LinearRegressionImpl():
         return self._wrapped_model.predict(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Ordinary least squares Linear Regression.',
     'allOf': [{
         'type': 'object',
         'required': ['fit_intercept', 'normalize', 'copy_X'],
@@ -48,26 +45,28 @@ _hyperparams_schema = {
             'fit_intercept': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'whether to calculate the intercept for this model. If set'},
+                'description': 'Whether to calculate the intercept for this model.'},
             'normalize': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
+                'description': 'If True, the regressors X will be normalized before regression by subtracting the mean and dividing by the l2-norm.'},
             'copy_X': {
                 'type': 'boolean',
                 'default': True,
                 'description': 'If True, X will be copied; else, it may be overwritten.'},
             'n_jobs': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'description': '1 unless in joblib.parallel_backend context.',
+                    'enum': [None]},
+                {   'description': 'Use all processors.',
+                    'enum': [-1]},
+                {   'description': 'Number of CPU cores.',
+                    'type': 'integer',
+                    'minimum': 1}],
                 'default': None,
-                'description': 'The number of jobs to use for the computation. This will only provide'},
-        }}]}
+                'description': 'The number of jobs to run in parallel.'}}}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Fit linear model.',
     'type': 'object',
     'required': ['X', 'y'],
     'properties': {
@@ -77,34 +76,27 @@ _input_fit_schema = {
             'items': {
                 'type': 'array',
                 'items': {
-                    'type': 'number'},
-            }},
+                    'type': 'number'}}},
         'y': {
             'anyOf': [
             {   'type': 'array',
                 'items': {
                     'type': 'array',
                     'items': {
-                        'type': 'number'},
-                }},
+                        'type': 'number'}}},
             {   'type': 'array',
                 'items': {
-                    'type': 'number'},
-            }],
+                    'type': 'number'}}],
             'description': "Target values. Will be cast to X's dtype if necessary"},
         'sample_weight': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }, {
-                'enum': [None]}],
-            'description': 'Individual weights for each sample'},
-    },
-}
+            'anyOf': [
+            {   'type': 'array',
+                'items': {'type': 'number'}},
+            {   'enum': [None],
+                'description': 'Samples are equally weighted.'}],
+            'description': 'Sample weights.'}}}
+
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Predict using the linear model',
     'type': 'object',
     'properties': {
         'X': {
@@ -112,21 +104,17 @@ _input_predict_schema = {
             'items': {
                 'type': 'array',
                 'items': {
-                    'type': 'number'},
-            },
-            'description': 'Samples.'},
-    },
-}
+                    'type': 'number'}},
+            'description': 'Samples.'}}}
+
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Returns predicted values.',
     'anyOf': [
     {   'type': 'array',
         'items': {
             'type': 'array',
             'items': {
-                'type': 'number'},
-        }},
+                'type': 'number'}}},
     {   'type': 'array',
         'items': {
             'type': 'number'}}]}
