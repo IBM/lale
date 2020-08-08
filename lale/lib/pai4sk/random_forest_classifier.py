@@ -12,59 +12,67 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.ensemble.forest
+import pai4sk
 import lale.docstrings
 import lale.operators
+import lale.datasets.data_schemas
 
-class RandomForestRegressorImpl():
-    def __init__(self, n_estimators=10, criterion='mse', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, bootstrap=True, oob_score=False, n_jobs=None, random_state=None, verbose=0, warm_start=False):
+class RandomForestClassifierImpl():
+    def __init__(self, n_estimators=10, criterion='gini', max_depth=None, min_samples_leaf=1, max_features='auto', bootstrap=True, n_jobs=None, random_state=None, verbose=False, use_histograms=False, hist_nbins=256, use_gpu=False, gpu_ids=None):
         self._hyperparams = {
             'n_estimators': n_estimators,
             'criterion': criterion,
             'max_depth': max_depth,
-            'min_samples_split': min_samples_split,
             'min_samples_leaf': min_samples_leaf,
-            'min_weight_fraction_leaf': min_weight_fraction_leaf,
             'max_features': max_features,
-            'max_leaf_nodes': max_leaf_nodes,
-            'min_impurity_decrease': min_impurity_decrease,
-            'min_impurity_split': min_impurity_split,
             'bootstrap': bootstrap,
-            'oob_score': oob_score,
             'n_jobs': n_jobs,
             'random_state': random_state,
             'verbose': verbose,
-            'warm_start': warm_start}
-        self._wrapped_model = sklearn.ensemble.forest.RandomForestRegressor(**self._hyperparams)
+            'use_histograms': use_histograms,
+            'hist_nbins': hist_nbins,
+            'use_gpu': use_gpu,
+            'gpu_ids': gpu_ids}
+        modified_hps = {**self._hyperparams}
+        if modified_hps['gpu_ids'] is None:
+            modified_hps['gpu_ids'] = [0] #TODO: support list as default
+        self._wrapped_model = pai4sk.RandomForestClassifier(**modified_hps)
 
     def fit(self, X, y, **fit_params):
+        X = lale.datasets.data_schemas.strip_schema(X)
+        y = lale.datasets.data_schemas.strip_schema(y)
         if fit_params is None:
             self._wrapped_model.fit(X, y)
         else:
             self._wrapped_model.fit(X, y, **fit_params)
         return self
 
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
+    def predict(self, X, **predict_params):
+        X = lale.datasets.data_schemas.strip_schema(X)
+        if predict_params is None:
+            return self._wrapped_model.predict(X)
+        else:
+            return self._wrapped_model.predict(X, **predict_params)
 
 _hyperparams_schema = {
-    'description': 'A random forest regressor.',
-    'allOf': [{
+    'description': 'Hyperparameter schema.',
+    'allOf': [
+    {   'description': 'This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.',
         'type': 'object',
-        'required': ['n_estimators', 'criterion', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features', 'bootstrap'],
-        'relevantToOptimizer': ['n_estimators', 'criterion', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features', 'bootstrap'],
+        'relevantToOptimizer': ['n_estimators', 'criterion', 'max_depth', 'min_samples_leaf', 'max_features', 'bootstrap'],
         'additionalProperties': False,
         'properties': {
             'n_estimators': {
                 'type': 'integer',
+                'minimum': 1,
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 100,
                 'default': 10,
                 'description': 'The number of trees in the forest.'},
             'criterion': {
-                'enum': ['mse', 'mae', 'friedman_mse'],
-                'default': 'mse',
-                'description': 'The function to measure the quality of a split.'},
+                'enum': ['gini'],
+                'default': 'gini',
+                'description': 'Function to measure the quality of a split.'},
             'max_depth': {
                 'anyOf': [
                 {   'type': 'integer',
@@ -72,24 +80,9 @@ _hyperparams_schema = {
                     'minimumForOptimizer': 3,
                     'maximumForOptimizer': 5},
                 {   'enum': [None],
-                    'description': 'Nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_split samples.'}],
+                    'description': 'Nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_leaf samples.'}],
                 'default': None,
                 'description': 'The maximum depth of the tree.'},
-            'min_samples_split': {
-                'anyOf': [
-                {   'type': 'integer',
-                    'minimum': 2,
-                    'forOptimizer': False,
-                    'description': 'Consider min_samples_split as the minimum number.'},
-                {   'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True,
-                    'maximum': 1.0,
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5,
-                    'description': 'min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.'}],
-                'default': 2,
-                'description': 'The minimum number of samples required to split an internal node.'},
             'min_samples_leaf': {
                 'anyOf': [
                 {   'type': 'integer',
@@ -103,10 +96,6 @@ _hyperparams_schema = {
                     'description': 'min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.'}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node.'},
-            'min_weight_fraction_leaf': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.'},
             'max_features': {
                 'anyOf': [
                 {   'type': 'integer',
@@ -122,63 +111,67 @@ _hyperparams_schema = {
                 {   'enum': ['auto', 'sqrt', 'log2', None]}],
                 'default': 'auto',
                 'description': 'The number of features to consider when looking for the best split.'},
-            'max_leaf_nodes': {
-                'anyOf': [
-                {   'type': 'integer'},
-                {   'enum': [None],
-                    'description': 'Unlimited number of leaf nodes.'}],
-                'default': None,
-                'description': 'Grow trees with max_leaf_nodes in best-first fashion. Best nodes are defined as relative reduction in impurity.'},
-            'min_impurity_decrease': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity greater than or equal to this value.'},
-            'min_impurity_split': {
-                'anyOf': [
-                {   'type': 'number',
-                    'minimum': 0.0},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'Threshold for early stopping in tree growth.'},
             'bootstrap': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'Whether bootstrap samples are used when building trees. If False, the whole datset is used to build each tree.'},
-            'oob_score': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'Whether to use out-of-bag samples to estimate the generalization accuracy.'},
+                'description': 'Whether bootstrap samples are used when building trees.'},
             'n_jobs': {
                 'anyOf': [
-                {   'description': '1 unless in joblib.parallel_backend context.',
+                {   'description': '1 process.',
                     'enum': [None]},
-                {   'description': 'Use all processors.',
-                    'enum': [-1]},
                 {   'description': 'Number of CPU cores.',
                     'type': 'integer',
                     'minimum': 1}],
                 'default': None,
-                'description': 'The number of jobs to run in parallel for both fit and predict.'},
+                'description': 'Number of jobs to run in parallel for fit.'},
             'random_state': {
                 'description':
                 'Seed of pseudo-random number generator.',
                 'anyOf': [
-                {   'laleType': 'numpy.random.RandomState'},
                 {   'description': 'RandomState used by np.random',
                     'enum': [None]},
                 {   'description': 'Explicit seed.',
                     'type': 'integer'}],
                 'default': None},
             'verbose': {
-                'type': 'integer',
-                'default': 0,
-                'description': 'Controls the verbosity when fitting and predicting.'},
-            'warm_start': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just fit a whole new forest.'}}}]}
+                'description': 'If True, it prints debugging information while training. Warning: this will increase the training time. For performance evaluation, use verbose=False.'},
+            'use_histograms': {
+                'type': 'boolean',
+                'default': False,
+                'description': 'Use histogram-based splits rather than exact splits.'},
+            'hist_nbins': {
+                'type': 'integer',
+                'default': 256,
+                'description': 'Number of histogram bins.'},
+            'use_gpu': {
+                'type': 'boolean',
+                'default': False,
+                'description': 'Use GPU acceleration (only supported for histogram-based splits).'},
+            'gpu_ids': {
+                'anyOf': [
+                {   'description': 'Use [0].',
+                    'enum': [None]},
+                {   'type': 'array',
+                    'items': {'type': 'integer'}}],
+                'default': None,
+                'description': 'Device IDs of the GPUs which will be used when GPU acceleration is enabled.'}}},
+    {   'description': 'Only need hist_nbins when use_histograms is true.',
+        'anyOf': [
+        {   'type': 'object',
+            'properties': {'use_histograms': {'enum': [True]}}},
+        {   'type': 'object',
+            'properties': {'hist_nbins': {'enum': [256]}}}]},
+    {   'description': 'Only need gpu_ids when use_gpu is true.',
+        'anyOf': [
+        {   'type': 'object',
+            'properties': {'use_gpu': {'enum': [True]}}},
+        {   'type': 'object',
+            'properties': {'gpu_ids': {'enum': [None]}}}]}]}
 
 _input_fit_schema = {
+    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a forest of trees from the training set (X, y).',
     'type': 'object',
     'required': ['X', 'y'],
@@ -193,9 +186,10 @@ _input_fit_schema = {
                     'type': 'number'}}},
         'y': {
             'description': 'The predicted classes.',
-            'type': 'array',
-            'items': {
-                'type': 'number'}},
+            'anyOf': [
+            {   'type': 'array', 'items': {'type': 'number'}},
+            {   'type': 'array', 'items': {'type': 'string'}},
+            {   'type': 'array', 'items': {'type': 'boolean'}}]},
         'sample_weight': {
             'anyOf': [
             {   'type': 'array',
@@ -206,6 +200,7 @@ _input_fit_schema = {
 
 _input_predict_schema = {
     'type': 'object',
+    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
@@ -214,25 +209,31 @@ _input_predict_schema = {
                 'type': 'array',
                 'description': 'The inner array is over features aka columns.',
                 'items': {
-                    'type': 'number'}}}}}
+                    'type': 'number'}}},
+        'num_threads': {
+            'type': 'integer',
+            'minimum': 0,
+            'default': 0,
+            'description': 'Number of threads used to run inference. By default inference runs with maximum number of available threads.'}}}
 
 _output_predict_schema = {
-    'description': 'The predicted values.',
-    'type': 'array',
-    'items': {
-        'type': 'number'}}
+    'description': 'The predicted classes.',
+    'anyOf': [
+    {    'type': 'array', 'items': {'type': 'number'}},
+    {    'type': 'array', 'items': {'type': 'string'}},
+    {    'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Random forest regressor`_ from scikit-learn.
+    'description': """`Random forest classifier`_ from SnapML. It can be used for binary classification problems.
 
-.. _`Random forest regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestRegressor.html#sklearn-ensemble-randomforestregressor
+.. _`Random forest classifier`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/ranforapidoc.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_regressor.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.pai4sk.random_forest_classifier.html',
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator', 'regressor'],
+        'op': ['estimator', 'classifier'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
@@ -240,6 +241,6 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
 
-lale.docstrings.set_docstrings(RandomForestRegressorImpl, _combined_schemas)
+lale.docstrings.set_docstrings(RandomForestClassifierImpl, _combined_schemas)
 
-RandomForestRegressor = lale.operators.make_operator(RandomForestRegressorImpl, _combined_schemas)
+RandomForestClassifier = lale.operators.make_operator(RandomForestClassifierImpl, _combined_schemas)

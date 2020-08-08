@@ -53,15 +53,14 @@ class RandomForestClassifierImpl():
 
 _hyperparams_schema = {
     'description': 'A random forest classifier.',
-    'allOf': [{
-        'type': 'object',
+    'allOf': [
+    {   'type': 'object',
         'required': ['class_weight'],
         'relevantToOptimizer': ['n_estimators', 'criterion', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features', 'bootstrap'],
         'additionalProperties': False,
         'properties': {
             'n_estimators': {
                 'type': 'integer',
-                'minimum': 1,
                 'minimumForOptimizer': 10,
                 'maximumForOptimizer': 100,
                 'default': 10,
@@ -141,7 +140,7 @@ _hyperparams_schema = {
             'min_impurity_split': {
                 'anyOf': [
                 {   'type': 'number',
-                    'minimum': 0},
+                    'minimum': 0.0},
                 {   'enum': [None]}],
                 'default': None,
                 'description': 'Threshold for early stopping in tree growth.'},
@@ -184,15 +183,17 @@ _hyperparams_schema = {
                 'description': 'When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just fit a whole new forest.'},
             'class_weight': {
                 'anyOf': [
-                {   'type': 'object'},
-                {   'type': 'array', 'item': {'type': 'object'}},
+                {   'type': 'object',
+                    'additionalProperties': {'type': 'number'}},
+                {   'type': 'array',
+                    'item': {
+                        'type': 'object',
+                        'additionalProperties': {'type': 'number'}}},
                 {   'enum': ['balanced', 'balanced_subsample', None]}],
                 'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
                 'default': None}}}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Build a forest of trees from the training set (X, y).',
     'type': 'object',
     'required': ['X', 'y'],
     'properties': {
@@ -233,9 +234,9 @@ _input_predict_schema = {
 _output_predict_schema = {
     'description': 'The predicted classes.',
     'anyOf': [
-    {    'type': 'array', 'items': {'type': 'number'}},
-    {    'type': 'array', 'items': {'type': 'string'}},
-    {    'type': 'array', 'items': {'type': 'boolean'}}]}
+    {   'type': 'array', 'items': {'type': 'number'}},
+    {   'type': 'array', 'items': {'type': 'string'}},
+    {   'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
     'type': 'object',
