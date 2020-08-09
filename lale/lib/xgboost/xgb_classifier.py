@@ -14,6 +14,12 @@
 
 from sklearn.base import BaseEstimator
 import lale.docstrings
+import lale.operators
+try:
+    import xgboost
+    xgboost_installed=True
+except ImportError:
+    xgboost_installed=False
 
 class XGBClassifierImpl(BaseEstimator):
     def __init__(self, max_depth=3, learning_rate=0.1, n_estimators=100, verbosity=1, 
@@ -22,6 +28,10 @@ class XGBClassifierImpl(BaseEstimator):
                 colsample_bytree=1, colsample_bylevel=1, colsample_bynode=1, reg_alpha=0, 
                 reg_lambda=1, scale_pos_weight=1, base_score=0.5, random_state=0, 
                 seed=None, missing=None, silent=None):
+        assert xgboost_installed, """Your Python environment does not have xgboost installed. You can install it with
+    pip install xgboost
+or with
+    pip install 'lale[full]'"""
         self.max_depth = max_depth
         self.learning_rate = learning_rate
         self.n_estimators = n_estimators
@@ -54,8 +64,7 @@ class XGBClassifierImpl(BaseEstimator):
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
                 self.seed, self.missing, self.silent)
-        result._wrapped_model = XGBoostClassifier(
-                    **self.get_params())
+        result._wrapped_model = xgboost.XGBClassifier(**self.get_params())
         if fit_params is None:
             result._wrapped_model.fit(X, y)
         else:
@@ -67,9 +76,6 @@ class XGBClassifierImpl(BaseEstimator):
 
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
-
-from xgboost import XGBClassifier as XGBoostClassifier
-import lale.operators
 
 _hyperparams_schema = {
   '$schema': 'http://json-schema.org/draft-04/schema#',

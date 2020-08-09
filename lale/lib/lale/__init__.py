@@ -63,13 +63,7 @@ from .baseline_regressor import BaselineRegressor
 from .grid_search_cv import GridSearchCV
 from .hyperopt import Hyperopt
 from .topk_voting_classifier import TopKVotingClassifier
-
-import warnings
-with warnings.catch_warnings(record=True) as w:
-    try:
-        from .smac import SMAC
-    except ImportError:
-        pass
+from .smac import SMAC
 
 #transformers
 from .batching import Batching
