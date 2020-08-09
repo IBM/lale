@@ -47,7 +47,6 @@ else:
         'scikit-learn==0.20.3',
         'scipy',
         'pandas<=0.25.3',
-        'lightgbm',
         'decorator',
         'h5py']
 
@@ -73,6 +72,7 @@ setup(
     extras_require={
         'full': [
             'xgboost',
+            'lightgbm',
             'liac-arff>=2.4.0',
             'pytorch-pretrained-bert>=0.6.1',
             'torchvision>=0.2.2',
