@@ -173,8 +173,7 @@ _hyperparams_schema = {
         'properties': {
             'estimator': {
                 'anyOf': [
-                {   'laleType': 'operator',
-                    'not': {'enum': [None]}},
+                {   'laleType': 'operator'},
                 {   'enum': [None],
                     'description': 'lale.lib.sklearn.LogisticRegression'}],
                 'description': 'A valid Lale operator or pipeline.',
