@@ -23,8 +23,8 @@ Operators:
 * `LGBMClassifier`_
 * `LGBMRegressor`_
 
-.. _`LGBMClassifier`: lale.lib.aif360.lgbm_classifier.html
-.. _`LGBMRegressor`: lale.lib.aif360.lgbm_regressor.html
+.. _`LGBMClassifier`: lale.lib.lightgbm.lgbm_classifier.html
+.. _`LGBMRegressor`: lale.lib.lightgbm.lgbm_regressor.html
 """
 
 from .lgbm_classifier import LGBMClassifier

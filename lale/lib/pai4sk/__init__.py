@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """
-Schema-enhanced versions of some of the operators from `SnapML`_ to enable hyperparameter tuning.
+Schema-enhanced versions of some of the operators from `Snap ML`_ to enable hyperparameter tuning.
 
-.. _`SnapML`: https://www.zurich.ibm.com/snapml/
+.. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 
 Operators
 =========
