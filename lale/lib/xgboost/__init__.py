@@ -22,8 +22,8 @@ Operators:
 * `XGBClassifier`_
 * `XGBRegressor`_
 
-.. _`XGBClassifier`: lale.lib.aif360.xgb_classifier.html
-.. _`XGBRegressor`: lale.lib.aif360.xgb_regressor.html
+.. _`XGBClassifier`: lale.lib.xgboost.xgb_classifier.html
+.. _`XGBRegressor`: lale.lib.xgboost.xgb_regressor.html
 """
 
 from .xgb_classifier import XGBClassifier

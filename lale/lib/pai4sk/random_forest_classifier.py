@@ -230,9 +230,10 @@ _output_predict_schema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Random forest classifier`_ from SnapML. It can be used for binary classification problems.
+    'description': """`Random forest classifier`_ from `Snap ML`_. It can be used for binary classification problems.
 
 .. _`Random forest classifier`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/ranforapidoc.html
+.. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.pai4sk.random_forest_classifier.html',
     'type': 'object',

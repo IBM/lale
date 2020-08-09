@@ -43,6 +43,10 @@ Operator libraries
 * `lale.lib.autogen`_ auto-generated based on `scikit-learn 0.20`_
 * `lale.lib.imblearn`_ based on `imbalanced-learn`_
 * `lale.lib.lightgbm`_ based on `LightGBM`_
+* `lale.lib.pai4sk`_ based on `Snap ML`_
+* `lale.lib.pytorch`_ based on `PyTorch`_
+* `lale.lib.spacy`_ based on `spaCy`_
+* `lale.lib.tensorflow`_ based on `TensorFlow`_
 * `lale.lib.xgboost`_ based on `XGBoost`_
 
 .. _`lale.lib.sklearn`: modules/lale.lib.sklearn.html#module-lale.lib.sklearn
@@ -58,6 +62,14 @@ Operator libraries
 .. _`imbalanced-learn`: https://imbalanced-learn.readthedocs.io/en/stable/index.html
 .. _`lale.lib.lightgbm`: modules/lale.lib.lightgbm.html#module-lale.lib.lightgbm
 .. _`LightGBM`: https://lightgbm.readthedocs.io/en/latest/Python-API.html
+.. _`lale.lib.pai4sk`: modules/lale.lib.pai4sk.html#module-lale.lib.pai4sk
+.. _`Snap ML`: https://www.zurich.ibm.com/snapml/
+.. _`lale.lib.pytorch`: modules/lale.lib.pytorch.html#module-lale.lib.pytorch
+.. _`PyTorch`: https://pytorch.org/
+.. _`lale.lib.spacy`: modules/lale.lib.spacy.html#module-lale.lib.spacy
+.. _`spaCy`: https://spacy.io/
+.. _`lale.lib.tensorflow`: modules/lale.lib.tensorflow.html#module-lale.lib.tensorflow
+.. _`TensorFlow`: https://www.tensorflow.org/
 .. _`lale.lib.xgboost`: modules/lale.lib.xgboost.html#module-lale.lib.xgboost
 .. _`XGBoost`: https://xgboost.readthedocs.io/en/latest/python/python_api.html
 
