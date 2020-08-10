@@ -11,6 +11,7 @@
 README in other languages: 
 [中文](https://github.com/IBM/lale/blob/master/docs/README-cn.md),
 [deutsch](https://github.com/IBM/lale/blob/master/docs/README-de.md),
+[français](https://github.com/IBM/lale/blob/master/docs/README-fr.md),
 or [contribute](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) your own.
 
 Lale is a Python library for semi-automated data science.
