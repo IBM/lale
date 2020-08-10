@@ -22,9 +22,15 @@ Operators
 
 Classifiers:
 
-* lale.lib.sklearn. `RandomForestClassifier`_
+* lale.lib.pai4sk. `DecisionTreeClassifier`_
+* lale.lib.pai4sk. `RandomForestClassifier`_
+* lale.lib.pai4sk. `RandomForestRegressor`_
 
+.. _`DecisionTreeClassifier`: lale.lib.pai4sk.decision_tree_classifier.html
 .. _`RandomForestClassifier`: lale.lib.pai4sk.random_forest_classifier.html
+.. _`RandomForestRegressor`: lale.lib.pai4sk.random_forest_regressor.html
 """
 
+from .decision_tree_classifier import DecisionTreeClassifier
 from .random_forest_classifier import RandomForestClassifier
+from .random_forest_regressor import RandomForestRegressor
