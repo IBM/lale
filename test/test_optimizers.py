@@ -19,24 +19,15 @@ import sklearn.datasets
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
-from lale.lib.sklearn import LinearSVC
 from lale.lib.sklearn import LogisticRegression
 from lale.lib.sklearn import LinearRegression
-from lale.lib.sklearn import RandomForestRegressor
 from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import Normalizer
-from lale.lib.sklearn import MLPClassifier
 from lale.lib.sklearn import Nystroem
 from lale.lib.sklearn import OneHotEncoder
 from lale.lib.sklearn import PCA
-from lale.lib.sklearn import TfidfVectorizer
-from lale.lib.sklearn import MultinomialNB
 from lale.lib.sklearn import SimpleImputer
-from lale.lib.sklearn import SVC
-from lale.lib.xgboost import XGBClassifier
-from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
-from lale.lib.sklearn import FeatureAgglomeration
 
 from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.lib.lale import Hyperopt
@@ -760,3 +751,17 @@ class TestTopKVotingClassifier(unittest.TestCase):
         from sklearn.metrics import accuracy_score
         with self.assertRaises(ValueError):
             ensemble = TopKVotingClassifier()
+
+class TestDataConstraints(unittest.TestCase):
+    def test_n_neighbors(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        all_X, all_y = load_iris(return_X_y=True)
+        #15 samples / 3 folds = 5 samples per fold = likely < n_neighbors
+        train_X, test_X, train_y, test_y = train_test_split(
+            all_X, all_y, train_size=15, test_size=None,
+            shuffle=True, random_state=42)
+        planned = KNeighborsClassifier
+        trained = planned.auto_configure(
+            train_X, train_y, optimizer=Hyperopt,
+            cv=3, max_evals=3, verbose=True)
