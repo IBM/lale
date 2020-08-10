@@ -1,0 +1,37 @@
+# Lale
+
+[![Build Status](https://travis-ci.com/IBM/lale.svg?branch=master)](https://travis-ci.com/IBM/lale)
+[![Documentation Status](https://readthedocs.org/projects/lale/badge/?version=latest)](https://lale.readthedocs.io/en/latest/?badge=latest)
+[![codecov](https://codecov.io/gh/IBM/lale/branch/master/graph/badge.svg)](https://codecov.io/gh/IBM/lale)
+[![PyPI version shields.io](https://img.shields.io/pypi/v/lale?color=success)](https://pypi.python.org/pypi/lale/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+<br />
+<img src="https://github.com/IBM/lale/raw/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
+
+
+Lale est une bibliothèque Python pour la science des données semi-automatique. 
+Lale utilise des techniques de typage pour faciliter la sélection automatique d'algorithmes et le réglage des hyperparamètres de pipelines compatibles avec scikit-learn. 
+Si vous souhaitez essayer l'apprentissage automatique, cette bibliothèque est faite pour vous ! 
+Lale complète scikit-learn selon trois axes: automatisation, correction, et interopérabilité. 
+Pour l'*automatisation*, Lale fournit une interface cohérente de haut niveau pour les outils d'optimisation existants, notamment Hyperopt, GridSearchCV et SMAC. 
+Pour la *correction*, Lale utilise les schémas JSON pour détecter les erreurs d'incompatibilité entre les hyperparamètres et leur type, ou entre les données et les opérateurs. 
+Enfin, pour l'*interopérabilité*, Lale dispose d'une bibliothèque grandissante de transformateurs et d'estimateurs issus de projets populaires comme scikit-learn, XGBoost, PyTorch, etc.
+Lale peut être installé comme n'importe quel autre bibliothèque python et peut être utilisé avec des outils Python standards comme les notebooks Jupyter.
+
+* [Introduction](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) pour les utilisateurs de scikit-learn
+* Instructions pour l'[installation](https://github.com/IBM/lale/blob/master/docs/installation.rst)
+* Aperçu technique [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), et [video](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
+* IBM [AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only) utilise Lale, voir le [notebook](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
+* Guide pour ajouter de [nouveaux operateurs](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
+* Guide pour [contribuer](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) au projet Lale
+* [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)
+* [Articles](https://github.com/IBM/lale/blob/master/docs/papers.rst)
+* [Documentation de l'API](https://lale.readthedocs.io/en/latest/)
+
+Le nom Lale, prononcé *laleh*, vient de tulipe en persan. 
+Comme les autre bibliothèques populaires d'apprentissage automatique comme scikit-learn, Lale est une simple bibliothèque python, pas un nouveau langage de programmation. 
+Il n'est pas necessaire d'installer de nouveaux outils ni d'apprendre une nouvelle syntaxe.
+
+Lale est distribué sous les termes de la licence Apache 2.0, voir
+[LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt).
+Il est actuellement en **version Alpha**, sans aucune garantie.
