@@ -17,7 +17,7 @@ import sklearn.datasets
 import sklearn.metrics
 import lale.sklearn_compat
 
-class TestSnapML(unittest.TestCase):
+class TestSnapMLClassifiers(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_breast_cancer
         from sklearn.model_selection import train_test_split
@@ -40,6 +40,13 @@ class TestSnapML(unittest.TestCase):
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         accuracy = scorer(trained, self.test_X, self.test_y)
 
+    def test_decision_tree_classifier(self):
+        import lale.lib.pai4sk
+        trainable = lale.lib.pai4sk.DecisionTreeClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
+        accuracy = scorer(trained, self.test_X, self.test_y)
+
     def test_sklearn_compat(self):
         import lale.lib.pai4sk
         trainable = lale.lib.pai4sk.RandomForestClassifier()
@@ -47,3 +54,17 @@ class TestSnapML(unittest.TestCase):
         trained = compat.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         accuracy = scorer(trained, self.test_X, self.test_y)
+
+class TestSnapMLRegressors(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_diabetes
+        from sklearn.model_selection import train_test_split
+        X, y = load_diabetes(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)    
+
+    def test_random_forest_regressor(self):
+        import lale.lib.pai4sk
+        trainable = lale.lib.pai4sk.RandomForestRegressor()
+        trained = trainable.fit(self.train_X, self.train_y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+        r2 = scorer(trained, self.test_X, self.test_y)
