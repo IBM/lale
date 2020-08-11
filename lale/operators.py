@@ -1193,20 +1193,48 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     def __call__(self, *args, **kwargs)->'TrainableIndividualOp':
         return self._configure(*args, **kwargs)
 
-    def _hyperparam_schema_with_hyperparams(self):
-        schema = self.hyperparam_schema()
-        params = None
-        try:
-            params = self._hyperparams
-        except AttributeError:
-            pass
-        if not params:
-            return schema
-        props = {k : {'enum' : [v]} for k, v in params.items()}
-        obj = {'type':'object', 'properties':props}
-        obj['relevantToOptimizer'] = list(params.keys())
-        top = {'allOf':[schema, obj]}
-        return top
+    def _hyperparam_schema_with_hyperparams(self, data_schema={}):
+        def fix_hyperparams(schema):
+            params = None
+            try:
+                hyperparams = self._hyperparams
+            except AttributeError:
+                pass
+            if not hyperparams:
+                return schema
+            props = {k : {'enum' : [v]} for k, v in hyperparams.items()}
+            obj = {'type':'object', 'properties':props}
+            obj['relevantToOptimizer'] = list(hyperparams.keys())
+            top = {'allOf':[schema, obj]}
+            return top
+        data_info_keys = {'laleMaximum': 'maximum'}
+        def replace_data_info(subject, data_schema):
+            any_changes = False
+            if isinstance(subject, (list, tuple)):
+                result = []
+                for v in subject:
+                    new_v = replace_data_info(v, data_schema)
+                    result.append(new_v)
+                    any_changes = any_changes or v is not new_v
+                if isinstance(subject, tuple):
+                    result = tuple(result)
+            elif isinstance(subject, dict):
+                result = {}
+                for k, v in subject.items():
+                    if k in data_info_keys:
+                        new_k = data_info_keys[k]
+                        new_v = lale.helpers.json_lookup(
+                            'properties/' + v, data_schema)
+                    else:
+                        new_k = k
+                        new_v = replace_data_info(v, data_schema)
+                    result[new_k] = new_v
+                    any_changes = any_changes or k != new_k or v is not new_v
+            return result if any_changes else subject
+        schema_1 = self.hyperparam_schema()
+        schema_2 = fix_hyperparams(schema_1)
+        schema_3 = replace_data_info(schema_2, data_schema)
+        return schema_3
 
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):

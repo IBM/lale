@@ -55,25 +55,30 @@ or with
         else:
             self.estimator = estimator
 
-        self.search_space:ConfigurationSpace = get_smac_space(self.estimator, lale_num_grids=lale_num_grids)
         self.scoring = scoring
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
         self.max_opt_time = max_opt_time
-        # Scenario object
-        scenario_options = {"run_obj": "quality",   # we optimize quality (alternatively runtime)
-                            "runcount-limit": self.max_evals,  # maximum function evaluations
-                            "cs": self.search_space,               # configuration space
-                            "deterministic": "true",
-                            "abort_on_first_run_crash": False,
-                            }
-        if max_opt_time is not None:
-            scenario_options["wallclock_limit"]= max_opt_time
-        self.scenario = Scenario(scenario_options)
+        self.lale_num_grids = lale_num_grids
         self.trials = None
 
     def fit(self, X_train, y_train):
+        self.search_space:ConfigurationSpace = get_smac_space(
+            self.estimator, lale_num_grids=self.lale_num_grids,
+            data_schema=lale.helpers.fold_schema(X_train, y_train, self.cv))
+        # Scenario object
+        scenario_options = {
+            "run_obj": "quality", # optimize quality (alternatively runtime)
+            "runcount-limit": self.max_evals,  # maximum function evaluations
+            "cs": self.search_space, # configuration space
+            "deterministic": "true",
+            "abort_on_first_run_crash": False,
+        }
+        if self.max_opt_time is not None:
+            scenario_options["wallclock_limit"]= self.max_opt_time
+        self.scenario = Scenario(scenario_options)
+
         self.cv = check_cv(self.cv, y = y_train, classifier=True) #TODO: Replace the classifier flag value by using tags?
 
         def smac_train_test(trainable, X_train, y_train):

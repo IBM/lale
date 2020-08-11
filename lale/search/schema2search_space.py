@@ -46,10 +46,10 @@ class OperatorSchemaError(VisitorPathError):
         else:
             return f"for path {self.sub_path}: {msg}"
 
-def op_to_search_space(op:PlannedOperator, pgo:Optional[PGO]=None)->SearchSpace:
+def op_to_search_space(op:PlannedOperator, pgo:Optional[PGO]=None, data_schema={})->SearchSpace:
     """ Given an operator, this method compiles its schemas into a SearchSpace
     """
-    search_space = SearchSpaceOperatorVisitor.run(op, pgo=pgo)
+    search_space = SearchSpaceOperatorVisitor.run(op, pgo=pgo, data_schema=data_schema)
 
     if should_print_search_space("true", "all", "search_space"):
         name = op.name()
@@ -126,16 +126,17 @@ class SearchSpaceOperatorVisitor(Visitor):
     pgo:Optional[PGO]
 
     @classmethod
-    def run(cls, op:PlannedOperator, pgo:Optional[PGO]=None)->SearchSpace:
-        visitor = cls(pgo=pgo)
+    def run(cls, op:PlannedOperator, pgo:Optional[PGO]=None, data_schema={})->SearchSpace:
+        visitor = cls(pgo=pgo, data_schema=data_schema)
         return accept(op, visitor)
 
-    def __init__(self, pgo:Optional[PGO]=None):
+    def __init__(self, pgo:Optional[PGO]=None, data_schema={}):
         super(SearchSpaceOperatorVisitor, self).__init__()
         self.pgo = pgo
+        self.data_schema = data_schema
     
     def visitPlannedIndividualOp(self, op:PlannedIndividualOp)->SearchSpace:
-        schema = op._hyperparam_schema_with_hyperparams()
+        schema = op._hyperparam_schema_with_hyperparams(self.data_schema)
         module = op._impl.__module__
         if module is None or module == str.__class__.__module__:
             long_name = op.name()
