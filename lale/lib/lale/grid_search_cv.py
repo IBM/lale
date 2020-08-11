@@ -53,12 +53,14 @@ class GridSearchCVImpl:
             observed_op = Observing(op=op, observer=obs)
 
         hp_grid = self._hyperparams['hp_grid']
+        data_schema = lale.helpers.fold_schema(X, y, self._hyperparams['cv'])
         if hp_grid is None:
             hp_grid = lale.search.lale_grid_search_cv.get_parameter_grids(
                 observed_op,
                 num_samples=self._hyperparams['lale_num_samples'],
                 num_grids=self._hyperparams['lale_num_grids'],
-                pgo=self._hyperparams['pgo'])
+                pgo=self._hyperparams['pgo'],
+                data_schema=data_schema)
         if not hp_grid and isinstance(op, lale.operators.IndividualOp):
             hp_grid = [
                 lale.search.lale_grid_search_cv.get_defaults_as_param_grid(observed_op)]

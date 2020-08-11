@@ -66,7 +66,8 @@ def lale_trainable_op_from_config(op:'Ops.PlannedOperator', cfg)->'Ops.Trainable
 
 def get_smac_space(op:'Ops.PlannedOperator',
                    lale_num_grids:Optional[float]=None,
-                   lale_pgo:Optional[PGO]=None)->ConfigurationSpace:
+                   lale_pgo:Optional[PGO]=None,
+                   data_schema:Dict[str,Any]={})->ConfigurationSpace:
     """ Top level function: given a lale operator, returns a ConfigurationSpace for use with SMAC
     Parameters
     ----------
@@ -77,7 +78,8 @@ def get_smac_space(op:'Ops.PlannedOperator',
         note that setting it to 1 is treated as in integer.  To return all results, use None
     """
     
-    hp_grids = get_search_space_grids(op, num_grids=lale_num_grids, pgo=lale_pgo)
+    hp_grids = get_search_space_grids(
+        op, num_grids=lale_num_grids, pgo=lale_pgo, data_schema=data_schema)
     cs = hp_grids_to_smac_cs(hp_grids)
     if should_print_search_space("true", "all", "backend", "smac"):
         name = op.name()

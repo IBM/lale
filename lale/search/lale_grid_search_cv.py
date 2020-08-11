@@ -44,7 +44,8 @@ def get_parameter_grids(
     op:'PlannedOperator', 
     num_samples:Optional[int]=None, 
     num_grids:Optional[float]=None,
-    pgo:Optional[PGO]=None):
+    pgo:Optional[PGO]=None,
+    data_schema:Dict[str,Any]={}):
     """
     Parameters
     ----------
@@ -56,19 +57,21 @@ def get_parameter_grids(
         if set to an float between 0 and 1, it will determine what fraction should be returned
         note that setting it to 1 is treated as in integer.  To return all results, use None
     """
-    return get_grid_search_parameter_grids(op, num_samples=num_samples, num_grids=num_grids, pgo=pgo)
+    return get_grid_search_parameter_grids(op, num_samples=num_samples, num_grids=num_grids, pgo=pgo, data_schema=data_schema)
 
 def get_grid_search_parameter_grids(
         op:'PlannedOperator', 
         num_samples:Optional[int]=None, 
         num_grids:Optional[float]=None,
-        pgo:Optional[PGO]=None)->List[Dict[str, List[Any]]]:
+        pgo:Optional[PGO]=None,
+        data_schema:Dict[str,Any]={})->List[Dict[str, List[Any]]]:
     """ Top level function: given a lale operator, returns a list of parameter grids
         suitable for passing to GridSearchCV.
         Note that you will need to wrap the lale operator for sklearn compatibility to call GridSearchCV
         directly.  The lale GridSearchCV wrapper takes care of that for you
     """
-    hp_grids = get_search_space_grids(op, num_grids=num_grids, pgo=pgo)
+    hp_grids = get_search_space_grids(op, num_grids=num_grids, pgo=pgo,
+                                      data_schema=data_schema)
     grids = SearchSpaceGridstoGSGrids(hp_grids, num_samples=num_samples)
     if should_print_search_space("true", "all", "backend", "gridsearchcv"):
         name = op.name()
