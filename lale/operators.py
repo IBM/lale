@@ -1207,12 +1207,6 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             obj['relevantToOptimizer'] = list(hyperparams.keys())
             top = {'allOf':[schema, obj]}
             return top
-        def json_lookup(ptr, jsn):
-            sub_jsn = jsn['properties']
-            steps = ptr.split('/')
-            for s in steps:
-                sub_jsn = sub_jsn[s]
-            return sub_jsn
         data_info_keys = {'laleMaximum': 'maximum'}
         def replace_data_info(subject, data_schema):
             any_changes = False
@@ -1229,7 +1223,8 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
                 for k, v in subject.items():
                     if k in data_info_keys:
                         new_k = data_info_keys[k]
-                        new_v = json_lookup(v, data_schema)
+                        new_v = lale.helpers.json_lookup(
+                            'properties/' + v, data_schema)
                     else:
                         new_k = k
                         new_v = replace_data_info(v, data_schema)

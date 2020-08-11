@@ -87,6 +87,17 @@ def is_empty_dict(val) -> bool:
 def dict_without(orig_dict: Dict[str, Any], key: str) -> Dict[str, Any]:
     return {k: orig_dict[k] for k in orig_dict if k != key}
 
+def json_lookup(ptr, jsn):
+    steps = ptr.split('/')
+    sub_jsn = jsn
+    for s in steps:
+        if s not in sub_jsn:
+            from lale.pretty_print import json_to_string
+            j2s = lale.pretty_print.json_to_string(jsn)
+            raise ValueError(f"could not find step '{s}' of '{ptr}' in {j2s}")
+        sub_jsn = sub_jsn[s]
+    return sub_jsn
+
 def ndarray_to_json(arr, subsample_array:bool=True) -> Union[list, dict]:
     #sample 10 rows and no limit on columns
     if subsample_array:
@@ -140,7 +151,7 @@ def fold_schema(X, y, cv):
         orig_schema = lale.datasets.data_schemas.to_schema(data)
         fold_schema = {**orig_schema, 'minItems': n_rows, 'maxItems': n_rows}
         return fold_schema
-    n_splits = cv.get_n_splits()
+    n_splits = cv if isinstance(cv, int) else cv.get_n_splits()
     n_samples = y.shape[0]
     n_classes = 2 if len(y.shape) == 1 else y.shape[1]
     n_rows_fold = max(1, (n_samples // n_splits) * (n_splits - 1) - n_classes)

@@ -31,6 +31,8 @@ from lale.lib.sklearn import StandardScaler
 
 from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.lib.lale import Hyperopt
+from lale.lib.lale import GridSearchCV
+from lale.lib.lale import SMAC
 from lale.search.op2hp import hyperopt_search_space
 
 
@@ -752,16 +754,34 @@ class TestTopKVotingClassifier(unittest.TestCase):
         with self.assertRaises(ValueError):
             ensemble = TopKVotingClassifier()
 
-class TestDataConstraints(unittest.TestCase):
-    def test_n_neighbors(self):
+class TestKNNDataConstraints(unittest.TestCase):
+    def setUp(self):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
+        import lale.lib.lale
         all_X, all_y = load_iris(return_X_y=True)
-        #15 samples / 3 folds = 5 samples per fold = likely < n_neighbors
-        train_X, test_X, train_y, test_y = train_test_split(
+        #15 samples, small enough so folds are likely smaller than n_neighbors
+        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(
             all_X, all_y, train_size=15, test_size=None,
             shuffle=True, random_state=42)
+
+    def test_hyperopt(self):
         planned = KNeighborsClassifier
         trained = planned.auto_configure(
-            train_X, train_y, optimizer=Hyperopt,
-            cv=3, max_evals=3, verbose=True)
+            self.train_X, self.train_y, cv=3, optimizer=Hyperopt,
+            max_evals=3, verbose=True)
+        predicted = trained.predict(self.test_X)
+
+    def test_gridsearch(self):
+        planned = KNeighborsClassifier
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            trained = planned.auto_configure(
+                self.train_X, self.train_y, optimizer=GridSearchCV, cv=3)
+        predicted = trained.predict(self.test_X)
+
+    def test_smac(self):
+        planned = KNeighborsClassifier
+        trained = planned.auto_configure(
+            self.train_X, self.train_y, cv=3, optimizer=SMAC, max_evals=3)
+        predicted = trained.predict(self.test_X)

@@ -35,9 +35,10 @@ def search_space_grid_to_string(grid:SearchSpaceGrid)->str:
 def search_space_grids_to_string(grids:List[SearchSpaceGrid])->str:
     return "|".join(search_space_grid_to_string(grid) for grid in grids)
 
-def get_search_space_grids( op:'PlannedOperator', 
-                            num_grids:Optional[float]=None, 
-                            pgo:Optional[PGO]=None)->List[SearchSpaceGrid]:
+def get_search_space_grids(op:'PlannedOperator', 
+                           num_grids:Optional[float]=None, 
+                           pgo:Optional[PGO]=None,
+                           data_schema:Dict[str,Any]={})->List[SearchSpaceGrid]:
     """ Top level function: given a lale operator, returns a list of hp grids.
     Parameters
     ----------
@@ -47,7 +48,8 @@ def get_search_space_grids( op:'PlannedOperator',
         if set to an float between 0 and 1, it will determine what fraction should be returned
         note that setting it to 1 is treated as in integer.  To return all results, use None
     """
-    all_parameters = op_to_search_space_grids(op, pgo=pgo)
+    all_parameters = op_to_search_space_grids(
+        op, pgo=pgo, data_schema=data_schema)
     if should_print_search_space("true", "all", "search_space_grids", "grids"):
         name = op.name()
         if not name:
@@ -75,8 +77,9 @@ def search_space_to_grids(hp:SearchSpace)->List[SearchSpaceGrid]:
     return SearchSpaceToGridVisitor.run(hp)
 
 def op_to_search_space_grids(op:PlannedOperator,
-                             pgo:Optional[PGO]=None)->List[SearchSpaceGrid]:
-    search_space = op_to_search_space(op, pgo=pgo)
+                             pgo:Optional[PGO]=None,
+                             data_schema:Dict[str,Any]={})->List[SearchSpaceGrid]:
+    search_space = op_to_search_space(op, pgo=pgo, data_schema=data_schema)
     grids = search_space_to_grids(search_space)
     return grids
 
