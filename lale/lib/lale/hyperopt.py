@@ -14,6 +14,7 @@
 
 import hyperopt
 from hyperopt.exceptions import AllTrialsFailed
+import lale.helpers
 from lale.helpers import cross_val_score_track_trials, create_instance_from_hyperopt_search_space
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.PGO import PGO
@@ -72,11 +73,10 @@ class HyperoptImpl:
     def fit(self, X_train, y_train):
         opt_start_time = time.time()
         self.cv = check_cv(self.cv, y = y_train, classifier=True) #TODO: Replace the classifier flag value by using tags?
-        data_info = {
-            'X.shape[0]': X_train.shape[0] / self.cv.get_n_splits()}
+        data_schema = lale.helpers.fold_schema(X_train, y_train, self.cv)
         self.search_space = hyperopt.hp.choice(
             'meta_model', [hyperopt_search_space(self.estimator, pgo=self.pgo,
-                                                 data_info=data_info)])
+                                                 data_schema=data_schema)])
         def hyperopt_train_test(params, X_train, y_train):
             warnings.filterwarnings("ignore")
 

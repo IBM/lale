@@ -36,7 +36,7 @@ _hyperparams_schema = {
                 'type': 'integer',
                 'distribution': 'uniform',
                 'minimum': 1,
-                'laleMaximum': 'X.shape[0]',
+                'laleMaximum': 'X/items/maxItems',
                 'default': 5,
                 'maximumForOptimizer': 100},
             'weights': {

@@ -46,10 +46,10 @@ class OperatorSchemaError(VisitorPathError):
         else:
             return f"for path {self.sub_path}: {msg}"
 
-def op_to_search_space(op:PlannedOperator, pgo:Optional[PGO]=None, data_info={})->SearchSpace:
+def op_to_search_space(op:PlannedOperator, pgo:Optional[PGO]=None, data_schema={})->SearchSpace:
     """ Given an operator, this method compiles its schemas into a SearchSpace
     """
-    search_space = SearchSpaceOperatorVisitor.run(op, pgo=pgo, data_info=data_info)
+    search_space = SearchSpaceOperatorVisitor.run(op, pgo=pgo, data_schema=data_schema)
 
     if should_print_search_space("true", "all", "search_space"):
         name = op.name()
@@ -120,50 +120,23 @@ def add_sub_space(space, k, v):
             space.choices = (c + (SearchSpaceConstant(v),) for c in space.choices )
             return
 
-_data_info_keys = {
-    'laleMaximum': 'maximum'}
-
-def _replace_data_info(subject, data_info):
-    any_changes = False
-    if isinstance(subject, (list, tuple)):
-        result = []
-        for v in subject:
-            new_v = _replace_data_info(v, data_info)
-            result.append(new_v)
-            any_changes = any_changes or v is not new_v
-        if isinstance(subject, tuple):
-            result = tuple(result)
-    elif isinstance(subject, dict):
-        result = {}
-        for k, v in subject.items():
-            if k in _data_info_keys and v in data_info:
-                new_k = _data_info_keys[k]
-                new_v = data_info[v]
-            else:
-                new_k = k
-                new_v = _replace_data_info(v, data_info)
-            result[new_k] = new_v
-            any_changes = any_changes or k != new_k or v is not new_v
-    return result if any_changes else subject
-
 # TODO: do we use 'path' above anymore?
 # or do we just add the paths later as needed?
 class SearchSpaceOperatorVisitor(Visitor):
     pgo:Optional[PGO]
 
     @classmethod
-    def run(cls, op:PlannedOperator, pgo:Optional[PGO]=None, data_info={})->SearchSpace:
-        visitor = cls(pgo=pgo, data_info=data_info)
+    def run(cls, op:PlannedOperator, pgo:Optional[PGO]=None, data_schema={})->SearchSpace:
+        visitor = cls(pgo=pgo, data_schema=data_schema)
         return accept(op, visitor)
 
-    def __init__(self, pgo:Optional[PGO]=None, data_info={}):
+    def __init__(self, pgo:Optional[PGO]=None, data_schema={}):
         super(SearchSpaceOperatorVisitor, self).__init__()
         self.pgo = pgo
-        self.data_info = data_info
+        self.data_schema = data_schema
     
     def visitPlannedIndividualOp(self, op:PlannedIndividualOp)->SearchSpace:
-        data_independent_schema = op._hyperparam_schema_with_hyperparams()
-        schema = _replace_data_info(data_independent_schema, self.data_info)
+        schema = op._hyperparam_schema_with_hyperparams(self.data_schema)
         module = op._impl.__module__
         if module is None or module == str.__class__.__module__:
             long_name = op.name()

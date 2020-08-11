@@ -30,9 +30,9 @@ if TYPE_CHECKING:
 def hyperopt_search_space(op:'PlannedOperator', 
                           schema=None,
                           pgo:Optional[PGO]=None,
-                          data_info={}):
+                          data_schema={}):
 
-    search_space = op_to_search_space(op, pgo=pgo, data_info=data_info)
+    search_space = op_to_search_space(op, pgo=pgo, data_schema=data_schema)
     if search_space:
         name = op.name()
 

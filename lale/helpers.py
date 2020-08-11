@@ -135,6 +135,20 @@ def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
         lale.datasets.data_schemas.add_schema(subset_y, schema)
     return subset_X, subset_y
 
+def fold_schema(X, y, cv):
+    def fold_schema_aux(data, n_rows):
+        orig_schema = lale.datasets.data_schemas.to_schema(data)
+        fold_schema = {**orig_schema, 'minItems': n_rows, 'maxItems': n_rows}
+        return fold_schema
+    n_splits = cv.get_n_splits()
+    n_samples = y.shape[0]
+    n_classes = 2 if len(y.shape) == 1 else y.shape[1]
+    n_rows_fold = max(1, (n_samples // n_splits) * (n_splits - 1) - n_classes)
+    schema_X = fold_schema_aux(X, n_rows_fold)
+    schema_y = fold_schema_aux(y, n_rows_fold)
+    result = {'properties': {'X': schema_X, 'y': schema_y}}
+    return result
+
 def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5, args_to_scorer=None):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
