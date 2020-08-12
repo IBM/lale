@@ -37,6 +37,7 @@ from lale.search.op2hp import hyperopt_search_space
 
 
 import numpy as np
+import jsonschema
 from typing import List
 
 def f_min(op, X, y, num_folds=5):
@@ -785,3 +786,11 @@ class TestKNNDataConstraints(unittest.TestCase):
         trained = planned.auto_configure(
             self.train_X, self.train_y, cv=3, optimizer=SMAC, max_evals=3)
         predicted = trained.predict(self.test_X)
+
+    def test_schema_validation(self):
+        trainable_16 = KNeighborsClassifier(n_neighbors=16)
+        with self.assertRaises(jsonschema.ValidationError):
+            trained_16 = trainable_16.fit(self.train_X, self.train_y)
+        trainable_15 = KNeighborsClassifier(n_neighbors=15)
+        trained_15 = trainable_15.fit(self.train_X, self.train_y)
+        predicted = trained_15.predict(self.test_X)
