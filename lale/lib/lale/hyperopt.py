@@ -182,8 +182,12 @@ class HyperoptImpl:
 
         self._trials = hyperopt.trials_from_docs(list(self._trials) + list(self._default_trials))
         try :
-            best_trials = sorted(self._trials.results, key=lambda x: x['loss'], reverse=False)
-            best_trial = best_trials[0]
+            best_trial = self._trials.best_trial
+            val_loss = self._trials.best_trial['loss']
+            if len(self._default_trials) > 0:
+                default_val_loss = self._default_trials.best_trial['loss']
+                if default_val_loss < val_loss:
+                    best_trial = self._default_trials.best_trial
             best_params = best_trial['params']
             logger.info(
                 'best score: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(
