@@ -53,7 +53,8 @@ class GridSearchCVImpl:
             observed_op = Observing(op=op, observer=obs)
 
         hp_grid = self._hyperparams['hp_grid']
-        data_schema = lale.helpers.fold_schema(X, y, self._hyperparams['cv'])
+        data_schema = lale.helpers.fold_schema(
+            X, y, self._hyperparams['cv'], op.is_classifier())
         if hp_grid is None:
             hp_grid = lale.search.lale_grid_search_cv.get_parameter_grids(
                 observed_op,
