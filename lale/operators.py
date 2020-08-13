@@ -350,6 +350,17 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
+    @abstractmethod
+    def is_classifier(self)->bool:
+        """Checks if this operator is a clasifier.
+
+        Returns
+        -------
+        bool
+            True if the classifier tag is set.
+        """
+        pass
+
 Operator.__doc__ = cast(str, Operator.__doc__) + '\n' + _combinators_docstrings
 
 class PlannedOperator(Operator):
@@ -1114,6 +1125,9 @@ class IndividualOp(Operator):
             schema_fit = self.input_schema_fit()
             return lale.type_checking.is_subschema(schema_fit, _is_supervised_schema)
         return default_if_missing
+
+    def is_classifier(self)->bool:
+        return self.has_tag('classifier')
 
     def is_transformer(self)->bool:
         """ Checks if the operator is a transformer
@@ -2021,6 +2035,13 @@ class BasePipeline(Operator, Generic[OpType]):
             raise TypeError("Error creating a scikit-learn pipeline, most likely because the steps are not scikit compatible.")
         return sklearn_pipeline
 
+    def is_classifier(self)->bool:
+        sink_nodes = self._find_sink_nodes()
+        for op in sink_nodes:
+            if not op.is_classifier():
+                return False
+        return True
+
 PlannedOpType = TypeVar('PlannedOpType', bound=PlannedOperator)
 
 class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
@@ -2649,6 +2670,12 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         pipeline_inputs = [s.input_schema_fit() for s in self.steps()]
         result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
+
+    def is_classifier(self)->bool:
+        for op in self.steps():
+            if not op.is_classifier():
+                return False
+        return True
 
 class _PipelineFactory:
     def __init__(self):
