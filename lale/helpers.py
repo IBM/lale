@@ -146,20 +146,22 @@ def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
         lale.datasets.data_schemas.add_schema(subset_y, schema)
     return subset_X, subset_y
 
-def fold_schema(X, y, cv=1):
+def fold_schema(X, y, cv=1, is_classifier=True):
     def fold_schema_aux(data, n_rows):
         orig_schema = lale.datasets.data_schemas.to_schema(data)
-        fold_schema = {**orig_schema, 'minItems': n_rows, 'maxItems': n_rows}
-        return fold_schema
+        aux_result = {**orig_schema, 'minItems': n_rows, 'maxItems': n_rows}
+        return aux_result
     n_splits = cv if isinstance(cv, int) else cv.get_n_splits()
     n_samples = y.shape[0]
     if n_splits == 1:
         n_rows_fold = n_samples
-    else:
+    elif is_classifier:
         n_classes = 2 if len(y.shape) == 1 else y.shape[1]
         n_rows_unstratified = (n_samples // n_splits) * (n_splits - 1)
         #in stratified case, fold sizes can differ by up to n_classes
         n_rows_fold = max(1, n_rows_unstratified - n_classes)
+    else:
+        n_rows_fold = (n_samples // n_splits) * (n_splits - 1)
     schema_X = fold_schema_aux(X, n_rows_fold)
     schema_y = fold_schema_aux(y, n_rows_fold)
     result = {'properties': {'X': schema_X, 'y': schema_y}}

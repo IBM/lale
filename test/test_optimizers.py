@@ -19,6 +19,7 @@ import sklearn.datasets
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
+from lale.lib.sklearn import KNeighborsRegressor
 from lale.lib.sklearn import LogisticRegression
 from lale.lib.sklearn import LinearRegression
 from lale.lib.sklearn import MinMaxScaler
@@ -766,7 +767,7 @@ class TestTopKVotingClassifier(unittest.TestCase):
         with self.assertRaises(ValueError):
             ensemble = TopKVotingClassifier()
 
-class TestKNNDataConstraints(unittest.TestCase):
+class TestKNeighborsClassifier(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
@@ -776,6 +777,14 @@ class TestKNNDataConstraints(unittest.TestCase):
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(
             all_X, all_y, train_size=15, test_size=None,
             shuffle=True, random_state=42)
+
+    def test_schema_validation(self):
+        trainable_16 = KNeighborsClassifier(n_neighbors=16)
+        with self.assertRaises(jsonschema.ValidationError):
+            trained_16 = trainable_16.fit(self.train_X, self.train_y)
+        trainable_15 = KNeighborsClassifier(n_neighbors=15)
+        trained_15 = trainable_15.fit(self.train_X, self.train_y)
+        predicted = trained_15.predict(self.test_X)
 
     def test_hyperopt(self):
         planned = KNeighborsClassifier
@@ -798,10 +807,44 @@ class TestKNNDataConstraints(unittest.TestCase):
             self.train_X, self.train_y, cv=3, optimizer=SMAC, max_evals=3)
         predicted = trained.predict(self.test_X)
 
+class TestKNeighborsRegressor(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_diabetes
+        from sklearn.model_selection import train_test_split
+        import lale.lib.lale
+        all_X, all_y = load_diabetes(return_X_y=True)
+        #15 samples, small enough so folds are likely smaller than n_neighbors
+        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(
+            all_X, all_y, train_size=15, test_size=None,
+            shuffle=True, random_state=42)
+
     def test_schema_validation(self):
-        trainable_16 = KNeighborsClassifier(n_neighbors=16)
+        trainable_16 = KNeighborsRegressor(n_neighbors=16)
         with self.assertRaises(jsonschema.ValidationError):
             trained_16 = trainable_16.fit(self.train_X, self.train_y)
-        trainable_15 = KNeighborsClassifier(n_neighbors=15)
+        trainable_15 = KNeighborsRegressor(n_neighbors=15)
         trained_15 = trainable_15.fit(self.train_X, self.train_y)
         predicted = trained_15.predict(self.test_X)
+
+    def test_hyperopt(self):
+        planned = KNeighborsRegressor
+        trained = planned.auto_configure(
+            self.train_X, self.train_y, cv=3, optimizer=Hyperopt,
+            max_evals=3, verbose=True, scoring='r2')
+        predicted = trained.predict(self.test_X)
+
+    def test_gridsearch(self):
+        planned = KNeighborsRegressor
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            trained = planned.auto_configure(
+                self.train_X, self.train_y, optimizer=GridSearchCV,
+                cv=3, scoring='r2')
+        predicted = trained.predict(self.test_X)
+
+    def test_smac(self):
+        planned = KNeighborsRegressor
+        trained = planned.auto_configure(
+            self.train_X, self.train_y, cv=3, optimizer=SMAC,
+            max_evals=3, scoring='r2')
+        predicted = trained.predict(self.test_X)

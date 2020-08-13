@@ -81,8 +81,10 @@ class HyperoptImpl:
 
     def fit(self, X_train, y_train):
         opt_start_time = time.time()
-        self.cv = check_cv(self.cv, y = y_train, classifier=True) #TODO: Replace the classifier flag value by using tags?
-        data_schema = lale.helpers.fold_schema(X_train, y_train, self.cv)
+        is_clf = self.estimator.is_classifier()
+        self.cv = check_cv(self.cv, y = y_train, classifier=is_clf)
+        data_schema = lale.helpers.fold_schema(
+            X_train, y_train, self.cv, is_clf)
         self.search_space = hyperopt.hp.choice(
             'meta_model', [hyperopt_search_space(self.estimator, pgo=self.pgo,
                                                  data_schema=data_schema)])

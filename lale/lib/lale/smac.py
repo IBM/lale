@@ -64,9 +64,11 @@ or with
         self.trials = None
 
     def fit(self, X_train, y_train):
+        data_schema = lale.helpers.fold_schema(
+            X_train, y_train, self.cv, self.estimator.is_classifier())
         self.search_space:ConfigurationSpace = get_smac_space(
             self.estimator, lale_num_grids=self.lale_num_grids,
-            data_schema=lale.helpers.fold_schema(X_train, y_train, self.cv))
+            data_schema=data_schema)
         # Scenario object
         scenario_options = {
             "run_obj": "quality", # optimize quality (alternatively runtime)
@@ -79,7 +81,8 @@ or with
             scenario_options["wallclock_limit"]= self.max_opt_time
         self.scenario = Scenario(scenario_options)
 
-        self.cv = check_cv(self.cv, y = y_train, classifier=True) #TODO: Replace the classifier flag value by using tags?
+        self.cv = check_cv(
+            self.cv, y=y_train, classifier=self.estimator.is_classifier())
 
         def smac_train_test(trainable, X_train, y_train):
             try:
