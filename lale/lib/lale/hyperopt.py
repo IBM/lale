@@ -113,7 +113,25 @@ class HyperoptImpl:
                     logger.debug("Error {} with pipeline:{}".format(e, trainable.to_json()))
                     raise e
             return cv_score, logloss, execution_time
-            
+
+        def merge_trials(trials1, trials2):
+             max_tid = max([trial['tid'] for trial in trials1.trials])
+
+             for trial in trials2:
+                 tid = trial['tid'] + max_tid + 1
+                 hyperopt_trial = hyperopt.Trials().new_trial_docs(
+                         tids=[None],
+                         specs=[None],
+                         results=[None],
+                         miscs=[None])
+                 hyperopt_trial[0] = trial
+                 hyperopt_trial[0]['tid'] = tid
+                 hyperopt_trial[0]['misc']['tid'] = tid
+                 for key in hyperopt_trial[0]['misc']['idxs'].keys():
+                     hyperopt_trial[0]['misc']['idxs'][key] = [tid]
+                 trials1.insert_trial_docs(hyperopt_trial) 
+                 trials1.refresh()
+             return trials1
             
         def proc_train_test(params, X_train, y_train, return_dict):
             return_dict['params'] = copy.deepcopy(params)
@@ -186,15 +204,15 @@ class HyperoptImpl:
             if hyperopt.STATUS_OK not in self._trials.statuses():
                 raise ValueError('Error from hyperopt, none of the trials succeeded.')
 
-        self._trials = hyperopt.trials_from_docs(list(self._trials) + list(self._default_trials))
+        self._trials = merge_trials(self._trials, self._default_trials)
         try :
             best_trial = self._trials.best_trial
-            val_loss = self._trials.best_trial['loss']
+            val_loss = self._trials.best_trial['result']['loss']
             if len(self._default_trials) > 0:
-                default_val_loss = self._default_trials.best_trial['loss']
+                default_val_loss = self._default_trials.best_trial['result']['loss']
                 if default_val_loss < val_loss:
                     best_trial = self._default_trials.best_trial
-            best_params = best_trial['params']
+            best_params = best_trial['result']['params']
             logger.info(
                 'best score: {:.1%}\nbest hyperparams found using {} hyperopt trials: {}'.format(
                     self.best_score - self._trials.average_best_error(), self.max_evals, best_params
