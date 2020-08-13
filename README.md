@@ -8,7 +8,11 @@
 <br />
 <img src="https://github.com/IBM/lale/raw/master/docs/img/lale_logo.jpg" alt="logo" width="55px"/>
 
-[中文README请按此处](README-cn.md)
+README in other languages: 
+[中文](https://github.com/IBM/lale/blob/master/docs/README-cn.md),
+[deutsch](https://github.com/IBM/lale/blob/master/docs/README-de.md),
+[français](https://github.com/IBM/lale/blob/master/docs/README-fr.md),
+or [contribute](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) your own.
 
 Lale is a Python library for semi-automated data science.
 Lale makes it easy to automatically select algorithms and tune
@@ -36,6 +40,7 @@ edited with off-the-shelf Python tools such as Jupyter notebooks.
 * Guide for wrapping [new operators](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
 * Guide for [contributing](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) to Lale
 * [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)
+* [Papers](https://github.com/IBM/lale/blob/master/docs/papers.rst)
 * Python [API documentation](https://lale.readthedocs.io/en/latest/)
 
 The name Lale, pronounced *laleh*, comes from the Persian word for
@@ -43,28 +48,6 @@ tulip. Similarly to popular machine-learning libraries such as
 scikit-learn, Lale is also just a Python library, not a new stand-alone
 programming language. It does not require users to install new tools
 nor learn new syntax.
-
-The following paper has a technical deep-dive:
-```
-@InProceedings{baudart_et_al_2020-automl_kdd,
-  title = "Lale: Consistent Automated Machine Learning",
-  author = "Baudart, Guillaume and Hirzel, Martin and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham",
-  booktitle = "KDD Workshop on Automation in Machine Learning (AutoML@KDD)",
-  year = 2020,
-  month = aug,
-  url = "https://arxiv.org/abs/2007.01977" }
-```
-
-The schemas of the operators defined in the `lale.lib.autogen` module were automatically generated from the source code of 115 scikit-learn operators. The following paper describes the schema extractor:
-```
-@InProceedings{baudart_et_al_2020_automl_icml,
-  title = "Mining Documentation to Extract Hyperparameter Schemas",
-  author = "Baudart, Guillaume and Kirchner, Peter and Hirzel, Martin and Kate, Kiran",
-  booktitle = "ICML Workshop on Automated Machine Learning (AutoML@ICML)",
-  month = jul,
-  year = 2020,
-  url = "https://arxiv.org/abs/2006.16984" }
-```
 
 Lale is distributed under the terms of the Apache 2.0 License, see
 [LICENSE.txt](https://github.com/IBM/lale/blob/master/LICENSE.txt).

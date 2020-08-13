@@ -19,31 +19,25 @@ import sklearn.datasets
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
-from lale.lib.sklearn import LinearSVC
 from lale.lib.sklearn import LogisticRegression
 from lale.lib.sklearn import LinearRegression
-from lale.lib.sklearn import RandomForestRegressor
 from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import Normalizer
-from lale.lib.sklearn import MLPClassifier
 from lale.lib.sklearn import Nystroem
 from lale.lib.sklearn import OneHotEncoder
 from lale.lib.sklearn import PCA
-from lale.lib.sklearn import TfidfVectorizer
-from lale.lib.sklearn import MultinomialNB
 from lale.lib.sklearn import SimpleImputer
-from lale.lib.sklearn import SVC
-from lale.lib.xgboost import XGBClassifier
-from lale.lib.sklearn import PassiveAggressiveClassifier
 from lale.lib.sklearn import StandardScaler
-from lale.lib.sklearn import FeatureAgglomeration
 
 from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.lib.lale import Hyperopt
+from lale.lib.lale import GridSearchCV
+from lale.lib.lale import SMAC
 from lale.search.op2hp import hyperopt_search_space
 
 
 import numpy as np
+import jsonschema
 from typing import List
 
 def f_min(op, X, y, num_folds=5):
@@ -771,3 +765,43 @@ class TestTopKVotingClassifier(unittest.TestCase):
         from sklearn.metrics import accuracy_score
         with self.assertRaises(ValueError):
             ensemble = TopKVotingClassifier()
+
+class TestKNNDataConstraints(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        import lale.lib.lale
+        all_X, all_y = load_iris(return_X_y=True)
+        #15 samples, small enough so folds are likely smaller than n_neighbors
+        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(
+            all_X, all_y, train_size=15, test_size=None,
+            shuffle=True, random_state=42)
+
+    def test_hyperopt(self):
+        planned = KNeighborsClassifier
+        trained = planned.auto_configure(
+            self.train_X, self.train_y, cv=3, optimizer=Hyperopt,
+            max_evals=3, verbose=True)
+        predicted = trained.predict(self.test_X)
+
+    def test_gridsearch(self):
+        planned = KNeighborsClassifier
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            trained = planned.auto_configure(
+                self.train_X, self.train_y, optimizer=GridSearchCV, cv=3)
+        predicted = trained.predict(self.test_X)
+
+    def test_smac(self):
+        planned = KNeighborsClassifier
+        trained = planned.auto_configure(
+            self.train_X, self.train_y, cv=3, optimizer=SMAC, max_evals=3)
+        predicted = trained.predict(self.test_X)
+
+    def test_schema_validation(self):
+        trainable_16 = KNeighborsClassifier(n_neighbors=16)
+        with self.assertRaises(jsonschema.ValidationError):
+            trained_16 = trainable_16.fit(self.train_X, self.train_y)
+        trainable_15 = KNeighborsClassifier(n_neighbors=15)
+        trained_15 = trainable_15.fit(self.train_X, self.train_y)
+        predicted = trained_15.predict(self.test_X)

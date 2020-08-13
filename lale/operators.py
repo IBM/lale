@@ -1037,6 +1037,18 @@ class IndividualOp(Operator):
         self._invalidate_enum_attributes()
         return op
 
+    def _validate_hyperparam_data_constraints(self, X, y=None):
+        hp_schema = self.hyperparam_schema()
+        if not hasattr(self, '__has_data_constraints'):
+            has_dc = lale.type_checking.has_data_constraints(hp_schema)
+            self.__has_data_constraints = has_dc
+        if self.__has_data_constraints:
+            hyperparams = self._get_params_all()
+            data_schema = lale.helpers.fold_schema(X, y)
+            hp_schema_2 = lale.type_checking.replace_data_constraints(
+                hp_schema, data_schema)
+            lale.type_checking.validate_schema(hyperparams, hp_schema_2)
+
     def validate_schema(self, X, y=None):
         if hasattr(self._impl, 'fit'):
             X = self._validate_input_schema('X', X, 'fit')
@@ -1194,20 +1206,24 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     def __call__(self, *args, **kwargs)->'TrainableIndividualOp':
         return self._configure(*args, **kwargs)
 
-    def _hyperparam_schema_with_hyperparams(self):
-        schema = self.hyperparam_schema()
-        params = None
-        try:
-            params = self._hyperparams
-        except AttributeError:
-            pass
-        if not params:
-            return schema
-        props = {k : {'enum' : [v]} for k, v in params.items()}
-        obj = {'type':'object', 'properties':props}
-        obj['relevantToOptimizer'] = list(params.keys())
-        top = {'allOf':[schema, obj]}
-        return top
+    def _hyperparam_schema_with_hyperparams(self, data_schema={}):
+        def fix_hyperparams(schema):
+            params = None
+            try:
+                hyperparams = self._hyperparams
+            except AttributeError:
+                pass
+            if not hyperparams:
+                return schema
+            props = {k : {'enum' : [v]} for k, v in hyperparams.items()}
+            obj = {'type':'object', 'properties':props}
+            obj['relevantToOptimizer'] = list(hyperparams.keys())
+            top = {'allOf':[schema, obj]}
+            return top
+        s_1 = self.hyperparam_schema()
+        s_2 = fix_hyperparams(s_1)
+        s_3 = lale.type_checking.replace_data_constraints(s_2, data_schema)
+        return s_3
 
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
@@ -1261,6 +1277,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         logger.info('%s enter fit %s', time.asctime(), self.name())
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
+        self._validate_hyperparam_data_constraints(X, y)
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
         trainable_impl = self._clone_impl()
         if filtered_fit_params is None:
@@ -1278,6 +1295,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise AttributeError(f'{self.name()} has no partial_fit implemented.')
         X = self._validate_input_schema('X', X, 'partial_fit')
         y = self._validate_input_schema('y', y, 'partial_fit')
+        self._validate_hyperparam_data_constraints(X, y)
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
         trainable_impl = self._clone_impl()
         if filtered_fit_params is None:

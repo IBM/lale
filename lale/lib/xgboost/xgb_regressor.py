@@ -13,9 +13,13 @@
 # limitations under the License.
 
 from sklearn.base import BaseEstimator
-from xgboost import XGBRegressor as XGBoostRegressor
 import lale.docstrings
 import lale.operators
+try:
+    import xgboost
+    xgboost_installed=True
+except ImportError:
+    xgboost_installed=False
 
 class XGBRegressorImpl(BaseEstimator):
     def __init__(self, max_depth=3, learning_rate=0.1, n_estimators=100, verbosity=1, 
@@ -24,6 +28,10 @@ class XGBRegressorImpl(BaseEstimator):
                 colsample_bytree=1, colsample_bylevel=1, colsample_bynode=1, reg_alpha=0, 
                 reg_lambda=1, scale_pos_weight=1, base_score=0.5, random_state=0, 
                 seed=None, missing=None, importance_type='gain'):
+        assert xgboost_installed, """Your Python environment does not have xgboost installed. You can install it with
+    pip install xgboost
+or with
+    pip install 'lale[full]'"""
         self.max_depth = max_depth
         self.learning_rate = learning_rate
         self.n_estimators = n_estimators
@@ -57,7 +65,7 @@ class XGBRegressorImpl(BaseEstimator):
                 self.colsample_bytree, self.colsample_bylevel, self.colsample_bynode, self.reg_alpha, 
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
                 self.seed, self.missing, self.importance_type)
-        result._wrapped_model = XGBoostRegressor(
+        result._wrapped_model = xgboost.XGBRegressor(
                     **self.get_params())
         if fit_params is None:
             result._wrapped_model.fit(X, y)
@@ -122,9 +130,11 @@ _hyperparams_schema = {
           'description':'Whether to print messages while running boosting. Deprecated.'},
         'objective': {
           'description': 'Specify the learning task and the corresponding '
-           'learning objective or a custom objective function to be used.'
-           ' string or callable.',
-          'enum': ['reg:linear', 'reg:logistic', 'reg:gamma','reg:tweedie'],
+            'learning objective or a custom objective function to be used.',
+          'anyOf': [
+          {   'enum': [
+                  'reg:linear', 'reg:logistic', 'reg:gamma','reg:tweedie']},
+          {   'laleType': 'callable'}],
           'default': 'reg:linear'},
         'booster': {
           'description':

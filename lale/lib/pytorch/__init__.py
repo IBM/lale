@@ -12,5 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Scikit-learn compatible wrappers for some operators from PyTorch_ along with schemas to enable hyperparameter tuning.
+
+.. _PyTorch: https://pytorch.org/
+
+Operators:
+==========
+* `BertPretrainedEncoder`_
+* `ResNet50`_
+
+.. _`BertPretrainedEncoder`: lale.lib.pytorch.bert_pretrained_encoder.html
+.. _`ResNet50`: lale.lib.pytorch.resnet.html
+"""
+
 from .bert_pretrained_encoder import BertPretrainedEncoder
 from .resnet import ResNet50

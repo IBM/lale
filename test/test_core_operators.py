@@ -24,9 +24,7 @@ import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
-from lale.lib.sklearn import LinearSVC
 from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import MinMaxScaler
 from lale.lib.sklearn import MLPClassifier
 from lale.lib.sklearn import Nystroem
 from lale.lib.sklearn import OneHotEncoder
@@ -36,13 +34,6 @@ from lale.lib.sklearn import FunctionTransformer
 from lale.lib.sklearn import MissingIndicator
 from lale.lib.sklearn import RFE
 from lale.lib.sklearn import TfidfVectorizer
-from lale.lib.sklearn import MultinomialNB
-from lale.lib.sklearn import SimpleImputer
-from lale.lib.sklearn import SVC
-from lale.lib.xgboost import XGBClassifier
-from lale.lib.sklearn import PassiveAggressiveClassifier
-from lale.lib.sklearn import StandardScaler
-from lale.lib.sklearn import FeatureAgglomeration
 from lale.lib.sklearn import RidgeClassifier
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.sklearn_compat import make_sklearn_compat
@@ -139,6 +130,10 @@ class TestNMF(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         predicted = trained.predict(test_X)
 
+    def test_not_randome_state(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            nmf = NMF(random_state='"not RandomState"')
+
 class TestFunctionTransformer(unittest.TestCase):
     def test_init_fit_predict(self):
         import numpy as np
@@ -149,6 +144,10 @@ class TestFunctionTransformer(unittest.TestCase):
         (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
         predicted = trained.predict(test_X)
+
+    def test_not_callable(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            ft = FunctionTransformer(func='"not callable"')
 
 class TestMissingIndicator(unittest.TestCase):
     def test_init_fit_transform(self):
@@ -173,6 +172,10 @@ class TestRFE(unittest.TestCase):
         X, y = data.data, data.target
         trained = trainable.fit(X, y)
         predicted = trained.predict(X)
+
+    def test_not_operator(self):
+        with self.assertRaises(jsonschema.ValidationError):
+            rfe = RFE(estimator='"not an operator"', n_features_to_select=2)
 
 class TestBoth(unittest.TestCase):
     def test_init_fit_transform(self):

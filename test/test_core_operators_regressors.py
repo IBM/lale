@@ -13,42 +13,9 @@
 # limitations under the License.
 
 import unittest
-import jsonschema
-import warnings
 import sklearn.datasets
-import inspect
-import logging
-import io
-
 import lale.lib.lale
-from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
-from lale.lib.sklearn import KNeighborsClassifier
-from lale.lib.sklearn import LinearSVC
-from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import MinMaxScaler
-from lale.lib.sklearn import MLPClassifier
-from lale.lib.sklearn import Nystroem
-from lale.lib.sklearn import OneHotEncoder
-from lale.lib.sklearn import PCA
-from lale.lib.sklearn import NMF
-from lale.lib.sklearn import FunctionTransformer
-from lale.lib.sklearn import MissingIndicator
-from lale.lib.sklearn import RFE
-from lale.lib.sklearn import TfidfVectorizer
-from lale.lib.sklearn import MultinomialNB
-from lale.lib.sklearn import SimpleImputer
-from lale.lib.sklearn import SVC
-from lale.lib.xgboost import XGBClassifier
-from lale.lib.sklearn import PassiveAggressiveClassifier
-from lale.lib.sklearn import StandardScaler
-from lale.lib.sklearn import FeatureAgglomeration
-from lale.lib.sklearn import RidgeClassifier
-from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
-from lale.sklearn_compat import make_sklearn_compat
-
-import lale.operators as Ops
-
 import lale.type_checking
 
 class TestRegression(unittest.TestCase):

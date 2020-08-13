@@ -32,6 +32,8 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import jsonschema
+import jsonschema.exceptions
+import jsonschema.validators
 import jsonsubschema
 import lale.helpers
 import numpy as np
@@ -42,6 +44,32 @@ import logging
 import inspect
 from typing import Any, Dict, List, Union
 JSON_TYPE = Dict[str, Any]
+
+def _validate_lale_type(validator, laleType, instance, schema):
+    #https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
+    if laleType == 'Any':
+        return
+    elif laleType == 'callable':
+        if not callable(instance):
+            yield jsonschema.exceptions.ValidationError(
+                f'expected {laleType}, got {type(instance)}')
+    elif laleType == 'operator':
+        import lale.operators
+        import sklearn.base
+        if not (isinstance(instance, lale.operators.Operator) or
+                isinstance(instance, sklearn.base.BaseEstimator)):
+            yield jsonschema.exceptions.ValidationError(
+                f'expected {laleType}, got {type(instance)}')
+    elif laleType == 'numpy.random.RandomState':
+        import numpy.random
+        if not isinstance(instance, numpy.random.RandomState):
+            yield jsonschema.exceptions.ValidationError(
+                f'expected {laleType}, got {type(instance)}')
+
+# https://github.com/Julian/jsonschema/blob/master/jsonschema/validators.py
+_lale_validator = jsonschema.validators.extend(
+    validator=jsonschema.Draft4Validator,
+    validators={u'laleType': _validate_lale_type})
 
 def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
     """Validate that the value is an instance of the schema.
@@ -64,9 +92,9 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
     """
     disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
     if disable_schema is not None and disable_schema.lower()=='true':
-        return True #If schema validation is disabled, always return as valid    
+        return True #if schema validation is disabled, always return as valid
     json_value = lale.helpers.data_to_json(value, subsample_array)
-    jsonschema.validate(json_value, schema, jsonschema.Draft4Validator)
+    jsonschema.validate(json_value, schema, _lale_validator)
 
 _JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
 
@@ -331,4 +359,47 @@ def get_default_schema(impl):
         'type': 'object',
         'tags': tags,
         'properties': method_schemas}
+    return result
+
+_data_info_keys = {'laleMaximum': 'maximum'}
+
+def has_data_constraints(hyperparam_schema: JSON_TYPE) -> bool:
+    def recursive_check(subject: JSON_TYPE) -> bool:
+        if isinstance(subject, (list, tuple)):
+            for v in subject:
+                if recursive_check(v):
+                    return True
+        elif isinstance(subject, dict):
+            for k, v in subject.items():
+                if k in _data_info_keys or recursive_check(v):
+                    return True
+        return False
+    result = recursive_check(hyperparam_schema)
+    return result
+
+def replace_data_constraints(hyperparam_schema: JSON_TYPE, data_schema: JSON_TYPE) -> JSON_TYPE:
+    def recursive_replace(subject: JSON_TYPE) -> JSON_TYPE:
+        any_changes = False
+        if isinstance(subject, (list, tuple)):
+            result = []
+            for v in subject:
+                new_v = recursive_replace(v)
+                result.append(new_v)
+                any_changes = any_changes or v is not new_v
+            if isinstance(subject, tuple):
+                result = tuple(result)
+        elif isinstance(subject, dict):
+            result = {}
+            for k, v in subject.items():
+                if k in _data_info_keys:
+                    new_k = _data_info_keys[k]
+                    new_v = lale.helpers.json_lookup(
+                        'properties/' + v, data_schema)
+                else:
+                    new_k = k
+                    new_v = recursive_replace(v)
+                result[new_k] = new_v
+                any_changes = any_changes or k != new_k or v is not new_v
+        return result if any_changes else subject
+    result = recursive_replace(hyperparam_schema)
     return result

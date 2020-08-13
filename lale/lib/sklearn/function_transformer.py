@@ -41,7 +41,7 @@ class FunctionTransformerImpl():
 
 _hyperparams_schema = {
     'allOf': [
-    {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.\n',
+    {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
         'required': ['func', 'inverse_func', 'validate', 'accept_sparse', 'pass_y', 'check_inverse', 'kw_args', 'inv_kw_args'],
@@ -49,13 +49,13 @@ _hyperparams_schema = {
         'properties': {
             'func': {
                 'anyOf': [
-                {   'laleType': 'Any'},
+                {   'laleType': 'callable'},
                 {   'enum': [None]}],
                 'default': None,
                 'description': 'The callable to use for the transformation.'},
             'inverse_func': {
                 'anyOf': [
-                {   'laleType': 'Any'},
+                {   'laleType': 'callable'},
                 {   'enum': [None]}],
                 'default': None,
                 'description': 'The callable to use for the inverse transformation.'},

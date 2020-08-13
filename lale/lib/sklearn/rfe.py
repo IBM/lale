@@ -43,7 +43,7 @@ _hyperparams_schema = {
         'properties': {
             'estimator': {
                 'description': 'A supervised learning estimator with a fit method that provides information about feature importance either through a coef_ attribute or through a feature_importances_ attribute.',
-                'laleType': 'estimator'},
+                'laleType': 'operator'},
             'n_features_to_select': {
                 'description': 'The number of features to select. If None, half of the features are selected.',
                 'anyOf': [

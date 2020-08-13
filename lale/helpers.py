@@ -87,6 +87,17 @@ def is_empty_dict(val) -> bool:
 def dict_without(orig_dict: Dict[str, Any], key: str) -> Dict[str, Any]:
     return {k: orig_dict[k] for k in orig_dict if k != key}
 
+def json_lookup(ptr, jsn):
+    steps = ptr.split('/')
+    sub_jsn = jsn
+    for s in steps:
+        if s not in sub_jsn:
+            from lale.pretty_print import json_to_string
+            j2s = lale.pretty_print.json_to_string(jsn)
+            raise ValueError(f"could not find step '{s}' of '{ptr}' in {j2s}")
+        sub_jsn = sub_jsn[s]
+    return sub_jsn
+
 def ndarray_to_json(arr, subsample_array:bool=True) -> Union[list, dict]:
     #sample 10 rows and no limit on columns
     if subsample_array:
@@ -134,6 +145,25 @@ def split_with_schemas(estimator, all_X, all_y, indices, train_indices=None):
             'items': all_y.json_schema['items']}
         lale.datasets.data_schemas.add_schema(subset_y, schema)
     return subset_X, subset_y
+
+def fold_schema(X, y, cv=1):
+    def fold_schema_aux(data, n_rows):
+        orig_schema = lale.datasets.data_schemas.to_schema(data)
+        fold_schema = {**orig_schema, 'minItems': n_rows, 'maxItems': n_rows}
+        return fold_schema
+    n_splits = cv if isinstance(cv, int) else cv.get_n_splits()
+    n_samples = y.shape[0]
+    if n_splits == 1:
+        n_rows_fold = n_samples
+    else:
+        n_classes = 2 if len(y.shape) == 1 else y.shape[1]
+        n_rows_unstratified = (n_samples // n_splits) * (n_splits - 1)
+        #in stratified case, fold sizes can differ by up to n_classes
+        n_rows_fold = max(1, n_rows_unstratified - n_classes)
+    schema_X = fold_schema_aux(X, n_rows_fold)
+    schema_y = fold_schema_aux(y, n_rows_fold)
+    result = {'properties': {'X': schema_X, 'y': schema_y}}
+    return result
 
 def cross_val_score_track_trials(estimator, X, y=None, scoring=accuracy_score, cv=5, args_to_scorer=None):
     """

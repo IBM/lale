@@ -12,5 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+"""
+Scikit-learn compatible wrappers for LightGBM_ along with schemas to enable hyperparameter tuning.
+
+.. _LightGBM: https://www.microsoft.com/en-us/research/project/lightgbm/
+
+Operators:
+==========
+* `LGBMClassifier`_
+* `LGBMRegressor`_
+
+.. _`LGBMClassifier`: lale.lib.lightgbm.lgbm_classifier.html
+.. _`LGBMRegressor`: lale.lib.lightgbm.lgbm_regressor.html
+"""
+
 from .lgbm_classifier import LGBMClassifier
 from .lgbm_regressor import LGBMRegressor

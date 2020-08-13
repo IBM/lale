@@ -17,10 +17,9 @@ import lale.docstrings
 import lale.operators
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'A decision tree classifier.',
-    'allOf': [{
-        'type': 'object',
+    'allOf': [
+    {   'type': 'object',
         'required': ['class_weight'],
         'relevantToOptimizer': ['criterion', 'splitter', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features'],
         'additionalProperties': False,
@@ -28,199 +27,197 @@ _hyperparams_schema = {
             'criterion': {
                 'enum': ['gini', 'entropy'],
                 'default': 'gini',
-                'description': 'The function to measure the quality of a split. Supported criteria are'},
+                'description': 'The function to measure the quality of a split.'},
             'splitter': {
                 'enum': ['best', 'random'],
                 'default': 'best',
-                'description': 'The strategy used to choose the split at each node. Supported'},
+                'description': 'The strategy used to choose the split at each node.'},
             'max_depth': {
-                'anyOf': [{
-                    'type': 'integer',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 1,
                     'minimumForOptimizer': 3,
-                    'maximumForOptimizer': 5}, {
-                    'enum': [None]}],
+                    'maximumForOptimizer': 5},
+                {   'enum': [None],
+                    'description': 'Nodes are expanded until all leaves are pure or until all leaves contain less than min_samples_split samples.'}],
                 'default': None,
-                'description': 'The maximum depth of the tree. If None, then nodes are expanded until'},
+                'description': 'The maximum depth of the tree.'},
             'min_samples_split': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 2,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 2,
+                    'forOptimizer': False,
+                    'description': 'Consider min_samples_split as the minimum number.'},
+                {   'type': 'number',
+                    'minimum': 0.0,
+                    'exclusiveMinimum': True,
+                    'maximum': 1.0,
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'description': 'min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.'}],
                 'default': 2,
-                'description': 'The minimum number of samples required to split an internal node:'},
+                'description': 'The minimum number of samples required to split an internal node.'},
             'min_samples_leaf': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 1,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 1,
+                    'forOptimizer': False,
+                    'description': 'Consider min_samples_leaf as the minimum number.'},
+                {   'type': 'number',
+                    'minimum': 0.0,
+                    'exclusiveMinimum': True,
+                    'maximum': 0.5,
+                    'description': 'min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.'}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node.'},
             'min_weight_fraction_leaf': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all'},
+                'description': 'The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.'},
             'max_features': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'forOptimizer': False}, {
-                    'type': 'number',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 2,
+                    'forOptimizer': False,
+                    'description': 'Consider max_features features at each split.'},
+                {   'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
-                    'minimumForOptimizer': 0.0,
-                    'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
-                    'enum': ['auto', 'sqrt', 'log2', None]}],
-                'default': None,
-                'description': 'The number of features to consider when looking for the best split:'},
+                    'maximum': 1.0,
+                    'distribution': 'uniform',
+                    'description': 'max_features is a fraction and int(max_features * n_features) features are considered at each split.'},
+                {   'enum': ['auto', 'sqrt', 'log2', None]}],
+                'default': 'auto',
+                'description': 'The number of features to consider when looking for the best split.'},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
+                'description':
+                'Seed of pseudo-random number generator.',
+                'anyOf': [
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'description': 'RandomState used by np.random',
+                    'enum': [None]},
+                {   'description': 'Explicit seed.',
+                    'type': 'integer'}],
+                'default': None},
             'max_leaf_nodes': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'enum': [None],
+                    'description': 'Unlimited number of leaf nodes.'}],
                 'default': None,
                 'description': 'Grow a tree with ``max_leaf_nodes`` in best-first fashion.'},
             'min_impurity_decrease': {
                 'type': 'number',
                 'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity'},
+                'description': 'A node will be split if this split induces a decrease of the impurity greater than or equal to this value.'},
             'min_impurity_split': {
-                'anyOf':[
-                {'type': 'number'},{
-                    'enum': [None]
-                }],
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0},
+                {   'enum': [None]}],
                 'default': None,
-                'description': 'Threshold for early stopping in tree growth. A node will split'},
+                'description': 'Threshold for early stopping in tree growth.'},
             'class_weight': {
-                'anyOf': [{
-                    'type': 'object'}, #dict, list of dicts, 
-                    {'enum': ['balanced', 'balanced_subsample', None]}],
-                'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
-                'default': None},
+                'anyOf': [
+                {   'type': 'object',
+                    'additionalProperties': {'type': 'number'}},
+                {   'type': 'array',
+                    'item': {
+                        'type': 'object',
+                        'additionalProperties': {'type': 'number'}}},
+                {   'enum': ['balanced', 'balanced_subsample', None]}],
+                'description': 'Weights associated with classes in the form ``{class_label: weight}``.'},
             'presort': {
                 'type': 'boolean',
                 'default': False,
-                'description': 'Whether to presort the data to speed up the finding of best splits in'},
-        }}]
-}
+                'description': 'Whether to presort the data to speed up the finding of best splits in splitting.'}}}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Build a decision tree classifier from the training set (X, y).',
     'required': ['X', 'y'],
     'type': 'object',
     'properties': {
         'X': {
-            'anyOf': [{
+            'type': 'array',
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
                 'type': 'array',
+                'description': 'The inner array is over features aka columns.',
                 'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'},
-                }}],
-            'description': 'The training input samples. Internally, it will be converted to'},
+                    'type': 'number'}}},
         'y': {
+            'description': 'The predicted classes.',
             'anyOf': [
-                {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}},
-                {'type': 'array', 'items': {'type': 'boolean'}}],
-            'description': 'The target values (class labels) as integers or strings.'},
+            {   'type': 'array', 'items': {'type': 'number'}},
+            {   'type': 'array', 'items': {'type': 'string'}},
+            {   'type': 'array', 'items': {'type': 'boolean'}}]},
         'sample_weight': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }, {
-                'enum': [None]}],
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
+            'anyOf': [
+            {   'type': 'array',
+                'items': {'type': 'number'}},
+            {   'enum': [None],
+                'description': 'Samples are equally weighted.'}],
+            'description': 'Sample weights.'},
         'check_input': {
             'type': 'boolean',
             'default': True,
             'description': 'Allow to bypass several input checking.'},
         'X_idx_sorted': {
-            'anyOf': [{
-                'type': 'array',
+            'anyOf': [
+            {   'type': 'array',
                 'items': {
                     'type': 'array',
                     'items': {
-                        'type': 'number'},
-                }}, {
-                'enum': [None]}],
+                        'type': 'number'}}},
+            {   'enum': [None]}],
             'default': None,
-            'description': 'The indexes of the sorted training input samples. If many tree'},
-    },
-}
+            'description': 'The indexes of the sorted training input samples. If many tree'}}}
+
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Predict class or regression value for X.',
     'type': 'object',
     'properties': {
         'X': {
             'type': 'array',
+            'description': 'The outer array is over samples aka rows.',
             'items': {
                 'type': 'array',
+                'description': 'The inner array is over features aka columns.',
                 'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, its dtype will be converted to'},
+                    'type': 'number'}}},
         'check_input': {
             'type': 'boolean',
             'default': True,
-            'description': 'Allow to bypass several input checking.'},
-    },
-}
+            'description': 'Allow to bypass several input checking.'}}}
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Predicted class label per sample.',
+    'description': 'The predicted classes.',
     'anyOf': [
-        {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}},
-        {'type': 'array', 'items': {'type': 'boolean'}}]}
+    {   'type': 'array', 'items': {'type': 'number'}},
+    {   'type': 'array', 'items': {'type': 'string'}},
+    {   'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Predict class probabilities of the input samples X.',
     'type': 'object',
     'properties': {
         'X': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'},
-                }}],
-            'description': 'The input samples. Internally, its dtype will be converted to'},
-        'check_input': {
-            'type': 'boolean',
-            'description': 'Run check_array on X.'},
-    },
-}
-
-_output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Probability of the sample for each class in the model.',
-    'type': 'array',
+            'type': 'array',
+            'description': 'The outer array is over samples aka rows.',
             'items': {
                 'type': 'array',
+                'description': 'The inner array is over features aka columns.',
                 'items': {
-                    'type': 'number'},
-            }    
-}
+                    'type': 'number'}}},
+        'check_input': {
+            'type': 'boolean',
+            'description': 'Run check_array on X.'}}}
+
+_output_predict_proba_schema = {
+    'type': 'array',
+    'description': 'The outer array is over samples aka rows.',
+    'items': {
+        'type': 'array',
+        'description': 'The inner array has items corresponding to each class.',
+        'items': {
+            'type': 'number'}}}
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
@@ -244,7 +241,6 @@ _combined_schemas = {
 
 
 class DecisionTreeClassifierImpl():        
-
     def __init__(self, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, class_weight=None, presort=False):
         self._hyperparams = {
             'criterion': criterion,

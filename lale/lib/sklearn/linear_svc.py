@@ -44,8 +44,6 @@ class LinearSVCImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Linear Support Vector Classification.',
     'allOf': [
     {   'type': 'object',
         'additionalProperties': False,
@@ -72,7 +70,8 @@ _hyperparams_schema = {
             'tol': {
                 'type': 'number',
                 'distribution': 'loguniform',
-                'minimumForOptimizer': 1e-08,
+                'minimum': 0.0,
+                'exclusiveMinimum': True,
                 'maximumForOptimizer': 0.01,
                 'default': 0.0001,
                 'description': 'Tolerance for stopping criteria.'},
@@ -98,9 +97,10 @@ _hyperparams_schema = {
                 'description':
                     'Append a constant feature with constant value '
                     'intercept_scaling to the instance vector.',
-                'minimumForOptimizer': 0.0,
+                'minimum': 0.0,
+                'exclusiveMinimum': True,
                 'maximumForOptimizer': 1.0,
-                'default': 1},
+                'default': 1.0},
             'class_weight': {
                 'anyOf': [
                     { 'description': 'By default, all classes have weight 1.',
@@ -109,7 +109,7 @@ _hyperparams_schema = {
                       'enum': ['balanced']},
                     { 'description': 'Dictionary mapping class labels to weights.',
                       'type': 'object',
-                      'propertyNames': {'pattern': '^.+$', 'type': 'number'},
+                      'additionalProperties': {'type': 'number'},
                       'forOptimizer': False}],
                 'default': None},
             'verbose': {
@@ -118,12 +118,13 @@ _hyperparams_schema = {
                 'description': 'Enable verbose output.'},
             'random_state': {
                 'description':
-                'Seed of pseudo-random number generator for shuffling data.',
+                'Seed of pseudo-random number generator.',
                 'anyOf': [
-                    { 'description': 'RandomState used by np.random',
-                      'enum': [None]},
-                    { 'description': 'Explicit seed.',
-                      'type': 'integer'}],
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'description': 'RandomState used by np.random',
+                    'enum': [None]},
+                {   'description': 'Explicit seed.',
+                    'type': 'integer'}],
                 'default': None},
             'max_iter': {
                 'type': 'integer',
@@ -134,83 +135,86 @@ _hyperparams_schema = {
     {   'description':
             'The combination of penalty=`l1` and loss=`hinge` is not supported',
         'anyOf': [
-            { 'type': 'object',
-              'properties': {'penalty': {'enum': ['l2']}}},
-            { 'type': 'object',
-              'properties': {'loss': {'enum': ['squared_hinge']}}}]},
+        {   'type': 'object',
+            'properties': {'penalty': {'enum': ['l2']}}},
+        {   'type': 'object',
+            'properties': {'loss': {'enum': ['squared_hinge']}}}]},
     {   'description': 'The combination of penalty=`l2` and loss=`hinge` '
                        'is not supported when dual=False.',
         'anyOf': [
-            { 'type': 'object',
-              'properties': {'penalty': {'enum': ['l1']}}},
-            { 'type': 'object',
-              'properties': {'loss': {'enum': ['squared_hinge']}}},
-            { 'type': 'object',
-              'properties': {'dual': {'enum': [True]}}}]},
+        {   'type': 'object',
+            'properties': {'penalty': {'enum': ['l1']}}},
+        {   'type': 'object',
+            'properties': {'loss': {'enum': ['squared_hinge']}}},
+        {   'type': 'object',
+            'properties': {'dual': {'enum': [True]}}}]},
     {   'description': 'The combination of penalty=`l1` and '
                        'loss=`squared_hinge` is not supported when dual=True.',
         'anyOf': [
-            { 'type': 'object',
-              'properties': {'penalty': {'enum': ['l2']}}},
-            { 'type': 'object',
-              'properties': {'loss': {'enum': ['hinge']}}},
-            { 'type': 'object',
-              'properties': {'dual': {'enum': [False]}}}]}
-    ]}
+        {   'type': 'object',
+            'properties': {'penalty': {'enum': ['l2']}}},
+        {   'type': 'object',
+            'properties': {'loss': {'enum': ['hinge']}}},
+        {   'type': 'object',
+            'properties': {'dual': {'enum': [False]}}}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Fit the model according to the given training data.',
     'type': 'object',
     'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}},
-            'description': 'Training vector.'},
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
+                'type': 'array',
+                'description': 'The inner array is over features aka columns.',
+                'items': {
+                    'type': 'number'}}},
         'y': {
+            'description': 'The predicted classes.',
             'anyOf': [
-                {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}},
-                {'type': 'array', 'items': {'type': 'boolean'}}],
-            'description': 'Target vector relative to X.'},
+            {   'type': 'array', 'items': {'type': 'number'}},
+            {   'type': 'array', 'items': {'type': 'string'}},
+            {   'type': 'array', 'items': {'type': 'boolean'}}]},
         'sample_weight': {
             'anyOf': [
             {   'type': 'array',
                 'items': {'type': 'number'}},
-            {   'enum': [None]}],
-            'default': None,
-            'description':
-                'Array of weights that are assigned to individual samples.'}}}
+            {   'enum': [None],
+                'description': 'Samples are equally weighted.'}],
+            'description': 'Sample weights.'}}}
 
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'type': 'object',
+    'properties': {
+        'X': {
+            'type': 'array',
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
+                'type': 'array',
+                'description': 'The inner array is over features aka columns.',
+                'items': {
+                    'type': 'number'}}}}}
+
+_output_predict_schema = {
     'description': 'Predict class labels for samples in X.',
+    'anyOf': [
+    {   'type': 'array', 'items': {'type': 'number'}},
+    {   'type': 'array', 'items': {'type': 'string'}},
+    {   'type': 'array', 'items': {'type': 'boolean'}}]}
+
+_input_decision_function_schema = {
     'type': 'object',
     'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}},
-            'description': 'Samples.'}}}
-
-_output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Predict class labels for samples in X.',
-    'anyOf': [
-        {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}},
-        {'type': 'array', 'items': {'type': 'boolean'}}]}
-
-_input_decision_function_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
+                'type': 'array',
+                'description': 'The inner array is over features aka columns.',
+                'items': {
+                    'type': 'number'}}}}}
 
 _output_decision_function_schema = {
     'description': 'Confidence scores for samples for each class in the model.',
@@ -240,8 +244,7 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema,
         'input_decision_function': _input_decision_function_schema,
-        'output_decision_function': _output_decision_function_schema,
-}}
+        'output_decision_function': _output_decision_function_schema}}
 
 lale.docstrings.set_docstrings(LinearSVCImpl, _combined_schemas)
 

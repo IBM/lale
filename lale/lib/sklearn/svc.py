@@ -17,7 +17,6 @@ import lale.docstrings
 import lale.operators
 
 class SVCImpl():
-
     def __init__(self, C=1.0, kernel='rbf', degree=3, gamma='auto', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', random_state=None):
         self._hyperparams = {
             'C': C,
@@ -50,44 +49,47 @@ class SVCImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'C-Support Vector Classification.',
-    'allOf': [{
-        'type': 'object',
+    'allOf': [
+    {   'type': 'object',
         'additionalProperties': False,
         'required': ['kernel', 'degree', 'gamma', 'shrinking', 'tol', 'cache_size', 'max_iter', 'decision_function_shape'],
         'relevantToOptimizer': ['kernel', 'degree', 'gamma', 'shrinking', 'probability', 'tol'],
         'properties': {
             'C': {
-                'type': 'number',
                 'description': 'Penalty parameter C of the error term.',
+                'type': 'number',
                 'distribution': 'loguniform',
+                'minimum': 0.0,
+                'exclusiveMinimum': True,
                 'default': 1.0,
                 'minimumForOptimizer': 0.03125,
                 'maximumForOptimizer': 32768},
             'kernel': {
                 'anyOf': [
-                    {'enum':['precomputed'], 'forOptimizer': False}, 
-                    {'enum': ['linear', 'poly', 'rbf', 'sigmoid']}],
-                    #support for callable is missing as of now.               
+                {   'enum':['precomputed'], 'forOptimizer': False}, 
+                {   'enum': ['linear', 'poly', 'rbf', 'sigmoid']},
+                {   'laleType': 'callable', 'forOptimizer': False}],
                 'default': 'rbf',
-                'description': 'Specifies the kernel type to be used in the algorithm.'},
+                'description':
+                    'Specifies the kernel type to be used in the algorithm.'},
             'degree': {
                 'type': 'integer',
+                'minimum': 0,
                 'minimumForOptimizer': 2,
                 'maximumForOptimizer': 5,
                 'default': 3,
                 'description': "Degree of the polynomial kernel function ('poly')."},
             'gamma': {
-                'anyOf': [{
-                    'type': 'number',
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0,
+                    'exclusiveMinimum': True,
                     'minimumForOptimizer': 3.0517578125e-05,
                     'maximumForOptimizer': 8,
                     'distribution': 'loguniform'},
-                    {'enum': ['auto', 'auto_deprecated', 'scale']}
-                    ],
+                {   'enum': ['auto', 'auto_deprecated', 'scale']}],
                 'default': 'auto_deprecated', #going to change to 'scale' from sklearn 0.22.
-                'description': "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'."},
+                'description': "Kernel coefficient for 'rbf', 'poly', and 'sigmoid'."},
             'coef0': {
                 'type': 'number',
                 'default': 0.0,
@@ -102,21 +104,27 @@ _hyperparams_schema = {
                 'description': 'Whether to enable probability estimates.'},
             'tol': {
                 'type': 'number',
-                'distribution':'loguniform',
-                'minimumForOptimizer': 1e-08,
+                'distribution': 'loguniform',
+                'minimum': 0.0,
+                'exclusiveMinimum': True,
                 'maximumForOptimizer': 0.01,
-                'default': 0.001,
-                'description': 'Tolerance for stopping criterion.'},
+                'default': 0.0001,
+                'description': 'Tolerance for stopping criteria.'},
             'cache_size': {
                 'type': 'integer',
                 'default': 200,
                 'description': 'Specify the size of the kernel cache (in MB).'},
             'class_weight': {
-                'anyOf': [{
-                    'type': 'object'}, {
-                    'enum': ['balanced', None]}],
-                'default': None,
-                'description': 'Set the parameter C of class i to class_weight[i]*C for SVC'},
+                'anyOf': [
+                    { 'description': 'By default, all classes have weight 1.',
+                      'enum': [None]},
+                    { 'description': 'Adjust weights by inverse frequency.',
+                      'enum': ['balanced']},
+                    { 'description': 'Dictionary mapping class labels to weights.',
+                      'type': 'object',
+                      'additionalProperties': {'type': 'number'},
+                      'forOptimizer': False}],
+                'default': None},
             'verbose': {
                 'type': 'boolean',
                 'default': False,
@@ -128,101 +136,102 @@ _hyperparams_schema = {
             'decision_function_shape': {
                 'enum': ['ovo', 'ovr'],
                 'default': 'ovr',
-                'description': "Whether to return a one-vs-rest ('ovr') decision function of shape"},
+                'description': "Whether to return a one-vs-rest ('ovr') decision function of shape (n_samples, n_classes) as all other classifiers, or the original one-vs-one (‘ovo’) decision function of libsvm which has shape (n_samples, n_classes * (n_classes - 1) / 2)."},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'type': 'object'}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'The seed of the pseudo random number generator used when shuffling'},
-        }},
-        {'description': 'coef0 only significant in kernel ‘poly’ and ‘sigmoid’.',
-         'anyOf': [{
-             'type': 'object',
-             'properties': {
-                 'kernel': {
-                     'enum': ['poly', 'sigmoid']},
-             }}, {
-             'type': 'object',
-             'properties': {
-                 'coef0': {
-                     'enum': [0.0]},
-             }}]}],
-}
+                'description':
+                'Seed of pseudo-random number generator.',
+                'anyOf': [
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'description': 'RandomState used by np.random',
+                    'enum': [None]},
+                {   'description': 'Explicit seed.',
+                    'type': 'integer'}],
+                'default': None}}},
+    {   'description': 'coef0 only significant in kernel ‘poly’ and ‘sigmoid’.',
+        'anyOf': [
+        {   'type': 'object',
+            'properties': {'kernel': {'enum': ['poly', 'sigmoid']}}},
+        {   'type': 'object',
+            'properties': {'coef0': {'enum': [0.0]}}}]}]}
+
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Fit the SVM model according to the given training data.',
     'type': 'object',
     'required': ['X', 'y'],
     'properties': {
         'X': {
             'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}},
-            'description': 'Training vectors, where n_samples is the number of samples and n_features is the number of features.'},
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
+                'type': 'array',
+                'description': 'The inner array is over features aka columns.',
+                'items': {
+                    'type': 'number'}}},
         'y': {
+            'description': 'The predicted classes.',
             'anyOf': [
-                {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}},
-                {'type': 'array', 'items': {'type': 'boolean'}}],
-            'description': 'Target values (class labels in classification, real numbers in regression)'},
+            {   'type': 'array', 'items': {'type': 'number'}},
+            {   'type': 'array', 'items': {'type': 'string'}},
+            {   'type': 'array', 'items': {'type': 'boolean'}}]},
         'sample_weight': {
-            'anyOf': [{
-                    'type': 'array',
-                    'items': {'type': 'number'},
-                    'description': 'Per-sample weights. Rescale C per sample.'},
-                {'enum': [None]}],
-            'default': None,
-        },
-    },
-}
+            'anyOf': [
+            {   'type': 'array',
+                'items': {'type': 'number'}},
+            {   'enum': [None],
+                'description': 'Samples are equally weighted.'}],
+            'description': 'Sample weights.'}}}
+
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Perform classification on samples in X.',
     'type': 'object',
-    'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}}
-        },
-    },
-}
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
+                'type': 'array',
+                'description': 'The inner array is over features aka columns.',
+                'items': {
+                    'type': 'number'}}}}}
+
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Class labels for samples in X.',
+    'description': 'The predicted classes.',
     'anyOf': [
-        {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}},
-        {'type': 'array', 'items': {'type': 'boolean'}}]}
+    {   'type': 'array', 'items': {'type': 'number'}},
+    {   'type': 'array', 'items': {'type': 'string'}},
+    {   'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
+    'type': 'object',
+    'properties': {
+        'X': {
+            'type': 'array',
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
+                'type': 'array',
+                'description': 'The inner array is over features aka columns.',
+                'items': {
+                    'type': 'number'}}}}}
+
+_output_predict_proba_schema = {
+    'type': 'array',
+    'description': 'The outer array is over samples aka rows.',
+    'items': {
+        'type': 'array',
+        'description': 'The inner array has items corresponding to each class.',
+        'items': {
+            'type': 'number'}}}
+
+_input_decision_function_schema = {
     'type': 'object',
     'required': ['X'],
     'properties': {
         'X': {
             'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'number'}},
-        },
-    },
-}
-_output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'type': 'array',
-    'items': {'type': 'array', 'items': {'type': 'number'}},
-    'description': 'Returns the probability of the sample for each class in the model.'}
-
-
-_input_decision_function_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+            'description': 'The outer array is over samples aka rows.',
+            'items': {
+                'type': 'array',
+                'description': 'The inner array is over features aka columns.',
+                'items': {
+                    'type': 'number'}}}}}
 
 _output_decision_function_schema = {
     'description': 'Confidence scores for samples for each class in the model.',
@@ -254,8 +263,7 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema,
         'input_decision_function': _input_decision_function_schema,
-        'output_decision_function': _output_decision_function_schema,
-}}
+        'output_decision_function': _output_decision_function_schema}}
 
 lale.docstrings.set_docstrings(SVCImpl, _combined_schemas)
 

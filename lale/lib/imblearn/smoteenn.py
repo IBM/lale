@@ -82,7 +82,7 @@ class.""",
                     {   'description':"""When callable, function taking ``y`` and returns a ``dict``. 
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
-                        'laleType': 'Any'}],
+                        'laleType': 'callable'}],
                 'default': 'auto'},
             'random_state': {
             'description':
@@ -93,7 +93,7 @@ desired number of samples for each class.""",
                 { 'description': 'The seed used by the random number generator',
                 'type': 'integer'},
                 { 'description': 'Random number generator instance.',
-                'laleType':'Any'}],
+                'laleType':'numpy.random.RandomState'}],
             'default': None},
             'smote':{
                 'description':"""The imblearn.over_sampling.SMOTE object to use. 

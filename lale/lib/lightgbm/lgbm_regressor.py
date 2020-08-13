@@ -12,18 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lightgbm.sklearn
 import lale.docstrings
 import lale.operators
+try:
+    import lightgbm.sklearn
+    lightgbm_installed=True
+except ImportError:
+    lightgbm_installed=False
 
 class LGBMRegressorImpl():
-
     def __init__(self, boosting_type='gbdt', num_leaves=31, max_depth=-1, 
             learning_rate=0.1, n_estimators=100, subsample_for_bin=200000, 
             objective=None, class_weight=None, min_split_gain=0.0, 
             min_child_weight=0.001, min_child_samples=20, subsample=1.0, 
             subsample_freq=0, colsample_bytree=1.0, reg_alpha=0.0, reg_lambda=0.0, 
             random_state=None, n_jobs=-1, silent=True, importance_type='split'):
+        assert lightgbm_installed, """Your Python environment does not have lightgbm installed. You can install it with
+    pip install lightgbm
+or with
+    pip install 'lale[full]'"""
         self._hyperparams = {
             'boosting_type': boosting_type,
             'num_leaves': num_leaves,
@@ -161,9 +168,10 @@ _hyperparams_schema = {
                 'default': 0.0,
                 'description': 'L2 regularization term on weights.'},
             'random_state': {
-                'anyOf': [{
-                    'type': 'integer'},{
-                    'enum': [None]}],
+                'anyOf': [
+                {   'type': 'integer'},
+                {   'laleType': 'numpy.random.RandomState'},
+                {   'enum': [None]}],
                 'default': None,
                 'description': 'Random number seed. If None, default seeds in C++ code will be used.'},
             'n_jobs': {
@@ -242,11 +250,11 @@ _input_fit_schema = {
             'default': None,
             'description': 'Group data of eval data.'},
         'eval_metric': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {'type':'string'}}, {
-                'enum': ['l2', None]},{
-                'type': 'object'}],
+            'anyOf': [
+            {   'type': 'array',
+                'items': {'type':'string'}},
+            {   'enum': ['l2', None]},
+            {   'laleType': 'callable'}],
             'default': None,
             'description': 'string, list of strings, callable or None, optional (default=None).'},
         'early_stopping_rounds': {

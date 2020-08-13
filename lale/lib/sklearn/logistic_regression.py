@@ -17,7 +17,6 @@ import lale.operators
 import sklearn.linear_model
 
 _input_fit_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X', 'y'],
   'additionalProperties': False,
@@ -34,7 +33,6 @@ _input_fit_schema = {
             {'type': 'array', 'items': {'type': 'boolean'}}]}}}
 
 _input_predict_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -45,7 +43,6 @@ _input_predict_schema = {
       'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -53,7 +50,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -64,7 +60,6 @@ _input_predict_proba_schema = {
       'items': {'type': 'array', 'items': {'type': 'number'}}}}}
 
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability of the sample for each class in the model.',
     'type': 'array',
     'items': {
@@ -93,7 +88,6 @@ _output_decision_function_schema = {
         'items': {'type': 'number'}}]}
 
 _hyperparams_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Hyperparameter schema.',
   'allOf': [
     { 'description':
@@ -189,7 +183,7 @@ proportional to class frequencies in the input data as "n_samples / (n_classes *
               'enum': ['balanced']},
             { 'description': 'Weights associated with classes in the form "{class_label: weight}".',
               'type': 'object',
-              'propertyNames': {'pattern': '^.+$', 'type': 'number'},
+              'additionalProperties': {'type': 'number'},
               'forOptimizer': False}],
           'default': None},
         'random_state': {
@@ -198,6 +192,8 @@ proportional to class frequencies in the input data as "n_samples / (n_classes *
           'anyOf': [
             { 'description': 'RandomState used by np.random',
               'enum': [None]},
+            { 'description': 'Use the provided random state, only affecting other users of that same random state instance.',
+              'laleType': 'numpy.random.RandomState' },
             { 'description': 'Explicit seed.',
               'type': 'integer'}],
           'default': None},
