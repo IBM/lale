@@ -1036,6 +1036,18 @@ class IndividualOp(Operator):
         self._invalidate_enum_attributes()
         return op
 
+    def _validate_hyperparam_data_constraints(self, X, y=None):
+        hp_schema = self.hyperparam_schema()
+        if not hasattr(self, '__has_data_constraints'):
+            has_dc = lale.type_checking.has_data_constraints(hp_schema)
+            self.__has_data_constraints = has_dc
+        if self.__has_data_constraints:
+            hyperparams = self._get_params_all()
+            data_schema = lale.helpers.fold_schema(X, y)
+            hp_schema_2 = lale.type_checking.replace_data_constraints(
+                hp_schema, data_schema)
+            lale.type_checking.validate_schema(hyperparams, hp_schema_2)
+
     def validate_schema(self, X, y=None):
         if hasattr(self._impl, 'fit'):
             X = self._validate_input_schema('X', X, 'fit')
@@ -1207,34 +1219,10 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             obj['relevantToOptimizer'] = list(hyperparams.keys())
             top = {'allOf':[schema, obj]}
             return top
-        data_info_keys = {'laleMaximum': 'maximum'}
-        def replace_data_info(subject, data_schema):
-            any_changes = False
-            if isinstance(subject, (list, tuple)):
-                result = []
-                for v in subject:
-                    new_v = replace_data_info(v, data_schema)
-                    result.append(new_v)
-                    any_changes = any_changes or v is not new_v
-                if isinstance(subject, tuple):
-                    result = tuple(result)
-            elif isinstance(subject, dict):
-                result = {}
-                for k, v in subject.items():
-                    if k in data_info_keys:
-                        new_k = data_info_keys[k]
-                        new_v = lale.helpers.json_lookup(
-                            'properties/' + v, data_schema)
-                    else:
-                        new_k = k
-                        new_v = replace_data_info(v, data_schema)
-                    result[new_k] = new_v
-                    any_changes = any_changes or k != new_k or v is not new_v
-            return result if any_changes else subject
-        schema_1 = self.hyperparam_schema()
-        schema_2 = fix_hyperparams(schema_1)
-        schema_3 = replace_data_info(schema_2, data_schema)
-        return schema_3
+        s_1 = self.hyperparam_schema()
+        s_2 = fix_hyperparams(s_1)
+        s_3 = lale.type_checking.replace_data_constraints(s_2, data_schema)
+        return s_3
 
     # This should *only* ever be called by the sklearn_compat wrapper
     def set_params(self, **impl_params):
@@ -1268,6 +1256,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         logger.info('%s enter fit %s', time.asctime(), self.name())
         X = self._validate_input_schema('X', X, 'fit')
         y = self._validate_input_schema('y', y, 'fit')
+        self._validate_hyperparam_data_constraints(X, y)
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
         trainable_impl = self._clone_impl()
         if filtered_fit_params is None:
@@ -1285,6 +1274,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise AttributeError(f'{self.name()} has no partial_fit implemented.')
         X = self._validate_input_schema('X', X, 'partial_fit')
         y = self._validate_input_schema('y', y, 'partial_fit')
+        self._validate_hyperparam_data_constraints(X, y)
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
         trainable_impl = self._clone_impl()
         if filtered_fit_params is None:

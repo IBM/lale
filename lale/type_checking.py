@@ -360,3 +360,46 @@ def get_default_schema(impl):
         'tags': tags,
         'properties': method_schemas}
     return result
+
+_data_info_keys = {'laleMaximum': 'maximum'}
+
+def has_data_constraints(hyperparam_schema: JSON_TYPE) -> bool:
+    def recursive_check(subject: JSON_TYPE) -> bool:
+        if isinstance(subject, (list, tuple)):
+            for v in subject:
+                if recursive_check(v):
+                    return True
+        elif isinstance(subject, dict):
+            for k, v in subject.items():
+                if k in _data_info_keys or recursive_check(v):
+                    return True
+        return False
+    result = recursive_check(hyperparam_schema)
+    return result
+
+def replace_data_constraints(hyperparam_schema: JSON_TYPE, data_schema: JSON_TYPE) -> JSON_TYPE:
+    def recursive_replace(subject: JSON_TYPE) -> JSON_TYPE:
+        any_changes = False
+        if isinstance(subject, (list, tuple)):
+            result = []
+            for v in subject:
+                new_v = recursive_replace(v)
+                result.append(new_v)
+                any_changes = any_changes or v is not new_v
+            if isinstance(subject, tuple):
+                result = tuple(result)
+        elif isinstance(subject, dict):
+            result = {}
+            for k, v in subject.items():
+                if k in _data_info_keys:
+                    new_k = _data_info_keys[k]
+                    new_v = lale.helpers.json_lookup(
+                        'properties/' + v, data_schema)
+                else:
+                    new_k = k
+                    new_v = recursive_replace(v)
+                result[new_k] = new_v
+                any_changes = any_changes or k != new_k or v is not new_v
+        return result if any_changes else subject
+    result = recursive_replace(hyperparam_schema)
+    return result
