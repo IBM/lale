@@ -87,14 +87,12 @@ def is_empty_dict(val) -> bool:
 def dict_without(orig_dict: Dict[str, Any], key: str) -> Dict[str, Any]:
     return {k: orig_dict[k] for k in orig_dict if k != key}
 
-def json_lookup(ptr, jsn):
+def json_lookup(ptr, jsn, default=None):
     steps = ptr.split('/')
     sub_jsn = jsn
     for s in steps:
         if s not in sub_jsn:
-            from lale.pretty_print import json_to_string
-            j2s = lale.pretty_print.json_to_string(jsn)
-            raise ValueError(f"could not find step '{s}' of '{ptr}' in {j2s}")
+            return default
         sub_jsn = sub_jsn[s]
     return sub_jsn
 
@@ -152,7 +150,7 @@ def fold_schema(X, y, cv=1, is_classifier=True):
         aux_result = {**orig_schema, 'minItems': n_rows, 'maxItems': n_rows}
         return aux_result
     n_splits = cv if isinstance(cv, int) else cv.get_n_splits()
-    n_samples = y.shape[0]
+    n_samples = X.shape[0]
     if n_splits == 1:
         n_rows_fold = n_samples
     elif is_classifier:

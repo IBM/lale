@@ -1047,6 +1047,40 @@ class IndividualOp(Operator):
         self._invalidate_enum_attributes()
         return op
 
+    def _validate_hyperparams(self, hp_values, hp_schema):
+        try:
+            lale.type_checking.validate_schema(hp_values, hp_schema)
+        except jsonschema.ValidationError as e_orig:
+            e = e_orig if e_orig.parent is None else e_orig.parent
+            lale.type_checking.validate_is_schema(e.schema)
+            schema = lale.pretty_print.to_string(e.schema)
+            if [*e.schema_path][:3] == ['allOf', 0, 'properties']:
+                arg = e.schema_path[3]
+                reason = f'invalid value {arg}={e.instance}'
+                schema_path = f'argument {arg}'
+            elif [*e.schema_path][:3] == ['allOf', 0, 'additionalProperties']:
+                pref, suff = 'Additional properties are not allowed (', ')'
+                assert e.message.startswith(pref) and e.message.endswith(suff)
+                reason = 'argument ' + e.message[len(pref):-len(suff)]
+                schema_path = 'arguments and their defaults'
+                schema = self.hyperparam_defaults()
+            elif e.schema_path[0] == 'allOf' and int(e.schema_path[1]) != 0:
+                assert e.schema_path[2] == 'anyOf'
+                descr = e.schema['description']
+                if descr.endswith('.'):
+                    descr = descr[:-1]
+                reason = f'constraint {descr[0].lower()}{descr[1:]}'
+                schema_path = f'constraint {e.schema_path[1]}'
+            else:
+                reason = e.message
+                schema_path = e.schema_path
+            msg = f'Invalid configuration for {self.name()}(' \
+                + f'{lale.pretty_print.hyperparams_to_string(hp_values)}) ' \
+                + f'due to {reason}.\n' \
+                + f'Schema of {schema_path}: {schema}\n' \
+                + f'Value: {e.instance}'
+            raise jsonschema.ValidationError(msg) from e
+
     def _validate_hyperparam_data_constraints(self, X, y=None):
         hp_schema = self.hyperparam_schema()
         if not hasattr(self, '__has_data_constraints'):
@@ -1057,7 +1091,7 @@ class IndividualOp(Operator):
             data_schema = lale.helpers.fold_schema(X, y)
             hp_schema_2 = lale.type_checking.replace_data_constraints(
                 hp_schema, data_schema)
-            lale.type_checking.validate_schema(hyperparams, hp_schema_2)
+            self._validate_hyperparams(hyperparams, hp_schema_2)
 
     def validate_schema(self, X, y=None):
         if hasattr(self._impl, 'fit'):
@@ -1174,39 +1208,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         trainable_to_get_params = TrainableIndividualOp(_name=self.name(), _impl=None, _schemas=self._schemas)
         trainable_to_get_params._hyperparams = hyperparams
         params_all = trainable_to_get_params._get_params_all()
-        try:
-            lale.type_checking.validate_schema(params_all, self.hyperparam_schema())
-        except jsonschema.ValidationError as e_orig:
-            e = e_orig if e_orig.parent is None else e_orig.parent
-            lale.type_checking.validate_is_schema(e.schema)
-            schema = lale.pretty_print.to_string(e.schema)
-            if [*e.schema_path][:3] == ['allOf', 0, 'properties']:
-                arg = e.schema_path[3]
-                reason = f'invalid value {arg}={e.instance}'
-                schema_path = f'argument {arg}'
-            elif [*e.schema_path][:3] == ['allOf', 0, 'additionalProperties']:
-                pref, suff = 'Additional properties are not allowed (', ')'
-                assert e.message.startswith(pref) and e.message.endswith(suff)
-                reason = 'argument ' + e.message[len(pref):-len(suff)]
-                schema_path = 'arguments and their defaults'
-                schema = self.hyperparam_defaults()
-            elif e.schema_path[0] == 'allOf' and int(e.schema_path[1]) != 0:
-                assert e.schema_path[2] == 'anyOf'
-                descr = e.schema['description']
-                if descr.endswith('.'):
-                    descr = descr[:-1]
-                reason = f'constraint {descr[0].lower()}{descr[1:]}'
-                schema_path = f'constraint {e.schema_path[1]}'
-            else:
-                reason = e.message
-                schema_path = e.schema_path
-            msg = f'Invalid configuration for {self.name()}(' \
-                + f'{lale.pretty_print.hyperparams_to_string(hyperparams)}) ' \
-                + f'due to {reason}.\n' \
-                + f'Schema of {schema_path}: {schema}\n' \
-                + f'Value: {e.instance}'
-            raise jsonschema.ValidationError(msg) from e
-
+        self._validate_hyperparams(params_all, self.hyperparam_schema())
         if len(params_all) == 0:
             impl = class_()
         else:
