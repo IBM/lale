@@ -196,7 +196,7 @@ class SearchSpaceHPExprVisitor(Visitor):
             return accept(sum.sub_spaces[0], self, "")
         else:
             unique_name:str = self.get_unique_name("choice")
-            search_spaces = hp.choice(unique_name, [{i : accept(m, self, "")} for i, m in enumerate(sum.sub_spaces)])
+            search_spaces = hp.choice(unique_name, [{str(i) : accept(m, self, "")} for i, m in enumerate(sum.sub_spaces)])
             return search_spaces
 
     def visitSearchSpaceOperator(self, op:SearchSpaceOperator, path:str, counter=None):
