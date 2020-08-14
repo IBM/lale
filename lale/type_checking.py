@@ -361,7 +361,9 @@ def get_default_schema(impl):
         'properties': method_schemas}
     return result
 
-_data_info_keys = {'laleMaximum': 'maximum'}
+_data_info_keys = {
+    'laleMaximum': 'maximum',
+    'laleNot': 'not'}
 
 def has_data_constraints(hyperparam_schema: JSON_TYPE) -> bool:
     def recursive_check(subject: JSON_TYPE) -> bool:
@@ -392,12 +394,16 @@ def replace_data_constraints(hyperparam_schema: JSON_TYPE, data_schema: JSON_TYP
             result = {}
             for k, v in subject.items():
                 if k in _data_info_keys:
-                    new_k = _data_info_keys[k]
                     new_v = lale.helpers.json_lookup(
                         'properties/' + v, data_schema)
+                    if new_v is None:
+                        new_k = k
+                        new_v = v
+                    else:
+                        new_k = _data_info_keys[k]
                 else:
-                    new_k = k
                     new_v = recursive_replace(v)
+                    new_k = k
                 result[new_k] = new_v
                 any_changes = any_changes or k != new_k or v is not new_v
         return result if any_changes else subject

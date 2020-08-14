@@ -172,7 +172,9 @@ def ndarray_to_schema(array):
 
 def csr_matrix_to_schema(matrix):
     assert isinstance(matrix, scipy.sparse.csr_matrix)
-    return shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
+    result = shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
+    result['isSparse'] = {} #true schema
+    return result
 
 def dataframe_to_schema(df):
     assert isinstance(df, pd.DataFrame)
