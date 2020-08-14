@@ -1047,9 +1047,9 @@ class IndividualOp(Operator):
         self._invalidate_enum_attributes()
         return op
 
-    def _validate_hyperparams(self, hp_values, hp_schema):
+    def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema):
         try:
-            lale.type_checking.validate_schema(hp_values, hp_schema)
+            lale.type_checking.validate_schema(hp_all, hp_schema)
         except jsonschema.ValidationError as e_orig:
             e = e_orig if e_orig.parent is None else e_orig.parent
             lale.type_checking.validate_is_schema(e.schema)
@@ -1075,7 +1075,7 @@ class IndividualOp(Operator):
                 reason = e.message
                 schema_path = e.schema_path
             msg = f'Invalid configuration for {self.name()}(' \
-                + f'{lale.pretty_print.hyperparams_to_string(hp_values)}) ' \
+                + f'{lale.pretty_print.hyperparams_to_string(hp_explicit)}) ' \
                 + f'due to {reason}.\n' \
                 + f'Schema of {schema_path}: {schema}\n' \
                 + f'Value: {e.instance}'
@@ -1087,11 +1087,12 @@ class IndividualOp(Operator):
             has_dc = lale.type_checking.has_data_constraints(hp_schema)
             self.__has_data_constraints = has_dc
         if self.__has_data_constraints:
-            hyperparams = self._get_params_all()
+            hp_explicit = self._hyperparams
+            hp_all = self._get_params_all()
             data_schema = lale.helpers.fold_schema(X, y)
             hp_schema_2 = lale.type_checking.replace_data_constraints(
                 hp_schema, data_schema)
-            self._validate_hyperparams(hyperparams, hp_schema_2)
+            self._validate_hyperparams(hp_explicit, hp_all, hp_schema_2)
 
     def validate_schema(self, X, y=None):
         if hasattr(self._impl, 'fit'):
@@ -1208,7 +1209,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         trainable_to_get_params = TrainableIndividualOp(_name=self.name(), _impl=None, _schemas=self._schemas)
         trainable_to_get_params._hyperparams = hyperparams
         params_all = trainable_to_get_params._get_params_all()
-        self._validate_hyperparams(params_all, self.hyperparam_schema())
+        self._validate_hyperparams(hyperparams, params_all, self.hyperparam_schema())
         if len(params_all) == 0:
             impl = class_()
         else:
