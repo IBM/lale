@@ -31,3 +31,16 @@ class UnknownOp:
 
     def predict(self, X):
         return self._wrapped_model.predict(X)
+
+class BadClassifier:
+    def __init__(self, is_good=False):
+        self._hyperparams = {'is_good': is_good}
+
+    def get_params(self, deep:bool=False):
+        return self._hyperparams
+
+    def fit(self, X, y):
+        assert False, 'Bad fit method.'
+
+    def predict(self, X):
+        assert False, 'Bad predict method.'

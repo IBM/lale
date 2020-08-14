@@ -55,7 +55,8 @@ _hyperparams_schema = {
         'anyOf': [
         {   'type': 'object',
             'properties': {'with_mean': {'enum': [False]}}},
-        {   'laleNot': 'X/isSparse'}]}]}
+        {   'type': 'object',
+            'laleNot': 'X/isSparse'}]}]}
 
 _input_fit_schema = {
     'description': 'Compute the mean and std to be used for later scaling.',
