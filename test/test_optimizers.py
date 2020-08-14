@@ -837,3 +837,39 @@ class TestKNeighborsRegressor(unittest.TestCase):
             self.train_X, self.train_y, cv=3, optimizer=SMAC,
             max_evals=3, scoring='r2')
         predicted = trained.predict(self.test_X)
+
+class TestStandardScaler(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        import scipy.sparse
+        #from lale.datasets.data_schemas import add_schema
+        all_X, all_y = load_iris(return_X_y=True)
+        denseTrainX, self.test_X, self.train_y, self.test_y = train_test_split(
+            all_X, all_y, train_size=0.8, test_size=0.2,
+            shuffle=True, random_state=42)
+        #self.train_X = add_schema(scipy.sparse.csr_matrix(denseTrainX))
+        self.train_X = scipy.sparse.csr_matrix(denseTrainX)
+
+    def test_schema_validation(self):
+        trainable_okay = StandardScaler(with_mean=False) >> LogisticRegression()
+        trained_okay = trainable_okay.fit(self.train_X, self.train_y)
+        trainable_bad = StandardScaler(with_mean=True) >> LogisticRegression()
+        with self.assertRaises(jsonschema.ValidationError):
+            trained_bad = trainable_bad.fit(self.train_X, self.train_y)
+
+    def test_hyperopt(self):
+        planned = StandardScaler >> LogisticRegression().freeze_trainable()
+        trained = planned.auto_configure(
+            self.train_X, self.train_y, cv=3, optimizer=Hyperopt,
+            max_evals=3, verbose=True, scoring='r2')
+        predicted = trained.predict(self.test_X)
+
+    def test_gridsearch(self):
+        planned = StandardScaler >> LogisticRegression().freeze_trainable()
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')
+            trained = planned.auto_configure(
+                self.train_X, self.train_y, optimizer=GridSearchCV,
+                cv=3, scoring='r2')
+        predicted = trained.predict(self.test_X)

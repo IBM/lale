@@ -40,7 +40,7 @@ def _kind_tag(schema):
         return 'union type'
     elif 'allOf' in schema:
         return 'intersection type'
-    elif 'not' in schema:
+    elif 'not' in schema or 'laleNot' in schema:
         return 'negated type'
     else:
         return 'any type'
@@ -60,6 +60,8 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     if 'maximum' in schema:
         op = '<' if schema.get('exclusiveMaximum', False) else '<='
         tags.append(op + _value_docstring(schema['maximum']))
+    if 'laleMaximum' in schema:
+        tags.append('<=' + _value_docstring(schema['laleMaximum']))
     if 'maximumForOptimizer' in schema:
         tags.append('<=' + _value_docstring(schema['maximumForOptimizer'])
                     + ' for optimizer')
@@ -93,6 +95,8 @@ def _schema_docstring(name, schema, required=True, relevant=True):
         body = '\n\n'.join(item_docstrings)
     elif 'not' in schema:
         body = item_docstring(None, schema['not'])
+    elif 'laleNot' in schema:
+        body = f"  - '{schema['laleNot']}'"
     elif schema.get('type', '') == 'array':
         if 'items' in schema:
             items_schemas = schema['items']

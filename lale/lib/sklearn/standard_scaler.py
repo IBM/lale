@@ -12,18 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.preprocessing.data
+import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
 class StandardScalerImpl():
-
     def __init__(self, copy=True, with_mean=True, with_std=True):
         self._hyperparams = {
             'copy': copy,
             'with_mean': with_mean,
             'with_std': with_std}
-        self._wrapped_model = sklearn.preprocessing.data.StandardScaler(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.StandardScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)
@@ -33,10 +32,9 @@ class StandardScalerImpl():
         return self._wrapped_model.transform(X, copy)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Standardize features by removing the mean and scaling to unit variance',
-    'allOf': [{
-        'type': 'object',
+    'allOf': [
+    {   'type': 'object',
         'required': ['copy', 'with_mean', 'with_std'],
         'relevantToOptimizer': ['with_mean', 'with_std'],
         'additionalProperties': False,
@@ -52,11 +50,14 @@ _hyperparams_schema = {
             'with_std': {
                 'type': 'boolean',
                 'default': True,
-                'description': 'If True, scale the data to unit variance (or equivalently, unit standard deviation).'},
-}}]}
+                'description': 'If True, scale the data to unit variance (or equivalently, unit standard deviation).'}}},
+    {   'description': 'Setting `with_mean` to True does not work on sparse matrices, because centering them entails building a dense matrix which in common use cases is likely to be too large to fit in memory.',
+        'anyOf': [
+        {   'type': 'object',
+            'properties': {'with_mean': {'enum': [False]}}},
+        {   'laleNot': 'X/isSparse'}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the mean and std to be used for later scaling.',
     'type': 'object',
     'required': ['X'],
@@ -69,11 +70,9 @@ _input_fit_schema = {
                     'type': 'number'},
             },
             'description': 'The data used to compute the mean and standard deviation'},
-        'y': {'description': 'Ignored'},
-    },
-}
+        'y': {'description': 'Ignored'}}}
+
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform standardization by centering and scaling',
     'type': 'object',
     'required': ['X'],
@@ -91,15 +90,13 @@ _input_transform_schema = {
                 'type': 'boolean'}, {
                 'enum': [None]}],
             'default': None,
-            'description': 'Copy the input X or not.'},
-    },
-}
+            'description': 'Copy the input X or not.'}}}
+
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform standardization by centering and scaling',
     'type': 'array',
-    'items': {'type': 'array', 'items': {'type': 'number'}}
-}
+    'items': {'type': 'array', 'items': {'type': 'number'}}}
+
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Standard scaler`_ transformer from scikit-learn.
