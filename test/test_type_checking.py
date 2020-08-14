@@ -45,9 +45,9 @@ class TestDatasetSchemas(unittest.TestCase):
         (train_X, train_y), (test_X, test_y) = openml.fetch(
             'credit-g', 'classification', preprocess=False)
         cls._creditG = {'X': train_X, 'y': train_y}
-        # from lale.datasets import load_movie_review #TODO: commenting out for now since the dataset link is broken.
-        # train_X, train_y = load_movie_review()
-        cls._movies = {'X': train_X, 'y': train_y}#will use creditG for now.
+        from lale.datasets import load_movie_review 
+        train_X, train_y = load_movie_review()
+        cls._movies = {'X': train_X, 'y': train_y}
         from lale.datasets.uci.uci_datasets import fetch_drugscom
         train_X, train_y, test_X, test_y = fetch_drugscom()
         cls._drugRev = {'X': train_X, 'y': train_y}
