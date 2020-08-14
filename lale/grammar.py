@@ -28,7 +28,15 @@ class NonTerminal(Operator):
 
     def input_schema_fit(self):
         raise NotImplementedError() #TODO
-        
+
+    def freeze_trainable(self)->'Operator':
+        raise NotImplementedError() #TODO
+
+    def is_frozen_trainable(self)->bool:
+        raise NotImplementedError() #TODO
+
+    def is_classifier(self)->bool:
+        raise NotImplementedError() #TODO
         
 class Grammar(Operator):
     """ Base class for Lale grammars.
@@ -65,6 +73,15 @@ class Grammar(Operator):
         raise NotImplementedError() #TODO
 
     def input_schema_fit(self):
+        raise NotImplementedError() #TODO
+
+    def freeze_trainable(self)->'Operator':
+        raise NotImplementedError() #TODO
+
+    def is_frozen_trainable(self)->bool:
+        raise NotImplementedError() #TODO
+
+    def is_classifier(self)->bool:
         raise NotImplementedError() #TODO
 
     def _unfold(self, op: Operator, n: int) -> Optional[Operator]:
