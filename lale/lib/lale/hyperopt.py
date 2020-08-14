@@ -83,9 +83,15 @@ class HyperoptImpl:
         self.search_space = hyperopt.hp.choice(
             'meta_model', [hyperopt_search_space(self.estimator, pgo=self.pgo,
                                                  data_schema=data_schema)])
-         #Create a search space with default hyperparameters for all trainable parts of the pipeline. 
-         #This search space is used for `frac_evals_with_defaults` fraction of the total trials. 
-        self.search_space_with_defaults = hyperopt.hp.choice('meta_model', [hyperopt_search_space(self.estimator.freeze_trainable(), pgo=self.pgo, data_schema=data_schema)])
+        #Create a search space with default hyperparameters for all trainable parts of the pipeline. 
+        #This search space is used for `frac_evals_with_defaults` fraction of the total trials. 
+        try:
+            self.search_space_with_defaults = hyperopt.hp.choice('meta_model', 
+                                                [hyperopt_search_space(self.estimator.freeze_trainable(), 
+                                                pgo=self.pgo, data_schema=data_schema)])
+        except:
+            logger.warning(f"Exception caught during generation of default search space, setting frac_evals_with_defaults to zero.")
+            self.evals_with_defaults = 0
 
         def hyperopt_train_test(params, X_train, y_train):
             warnings.filterwarnings("ignore")
