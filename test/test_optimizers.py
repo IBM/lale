@@ -167,7 +167,10 @@ class TestSMAC(unittest.TestCase):
     def test_smac2(self):
         from sklearn.metrics import accuracy_score
         from lale.lib.lale import SMAC
-        planned_pipeline = (PCA | NoOp) >> KNeighborsClassifier(n_neighbors = 10000)
+        from test.mock_module import BadClassifier
+        import lale.operators
+        BadClf = lale.operators.make_operator(BadClassifier)
+        planned_pipeline = (PCA | NoOp) >> BadClf()
         opt = SMAC(estimator=planned_pipeline, max_evals=1)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
