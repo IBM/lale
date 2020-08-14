@@ -171,7 +171,6 @@ class TestSMAC(unittest.TestCase):
         import lale.operators
         BadClf = lale.operators.make_operator(BadClassifier)
         planned_pipeline = (PCA | NoOp) >> BadClf()
-        # planned_pipeline = (PCA | NoOp) >> KNeighborsClassifier(n_neighbors = 10000)
         opt = SMAC(estimator=planned_pipeline, max_evals=1)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
