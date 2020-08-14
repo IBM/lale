@@ -73,7 +73,8 @@ _hyperparams_schema = {
             'analyzer': {
                 'anyOf': [
                 {   'enum': ['word', 'char', 'char_wb']},
-                {   'laleType': 'callable'}],
+                {   'laleType': 'callable',
+                    'forOptimizer': False}],
                 'default': 'word'},
             'stop_words': {
                 'anyOf': [{
