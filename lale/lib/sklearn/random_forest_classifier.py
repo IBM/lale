@@ -88,7 +88,6 @@ _hyperparams_schema = {
                 {   'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
-                    'maximum': 1.0,
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
                     'description': 'min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.'}],
