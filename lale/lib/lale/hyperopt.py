@@ -43,7 +43,7 @@ logger.setLevel(logging.ERROR)
 
 class HyperoptImpl:
 
-    def __init__(self, estimator=None, max_evals=50, frac_evals_with_defaults = 0.1, algo='tpe',
+    def __init__(self, estimator=None, max_evals=50, frac_evals_with_defaults = 0, algo='tpe',
                  cv=5, handle_cv_failure=False,
                  scoring='accuracy', best_score=0.0,
                  max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None,
@@ -347,7 +347,7 @@ This value would allow a fraction of the trials to use default values. Hyperopt 
 for (1-frac_evals_with_defaults) fraction of max_evals.''',
                 'type':'number',
                 'minimum':0.0,
-                'default':0.1},
+                'default':0},
             'cv': {
                 'description': """Cross-validation as integer or as object that has a split function.
 
