@@ -167,7 +167,10 @@ class TestSMAC(unittest.TestCase):
     def test_smac2(self):
         from sklearn.metrics import accuracy_score
         from lale.lib.lale import SMAC
-        planned_pipeline = (PCA | NoOp) >> KNeighborsClassifier(n_neighbors = 10000)
+        from test.mock_module import BadClassifier
+        import lale.operators
+        BadClf = lale.operators.make_operator(BadClassifier)
+        planned_pipeline = (PCA | NoOp) >> BadClf()
         opt = SMAC(estimator=planned_pipeline, max_evals=1)
         # run optimizer
         res = opt.fit(self.X_train, self.y_train)
@@ -544,6 +547,17 @@ class TestAutoConfigureClassification(unittest.TestCase):
         best = choice.auto_configure(self.X_train, self.y_train,
                                      optimizer=Hyperopt, cv=3, max_evals=3)
         predictions = best.predict(self.X_test)
+
+    def test_with_Hyperopt_3(self):
+        from lale.lib.sklearn import PCA, LogisticRegression
+        from lale.lib.lale import NoOp, Hyperopt
+
+        planned_pipeline = (PCA() | Nystroem()) >> (LogisticRegression()|KNeighborsClassifier())
+        best_pipeline = planned_pipeline.auto_configure(self.X_train, self.y_train, optimizer = Hyperopt, cv = 3, 
+            scoring='accuracy', max_evals=10, frac_evals_with_defaults=0.2)
+        predictions = best_pipeline.predict(self.X_test)
+        from lale.operators import TrainedPipeline
+        assert isinstance(best_pipeline, TrainedPipeline)
 
     def test_with_gridsearchcv(self):
         from lale.lib.sklearn import PCA, LogisticRegression

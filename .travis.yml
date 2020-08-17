@@ -8,7 +8,6 @@ env:
     # and add a line below with NOTEBOOK_CATEGORY="$prefix" TEST_CASES="test/test_notebooks.py"
     - ALL_NOTEBOOK_CATEGORIES="demo_ docs_ talk_"
   jobs:
-    - SETUP_TARGET=.[test] JUST_RUN_STATIC_TESTS=yes 
     - SETUP_TARGET=.[test] TEST_CASES="test/test_core_operators.py" 
     - SETUP_TARGET=.[full,test] TEST_CASES="test/test_core_operators_classifiers.py" 
     - SETUP_TARGET=.[full,test] TEST_CASES="test/test_core_operators_regressors.py" 
@@ -52,31 +51,32 @@ install:
   - pip install $SETUP_TARGET
   - export PYTHONPATH=`pwd`
 script:
-  - |
-    if [ "z${JUST_RUN_STATIC_TESTS}" == "zyes" ]; then
-      echo -e "${ANSI_GREEN}Compiling all...${ANSI_RESET}" && echo -en 'travis_fold:start:compile\\r'
-      python -m compileall .
-      echo -en 'travis_fold:end:compile\\r'
-      echo -e "${ANSI_GREEN}Running flake8...${ANSI_RESET}" && echo -en 'travis_fold:start:flake8\\r'
-      flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
-      echo -en 'travis_fold:end:flake8\\r'
-      echo -e "${ANSI_GREEN}Running mypy...${ANSI_RESET}" && echo -en 'travis_fold:start:mypy\\r'
-      mypy -p lale
-      echo -en 'travis_fold:end:mypy\\r'
-    else
-      echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
-      travis_wait 60 py.test -v --cov-report=xml --cov=lale $TEST_CASES
-      bash <(curl -s https://codecov.io/bash)
-      echo -en 'travis_fold:end:tests\\r'
-    fi
+    - echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
+    - travis_wait 60 py.test -v --cov-report=xml --cov=lale $TEST_CASES
+    - bash <(curl -s https://codecov.io/bash)
+    - echo -en 'travis_fold:end:tests\\r'
 stages:
+  - static_tests
   - test
   - deploy
 jobs:
   include:
+    - stage: static_tests
+      script:
+        - echo -e "${ANSI_GREEN}Compiling all...${ANSI_RESET}" && echo -en 'travis_fold:start:compile\\r'
+        - python -m compileall .
+        - echo -en 'travis_fold:end:compile\\r'
+        - echo -e "${ANSI_GREEN}Running flake8...${ANSI_RESET}" && echo -en 'travis_fold:start:flake8\\r'
+        - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
+        - echo -en 'travis_fold:end:flake8\\r'
+        - echo -e "${ANSI_GREEN}Running mypy...${ANSI_RESET}" && echo -en 'travis_fold:start:mypy\\r'
+        - mypy -p lale
+        - echo -en 'travis_fold:end:mypy\\r'
+      env: SETUP_TARGET=.[test]
     - stage: deploy
       install: skip
       script: skip
+      env: SETUP_TARGET=.[test]
       deploy:
           provider: pypi
           server: https://test.pypi.org/legacy/

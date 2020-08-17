@@ -45,7 +45,7 @@ class TestDatasetSchemas(unittest.TestCase):
         (train_X, train_y), (test_X, test_y) = openml.fetch(
             'credit-g', 'classification', preprocess=False)
         cls._creditG = {'X': train_X, 'y': train_y}
-        from lale.datasets import load_movie_review
+        from lale.datasets import load_movie_review 
         train_X, train_y = load_movie_review()
         cls._movies = {'X': train_X, 'y': train_y}
         from lale.datasets.uci.uci_datasets import fetch_drugscom
@@ -309,7 +309,6 @@ class TestDatasetSchemas(unittest.TestCase):
         input_schema = to_schema(self._digits['X'])
         transformed_schema = pipeline.transform_schema(input_schema)
         transformed_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'description':
                 'Probability of the sample for each class in the model.',
             'type': 'array',
@@ -323,7 +322,6 @@ class TestDatasetSchemas(unittest.TestCase):
         input_schema = to_schema(self._digits['X'])
         transformed_schema = choice.transform_schema(input_schema)
         transformed_expected = {
-            '$schema': 'http://json-schema.org/draft-04/schema#',
             'type': 'array',
             'items': {'type': 'array', 'items': {'type': 'number'}}}
         self.maxDiff = None

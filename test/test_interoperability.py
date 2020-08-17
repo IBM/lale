@@ -43,6 +43,7 @@ import sklearn.datasets
 from lale.sklearn_compat import make_sklearn_compat
 from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
+from jsonschema.exceptions import ValidationError
 
 @unittest.skip("Skipping here because travis-ci fails to allocate memory. This runs on internal travis.")
 class TestResNet50(unittest.TestCase):
@@ -81,7 +82,7 @@ def create_function_test_resampler(res_name):
         module = importlib.import_module(module_name)
 
         class_ = getattr(module, class_name)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValidationError):
             res = class_()
 
         #test_schemas_are_schemas
