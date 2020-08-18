@@ -1235,6 +1235,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             props = {k : {'enum' : [v]} for k, v in hyperparams.items()}
             obj = {'type':'object', 'properties':props}
             obj['relevantToOptimizer'] = list(hyperparams.keys())
+            obj['required'] = list(hyperparams.keys())
             top = {'allOf':[schema, obj]}
             return top
         s_1 = self.hyperparam_schema()
