@@ -1304,6 +1304,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             trained_impl = trainable_impl.fit(X, y)
         else:
             trained_impl = trainable_impl.fit(X, y, **filtered_fit_params)
+        # if the trainable fit method returns None, assume that 
+        # the trainableshould be used as the trained impl as well
+        if trained_impl is None:
+            trained_impl = trainable_impl
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
         self._trained = result
@@ -1323,6 +1327,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         else:
             trained_impl = trainable_impl.partial_fit(
                 X, y, **filtered_fit_params)
+        if trained_impl is None:
+            trained_impl = trainable_impl
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
         self._trained = result
