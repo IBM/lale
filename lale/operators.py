@@ -959,7 +959,9 @@ class IndividualOp(Operator):
         return self._impl
 
     def class_name(self)->str:
-        module = self._impl.__module__
+        module = None
+        if self._impl is not None:
+            module = self._impl.__module__
         if module is None or module == str.__class__.__module__:
             class_name = self.name()
         else:
