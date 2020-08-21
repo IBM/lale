@@ -16,7 +16,13 @@ def _value_docstring(value):
     return pprint.pformat(value, width=10000, compact=True)
 
 def _kind_tag(schema):
-    if 'type' in schema:
+    if 'anyOf' in schema:
+        return 'union type'
+    elif 'allOf' in schema:
+        return 'intersection type'
+    elif 'not' in schema or 'laleNot' in schema:
+        return 'negated type'
+    elif 'type' in schema:
         if schema['type'] == 'object':
             return 'dict'
         elif schema['type'] == 'number':
@@ -36,12 +42,6 @@ def _kind_tag(schema):
             prefix = ', '.join([_value_docstring(v) for v in values[:-1]])
             suffix = ', or ' + _value_docstring(values[-1])
             return prefix + suffix
-    elif 'anyOf' in schema:
-        return 'union type'
-    elif 'allOf' in schema:
-        return 'intersection type'
-    elif 'not' in schema or 'laleNot' in schema:
-        return 'negated type'
     else:
         return 'any type'
 
