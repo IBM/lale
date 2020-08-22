@@ -52,7 +52,7 @@ install:
   - export PYTHONPATH=`pwd`
 script:
     - echo -e "${ANSI_GREEN}Running Tests...${ANSI_RESET}" && echo -en 'travis_fold:start:tests\\r'
-    - travis_wait 60 py.test -v --cov-report=xml --cov=lale $TEST_CASES
+    - travis_wait 60 py.test -v --capture=tee-sys --cov-report=xml --cov=lale $TEST_CASES
     - bash <(curl -s https://codecov.io/bash)
     - echo -en 'travis_fold:end:tests\\r'
 stages:
