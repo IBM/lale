@@ -499,8 +499,7 @@ class TestComposition(unittest.TestCase):
     def test_two_estimators_predict_proba1(self):
         pipeline = StandardScaler()  >> ( PCA() & Nystroem() & PassiveAggressiveClassifier() )>>ConcatFeatures() >> NoOp() >> PassiveAggressiveClassifier()
         pipeline.fit(self.X_train, self.y_train)
-        with self.assertRaises(ValueError):
-            pipeline.predict_proba(self.X_test)
+        pipeline.predict_proba(self.X_test)
 
     def test_multiple_estimators_predict_predict_proba(self) :
         pipeline = (
