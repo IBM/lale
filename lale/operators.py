@@ -2487,21 +2487,20 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
             if len(inputs) == 1:
                 inputs = inputs[0]
-            if operator.is_transformer():
+            if operator in sink_nodes and hasattr(operator._impl, 'predict_proba'):#Since this is pipeline's predict_proba, we should invoke predict from sink nodes
+                output = operator.predict_proba(X = inputs)
+            elif operator.is_transformer():
                 output = operator.transform(X = inputs)
+                if hasattr(operator._impl, "get_transform_meta_output"):
+                    meta_output = operator._impl_instance().get_transform_meta_output()
+            elif hasattr(operator._impl, 'predict_proba'):#For estimator as a transformer, use predict_proba if available
+                output = operator.predict_proba(X = inputs)
+            elif hasattr(operator._impl, 'decision_function'):#For estimator as a transformer, use decision_function if available
+                output = operator.decision_function(X = inputs)
             else:
-                if operator in sink_nodes:
-                    if hasattr(operator._impl, 'predict_proba'):
-                        output = operator.predict_proba(X = inputs)
-                    else:
-                        raise ValueError("The sink node of the pipeline {} does not support a predict_proba method.".format(operator.name()))
-                else:#this behavior may be different later if we add user input.
-                    if hasattr(operator._impl, 'predict_proba'):
-                        output = operator.predict_proba(X = inputs)
-                    elif hasattr(operator._impl, 'decision_function'):
-                        output = operator.decision_function(X = inputs)
-                    else:
-                        output = operator._predict(X = inputs)
+                output = operator._predict(X = inputs)
+                if hasattr(operator._impl, "get_predict_meta_output"):
+                    meta_output = operator._impl_instance().get_predict_meta_output()
             outputs[operator] = output
         return outputs[self._steps[-1]]
 
