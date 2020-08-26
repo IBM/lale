@@ -959,7 +959,9 @@ class IndividualOp(Operator):
         return self._impl
 
     def class_name(self)->str:
-        module = self._impl.__module__
+        module = None
+        if self._impl is not None:
+            module = self._impl.__module__
         if module is None or module == str.__class__.__module__:
             class_name = self.name()
         else:
@@ -1235,6 +1237,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             props = {k : {'enum' : [v]} for k, v in hyperparams.items()}
             obj = {'type':'object', 'properties':props}
             obj['relevantToOptimizer'] = list(hyperparams.keys())
+            obj['required'] = list(hyperparams.keys())
             top = {'allOf':[schema, obj]}
             return top
         s_1 = self.hyperparam_schema()
@@ -1301,6 +1304,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             trained_impl = trainable_impl.fit(X, y)
         else:
             trained_impl = trainable_impl.fit(X, y, **filtered_fit_params)
+        # if the trainable fit method returns None, assume that 
+        # the trainableshould be used as the trained impl as well
+        if trained_impl is None:
+            trained_impl = trainable_impl
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
         self._trained = result
@@ -1320,6 +1327,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         else:
             trained_impl = trainable_impl.partial_fit(
                 X, y, **filtered_fit_params)
+        if trained_impl is None:
+            trained_impl = trainable_impl
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._hyperparams
         self._trained = result
@@ -2478,21 +2487,20 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 inputs = [outputs[pred][0] if isinstance(outputs[pred], tuple) else outputs[pred] for pred in preds]
             if len(inputs) == 1:
                 inputs = inputs[0]
-            if operator.is_transformer():
+            if operator in sink_nodes and hasattr(operator._impl, 'predict_proba'):#Since this is pipeline's predict_proba, we should invoke predict from sink nodes
+                output = operator.predict_proba(X = inputs)
+            elif operator.is_transformer():
                 output = operator.transform(X = inputs)
+                if hasattr(operator._impl, "get_transform_meta_output"):
+                    meta_output = operator._impl_instance().get_transform_meta_output()
+            elif hasattr(operator._impl, 'predict_proba'):#For estimator as a transformer, use predict_proba if available
+                output = operator.predict_proba(X = inputs)
+            elif hasattr(operator._impl, 'decision_function'):#For estimator as a transformer, use decision_function if available
+                output = operator.decision_function(X = inputs)
             else:
-                if operator in sink_nodes:
-                    if hasattr(operator._impl, 'predict_proba'):
-                        output = operator.predict_proba(X = inputs)
-                    else:
-                        raise ValueError("The sink node of the pipeline {} does not support a predict_proba method.".format(operator.name()))
-                else:#this behavior may be different later if we add user input.
-                    if hasattr(operator._impl, 'predict_proba'):
-                        output = operator.predict_proba(X = inputs)
-                    elif hasattr(operator._impl, 'decision_function'):
-                        output = operator.decision_function(X = inputs)
-                    else:
-                        output = operator._predict(X = inputs)
+                output = operator._predict(X = inputs)
+                if hasattr(operator._impl, "get_predict_meta_output"):
+                    meta_output = operator._impl_instance().get_predict_meta_output()
             outputs[operator] = output
         return outputs[self._steps[-1]]
 

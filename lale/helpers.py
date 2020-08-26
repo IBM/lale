@@ -40,14 +40,12 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-class NestedHyperoptSpace():
-    sub_space:Any
-    def __init__(self, sub_space):
-        self.sub_space = sub_space
-    def __str__(self):
-        return str(self.sub_space)
-    #define __repr__ so that __str__ gets invoked while printing lists and dictionaries
-    __repr__ = __str__
+LALE_NESTED_SPACE_KEY = '__lale_nested_space'
+
+def make_nested_hyperopt_space(sub_space):
+    return {
+        LALE_NESTED_SPACE_KEY : sub_space
+    }
 
 def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
@@ -290,8 +288,8 @@ def println_pos(message, out_file=sys.stdout):
         os.system('echo {}'.format(to_log))
 
 def instantiate_from_hyperopt_search_space(obj_hyperparams, new_hyperparams):
-    if isinstance(new_hyperparams, NestedHyperoptSpace):
-        sub_params = new_hyperparams.sub_space
+    if isinstance(new_hyperparams, dict) and LALE_NESTED_SPACE_KEY in new_hyperparams:
+        sub_params = new_hyperparams[LALE_NESTED_SPACE_KEY]
 
         sub_op = obj_hyperparams
         if isinstance(sub_op, list):

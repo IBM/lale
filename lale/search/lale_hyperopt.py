@@ -48,7 +48,7 @@ def pgo_sample(pgo, sample):
 
 @scope.define
 def make_nested_hyperopt(space):
-    return helpers.NestedHyperoptSpace(space)
+    return helpers.make_nested_hyperopt_space(space)
 
 class SearchSpaceHPExprVisitor(Visitor):
     names:Dict[str,int]
@@ -424,8 +424,8 @@ def pgo_sample(pgo, sample):
             self.nested_header = """
 @scope.define
 def make_nested_hyperopt(space):
-    from lale.helpers import NestedHyperoptSpace
-    return NestedHyperoptSpace(space)
+    from lale.helpers import make_nested_hyperopt_space
+    return make_nested_hyperopt_space(space)
 
 """
         return f"scope.make_nested_hyperopt({accept(op.sub_space, self, path, counter=counter, useCounter=useCounter)})"
