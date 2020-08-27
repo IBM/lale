@@ -16,10 +16,11 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 import lale.type_checking
-import sklearn.compose
+from lale.type_checking import is_schema
 import pandas as pd
+import numpy as np
 
-def _find_columns_matching_schema(X, schema):
+def _columns_schema_to_list(X, schema):
     s_all = lale.datasets.data_schemas.to_schema(X)
     s_row = s_all['items']
     n_columns = s_row['minItems']
@@ -37,21 +38,23 @@ def _find_columns_matching_schema(X, schema):
             if lale.type_checking.is_subschema(s_cols[i], schema)]
     return result
 
-def _fit_column_transformer(columns, kind, X):
-    assert kind in ['passthrough', 'drop']
+def _columns_to_list(columns, kind, X):
     if columns is None:
         if kind == 'passthrough':
-            if isinstance(X, pd.DataFrame):
-                columns = list(X.columns)
-            else:
-                columns = range(X.shape[1])
+            result = [*range(X.shape[1])]
         else:
-            columns = []
-    elif lale.type_checking.is_schema(columns):
-        columns = _find_columns_matching_schema(X, columns)
-    result = sklearn.compose.ColumnTransformer(
-        transformers=[(kind, kind, columns)])
-    result.fit(X)
+            result = []
+    elif isinstance(columns, list):
+        result = columns
+    elif callable(columns):
+        result = columns(X)
+    elif is_schema(columns):
+        result = _columns_schema_to_list(X, columns)
+    else:
+        raise TypeError(f'type {type(columns)}, columns {columns}')
+    if len(result) > 0 and isinstance(result[0], str):
+        name2idx = {name: idx for idx, name in enumerate(X.columns)}
+        result = [name2idx[name] for name in result]
     return result
 
 class ProjectImpl:
@@ -59,59 +62,55 @@ class ProjectImpl:
         self._hyperparams = {'columns': columns, 'drop_columns': drop_columns}
 
     def fit(self, X, y=None):
-        self._keep_col_tfm = _fit_column_transformer(
-            self._hyperparams['columns'], 'passthrough', X)
-        self._drop_col_tfm = _fit_column_transformer(
-            self._hyperparams['drop_columns'], 'drop', X)
+        keep_cols = self._hyperparams['columns']
+        keep_list = _columns_to_list(keep_cols, 'passthrough', X)
+        drop_cols = self._hyperparams['drop_columns']
+        drop_list = _columns_to_list(drop_cols, 'drop', X)
+        self._fit_columns = [c for c in keep_list if c not in drop_list]
         return self
 
     def transform(self, X):
-        result = None
         if isinstance(X, pd.DataFrame):
-            keep_cols = self._keep_col_tfm.transformers[0][2]
-            drop_cols = self._drop_col_tfm.transformers[0][2]
-            if isinstance(keep_cols, list) and isinstance(drop_cols, list):
-                keep_cols = [X.columns[c] if isinstance(c, int) else c
-                             for c in keep_cols]
-                drop_cols = [X.columns[c] if isinstance(c, int) else c
-                             for c in drop_cols]
-                diff_cols = [c for c in keep_cols if c not in drop_cols]
-                result = X[diff_cols]
-        if result is None:
-            keep_X = self._keep_col_tfm.transform(X)
-            result = self._drop_col_tfm.transform(keep_X)
+            if (len(self._fit_columns) == 0 or
+                isinstance(self._fit_columns[0], int)):
+                result = X.iloc[:, self._fit_columns]
+            else:
+                result = X[self._fit_columns]
+        elif isinstance(X, np.ndarray):
+            result = X[:, self._fit_columns]
+        else:
+            raise TypeError(f'type {type(X)}')
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
         return lale.datasets.data_schemas.add_schema(result, s_result)
 
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""
-        if hasattr(self, '_keep_col_tfm'):
-            return self._transform_schema_col_tfm(s_X)
-        keep_cols = self._hyperparams['columns']
-        drop_cols = self._hyperparams['drop_columns']
-        if ((keep_cols is None or lale.type_checking.is_schema(keep_cols))
-            and (drop_cols is None or lale.type_checking.is_schema(drop_cols))):
-            return self._transform_schema_schema(s_X, keep_cols, drop_cols)
-        if not lale.type_checking.is_schema(s_X):
+        if is_schema(s_X):
+            if hasattr(self, '_fit_columns'):
+                return self._transform_schema_fit_columns(s_X)
+            keep_cols = self._hyperparams['columns']
+            drop_cols = self._hyperparams['drop_columns']
+            if ((keep_cols is None or is_schema(keep_cols))
+                and (drop_cols is None or is_schema(drop_cols))):
+                return self._transform_schema_schema(s_X, keep_cols, drop_cols)
+            return s_X
+        else:
             X = lale.datasets.data_schemas.add_schema(s_X)
             self.fit(X)
-            return self._transform_schema_col_tfm(X.json_schema)
-        return s_X
+            return self._transform_schema_fit_columns(X.json_schema)
 
-    def _transform_schema_col_tfm(self, s_X):
+    def _transform_schema_fit_columns(self, s_X):
         s_X = lale.datasets.data_schemas.to_schema(s_X)
         s_row = s_X['items']
         s_cols = s_row['items']
-        keep_cols = [c for c in self._keep_col_tfm.transformers_[0][2]
-                     if c not in self._drop_col_tfm.transformers_[0][2]]
-        n_columns = len(keep_cols)
+        n_columns = len(self._fit_columns)
         if isinstance(s_cols, dict):
             s_cols_result = s_cols
         else:
             name2i = {s_cols[i]['description']: i for i in range(len(s_cols))}
             keep_cols_i = [name2i[col] if isinstance(col, str) else col
-                           for col in keep_cols]
+                           for col in self._fit_columns]
             s_cols_result = [s_cols[i] for i in keep_cols_i]
         s_result = {
             **s_X,
@@ -122,7 +121,6 @@ class ProjectImpl:
         return s_result
 
     def _transform_schema_schema(self, s_X, s_keep, s_drop):
-        from lale.pretty_print import json_to_string
         def is_keeper(column_schema):
             if s_keep is not None:
                 if not lale.type_checking.is_subschema(column_schema, s_keep):
@@ -160,25 +158,21 @@ _hyperparams_schema = {
             'columns': {
                 'description': """The subset of columns to retain.
 
-The supported column specification formats include those of
-scikit-learn's ColumnTransformer_, and in addition, filtering
-by using a JSON subschema_ check.
+The supported column specification formats include some of the ones
+from scikit-learn's ColumnTransformer_, and in addition, filtering by
+using a JSON subschema_ check.
 
 .. _ColumnTransformer: https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html
 .. _subschema: https://github.com/IBM/jsonsubschema""",
                 'anyOf': [
                 {   'enum': [None],
                     'description': 'If not specified, keep all columns.'},
-                {   'type': 'integer',
-                    'description': 'One column by index.'},
                 {   'type': 'array', 'items': {'type': 'integer'},
                     'description': 'Multiple columns by index.'},
-                {   'type': 'string',
-                    'description': 'One Dataframe column by name.'},
                 {   'type': 'array', 'items': {'type': 'string'},
                     'description': 'Multiple Dataframe columns by names.'},
-                {   'type': 'array', 'items': {'type': 'boolean'},
-                    'description': 'Boolean mask.'},
+                {   'laleType': 'callable',
+                    'description': 'Callable that is passed the input data X and can return a list of column names or indices.'},
                 {   'type': 'object',
                     'description': 'Keep columns whose schema is a subschema of this JSON schema.'}],
                 'default': None},
@@ -190,17 +184,13 @@ If both are specified, keep everything from `columns` that is not
 also in `drop_columns`.""",
                 'anyOf': [
                 {   'enum': [None],
-                    'description': 'If not specified, keep all columns.'},
-                {   'type': 'integer',
-                    'description': 'One column by index.'},
+                    'description': 'If not specified, drop no further columns.'},
                 {   'type': 'array', 'items': {'type': 'integer'},
                     'description': 'Multiple columns by index.'},
-                {   'type': 'string',
-                    'description': 'One Dataframe column by name.'},
                 {   'type': 'array', 'items': {'type': 'string'},
                     'description': 'Multiple Dataframe columns by names.'},
-                {   'type': 'array', 'items': {'type': 'boolean'},
-                    'description': 'Boolean mask.'},
+                {   'laleType': 'callable',
+                    'description': 'Callable that is passed the input data X and can return a list of column names or indices.'},
                 {   'type': 'object',
                     'description': 'Remove columns whose schema is a subschema of this JSON schema.'}],
                 'default': None}}}]}
