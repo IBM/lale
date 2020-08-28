@@ -65,6 +65,15 @@ Estimators and transformers:
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
 .. _`Observing`: lale.lib.lale.observing.html
+
+Functions:
+==========
+
+* lale.lib.lale. `categorical`_
+* lale.lib.lale. `date_time`_
+
+.. _`categorical`: lale.lib.lale.functions.html#lale.lib.lale.functions.categorical
+.. _`date_time`: lale.lib.lale.functions.html#lale.lib.lale.functions.date_time
 """
 
 #estimators
@@ -91,3 +100,7 @@ from .scan import Scan
 from .both import Both
 from .identity_wrapper import IdentityWrapper
 from .observing import Observing
+
+#functions
+from .functions import categorical
+from .functions import date_time
