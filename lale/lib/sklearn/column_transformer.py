@@ -68,6 +68,7 @@ _hyperparams_schema = {
              { 'type': 'array', 'items': {'type': 'boolean'},
                'description': 'Boolean mask.'},
              { 'laleType': 'callable',
+               'not': {'type': ['integer', 'array', 'string']},
                'description': 'Callable that is passed the input data X and can return any of the above.'}]}]}},
       'remainder': {
         'description':
