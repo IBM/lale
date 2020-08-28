@@ -11,7 +11,8 @@ def wrap_imported_operators():
     calling_frame = inspect.stack()[1][0]
     symtab = calling_frame.f_globals
     for name, impl in symtab.items():
-        if inspect.isclass(impl) and not issubclass(impl, Operator):
+        if (inspect.isclass(impl) and not issubclass(impl, Operator) and
+            (hasattr(impl, 'predict') or hasattr(impl, 'transform'))):
             module = impl.__module__.split('.')[0]
             klass = impl.__name__
             try:
@@ -28,4 +29,3 @@ def wrap_imported_operators():
                     hasattr(impl, 'predict') or hasattr(impl, 'transform')):
                         logger.info(f'Lale:Wrapped unkwnown operator:{name}')
                         symtab[name] = make_operator(impl=impl, name=name)
-      
