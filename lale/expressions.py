@@ -15,7 +15,7 @@
 import ast #see also https://greentreesnakes.readthedocs.io/
 import astunparse
 import pprint
-from typing import Any, Dict, Union
+from typing import Any, Dict, Optional, Union
 
 class Expr:
     _expr : ast.Expr
@@ -47,13 +47,15 @@ class Expr:
         attr = ast.Attribute(value=self._expr, attr=name)
         return Expr(attr)
 
-    def __getitem__(self, key : Union[int, slice]) -> 'Expr':
+    def __getitem__(self, key: Union[int, str, slice]) -> 'Expr':
         if isinstance(key, int):
-            key_ast = ast.Index(key)
+            key_ast = ast.Index(ast.Num(n=key))
+        elif isinstance(key, str):
+            key_ast = ast.Index(ast.Str(s=key))
         elif isinstance(key, slice):
             key_ast = ast.Slice(key.start, key.stop, key.step)
         else:
-            raise TypeError(f'expected int or slice, got {key}: {type(key)}')
+            raise TypeError(f'expected int, str, or slice, got {type(key)}')
         subscript = ast.Subscript(value=self._expr, slice=key_ast)
         return Expr(subscript)
 
@@ -64,8 +66,48 @@ def count(group: Expr) -> Expr:
     call = ast.Call(func=ast.Name(id='count'), args=[group._expr], keywords=[])
     return Expr(call)
 
+def day_of_month(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    if fmt is None:
+        args = [subject._expr]
+    else:
+        args = [subject._expr, ast.Str(s=fmt)]
+    call = ast.Call(func=ast.Name(id='day_of_month'), args=args, keywords=[])
+    return Expr(call)
+
+def day_of_week(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    if fmt is None:
+        args = [subject._expr]
+    else:
+        args = [subject._expr, ast.Str(s=fmt)]
+    call = ast.Call(func=ast.Name(id='day_of_week'), args=args, keywords=[])
+    return Expr(call)
+
+def hour(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    if fmt is None:
+        args = [subject._expr]
+    else:
+        args = [subject._expr, ast.Str(s=fmt)]
+    call = ast.Call(func=ast.Name(id='hour'), args=args, keywords=[])
+    return Expr(call)
+
 def max(group: Expr) -> Expr:
     call = ast.Call(func=ast.Name(id='max'), args=[group._expr], keywords=[])
+    return Expr(call)
+
+def minute(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    if fmt is None:
+        args = [subject._expr]
+    else:
+        args = [subject._expr, ast.Str(s=fmt)]
+    call = ast.Call(func=ast.Name(id='minute'), args=args, keywords=[])
+    return Expr(call)
+
+def month(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    if fmt is None:
+        args = [subject._expr]
+    else:
+        args = [subject._expr, ast.Str(s=fmt)]
+    call = ast.Call(func=ast.Name(id='month'), args=args, keywords=[])
     return Expr(call)
 
 def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
