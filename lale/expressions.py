@@ -117,6 +117,9 @@ def item(group: Expr, value : Union[int, str]) -> Expr:
 def max(group: Expr) -> Expr:
     return _make_call_expr('max', group)
 
+def max_gap_to_cutoff(group: Expr) -> Expr:
+    return _make_call_expr('max_gap_to_cutoff', group)
+
 def mean(group: Expr) -> Expr:
     return _make_call_expr('mean', group)
 
@@ -133,6 +136,18 @@ def month(subject: Expr, fmt:Optional[str]=None) -> Expr:
         return _make_call_expr('month', subject)
     return _make_call_expr('month', subject, fmt)
 
+def normalized_count(group: Expr) -> Expr:
+    return _make_call_expr('normalized_count', group)
+
+def normalized_sum(group: Expr) -> Expr:
+    return _make_call_expr('normalized_sum', group)
+
+def recent(series: Expr, age: int) -> Expr:
+    return _make_call_expr('recent', series, age)
+
+def recent_gap_to_cutoff(series: Expr, age: int) -> Expr:
+    return _make_call_expr('recent_gap_to_cutoff', series, age)
+
 def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
     old2new_str = pprint.pformat(old2new)
     module_ast = ast.parse(old2new_str)
@@ -142,10 +157,34 @@ def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
 def sum(group: Expr) -> Expr:
     return _make_call_expr('sum', group)
 
-def trend(group: Expr) -> Expr:
-    return _make_call_expr('trend', group)
+def trend(series: Expr) -> Expr:
+    return _make_call_expr('trend', series)
 
 def variance(group: Expr) -> Expr:
     return _make_call_expr('variance', group)
+
+def window_max(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_max', series, size)
+
+def window_max_trend(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_max_trend', series, size)
+
+def window_mean(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_mean', series, size)
+
+def window_mean_trend(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_mean_trend', series, size)
+
+def window_min(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_min', series, size)
+
+def window_min_trend(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_min_trend', series, size)
+
+def window_variance(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_variance', series, size)
+
+def window_variance_trend(series: Expr, size: int) -> Expr:
+    return _make_call_expr('window_variance_trend', series, size)
 
 it = Expr(ast.Name(id='it'))
