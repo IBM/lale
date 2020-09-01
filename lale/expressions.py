@@ -15,13 +15,22 @@
 import ast #see also https://greentreesnakes.readthedocs.io/
 import astunparse
 import pprint
-from typing import cast, Any, Dict, List, Optional, Union
+import typing
+from typing import Any, Dict, List, Optional, Union
+
+AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict)
+AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict]
+AstExprs = (
+    *AstLits, ast.Name, ast.Expr, ast.UnaryOp, ast.BinOp, ast.BoolOp,
+    ast.Compare, ast.Call, ast.Attribute, ast.Subscript)
+AstExpr = Union[
+    AstLit, ast.Name, ast.Expr, ast.UnaryOp, ast.BinOp, ast.BoolOp,
+    ast.Compare, ast.Call, ast.Attribute, ast.Subscript]
 
 class Expr:
-    _expr : ast.Expr
+    _expr: AstExpr
 
-    def __init__(self, expr):
-        #assert isinstance(expr, ast.Expr)
+    def __init__(self, expr: AstExpr):
         self._expr = expr
 
     def __bool__(self) -> bool:
@@ -64,79 +73,79 @@ class Expr:
     def __str__(self) -> str:
         return astunparse.unparse(self._expr).strip()
 
+def _make_ast_expr(arg: Union[Expr, int, float, str, AstExpr]) -> AstExpr:
+    if isinstance(arg, Expr):
+        return arg._expr
+    elif isinstance(arg, (int, float)):
+        return ast.Num(n=arg)
+    elif isinstance(arg, str):
+        return ast.Str(s=arg)
+    else:
+        assert isinstance(arg, AstExprs), type(arg)
+        return arg
+
+def _make_call_expr(name: str, *args: Union[Expr, AstExpr, int, str]) -> Expr:
+    func_ast = ast.Name(id=name)
+    args_asts = [_make_ast_expr(arg) for arg in args]
+    call_ast = ast.Call(func=func_ast, args=args_asts, keywords=[])
+    return Expr(call_ast)
+
 def count(group: Expr) -> Expr:
-    call = ast.Call(func=ast.Name(id='count'), args=[group._expr], keywords=[])
-    return Expr(call)
+    return _make_call_expr('count', group)
 
 def day_of_month(subject: Expr, fmt:Optional[str]=None) -> Expr:
-    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
-        args = [subject._expr]
-    else:
-        args = [subject._expr, ast.Str(s=fmt)]
-    call = ast.Call(func=ast.Name(id='day_of_month'), args=args, keywords=[])
-    return Expr(call)
+        return _make_call_expr('day_of_month', subject)
+    return _make_call_expr('day_of_month', subject, fmt)
 
 def day_of_week(subject: Expr, fmt:Optional[str]=None) -> Expr:
-    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
-        args = [subject._expr]
-    else:
-        args = [subject._expr, ast.Str(s=fmt)]
-    call = ast.Call(func=ast.Name(id='day_of_week'), args=args, keywords=[])
-    return Expr(call)
+        return _make_call_expr('day_of_week', subject)
+    return _make_call_expr('day_of_week', subject, fmt)
+
+def distinct_count(group: Expr) -> Expr:
+    return _make_call_expr('distinct_count', group)
 
 def hour(subject: Expr, fmt:Optional[str]=None) -> Expr:
-    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
-        args = [subject._expr]
-    else:
-        args = [subject._expr, ast.Str(s=fmt)]
-    call = ast.Call(func=ast.Name(id='hour'), args=args, keywords=[])
-    return Expr(call)
+        return _make_call_expr('hour', subject)
+    return _make_call_expr('hour', subject, fmt)
 
 def item(group: Expr, value : Union[int, str]) -> Expr:
-    args: List[Union[ast.Expr, ast.Num, ast.Str]]
-    if isinstance(value, int):
-        args = [group._expr, ast.Num(n=value)]
-    elif isinstance(value, str):
-        args = [group._expr, ast.Str(s=value)]
-    else:
-        raise TypeError(f'expected int or str value, got {type(value)}')
-    call = ast.Call(func=ast.Name(id='item'), args=args, keywords=[])
-    return Expr(call)
+    return _make_call_expr('item', group, value)
 
 def max(group: Expr) -> Expr:
-    call = ast.Call(func=ast.Name(id='max'), args=[group._expr], keywords=[])
-    return Expr(call)
+    return _make_call_expr('max', group)
+
+def mean(group: Expr) -> Expr:
+    return _make_call_expr('mean', group)
+
+def min(group: Expr) -> Expr:
+    return _make_call_expr('min', group)
 
 def minute(subject: Expr, fmt:Optional[str]=None) -> Expr:
-    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
-        args = [subject._expr]
-    else:
-        args = [subject._expr, ast.Str(s=fmt)]
-    call = ast.Call(func=ast.Name(id='minute'), args=args, keywords=[])
-    return Expr(call)
+        return _make_call_expr('minute', subject)
+    return _make_call_expr('minute', subject, fmt)
 
 def month(subject: Expr, fmt:Optional[str]=None) -> Expr:
-    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
-        args = [subject._expr]
-    else:
-        args = [subject._expr, ast.Str(s=fmt)]
-    call = ast.Call(func=ast.Name(id='month'), args=args, keywords=[])
-    return Expr(call)
+        return _make_call_expr('month', subject)
+    return _make_call_expr('month', subject, fmt)
 
 def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
     old2new_str = pprint.pformat(old2new)
-    old2new_ast = ast.parse(old2new_str)
-    call = ast.Call(func=ast.Name(id='replace'),
-                    args=[subject._expr, old2new_ast], keywords=[])
-    return Expr(call)
+    module_ast = ast.parse(old2new_str)
+    old2new_ast = typing.cast(ast.Expr, module_ast.body[0])
+    return _make_call_expr('replace', old2new_ast)
 
 def sum(group: Expr) -> Expr:
-    call = ast.Call(func=ast.Name(id='sum'), args=[group._expr], keywords=[])
-    return Expr(call)
+    return _make_call_expr('sum', group)
+
+def trend(group: Expr) -> Expr:
+    return _make_call_expr('trend', group)
+
+def variance(group: Expr) -> Expr:
+    return _make_call_expr('variance', group)
 
 it = Expr(ast.Name(id='it'))
