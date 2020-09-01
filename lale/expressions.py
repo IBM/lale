@@ -15,19 +15,20 @@
 import ast #see also https://greentreesnakes.readthedocs.io/
 import astunparse
 import pprint
-from typing import Any, Dict, Optional, Union
+from typing import cast, Any, Dict, List, Optional, Union
 
 class Expr:
     _expr : ast.Expr
 
-    def __init__(self, expr : ast.Expr):
+    def __init__(self, expr):
+        #assert isinstance(expr, ast.Expr)
         self._expr = expr
 
     def __bool__(self) -> bool:
         raise TypeError(f'Cannot convert expression e1=`{str(self)}` to bool.'
                         'Instead of `e1 and e2`, try writing `[e1, e2]`.')
 
-    def __eq__(self, other) -> 'Expr':
+    def __eq__(self, other):
         if isinstance(other, Expr):
             comp = ast.Compare(left=self._expr, ops=[ast.Eq()],
                                comparators=[other._expr])
@@ -35,7 +36,7 @@ class Expr:
         else:
             return False
 
-    def __ge__(self, other) -> 'Expr':
+    def __ge__(self, other) -> Union[bool, 'Expr']:
         if isinstance(other, Expr):
             comp = ast.Compare(left=self._expr, ops=[ast.GtE()],
                                comparators=[other._expr])
@@ -48,6 +49,7 @@ class Expr:
         return Expr(attr)
 
     def __getitem__(self, key: Union[int, str, slice]) -> 'Expr':
+        key_ast: Union[ast.Index, ast.Slice]
         if isinstance(key, int):
             key_ast = ast.Index(ast.Num(n=key))
         elif isinstance(key, str):
@@ -67,6 +69,7 @@ def count(group: Expr) -> Expr:
     return Expr(call)
 
 def day_of_month(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
         args = [subject._expr]
     else:
@@ -75,6 +78,7 @@ def day_of_month(subject: Expr, fmt:Optional[str]=None) -> Expr:
     return Expr(call)
 
 def day_of_week(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
         args = [subject._expr]
     else:
@@ -83,6 +87,7 @@ def day_of_week(subject: Expr, fmt:Optional[str]=None) -> Expr:
     return Expr(call)
 
 def hour(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
         args = [subject._expr]
     else:
@@ -90,11 +95,23 @@ def hour(subject: Expr, fmt:Optional[str]=None) -> Expr:
     call = ast.Call(func=ast.Name(id='hour'), args=args, keywords=[])
     return Expr(call)
 
+def item(group: Expr, value : Union[int, str]) -> Expr:
+    args: List[Union[ast.Expr, ast.Num, ast.Str]]
+    if isinstance(value, int):
+        args = [group._expr, ast.Num(n=value)]
+    elif isinstance(value, str):
+        args = [group._expr, ast.Str(s=value)]
+    else:
+        raise TypeError(f'expected int or str value, got {type(value)}')
+    call = ast.Call(func=ast.Name(id='item'), args=args, keywords=[])
+    return Expr(call)
+
 def max(group: Expr) -> Expr:
     call = ast.Call(func=ast.Name(id='max'), args=[group._expr], keywords=[])
     return Expr(call)
 
 def minute(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
         args = [subject._expr]
     else:
@@ -103,6 +120,7 @@ def minute(subject: Expr, fmt:Optional[str]=None) -> Expr:
     return Expr(call)
 
 def month(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    args: List[Union[ast.Expr, ast.Str]]
     if fmt is None:
         args = [subject._expr]
     else:
