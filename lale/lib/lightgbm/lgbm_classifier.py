@@ -57,10 +57,7 @@ or with
 
     def fit(self, X, y=None, **fit_params):
         try:
-            if fit_params is None:
-                self._wrapped_model.fit(X, y)
-            else:
-                self._wrapped_model.fit(X, y, **fit_params)
+            self._wrapped_model.fit(X, y, **fit_params)
         except Exception as e:
             raise RuntimeError(str(self._hyperparams)) from e
         return self

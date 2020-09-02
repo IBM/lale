@@ -65,10 +65,7 @@ or with
                 self.reg_lambda, self.scale_pos_weight, self.base_score, self.random_state, 
                 self.seed, self.missing, self.silent)
         result._wrapped_model = xgboost.XGBClassifier(**self.get_params())
-        if fit_params is None:
-            result._wrapped_model.fit(X, y)
-        else:
-            result._wrapped_model.fit(X, y, **fit_params)
+        result._wrapped_model.fit(X, y, **fit_params)
         return result
 
     def predict(self, X):

@@ -67,10 +67,7 @@ or with
                 self.seed, self.missing, self.importance_type)
         result._wrapped_model = xgboost.XGBRegressor(
                     **self.get_params())
-        if fit_params is None:
-            result._wrapped_model.fit(X, y)
-        else:
-            result._wrapped_model.fit(X, y, **fit_params)
+        result._wrapped_model.fit(X, y, **fit_params)
         return result
 
     def predict(self, X):

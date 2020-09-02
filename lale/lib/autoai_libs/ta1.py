@@ -47,10 +47,7 @@ class TA1Impl():
                     col_dtypes.append(np.float32)
             fit_params['col_names'] = col_names    
             fit_params['col_dtypes'] = col_dtypes
-        if fit_params is None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X, y, **fit_params)
+        self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def transform(self, X):
