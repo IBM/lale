@@ -255,7 +255,7 @@ class DecisionTreeClassifierImpl():
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
 
-DecisionTreeClassifier = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)
+DecisionTreeClassifier : lale.operators.IndividualOp = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)
 
 if sklearn.__version__ >= '0.22':
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
