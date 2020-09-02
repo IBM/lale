@@ -51,7 +51,7 @@ class Schema:
 class Bool(Schema):
     def __init__(self,
                  desc: Option[str] = undefined,
-                 default: Option[str] = undefined,
+                 default: Option[bool] = undefined,
                  forOptimizer: bool = True):
         super().__init__(desc, default, forOptimizer)
         self.set('type', 'boolean')
@@ -70,14 +70,14 @@ class Enum(Schema):
 class Float(Schema):
     def __init__(self,
                  desc: Option[str] = undefined,
-                 default: Option[str] = undefined,
+                 default: Option[float] = undefined,
                  forOptimizer: bool = True,
                  min: Option[float] = undefined,
                  exclusiveMin: Option[bool] = undefined,
-                 minForOptimizer: Option[bool] = undefined,
+                 minForOptimizer: Option[float] = undefined,
                  max: Option[float] = undefined,
                  exclusiveMax: Option[bool] = undefined,
-                 maxForOptimizer: Option[bool] = undefined,
+                 maxForOptimizer: Option[float] = undefined,
                  distribution: Option[str] = undefined):
         super().__init__(desc, default, forOptimizer)
         self.set('type', 'number')
@@ -93,7 +93,7 @@ class Float(Schema):
 class Int(Schema):
     def __init__(self,
                  desc: Option[str] = undefined,
-                 default: Option[str] = undefined,
+                 default: Option[int] = undefined,
                  forOptimizer: bool = True,
                  min: Option[int] = undefined,
                  exclusiveMin: Option[bool] = undefined,

@@ -1038,13 +1038,11 @@ class IndividualOp(Operator):
             elif arg == 'relevantToOptimizer':
                 assert isinstance(value, list)
                 op._schemas['properties']['hyperparams']['allOf'][0]['relevantToOptimizer'] = value
-            elif arg in lale.type_checking.get_hyperparam_names(op):
-                op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
             elif arg == 'tags':
                 assert isinstance(value, dict)
                 op._schemas['tags'] = value
             else:
-                assert False, "Unknown method or parameter."
+                op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
         # since the schema has changed, we need to invalidate any
         # cached enum attributes
         self._invalidate_enum_attributes()
