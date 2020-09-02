@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.ensemble.forest
+import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
@@ -35,7 +35,7 @@ class RandomForestRegressorImpl():
             'random_state': random_state,
             'verbose': verbose,
             'warm_start': warm_start}
-        self._wrapped_model = sklearn.ensemble.forest.RandomForestRegressor(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.RandomForestRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:

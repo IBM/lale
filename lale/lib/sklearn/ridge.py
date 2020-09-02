@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.linear_model.ridge
+import sklearn.linear_model
 import lale.operators
 
 class RidgeImpl():
@@ -27,7 +27,7 @@ class RidgeImpl():
             'tol': tol,
             'solver': solver,
             'random_state': random_state}
-        self._wrapped_model = sklearn.linear_model.ridge.Ridge(**self._hyperparams)
+        self._wrapped_model = sklearn.linear_model.Ridge(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:

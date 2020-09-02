@@ -20,8 +20,7 @@ import time
 import traceback
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection._split import check_cv
-from sklearn.metrics import log_loss
-from sklearn.metrics.scorer import check_scoring
+from sklearn.metrics import log_loss, check_scoring
 
 import lale.sklearn_compat
 import lale.docstrings

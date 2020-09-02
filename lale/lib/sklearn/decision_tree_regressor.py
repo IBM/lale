@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.tree.tree
+import sklearn.tree
 import lale.docstrings
 import lale.operators
 
@@ -31,7 +31,7 @@ class DecisionTreeRegressorImpl():
             'min_impurity_decrease': min_impurity_decrease,
             'min_impurity_split': min_impurity_split,
             'presort': presort}
-        self._wrapped_model = sklearn.tree.tree.DecisionTreeRegressor(**self._hyperparams)
+        self._wrapped_model = sklearn.tree.DecisionTreeRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:

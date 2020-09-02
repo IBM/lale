@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.linear_model.stochastic_gradient import SGDClassifier as SKLModel
+from sklearn.linear_model import SGDClassifier as SKLModel
 import lale.docstrings
 import lale.operators
 
