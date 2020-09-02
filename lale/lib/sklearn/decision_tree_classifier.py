@@ -125,7 +125,7 @@ _hyperparams_schema = {
                     'item': {
                         'type': 'object',
                         'additionalProperties': {'type': 'number'}}},
-                {   'enum': ['balanced', 'balanced_subsample', None]}],
+                {   'enum': ['balanced', None]}],
                 'description': 'Weights associated with classes in the form ``{class_label: weight}``.'},
             'presort': {
                 'type': 'boolean',
@@ -241,28 +241,12 @@ _combined_schemas = {
 
 
 class DecisionTreeClassifierImpl():        
-    def __init__(self, criterion='gini', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, class_weight=None, presort=False):
-        self._hyperparams = {
-            'criterion': criterion,
-            'splitter': splitter,
-            'max_depth': max_depth,
-            'min_samples_split': min_samples_split,
-            'min_samples_leaf': min_samples_leaf,
-            'min_weight_fraction_leaf': min_weight_fraction_leaf,
-            'max_features': max_features,
-            'random_state': random_state,
-            'max_leaf_nodes': max_leaf_nodes,
-            'min_impurity_decrease': min_impurity_decrease,
-            'min_impurity_split': min_impurity_split,
-            'class_weight': class_weight,
-            'presort': presort}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.tree.DecisionTreeClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        if fit_params is None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X, y, **fit_params)
+        self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def predict(self, X):
@@ -271,6 +255,22 @@ class DecisionTreeClassifierImpl():
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
 
-lale.docstrings.set_docstrings(DecisionTreeClassifierImpl, _combined_schemas)
-
 DecisionTreeClassifier = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.22':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
+    from lale.schemas import AnyOf, Bool, Enum, Float
+    DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
+        presort=AnyOf(
+            types=[Bool(), Enum(['deprecated'])],
+            desc='This parameter is deprecated and will be removed in v0.24.',
+            default='deprecated'),
+        ccp_alpha=Float(
+            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            default=0.0,
+            forOptimizer=True,
+            min=0.0,
+            maxForOptimizer=0.1))
+
+lale.docstrings.set_docstrings(DecisionTreeClassifierImpl, DecisionTreeClassifier._schemas)
