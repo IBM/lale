@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.preprocessing.data
+import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
@@ -24,7 +24,7 @@ class RobustScalerImpl():
             'with_scaling': with_scaling,
             'quantile_range': quantile_range,
             'copy': copy}
-        self._wrapped_model = sklearn.preprocessing.data.RobustScaler(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.RobustScaler(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

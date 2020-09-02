@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.ensemble.weight_boosting import AdaBoostClassifier as SKLModel
+from sklearn.ensemble import AdaBoostClassifier as SKLModel
 import lale.docstrings
 import lale.operators
 

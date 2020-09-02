@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.linear_model.passive_aggressive
+import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
@@ -38,7 +38,7 @@ class PassiveAggressiveClassifierImpl():
             'warm_start': warm_start,
             'class_weight': class_weight,
             'average': average}
-        self._wrapped_model = sklearn.linear_model.passive_aggressive.PassiveAggressiveClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.linear_model.PassiveAggressiveClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

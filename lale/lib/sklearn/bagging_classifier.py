@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.ensemble.bagging import BaggingClassifier as SKLModel
+from sklearn.ensemble import BaggingClassifier as SKLModel
 import lale.operators
 import lale.docstrings
 from lale.sklearn_compat import make_sklearn_compat

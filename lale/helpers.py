@@ -23,8 +23,7 @@ import traceback
 import scipy.sparse
 import importlib
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, log_loss
-from sklearn.metrics.scorer import check_scoring
+from sklearn.metrics import accuracy_score, log_loss, check_scoring
 from sklearn.utils.metaestimators import _safe_split
 import copy
 import logging

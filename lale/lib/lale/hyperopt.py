@@ -20,8 +20,7 @@ from lale.search.op2hp import hyperopt_search_space
 from lale.search.PGO import PGO
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection._split import check_cv
-from sklearn.metrics import log_loss
-from sklearn.metrics.scorer import check_scoring
+from sklearn.metrics import log_loss, check_scoring
 import warnings
 import numpy as np
 import pandas as pd

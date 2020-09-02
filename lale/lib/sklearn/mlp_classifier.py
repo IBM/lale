@@ -14,12 +14,12 @@
 
 import lale.operators
 import lale.docstrings
-import sklearn.neural_network.multilayer_perceptron
+import sklearn.neural_network
 
 class MLPClassifierImpl():
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.neural_network.MLPClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)
@@ -33,7 +33,7 @@ class MLPClassifierImpl():
 
     def partial_fit(self, X, y=None, classes = None):
       if not hasattr(self, "_wrapped_model"):
-        self._wrapped_model = sklearn.neural_network.multilayer_perceptron.MLPClassifier(
+        self._wrapped_model = sklearn.neural_network.MLPClassifier(
             **self._hyperparams)
       self._wrapped_model.partial_fit(X, y, classes = classes)
       return self

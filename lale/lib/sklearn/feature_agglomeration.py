@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.cluster.hierarchical
+import sklearn.cluster
 import lale.docstrings
 import lale.operators
 import numpy as np
@@ -28,7 +28,7 @@ class FeatureAgglomerationImpl():
             'compute_full_tree': compute_full_tree,
             'linkage': linkage,
             'pooling_func': pooling_func}
-        self._wrapped_model = sklearn.cluster.hierarchical.FeatureAgglomeration(**self._hyperparams)
+        self._wrapped_model = sklearn.cluster.FeatureAgglomeration(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.svm.classes
+import sklearn.svm
 import lale.docstrings
 import lale.operators
 
@@ -33,7 +33,7 @@ class SVCImpl():
             'max_iter': max_iter,
             'decision_function_shape': decision_function_shape,
             'random_state': random_state}
-        self._wrapped_model = sklearn.svm.classes.SVC(**self._hyperparams)
+        self._wrapped_model = sklearn.svm.SVC(**self._hyperparams)
 
     def fit(self, X, y=None, sample_weight=None):
         self._wrapped_model.fit(X, y, sample_weight)
