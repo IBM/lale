@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.preprocessing.data
+import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
@@ -23,7 +23,7 @@ class PolynomialFeaturesImpl():
             'degree': degree,
             'interaction_only': interaction_only,
             'include_bias': include_bias}
-        self._wrapped_model = sklearn.preprocessing.data.PolynomialFeatures(**self._hyperparams)
+        self._wrapped_model = sklearn.preprocessing.PolynomialFeatures(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)

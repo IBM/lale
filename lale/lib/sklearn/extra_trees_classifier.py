@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.ensemble.forest
+import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
@@ -37,7 +37,7 @@ class ExtraTreesClassifierImpl():
             'verbose': verbose,
             'warm_start': warm_start,
             'class_weight': class_weight}
-        self._wrapped_model = sklearn.ensemble.forest.ExtraTreesClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.ExtraTreesClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:

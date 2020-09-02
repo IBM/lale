@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.ensemble.gradient_boosting
+import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
@@ -42,7 +42,7 @@ class GradientBoostingRegressorImpl():
             'validation_fraction': validation_fraction,
             'n_iter_no_change': n_iter_no_change,
             'tol': tol}
-        self._wrapped_model = sklearn.ensemble.gradient_boosting.GradientBoostingRegressor(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.GradientBoostingRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         if fit_params is None:
