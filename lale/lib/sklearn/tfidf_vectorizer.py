@@ -16,14 +16,14 @@ import lale.docstrings
 import lale.operators
 import numpy as np
 import pandas as pd
-import sklearn.feature_extraction
+import sklearn.feature_extraction.text
 
 class TfidfVectorizerImpl():
     def __init__(self, **hyperparams):
         if 'dtype' in hyperparams and hyperparams['dtype'] == 'float64':
             hyperparams = {**hyperparams, 'dtype': np.float64}
         self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.feature_extraction.TfidfVectorizer(**self._hyperparams)
+        self._wrapped_model = sklearn.feature_extraction.text.TfidfVectorizer(**self._hyperparams)
 
     def fit(self, X, y=None):
         if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
