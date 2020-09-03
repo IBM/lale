@@ -17,20 +17,8 @@ import lale.docstrings
 import lale.operators
 
 class DecisionTreeRegressorImpl():
-    def __init__(self, criterion='mse', splitter='best', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features=None, random_state=None, max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, presort=False):
-        self._hyperparams = {
-            'criterion': criterion,
-            'splitter': splitter,
-            'max_depth': max_depth,
-            'min_samples_split': min_samples_split,
-            'min_samples_leaf': min_samples_leaf,
-            'min_weight_fraction_leaf': min_weight_fraction_leaf,
-            'max_features': max_features,
-            'random_state': random_state,
-            'max_leaf_nodes': max_leaf_nodes,
-            'min_impurity_decrease': min_impurity_decrease,
-            'min_impurity_split': min_impurity_split,
-            'presort': presort}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.tree.DecisionTreeRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
@@ -225,6 +213,24 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
 
-lale.docstrings.set_docstrings(DecisionTreeRegressorImpl, _combined_schemas)
 
+DecisionTreeRegressor : lale.operators.IndividualOp
 DecisionTreeRegressor = lale.operators.make_operator(DecisionTreeRegressorImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.22':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    from lale.schemas import AnyOf, Bool, Enum, Float
+    DecisionTreeRegressor = DecisionTreeRegressor.customize_schema(
+        presort=AnyOf(
+            types=[Bool(), Enum(['deprecated'])],
+            desc='This parameter is deprecated and will be removed in v0.24.',
+            default='deprecated'),
+        ccp_alpha=Float(
+            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            default=0.0,
+            forOptimizer=True,
+            min=0.0,
+            maxForOptimizer=0.1))
+
+lale.docstrings.set_docstrings(DecisionTreeRegressorImpl, DecisionTreeRegressor._schemas)

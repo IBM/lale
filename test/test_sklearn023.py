@@ -14,12 +14,18 @@
 
 import unittest
 import sklearn.datasets
+import sklearn.metrics
 import sklearn.model_selection
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import DecisionTreeClassifier
+from lale.lib.sklearn import DecisionTreeRegressor
 from lale.lib.sklearn import ExtraTreesClassifier
+from lale.lib.sklearn import ExtraTreesRegressor
 from lale.lib.sklearn import GradientBoostingClassifier
+from lale.lib.sklearn import GradientBoostingRegressor
+from lale.lib.sklearn import LogisticRegression
 from lale.lib.sklearn import RandomForestClassifier
+from lale.lib.sklearn import RandomForestRegressor
 
 assert sklearn.__version__ >= '0.23', 'This test is for scikit-learn 0.23.'
 
@@ -44,6 +50,28 @@ class TestDecisionTreeClassifier(unittest.TestCase):
                                          optimizer=Hyperopt, cv=3, max_evals=1)
         predicted = trained.predict(self.test_X)
 
+class TestDecisionTreeRegressor(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_diabetes(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = DecisionTreeRegressor()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_ccp_alpha(self):
+        trainable = DecisionTreeRegressor(ccp_alpha=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = DecisionTreeRegressor
+        trained = planned.auto_configure(
+            self.train_X, self.train_y, optimizer=Hyperopt,
+            scoring='r2', cv=3, max_evals=1)
+        predicted = trained.predict(self.test_X)
+
 class TestExtraTreesClassifier(unittest.TestCase):
     def setUp(self):
         X, y = sklearn.datasets.load_iris(return_X_y=True)
@@ -56,7 +84,7 @@ class TestExtraTreesClassifier(unittest.TestCase):
 
     def test_n_estimators(self):
         default = ExtraTreesClassifier.hyperparam_defaults()['n_estimators']
-        self.assertEquals(default, 100)
+        self.assertEqual(default, 100)
 
     def test_ccp_alpha(self):
         trainable = ExtraTreesClassifier(ccp_alpha=0.01)
@@ -72,6 +100,37 @@ class TestExtraTreesClassifier(unittest.TestCase):
         planned = ExtraTreesClassifier
         trained = planned.auto_configure(self.train_X, self.train_y,
                                          optimizer=Hyperopt, cv=3, max_evals=1)
+        predicted = trained.predict(self.test_X)
+
+class TestExtraTreesRegressor(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_diabetes(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = ExtraTreesRegressor()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_n_estimators(self):
+        default = ExtraTreesRegressor.hyperparam_defaults()['n_estimators']
+        self.assertEqual(default, 100)
+
+    def test_ccp_alpha(self):
+        trainable = ExtraTreesRegressor(ccp_alpha=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_max_samples(self):
+        trainable = ExtraTreesRegressor(max_samples=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = ExtraTreesRegressor
+        trained = planned.auto_configure(
+            self.train_X, self.train_y,
+            scoring='r2', optimizer=Hyperopt, cv=3, max_evals=1)
         predicted = trained.predict(self.test_X)
 
 class TestGradientBoostingClassifier(unittest.TestCase):
@@ -95,6 +154,49 @@ class TestGradientBoostingClassifier(unittest.TestCase):
                                          optimizer=Hyperopt, cv=3, max_evals=1)
         predicted = trained.predict(self.test_X)
 
+class TestGradientBoostingRegressor(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_diabetes(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = GradientBoostingRegressor()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_ccp_alpha(self):
+        trainable = GradientBoostingRegressor(ccp_alpha=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = GradientBoostingRegressor
+        trained = planned.auto_configure(
+            self.train_X, self.train_y,
+            scoring='r2', optimizer=Hyperopt, cv=3, max_evals=1)
+        predicted = trained.predict(self.test_X)
+
+
+class TestLogisticRegression(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = DecisionTreeClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_multi_class(self):
+        default = LogisticRegression.hyperparam_defaults()['multi_class']
+        self.assertEqual(default, 'auto')
+
+    def test_with_hyperopt(self):
+        planned = DecisionTreeClassifier
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=1)
+        predicted = trained.predict(self.test_X)
+
 class TestRandomForestClassifier(unittest.TestCase):
     def setUp(self):
         X, y = sklearn.datasets.load_iris(return_X_y=True)
@@ -107,7 +209,7 @@ class TestRandomForestClassifier(unittest.TestCase):
 
     def test_n_estimators(self):
         default = RandomForestClassifier.hyperparam_defaults()['n_estimators']
-        self.assertEquals(default, 100)
+        self.assertEqual(default, 100)
 
     def test_ccp_alpha(self):
         trainable = RandomForestClassifier(ccp_alpha=0.01)
@@ -123,4 +225,35 @@ class TestRandomForestClassifier(unittest.TestCase):
         planned = RandomForestClassifier
         trained = planned.auto_configure(self.train_X, self.train_y,
                                          optimizer=Hyperopt, cv=3, max_evals=1)
+        predicted = trained.predict(self.test_X)
+
+class TestRandomForestRegressor(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_diabetes(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = RandomForestRegressor()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_n_estimators(self):
+        default = RandomForestRegressor.hyperparam_defaults()['n_estimators']
+        self.assertEqual(default, 100)
+
+    def test_ccp_alpha(self):
+        trainable = RandomForestRegressor(ccp_alpha=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_max_samples(self):
+        trainable = RandomForestRegressor(max_samples=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = RandomForestRegressor
+        trained = planned.auto_configure(
+            self.train_X, self.train_y,
+            scoring='r2', optimizer=Hyperopt, cv=3, max_evals=1)
         predicted = trained.predict(self.test_X)
