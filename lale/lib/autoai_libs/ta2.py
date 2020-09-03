@@ -33,10 +33,7 @@ class TA2Impl():
         self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TA2(**self._hyperparams)
 
     def fit(self, X, y=None, **fit_params):
-        if fit_params is None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X, y, **fit_params)
+        self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def transform(self, X):
