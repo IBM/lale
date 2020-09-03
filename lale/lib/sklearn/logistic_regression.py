@@ -310,18 +310,17 @@ class LogisticRegressionImpl:
     def decision_function(self, X):
         return self._wrapped_model.decision_function(X)
 
-
-LogisticRegression : lale.operators.IndividualOp
 LogisticRegression = lale.operators.make_operator(LogisticRegressionImpl, _combined_schemas)
 
 if sklearn.__version__ >= '0.22':
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.LogisticRegression.html
     from lale.schemas import Enum
-    LogisticRegression = LogisticRegression.customize_schema(
+    import typing
+    LogisticRegression = typing.cast(lale.operators.PlannedIndividualOp, LogisticRegression.customize_schema(
         multi_class=Enum(
             values=['auto', 'ovr', 'multinomial'],
-            desc='If the option chosen is ‘ovr’, then a binary problem is fit for each label. For ‘multinomial’ the loss minimised is the multinomial loss fit across the entire probability distribution, even when the data is binary. ‘multinomial’ is unavailable when solver=’liblinear’. ‘auto’ selects ‘ovr’ if the data is binary, or if solver=’liblinear’, and otherwise selects ‘multinomial’.',
-            default='auto'))
+            desc='If the option chosen is `ovr`, then a binary problem is fit for each label. For `multinomial` the loss minimised is the multinomial loss fit across the entire probability distribution, even when the data is binary. `multinomial` is unavailable when solver=`liblinear`. `auto` selects `ovr` if the data is binary, or if solver=`liblinear`, and otherwise selects `multinomial`.',
+            default='auto')))
 
 lale.docstrings.set_docstrings(LogisticRegressionImpl, LogisticRegression._schemas)
