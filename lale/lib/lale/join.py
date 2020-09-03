@@ -17,8 +17,8 @@ import lale.operators
 from lale.expressions import Expr
 
 class JoinImpl:
-    def __init__(self, pred=None):
-        self._hyperparams = { 'pred': pred }
+    def __init__(self, pred=None, join_limit=None, sliding_window_length=None):
+        self._hyperparams = { 'pred': pred, 'join_limit': join_limit, 'sliding_window_length': sliding_window_length }
 
     def transform(self, X):
         raise NotImplementedError()
@@ -35,7 +35,22 @@ _hyperparams_schema = {
       'properties': {
         'pred': {
           'description': 'Join predicate. Given as Python AST expression.',
-          'laleType': 'Any' }}}]}
+          'laleType': 'Any' },
+        'join_limit': {
+          'description': """For join paths that are one-to-many, join_limit is use to sample the joined results.
+When the right hand side of the join has a timestamp column, the join_limit is applied to select the most recent rows.
+When the right hand side does not have a timestamp, it randomly samples join_limit number of rows.""",
+          'anyOf':[
+            {'type':'integer'},
+            {'enum': None}],
+          'default': None},
+        'sliding_window_length':{
+          'description':"""sliding_window_length is also used for sampling the joined results,
+only rows in a recent window of length sliding_window_length seconds is used in addition to join_limit.""",
+          'anyOf':[
+            {'type':'integer'},
+            {'enum': None}],
+          'default': None}}}]}
 
 _input_transform_schema = {
   'type': 'object',
