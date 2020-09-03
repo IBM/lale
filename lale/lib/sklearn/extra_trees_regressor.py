@@ -17,25 +17,8 @@ import lale.docstrings
 import lale.operators
 
 class ExtraTreesRegressorImpl():
-
-    def __init__(self, n_estimators=10, criterion='mse', max_depth=None, min_samples_split=2, min_samples_leaf=1, min_weight_fraction_leaf=0.0, max_features='auto', max_leaf_nodes=None, min_impurity_decrease=0.0, min_impurity_split=None, bootstrap=False, oob_score=False, n_jobs=None, random_state=None, verbose=0, warm_start=False):
-        self._hyperparams = {
-            'n_estimators': n_estimators,
-            'criterion': criterion,
-            'max_depth': max_depth,
-            'min_samples_split': min_samples_split,
-            'min_samples_leaf': min_samples_leaf,
-            'min_weight_fraction_leaf': min_weight_fraction_leaf,
-            'max_features': max_features,
-            'max_leaf_nodes': max_leaf_nodes,
-            'min_impurity_decrease': min_impurity_decrease,
-            'min_impurity_split': min_impurity_split,
-            'bootstrap': bootstrap,
-            'oob_score': oob_score,
-            'n_jobs': n_jobs,
-            'random_state': random_state,
-            'verbose': verbose,
-            'warm_start': warm_start}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.ensemble.ExtraTreesRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
@@ -228,6 +211,33 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
 
-lale.docstrings.set_docstrings(ExtraTreesRegressorImpl, _combined_schemas)
-
+ExtraTreesRegressor : lale.operators.IndividualOp
 ExtraTreesRegressor = lale.operators.make_operator(ExtraTreesRegressorImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.22':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
+    from lale.schemas import AnyOf, Float, Int, Null
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        n_estimators=Int(
+            desc='The number of trees in the forest.',
+            default=100,
+            forOptimizer=True,
+            minForOptimizer=10,
+            maxForOptimizer=100),
+        ccp_alpha=Float(
+            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            default=0.0,
+            forOptimizer=True,
+            min=0.0,
+            maxForOptimizer=0.1),
+        max_samples=AnyOf(
+            types=[
+                Null(desc='Draw X.shape[0] samples.'),
+                Int(desc='Draw max_samples samples.', min=1),
+                Float(desc='Draw max_samples * X.shape[0] samples.',
+                      min=0.0, exclusiveMin=True, max=1.0, exclusiveMax=True)],
+            desc='If bootstrap is True, the number of samples to draw from X to train each base estimator.',
+            default=None))
+
+lale.docstrings.set_docstrings(ExtraTreesRegressorImpl, ExtraTreesRegressor._schemas)
