@@ -17,8 +17,8 @@ import lale.operators
 from lale.expressions import Expr
 
 class AggregateImpl:
-    def __init__(self, columns):
-        self._hyperparams = { 'columns': columns }
+    def __init__(self, columns, group_by):
+        self._hyperparams = { 'columns': columns, 'group_by': group_by}
 
     def transform(self, X):
         raise NotImplementedError()
@@ -37,6 +37,15 @@ _hyperparams_schema = {
                     'type': 'object',
                     'additionalProperties': {'laleType': 'expression'}},
                 {   'description': 'List of aggregation expressions. The output column name is determined by a heuristic based on the input column name and the transformation function.',
+                    'type': 'array',
+                    'items': {'laleType': 'expression'}}],
+                'default': []},
+            'group_by':{
+                'description': 'Group by columns for aggregates.',
+                'anyOf': [
+                {   'description': 'Expressions for columns name if there is a single column.',
+                    'laleType': 'expression'},
+                {   'description': 'List of expressions for columns.',
                     'type': 'array',
                     'items': {'laleType': 'expression'}}],
                 'default': []}}}]}
