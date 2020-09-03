@@ -39,7 +39,8 @@ _hyperparams_schema = {
         'join_limit': {
           'description': """For join paths that are one-to-many, join_limit is use to sample the joined results.
 When the right hand side of the join has a timestamp column, the join_limit is applied to select the most recent rows.
-When the right hand side does not have a timestamp, it randomly samples join_limit number of rows.""",
+When the right hand side does not have a timestamp, it randomly samples join_limit number of rows.
+Sampling is applied after each pair of tables are joined.""",
           'anyOf':[
             {'type':'integer'},
             {'enum': None}],
