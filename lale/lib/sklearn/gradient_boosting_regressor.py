@@ -45,10 +45,7 @@ class GradientBoostingRegressorImpl():
         self._wrapped_model = sklearn.ensemble.GradientBoostingRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        if fit_params is None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X, y, **fit_params)
+        self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def predict(self, X):

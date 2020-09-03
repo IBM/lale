@@ -42,10 +42,7 @@ class DecisionTreeClassifierImpl():
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
         y = lale.datasets.data_schemas.strip_schema(y)
-        if fit_params is None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X, y, **fit_params)
+        self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def predict(self, X, **predict_params):
