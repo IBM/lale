@@ -103,6 +103,11 @@ def day_of_week(subject: Expr, fmt:Optional[str]=None) -> Expr:
         return _make_call_expr('day_of_week', subject)
     return _make_call_expr('day_of_week', subject, fmt)
 
+def day_of_year(subject: Expr, fmt:Optional[str]=None) -> Expr:
+    if fmt is None:
+        return _make_call_expr('day_of_year', subject)
+    return _make_call_expr('day_of_year', subject, fmt)
+
 def distinct_count(group: Expr) -> Expr:
     return _make_call_expr('distinct_count', group)
 

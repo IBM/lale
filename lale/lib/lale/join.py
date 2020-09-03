@@ -42,15 +42,15 @@ When the right hand side of the join has a timestamp column, the join_limit is a
 When the right hand side does not have a timestamp, it randomly samples join_limit number of rows.
 Sampling is applied after each pair of tables are joined.""",
           'anyOf':[
-            {'type':'integer'},
-            {'enum': None}],
+            {'type':'number'},
+            {'enum':[None]}],
           'default': None},
         'sliding_window_length':{
           'description':"""sliding_window_length is also used for sampling the joined results,
 only rows in a recent window of length sliding_window_length seconds is used in addition to join_limit.""",
           'anyOf':[
-            {'type':'integer'},
-            {'enum': None}],
+            {'type':'number'},
+            {'enum': [None]}],
           'default': None}}}]}
 
 _input_transform_schema = {
