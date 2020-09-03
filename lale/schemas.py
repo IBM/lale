@@ -97,15 +97,19 @@ class Int(Schema):
                  forOptimizer: bool = True,
                  min: Option[int] = undefined,
                  exclusiveMin: Option[bool] = undefined,
+                 minForOptimizer: Option[int] = undefined,
                  max: Option[int] = undefined,
                  exclusiveMax: Option[bool] = undefined,
+                 maxForOptimizer: Option[int] = undefined,
                  distribution: Option[str] = undefined):
         super().__init__(desc, default, forOptimizer)
         self.set('type', 'integer')
         self.set('minimum', min)
         self.set('exclusiveMinimum', exclusiveMin)
+        self.set('minimumForOptimizer', minForOptimizer)
         self.set('maximum', max)
         self.set('exclusiveMaximum', exclusiveMax)
+        self.set('maximumForOptimizer', maxForOptimizer)
         self.set('distribution', distribution)
 
 
