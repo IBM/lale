@@ -17,6 +17,8 @@ import sklearn.datasets
 import sklearn.model_selection
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import DecisionTreeClassifier
+from lale.lib.sklearn import ExtraTreesClassifier
+from lale.lib.sklearn import GradientBoostingClassifier
 from lale.lib.sklearn import RandomForestClassifier
 
 assert sklearn.__version__ >= '0.23', 'This test is for scikit-learn 0.23.'
@@ -42,6 +44,57 @@ class TestDecisionTreeClassifier(unittest.TestCase):
                                          optimizer=Hyperopt, cv=3, max_evals=1)
         predicted = trained.predict(self.test_X)
 
+class TestExtraTreesClassifier(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = ExtraTreesClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_n_estimators(self):
+        default = ExtraTreesClassifier.hyperparam_defaults()['n_estimators']
+        self.assertEquals(default, 100)
+
+    def test_ccp_alpha(self):
+        trainable = ExtraTreesClassifier(ccp_alpha=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_max_samples(self):
+        trainable = ExtraTreesClassifier(max_samples=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = ExtraTreesClassifier
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=1)
+        predicted = trained.predict(self.test_X)
+
+class TestGradientBoostingClassifier(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = GradientBoostingClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_ccp_alpha(self):
+        trainable = GradientBoostingClassifier(ccp_alpha=0.01)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = GradientBoostingClassifier
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=1)
+        predicted = trained.predict(self.test_X)
+
 class TestRandomForestClassifier(unittest.TestCase):
     def setUp(self):
         X, y = sklearn.datasets.load_iris(return_X_y=True)
@@ -49,9 +102,12 @@ class TestRandomForestClassifier(unittest.TestCase):
 
     def test_with_defaults(self):
         trainable = RandomForestClassifier()
-        self.assertEquals(100, trainable.hyperparam_defaults()['n_estimators'])
         trained = trainable.fit(self.train_X, self.train_y)
         predicted = trained.predict(self.test_X)
+
+    def test_n_estimators(self):
+        default = RandomForestClassifier.hyperparam_defaults()['n_estimators']
+        self.assertEquals(default, 100)
 
     def test_ccp_alpha(self):
         trainable = RandomForestClassifier(ccp_alpha=0.01)
