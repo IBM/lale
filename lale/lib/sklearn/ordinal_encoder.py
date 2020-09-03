@@ -134,9 +134,9 @@ _input_fit_schema = {
             'description': 'Features; the outer array is over samples.',
             'type': 'array',
             'items': {
-                'type': 'array',
-                'items': {'type': 'number'},
-            }},
+                'anyOf': [
+                    {'type': 'array', 'items': {'type': 'number'}},
+                    {'type': 'array', 'items': {'type': 'string'}}]}},
         'y': {
             'description': 'Target class labels; the array is over samples.'}}}
 
@@ -151,8 +151,9 @@ _input_transform_schema = {
             'description': 'Features; the outer array is over samples.',
             'type': 'array',
             'items': {
-                'type': 'array',
-                'items': {'type': 'number'}}}}}
+                'anyOf': [
+                    {'type': 'array', 'items': {'type': 'number'}},
+                    {'type': 'array', 'items': {'type': 'string'}}]}}}}
 
 _output_transform_schema = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
