@@ -259,8 +259,8 @@ DecisionTreeClassifier : lale.operators.IndividualOp
 DecisionTreeClassifier = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)
 
 if sklearn.__version__ >= '0.22':
-    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
-    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     from lale.schemas import AnyOf, Bool, Enum, Float
     DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
         presort=AnyOf(
