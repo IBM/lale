@@ -210,6 +210,7 @@ _combined_schemas = {
 .. _`Random forest regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestRegressor.html#sklearn-ensemble-randomforestregressor
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_regressor.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

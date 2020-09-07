@@ -90,6 +90,7 @@ _combined_schemas = {
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 .. _Imputer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Imputer.html#sklearn-preprocessing-imputer""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.num_imputer.html',
+    'import_from': 'autoai_libs.transformers.exportable',
     'type': 'object',
     'tags': {
         'pre': [],

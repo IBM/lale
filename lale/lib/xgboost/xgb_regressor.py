@@ -407,6 +407,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
     'documentation_url': 'https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn',
+    'import_from': 'xgboost',
     'tags': {
         'pre': [],
         'op': ['estimator', 'regressor'],

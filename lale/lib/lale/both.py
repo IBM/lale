@@ -111,6 +111,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.both.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': [],

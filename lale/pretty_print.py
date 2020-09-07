@@ -104,32 +104,42 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
     return ', '.join(strings)
 
 def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
-    def has_op(module_name, sym):
+    def find_op(module_name, sym):
         module = importlib.import_module(module_name)
         if hasattr(module, sym):
             op = getattr(module, sym)
             if isinstance(op, lale.operators.IndividualOp):
-                return op.class_name() == class_name
-            else:
-                return hasattr(op, '__init__') and hasattr(op, 'fit') and (
-                    hasattr(op, 'predict') or hasattr(op, 'transform'))
-        return False
+                if op.class_name() == class_name:
+                    return op
+            elif hasattr(op, '__init__') and hasattr(op, 'fit'):
+                if hasattr(op, 'predict') or hasattr(op, 'transform'):
+                    return op
+        return None
     mod_name_long = class_name[:class_name.rfind('.')]
     mod_name_short = mod_name_long[:mod_name_long.rfind('.')]
     unqualified = class_name[class_name.rfind('.')+1:]
-    if has_op(mod_name_short, op_label):
-        return mod_name_short
-    if has_op(mod_name_long, op_label):
-        return mod_name_long
-    if has_op(mod_name_short, op_name):
-        return mod_name_short
-    if has_op(mod_name_long, op_name):
-        return mod_name_long
-    if has_op(mod_name_short, unqualified):
-        return mod_name_short
-    if has_op(mod_name_long, unqualified):
-        return mod_name_long
-    assert False, (op_label, op_name, class_name)
+    if class_name.startswith('lale.') and unqualified.endswith('Impl'):
+        unqualified = unqualified[:-len('Impl')]
+    op = find_op(mod_name_short, op_name)
+    if op is not None:
+        mod = mod_name_short
+    else:
+        op = find_op(mod_name_long, op_name)
+        if op is not None:
+            mod = mod_name_long
+        else:
+            op = find_op(mod_name_short, unqualified)
+            if op is not None:
+                mod = mod_name_short
+            else:
+                op = find_op(mod_name_long, unqualified)
+                if op is not None:
+                    mod = mod_name_long
+    assert op is not None, (op_label, op_name, class_name)
+    if isinstance(op, lale.operators.IndividualOp):
+        if 'import_from' in op._schemas:
+            mod = op._schemas['import_from']
+    return mod        
 
 def _op_kind(op: JSON_TYPE) -> str:
     assert isinstance(op, dict)
@@ -332,6 +342,8 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             op_name = jsn['operator']
         else:
             op_name = class_name[class_name.rfind('.')+1:]
+        if op_name.endswith('Impl'):
+            op_name = op_name[:-len('Impl')]
         if op_name == label:
             import_stmt = f'from {module_name} import {op_name}'
         else:

@@ -177,6 +177,7 @@ _combined_schemas = {
 .. _`Feature agglomeration`: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html#sklearn-cluster-featureagglomeration
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.feature_agglomeration.html',
+    'import_from': 'sklearn.cluster',
     'type': 'object',
     'tags': {
         'pre': [],

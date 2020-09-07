@@ -306,6 +306,7 @@ _output_predict_schema = {
 
 _combined_schemas = {
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.smac.html',
+    'import_from': 'lale.lib.lale',
     'description': """SMAC_, the optimizer used inside auto-weka and auto-sklearn.
 
 .. _SMAC: https://github.com/automl/SMAC3

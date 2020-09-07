@@ -488,6 +488,7 @@ Other scoring metrics:
 ...    scoring=make_scorer(f1_score, average='macro'), cv=3, max_evals=5)
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': [],

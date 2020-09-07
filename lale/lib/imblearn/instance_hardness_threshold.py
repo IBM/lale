@@ -122,6 +122,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """Class to perform under-sampling based on the instance hardness threshold.""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.instance_hardness_threshold.html',
+  'import_from': 'imblearn.under_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

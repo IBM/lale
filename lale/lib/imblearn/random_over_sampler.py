@@ -99,6 +99,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """Class to perform random over-sampling, i.e. over-sample the minority class(es) by picking samples at random with replacement.""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.random_over_sampler.html',
+  'import_from': 'imblearn.over_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

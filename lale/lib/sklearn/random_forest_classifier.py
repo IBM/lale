@@ -246,6 +246,7 @@ _combined_schemas = {
 .. _`Random forest classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn-ensemble-randomforestclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_classifier.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -114,6 +114,7 @@ _combined_schemas = {
 .. _`Select k best`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.SelectKBest.html#sklearn-feature-selection-selectkbest
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.select_k_best.html',
+    'import_from': 'sklearn.feature_selection',
     'type': 'object',
     'tags': {
         'pre': [],

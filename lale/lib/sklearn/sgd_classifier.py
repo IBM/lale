@@ -324,6 +324,7 @@ _combined_schemas = {
 .. _`SGD classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn-linear-model-sgdclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.sgd_classifier.html',
+    'import_from': 'sklearn.linear_model',
     'type': 'object',
     'tags': {
         'pre': [],

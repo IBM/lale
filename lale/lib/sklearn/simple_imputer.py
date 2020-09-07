@@ -129,6 +129,7 @@ _combined_schemas = {
 .. _`Simple imputer`: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.simple_imputer.html',
+    'import_from': 'sklearn.impute',
     'type': 'object',
     'tags': {
         'pre': [],

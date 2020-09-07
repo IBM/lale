@@ -233,6 +233,7 @@ _combined_schemas = {
 .. _`Voting classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html#sklearn-ensemble-votingclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.voting_classifier.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

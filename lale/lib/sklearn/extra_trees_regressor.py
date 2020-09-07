@@ -200,6 +200,7 @@ _combined_schemas = {
 .. _`Extra trees regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html#sklearn-ensemble-extratreesregressor
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.extra_trees_regressor.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

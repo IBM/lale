@@ -115,6 +115,7 @@ _combined_schemas = {
   'description': """Class to perform over-sampling using SMOTE and cleaning using ENN. 
 Combine over- and under-sampling using SMOTE and Edited Nearest Neighbours.""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smoteenn.html',
+  'import_from': 'imblearn.over_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

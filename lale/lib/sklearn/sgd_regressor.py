@@ -249,6 +249,7 @@ _combined_schemas = {
 .. _`SGD regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDRegressor.html#sklearn-linear-model-sgdregressor
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.sgd_regressor.html',
+    'import_from': 'sklearn.linear_model',
     'type': 'object',
     'tags': {
         'pre': [],
