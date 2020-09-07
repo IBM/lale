@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-import astunparse
+import black
 import importlib
 import inspect
 import json
@@ -29,6 +28,7 @@ import lale.operators
 import lale.type_checking
 
 JSON_TYPE = Dict[str, Any]
+_black78 = black.Mode(line_length=78)
 
 class _CodeGenState:
     imports: List[str]
@@ -402,22 +402,13 @@ def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: boo
         result += '\n'.join(gen.assigns)
     else:
         result = '\n'.join(gen.assigns)
-    return result
+    formatted = black.format_str(result, mode=_black78)
+    return formatted
 
 def json_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
-    s2 = ast.parse(s1)
-    s3 = astunparse.unparse(s2).strip()
-    s4 = re.sub(r'}, {\n    (\s+)', r'},\n\1{   ', s3)
-    s5 = re.sub(r'\[{\n    (\s+)', r'[\n\1{   ', s4)
-    s6 = re.sub(r"'\$schema':[^\n{}\[\]]+\n\s+", "\1", s5)
-    while True:
-        s7 = re.sub(r',\n\s*([\]}])', r'\1', s6)
-        if s6 == s7:
-            break
-        s6 = s7
-    s8 = re.sub(r'{\s+}', r'{}', s7)
-    return s8
+    s2 = black.format_str(s1, mode=_black78)
+    return s2
 
 def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, astype:str='lale', call_depth:int=1) -> str:
     assert astype in ['lale', 'sklearn'], astype
