@@ -150,6 +150,7 @@ _output_predict_schema:Dict[str, Any] = {}
 _combined_schemas = {
     'description': """This operator creates a voting ensemble from top k performing pipelines from the given planned pipeline.""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.topk_voting_classifier.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -115,6 +115,7 @@ _combined_schemas = {
 .. _`Robust scaler`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.RobustScaler.html#sklearn-preprocessing-robustscaler
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.robust_scaler.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -184,6 +184,7 @@ _combined_schemas = {
 .. _`K nearest neighbors classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn-neighbors-kneighborsclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.k_neighbors_classifier.html',
+    'import_from': 'sklearn.neighbors',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

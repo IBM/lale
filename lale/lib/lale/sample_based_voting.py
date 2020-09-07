@@ -81,6 +81,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """Treat the input as labels and use the end_index_list to produce labels using voting. Note that here, X contains the label and no y is accepted.""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.sample_based_voting.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': [],

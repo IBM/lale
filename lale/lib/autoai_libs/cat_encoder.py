@@ -158,6 +158,7 @@ _combined_schemas = {
 .. _OneHotEncoder: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html#sklearn.preprocessing.OneHotEncoder
 .. _OrdinalEncoder: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OrdinalEncoder.html#sklearn.preprocessing.OrdinalEncoder""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.cat_encoder.html',
+    'import_from': 'autoai_libs.transformers.exportable',
     'type': 'object',
     'tags': {
         'pre': [],

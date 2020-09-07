@@ -275,6 +275,7 @@ _combined_schemas = {
 .. _`Logistic regression`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html#sklearn-linear-model-logisticregression
 """,
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
+  'import_from': 'sklearn.linear_model',
   'type': 'object',
   'tags': {
     'pre': ['~categoricals'],

@@ -102,6 +102,7 @@ _combined_schemas = {
 .. _`Normalizer`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Normalizer.html#sklearn-preprocessing-normalizer
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.normalizer.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

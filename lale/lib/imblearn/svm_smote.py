@@ -137,6 +137,7 @@ _combined_schemas = {
   'description': """Over-sampling using SVM-SMOTE, 
 Variant of SMOTE algorithm which use an SVM algorithm to detect sample to use for generating new synthetic samples.""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.svm_smote.html',
+  'import_from': 'imblearn.over_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

@@ -129,6 +129,7 @@ _combined_schemas = {
 .. _`Quantile transformer`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.QuantileTransformer.html#sklearn-preprocessing-quantiletransformer
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.quantile_transformer.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -194,6 +194,7 @@ _combined_schemas = {
 .. _`Principal component analysis`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.PCA.html#sklearn-decomposition-pca
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html',
+    'import_from': 'sklearn.decomposition',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

@@ -296,6 +296,7 @@ _combined_schemas = {
 .. _`Multi-layer perceptron`: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn-neural-network-mlpclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.mlp_classifier.html',
+    'import_from': 'sklearn.neural_network',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

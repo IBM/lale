@@ -142,6 +142,7 @@ _combined_schemas = {
 .. _`Gaussian Naive Bayes`: https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.GaussianNB.html#sklearn-naive-bayes-gaussiannb
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gaussian_naive_bayes.html',
+    'import_from': 'sklearn.naive_bayes',
     'type': 'object',
     'tags': {
         'pre': [],

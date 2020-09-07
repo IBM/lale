@@ -109,6 +109,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """Class to perform under-sampling based on the condensed nearest neighbour method.""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.condensed_nearest_neighbour.html',
+  'import_from': 'imblearn.under_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

@@ -57,7 +57,9 @@ def _validate_lale_type(validator, laleType, instance, schema):
         import lale.operators
         import sklearn.base
         if not (isinstance(instance, lale.operators.Operator) or
-                isinstance(instance, sklearn.base.BaseEstimator)):
+                isinstance(instance, sklearn.base.BaseEstimator) or
+                ( inspect.isclass(instance) and
+                  issubclass(instance, sklearn.base.BaseEstimator))):
             yield jsonschema.exceptions.ValidationError(
                 f'expected {laleType}, got {type(instance)}')
     elif laleType == 'expression':

@@ -250,6 +250,7 @@ _combined_schemas = {
 .. _`Support Vector Classification`: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVC.html#sklearn-svm-svc
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.svc.html',
+    'import_from': 'sklearn.svm',
     'type': 'object',
     'tags': {
         'pre': [],

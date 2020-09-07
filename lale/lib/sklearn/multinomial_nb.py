@@ -134,6 +134,7 @@ _combined_schemas = {
 .. _`Multinomial Naive Bayes`: https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.MultinomialNB.html#sklearn-naive-bayes-multinomialnb
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.multinomial_naive_bayes.html',
+    'import_from': 'sklearn.naive_bayes',
     'type': 'object',
     'tags': {
         'pre': [],

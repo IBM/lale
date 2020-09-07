@@ -139,6 +139,7 @@ _combined_schemas = {
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.ta2.html',
+    'import_from': 'autoai_libs.cognito.transforms.transform_utils',
     'type': 'object',
     'tags': {
         'pre': [],

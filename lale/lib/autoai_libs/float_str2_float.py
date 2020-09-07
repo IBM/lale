@@ -93,6 +93,7 @@ _combined_schemas = {
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.float_str2_float.html',
+    'import_from': 'autoai_libs.transformers.exportable',
     'type': 'object',
     'tags': {
         'pre': [],
