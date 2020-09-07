@@ -125,6 +125,30 @@ pipeline = make_pipeline(choice_0, union, choice_1)"""
         printed = lale.pretty_print.to_string(pipeline, combinators=False)
         self._roundtrip(expected, printed)
 
+    def test_astype_sklearn(self):
+        from lale.lib.sklearn import MinMaxScaler
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import Nystroem
+        from lale.lib.lale import ConcatFeatures
+        from lale.lib.sklearn import LogisticRegression
+        pca = PCA(copy=False)
+        logistic_regression = LogisticRegression(solver='saga', C=0.9)
+        pipeline = MinMaxScaler() >> (pca & Nystroem()) >> ConcatFeatures >> logistic_regression
+        expected = \
+"""from sklearn.preprocessing import MinMaxScaler
+from sklearn.decomposition import PCA
+from sklearn.kernel_approximation import Nystroem
+from sklearn.pipeline import make_union
+from sklearn.linear_model import LogisticRegression
+from sklearn.pipeline import make_pipeline
+
+pca = PCA(copy=False)
+union = make_union(pca, Nystroem())
+logistic_regression = LogisticRegression(solver='saga', C=0.9)
+pipeline = make_pipeline(MinMaxScaler(), union, logistic_regression)"""
+        printed = lale.pretty_print.to_string(pipeline, astype='sklearn')
+        self._roundtrip(expected, printed)
+
     def test_import_as_1(self):
         from lale.lib.sklearn import LogisticRegression as LR
         pipeline = LR(solver='saga', C=0.9)

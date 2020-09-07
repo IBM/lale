@@ -281,7 +281,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         return lale.helpers.to_graphviz(self, ipython_display, call_depth=2)
 
-    def pretty_print(self, show_imports:bool=True, combinators:bool=True, ipython_display:Union[bool,str]=False):
+    def pretty_print(self, show_imports:bool=True, combinators:bool=True, astype:str='lale', ipython_display:Union[bool,str]=False):
         """Returns the Python source code representation of the operator.
 
         Parameters
@@ -292,7 +292,17 @@ class Operator(metaclass=AbstractVisitorMeta):
 
         combinators : bool, default True
 
-            If True, pretty-print with combinators (`>>`, `|`, `&`). Otherwise, pretty-print with functions (`make_pipeline`, `make_choice`, `make_union`) instead.
+            If True, pretty-print with combinators (`>>`, `|`, `&`). Otherwise, pretty-print with functions (`make_pipeline`, `make_choice`, `make_union`) instead. Always False when astype is 'sklearn'.
+
+        astype : union type, default 'lale'
+
+            - 'lale'
+
+              Use `lale.operators.make_pipeline` and `lale.operators.make_union` when pretty-printing wth functions.
+
+            - 'sklearn'
+
+              Set combinators to False and use `sklearn.pipeline.make_pipeline` and `sklearn.pipeline.make_union` for pretty-printed functions.
 
         ipython_display : union type, default False
 
@@ -313,7 +323,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         str or None
             If called with ipython_display=False, return pretty-printed Python source code as a Python string.
         """
-        result = lale.pretty_print.to_string(self, show_imports, combinators, call_depth=2)
+        result = lale.pretty_print.to_string(self, show_imports, combinators, astype, call_depth=2)
         if ipython_display == False:
             return result
         elif ipython_display == 'input':

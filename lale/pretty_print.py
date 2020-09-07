@@ -35,10 +35,11 @@ class _CodeGenState:
     assigns: List[str]
     _names: Set[str]
 
-    def __init__(self, names: Set[str], combinators: bool):
+    def __init__(self, names: Set[str], combinators: bool, astype: str):
         self.imports = []
         self.assigns = []
         self.combinators = combinators
+        self.astype= astype
         self._names = (
             { 'get_pipeline_of_applicable_type', 'lale', 'make_choice',
               'make_pipeline', 'make_union', 'make_union_no_concat',
@@ -329,7 +330,11 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
                 for step_uid, step_val in jsn['steps'].items()}
             function = _OP_KIND_TO_FUNCTION[_op_kind(jsn)]
-            gen.imports.append(f'from lale.operators import {function}')
+            if (gen.astype == 'sklearn' and
+                function in ['make_union', 'make_pipeline']):
+                gen.imports.append(f'from sklearn.pipeline import {function}')
+            else:
+                gen.imports.append(f'from lale.operators import {function}')
             op_expr = '{}({})'.format(function,
                                       ', '.join(printed_steps.values()))
             gen.assigns.append(f'{uid} = {op_expr}')
@@ -376,8 +381,8 @@ def _collect_names(jsn: JSON_TYPE) -> Set[str]:
         result |= {jsn['label']}
     return result
 
-def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: bool) -> str:
-    gen = _CodeGenState(_collect_names(jsn), combinators)
+def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: bool, astype=str) -> str:
+    gen = _CodeGenState(_collect_names(jsn), combinators, astype)
     expr = _operator_jsn_to_string_rec('pipeline', jsn, gen)
     if expr != 'pipeline':
         gen.assigns.append(f'pipeline = {expr}')
@@ -414,12 +419,15 @@ def json_to_string(schema: JSON_TYPE) -> str:
     s8 = re.sub(r'{\s+}', r'{}', s7)
     return s8
 
-def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, call_depth:int=1) -> str:
+def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, astype:str='lale', call_depth:int=1) -> str:
+    assert astype in ['lale', 'sklearn'], astype
+    if astype == 'sklearn':
+        combinators = False
     if lale.type_checking.is_schema(arg):
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
-        return _operator_jsn_to_string(jsn, show_imports, combinators)
+        return _operator_jsn_to_string(jsn, show_imports, combinators, astype)
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
 
