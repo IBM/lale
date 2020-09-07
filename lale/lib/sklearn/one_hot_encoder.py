@@ -121,6 +121,7 @@ _combined_schemas = {
 .. _`One-hot encoder`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html#sklearn-preprocessing-onehotencoder
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.one_hot_encoder.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': ['categoricals'],

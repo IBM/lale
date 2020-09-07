@@ -72,6 +72,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Baseline regressor always predicts the average target value.',
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.baseline_regressor.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -202,6 +202,7 @@ _combined_schemas = {
 .. _`Decision tree regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeRegressor.html#sklearn-tree-decisiontreeregressor
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.decision_tree_regressor.html',
+    'import_from': 'sklearn.tree',
     'type': 'object',
     'tags': {
         'pre': [],

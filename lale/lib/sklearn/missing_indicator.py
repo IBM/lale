@@ -127,6 +127,7 @@ _combined_schemas = {
 .. _`Missing values indicator`: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.MissingIndicator.html#sklearn-impute-missingindicator
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.missing_indicator.html',
+    'import_from': 'sklearn.impute',
     'type': 'object',
     'tags': {
         'pre': [],

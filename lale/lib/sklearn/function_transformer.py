@@ -129,6 +129,7 @@ _combined_schemas = {
 .. _FunctionTransformer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.function_transformer.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -129,6 +129,7 @@ _combined_schemas = {
   'description': """Over-sampling using Borderline SMOTE, which is a variant of the original SMOTE algorithm.
 Borderline samples will be detected and used to generate new synthetic samples.""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.borderline_smote.html',
+  'import_from': 'imblearn.over_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

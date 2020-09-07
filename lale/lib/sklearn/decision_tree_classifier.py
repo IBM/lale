@@ -226,6 +226,7 @@ _combined_schemas = {
 .. _`Decision tree classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn-tree-decisiontreeclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.decision_tree_classifier.html',
+    'import_from': 'sklearn.tree',
     'type': 'object',
     'tags': {
         'pre': [],

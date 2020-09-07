@@ -295,6 +295,7 @@ _combined_schemas = {
 .. _`Gradient boosting classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn-ensemble-gradientboostingclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_classifier.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

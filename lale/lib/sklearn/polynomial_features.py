@@ -107,6 +107,7 @@ _combined_schemas = {
 .. _`Polynomial features`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.PolynomialFeatures.html#sklearn-preprocessing-polynomialfeatures
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.polynomial_features.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

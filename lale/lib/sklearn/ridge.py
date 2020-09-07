@@ -176,7 +176,8 @@ _combined_schemas = {
 
 .. _`Ridge`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.Ridge.html#sklearn-linear-model-ridge
 """,
-  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ridge.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ridge.html',
+    'import_from': 'sklearn.linear_model',
     'type': 'object',
     'tags': {
         'pre': [],

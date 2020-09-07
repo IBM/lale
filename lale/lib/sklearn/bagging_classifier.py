@@ -224,6 +224,7 @@ _combined_schemas = {
 .. _`Bagging classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.BaggingClassifier.html#sklearn-ensemble-baggingclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.bagging_classifier.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

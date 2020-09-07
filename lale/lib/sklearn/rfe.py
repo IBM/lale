@@ -113,6 +113,7 @@ _combined_schemas = {
 .. _`Recursive feature elimination`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.RFE.html#sklearn-feature-selection-rfe
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.rfe.html',
+    'import_from': 'sklearn.feature_selection',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -244,6 +244,7 @@ NDArrayWithSchema([[1, 3],
                    [2, 4]])
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.project.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': ['categoricals'],

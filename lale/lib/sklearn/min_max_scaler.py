@@ -100,6 +100,7 @@ _combined_schemas = {
 .. _`Min-max scaler`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.MinMaxScaler.html#sklearn-preprocessing-minmaxscaler
 """,
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.min_max_scaler.html',
+  'import_from': 'sklearn.preprocessing',
   'type': 'object',
   'tags': {
     'pre': ['~categoricals'],

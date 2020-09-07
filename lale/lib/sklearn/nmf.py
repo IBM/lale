@@ -181,6 +181,7 @@ _combined_schemas = {
 .. _`Non-negative matrix factorization`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html#sklearn-decomposition-nmf
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.nmf.html',
+    'import_from': 'sklearn.decomposition',
     'type': 'object',
     'tags': {
         'pre': [],

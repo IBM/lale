@@ -119,6 +119,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """Perform over-sampling using Adaptive Synthetic (ADASYN) sampling approach for imbalanced datasets.""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.adasyn.html',
+  'import_from': 'imblearn.over_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

@@ -145,6 +145,7 @@ _combined_schemas = {
 .. _`Nystroem`: https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_approximation.Nystroem.html#sklearn-kernel-approximation-nystroem
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.nystroem.html',
+    'import_from': 'sklearn.kernel_approximation',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

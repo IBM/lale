@@ -122,7 +122,8 @@ _combined_schemas = {
 
 .. _`Linear regression`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LinearRegression.html#sklearn-linear-model-linearregression
 """,
-  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.linear_regression.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.linear_regression.html',
+    'import_from': 'sklearn.linear_model',
     'type': 'object',
     'tags': {
         'pre': [],
