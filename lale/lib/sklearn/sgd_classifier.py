@@ -66,7 +66,6 @@ class SGDClassifierImpl():
       return self
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for SGDClassifier Linear classifiers (SVM, logistic regression, a.o.) with SGD training.',
     'allOf': [{
         'type': 'object',
@@ -207,7 +206,6 @@ _hyperparams_schema = {
             }}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Stochastic Gradient Descent.',
     'required': ['X', 'y'],
     'type': 'object',
@@ -251,7 +249,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
     'type': 'object',
     'properties': {
@@ -266,7 +263,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -274,7 +270,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability estimates.',
     'type': 'object',
     'properties': {
@@ -288,7 +283,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Returns the probability of the sample for each class in the model,',
     'type': 'array',
     'items': {

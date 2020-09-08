@@ -370,7 +370,6 @@ class TimeFreqEigenVectorsImpl():
             raise ValueError('Must call transform before trying to access its meta output.')
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'TODO',
     'allOf': [{
         'type': 'object',
@@ -413,7 +412,6 @@ _hyperparams_schema = {
 }
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input format for data passed to the transform method.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -429,7 +427,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The input data to complete.',
     'type': 'array', #This is actually a tuple of X and y
     'items': {'type': 'array'}

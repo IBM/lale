@@ -49,7 +49,6 @@ class AdaBoostClassifierImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema.',
     'allOf': [{
         'type': 'object',
@@ -90,7 +89,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a boosted classifier from the training set (X, y).',
     'type': 'object',    
     'required': ['X', 'y'],
@@ -121,7 +119,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict classes for X.',
     'type': 'object',
     'properties': {
@@ -136,7 +133,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted classes.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -144,7 +140,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities for X.',
     'type': 'object',
     'properties': {
@@ -159,7 +154,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The class probabilities of the input samples. The order of',
     'type': 'array',
     'items': {

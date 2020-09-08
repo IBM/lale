@@ -38,7 +38,6 @@ class FeatureAgglomerationImpl():
         return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Agglomerate features.',
     'allOf': [{
         'type': 'object',
@@ -128,7 +127,6 @@ _hyperparams_schema = {
         }],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the hierarchical clustering on the data',
     'type': 'object',
     'required': ['X'],
@@ -145,7 +143,6 @@ _input_fit_schema = {
 }}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform a new matrix using the built clustering',
     'type': 'object',
     'required': ['X'],
@@ -161,7 +158,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The pooled values for each feature cluster.',
     'type': 'array',
     'items': {

@@ -52,7 +52,6 @@ class IdentityWrapperImpl():
     #         raise ValueError('Can only call get_feature_names on a trained operator. Please call fit to get a trained operator.')
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the identity Higher Order Operator, which wraps another operator and runs it as usual',
     'allOf': [
     {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
@@ -67,7 +66,6 @@ _hyperparams_schema = {
 
 # TODO: can we surface the base op input/output schema?
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training identity.',
     'type': 'object',
     'required': ['X'],  
@@ -76,7 +74,6 @@ _input_fit_schema = {
         'X': {}}}
 
 _input_predict_transform_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for transformations using identity.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -86,7 +83,6 @@ _input_predict_transform_schema = { #TODO: separate predict vs. predict_proba vs
         'y': {}}}
 
 _output_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for transformations using identity.',
     'laleType': 'Any'}
 

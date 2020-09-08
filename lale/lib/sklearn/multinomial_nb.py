@@ -38,7 +38,6 @@ class MultinomialNBImpl():
 
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Naive Bayes classifier for multinomial models',
     'allOf': [{
         'type': 'object',
@@ -66,7 +65,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Naive Bayes classifier according to X, y',
     'type': 'object',
     'required': ['X', 'y'],
@@ -91,7 +89,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
     'type': 'object',
     'required': ['X'],
@@ -102,7 +99,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -110,7 +106,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
     'type': 'object',
     'required': ['X'],
@@ -121,7 +116,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
     'type': 'array',
     'items': {'type': 'array', 'items': {'type': 'number'}},

@@ -30,7 +30,6 @@ class OneHotEncoderImpl():
 
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the OneHotEncoder model from scikit-learn.',
     'allOf': [
     {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
@@ -73,7 +72,6 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training the OneHotEncoder model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -91,7 +89,6 @@ _input_fit_schema = {
             'description': 'Target class labels; the array is over samples.'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for predictions using the OneHotEncoder model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -106,7 +103,6 @@ _input_transform_schema = {
                     'anyOf':[{'type': 'number'}, {'type':'string'}]}}}}}
 
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for predictions (projected data) using the OneHotEncoder model from scikit-learn. See the official documentation for details: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html\n',
     'type': 'array',
     'items': {

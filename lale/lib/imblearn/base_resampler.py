@@ -39,7 +39,6 @@ class BaseResamplerImpl():
         return self.trained_operator.decision_function(X)
 
 _input_fit_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X', 'y'],
   'additionalProperties': False,
@@ -55,7 +54,6 @@ _input_fit_schema = {
             {'type': 'array', 'items': {'type': 'string'}}]}}}
 
 _input_transform_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X', 'y'],
   'additionalProperties': False,
@@ -72,12 +70,10 @@ _input_transform_schema = {
           {'enum': [None]}]}}}
 
 _output_transform_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for transformed data.',
   'laleType': 'Any'}
 
 _input_predict_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -89,12 +85,10 @@ _input_predict_schema = {
 }}
 
 _output_predict_schema={
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for predictions.',
   'laleType': 'Any'}
 
 _input_predict_proba_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -106,12 +100,10 @@ _input_predict_proba_schema = {
 }}
 
 _output_predict_proba_schema={
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for predictions.',
   'laleType': 'Any'}
 
 _input_decision_function_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'type': 'object',
   'required': ['X'],
   'additionalProperties': False,
@@ -123,6 +115,5 @@ _input_decision_function_schema = {
 }}
 
 _output_decision_function_schema={
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for predictions.',
   'laleType': 'Any'}

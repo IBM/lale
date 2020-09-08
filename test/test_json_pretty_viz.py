@@ -52,9 +52,7 @@ class TestPrettyPrint(unittest.TestCase):
 import lale
 
 lale.wrap_imported_operators()
-
-pipeline = LogisticRegression(solver="saga", C=0.9)
-"""
+pipeline = LogisticRegression(solver="saga", C=0.9)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_indiv_op_2(self):
@@ -64,9 +62,7 @@ pipeline = LogisticRegression(solver="saga", C=0.9)
 import lale
 
 lale.wrap_imported_operators()
-
-pipeline = LogisticRegression()
-"""
+pipeline = LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_reducible(self):
@@ -92,7 +88,6 @@ from xgboost import XGBClassifier as XGB
 import lale
 
 lale.wrap_imported_operators()
-
 pca = PCA(copy=False)
 logistic_regression = LogisticRegression(solver="saga", C=0.9)
 pipeline = (
@@ -100,8 +95,7 @@ pipeline = (
     >> (pca & Nystroem)
     >> ConcatFeatures
     >> (KNeighborsClassifier | logistic_regression | XGB)
-)
-"""
+)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_no_combinators(self):
@@ -130,8 +124,7 @@ pca = PCA(copy=False)
 union = make_union(pca, Nystroem, NoOp)
 logistic_regression = LogisticRegression(solver="saga", C=0.9)
 choice_1 = make_choice(KNeighborsClassifier, logistic_regression)
-pipeline = make_pipeline(choice_0, union, choice_1)
-"""
+pipeline = make_pipeline(choice_0, union, choice_1)"""
         printed = lale.pretty_print.to_string(pipeline, combinators=False)
         self._roundtrip(expected, printed)
 
@@ -154,8 +147,7 @@ from sklearn.pipeline import make_pipeline
 pca = PCA(copy=False)
 union = make_union(pca, Nystroem())
 logistic_regression = LogisticRegression(solver="saga", C=0.9)
-pipeline = make_pipeline(MinMaxScaler(), union, logistic_regression)
-"""
+pipeline = make_pipeline(MinMaxScaler(), union, logistic_regression)"""
         printed = lale.pretty_print.to_string(pipeline, astype='sklearn')
         self._roundtrip(expected, printed)
 
@@ -166,9 +158,7 @@ pipeline = make_pipeline(MinMaxScaler(), union, logistic_regression)
 import lale
 
 lale.wrap_imported_operators()
-
-pipeline = LR(solver="saga", C=0.9)
-"""
+pipeline = LR(solver="saga", C=0.9)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_import_as_2(self):
@@ -192,11 +182,9 @@ from sklearn.linear_model import LogisticRegression as LR
 import lale
 
 lale.wrap_imported_operators()
-
 pca = PCA(copy=False)
 lr = LR(solver="saga", C=0.9)
-pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)
-"""
+pipeline = (Scaler | NoOp) >> (pca & Nystroem) >> Concat >> (KNN | lr)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_operator_choice(self):
@@ -208,9 +196,7 @@ from sklearn.preprocessing import MinMaxScaler as Scl
 import lale
 
 lale.wrap_imported_operators()
-
-pipeline = PCA | Scl
-"""
+pipeline = PCA | Scl"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_higher_order(self):
@@ -224,10 +210,8 @@ from sklearn.kernel_approximation import Nystroem
 import lale
 
 lale.wrap_imported_operators()
-
 pca = PCA(n_components=2)
-pipeline = Both(op1=pca, op2=Nystroem)
-"""
+pipeline = Both(op1=pca, op2=Nystroem)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_higher_order_2(self):
@@ -244,11 +228,9 @@ from sklearn.linear_model import LogisticRegression as LR
 import lale
 
 lale.wrap_imported_operators()
-
 pipeline = Vote(
     estimators=[("knn", KNN), ("pipeline", PCA() >> LR)], voting="soft"
-)
-"""
+)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_multimodal(self):
@@ -269,14 +251,12 @@ from sklearn.svm import LinearSVC
 import lale
 
 lale.wrap_imported_operators()
-
 project_0 = Project(columns={"type": "number"})
 project_1 = Project(columns={"type": "string"})
 linear_svc = LinearSVC(C=29617.4, dual=False, tol=0.005266)
 pipeline = (
     ((project_0 >> Norm()) & (project_1 >> OneHot())) >> Cat >> linear_svc
-)
-"""
+)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_irreducible_1(self):
@@ -299,7 +279,6 @@ from lale.operators import get_pipeline_of_applicable_type
 import lale
 
 lale.wrap_imported_operators()
-
 choice = PCA | Nystroem
 pipeline = get_pipeline_of_applicable_type(
     steps=[choice, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
@@ -308,8 +287,7 @@ pipeline = get_pipeline_of_applicable_type(
         (MinMaxScaler, LogisticRegression),
         (MinMaxScaler, KNeighborsClassifier),
     ],
-)
-"""
+)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_irreducible_2(self):
@@ -332,13 +310,11 @@ from lale.operators import get_pipeline_of_applicable_type
 import lale
 
 lale.wrap_imported_operators()
-
 pipeline_0 = HStack >> LR
 pipeline = get_pipeline_of_applicable_type(
     steps=[PCA, MMS, KNN, pipeline_0],
     edges=[(PCA, KNN), (PCA, pipeline_0), (MMS, pipeline_0)],
-)
-"""
+)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_nested(self):
@@ -354,11 +330,9 @@ from lale.lib.lale import NoOp
 import lale
 
 lale.wrap_imported_operators()
-
 lr_0 = LR(C=0.09)
 lr_1 = LR(C=0.19)
-pipeline = PCA >> (lr_0 | NoOp >> lr_1)
-"""
+pipeline = PCA >> (lr_0 | NoOp >> lr_1)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_cat_encoder(self):
@@ -373,15 +347,13 @@ from sklearn.linear_model import LogisticRegression as LR
 import lale
 
 lale.wrap_imported_operators()
-
 cat_encoder = CatEncoder(
     categories="auto",
     dtype=np.float64,
     encoding="ordinal",
     handle_unknown="error",
 )
-pipeline = cat_encoder >> LR()
-"""
+pipeline = cat_encoder >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_numpy_replace_missing_values(self):
@@ -395,12 +367,10 @@ from sklearn.linear_model import LogisticRegression as LR
 import lale
 
 lale.wrap_imported_operators()
-
 numpy_replace_missing_values = NumpyReplaceMissingValues(
     filling_values=float("nan"), missing_values=["?"]
 )
-pipeline = numpy_replace_missing_values >> LR()
-"""
+pipeline = numpy_replace_missing_values >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_tam_1(self):
@@ -426,8 +396,7 @@ tam = TAM(
         np.dtype("float32"),
     ],
 )
-pipeline = make_pipeline(tam, LR())
-"""
+pipeline = make_pipeline(tam, LR())"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline, astype='sklearn'))
 
     def test_autoai_libs_tam_2(self):
@@ -465,8 +434,7 @@ tam = TAM(
     ],
 )
 lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
-pipeline = make_pipeline(tam, lgbm_classifier)
-"""
+pipeline = make_pipeline(tam, lgbm_classifier)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
 
     def test_autoai_libs_tam_3(self):
@@ -487,7 +455,6 @@ from sklearn.linear_model import LogisticRegression
 import lale
 
 lale.wrap_imported_operators()
-
 tam = TAM(
     tans_class=FeatureAgglomeration(),
     name="featureagglomeration",
@@ -498,8 +465,7 @@ tam = TAM(
         np.dtype("float32"),
     ],
 )
-pipeline = tam >> LogisticRegression()
-"""
+pipeline = tam >> LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_tam_4(self):
@@ -520,7 +486,6 @@ from sklearn.linear_model import LogisticRegression
 import lale
 
 lale.wrap_imported_operators()
-
 tam = TAM(
     tans_class=PCA(),
     name="pca",
@@ -531,8 +496,7 @@ tam = TAM(
         np.dtype("float32"),
     ],
 )
-pipeline = tam >> LogisticRegression()
-"""
+pipeline = tam >> LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
         import pandas as pd
         import numpy as np
@@ -554,7 +518,6 @@ from sklearn.linear_model import LogisticRegression as LR
 import lale
 
 lale.wrap_imported_operators()
-
 ta1 = TA1(
     fun=np.rint,
     name="round",
@@ -567,8 +530,7 @@ ta1 = TA1(
         np.dtype("float32"),
     ],
 )
-pipeline = ta1 >> LR()
-"""
+pipeline = ta1 >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_t_no_op(self):
@@ -590,8 +552,7 @@ t_no_op = TNoOp(
     tgraph="tgraph",
 )
 lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
-pipeline = make_pipeline(t_no_op, lgbm_classifier)
-"""
+pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
 
 
