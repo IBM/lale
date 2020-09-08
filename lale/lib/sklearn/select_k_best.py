@@ -43,7 +43,6 @@ class SelectKBestImpl():
         return result
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Select features according to the k highest scores.',
     'allOf': [{
         'type': 'object',
@@ -67,7 +66,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Run score function on (X, y) and get the appropriate features.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -85,7 +83,6 @@ _input_fit_schema = {
             'description': 'Target values.'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Reduce X to the selected features.',
     'required': ['X'],
     'properties': {
@@ -100,7 +97,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The input samples with only the selected features.',
     'type': 'array',
     'items': {

@@ -39,7 +39,6 @@ class MLPClassifierImpl():
       return self
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description':
         'Hyperparameter schema for the MLPClassifier model from scikit-learn.',
     'allOf': [{
@@ -228,7 +227,6 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model to data matrix X and target(s) y.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -252,7 +250,6 @@ _input_fit_schema = {
             {   'type': 'array', 'items': {'type': 'boolean'}}]}}}
 
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the multi-layer perceptron classifier',
     'type': 'object',
     'required': ['X'],
@@ -265,7 +262,6 @@ _input_predict_schema = {
                 'type': 'array', 'items': {'type': 'number'}}}}}
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the multi-layer perceptron classifier',
     'anyOf': [
     {   'type': 'array', 'items': {'type': 'number'}},

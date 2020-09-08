@@ -77,7 +77,6 @@ class OrdinalEncoderImpl():
         return X_tr
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the OrdinalEncoder model from scikit-learn.',
     'allOf': [
     {   'type': 'object',
@@ -124,7 +123,6 @@ n is the maximum encoding value based on known categories.""",
                 'default':'auto'}}}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training the OrdinalEncoder model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -141,7 +139,6 @@ _input_fit_schema = {
             'description': 'Target class labels; the array is over samples.'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for predictions using the OrdinalEncoder model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -156,7 +153,6 @@ _input_transform_schema = {
                     {'type': 'array', 'items': {'type': 'string'}}]}}}}
 
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for predictions (projected data) using the OrdinalEncoder model from scikit-learn.',
     'type': 'array',
     'items': {

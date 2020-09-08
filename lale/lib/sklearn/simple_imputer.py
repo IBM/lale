@@ -41,7 +41,6 @@ class SimpleImputerImpl():
         return s_X
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Imputation transformer for completing missing values.',
     'allOf': [{
         'type': 'object',
@@ -79,7 +78,6 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the imputer on X.',
     'type': 'object',
     'required': ['X'],
@@ -95,8 +93,8 @@ _input_fit_schema = {
                     {'type': 'string'}]}},
             'description': 'Input data, where ``n_samples`` is the number of samples and  ``n_features`` is the number of features.'},
         'y': {}}}
+
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Impute all missing values in X.',
     'type': 'object',
     'required': ['X'],
@@ -113,7 +111,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The input data to complete.',
     'type': 'array',
     'items': {'type': 'array', 

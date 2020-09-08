@@ -33,7 +33,6 @@ class RFEImpl():
         return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Feature ranking with recursive feature elimination.',
     'allOf': [{
         'type': 'object',
@@ -68,7 +67,6 @@ _hyperparams_schema = {
                 'description': 'Controls verbosity of output.'}}}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model to data matrix X and target(s) y.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -86,7 +84,6 @@ _input_fit_schema = {
             'items': { 'type': 'number'}}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Reduce X to the selected features.',
     'type': 'object',
     'properties': {
@@ -99,7 +96,6 @@ _input_transform_schema = {
             'description': 'The input samples.'}}}
 
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'type': 'array',
     'items': {
         'type': 'array',
