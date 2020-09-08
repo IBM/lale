@@ -119,7 +119,6 @@ class ResNet50Impl():
         return predicted_X
 
 _input_schema_fit = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for training.',
   'type': 'object',
   'required': ['X'],
@@ -130,7 +129,6 @@ _input_schema_fit = {
       }}}
 
 _input_predict_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for predictions.',
   'type': 'object',
   'required': ['X'],
@@ -141,14 +139,12 @@ _input_predict_schema = {
       }}}
 
 _output_predict_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for transformed data.',
   'type': 'array',
   'items': {'type': 'array', 'items': {'type': 'number'}}}
   
 
 _hyperparams_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Hyperparameter schema.',
   'allOf': [
     { 'description':

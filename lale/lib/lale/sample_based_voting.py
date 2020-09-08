@@ -49,7 +49,6 @@ class SampleBasedVotingImpl():
     
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'allOf': [
     {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
         'type': 'object',
@@ -58,7 +57,6 @@ _hyperparams_schema = {
         'properties': {}}]}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for transformations using NoOp.',
     'type': 'object',
     'required': ['X'],

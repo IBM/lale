@@ -75,7 +75,6 @@ or with
         return self._wrapped_model.predict_proba(X)
 
 _hyperparams_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Hyperparameter schema for a Lale wrapper for XGBoost.',
   'allOf': [
     { 'description':
@@ -268,7 +267,6 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
     }],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit gradient boosting classifier',
     'type': 'object',
     'required': ['X', 'y'],
@@ -359,7 +357,6 @@ _input_fit_schema = {
 }
 
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict with `data`.',
     'type': 'object',
     'required': ['X'],
@@ -387,7 +384,6 @@ _input_predict_schema = {
         }}}
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -406,7 +402,6 @@ _input_predict_proba_schema = {
                     'type': 'number'}}}}}
 
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability of the sample for each class in the model.',
     'type': 'array',
     'items': {

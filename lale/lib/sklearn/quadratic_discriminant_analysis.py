@@ -41,7 +41,6 @@ class QuadraticDiscriminantAnalysisImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Quadratic Discriminant Analysis',
     'allOf': [{
         'type': 'object',
@@ -79,7 +78,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model according to the given training data and parameters.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -101,7 +99,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
     'type': 'object',
     'properties': {
@@ -115,7 +112,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -123,7 +119,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return posterior probabilities of classification.',
     'type': 'object',
     'properties': {
@@ -138,7 +133,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Posterior probabilities of classification per class.',
     'type': 'array',
     'items': {
@@ -169,7 +163,6 @@ _output_decision_function_schema = {
         'items': {'type': 'number'}}]}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Quadratic discriminant analysis`_ classifier with a quadratic decision boundary from scikit-learn.
 
 .. _`Quadratic discriminant analysis`: https://scikit-learn.org/0.20/modules/generated/sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis.html#sklearn-discriminant-analysis-quadraticdiscriminantanalysis 

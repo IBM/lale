@@ -398,16 +398,16 @@ def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: boo
         result = '\n'.join(imports_list)
         if combinators:
             result += '\nlale.wrap_imported_operators()'
-        result += '\n\n'
+        result += '\n'
         result += '\n'.join(gen.assigns)
     else:
         result = '\n'.join(gen.assigns)
-    formatted = black.format_str(result, mode=_black78)
+    formatted = black.format_str(result, mode=_black78).rstrip()
     return formatted
 
 def json_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
-    s2 = black.format_str(s1, mode=_black78)
+    s2 = black.format_str(s1, mode=_black78).rstrip()
     return s2
 
 def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, astype:str='lale', call_depth:int=1) -> str:
