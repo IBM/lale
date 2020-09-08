@@ -147,7 +147,8 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number', 'minimum': 0.0},
             }},
-        'y': {}}}
+        'y': {
+            'laleType': 'Any'}}}
 
 _input_transform_schema = {
     'type': 'object',
