@@ -16,16 +16,8 @@ import sklearn.preprocessing
 import lale.operators
 
 class FunctionTransformerImpl():
-    def __init__(self, func=None, inverse_func=None, validate=None, accept_sparse=False, pass_y='deprecated', check_inverse=True, kw_args=None, inv_kw_args=None):
-        self._hyperparams = {
-            'func': func,
-            'inverse_func': inverse_func,
-            'validate': validate,
-            'accept_sparse': accept_sparse,
-            'pass_y': pass_y,
-            'check_inverse': check_inverse,
-            'kw_args': kw_args,
-            'inv_kw_args': inv_kw_args}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.FunctionTransformer(
             **self._hyperparams)
 
@@ -60,7 +52,8 @@ _hyperparams_schema = {
                 'default': None,
                 'description': 'The callable to use for the inverse transformation.'},
             'validate': {
-                'default': False,
+                'type': 'boolean',
+                'default': True,
                 'description': 'Indicate that the input X array should be checked before calling ``func``.'},
             'accept_sparse': {
                 'type': 'boolean',
@@ -141,6 +134,21 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(FunctionTransformerImpl, _combined_schemas)
-
+FunctionTransformer : lale.operators.IndividualOp
 FunctionTransformer = lale.operators.make_operator(FunctionTransformerImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.22':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.FunctionTransformer.html
+    from lale.schemas import Bool
+    FunctionTransformer = FunctionTransformer.customize_schema(
+        validate=Bool(
+            desc='Indicate that the input X array should be checked before calling ``func``.',
+            default=False))
+    #remove hyperparameter 'pass_y'
+    scm = FunctionTransformer.hyperparam_schema()['allOf'][0]
+    scm['required'] = [k for k in scm['required'] if k != 'pass_y']
+    scm['properties'] = {k: scm['properties'][k]
+                         for k in scm['properties'] if k != 'pass_y'}
+
+lale.docstrings.set_docstrings(FunctionTransformerImpl, FunctionTransformer._schemas)

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import jsonschema
+import numpy as np
 import unittest
 import sklearn.datasets
 import sklearn.metrics
@@ -22,6 +24,8 @@ from lale.lib.sklearn import DecisionTreeClassifier
 from lale.lib.sklearn import DecisionTreeRegressor
 from lale.lib.sklearn import ExtraTreesClassifier
 from lale.lib.sklearn import ExtraTreesRegressor
+from lale.lib.sklearn import FeatureAgglomeration
+from lale.lib.sklearn import FunctionTransformer
 from lale.lib.sklearn import GradientBoostingClassifier
 from lale.lib.sklearn import GradientBoostingRegressor
 from lale.lib.sklearn import LinearRegression
@@ -137,6 +141,52 @@ class TestExtraTreesRegressor(unittest.TestCase):
         trained = planned.auto_configure(
             self.train_X, self.train_y,
             scoring='r2', optimizer=Hyperopt, cv=3, max_evals=3)
+        predicted = trained.predict(self.test_X)
+
+class TestFeatureAgglomeration(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = FeatureAgglomeration() >> LogisticRegression()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_distance_threshold(self):
+        trainable = FeatureAgglomeration(distance_threshold=0.5, n_clusters=None, compute_full_tree=True) >> LogisticRegression()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = FeatureAgglomeration >> LogisticRegression
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=3)
+        predicted = trained.predict(self.test_X)
+
+class TestFunctionTransformer(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = FunctionTransformer(func=np.log1p) >> LogisticRegression()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_pass_y(self):
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'pass_y' was unexpected"):
+            trainable = FunctionTransformer(func=np.log1p, pass_y=False)
+
+    def test_validate(self):
+        default = FunctionTransformer.hyperparam_defaults()['validate']
+        self.assertEqual(default, False)
+
+    def test_with_hyperopt(self):
+        planned = FunctionTransformer(func=np.log1p) >> LogisticRegression
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=3)
         predicted = trained.predict(self.test_X)
 
 class TestGradientBoostingClassifier(unittest.TestCase):
