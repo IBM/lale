@@ -10,13 +10,13 @@
 
 
 Lale est une bibliothèque Python pour la science des données semi-automatique. 
-Lale utilise des techniques de typage pour faciliter la sélection automatique d'algorithmes et le réglage des hyperparamètres de pipelines compatibles avec scikit-learn. 
+Lale utilise des techniques de typage pour faciliter la sélection automatique d'algorithmes et le réglage des hyperparamètres pour des pipelines compatibles avec scikit-learn. 
 Si vous souhaitez essayer l'apprentissage automatique, cette bibliothèque est faite pour vous ! 
 Lale complète scikit-learn selon trois axes: automatisation, correction, et interopérabilité. 
 Pour l'*automatisation*, Lale fournit une interface cohérente de haut niveau pour les outils d'optimisation existants, notamment Hyperopt, GridSearchCV et SMAC. 
 Pour la *correction*, Lale utilise les schémas JSON pour détecter les erreurs d'incompatibilité entre les hyperparamètres et leur type, ou entre les données et les opérateurs. 
 Enfin, pour l'*interopérabilité*, Lale dispose d'une bibliothèque grandissante de transformateurs et d'estimateurs issus de projets populaires comme scikit-learn, XGBoost, PyTorch, etc.
-Lale peut être installé comme n'importe quel autre bibliothèque python et peut être utilisé avec des outils Python standards comme les notebooks Jupyter.
+Lale peut être installé comme n'importe quelle autre bibliothèque python et peut être utilisé avec des outils Python standards comme les notebooks Jupyter.
 
 * [Introduction](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) pour les utilisateurs de scikit-learn
 * Instructions pour l'[installation](https://github.com/IBM/lale/blob/master/docs/installation.rst)
@@ -29,7 +29,7 @@ Lale peut être installé comme n'importe quel autre bibliothèque python et peu
 * [Documentation de l'API](https://lale.readthedocs.io/en/latest/)
 
 Le nom Lale, prononcé *laleh*, vient de tulipe en persan. 
-Comme les autre bibliothèques populaires d'apprentissage automatique comme scikit-learn, Lale est une simple bibliothèque python, pas un nouveau langage de programmation. 
+Comme les autres bibliothèques populaires d'apprentissage automatique comme scikit-learn, Lale est une simple bibliothèque python, pas un nouveau langage de programmation. 
 Il n'est pas necessaire d'installer de nouveaux outils ni d'apprendre une nouvelle syntaxe.
 
 Lale est distribué sous les termes de la licence Apache 2.0, voir
