@@ -92,7 +92,6 @@ from .birch import Birch
 from .dictionary_learning import DictionaryLearning
 from .factor_analysis import FactorAnalysis
 from .fast_ica import FastICA
-from .feature_agglomeration import FeatureAgglomeration
 from .function_transformer import FunctionTransformer
 from .gaussian_random_projection import GaussianRandomProjection
 from .incremental_pca import IncrementalPCA
@@ -122,6 +121,7 @@ from .polynomial_features import PolynomialFeatures
 from .power_transformer import PowerTransformer
 from .quantile_transformer import QuantileTransformer
 from .rbf_sampler import RBFSampler
+from .random_trees_embedding import RandomTreesEmbedding
 from .robust_scaler import RobustScaler
 from .simple_imputer import SimpleImputer
 from .skewed_chi2_sampler import SkewedChi2Sampler
