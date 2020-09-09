@@ -29,7 +29,6 @@ class PCAImpl():
         return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the PCA model from scikit-learn.',
     'allOf': [{
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.\n',
@@ -151,7 +150,6 @@ outputs with unit component-wise variances.""",
 ]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
@@ -167,7 +165,6 @@ _input_fit_schema = {
             'laleType': 'Any'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
@@ -180,7 +177,6 @@ _input_transform_schema = {
                 'items': {'type': 'number'}}}}}
 
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Features; the outer array is over samples.',
     'type': 'array',
     'items': {
@@ -194,6 +190,7 @@ _combined_schemas = {
 .. _`Principal component analysis`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.PCA.html#sklearn-decomposition-pca
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html',
+    'import_from': 'sklearn.decomposition',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

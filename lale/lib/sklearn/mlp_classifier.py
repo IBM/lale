@@ -39,7 +39,6 @@ class MLPClassifierImpl():
       return self
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description':
         'Hyperparameter schema for the MLPClassifier model from scikit-learn.',
     'allOf': [{
@@ -228,7 +227,6 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the model to data matrix X and target(s) y.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -252,7 +250,6 @@ _input_fit_schema = {
             {   'type': 'array', 'items': {'type': 'boolean'}}]}}}
 
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the multi-layer perceptron classifier',
     'type': 'object',
     'required': ['X'],
@@ -265,7 +262,6 @@ _input_predict_schema = {
                 'type': 'array', 'items': {'type': 'number'}}}}}
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict using the multi-layer perceptron classifier',
     'anyOf': [
     {   'type': 'array', 'items': {'type': 'number'}},
@@ -296,6 +292,7 @@ _combined_schemas = {
 .. _`Multi-layer perceptron`: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn-neural-network-mlpclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.mlp_classifier.html',
+    'import_from': 'sklearn.neural_network',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

@@ -51,7 +51,6 @@ class PassiveAggressiveClassifierImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Passive Aggressive Classifier',
     'allOf': [{
         'type': 'object',
@@ -154,7 +153,6 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit linear model with Passive Aggressive algorithm.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -186,7 +184,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
     'type': 'object',
     'required': ['X'],
@@ -200,7 +197,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -234,6 +230,7 @@ _combined_schemas = {
 .. _`Passive aggressive`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html#sklearn-linear-model-passiveaggressiveclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.passive_aggressive_classifier.html',
+    'import_from': 'sklearn.linear_model',
     'type': 'object',
     'tags': {
         'pre': [],

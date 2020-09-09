@@ -232,7 +232,8 @@ _combined_schemas = {
 
 .. _`Linear Support Vector Classification`: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.LinearSVC.html#sklearn-svm-linearsvc
 """,
-  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.linear_svc.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.linear_svc.html',
+    'import_from': 'sklearn.svm',
     'type': 'object',
     'tags': {
         'pre': [],

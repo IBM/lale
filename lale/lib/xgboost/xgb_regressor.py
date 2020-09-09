@@ -77,7 +77,6 @@ or with
         return self._wrapped_model.predict_proba(X)
 
 _hyperparams_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Hyperparameter schema for a Lale wrapper for XGBoost.',
   'allOf': [
     { 'description':
@@ -264,7 +263,6 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
     }],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit gradient boosting classifier',
     'type': 'object',
     'required': ['X', 'y'],
@@ -353,7 +351,6 @@ _input_fit_schema = {
     }
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict with `data`.',
     'type': 'object',
     'required': ['X'],
@@ -380,7 +377,6 @@ _input_predict_schema = {
             'default': True,
             'description': "When this is True, validate that the Booster's and data's feature_names are identical."}}}
 _output_predict_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for predictions (target class labels).',
   'type': 'array',
   'items': {'type': 'number'}}
@@ -407,6 +403,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
     'documentation_url': 'https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn',
+    'import_from': 'xgboost',
     'tags': {
         'pre': [],
         'op': ['estimator', 'regressor'],

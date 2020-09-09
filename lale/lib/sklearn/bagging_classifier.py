@@ -50,7 +50,6 @@ class BaggingClassifierImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'A Bagging classifier.',
     'allOf': [{
         'type': 'object',
@@ -119,7 +118,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a Bagging ensemble of estimators from the training',
     'type': 'object',
     'required': ['y', 'X'],
@@ -148,7 +146,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class for X.',
     'type': 'object',
     'required': ['X'],
@@ -164,14 +161,12 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted classes.',
     'type': 'array',
     'items': {
         'type': 'number'},
 }
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities for X.',
     'type': 'object',
     'required': ['X'],
@@ -187,7 +182,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The class probabilities of the input samples. The order of the',
     'type': 'array',
     'items': {
@@ -224,6 +218,7 @@ _combined_schemas = {
 .. _`Bagging classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.BaggingClassifier.html#sklearn-ensemble-baggingclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.bagging_classifier.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

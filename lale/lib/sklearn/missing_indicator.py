@@ -36,8 +36,8 @@ class MissingIndicatorImpl():
 
     def transform(self, X):
         return self._wrapped_model.transform(X)
+
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for MissingIndicator    Binary indicators for missing values.',
     'allOf': [{
         'type': 'object',
@@ -81,7 +81,6 @@ _hyperparams_schema = {
             }}]}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the transformer on X.',
     'type': 'object',
     'required': ['X'],
@@ -97,7 +96,6 @@ _input_fit_schema = {
     },
 }
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Generate missing values indicator for X.',
     'type': 'object',
     'required': ['X'],
@@ -113,7 +111,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The missing indicator for input data.',
     'type': 'array',
     'items': {'type': 'array', 
@@ -127,6 +124,7 @@ _combined_schemas = {
 .. _`Missing values indicator`: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.MissingIndicator.html#sklearn-impute-missingindicator
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.missing_indicator.html',
+    'import_from': 'sklearn.impute',
     'type': 'object',
     'tags': {
         'pre': [],

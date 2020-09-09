@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-import astunparse
+import black
 import importlib
 import inspect
 import json
@@ -30,16 +29,18 @@ import lale.type_checking
 import lale.expressions
 
 JSON_TYPE = Dict[str, Any]
+_black78 = black.Mode(line_length=78)
 
 class _CodeGenState:
     imports: List[str]
     assigns: List[str]
     _names: Set[str]
 
-    def __init__(self, names: Set[str], combinators: bool):
+    def __init__(self, names: Set[str], combinators: bool, astype: str):
         self.imports = []
         self.assigns = []
         self.combinators = combinators
+        self.astype= astype
         self._names = (
             { 'get_pipeline_of_applicable_type', 'lale', 'make_choice',
               'make_pipeline', 'make_union', 'make_union_no_concat',
@@ -107,32 +108,42 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
     return ', '.join(strings)
 
 def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
-    def has_op(module_name, sym):
+    def find_op(module_name, sym):
         module = importlib.import_module(module_name)
         if hasattr(module, sym):
             op = getattr(module, sym)
             if isinstance(op, lale.operators.IndividualOp):
-                return op.class_name() == class_name
-            else:
-                return hasattr(op, '__init__') and hasattr(op, 'fit') and (
-                    hasattr(op, 'predict') or hasattr(op, 'transform'))
-        return False
+                if op.class_name() == class_name:
+                    return op
+            elif hasattr(op, '__init__') and hasattr(op, 'fit'):
+                if hasattr(op, 'predict') or hasattr(op, 'transform'):
+                    return op
+        return None
     mod_name_long = class_name[:class_name.rfind('.')]
     mod_name_short = mod_name_long[:mod_name_long.rfind('.')]
     unqualified = class_name[class_name.rfind('.')+1:]
-    if has_op(mod_name_short, op_label):
-        return mod_name_short
-    if has_op(mod_name_long, op_label):
-        return mod_name_long
-    if has_op(mod_name_short, op_name):
-        return mod_name_short
-    if has_op(mod_name_long, op_name):
-        return mod_name_long
-    if has_op(mod_name_short, unqualified):
-        return mod_name_short
-    if has_op(mod_name_long, unqualified):
-        return mod_name_long
-    assert False, (op_label, op_name, class_name)
+    if class_name.startswith('lale.') and unqualified.endswith('Impl'):
+        unqualified = unqualified[:-len('Impl')]
+    op = find_op(mod_name_short, op_name)
+    if op is not None:
+        mod = mod_name_short
+    else:
+        op = find_op(mod_name_long, op_name)
+        if op is not None:
+            mod = mod_name_long
+        else:
+            op = find_op(mod_name_short, unqualified)
+            if op is not None:
+                mod = mod_name_short
+            else:
+                op = find_op(mod_name_long, unqualified)
+                if op is not None:
+                    mod = mod_name_long
+    assert op is not None, (op_label, op_name, class_name)
+    if isinstance(op, lale.operators.IndividualOp):
+        if 'import_from' in op._schemas:
+            mod = op._schemas['import_from']
+    return mod        
 
 def _op_kind(op: JSON_TYPE) -> str:
     assert isinstance(op, dict)
@@ -322,7 +333,11 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
                 for step_uid, step_val in jsn['steps'].items()}
             function = _OP_KIND_TO_FUNCTION[_op_kind(jsn)]
-            gen.imports.append(f'from lale.operators import {function}')
+            if (gen.astype == 'sklearn' and
+                function in ['make_union', 'make_pipeline']):
+                gen.imports.append(f'from sklearn.pipeline import {function}')
+            else:
+                gen.imports.append(f'from lale.operators import {function}')
             op_expr = '{}({})'.format(function,
                                       ', '.join(printed_steps.values()))
             gen.assigns.append(f'{uid} = {op_expr}')
@@ -335,6 +350,8 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             op_name = jsn['operator']
         else:
             op_name = class_name[class_name.rfind('.')+1:]
+        if op_name.endswith('Impl'):
+            op_name = op_name[:-len('Impl')]
         if op_name == label:
             import_stmt = f'from {module_name} import {op_name}'
         else:
@@ -367,8 +384,8 @@ def _collect_names(jsn: JSON_TYPE) -> Set[str]:
         result |= {jsn['label']}
     return result
 
-def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: bool) -> str:
-    gen = _CodeGenState(_collect_names(jsn), combinators)
+def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: bool, astype=str) -> str:
+    gen = _CodeGenState(_collect_names(jsn), combinators, astype)
     expr = _operator_jsn_to_string_rec('pipeline', jsn, gen)
     if expr != 'pipeline':
         gen.assigns.append(f'pipeline = {expr}')
@@ -384,33 +401,27 @@ def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: boo
         result = '\n'.join(imports_list)
         if combinators:
             result += '\nlale.wrap_imported_operators()'
-        result += '\n\n'
+        result += '\n'
         result += '\n'.join(gen.assigns)
     else:
         result = '\n'.join(gen.assigns)
-    return result
+    formatted = black.format_str(result, mode=_black78).rstrip()
+    return formatted
 
 def json_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
-    s2 = ast.parse(s1)
-    s3 = astunparse.unparse(s2).strip()
-    s4 = re.sub(r'}, {\n    (\s+)', r'},\n\1{   ', s3)
-    s5 = re.sub(r'\[{\n    (\s+)', r'[\n\1{   ', s4)
-    s6 = re.sub(r"'\$schema':[^\n{}\[\]]+\n\s+", "\1", s5)
-    while True:
-        s7 = re.sub(r',\n\s*([\]}])', r'\1', s6)
-        if s6 == s7:
-            break
-        s6 = s7
-    s8 = re.sub(r'{\s+}', r'{}', s7)
-    return s8
+    s2 = black.format_str(s1, mode=_black78).rstrip()
+    return s2
 
-def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, call_depth:int=1) -> str:
+def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, astype:str='lale', call_depth:int=1) -> str:
+    assert astype in ['lale', 'sklearn'], astype
+    if astype == 'sklearn':
+        combinators = False
     if lale.type_checking.is_schema(arg):
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
-        return _operator_jsn_to_string(jsn, show_imports, combinators)
+        return _operator_jsn_to_string(jsn, show_imports, combinators, astype)
     else:
         raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
 

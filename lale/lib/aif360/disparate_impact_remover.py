@@ -95,6 +95,7 @@ _combined_schemas = {
 .. _`Disparate impact remover`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.DisparateImpactRemover.html
 """,
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.disparate_impact_remover.html',
+  'import_from': 'aif360.algorithms.preprocessing',
   'type': 'object',
   'tags': {
     'pre': ['~categoricals'],

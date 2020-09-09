@@ -37,7 +37,6 @@ class TfidfVectorizerImpl():
         return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Convert a collection of raw documents to a matrix of TF-IDF features.',
     'allOf': [
     {   'type': 'object',
@@ -178,7 +177,6 @@ _hyperparams_schema = {
                     'enum': ['word']}}}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training the TfidfVectorizer from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -197,7 +195,6 @@ _input_fit_schema = {
             'description': 'Target class labels; the array is over samples.'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for predictions using the TfidfVectorizer model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -214,7 +211,6 @@ _input_transform_schema = {
                         'items': {'type': 'string'}}}]}}}
 
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for predictions (projected data) using the TfidfVectorizer model from scikit-learn.',
     'type': 'array',
     'items': {
@@ -229,6 +225,7 @@ _combined_schemas = {
 .. _`TF-IDF vectorizer`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html#sklearn-feature-extraction-text-tfidfvectorizer
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.tfidf_vectorizer.html',
+    'import_from': 'sklearn.feature_extraction',
     'type': 'object',
     'tags': {
         'pre': ['text'],

@@ -114,6 +114,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """Class to perform over-sampling using Synthetic Minority Over-sampling Technique (SMOTE).""",
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smote.html',
+  'import_from': 'imblearn.over_sampling',
   'type': 'object',
   'tags': {
     'pre': [],

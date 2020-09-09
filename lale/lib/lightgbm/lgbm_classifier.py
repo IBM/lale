@@ -69,7 +69,6 @@ or with
         return self._wrapped_model.predict_proba(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'LightGBM classifier. (https://lightgbm.readthedocs.io/en/latest/Python-API.html#scikit-learn-api)',
     'allOf': [{
         'type': 'object',
@@ -212,7 +211,6 @@ _hyperparams_schema = {
                 'properties': {'subsample': {'enum': [1.0]}}}]}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a lightgbm model from the training set (X, y).',
     'type': 'object',
     'required': ['X', 'y'],
@@ -319,7 +317,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return the predicted value for each sample.',
     'type': 'object',
     'properties': {
@@ -353,7 +350,6 @@ _input_predict_schema = {
 }
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return the predicted value for each sample.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -361,7 +357,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return the predicted probability for each class for each sample.',
     'type': 'object',
     'properties': {
@@ -394,7 +389,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return the predicted probability for each class for each sample.',
     'type': 'array',
     'items': {
@@ -406,6 +400,8 @@ _output_predict_proba_schema = {
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Combined schema for expected data and hyperparameters.',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lightgbm.LGBMClassifier.html',
+    'import_from': 'lightgbm.sklearn',
     'type': 'object',
     'tags': {
         'pre': [],

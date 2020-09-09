@@ -17,7 +17,6 @@ import lale.docstrings
 import sklearn.neighbors
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the KNeighborsRegressor model from scikit-learn.',
     'allOf': [{
         'description':
@@ -110,7 +109,6 @@ _hyperparams_schema = {
             }}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training the KNeighborsRegressor model from scikit-learn.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -132,7 +130,6 @@ _input_fit_schema = {
                     'type': 'array', 'items': {'type': 'number'}}}]}}}
 
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for predictions using the KNeighborsRegressor model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -146,7 +143,6 @@ _input_predict_schema = {
                 'items': { 'type': 'number'}}}}}
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Returns predicted values.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -160,6 +156,7 @@ _combined_schemas = {
 .. _`K nearest neighbors regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.neighbors.KNeighborsRegressor.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.k_neighbors_regressor.html',
+    'import_from': 'sklearn.neighbors',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],

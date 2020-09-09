@@ -173,7 +173,6 @@ _hyperparams_schema = {
             'properties': {'gpu_ids': {'enum': [None]}}}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a forest of trees from the training set (X, y).',
     'type': 'object',
     'required': ['X', 'y'],
@@ -233,6 +232,7 @@ _combined_schemas = {
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.pai4sk.random_forest_regressor.html',
+    'import_from': 'pai4sk',
     'type': 'object',
     'tags': {
         'pre': [],

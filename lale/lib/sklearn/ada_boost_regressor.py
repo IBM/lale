@@ -42,7 +42,6 @@ class AdaBoostRegressorImpl():
     def predict(self, X):
         return self._wrapped_model.predict(X)
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for AdaBoostRegressor    An AdaBoost regressor.',
     'allOf': [{
         'type': 'object',
@@ -84,7 +83,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Build a boosted regressor from the training set (X, y).',
     'required': ['X', 'y'],
     'type': 'object',
@@ -114,7 +112,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict regression value for X.',
     'type': 'object',
     'properties': {
@@ -129,7 +126,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted regression values.',
     'type': 'array',
     'items': {
@@ -142,6 +138,7 @@ _combined_schemas = {
 .. _`AdaBoost regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.AdaBoostRegressor.html#sklearn-ensemble-adaboostregressor
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ada_boost_regressor.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

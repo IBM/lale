@@ -83,6 +83,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Baseline classifier always predicts the majority class.',
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.baseline_classifier.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -74,6 +74,7 @@ _combined_schemas = {
 .. _`Calibrated equalized odds postprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.CalibratedEqOddsPostprocessing.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.calibrated_eq_odds_postprocessing.html',
+    'import_from': 'aif360.algorithms.postprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

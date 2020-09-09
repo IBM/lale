@@ -43,7 +43,6 @@ class SelectKBestImpl():
         return result
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Select features according to the k highest scores.',
     'allOf': [{
         'type': 'object',
@@ -67,7 +66,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Run score function on (X, y) and get the appropriate features.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -85,7 +83,6 @@ _input_fit_schema = {
             'description': 'Target values.'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Reduce X to the selected features.',
     'required': ['X'],
     'properties': {
@@ -100,7 +97,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The input samples with only the selected features.',
     'type': 'array',
     'items': {
@@ -114,6 +110,7 @@ _combined_schemas = {
 .. _`Select k best`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.SelectKBest.html#sklearn-feature-selection-selectkbest
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.select_k_best.html',
+    'import_from': 'sklearn.feature_selection',
     'type': 'object',
     'tags': {
         'pre': [],

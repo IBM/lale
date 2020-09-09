@@ -39,7 +39,7 @@ if on_rtd:
 else:
     install_requires=[
         'numpy',
-        'astunparse',
+        'black',
         'graphviz',
         'hyperopt==0.2.3',
         'jsonschema',

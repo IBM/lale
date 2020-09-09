@@ -39,7 +39,6 @@ class QuantileTransformerImpl():
         return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'inherited docstring for QuantileTransformer    Transform features using quantiles information.',
     'allOf': [{
         'type': 'object',
@@ -83,7 +82,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the quantiles used for transforming.',
     'type': 'object',
     'required': ['X'],
@@ -99,7 +97,6 @@ _input_fit_schema = {
     },
 }
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Feature-wise transformation of the data.',
     'type': 'object',
     'required': ['X'],
@@ -115,7 +112,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The projected data.',
     'type': 'array',
     'items': {
@@ -129,6 +125,7 @@ _combined_schemas = {
 .. _`Quantile transformer`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.QuantileTransformer.html#sklearn-preprocessing-quantiletransformer
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.quantile_transformer.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

@@ -49,7 +49,6 @@ class SampleBasedVotingImpl():
     
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'allOf': [
     {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
         'type': 'object',
@@ -58,7 +57,6 @@ _hyperparams_schema = {
         'properties': {}}]}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for transformations using NoOp.',
     'type': 'object',
     'required': ['X'],
@@ -81,6 +79,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """Treat the input as labels and use the end_index_list to produce labels using voting. Note that here, X contains the label and no y is accepted.""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.sample_based_voting.html',
+    'import_from': 'lale.lib.lale',
     'type': 'object',
     'tags': {
         'pre': [],

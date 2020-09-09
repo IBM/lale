@@ -104,7 +104,8 @@ _combined_schemas = {
 
 .. _`Standard scaler`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn-preprocessing-standardscaler
 """,
-  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.standard_scaler.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.standard_scaler.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

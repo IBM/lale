@@ -33,7 +33,6 @@ class RobustScalerImpl():
     def transform(self, X):
         return self._wrapped_model.transform(X)
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Scale features using statistics that are robust to outliers.',
     'allOf': [{
         'type': 'object',
@@ -70,7 +69,6 @@ _hyperparams_schema = {
         }}]
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute the median and quantiles to be used for scaling.',
     'type': 'object',
     'required': ['X'],
@@ -85,7 +83,6 @@ _input_fit_schema = {
             'description': 'The data used to compute the median and quantiles'},
         'y': {}}}
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Center and scale the data.',
     'type': 'object',
     'properties': {
@@ -100,7 +97,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Center and scale the data.',
     'type': 'array',
     'items': {
@@ -115,6 +111,7 @@ _combined_schemas = {
 .. _`Robust scaler`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.RobustScaler.html#sklearn-preprocessing-robustscaler
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.robust_scaler.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

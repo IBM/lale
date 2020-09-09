@@ -77,7 +77,6 @@ class OrdinalEncoderImpl():
         return X_tr
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the OrdinalEncoder model from scikit-learn.',
     'allOf': [
     {   'type': 'object',
@@ -124,7 +123,6 @@ n is the maximum encoding value based on known categories.""",
                 'default':'auto'}}}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training the OrdinalEncoder model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -134,14 +132,13 @@ _input_fit_schema = {
             'description': 'Features; the outer array is over samples.',
             'type': 'array',
             'items': {
-                'type': 'array',
-                'items': {'type': 'number'},
-            }},
+                'anyOf': [
+                    {'type': 'array', 'items': {'type': 'number'}},
+                    {'type': 'array', 'items': {'type': 'string'}}]}},
         'y': {
             'description': 'Target class labels; the array is over samples.'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for predictions using the OrdinalEncoder model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -151,11 +148,11 @@ _input_transform_schema = {
             'description': 'Features; the outer array is over samples.',
             'type': 'array',
             'items': {
-                'type': 'array',
-                'items': {'type': 'number'}}}}}
+                'anyOf': [
+                    {'type': 'array', 'items': {'type': 'number'}},
+                    {'type': 'array', 'items': {'type': 'string'}}]}}}}
 
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Output data schema for predictions (projected data) using the OrdinalEncoder model from scikit-learn.',
     'type': 'array',
     'items': {
@@ -170,6 +167,7 @@ _combined_schemas = {
 .. _`Ordinal encoder`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OrdinalEncoder.html#sklearn-preprocessing-ordinalencoder
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ordinal_encoder.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': ['categoricals'],

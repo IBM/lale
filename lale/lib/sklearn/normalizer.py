@@ -30,8 +30,8 @@ class NormalizerImpl():
 
     def transform(self, X):
         return self._wrapped_model.transform(X)
+
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Normalize samples individually to unit norm.',
     'allOf': [{
         'type': 'object',
@@ -50,7 +50,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Do nothing and return the estimator unchanged',
     'type': 'object',
     'required': ['X'],
@@ -66,7 +65,6 @@ _input_fit_schema = {
             'description': 'Target class labels; the array is over samples.'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Scale each non zero row of X to unit norm',
     'type': 'object',
     'required': ['X'],
@@ -88,7 +86,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Scale each non zero row of X to unit norm',
     'type': 'array',
     'items': {
@@ -102,6 +99,7 @@ _combined_schemas = {
 .. _`Normalizer`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Normalizer.html#sklearn-preprocessing-normalizer
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.normalizer.html',
+    'import_from': 'sklearn.preprocessing',
     'type': 'object',
     'tags': {
         'pre': [],

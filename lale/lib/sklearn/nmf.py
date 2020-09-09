@@ -43,7 +43,6 @@ class NMFImpl():
         return self._wrapped_model.transform(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Non-Negative Matrix Factorization (NMF)',
     'allOf': [{
         'type': 'object',
@@ -137,7 +136,6 @@ _hyperparams_schema = {
 }
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'type': 'object',
     'required': ['X'],
     'additionalProperties': False,
@@ -149,10 +147,10 @@ _input_fit_schema = {
                 'items': {
                     'type': 'number', 'minimum': 0.0},
             }},
-        'y': {}}}
+        'y': {
+            'laleType': 'Any'}}}
 
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'type': 'object',
     'required': ['X'],
     'properties': {
@@ -164,7 +162,6 @@ _input_transform_schema = {
                     'type': 'number', 'minimum': 0.0}}}}}
 
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transformed data',
     'type': 'array',
     'items': {
@@ -181,6 +178,7 @@ _combined_schemas = {
 .. _`Non-negative matrix factorization`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html#sklearn-decomposition-nmf
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.nmf.html',
+    'import_from': 'sklearn.decomposition',
     'type': 'object',
     'tags': {
         'pre': [],

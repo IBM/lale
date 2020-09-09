@@ -100,6 +100,7 @@ _combined_schemas = {
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 .. _StandardScaler: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.opt_standard_scaler.html',
+    'import_from': 'autoai_libs.transformers.exportable',
     'type': 'object',
     'tags': {
         'pre': [],

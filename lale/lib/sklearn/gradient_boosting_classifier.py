@@ -35,7 +35,6 @@ class GradientBoostingClassifierImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Gradient Boosting for classification.',
     'allOf': [{
         'type': 'object',
@@ -183,7 +182,6 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit the gradient boosting model.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -220,7 +218,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class for X.',
     'type': 'object',
     'properties': {
@@ -235,7 +232,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The predicted values.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -243,7 +239,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class probabilities for X.',
     'type': 'object',
     'properties': {
@@ -258,7 +253,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The class probabilities of the input samples. The order of the',
     'type': 'array',
     'items': {
@@ -295,6 +289,7 @@ _combined_schemas = {
 .. _`Gradient boosting classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html#sklearn-ensemble-gradientboostingclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_classifier.html',
+    'import_from': 'sklearn.ensemble',
     'type': 'object',
     'tags': {
         'pre': [],

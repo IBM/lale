@@ -42,7 +42,6 @@ class RidgeClassifierImpl():
         return self._wrapped_model.decision_function(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Classifier using Ridge regression.',
     'allOf': [{
         'type': 'object',
@@ -114,7 +113,6 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Ridge regression model',
     'type': 'object',
     'required': ['X', 'y'],
@@ -156,7 +154,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predict class labels for samples in X.',
     'type': 'object',
     'properties': {
@@ -174,7 +171,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -207,7 +203,8 @@ _combined_schemas = {
 
 .. _`Ridge classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.RidgeClassifier.html#sklearn-linear-model-ridgeclassifier
 """,
-  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ridge_classifier.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ridge_classifier.html',
+    'import_from': 'sklearn.linear_model',
     'type': 'object',
     'tags': {
         'pre': [],

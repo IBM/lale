@@ -17,7 +17,6 @@ import lale.docstrings
 import sklearn.neighbors
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Hyperparameter schema for the KNeighborsClassifier model from scikit-learn.',
     'allOf': [{
         'description':
@@ -110,7 +109,6 @@ _hyperparams_schema = {
             }}]}]}
 
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for training the KNeighborsClassifier model from scikit-learn.',
     'type': 'object',
     'required': ['X', 'y'],
@@ -134,7 +132,6 @@ _input_fit_schema = {
                 {'type': 'array', 'items': {'type': 'boolean'}}]}}}
 
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for predictions using the KNeighborsClassifier model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -148,7 +145,6 @@ _input_predict_schema = {
                 'items': { 'type': 'number'}}}}}
 
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted class label per sample.',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -158,7 +154,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Input data schema for predictions using the KNeighborsClassifier model from scikit-learn.',
     'type': 'object',
     'required': ['X'],
@@ -172,7 +167,6 @@ _input_predict_proba_schema = {
                 'items': { 'type': 'number'}}}}}
 
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Probability of the sample for each class in the model.',
     'type': 'array',
     'items': {'type': 'array', 'items': {'type': 'number'}}}
@@ -184,6 +178,7 @@ _combined_schemas = {
 .. _`K nearest neighbors classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn-neighbors-kneighborsclassifier
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.k_neighbors_classifier.html',
+    'import_from': 'sklearn.neighbors',
     'type': 'object',
     'tags': {
         'pre': ['~categoricals'],
