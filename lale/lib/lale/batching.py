@@ -43,7 +43,6 @@ class BatchingImpl():
     return self.transform(X, y)
 
 _input_fit_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for fit.',
   'type': 'object',
   'required': ['X', 'y'],
@@ -66,7 +65,6 @@ _input_fit_schema = {
 }
 
 _input_predict_transform_schema = { #TODO: separate predict vs. transform
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Input data schema for predictions.',
   'type': 'object',
   'required': ['X'],
@@ -89,13 +87,11 @@ _input_predict_transform_schema = { #TODO: separate predict vs. transform
 }
 
 _output_schema = { #TODO: separate predict vs. transform
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Output data schema for transformed data.',
   'laleType': 'Any'}
   
 
 _hyperparams_schema = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': 'Hyperparameter schema.',
   'allOf': [
     { 'description':

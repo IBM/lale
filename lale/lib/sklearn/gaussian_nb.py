@@ -35,7 +35,6 @@ class GaussianNBImpl():
         return self._wrapped_model.predict_proba(X)
 
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Gaussian Naive Bayes (GaussianNB)',
     'allOf': [{
         'type': 'object',
@@ -59,7 +58,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Fit Gaussian Naive Bayes according to X, y',
     'type': 'object',
     'required': ['X', 'y'],
@@ -90,7 +88,6 @@ _input_fit_schema = {
     },
 }
 _input_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Perform classification on an array of test vectors X.',
     'type': 'object',
     'properties': {
@@ -104,7 +101,6 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Predicted target values for X',
     'anyOf': [
         {'type': 'array', 'items': {'type': 'number'}},
@@ -112,7 +108,6 @@ _output_predict_schema = {
         {'type': 'array', 'items': {'type': 'boolean'}}]}
 
 _input_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Return probability estimates for the test vector X.',
     'type': 'object',
     'properties': {
@@ -126,7 +121,6 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Returns the probability of the samples for each class in',
     'type': 'array',
     'items': {

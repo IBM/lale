@@ -32,7 +32,6 @@ class PolynomialFeaturesImpl():
     def transform(self, X):
         return self._wrapped_model.transform(X)
 _hyperparams_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Generate polynomial and interaction features.',
     'allOf': [{
         'type': 'object',
@@ -62,7 +61,6 @@ _hyperparams_schema = {
         }}],
 }
 _input_fit_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Compute number of output features.',
     'type': 'object',
     'required': ['X'],
@@ -77,7 +75,6 @@ _input_fit_schema = {
             'description': 'The data.'},
         'y': {}}}
 _input_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'Transform data to polynomial features',
     'type': 'object',
     'required': ['X'],
@@ -93,7 +90,6 @@ _input_transform_schema = {
     },
 }
 _output_transform_schema = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': 'The matrix of features, where NP is the number of polynomial',
     'type': 'array',
     'items': {
