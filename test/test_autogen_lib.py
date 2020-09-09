@@ -182,6 +182,7 @@ transformers = [
     'PolynomialFeatures',
     'PowerTransformer',
     'QuantileTransformer',
+    'RandomTreesEmbedding',
     'RBFSampler',
     'RobustScaler',
     'SimpleImputer',
@@ -194,7 +195,6 @@ transformers = [
 
 failed_transformers = [
     ('CCA', 'Fit required Y (not y)'),
-    ('FeatureAgglomeration', 'too many side constraints'),
     ('LabelBinarizer', 'operates on labels (not supported by lale yet)'),
     ('LabelEncoder', 'operates on labels (not supported by lale yet)'),
     ('LatentDirichletAllocation', 'Failed 2D array output'),

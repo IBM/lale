@@ -1,42 +1,36 @@
-from sklearn.ensemble import ExtraTreesRegressor as Op
+from sklearn.ensemble import RandomTreesEmbedding as Op
 from lale.operators import make_operator
 from lale.docstrings import set_docstrings
 from numpy import nan, inf
 
 
-class ExtraTreesRegressorImpl:
+class RandomTreesEmbeddingImpl:
     def __init__(
         self,
         n_estimators=10,
-        criterion="mse",
-        max_depth=None,
+        max_depth=5,
         min_samples_split=2,
         min_samples_leaf=1,
         min_weight_fraction_leaf=0.0,
-        max_features="auto",
         max_leaf_nodes=None,
         min_impurity_decrease=0.0,
         min_impurity_split=None,
-        bootstrap=False,
-        oob_score=False,
-        n_jobs=4,
+        sparse_output=True,
+        n_jobs=1,
         random_state=None,
         verbose=0,
         warm_start=False,
     ):
         self._hyperparams = {
             "n_estimators": n_estimators,
-            "criterion": criterion,
             "max_depth": max_depth,
             "min_samples_split": min_samples_split,
             "min_samples_leaf": min_samples_leaf,
             "min_weight_fraction_leaf": min_weight_fraction_leaf,
-            "max_features": max_features,
             "max_leaf_nodes": max_leaf_nodes,
             "min_impurity_decrease": min_impurity_decrease,
             "min_impurity_split": min_impurity_split,
-            "bootstrap": bootstrap,
-            "oob_score": oob_score,
+            "sparse_output": sparse_output,
             "n_jobs": n_jobs,
             "random_state": random_state,
             "verbose": verbose,
@@ -51,29 +45,26 @@ class ExtraTreesRegressorImpl:
             self._wrapped_model.fit(X)
         return self
 
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
+    def transform(self, X):
+        return self._wrapped_model.transform(X)
 
 
 _hyperparams_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "inherited docstring for ExtraTreesRegressor    An extra-trees regressor.",
+    "description": "inherited docstring for RandomTreesEmbedding    An ensemble of totally random trees.",
     "allOf": [
         {
             "type": "object",
             "required": [
                 "n_estimators",
-                "criterion",
                 "max_depth",
                 "min_samples_split",
                 "min_samples_leaf",
                 "min_weight_fraction_leaf",
-                "max_features",
                 "max_leaf_nodes",
                 "min_impurity_decrease",
                 "min_impurity_split",
-                "bootstrap",
-                "oob_score",
+                "sparse_output",
                 "n_jobs",
                 "random_state",
                 "verbose",
@@ -81,12 +72,10 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": [
                 "n_estimators",
-                "criterion",
                 "max_depth",
                 "min_samples_split",
                 "min_samples_leaf",
-                "max_features",
-                "bootstrap",
+                "sparse_output",
             ],
             "additionalProperties": False,
             "properties": {
@@ -96,38 +85,23 @@ _hyperparams_schema = {
                     "maximumForOptimizer": 100,
                     "distribution": "uniform",
                     "default": 10,
-                    "description": "The number of trees in the forest",
-                },
-                "criterion": {
-                    "enum": ["friedman_mse", "mse"],
-                    "default": "mse",
-                    "description": "The function to measure the quality of a split",
+                    "description": "Number of trees in the forest",
                 },
                 "max_depth": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 3,
-                            "maximumForOptimizer": 5,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                    "description": "The maximum depth of the tree",
+                    "type": "integer",
+                    "minimumForOptimizer": 3,
+                    "maximumForOptimizer": 5,
+                    "distribution": "uniform",
+                    "default": 5,
+                    "description": "The maximum depth of each tree",
                 },
                 "min_samples_split": {
                     "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 2,
-                            "maximumForOptimizer": 5,
-                            "distribution": "uniform",
-                        },
+                        {"type": "integer", "forOptimizer": False},
                         {
                             "type": "number",
-                            "minimumForOptimizer": 2,
-                            "maximumForOptimizer": 5,
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 0.5,
                             "distribution": "uniform",
                         },
                     ],
@@ -136,16 +110,11 @@ _hyperparams_schema = {
                 },
                 "min_samples_leaf": {
                     "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 1,
-                            "maximumForOptimizer": 5,
-                            "distribution": "uniform",
-                        },
+                        {"type": "integer", "forOptimizer": False},
                         {
                             "type": "number",
-                            "minimumForOptimizer": 1,
-                            "maximumForOptimizer": 5,
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 0.5,
                             "distribution": "uniform",
                         },
                     ],
@@ -156,21 +125,6 @@ _hyperparams_schema = {
                     "type": "number",
                     "default": 0.0,
                     "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node",
-                },
-                "max_features": {
-                    "anyOf": [
-                        {"type": "integer", "forOptimizer": False},
-                        {
-                            "type": "number",
-                            "minimumForOptimizer": 0.01,
-                            "maximumForOptimizer": 1.0,
-                            "distribution": "uniform",
-                        },
-                        {"type": "string", "forOptimizer": False},
-                        {"enum": [None]},
-                    ],
-                    "default": "auto",
-                    "description": "The number of features to consider when looking for the best split:  - If int, then consider `max_features` features at each split",
                 },
                 "max_leaf_nodes": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
@@ -187,19 +141,14 @@ _hyperparams_schema = {
                     "default": None,
                     "description": "Threshold for early stopping in tree growth",
                 },
-                "bootstrap": {
+                "sparse_output": {
                     "type": "boolean",
-                    "default": False,
-                    "description": "Whether bootstrap samples are used when building trees",
-                },
-                "oob_score": {
-                    "type": "boolean",
-                    "default": False,
-                    "description": "Whether to use out-of-bag samples to estimate the R^2 on unseen data.",
+                    "default": True,
+                    "description": "Whether or not to return a sparse CSR matrix, as default behavior, or to return a dense array compatible with dense pipeline operators.",
                 },
                 "n_jobs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
-                    "default": 4,
+                    "default": 1,
                     "description": "The number of jobs to run in parallel for both `fit` and `predict`",
                 },
                 "random_state": {
@@ -230,43 +179,7 @@ _hyperparams_schema = {
 }
 _input_fit_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Build a forest of trees from the training set (X, y).",
-    "type": "object",
-    "required": ["X", "y"],
-    "properties": {
-        "X": {
-            "anyOf": [
-                {
-                    "type": "array",
-                    "items": {"laleType": "Any", "XXX TODO XXX": "item type"},
-                    "XXX TODO XXX": "array-like or sparse matrix of shape = [n_samples, n_features]",
-                },
-                {
-                    "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"}},
-                },
-            ],
-            "description": "The training input samples",
-        },
-        "y": {
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {
-                    "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"}},
-                },
-            ],
-            "description": "The target values (class labels in classification, real numbers in regression).",
-        },
-        "sample_weight": {
-            "anyOf": [{"type": "array", "items": {"type": "number"}}, {"enum": [None]}],
-            "description": "Sample weights",
-        },
-    },
-}
-_input_predict_schema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Predict regression target for X.",
+    "description": "Fit estimator.",
     "type": "object",
     "required": ["X"],
     "properties": {
@@ -275,7 +188,7 @@ _input_predict_schema = {
                 {
                     "type": "array",
                     "items": {"laleType": "Any", "XXX TODO XXX": "item type"},
-                    "XXX TODO XXX": "array-like or sparse matrix of shape = [n_samples, n_features]",
+                    "XXX TODO XXX": "array-like or sparse matrix, shape=(n_samples, n_features)",
                 },
                 {
                     "type": "array",
@@ -283,30 +196,54 @@ _input_predict_schema = {
                 },
             ],
             "description": "The input samples",
+        },
+        "sample_weight": {
+            "anyOf": [{"type": "array", "items": {"type": "number"}}, {"enum": [None]}],
+            "description": "Sample weights",
+        },
+    },
+}
+_input_transform_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Transform dataset.",
+    "type": "object",
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"laleType": "Any", "XXX TODO XXX": "item type"},
+                    "XXX TODO XXX": "array-like or sparse matrix, shape=(n_samples, n_features)",
+                },
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"}},
+                },
+            ],
+            "description": "Input data to be transformed",
         }
     },
 }
-_output_predict_schema = {
+_output_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "The predicted values.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "array", "items": {"type": "number"}}},
-    ],
+    "description": "Transformed dataset.",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
 }
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Combined schema for expected data and hyperparameters.",
-    "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesRegressor#sklearn-ensemble-extratreesregressor",
+    "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomTreesEmbedding#sklearn-ensemble-randomtreesembedding",
     "import_from": "sklearn.ensemble",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(ExtraTreesRegressorImpl, _combined_schemas)
-ExtraTreesRegressor = make_operator(ExtraTreesRegressorImpl, _combined_schemas)
+set_docstrings(RandomTreesEmbeddingImpl, _combined_schemas)
+RandomTreesEmbedding = make_operator(RandomTreesEmbeddingImpl, _combined_schemas)
