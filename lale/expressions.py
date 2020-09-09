@@ -122,8 +122,8 @@ def item(group: Expr, value : Union[int, str]) -> Expr:
 def max(group: Expr) -> Expr:
     return _make_call_expr('max', group)
 
-def max_gap_to_cutoff(group: Expr) -> Expr:
-    return _make_call_expr('max_gap_to_cutoff', group)
+def max_gap_to_cutoff(group: Expr, cutoff: Expr) -> Expr:
+    return _make_call_expr('max_gap_to_cutoff', group, cutoff)
 
 def mean(group: Expr) -> Expr:
     return _make_call_expr('mean', group)
@@ -150,8 +150,8 @@ def normalized_sum(group: Expr) -> Expr:
 def recent(series: Expr, age: int) -> Expr:
     return _make_call_expr('recent', series, age)
 
-def recent_gap_to_cutoff(series: Expr, age: int) -> Expr:
-    return _make_call_expr('recent_gap_to_cutoff', series, age)
+def recent_gap_to_cutoff(series: Expr, cutoff: Expr, age: int) -> Expr:
+    return _make_call_expr('recent_gap_to_cutoff', series, cutoff, age)
 
 def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
     old2new_str = pprint.pformat(old2new)
@@ -191,5 +191,8 @@ def window_variance(series: Expr, size: int) -> Expr:
 
 def window_variance_trend(series: Expr, size: int) -> Expr:
     return _make_call_expr('window_variance_trend', series, size)
+
+def string_indexer(subject: Expr) -> Expr:
+    return _make_call_expr('string_indexer', subject)
 
 it = Expr(ast.Name(id='it'))
