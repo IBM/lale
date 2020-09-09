@@ -18,16 +18,8 @@ import lale.operators
 import numpy as np
 
 class FeatureAgglomerationImpl():
-
-    def __init__(self, n_clusters=2, affinity='euclidean', memory=None, connectivity=None, compute_full_tree=None, linkage='ward', pooling_func=None):
-        self._hyperparams = {
-            'n_clusters': n_clusters,
-            'affinity': affinity,
-            'memory': memory,
-            'connectivity': connectivity,
-            'compute_full_tree': compute_full_tree,
-            'linkage': linkage,
-            'pooling_func': pooling_func}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.cluster.FeatureAgglomeration(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -46,9 +38,11 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'n_clusters': {
-                'type': 'integer',
-                'minimumForOptimizer': 2,
-                'maximumForOptimizer': 8,
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimumForOptimizer': 2,
+                    'maximumForOptimizer': 8},
+                {   'enum': [None]}],
                 'default': 2,
                 'description': 'The number of clusters to find.'},
             'affinity': {
@@ -92,40 +86,31 @@ _hyperparams_schema = {
                 'description': 'Which linkage criterion to use. The linkage criterion determines which'},
             'pooling_func': {
                 'description': 'This combines the values of agglomerated features into a single',
+                'laleType': 'callable',
                 'default': np.mean},
-        }}, {
-        'description': 'affinity, if linkage is "ward", only "euclidean" is accepted',
+        }},
+    {   'description': 'affinity, if linkage is "ward", only "euclidean" is accepted',
           'anyOf': [
             { 'type': 'object',
               'properties': {'affinity': {'enum': ['euclidean']}}},
             { 'type': 'object',
               'properties': {
-                'linkage':{'not': {'enum': ['ward']}}}}]},{
-        'description': 'compute_full_tree, useful only when specifying a connectivity matrix',
+                'linkage':{'not': {'enum': ['ward']}}}}]},
+    {   'description': 'n_clusters must be None if distance_threshold is not None.',
         'anyOf': [
         { 'type': 'object',
-            'properties': {'compute_full_tree': {'not': {'enum': ['True']}}}},
+            'properties': {'n_clusters': {'enum': [None]}}},
         { 'type': 'object',
             'properties': {
-            'connectivity': {'not': {'enum': ['None']}}}}]        
-        },
-        {'description': 'n_clusters must be None if distance_threshold is not None.',
+            'distance_threshold': {'enum': [None]}}}]},
+    {   'description': 'compute_full_tree must be True if distance_threshold is not None.',
         'anyOf': [
         { 'type': 'object',
-            'properties': {'n_clusters': {'enum': ['None']}}},
+            'properties': {'compute_full_tree': {'enum': [True]}}},
         { 'type': 'object',
             'properties': {
-            'distance_threshold': {'enum': ['None']}}}]
-        },
-        {'description': 'compute_full_tree must be True if distance_threshold is not None.',
-        'anyOf': [
-        { 'type': 'object',
-            'properties': {'compute_full_tree': {'enum': ['True']}}},
-        { 'type': 'object',
-            'properties': {
-            'distance_threshold': {'enum': ['None']}}}]
-        }],
-}
+            'distance_threshold': {'enum': [None]}}}]}]}
+
 _input_fit_schema = {
     'description': 'Fit the hierarchical clustering on the data',
     'type': 'object',
@@ -185,6 +170,17 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(FeatureAgglomerationImpl, _combined_schemas)
-
+FeatureAgglomeration : lale.operators.IndividualOp
 FeatureAgglomeration = lale.operators.make_operator(FeatureAgglomerationImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.21':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    from lale.schemas import AnyOf, Float, Null
+    FeatureAgglomeration = FeatureAgglomeration.customize_schema(
+        distance_threshold=AnyOf(
+            types=[Float(), Null()],
+            desc='The linkage distance threshold above which, clusters will not be merged.',
+            default=None))
+
+lale.docstrings.set_docstrings(FeatureAgglomerationImpl, FeatureAgglomeration._schemas)
