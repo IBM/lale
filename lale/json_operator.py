@@ -267,6 +267,8 @@ def _op_to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], ge
         if documentation_url is not None:
             jsn['documentation_url'] = documentation_url
         if isinstance(op, lale.operators.TrainableIndividualOp):
+            if hasattr(op._impl, 'viz_label'):
+                jsn['viz_label'] = op._impl.viz_label()
             if op.hyperparams() is None:
                 jsn['hyperparams'] = None
             else:
