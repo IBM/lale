@@ -156,9 +156,13 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
                 'tooltip': tooltip}
             if 'documentation_url' in step_jsn:
                 attrs['URL'] = step_jsn['documentation_url']
-            label1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\n\2', step_jsn['label'])
-            label2 = re.sub('([a-z0-9])([A-Z])', r'\1-\n\2', label1)
-            label3 = re.sub(r'([^_\n-]_)([^_\n-])', r'\1-\n\2', label2)
+            label0 = step_jsn.get('viz_label', step_jsn['label'])
+            if '\n' in label0:
+                label3 = label0
+            else:
+                label1 = re.sub('(.)([A-Z][a-z]+)', r'\1-\n\2', label0)
+                label2 = re.sub('([a-z0-9])([A-Z])', r'\1-\n\2', label1)
+                label3 = re.sub(r'([^_\n-]_)([^_\n-])', r'\1-\n\2', label2)
             dot.node(step_uid, label3, **attrs)
     cluster2root, cluster2leaf = cluster2reps
     for tail, head in edges:

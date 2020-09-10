@@ -188,6 +188,20 @@ class TestBoth(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         transformed = trained.transform(test_X)
 
+class TestMap(unittest.TestCase):
+    def test_init(self):
+        from lale.lib.lale import Map
+        from lale.expressions import it, replace
+        gender_map = {'m': 'Male', 'f': 'Female'}
+        state_map = {'NY': 'New York', 'CA': 'California'}
+        map_replace = Map(columns=[replace(it.gender, gender_map),
+                                   replace(it.state, state_map)])
+
+    def test_not_expression(self):
+        from lale.lib.lale import Map
+        with self.assertRaises(jsonschema.ValidationError):
+            map_replace = Map(columns=[123, 'hello'])
+
 class TestConcatFeatures(unittest.TestCase):
     def test_hyperparam_defaults(self):
         cf = ConcatFeatures()

@@ -26,6 +26,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 import lale.json_operator
 import lale.operators
 import lale.type_checking
+import lale.expressions
 
 JSON_TYPE = Dict[str, Any]
 _black78 = black.Mode(line_length=78)
@@ -82,6 +83,8 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
             if gen is not None:
                 gen.imports.append('import numpy as np')
             return f'np.{value.__name__}'
+        elif isinstance(value, lale.expressions.Expr):
+            return str(value)
         elif hasattr(value, '__module__') and hasattr(value, '__name__'):
             modules = {'numpy': 'np', 'pandas': 'pd'}
             module = modules.get(value.__module__, value.__module__)

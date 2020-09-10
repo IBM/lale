@@ -34,6 +34,11 @@ Transformers:
 * lale.lib.lale. `NoOp`_
 * lale.lib.lale. `Project`_
 * lale.lib.lale. `SampleBasedVoting`_
+* lale.lib.lale. `Aggregate`_
+* lale.lib.lale. `GroupBy`_
+* lale.lib.lale. `Map`_
+* lale.lib.lale. `Join`_
+* lale.lib.lale. `Scan`_
 
 Estimators and transformers:
 
@@ -52,6 +57,11 @@ Estimators and transformers:
 .. _`NoOp`: lale.lib.lale.no_op.html
 .. _`Project`: lale.lib.lale.project.html
 .. _`SampleBasedVoting`: lale.lib.lale.sample_based_voting.html
+.. _`Aggregate`: lale.lib.lale.aggregate.html
+.. _`GroupBy`: lale.lib.lale.group_by.html
+.. _`Map`: lale.lib.lale.map.html
+.. _`Join`: lale.lib.lale.join.html
+.. _`Scan`: lale.lib.lale.scan.html
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
 .. _`Observing`: lale.lib.lale.observing.html
@@ -80,6 +90,11 @@ from .concat_features import ConcatFeatures
 from .no_op import NoOp
 from .project import Project
 from .sample_based_voting import SampleBasedVoting
+from .aggregate import Aggregate
+from .group_by import GroupBy
+from .map import Map
+from .join import Join
+from .scan import Scan
 
 #estimators and transformers
 from .both import Both

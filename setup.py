@@ -48,7 +48,8 @@ else:
         'scipy',
         'pandas<=0.25.3',
         'decorator',
-        'h5py']
+        'h5py',
+        'astunparse']
 
 import lale
 if "TRAVIS" in os.environ:
