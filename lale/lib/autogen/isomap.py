@@ -5,27 +5,8 @@ from numpy import nan, inf
 
 
 class IsomapImpl:
-    def __init__(
-        self,
-        n_neighbors=5,
-        n_components=2,
-        eigen_solver="auto",
-        tol=0,
-        max_iter=None,
-        path_method="auto",
-        neighbors_algorithm="auto",
-        n_jobs=1,
-    ):
-        self._hyperparams = {
-            "n_neighbors": n_neighbors,
-            "n_components": n_components,
-            "eigen_solver": eigen_solver,
-            "tol": tol,
-            "max_iter": max_iter,
-            "path_method": path_method,
-            "neighbors_algorithm": neighbors_algorithm,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

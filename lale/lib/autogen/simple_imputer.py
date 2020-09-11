@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class SimpleImputerImpl:
-    def __init__(
-        self,
-        missing_values="nan",
-        strategy="mean",
-        fill_value=None,
-        verbose=0,
-        copy=True,
-    ):
-        self._hyperparams = {
-            "missing_values": missing_values,
-            "strategy": strategy,
-            "fill_value": fill_value,
-            "verbose": verbose,
-            "copy": copy,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

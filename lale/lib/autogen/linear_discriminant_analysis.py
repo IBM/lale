@@ -5,23 +5,8 @@ from numpy import nan, inf
 
 
 class LinearDiscriminantAnalysisImpl:
-    def __init__(
-        self,
-        solver="svd",
-        shrinkage=None,
-        priors=None,
-        n_components=None,
-        store_covariance=False,
-        tol=0.0001,
-    ):
-        self._hyperparams = {
-            "solver": solver,
-            "shrinkage": shrinkage,
-            "priors": priors,
-            "n_components": n_components,
-            "store_covariance": store_covariance,
-            "tol": tol,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,39 +5,8 @@ from numpy import nan, inf
 
 
 class NuSVCImpl:
-    def __init__(
-        self,
-        nu=0.5,
-        kernel="rbf",
-        degree=3,
-        gamma="auto_deprecated",
-        coef0=0.0,
-        shrinking=True,
-        probability=False,
-        tol=0.001,
-        cache_size=200,
-        class_weight="balanced",
-        verbose=False,
-        max_iter=(-1),
-        decision_function_shape="ovr",
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "nu": nu,
-            "kernel": kernel,
-            "degree": degree,
-            "gamma": gamma,
-            "coef0": coef0,
-            "shrinking": shrinking,
-            "probability": probability,
-            "tol": tol,
-            "cache_size": cache_size,
-            "class_weight": class_weight,
-            "verbose": verbose,
-            "max_iter": max_iter,
-            "decision_function_shape": decision_function_shape,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -77,6 +46,7 @@ _hyperparams_schema = {
                 "verbose",
                 "max_iter",
                 "decision_function_shape",
+                "break_ties",
                 "random_state",
             ],
             "relevantToOptimizer": [
@@ -113,9 +83,9 @@ _hyperparams_schema = {
                 "gamma": {
                     "anyOf": [
                         {"type": "number", "forOptimizer": False},
-                        {"enum": ["auto_deprecated"]},
+                        {"enum": ["scale", "auto"]},
                     ],
-                    "default": "auto_deprecated",
+                    "default": "scale",
                     "description": "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'",
                 },
                 "coef0": {
@@ -173,6 +143,11 @@ _hyperparams_schema = {
                     "description": "Whether to return a one-vs-rest ('ovr') decision function of shape (n_samples, n_classes) as all other classifiers, or the original one-vs-one ('ovo') decision function of libsvm which has shape (n_samples, n_classes * (n_classes - 1) / 2)",
                     "enum": ["ovr"],
                     "default": "ovr",
+                },
+                "break_ties": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "If true, decision_function_shape='ovr', and number of classes > 2, predict will break ties according to the confidence values of decision_function; otherwise the first class among the tied classes is returned.",
                 },
                 "random_state": {
                     "anyOf": [

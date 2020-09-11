@@ -5,27 +5,8 @@ from numpy import nan, inf
 
 
 class RidgeImpl:
-    def __init__(
-        self,
-        alpha=1.0,
-        fit_intercept=True,
-        normalize=False,
-        copy_X=True,
-        max_iter=None,
-        tol=0.001,
-        solver="auto",
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "alpha": alpha,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "copy_X": copy_X,
-            "max_iter": max_iter,
-            "tol": tol,
-            "solver": solver,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

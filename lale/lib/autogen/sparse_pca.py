@@ -5,35 +5,8 @@ from numpy import nan, inf
 
 
 class SparsePCAImpl:
-    def __init__(
-        self,
-        n_components=None,
-        alpha=1,
-        ridge_alpha=0.01,
-        max_iter=1000,
-        tol=1e-08,
-        method="lars",
-        n_jobs=1,
-        U_init=None,
-        V_init=None,
-        verbose=False,
-        random_state=None,
-        normalize_components=False,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "alpha": alpha,
-            "ridge_alpha": ridge_alpha,
-            "max_iter": max_iter,
-            "tol": tol,
-            "method": method,
-            "n_jobs": n_jobs,
-            "U_init": U_init,
-            "V_init": V_init,
-            "verbose": verbose,
-            "random_state": random_state,
-            "normalize_components": normalize_components,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -65,7 +38,6 @@ _hyperparams_schema = {
                 "V_init",
                 "verbose",
                 "random_state",
-                "normalize_components",
             ],
             "relevantToOptimizer": [
                 "n_components",
@@ -163,11 +135,6 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                     "description": "If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.",
-                },
-                "normalize_components": {
-                    "type": "boolean",
-                    "default": False,
-                    "description": "- if False, use a version of Sparse PCA without components   normalization and without data centering",
                 },
             },
         }

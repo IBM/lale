@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class StandardScalerImpl:
-    def __init__(self, copy=True, with_mean=True, with_std=True):
-        self._hyperparams = {"copy": copy, "with_mean": with_mean, "with_std": with_std}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

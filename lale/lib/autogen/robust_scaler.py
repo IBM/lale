@@ -5,19 +5,8 @@ from numpy import nan, inf
 
 
 class RobustScalerImpl:
-    def __init__(
-        self,
-        with_centering=True,
-        with_scaling=True,
-        quantile_range=(25.0, 75.0),
-        copy=True,
-    ):
-        self._hyperparams = {
-            "with_centering": with_centering,
-            "with_scaling": with_scaling,
-            "quantile_range": quantile_range,
-            "copy": copy,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

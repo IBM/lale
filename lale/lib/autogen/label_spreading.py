@@ -5,25 +5,8 @@ from numpy import nan, inf
 
 
 class LabelSpreadingImpl:
-    def __init__(
-        self,
-        kernel="rbf",
-        gamma=20,
-        n_neighbors=7,
-        alpha=0.2,
-        max_iter=30,
-        tol=0.001,
-        n_jobs=1,
-    ):
-        self._hyperparams = {
-            "kernel": kernel,
-            "gamma": gamma,
-            "n_neighbors": n_neighbors,
-            "alpha": alpha,
-            "max_iter": max_iter,
-            "tol": tol,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

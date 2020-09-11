@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class QuadraticDiscriminantAnalysisImpl:
-    def __init__(
-        self,
-        priors=None,
-        reg_param=0.0,
-        store_covariance=False,
-        tol=0.0001,
-        store_covariances=None,
-    ):
-        self._hyperparams = {
-            "priors": priors,
-            "reg_param": reg_param,
-            "store_covariance": store_covariance,
-            "tol": tol,
-            "store_covariances": store_covariances,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -50,7 +37,6 @@ _hyperparams_schema = {
                 "reg_param",
                 "store_covariance",
                 "tol",
-                "store_covariances",
             ],
             "relevantToOptimizer": ["tol"],
             "additionalProperties": False,
@@ -78,11 +64,6 @@ _hyperparams_schema = {
                     "distribution": "loguniform",
                     "default": 0.0001,
                     "description": "Threshold used for rank estimation",
-                },
-                "store_covariances": {
-                    "anyOf": [{"type": "boolean"}, {"enum": [None]}],
-                    "default": None,
-                    "description": "Deprecated, use `store_covariance`.",
                 },
             },
         }

@@ -5,23 +5,8 @@ from numpy import nan, inf
 
 
 class OneHotEncoderImpl:
-    def __init__(
-        self,
-        categories=None,
-        sparse=True,
-        dtype=None,
-        handle_unknown="error",
-        n_values=None,
-        categorical_features=None,
-    ):
-        self._hyperparams = {
-            "categories": categories,
-            "sparse": sparse,
-            "dtype": dtype,
-            "handle_unknown": handle_unknown,
-            "n_values": n_values,
-            "categorical_features": categorical_features,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -43,20 +28,27 @@ _hyperparams_schema = {
             "type": "object",
             "required": [
                 "categories",
+                "drop",
                 "sparse",
                 "dtype",
                 "handle_unknown",
-                "n_values",
-                "categorical_features",
             ],
-            "relevantToOptimizer": ["sparse"],
+            "relevantToOptimizer": [],
             "additionalProperties": False,
             "properties": {
                 "categories": {
                     "XXX TODO XXX": "'auto' or a list of lists/arrays of values, default='auto'.",
                     "description": "Categories (unique values) per feature:  - 'auto' : Determine categories automatically from the training data",
-                    "enum": [None],
+                    "enum": ["auto"],
+                    "default": "auto",
+                },
+                "drop":{
+                    "anyOf": [
+                        {"type": "array", "items": {"type": "number"}},
+                        {"enum": ["first", "if_binary", None]},
+                    ],
                     "default": None,
+                    "description": "Specifies a methodology to use to drop one of the categories per feature.",
                 },
                 "sparse": {
                     "type": "boolean",
@@ -73,18 +65,6 @@ _hyperparams_schema = {
                     "description": "Whether to raise an error or ignore if an unknown categorical feature is present during transform (default is to raise)",
                     "enum": ["error"],
                     "default": "error",
-                },
-                "n_values": {
-                    "XXX TODO XXX": "'auto', int or array of ints, default='auto'",
-                    "description": "Number of values per feature",
-                    "enum": [None],
-                    "default": None,
-                },
-                "categorical_features": {
-                    "XXX TODO XXX": "'all' or array of indices or mask, default='all'",
-                    "description": "Specify what features are treated as categorical",
-                    "enum": [None],
-                    "default": None,
                 },
             },
         }

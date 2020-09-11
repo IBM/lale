@@ -5,27 +5,8 @@ from numpy import nan, inf
 
 
 class FactorAnalysisImpl:
-    def __init__(
-        self,
-        n_components=None,
-        tol=0.01,
-        copy=True,
-        max_iter=1000,
-        noise_variance_init=None,
-        svd_method="randomized",
-        iterated_power=3,
-        random_state=0,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "tol": tol,
-            "copy": copy,
-            "max_iter": max_iter,
-            "noise_variance_init": noise_variance_init,
-            "svd_method": svd_method,
-            "iterated_power": iterated_power,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

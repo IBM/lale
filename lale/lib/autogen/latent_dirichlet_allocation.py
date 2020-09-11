@@ -5,45 +5,8 @@ from numpy import nan, inf
 
 
 class LatentDirichletAllocationImpl:
-    def __init__(
-        self,
-        n_components=10,
-        doc_topic_prior=None,
-        topic_word_prior=None,
-        learning_method="batch",
-        learning_decay=0.7,
-        learning_offset=10.0,
-        max_iter=10,
-        batch_size=128,
-        evaluate_every=(-1),
-        total_samples=1000000.0,
-        perp_tol=0.1,
-        mean_change_tol=0.001,
-        max_doc_update_iter=100,
-        n_jobs=1,
-        verbose=0,
-        random_state=None,
-        n_topics=None,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "doc_topic_prior": doc_topic_prior,
-            "topic_word_prior": topic_word_prior,
-            "learning_method": learning_method,
-            "learning_decay": learning_decay,
-            "learning_offset": learning_offset,
-            "max_iter": max_iter,
-            "batch_size": batch_size,
-            "evaluate_every": evaluate_every,
-            "total_samples": total_samples,
-            "perp_tol": perp_tol,
-            "mean_change_tol": mean_change_tol,
-            "max_doc_update_iter": max_doc_update_iter,
-            "n_jobs": n_jobs,
-            "verbose": verbose,
-            "random_state": random_state,
-            "n_topics": n_topics,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -311,4 +274,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(LatentDirichletAllocationImpl, _combined_schemas)
-LatentDirichletAllocation = make_operator(LatentDirichletAllocationImpl, _combined_schemas)
+LatentDirichletAllocation = make_operator(
+    LatentDirichletAllocationImpl, _combined_schemas
+)

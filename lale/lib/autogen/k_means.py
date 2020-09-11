@@ -5,33 +5,8 @@ from numpy import nan, inf
 
 
 class KMeansImpl:
-    def __init__(
-        self,
-        n_clusters=8,
-        init="k-means++",
-        n_init=10,
-        max_iter=300,
-        tol=0.0001,
-        precompute_distances="auto",
-        verbose=0,
-        random_state=None,
-        copy_x=True,
-        n_jobs=1,
-        algorithm="auto",
-    ):
-        self._hyperparams = {
-            "n_clusters": n_clusters,
-            "init": init,
-            "n_init": n_init,
-            "max_iter": max_iter,
-            "tol": tol,
-            "precompute_distances": precompute_distances,
-            "verbose": verbose,
-            "random_state": random_state,
-            "copy_x": copy_x,
-            "n_jobs": n_jobs,
-            "algorithm": algorithm,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

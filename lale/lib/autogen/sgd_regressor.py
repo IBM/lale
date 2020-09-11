@@ -5,51 +5,8 @@ from numpy import nan, inf
 
 
 class SGDRegressorImpl:
-    def __init__(
-        self,
-        loss="squared_loss",
-        penalty="l2",
-        alpha=0.0001,
-        l1_ratio=0.15,
-        fit_intercept=True,
-        max_iter=None,
-        tol=None,
-        shuffle=True,
-        verbose=0,
-        epsilon=0.1,
-        random_state=None,
-        learning_rate="invscaling",
-        eta0=0.01,
-        power_t=0.25,
-        early_stopping=False,
-        validation_fraction=0.1,
-        n_iter_no_change=5,
-        warm_start=False,
-        average=False,
-        n_iter=None,
-    ):
-        self._hyperparams = {
-            "loss": loss,
-            "penalty": penalty,
-            "alpha": alpha,
-            "l1_ratio": l1_ratio,
-            "fit_intercept": fit_intercept,
-            "max_iter": max_iter,
-            "tol": tol,
-            "shuffle": shuffle,
-            "verbose": verbose,
-            "epsilon": epsilon,
-            "random_state": random_state,
-            "learning_rate": learning_rate,
-            "eta0": eta0,
-            "power_t": power_t,
-            "early_stopping": early_stopping,
-            "validation_fraction": validation_fraction,
-            "n_iter_no_change": n_iter_no_change,
-            "warm_start": warm_start,
-            "average": average,
-            "n_iter": n_iter,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -89,7 +46,6 @@ _hyperparams_schema = {
                 "n_iter_no_change",
                 "warm_start",
                 "average",
-                "n_iter",
             ],
             "relevantToOptimizer": [
                 "loss",
@@ -102,7 +58,6 @@ _hyperparams_schema = {
                 "epsilon",
                 "learning_rate",
                 "eta0",
-                "n_iter",
             ],
             "additionalProperties": False,
             "properties": {
@@ -235,19 +190,6 @@ _hyperparams_schema = {
                     "anyOf": [{"type": "boolean"}, {"type": "integer"}],
                     "default": False,
                     "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute",
-                },
-                "n_iter": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 5,
-                            "maximumForOptimizer": 1000,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                    "description": "The number of passes over the training data (aka epochs)",
                 },
             },
         },

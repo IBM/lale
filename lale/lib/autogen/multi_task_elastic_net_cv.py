@@ -5,39 +5,8 @@ from numpy import nan, inf
 
 
 class MultiTaskElasticNetCVImpl:
-    def __init__(
-        self,
-        l1_ratio=0.5,
-        eps=0.001,
-        n_alphas=100,
-        alphas=None,
-        fit_intercept=True,
-        normalize=False,
-        max_iter=1000,
-        tol=0.0001,
-        cv=3,
-        copy_X=True,
-        verbose=0,
-        n_jobs=1,
-        random_state=None,
-        selection="cyclic",
-    ):
-        self._hyperparams = {
-            "l1_ratio": l1_ratio,
-            "eps": eps,
-            "n_alphas": n_alphas,
-            "alphas": alphas,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "max_iter": max_iter,
-            "tol": tol,
-            "cv": cv,
-            "copy_X": copy_X,
-            "verbose": verbose,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "selection": selection,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

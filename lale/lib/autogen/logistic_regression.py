@@ -5,39 +5,8 @@ from numpy import nan, inf
 
 
 class LogisticRegressionImpl:
-    def __init__(
-        self,
-        penalty="l2",
-        dual=False,
-        tol=0.0001,
-        C=1.0,
-        fit_intercept=True,
-        intercept_scaling=1,
-        class_weight="balanced",
-        random_state=None,
-        solver="liblinear",
-        max_iter=100,
-        multi_class="ovr",
-        verbose=0,
-        warm_start=False,
-        n_jobs=1,
-    ):
-        self._hyperparams = {
-            "penalty": penalty,
-            "dual": dual,
-            "tol": tol,
-            "C": C,
-            "fit_intercept": fit_intercept,
-            "intercept_scaling": intercept_scaling,
-            "class_weight": class_weight,
-            "random_state": random_state,
-            "solver": solver,
-            "max_iter": max_iter,
-            "multi_class": multi_class,
-            "verbose": verbose,
-            "warm_start": warm_start,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

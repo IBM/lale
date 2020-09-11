@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class OrdinalEncoderImpl:
-    def __init__(self, categories="auto", dtype=None):
-        self._hyperparams = {"categories": categories, "dtype": dtype}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

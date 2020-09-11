@@ -5,27 +5,8 @@ from numpy import nan, inf
 
 
 class FunctionTransformerImpl:
-    def __init__(
-        self,
-        func=None,
-        inverse_func=None,
-        validate=None,
-        accept_sparse=False,
-        pass_y="deprecated",
-        check_inverse=True,
-        kw_args=None,
-        inv_kw_args=None,
-    ):
-        self._hyperparams = {
-            "func": func,
-            "inverse_func": inverse_func,
-            "validate": validate,
-            "accept_sparse": accept_sparse,
-            "pass_y": pass_y,
-            "check_inverse": check_inverse,
-            "kw_args": kw_args,
-            "inv_kw_args": inv_kw_args,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -50,12 +31,11 @@ _hyperparams_schema = {
                 "inverse_func",
                 "validate",
                 "accept_sparse",
-                "pass_y",
                 "check_inverse",
                 "kw_args",
                 "inv_kw_args",
             ],
-            "relevantToOptimizer": ["accept_sparse", "pass_y"],
+            "relevantToOptimizer": ["accept_sparse"],
             "additionalProperties": False,
             "properties": {
                 "func": {
@@ -77,11 +57,6 @@ _hyperparams_schema = {
                     "type": "boolean",
                     "default": False,
                     "description": "Indicate that func accepts a sparse matrix as input",
-                },
-                "pass_y": {
-                    "anyOf": [{"type": "boolean"}, {"enum": ["deprecated"]}],
-                    "default": "deprecated",
-                    "description": "Indicate that transform should forward the y argument to the inner callable",
                 },
                 "check_inverse": {
                     "type": "boolean",

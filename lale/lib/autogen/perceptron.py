@@ -5,43 +5,8 @@ from numpy import nan, inf
 
 
 class PerceptronImpl:
-    def __init__(
-        self,
-        penalty=None,
-        alpha=0.0001,
-        fit_intercept=True,
-        max_iter=None,
-        tol=None,
-        shuffle=True,
-        verbose=0,
-        eta0=1.0,
-        n_jobs=1,
-        random_state=None,
-        early_stopping=False,
-        validation_fraction=0.1,
-        n_iter_no_change=5,
-        class_weight="balanced",
-        warm_start=False,
-        n_iter=None,
-    ):
-        self._hyperparams = {
-            "penalty": penalty,
-            "alpha": alpha,
-            "fit_intercept": fit_intercept,
-            "max_iter": max_iter,
-            "tol": tol,
-            "shuffle": shuffle,
-            "verbose": verbose,
-            "eta0": eta0,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "early_stopping": early_stopping,
-            "validation_fraction": validation_fraction,
-            "n_iter_no_change": n_iter_no_change,
-            "class_weight": class_weight,
-            "warm_start": warm_start,
-            "n_iter": n_iter,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -80,7 +45,6 @@ _hyperparams_schema = {
                 "n_iter_no_change",
                 "class_weight",
                 "warm_start",
-                "n_iter",
             ],
             "relevantToOptimizer": [
                 "alpha",
@@ -89,7 +53,6 @@ _hyperparams_schema = {
                 "tol",
                 "shuffle",
                 "eta0",
-                "n_iter",
             ],
             "additionalProperties": False,
             "properties": {
@@ -195,19 +158,6 @@ _hyperparams_schema = {
                     "type": "boolean",
                     "default": False,
                     "description": "When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution",
-                },
-                "n_iter": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 5,
-                            "maximumForOptimizer": 1000,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                    "description": "The number of passes over the training data (aka epochs)",
                 },
             },
         },

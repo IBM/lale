@@ -5,25 +5,8 @@ from numpy import nan, inf
 
 
 class PCAImpl:
-    def __init__(
-        self,
-        n_components=None,
-        copy=True,
-        whiten=False,
-        svd_solver="auto",
-        tol=0.0,
-        iterated_power="auto",
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "copy": copy,
-            "whiten": whiten,
-            "svd_solver": svd_solver,
-            "tol": tol,
-            "iterated_power": iterated_power,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
