@@ -670,6 +670,10 @@ class IndividualOp(Operator):
             else:
                 raise AttributeError(f"Calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}.")
 
+        if name == '_estimator_type':
+            if self.is_classifier():
+                return 'classifier' #satisfy sklearn.base.is_classifier(op)
+
         ea = self.enum
         if name in ea:
             return ea[name]
