@@ -5,29 +5,8 @@ from numpy import nan, inf
 
 
 class LarsImpl:
-    def __init__(
-        self,
-        fit_intercept=True,
-        verbose=False,
-        normalize=True,
-        precompute="auto",
-        n_nonzero_coefs=500,
-        eps=2.220446049250313e-16,
-        copy_X=True,
-        fit_path=True,
-        positive=False,
-    ):
-        self._hyperparams = {
-            "fit_intercept": fit_intercept,
-            "verbose": verbose,
-            "normalize": normalize,
-            "precompute": precompute,
-            "n_nonzero_coefs": n_nonzero_coefs,
-            "eps": eps,
-            "copy_X": copy_X,
-            "fit_path": fit_path,
-            "positive": positive,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -56,7 +35,8 @@ _hyperparams_schema = {
                 "eps",
                 "copy_X",
                 "fit_path",
-                "positive",
+                "jitter",
+                "random_state",
             ],
             "relevantToOptimizer": [
                 "fit_intercept",
@@ -65,7 +45,6 @@ _hyperparams_schema = {
                 "n_nonzero_coefs",
                 "eps",
                 "copy_X",
-                "positive",
             ],
             "additionalProperties": False,
             "properties": {
@@ -123,10 +102,22 @@ _hyperparams_schema = {
                     "default": True,
                     "description": "If True the full path is stored in the ``coef_path_`` attribute",
                 },
-                "positive": {
-                    "type": "boolean",
-                    "default": False,
-                    "description": "Restrict coefficients to be >= 0",
+                "jitter": {
+                    "anyOf": [
+                        {"type": "number"},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "Upper bound on a uniform noise parameter to be added to the y values, to satisfy the model’s assumption of one-at-a-time computations"
+                },
+                "random_state": {
+                    "anyOf": [
+                        {"type": "integer"},
+                        {"laleType": "numpy.random.RandomState"},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "The seed of the pseudo random number generator to use when shuffling the data",
                 },
             },
         }

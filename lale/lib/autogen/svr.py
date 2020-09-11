@@ -5,33 +5,8 @@ from numpy import nan, inf
 
 
 class SVRImpl:
-    def __init__(
-        self,
-        kernel="rbf",
-        degree=3,
-        gamma="auto_deprecated",
-        coef0=0.0,
-        tol=0.001,
-        C=1.0,
-        epsilon=0.1,
-        shrinking=True,
-        cache_size=200,
-        verbose=False,
-        max_iter=(-1),
-    ):
-        self._hyperparams = {
-            "kernel": kernel,
-            "degree": degree,
-            "gamma": gamma,
-            "coef0": coef0,
-            "tol": tol,
-            "C": C,
-            "epsilon": epsilon,
-            "shrinking": shrinking,
-            "cache_size": cache_size,
-            "verbose": verbose,
-            "max_iter": max_iter,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -92,9 +67,9 @@ _hyperparams_schema = {
                 "gamma": {
                     "anyOf": [
                         {"type": "number", "forOptimizer": False},
-                        {"enum": ["auto_deprecated"]},
+                        {"enum": ["scale", "auto"]},
                     ],
-                    "default": "auto_deprecated",
+                    "default": "scale",
                     "description": "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'",
                 },
                 "coef0": {

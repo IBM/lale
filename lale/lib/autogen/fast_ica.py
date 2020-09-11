@@ -5,29 +5,8 @@ from numpy import nan, inf
 
 
 class FastICAImpl:
-    def __init__(
-        self,
-        n_components=None,
-        algorithm="parallel",
-        whiten=True,
-        fun="logcosh",
-        fun_args=None,
-        max_iter=200,
-        tol=0.0001,
-        w_init=None,
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "algorithm": algorithm,
-            "whiten": whiten,
-            "fun": fun,
-            "fun_args": fun_args,
-            "max_iter": max_iter,
-            "tol": tol,
-            "w_init": w_init,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class MultiLabelBinarizerImpl:
-    def __init__(self, classes=None, sparse_output=False):
-        self._hyperparams = {"classes": classes, "sparse_output": sparse_output}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

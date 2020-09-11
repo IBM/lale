@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class GaussianNBImpl:
-    def __init__(self, priors=None, var_smoothing=1e-09):
-        self._hyperparams = {"priors": priors, "var_smoothing": var_smoothing}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

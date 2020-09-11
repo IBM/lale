@@ -5,19 +5,8 @@ from numpy import nan, inf
 
 
 class MissingIndicatorImpl:
-    def __init__(
-        self,
-        missing_values="nan",
-        features="missing-only",
-        sparse="auto",
-        error_on_new=True,
-    ):
-        self._hyperparams = {
-            "missing_values": missing_values,
-            "features": features,
-            "sparse": sparse,
-            "error_on_new": error_on_new,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

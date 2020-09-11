@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class MaxAbsScalerImpl:
-    def __init__(self, copy=True):
-        self._hyperparams = {"copy": copy}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,33 +5,8 @@ from numpy import nan, inf
 
 
 class NMFImpl:
-    def __init__(
-        self,
-        n_components=None,
-        init=None,
-        solver="cd",
-        beta_loss="frobenius",
-        tol=0.0001,
-        max_iter=200,
-        random_state=None,
-        alpha=0.0,
-        l1_ratio=0.0,
-        verbose=0,
-        shuffle=False,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "init": init,
-            "solver": solver,
-            "beta_loss": beta_loss,
-            "tol": tol,
-            "max_iter": max_iter,
-            "random_state": random_state,
-            "alpha": alpha,
-            "l1_ratio": l1_ratio,
-            "verbose": verbose,
-            "shuffle": shuffle,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

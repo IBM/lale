@@ -5,43 +5,8 @@ from numpy import nan, inf
 
 
 class MiniBatchDictionaryLearningImpl:
-    def __init__(
-        self,
-        n_components=None,
-        alpha=1,
-        n_iter=1000,
-        fit_algorithm="lars",
-        n_jobs=1,
-        batch_size=3,
-        shuffle=True,
-        dict_init=None,
-        transform_algorithm="omp",
-        transform_n_nonzero_coefs=None,
-        transform_alpha=None,
-        verbose=False,
-        split_sign=False,
-        random_state=None,
-        positive_code=False,
-        positive_dict=False,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "alpha": alpha,
-            "n_iter": n_iter,
-            "fit_algorithm": fit_algorithm,
-            "n_jobs": n_jobs,
-            "batch_size": batch_size,
-            "shuffle": shuffle,
-            "dict_init": dict_init,
-            "transform_algorithm": transform_algorithm,
-            "transform_n_nonzero_coefs": transform_n_nonzero_coefs,
-            "transform_alpha": transform_alpha,
-            "verbose": verbose,
-            "split_sign": split_sign,
-            "random_state": random_state,
-            "positive_code": positive_code,
-            "positive_dict": positive_dict,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

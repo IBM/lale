@@ -5,41 +5,8 @@ from numpy import nan, inf
 
 
 class KernelPCAImpl:
-    def __init__(
-        self,
-        n_components=None,
-        kernel="linear",
-        gamma=None,
-        degree=3,
-        coef0=1,
-        kernel_params=None,
-        alpha=1.0,
-        fit_inverse_transform=False,
-        eigen_solver="auto",
-        tol=0,
-        max_iter=None,
-        remove_zero_eig=False,
-        random_state=None,
-        copy_X=True,
-        n_jobs=1,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "kernel": kernel,
-            "gamma": gamma,
-            "degree": degree,
-            "coef0": coef0,
-            "kernel_params": kernel_params,
-            "alpha": alpha,
-            "fit_inverse_transform": fit_inverse_transform,
-            "eigen_solver": eigen_solver,
-            "tol": tol,
-            "max_iter": max_iter,
-            "remove_zero_eig": remove_zero_eig,
-            "random_state": random_state,
-            "copy_X": copy_X,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

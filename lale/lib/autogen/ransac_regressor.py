@@ -5,35 +5,8 @@ from numpy import nan, inf
 
 
 class RANSACRegressorImpl:
-    def __init__(
-        self,
-        base_estimator=None,
-        min_samples=None,
-        residual_threshold=None,
-        is_data_valid=None,
-        is_model_valid=None,
-        max_trials=100,
-        max_skips="inf",
-        stop_n_inliers="inf",
-        stop_score="inf",
-        stop_probability=0.99,
-        loss="absolute_loss",
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "base_estimator": base_estimator,
-            "min_samples": min_samples,
-            "residual_threshold": residual_threshold,
-            "is_data_valid": is_data_valid,
-            "is_model_valid": is_model_valid,
-            "max_trials": max_trials,
-            "max_skips": max_skips,
-            "stop_n_inliers": stop_n_inliers,
-            "stop_score": stop_score,
-            "stop_probability": stop_probability,
-            "loss": loss,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

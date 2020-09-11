@@ -5,33 +5,8 @@ from numpy import nan, inf
 
 
 class LassoLarsCVImpl:
-    def __init__(
-        self,
-        fit_intercept=True,
-        verbose=False,
-        max_iter=500,
-        normalize=True,
-        precompute="auto",
-        cv=3,
-        max_n_alphas=1000,
-        n_jobs=1,
-        eps=2.220446049250313e-16,
-        copy_X=True,
-        positive=False,
-    ):
-        self._hyperparams = {
-            "fit_intercept": fit_intercept,
-            "verbose": verbose,
-            "max_iter": max_iter,
-            "normalize": normalize,
-            "precompute": precompute,
-            "cv": cv,
-            "max_n_alphas": max_n_alphas,
-            "n_jobs": n_jobs,
-            "eps": eps,
-            "copy_X": copy_X,
-            "positive": positive,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

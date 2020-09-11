@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class PowerTransformerImpl:
-    def __init__(self, method="yeo-johnson", standardize=True, copy=True):
-        self._hyperparams = {"method": method, "standardize": standardize, "copy": copy}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

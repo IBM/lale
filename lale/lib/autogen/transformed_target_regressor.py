@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class TransformedTargetRegressorImpl:
-    def __init__(
-        self,
-        regressor=None,
-        transformer=None,
-        func=None,
-        inverse_func=None,
-        check_inverse=True,
-    ):
-        self._hyperparams = {
-            "regressor": regressor,
-            "transformer": transformer,
-            "func": func,
-            "inverse_func": inverse_func,
-            "check_inverse": check_inverse,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

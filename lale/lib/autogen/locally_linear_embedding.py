@@ -5,35 +5,8 @@ from numpy import nan, inf
 
 
 class LocallyLinearEmbeddingImpl:
-    def __init__(
-        self,
-        n_neighbors=5,
-        n_components=2,
-        reg=0.001,
-        eigen_solver="auto",
-        tol=1e-06,
-        max_iter=100,
-        method="standard",
-        hessian_tol=0.0001,
-        modified_tol=1e-12,
-        neighbors_algorithm="auto",
-        random_state=None,
-        n_jobs=1,
-    ):
-        self._hyperparams = {
-            "n_neighbors": n_neighbors,
-            "n_components": n_components,
-            "reg": reg,
-            "eigen_solver": eigen_solver,
-            "tol": tol,
-            "max_iter": max_iter,
-            "method": method,
-            "hessian_tol": hessian_tol,
-            "modified_tol": modified_tol,
-            "neighbors_algorithm": neighbors_algorithm,
-            "random_state": random_state,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

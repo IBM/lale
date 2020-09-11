@@ -5,29 +5,8 @@ from numpy import nan, inf
 
 
 class LassoLarsICImpl:
-    def __init__(
-        self,
-        criterion="aic",
-        fit_intercept=True,
-        verbose=False,
-        normalize=True,
-        precompute="auto",
-        max_iter=500,
-        eps=2.220446049250313e-16,
-        copy_X=True,
-        positive=False,
-    ):
-        self._hyperparams = {
-            "criterion": criterion,
-            "fit_intercept": fit_intercept,
-            "verbose": verbose,
-            "normalize": normalize,
-            "precompute": precompute,
-            "max_iter": max_iter,
-            "eps": eps,
-            "copy_X": copy_X,
-            "positive": positive,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
