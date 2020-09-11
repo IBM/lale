@@ -5,37 +5,8 @@ from numpy import nan, inf
 
 
 class RandomTreesEmbeddingImpl:
-    def __init__(
-        self,
-        n_estimators=10,
-        max_depth=5,
-        min_samples_split=2,
-        min_samples_leaf=1,
-        min_weight_fraction_leaf=0.0,
-        max_leaf_nodes=None,
-        min_impurity_decrease=0.0,
-        min_impurity_split=None,
-        sparse_output=True,
-        n_jobs=1,
-        random_state=None,
-        verbose=0,
-        warm_start=False,
-    ):
-        self._hyperparams = {
-            "n_estimators": n_estimators,
-            "max_depth": max_depth,
-            "min_samples_split": min_samples_split,
-            "min_samples_leaf": min_samples_leaf,
-            "min_weight_fraction_leaf": min_weight_fraction_leaf,
-            "max_leaf_nodes": max_leaf_nodes,
-            "min_impurity_decrease": min_impurity_decrease,
-            "min_impurity_split": min_impurity_split,
-            "sparse_output": sparse_output,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "verbose": verbose,
-            "warm_start": warm_start,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

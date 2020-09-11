@@ -5,35 +5,8 @@ from numpy import nan, inf
 
 
 class LinearSVCImpl:
-    def __init__(
-        self,
-        penalty="l2",
-        loss="squared_hinge",
-        dual=True,
-        tol=0.0001,
-        C=1.0,
-        multi_class="ovr",
-        fit_intercept=True,
-        intercept_scaling=1,
-        class_weight="balanced",
-        verbose=0,
-        random_state=None,
-        max_iter=1000,
-    ):
-        self._hyperparams = {
-            "penalty": penalty,
-            "loss": loss,
-            "dual": dual,
-            "tol": tol,
-            "C": C,
-            "multi_class": multi_class,
-            "fit_intercept": fit_intercept,
-            "intercept_scaling": intercept_scaling,
-            "class_weight": class_weight,
-            "verbose": verbose,
-            "random_state": random_state,
-            "max_iter": max_iter,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

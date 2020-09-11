@@ -5,27 +5,8 @@ from numpy import nan, inf
 
 
 class KNeighborsRegressorImpl:
-    def __init__(
-        self,
-        n_neighbors=5,
-        weights="uniform",
-        algorithm="auto",
-        leaf_size=30,
-        p=2,
-        metric="minkowski",
-        metric_params=None,
-        n_jobs=1,
-    ):
-        self._hyperparams = {
-            "n_neighbors": n_neighbors,
-            "weights": weights,
-            "algorithm": algorithm,
-            "leaf_size": leaf_size,
-            "p": p,
-            "metric": metric,
-            "metric_params": metric_params,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

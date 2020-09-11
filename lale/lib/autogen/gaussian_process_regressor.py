@@ -5,25 +5,8 @@ from numpy import nan, inf
 
 
 class GaussianProcessRegressorImpl:
-    def __init__(
-        self,
-        kernel=None,
-        alpha=1e-10,
-        optimizer="fmin_l_bfgs_b",
-        n_restarts_optimizer=0,
-        normalize_y=False,
-        copy_X_train=True,
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "kernel": kernel,
-            "alpha": alpha,
-            "optimizer": optimizer,
-            "n_restarts_optimizer": n_restarts_optimizer,
-            "normalize_y": normalize_y,
-            "copy_X_train": copy_X_train,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

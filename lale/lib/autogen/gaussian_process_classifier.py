@@ -5,29 +5,8 @@ from numpy import nan, inf
 
 
 class GaussianProcessClassifierImpl:
-    def __init__(
-        self,
-        kernel=None,
-        optimizer="fmin_l_bfgs_b",
-        n_restarts_optimizer=0,
-        max_iter_predict=100,
-        warm_start=False,
-        copy_X_train=True,
-        random_state=None,
-        multi_class="one_vs_rest",
-        n_jobs=1,
-    ):
-        self._hyperparams = {
-            "kernel": kernel,
-            "optimizer": optimizer,
-            "n_restarts_optimizer": n_restarts_optimizer,
-            "max_iter_predict": max_iter_predict,
-            "warm_start": warm_start,
-            "copy_X_train": copy_X_train,
-            "random_state": random_state,
-            "multi_class": multi_class,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

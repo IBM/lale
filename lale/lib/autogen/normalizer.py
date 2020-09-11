@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class NormalizerImpl:
-    def __init__(self, norm="l2", copy=True):
-        self._hyperparams = {"norm": norm, "copy": copy}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

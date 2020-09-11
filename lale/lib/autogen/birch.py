@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class BirchImpl:
-    def __init__(
-        self,
-        threshold=0.5,
-        branching_factor=50,
-        n_clusters=3,
-        compute_labels=True,
-        copy=True,
-    ):
-        self._hyperparams = {
-            "threshold": threshold,
-            "branching_factor": branching_factor,
-            "n_clusters": n_clusters,
-            "compute_labels": compute_labels,
-            "copy": copy,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

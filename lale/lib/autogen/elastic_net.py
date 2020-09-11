@@ -5,35 +5,8 @@ from numpy import nan, inf
 
 
 class ElasticNetImpl:
-    def __init__(
-        self,
-        alpha=1.0,
-        l1_ratio=0.5,
-        fit_intercept=True,
-        normalize=False,
-        precompute=False,
-        max_iter=1000,
-        copy_X=True,
-        tol=0.0001,
-        warm_start=False,
-        positive=False,
-        random_state=None,
-        selection="cyclic",
-    ):
-        self._hyperparams = {
-            "alpha": alpha,
-            "l1_ratio": l1_ratio,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "precompute": precompute,
-            "max_iter": max_iter,
-            "copy_X": copy_X,
-            "tol": tol,
-            "warm_start": warm_start,
-            "positive": positive,
-            "random_state": random_state,
-            "selection": selection,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

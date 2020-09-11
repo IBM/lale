@@ -5,29 +5,8 @@ from numpy import nan, inf
 
 
 class TheilSenRegressorImpl:
-    def __init__(
-        self,
-        fit_intercept=True,
-        copy_X=True,
-        max_subpopulation=10000,
-        n_subsamples=None,
-        max_iter=300,
-        tol=0.001,
-        random_state=None,
-        n_jobs=1,
-        verbose=False,
-    ):
-        self._hyperparams = {
-            "fit_intercept": fit_intercept,
-            "copy_X": copy_X,
-            "max_subpopulation": max_subpopulation,
-            "n_subsamples": n_subsamples,
-            "max_iter": max_iter,
-            "tol": tol,
-            "random_state": random_state,
-            "n_jobs": n_jobs,
-            "verbose": verbose,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

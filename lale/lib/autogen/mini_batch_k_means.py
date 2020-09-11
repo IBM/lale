@@ -5,35 +5,8 @@ from numpy import nan, inf
 
 
 class MiniBatchKMeansImpl:
-    def __init__(
-        self,
-        n_clusters=8,
-        init="k-means++",
-        max_iter=100,
-        batch_size=100,
-        verbose=0,
-        compute_labels=True,
-        random_state=None,
-        tol=0.0,
-        max_no_improvement=10,
-        init_size=None,
-        n_init=3,
-        reassignment_ratio=0.01,
-    ):
-        self._hyperparams = {
-            "n_clusters": n_clusters,
-            "init": init,
-            "max_iter": max_iter,
-            "batch_size": batch_size,
-            "verbose": verbose,
-            "compute_labels": compute_labels,
-            "random_state": random_state,
-            "tol": tol,
-            "max_no_improvement": max_no_improvement,
-            "init_size": init_size,
-            "n_init": n_init,
-            "reassignment_ratio": reassignment_ratio,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

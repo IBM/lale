@@ -5,23 +5,8 @@ from numpy import nan, inf
 
 
 class HuberRegressorImpl:
-    def __init__(
-        self,
-        epsilon=1.35,
-        max_iter=100,
-        alpha=0.0001,
-        warm_start=False,
-        fit_intercept=True,
-        tol=1e-05,
-    ):
-        self._hyperparams = {
-            "epsilon": epsilon,
-            "max_iter": max_iter,
-            "alpha": alpha,
-            "warm_start": warm_start,
-            "fit_intercept": fit_intercept,
-            "tol": tol,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class MinMaxScalerImpl:
-    def __init__(self, feature_range=(0, 1), copy=True):
-        self._hyperparams = {"feature_range": feature_range, "copy": copy}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

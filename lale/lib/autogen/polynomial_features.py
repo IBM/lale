@@ -5,12 +5,8 @@ from numpy import nan, inf
 
 
 class PolynomialFeaturesImpl:
-    def __init__(self, degree=2, interaction_only=False, include_bias=True):
-        self._hyperparams = {
-            "degree": degree,
-            "interaction_only": interaction_only,
-            "include_bias": include_bias,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

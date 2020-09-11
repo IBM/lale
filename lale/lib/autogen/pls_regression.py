@@ -5,14 +5,8 @@ from numpy import nan, inf
 
 
 class PLSRegressionImpl:
-    def __init__(self, n_components=2, scale=True, max_iter=500, tol=1e-06, copy=True):
-        self._hyperparams = {
-            "n_components": n_components,
-            "scale": scale,
-            "max_iter": max_iter,
-            "tol": tol,
-            "copy": copy,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

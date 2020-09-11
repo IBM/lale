@@ -5,43 +5,8 @@ from numpy import nan, inf
 
 
 class PassiveAggressiveClassifierImpl:
-    def __init__(
-        self,
-        C=1.0,
-        fit_intercept=True,
-        max_iter=None,
-        tol=None,
-        early_stopping=False,
-        validation_fraction=0.1,
-        n_iter_no_change=5,
-        shuffle=True,
-        verbose=0,
-        loss="hinge",
-        n_jobs=1,
-        random_state=None,
-        warm_start=False,
-        class_weight="balanced",
-        average=False,
-        n_iter=None,
-    ):
-        self._hyperparams = {
-            "C": C,
-            "fit_intercept": fit_intercept,
-            "max_iter": max_iter,
-            "tol": tol,
-            "early_stopping": early_stopping,
-            "validation_fraction": validation_fraction,
-            "n_iter_no_change": n_iter_no_change,
-            "shuffle": shuffle,
-            "verbose": verbose,
-            "loss": loss,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "warm_start": warm_start,
-            "class_weight": class_weight,
-            "average": average,
-            "n_iter": n_iter,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -80,7 +45,6 @@ _hyperparams_schema = {
                 "warm_start",
                 "class_weight",
                 "average",
-                "n_iter",
             ],
             "relevantToOptimizer": [
                 "fit_intercept",
@@ -88,7 +52,6 @@ _hyperparams_schema = {
                 "tol",
                 "shuffle",
                 "loss",
-                "n_iter",
             ],
             "additionalProperties": False,
             "properties": {
@@ -197,19 +160,6 @@ _hyperparams_schema = {
                     "anyOf": [{"type": "boolean"}, {"type": "integer"}],
                     "default": False,
                     "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute",
-                },
-                "n_iter": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 5,
-                            "maximumForOptimizer": 1000,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                    "description": "The number of passes over the training data (aka epochs)",
                 },
             },
         },

@@ -5,13 +5,8 @@ from numpy import nan, inf
 
 
 class ComplementNBImpl:
-    def __init__(self, alpha=1.0, fit_prior=True, class_prior=None, norm=False):
-        self._hyperparams = {
-            "alpha": alpha,
-            "fit_prior": fit_prior,
-            "class_prior": class_prior,
-            "norm": norm,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class NearestCentroidImpl:
-    def __init__(self, metric="euclidean", shrink_threshold=None):
-        self._hyperparams = {"metric": metric, "shrink_threshold": shrink_threshold}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class SparseRandomProjectionImpl:
-    def __init__(
-        self,
-        n_components="auto",
-        density="auto",
-        eps=0.1,
-        dense_output=False,
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "density": density,
-            "eps": eps,
-            "dense_output": dense_output,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

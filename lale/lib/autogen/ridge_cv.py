@@ -5,25 +5,8 @@ from numpy import nan, inf
 
 
 class RidgeCVImpl:
-    def __init__(
-        self,
-        alphas=[0.1, 1.0, 10.0],
-        fit_intercept=True,
-        normalize=False,
-        scoring=None,
-        cv=None,
-        gcv_mode=None,
-        store_cv_values=False,
-    ):
-        self._hyperparams = {
-            "alphas": alphas,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "scoring": scoring,
-            "cv": cv,
-            "gcv_mode": gcv_mode,
-            "store_cv_values": store_cv_values,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
