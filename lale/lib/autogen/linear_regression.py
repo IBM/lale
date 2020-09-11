@@ -5,13 +5,8 @@ from numpy import nan, inf
 
 
 class LinearRegressionImpl:
-    def __init__(self, fit_intercept=True, normalize=False, copy_X=True, n_jobs=1):
-        self._hyperparams = {
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "copy_X": copy_X,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

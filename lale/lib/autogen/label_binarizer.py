@@ -5,12 +5,8 @@ from numpy import nan, inf
 
 
 class LabelBinarizerImpl:
-    def __init__(self, neg_label=0, pos_label=1, sparse_output=False):
-        self._hyperparams = {
-            "neg_label": neg_label,
-            "pos_label": pos_label,
-            "sparse_output": sparse_output,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,23 +5,8 @@ from numpy import nan, inf
 
 
 class QuantileTransformerImpl:
-    def __init__(
-        self,
-        n_quantiles=1000,
-        output_distribution="uniform",
-        ignore_implicit_zeros=False,
-        subsample=100000,
-        random_state=None,
-        copy=True,
-    ):
-        self._hyperparams = {
-            "n_quantiles": n_quantiles,
-            "output_distribution": output_distribution,
-            "ignore_implicit_zeros": ignore_implicit_zeros,
-            "subsample": subsample,
-            "random_state": random_state,
-            "copy": copy,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

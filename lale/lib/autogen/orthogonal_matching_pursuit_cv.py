@@ -5,25 +5,8 @@ from numpy import nan, inf
 
 
 class OrthogonalMatchingPursuitCVImpl:
-    def __init__(
-        self,
-        copy=True,
-        fit_intercept=True,
-        normalize=True,
-        max_iter=None,
-        cv=3,
-        n_jobs=1,
-        verbose=False,
-    ):
-        self._hyperparams = {
-            "copy": copy,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "max_iter": max_iter,
-            "cv": cv,
-            "n_jobs": n_jobs,
-            "verbose": verbose,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

@@ -5,25 +5,8 @@ from numpy import nan, inf
 
 
 class NystroemImpl:
-    def __init__(
-        self,
-        kernel="rbf",
-        gamma=None,
-        coef0=None,
-        degree=None,
-        kernel_params=None,
-        n_components=100,
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "kernel": kernel,
-            "gamma": gamma,
-            "coef0": coef0,
-            "degree": degree,
-            "kernel_params": kernel_params,
-            "n_components": n_components,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

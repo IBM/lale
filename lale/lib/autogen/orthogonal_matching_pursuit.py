@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class OrthogonalMatchingPursuitImpl:
-    def __init__(
-        self,
-        n_nonzero_coefs=None,
-        tol=None,
-        fit_intercept=True,
-        normalize=True,
-        precompute="auto",
-    ):
-        self._hyperparams = {
-            "n_nonzero_coefs": n_nonzero_coefs,
-            "tol": tol,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "precompute": precompute,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

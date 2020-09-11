@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class TruncatedSVDImpl:
-    def __init__(
-        self,
-        n_components=2,
-        algorithm="randomized",
-        n_iter=5,
-        random_state=None,
-        tol=0.0,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "algorithm": algorithm,
-            "n_iter": n_iter,
-            "random_state": random_state,
-            "tol": tol,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

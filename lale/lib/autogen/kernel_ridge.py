@@ -5,23 +5,8 @@ from numpy import nan, inf
 
 
 class KernelRidgeImpl:
-    def __init__(
-        self,
-        alpha=1,
-        kernel="linear",
-        gamma=None,
-        degree=3,
-        coef0=1,
-        kernel_params=None,
-    ):
-        self._hyperparams = {
-            "alpha": alpha,
-            "kernel": kernel,
-            "gamma": gamma,
-            "degree": degree,
-            "coef0": coef0,
-            "kernel_params": kernel_params,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

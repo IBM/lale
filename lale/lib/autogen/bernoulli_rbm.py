@@ -5,23 +5,8 @@ from numpy import nan, inf
 
 
 class BernoulliRBMImpl:
-    def __init__(
-        self,
-        n_components=256,
-        learning_rate=0.1,
-        batch_size=10,
-        n_iter=10,
-        verbose=0,
-        random_state=33,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "learning_rate": learning_rate,
-            "batch_size": batch_size,
-            "n_iter": n_iter,
-            "verbose": verbose,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

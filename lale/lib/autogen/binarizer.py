@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class BinarizerImpl:
-    def __init__(self, threshold=0.0, copy=True):
-        self._hyperparams = {"threshold": threshold, "copy": copy}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

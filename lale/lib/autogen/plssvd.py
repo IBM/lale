@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class PLSSVDImpl:
-    def __init__(self, n_components=2, scale=True, copy=True):
-        self._hyperparams = {"n_components": n_components, "scale": scale, "copy": copy}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

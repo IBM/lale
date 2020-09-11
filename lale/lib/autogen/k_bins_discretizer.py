@@ -5,8 +5,8 @@ from numpy import nan, inf
 
 
 class KBinsDiscretizerImpl:
-    def __init__(self, n_bins=5, encode="onehot", strategy="quantile"):
-        self._hyperparams = {"n_bins": n_bins, "encode": encode, "strategy": strategy}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

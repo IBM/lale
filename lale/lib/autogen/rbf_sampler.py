@@ -5,12 +5,8 @@ from numpy import nan, inf
 
 
 class RBFSamplerImpl:
-    def __init__(self, gamma=1.0, n_components=100, random_state=None):
-        self._hyperparams = {
-            "gamma": gamma,
-            "n_components": n_components,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

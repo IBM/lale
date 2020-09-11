@@ -5,11 +5,8 @@ from numpy import nan, inf
 
 
 class AdditiveChi2SamplerImpl:
-    def __init__(self, sample_steps=2, sample_interval=None):
-        self._hyperparams = {
-            "sample_steps": sample_steps,
-            "sample_interval": sample_interval,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

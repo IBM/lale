@@ -5,21 +5,8 @@ from numpy import nan, inf
 
 
 class AdaBoostRegressorImpl:
-    def __init__(
-        self,
-        base_estimator=None,
-        n_estimators=50,
-        learning_rate=1.0,
-        loss="linear",
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "base_estimator": base_estimator,
-            "n_estimators": n_estimators,
-            "learning_rate": learning_rate,
-            "loss": loss,
-            "random_state": random_state,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

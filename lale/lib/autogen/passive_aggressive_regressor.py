@@ -5,41 +5,8 @@ from numpy import nan, inf
 
 
 class PassiveAggressiveRegressorImpl:
-    def __init__(
-        self,
-        C=1.0,
-        fit_intercept=True,
-        max_iter=None,
-        tol=None,
-        early_stopping=False,
-        validation_fraction=0.1,
-        n_iter_no_change=5,
-        shuffle=True,
-        verbose=0,
-        loss="epsilon_insensitive",
-        epsilon=0.1,
-        random_state=None,
-        warm_start=False,
-        average=False,
-        n_iter=None,
-    ):
-        self._hyperparams = {
-            "C": C,
-            "fit_intercept": fit_intercept,
-            "max_iter": max_iter,
-            "tol": tol,
-            "early_stopping": early_stopping,
-            "validation_fraction": validation_fraction,
-            "n_iter_no_change": n_iter_no_change,
-            "shuffle": shuffle,
-            "verbose": verbose,
-            "loss": loss,
-            "epsilon": epsilon,
-            "random_state": random_state,
-            "warm_start": warm_start,
-            "average": average,
-            "n_iter": n_iter,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -74,7 +41,6 @@ _hyperparams_schema = {
                 "random_state",
                 "warm_start",
                 "average",
-                "n_iter",
             ],
             "relevantToOptimizer": [
                 "fit_intercept",
@@ -83,7 +49,6 @@ _hyperparams_schema = {
                 "shuffle",
                 "loss",
                 "epsilon",
-                "n_iter",
             ],
             "additionalProperties": False,
             "properties": {
@@ -184,19 +149,6 @@ _hyperparams_schema = {
                     "anyOf": [{"type": "boolean"}, {"type": "integer"}],
                     "default": False,
                     "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute",
-                },
-                "n_iter": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 5,
-                            "maximumForOptimizer": 1000,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                    "description": "The number of passes over the training data (aka epochs)",
                 },
             },
         },

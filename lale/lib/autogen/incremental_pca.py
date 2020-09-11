@@ -5,13 +5,8 @@ from numpy import nan, inf
 
 
 class IncrementalPCAImpl:
-    def __init__(self, n_components=None, whiten=False, copy=True, batch_size=None):
-        self._hyperparams = {
-            "n_components": n_components,
-            "whiten": whiten,
-            "copy": copy,
-            "batch_size": batch_size,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):

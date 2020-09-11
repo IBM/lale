@@ -5,12 +5,8 @@ from numpy import nan, inf
 
 
 class CalibratedClassifierCVImpl:
-    def __init__(self, base_estimator=None, method="sigmoid", cv=3):
-        self._hyperparams = {
-            "base_estimator": base_estimator,
-            "method": method,
-            "cv": cv,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
 
     def fit(self, X, y=None):
