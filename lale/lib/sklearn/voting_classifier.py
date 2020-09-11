@@ -12,19 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.ensemble import VotingClassifier as SKLModel
+import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
 class VotingClassifierImpl():
-    def __init__(self, estimators=None, voting='hard', weights=None, n_jobs=None, flatten_transform=True):
-        self._hyperparams = {
-            'estimators': estimators,
-            'voting': voting,
-            'weights': weights,
-            'n_jobs': n_jobs,
-            'flatten_transform': flatten_transform}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
+        self._wrapped_model = sklearn.ensemble.VotingClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -59,11 +54,11 @@ _hyperparams_schema = {
                     'type': 'array',
                     'laleType': 'tuple',
                     'items': [
-                        {'type':'string'},
-                        {'laleType': 'operator'}
-                    ]
-                },
-                'description': 'list of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones'},
+                    {   'type':'string'},
+                    {   'anyOf': [
+                        {   'laleType': 'operator'},
+                        {   'enum': [None]}]}]},
+                'description': 'List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.'},
             'voting': {
                 'enum': ['hard', 'soft'],
                 'default': 'hard',
@@ -244,6 +239,24 @@ _combined_schemas = {
         'output_decision_function': _output_decision_function_schema,
 }}
 
-lale.docstrings.set_docstrings(VotingClassifierImpl, _combined_schemas)
-
+VotingClassifier : lale.operators.IndividualOp
 VotingClassifier = lale.operators.make_operator(VotingClassifierImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.21':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.VotingClassifier.html
+    from lale.schemas import JSON
+    VotingClassifier = VotingClassifier.customize_schema(
+        estimators=JSON({
+            'type': 'array',
+            'items': {
+                'type': 'array',
+                'laleType': 'tuple',
+                'items': [
+                {   'type':'string'},
+                {   'anyOf': [
+                    {   'laleType': 'operator'},
+                    {   'enum': [None, 'drop']}]}]},
+            'description': 'List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.'}))
+
+lale.docstrings.set_docstrings(VotingClassifierImpl, VotingClassifier._schemas)

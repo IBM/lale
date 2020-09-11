@@ -36,6 +36,7 @@ from lale.lib.sklearn import RandomForestClassifier
 from lale.lib.sklearn import RandomForestRegressor
 from lale.lib.sklearn import Ridge
 from lale.lib.sklearn import SVC
+from lale.lib.sklearn import VotingClassifier
 from lale.lib.xgboost import XGBClassifier
 from lale.lib.xgboost import XGBRegressor
 
@@ -413,6 +414,32 @@ class TestSVC(unittest.TestCase):
 
     def test_with_hyperopt(self):
         planned = SVC
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=3)
+        predicted = trained.predict(self.test_X)
+
+class TestVotingClassifier(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = VotingClassifier(estimators=[
+            ('lr', LogisticRegression()), ('dt', DecisionTreeClassifier())])
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_estimators(self):
+        trainable = VotingClassifier(estimators=[
+            ('lr', LogisticRegression()),
+            ('dt', DecisionTreeClassifier()),
+            ('na', 'drop')])
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = VotingClassifier(estimators=[
+            ('lr', LogisticRegression), ('dt', DecisionTreeClassifier)])
         trained = planned.auto_configure(self.train_X, self.train_y,
                                          optimizer=Hyperopt, cv=3, max_evals=3)
         predicted = trained.predict(self.test_X)
