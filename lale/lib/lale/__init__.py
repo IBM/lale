@@ -39,6 +39,7 @@ Transformers:
 * lale.lib.lale. `Map`_
 * lale.lib.lale. `Join`_
 * lale.lib.lale. `Scan`_
+* lale.lib.lale. `Relational`_
 
 Estimators and transformers:
 
@@ -62,6 +63,7 @@ Estimators and transformers:
 .. _`Map`: lale.lib.lale.map.html
 .. _`Join`: lale.lib.lale.join.html
 .. _`Scan`: lale.lib.lale.scan.html
+.. _`Relational`: lale.lib.lale.relational.html
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
 .. _`Observing`: lale.lib.lale.observing.html
@@ -95,6 +97,7 @@ from .group_by import GroupBy
 from .map import Map
 from .join import Join
 from .scan import Scan
+from .relational import Relational
 
 #estimators and transformers
 from .both import Both
