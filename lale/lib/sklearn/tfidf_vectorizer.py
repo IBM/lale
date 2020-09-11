@@ -225,7 +225,7 @@ _combined_schemas = {
 .. _`TF-IDF vectorizer`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html#sklearn-feature-extraction-text-tfidfvectorizer
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.tfidf_vectorizer.html',
-    'import_from': 'sklearn.feature_extraction',
+    'import_from': 'sklearn.feature_extraction.text',
     'type': 'object',
     'tags': {
         'pre': ['text'],

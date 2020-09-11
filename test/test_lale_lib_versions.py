@@ -30,9 +30,12 @@ from lale.lib.sklearn import GradientBoostingClassifier
 from lale.lib.sklearn import GradientBoostingRegressor
 from lale.lib.sklearn import LinearRegression
 from lale.lib.sklearn import LogisticRegression
+from lale.lib.sklearn import MLPClassifier
+from lale.lib.sklearn import PolynomialFeatures
 from lale.lib.sklearn import RandomForestClassifier
 from lale.lib.sklearn import RandomForestRegressor
 from lale.lib.sklearn import Ridge
+from lale.lib.sklearn import SVC
 from lale.lib.xgboost import XGBClassifier
 from lale.lib.xgboost import XGBRegressor
 
@@ -269,6 +272,48 @@ class TestLogisticRegression(unittest.TestCase):
                                          optimizer=Hyperopt, cv=3, max_evals=3)
         predicted = trained.predict(self.test_X)
 
+class TestMLPClassifier(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = MLPClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_max_fun(self):
+        trainable = MLPClassifier(max_fun=1000)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = MLPClassifier(max_iter=20)
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=3)
+        predicted = trained.predict(self.test_X)
+
+class TestPolynomialFeatures(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = PolynomialFeatures() >> LogisticRegression()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_order(self):
+        trainable = PolynomialFeatures(order='F') >> LogisticRegression()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = PolynomialFeatures >> LogisticRegression
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=3)
+        predicted = trained.predict(self.test_X)
+
 class TestRandomForestClassifier(unittest.TestCase):
     def setUp(self):
         X, y = sklearn.datasets.load_iris(return_X_y=True)
@@ -345,6 +390,31 @@ class TestRidge(unittest.TestCase):
         trained = planned.auto_configure(
             self.train_X, self.train_y,
             scoring='r2', optimizer=Hyperopt, cv=3, max_evals=3)
+        predicted = trained.predict(self.test_X)
+
+class TestSVC(unittest.TestCase):
+    def setUp(self):
+        X, y = sklearn.datasets.load_iris(return_X_y=True)
+        self.train_X, self.test_X, self.train_y, self.test_y = sklearn.model_selection.train_test_split(X, y)
+
+    def test_with_defaults(self):
+        trainable = SVC()
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_gamma(self):
+        default = SVC.hyperparam_defaults()['gamma']
+        self.assertEqual(default, 'scale')
+
+    def test_break_ties(self):
+        trainable = SVC(break_ties=True)
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
+
+    def test_with_hyperopt(self):
+        planned = SVC
+        trained = planned.auto_configure(self.train_X, self.train_y,
+                                         optimizer=Hyperopt, cv=3, max_evals=3)
         predicted = trained.predict(self.test_X)
 
 class TestXGBClassifier(unittest.TestCase):
