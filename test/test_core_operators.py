@@ -37,6 +37,8 @@ from lale.lib.sklearn import TfidfVectorizer
 from lale.lib.sklearn import RidgeClassifier
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.sklearn_compat import make_sklearn_compat
+from lale.lib.lale import Relational, Scan, Join, Aggregate
+from lale.expressions import it, count
 
 import lale.operators as Ops
 
@@ -1157,3 +1159,45 @@ class TestOperatorLogging(unittest.TestCase):
         Ops.logger.removeHandler(self.handler)
         Ops.logger.setLevel(self.old_level)
         self.handler.close()
+
+class TestRelationalOperator(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+    def test_fit_transform(self):
+        relational = Relational(operator= (Scan(table=it.main) & Scan(table=it.delay))
+        >> Join(pred=[it.main.TrainId == it.delay.TrainId,
+                it.main['Arrival time'] >= it.delay.TimeStamp])
+        >> Aggregate(columns=[count(it.Delay)], group_by = it.MessageId))
+        trained_relational = relational.fit(self.X_train, self.y_train)
+        output = trained_relational.transform(self.X_test)
+
+    def test_fit_error(self):
+        relational = Relational(operator= (Scan(table=it.main) & Scan(table=it.delay))
+        >> Join(pred=[it.main.TrainId == it.delay.TrainId,
+                it.main['Arrival time'] >= it.delay.TimeStamp])
+        >> Aggregate(columns=[count(it.Delay)], group_by = it.MessageId))
+        with self.assertRaises(ValueError):
+            trained_relational = relational.fit([self.X_train], self.y_train)
+
+    def test_transform_error(self):
+        relational = Relational(operator= (Scan(table=it.main) & Scan(table=it.delay))
+        >> Join(pred=[it.main.TrainId == it.delay.TrainId,
+                it.main['Arrival time'] >= it.delay.TimeStamp])
+        >> Aggregate(columns=[count(it.Delay)], group_by = it.MessageId))
+        trained_relational = relational.fit(self.X_train, self.y_train)
+        with self.assertRaises(ValueError):
+            output = trained_relational.transform([self.X_test])
+
+    def test_fit_transform_in_pipeline(self):
+        relational = Relational(operator= (Scan(table=it.main) & Scan(table=it.delay))
+        >> Join(pred=[it.main.TrainId == it.delay.TrainId,
+                it.main['Arrival time'] >= it.delay.TimeStamp])
+        >> Aggregate(columns=[count(it.Delay)], group_by = it.MessageId))
+        pipeline = relational >> LogisticRegression()
+        trained_pipeline = pipeline.fit(self.X_train, self.y_train)
+        output = trained_pipeline.predict(self.X_test)
