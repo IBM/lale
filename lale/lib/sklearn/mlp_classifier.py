@@ -306,6 +306,18 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
 
-lale.docstrings.set_docstrings(MLPClassifierImpl, _combined_schemas)
-
+MLPClassifier : lale.operators.IndividualOp
 MLPClassifier = lale.operators.make_operator(MLPClassifierImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.22':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.neural_network.MLPClassifier.html
+    from lale.schemas import Int
+    MLPClassifier = MLPClassifier.customize_schema(
+        max_fun=Int(
+            desc='Maximum number of loss function calls.',
+            default=15000,
+            forOptimizer=False,
+            min=0))
+
+lale.docstrings.set_docstrings(MLPClassifierImpl, MLPClassifier._schemas)

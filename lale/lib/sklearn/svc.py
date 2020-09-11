@@ -17,22 +17,8 @@ import lale.docstrings
 import lale.operators
 
 class SVCImpl():
-    def __init__(self, C=1.0, kernel='rbf', degree=3, gamma='auto', coef0=0.0, shrinking=True, probability=False, tol=0.001, cache_size=200, class_weight=None, verbose=False, max_iter=-1, decision_function_shape='ovr', random_state=None):
-        self._hyperparams = {
-            'C': C,
-            'kernel': kernel,
-            'degree': degree,
-            'gamma': gamma,
-            'coef0': coef0,
-            'shrinking': shrinking,
-            'probability': probability,
-            'tol': tol,
-            'cache_size': cache_size,
-            'class_weight': class_weight,
-            'verbose': verbose,
-            'max_iter': max_iter,
-            'decision_function_shape': decision_function_shape,
-            'random_state': random_state}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.svm.SVC(**self._hyperparams)
 
     def fit(self, X, y=None, sample_weight=None):
@@ -266,6 +252,27 @@ _combined_schemas = {
         'input_decision_function': _input_decision_function_schema,
         'output_decision_function': _output_decision_function_schema}}
 
-lale.docstrings.set_docstrings(SVCImpl, _combined_schemas)
-
+SVC : lale.operators.IndividualOp
 SVC = lale.operators.make_operator(SVCImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.22':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVC.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.svm.SVC.html
+    from lale.schemas import AnyOf, Bool, Enum, Float
+    SVC = SVC.customize_schema(
+        gamma=AnyOf(
+            types=[
+                Enum(['scale', 'auto']),
+                Float(
+                    min=0.0,
+                    exclusiveMin=True,
+                    minForOptimizer=3.0517578125e-05,
+                    maxForOptimizer=8,
+                    distribution='loguniform')],
+            desc="Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.",
+            default='scale'),
+        break_ties=Bool(
+            desc="If true, decision_function_shape='ovr', and number of classes > 2, predict will break ties according to the confidence values of decision_function; otherwise the first class among the tied classes is returned.",
+            default=False))
+
+lale.docstrings.set_docstrings(SVCImpl, SVC._schemas)

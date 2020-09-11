@@ -17,12 +17,8 @@ import lale.docstrings
 import lale.operators
 
 class PolynomialFeaturesImpl():
-
-    def __init__(self, degree=2, interaction_only=False, include_bias=None):
-        self._hyperparams = {
-            'degree': degree,
-            'interaction_only': interaction_only,
-            'include_bias': include_bias}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.PolynomialFeatures(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -31,6 +27,7 @@ class PolynomialFeaturesImpl():
 
     def transform(self, X):
         return self._wrapped_model.transform(X)
+
 _hyperparams_schema = {
     'description': 'Generate polynomial and interaction features.',
     'allOf': [{
@@ -53,13 +50,9 @@ _hyperparams_schema = {
                 'type': 'boolean',
                 'default': True,
                 'description': 'If True (default), then include a bias column, the feature in which'},
-            # 'order':{#This is new in version 0.21. Hence commenting out for now.
-            #     'enum':['F', 'C'],
-            #     'default': 'C',
-            #     'description':'Order of output array in the dense case. '
-            #                     ''F' order is faster to compute, but may slow down subsequent estimators.' },
         }}],
 }
+
 _input_fit_schema = {
     'description': 'Compute number of output features.',
     'type': 'object',
@@ -115,6 +108,17 @@ _combined_schemas = {
         'input_transform': _input_transform_schema,
         'output_transform': _output_transform_schema}}
 
-lale.docstrings.set_docstrings(PolynomialFeaturesImpl, _combined_schemas)
-
+PolynomialFeatures : lale.operators.IndividualOp
 PolynomialFeatures = lale.operators.make_operator(PolynomialFeaturesImpl, _combined_schemas)
+
+if sklearn.__version__ >= '0.21':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.PolynomialFeatures.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.PolynomialFeatures.html
+    from lale.schemas import Enum
+    PolynomialFeatures = PolynomialFeatures.customize_schema(
+        order=Enum(
+            values=['C', 'F'],
+            desc="Order of output array in the dense case. 'F' order is faster to compute, but may slow down subsequent estimators.",
+            default='C'))
+
+lale.docstrings.set_docstrings(PolynomialFeaturesImpl, PolynomialFeatures._schemas)
