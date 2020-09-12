@@ -1038,16 +1038,19 @@ class IndividualOp(Operator):
         for arg in kwargs:
             value = kwargs[arg]
             if arg == 'schemas':
+                assert value is not None
                 value.schema['$schema'] = 'http://json-schema.org/draft-04/schema#'
                 lale.type_checking.validate_is_schema(value.schema)
                 op._schemas = value.schema
                 break
             elif arg in [p+n for p in ['input_', 'output_'] for n in methods]:
             # multiple input types (e.g., fit, predict)
+                assert value is not None
                 lale.type_checking.validate_method(op, arg)
                 lale.type_checking.validate_is_schema(value.schema)
                 op._schemas['properties'][arg] = value.schema
             elif arg == 'constraint':
+                assert value is not None
                 op._schemas['properties']['hyperparams']['allOf'].append(value.schema)
             elif arg == 'relevantToOptimizer':
                 assert isinstance(value, list)

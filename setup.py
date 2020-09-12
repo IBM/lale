@@ -86,7 +86,7 @@ setup(
             'aif360<=0.2.3',
             'torch>=1.0',
             'BlackBoxAuditing',
-            'imbalanced-learn==0.4.3'],
+            'imbalanced-learn'],
         'test':[
             'autoai-libs',
             'jupyter',
