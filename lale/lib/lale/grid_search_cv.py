@@ -82,7 +82,7 @@ class GridSearchCVImpl:
                 be = self.grid.best_estimator_.to_lale()
             except BaseException as e:
                 if obs is not None:
-                    assert isinstance(be._impl, ObservingImpl)
+                    assert isinstance(observed_op._impl, ObservingImpl)
                     observed_op._impl.failObserving("optimize", e)
                 raise
 

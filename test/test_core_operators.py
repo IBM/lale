@@ -554,9 +554,9 @@ class TestClone(unittest.TestCase):
         trained2 = clone(trained)
     def test_with_voting_classifier1(self):
         lr = LogisticRegression()
-        pca = PCA()
+        knn = KNeighborsClassifier()
         from sklearn.ensemble import VotingClassifier
-        vclf = VotingClassifier(estimators = [('lr', lr), ('pca', pca)])
+        vclf = VotingClassifier(estimators = [('lr', lr), ('knn', knn)])
         from sklearn.datasets import load_iris
         iris = load_iris()
         X, y = iris.data, iris.target

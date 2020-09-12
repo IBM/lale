@@ -144,11 +144,7 @@ if sklearn.__version__ >= '0.22':
     FunctionTransformer = FunctionTransformer.customize_schema(
         validate=Bool(
             desc='Indicate that the input X array should be checked before calling ``func``.',
-            default=False))
-    #remove hyperparameter 'pass_y'
-    scm = FunctionTransformer.hyperparam_schema()['allOf'][0]
-    scm['required'] = [k for k in scm['required'] if k != 'pass_y']
-    scm['properties'] = {k: scm['properties'][k]
-                         for k in scm['properties'] if k != 'pass_y'}
+            default=False),
+        pass_y=None)
 
 lale.docstrings.set_docstrings(FunctionTransformerImpl, FunctionTransformer._schemas)
