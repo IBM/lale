@@ -15,6 +15,7 @@
 import lale.docstrings
 import lale.operators
 import autoai_libs.transformers.exportable
+import numpy as np
 
 class NumImputerImpl():
     def __init__(self, strategy, missing_values, activate_flag):
@@ -48,8 +49,8 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'laleType': 'Any'},
                 {   'description': 'For missing values encoded as np.nan.',
-                    'enum': ['NaN']}],
-                'default': 'NaN'},
+                    'enum': [np.nan]}],
+                'default': np.nan},
             'activate_flag': {
                 'description': 'If False, transform(X) outputs the input numpy array X unmodified.',
                 'type': 'boolean',

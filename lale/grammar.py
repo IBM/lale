@@ -36,7 +36,7 @@ class NonTerminal(Operator):
         raise NotImplementedError() #TODO
 
     def is_classifier(self)->bool:
-        raise NotImplementedError() #TODO
+        return False #TODO
         
 class Grammar(Operator):
     """ Base class for Lale grammars.

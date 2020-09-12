@@ -50,18 +50,17 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 10},
             'fit_intercept': {
                 'type': 'boolean',
-                'default': True,
+                'default': False,
                 'description': 'Whether the intercept should be estimated or not. If False, the'
                 'the data is assumed to be already centered.'},
             'max_iter': {
-                'anyOf': [{
-                    'type': 'integer',
+                'anyOf': [
+                {   'type': 'integer',
                     'minimumForOptimizer': 5,
                     'maximumForOptimizer': 1000,
-                    'distribution': 'uniform',
-                    'default': 5}, #default value is 1000 for sklearn 0.21.
-                    {'enum': [None]}],
-                'default': None,
+                    'distribution': 'uniform'},
+                {    'enum': [None]}],
+                'default': 5,
                 'description': 'The maximum number of passes over the training data (aka epochs).'},
             'tol': {
                 'anyOf': [{
@@ -235,12 +234,21 @@ _combined_schemas = {
 PassiveAggressiveClassifier : lale.operators.IndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(PassiveAggressiveClassifierImpl, _combined_schemas)
 
+# old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+# new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+from lale.schemas import Int
+
+if sklearn.__version__ >= '0.21':
+    PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
+        max_iter=Int(
+            minForOptimizer=5,
+            maxForOptimizer=1000,
+            distribution='uniform',
+            desc='The maximum number of passes over the training data (aka epochs).',
+            default=1000))
+
 if sklearn.__version__ >= '0.22':
-    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
-    from lale.schemas import Bool
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
         n_iter=None)
 
 lale.docstrings.set_docstrings(PassiveAggressiveClassifierImpl, PassiveAggressiveClassifier._schemas)
-

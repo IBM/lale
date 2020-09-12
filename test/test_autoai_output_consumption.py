@@ -3,7 +3,7 @@ import os
 import lale
 import urllib
 import pandas as pd
-from sklearn.externals import joblib
+import joblib
 from sklearn.linear_model import LogisticRegression as LR
 from sklearn.tree import DecisionTreeClassifier as Tree
 from sklearn.neighbors import KNeighborsClassifier as KNN

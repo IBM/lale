@@ -89,6 +89,7 @@ setup(
             'imbalanced-learn'],
         'test':[
             'autoai-libs',
+            'joblib',
             'jupyter',
             'mypy',
             'flake8',
