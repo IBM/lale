@@ -3,12 +3,13 @@ import os
 import lale
 import urllib
 import pandas as pd
-import joblib
+import sklearn
+assert sklearn.__version__ == '0.20.3', 'This test is for scikit-learn 0.20.3.'
+from sklearn.externals import joblib
 from sklearn.linear_model import LogisticRegression as LR
 from sklearn.tree import DecisionTreeClassifier as Tree
 from sklearn.neighbors import KNeighborsClassifier as KNN
 
-@unittest.skip('TODO: get this working with sklearn 0.23')
 class TestAutoAIOutputConsumption(unittest.TestCase):
 
     pickled_model_path = "credit_risk.pickle"
