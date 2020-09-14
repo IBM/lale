@@ -40,8 +40,8 @@ from lale.lib.sklearn import VotingClassifier
 from lale.lib.xgboost import XGBClassifier
 from lale.lib.xgboost import XGBRegressor
 
-assert sklearn.__version__ >= '0.23', 'This test is for scikit-learn 0.23.'
-assert xgboost.__version__ <= '0.90', 'This test is for XGBoost 0.90.'
+assert sklearn.__version__ == '0.20.3', 'This test is for scikit-learn 0.20.3.'
+assert xgboost.__version__ == '0.90', 'This test is for XGBoost 0.90.'
 
 class TestDecisionTreeClassifier(unittest.TestCase):
     def setUp(self):
@@ -54,9 +54,9 @@ class TestDecisionTreeClassifier(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        trainable = DecisionTreeClassifier(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = DecisionTreeClassifier(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = DecisionTreeClassifier
@@ -75,9 +75,9 @@ class TestDecisionTreeRegressor(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        trainable = DecisionTreeRegressor(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = DecisionTreeRegressor(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = DecisionTreeRegressor
@@ -98,17 +98,17 @@ class TestExtraTreesClassifier(unittest.TestCase):
 
     def test_n_estimators(self):
         default = ExtraTreesClassifier.hyperparam_defaults()['n_estimators']
-        self.assertEqual(default, 100)
+        self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        trainable = ExtraTreesClassifier(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = ExtraTreesClassifier(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        trainable = ExtraTreesClassifier(max_samples=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'max_samples' was unexpected"):
+            trainable = ExtraTreesClassifier(max_samples=0.01)
 
     def test_with_hyperopt(self):
         planned = ExtraTreesClassifier
@@ -128,17 +128,17 @@ class TestExtraTreesRegressor(unittest.TestCase):
 
     def test_n_estimators(self):
         default = ExtraTreesRegressor.hyperparam_defaults()['n_estimators']
-        self.assertEqual(default, 100)
+        self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        trainable = ExtraTreesRegressor(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = ExtraTreesRegressor(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        trainable = ExtraTreesRegressor(max_samples=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'max_samples' was unexpected"):
+            trainable = ExtraTreesRegressor(max_samples=0.01)
 
     def test_with_hyperopt(self):
         planned = ExtraTreesRegressor
@@ -158,9 +158,9 @@ class TestFeatureAgglomeration(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_distance_threshold(self):
-        trainable = FeatureAgglomeration(distance_threshold=0.5, n_clusters=None, compute_full_tree=True) >> LogisticRegression()
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(TypeError,
+                                    "type 'function' is not JSON serializable"):
+            trainable = FeatureAgglomeration(distance_threshold=0.5, n_clusters=None, compute_full_tree=True) >> LogisticRegression()
 
     def test_with_hyperopt(self):
         planned = FeatureAgglomeration >> LogisticRegression
@@ -179,13 +179,14 @@ class TestFunctionTransformer(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_pass_y(self):
-        with self.assertRaisesRegex(jsonschema.ValidationError,
-                                    "argument 'pass_y' was unexpected"):
-            trainable = FunctionTransformer(func=np.log1p, pass_y=False)
+        trainable = (FunctionTransformer(func=np.log1p, pass_y=False)
+                     >> LogisticRegression())
+        trained = trainable.fit(self.train_X, self.train_y)
+        predicted = trained.predict(self.test_X)
 
     def test_validate(self):
         default = FunctionTransformer.hyperparam_defaults()['validate']
-        self.assertEqual(default, False)
+        self.assertEqual(default, True)
 
     def test_with_hyperopt(self):
         planned = FunctionTransformer(func=np.log1p) >> LogisticRegression
@@ -204,9 +205,9 @@ class TestGradientBoostingClassifier(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        trainable = GradientBoostingClassifier(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = GradientBoostingClassifier(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = GradientBoostingClassifier
@@ -225,9 +226,9 @@ class TestGradientBoostingRegressor(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        trainable = GradientBoostingRegressor(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = GradientBoostingRegressor(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = GradientBoostingRegressor
@@ -265,7 +266,16 @@ class TestLogisticRegression(unittest.TestCase):
 
     def test_multi_class(self):
         default = LogisticRegression.hyperparam_defaults()['multi_class']
-        self.assertEqual(default, 'auto')
+        self.assertEqual(default, 'ovr')
+
+    def test_solver(self):
+        default = LogisticRegression.hyperparam_defaults()['solver']
+        self.assertEqual(default, 'liblinear')
+
+    def test_l1_ratio(self):
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'l1_ratio' was unexpected"):
+            trainable = LogisticRegression(l1_ratio=0.2)
 
     def test_with_hyperopt(self):
         planned = LogisticRegression
@@ -284,9 +294,9 @@ class TestMLPClassifier(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_max_fun(self):
-        trainable = MLPClassifier(max_fun=1000)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'max_fun' was unexpected"):
+            trainable = MLPClassifier(max_fun=1000)
 
     def test_with_hyperopt(self):
         planned = MLPClassifier(max_iter=20)
@@ -305,9 +315,9 @@ class TestPolynomialFeatures(unittest.TestCase):
         predicted = trained.predict(self.test_X)
 
     def test_order(self):
-        trainable = PolynomialFeatures(order='F') >> LogisticRegression()
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'order' was unexpected"):
+            trainable = PolynomialFeatures(order='F') >> LogisticRegression()
 
     def test_with_hyperopt(self):
         planned = PolynomialFeatures >> LogisticRegression
@@ -327,17 +337,17 @@ class TestRandomForestClassifier(unittest.TestCase):
 
     def test_n_estimators(self):
         default = RandomForestClassifier.hyperparam_defaults()['n_estimators']
-        self.assertEqual(default, 100)
+        self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        trainable = RandomForestClassifier(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = RandomForestClassifier(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        trainable = RandomForestClassifier(max_samples=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'max_samples' was unexpected"):
+            trainable = RandomForestClassifier(max_samples=0.01)
 
     def test_with_hyperopt(self):
         planned = RandomForestClassifier
@@ -357,17 +367,17 @@ class TestRandomForestRegressor(unittest.TestCase):
 
     def test_n_estimators(self):
         default = RandomForestRegressor.hyperparam_defaults()['n_estimators']
-        self.assertEqual(default, 100)
+        self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        trainable = RandomForestRegressor(ccp_alpha=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'ccp_alpha' was unexpected"):
+            trainable = RandomForestRegressor(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        trainable = RandomForestRegressor(max_samples=0.01)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'max_samples' was unexpected"):
+            trainable = RandomForestRegressor(max_samples=0.01)
 
     def test_with_hyperopt(self):
         planned = RandomForestRegressor
@@ -405,12 +415,12 @@ class TestSVC(unittest.TestCase):
 
     def test_gamma(self):
         default = SVC.hyperparam_defaults()['gamma']
-        self.assertEqual(default, 'scale')
+        self.assertEqual(default, 'auto_deprecated')
 
     def test_break_ties(self):
-        trainable = SVC(break_ties=True)
-        trained = trainable.fit(self.train_X, self.train_y)
-        predicted = trained.predict(self.test_X)
+        with self.assertRaisesRegex(jsonschema.ValidationError,
+                                    "argument 'break_ties' was unexpected"):
+            trainable = SVC(break_ties=True)
 
     def test_with_hyperopt(self):
         planned = SVC
@@ -433,7 +443,7 @@ class TestVotingClassifier(unittest.TestCase):
         trainable = VotingClassifier(estimators=[
             ('lr', LogisticRegression()),
             ('dt', DecisionTreeClassifier()),
-            ('na', 'drop')])
+            ('na', None)])
         trained = trainable.fit(self.train_X, self.train_y)
         predicted = trained.predict(self.test_X)
 

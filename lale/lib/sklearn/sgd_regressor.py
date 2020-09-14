@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.linear_model import SGDRegressor as SKLModel
+import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
@@ -39,7 +39,7 @@ class SGDRegressorImpl():
             'n_iter_no_change': n_iter_no_change,
             'warm_start': warm_start,
             'average': average}
-        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model = sklearn.linear_model.SGDRegressor(**self._hyperparams)
 
     def fit(self, X, y=None):
         if (y is not None):
@@ -258,7 +258,19 @@ _combined_schemas = {
         'input_predict': _input_predict_schema,
         'output_predict': _output_predict_schema}}
 
-lale.docstrings.set_docstrings(SGDRegressorImpl, _combined_schemas)
-
 SGDRegressor = lale.operators.make_operator(SGDRegressorImpl, _combined_schemas)
 
+if sklearn.__version__ >= '0.21':
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDRegressor.html
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.SGDRegressor.html
+    from lale.schemas import Int
+    import typing
+    SGDRegressor = typing.cast(lale.operators.PlannedIndividualOp, SGDRegressor.customize_schema(
+        max_iter=Int(
+            minForOptimizer=5,
+            maxForOptimizer=1000,
+            distribution='uniform',
+            desc='The maximum number of passes over the training data (aka epochs).',
+            default=1000)))
+
+lale.docstrings.set_docstrings(SGDRegressorImpl, SGDRegressor._schemas)

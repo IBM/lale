@@ -51,8 +51,12 @@ install:
     fi
   - pip install $SETUP_TARGET
   - |
+    if [ "z${TEST_CASES}" == z"test/test_autoai_output_consumption.py" ]; then
+      pip install 'scikit-learn==0.20.3'
+    fi
+  - |
     if [ "z${TEST_CASES}" == z"test/test_lale_lib_versions.py" ]; then
-      pip install 'scikit-learn==0.23.1'
+      pip install 'scikit-learn==0.20.3'
       pip install 'xgboost==0.90'
     fi
   - export PYTHONPATH=`pwd`

@@ -17,14 +17,8 @@ import lale.docstrings
 import lale.operators
 
 class QuadraticDiscriminantAnalysisImpl():
-
-    def __init__(self, priors=None, reg_param=None, store_covariance=None, tol=0.0001, store_covariances=None):
-        self._hyperparams = {
-            'priors': priors,
-            'reg_param': reg_param,
-            'store_covariance': store_covariance,
-            'tol': tol,
-            'store_covariances': store_covariances}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis(**self._hyperparams)
 
     def fit(self, X, y=None):
