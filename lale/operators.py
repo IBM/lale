@@ -999,7 +999,7 @@ class IndividualOp(Operator):
         cp = self.__class__(self._name, impl, self._schemas)
         return cp
 
-    def customize_schema(self, **kwargs: Schema) -> 'IndividualOp':
+    def customize_schema(self, **kwargs: Optional[Schema]) -> 'IndividualOp':
         """Return a new operator with a customized schema
         
         Parameters
@@ -1038,16 +1038,19 @@ class IndividualOp(Operator):
         for arg in kwargs:
             value = kwargs[arg]
             if arg == 'schemas':
+                assert value is not None
                 value.schema['$schema'] = 'http://json-schema.org/draft-04/schema#'
                 lale.type_checking.validate_is_schema(value.schema)
                 op._schemas = value.schema
                 break
             elif arg in [p+n for p in ['input_', 'output_'] for n in methods]:
             # multiple input types (e.g., fit, predict)
+                assert value is not None
                 lale.type_checking.validate_method(op, arg)
                 lale.type_checking.validate_is_schema(value.schema)
                 op._schemas['properties'][arg] = value.schema
             elif arg == 'constraint':
+                assert value is not None
                 op._schemas['properties']['hyperparams']['allOf'].append(value.schema)
             elif arg == 'relevantToOptimizer':
                 assert isinstance(value, list)
@@ -1055,6 +1058,13 @@ class IndividualOp(Operator):
             elif arg == 'tags':
                 assert isinstance(value, dict)
                 op._schemas['tags'] = value
+            elif value is None:
+                scm = op._schemas['properties']['hyperparams']['allOf'][0]
+                scm['required'] = [k for k in scm['required'] if k != arg]
+                scm['relevantToOptimizer'] = [
+                    k for k in scm['relevantToOptimizer'] if k != arg]
+                scm['properties'] = {k: scm['properties'][k]
+                                     for k in scm['properties'] if k != arg}
             else:
                 op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
         # since the schema has changed, we need to invalidate any
@@ -1765,6 +1775,7 @@ class BasePipeline(Operator, Generic[OpType]):
     _steps:List[OpType]
     _preds:Dict[OpType, List[OpType]]
     _name:str
+    _estimator_type:Optional[str]
 
     def _lale_clone(self, cloner:Callable[[Any], Any]):
         steps = self._steps
@@ -1816,6 +1827,8 @@ class BasePipeline(Operator, Generic[OpType]):
             if not ordered:
                 self.__sort_topologically()
             assert self.__is_in_topological_order()
+        if self.is_classifier():
+            self._estimator_type = 'classifier' #satisfy sklearn.base.is_classifier(op)
 
     def __constructor_for_cloning(self, steps:List[OpType]):
         edges:List[Tuple[OpType, OpType]] = []
@@ -2684,6 +2697,8 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
 
         self._name = name
         self._steps = steps.copy()
+        if self.is_classifier():
+            self._estimator_type = 'classifier' #satisfy sklearn.base.is_classifier(op)
 
     def steps(self)->List[OperatorChoiceType]:
         return self._steps

@@ -410,21 +410,13 @@ pipeline = make_pipeline(tam, LR())"""
         lgbm_classifier = LGBMClassifier(class_weight='balanced', learning_rate=0.18)
         pipeline = make_pipeline(tam, lgbm_classifier)
         expected = """from autoai_libs.cognito.transforms.transform_utils import TAM
-import sklearn.decomposition.pca
+import sklearn.decomposition
 import numpy as np
 from lightgbm import LGBMClassifier
 from lale.operators import make_pipeline
 
 tam = TAM(
-    tans_class=sklearn.decomposition.pca.PCA(
-        copy=False,
-        iterated_power="auto",
-        n_components=None,
-        random_state=None,
-        svd_solver="auto",
-        tol=0.0,
-        whiten=False,
-    ),
+    tans_class=sklearn.decomposition.PCA(copy=False),
     name="pca",
     col_names=["a", "b", "c"],
     col_dtypes=[
@@ -465,7 +457,10 @@ tam = TAM(
         np.dtype("float32"),
     ],
 )
-pipeline = tam >> LogisticRegression()"""
+logistic_regression = LogisticRegression(
+    multi_class="ovr", solver="liblinear"
+)
+pipeline = tam >> logistic_regression"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_tam_4(self):
@@ -496,7 +491,10 @@ tam = TAM(
         np.dtype("float32"),
     ],
 )
-pipeline = tam >> LogisticRegression()"""
+logistic_regression = LogisticRegression(
+    multi_class="ovr", solver="liblinear"
+)
+pipeline = tam >> logistic_regression"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
         import pandas as pd
         import numpy as np

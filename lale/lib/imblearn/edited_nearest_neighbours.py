@@ -21,19 +21,10 @@ from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schem
                                             _input_decision_function_schema, _output_decision_function_schema
 
 class EditedNearestNeighboursImpl(BaseResamplerImpl):
-
-    def __init__(self, operator = None, sampling_strategy='auto', random_state=None, 
-                n_neighbors=3, kind_sel='all', n_jobs=1):
+    def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
-
-        self._hyperparams = {
-            'sampling_strategy': sampling_strategy,
-            'random_state': random_state,
-            'n_neighbors': n_neighbors,
-            'kind_sel': kind_sel,
-            'n_jobs': n_jobs}
-    
+        self._hyperparams = hyperparams
         resampler_instance = OrigModel(**self._hyperparams)
         super(EditedNearestNeighboursImpl, self).__init__(
             operator = operator,
@@ -75,17 +66,6 @@ The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
                         'laleType': 'callable'}],
                 'default': 'auto'},
-            'random_state': {
-            'description':
-                'Control the randomization of the algorithm.',
-            'anyOf': [
-                { 'description': 'RandomState used by np.random',
-                'enum': [None]},
-                { 'description': 'The seed used by the random number generator',
-                'type': 'integer'},
-                { 'description': 'Random number generator instance.',
-                'laleType':'numpy.random.RandomState'}],
-            'default': None},
             'n_neighbors':{
                 'description': """If ``int``, size of the neighbourhood to consider to compute the nearest neighbors.  
 If object, an estimator that inherits from

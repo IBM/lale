@@ -3,11 +3,12 @@ import os
 import lale
 import urllib
 import pandas as pd
+import sklearn
+assert sklearn.__version__ == '0.20.3', 'This test is for scikit-learn 0.20.3.'
 from sklearn.externals import joblib
 from sklearn.linear_model import LogisticRegression as LR
 from sklearn.tree import DecisionTreeClassifier as Tree
 from sklearn.neighbors import KNeighborsClassifier as KNN
-
 
 class TestAutoAIOutputConsumption(unittest.TestCase):
 

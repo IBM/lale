@@ -97,6 +97,11 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
         elif hasattr(value, 'get_params'):
             module = value.__module__
             name = value.__class__.__name__
+            from lale.helpers import println_pos
+            if module.startswith('sklearn.'):
+                i = module.rfind('.')
+                if module[i+1] == '_':
+                    module = module[:i]
             if gen is not None:
                 gen.imports.append(f'import {module}')
             printed = pprint.pformat(value, width=10000, compact=True)

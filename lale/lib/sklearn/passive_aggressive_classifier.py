@@ -17,27 +17,8 @@ import lale.docstrings
 import lale.operators
 
 class PassiveAggressiveClassifierImpl():
-
-    def __init__(self, C=1.0, fit_intercept=True, max_iter=None, tol=None, early_stopping=False, 
-    validation_fraction=0.1, n_iter_no_change=5, shuffle=True, verbose=0, loss='hinge', 
-    n_jobs=None, random_state=None, warm_start=False, class_weight=None, average=False):
-    #The wrapper does not support n_iter as it is deprecated and will be removed in sklearn 0.21.
-        self._hyperparams = {
-            'C': C,
-            'fit_intercept': fit_intercept,
-            'max_iter': max_iter,
-            'tol': tol,
-            'early_stopping': early_stopping,
-            'validation_fraction': validation_fraction,
-            'n_iter_no_change': n_iter_no_change,
-            'shuffle': shuffle,
-            'verbose': verbose,
-            'loss': loss,
-            'n_jobs': n_jobs,
-            'random_state': random_state,
-            'warm_start': warm_start,
-            'class_weight': class_weight,
-            'average': average}
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.linear_model.PassiveAggressiveClassifier(**self._hyperparams)
 
     def fit(self, X, y=None):
@@ -69,18 +50,17 @@ _hyperparams_schema = {
                 'maximumForOptimizer': 10},
             'fit_intercept': {
                 'type': 'boolean',
-                'default': True,
+                'default': False,
                 'description': 'Whether the intercept should be estimated or not. If False, the'
                 'the data is assumed to be already centered.'},
             'max_iter': {
-                'anyOf': [{
-                    'type': 'integer',
+                'anyOf': [
+                {   'type': 'integer',
                     'minimumForOptimizer': 5,
                     'maximumForOptimizer': 1000,
-                    'distribution': 'uniform',
-                    'default': 5}, #default value is 1000 for sklearn 0.21.
-                    {'enum': [None]}],
-                'default': None,
+                    'distribution': 'uniform'},
+                {    'enum': [None]}],
+                'default': 5,
                 'description': 'The maximum number of passes over the training data (aka epochs).'},
             'tol': {
                 'anyOf': [{
@@ -149,8 +129,14 @@ _hyperparams_schema = {
                     'type': 'integer',
                     'forOptimizer': False}],
                 'default': False,
-                'description': 'When set to True, computes the averaged SGD weights and stores the'}
-        }}]}
+                'description': 'When set to True, computes the averaged SGD weights and stores the'},
+            'n_iter': {
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 1},
+                {   'enum': [None]}],
+                'default': None,
+                'description': 'The number of passes over the training data (aka epochs).'}}}]}
 
 _input_fit_schema = {
     'description': 'Fit linear model with Passive Aggressive algorithm.',
@@ -245,7 +231,24 @@ _combined_schemas = {
         'output_decision_function': _output_decision_function_schema,
 }}
 
-lale.docstrings.set_docstrings(PassiveAggressiveClassifierImpl, _combined_schemas)
-
+PassiveAggressiveClassifier : lale.operators.IndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(PassiveAggressiveClassifierImpl, _combined_schemas)
 
+# old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+# new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+from lale.schemas import Int
+
+if sklearn.__version__ >= '0.21':
+    PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
+        max_iter=Int(
+            minForOptimizer=5,
+            maxForOptimizer=1000,
+            distribution='uniform',
+            desc='The maximum number of passes over the training data (aka epochs).',
+            default=1000))
+
+if sklearn.__version__ >= '0.22':
+    PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
+        n_iter=None)
+
+lale.docstrings.set_docstrings(PassiveAggressiveClassifierImpl, PassiveAggressiveClassifier._schemas)
