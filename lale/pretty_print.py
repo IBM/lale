@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import black
 import importlib
 import inspect
@@ -84,6 +85,12 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
                 gen.imports.append('import numpy as np')
             return f'np.{value.__name__}'
         elif isinstance(value, lale.expressions.Expr):
+            if gen is not None:
+                gen.imports.append('from lale.expressions import it')
+                for node in ast.walk(value._expr):
+                    if isinstance(node, ast.Call):
+                        gen.imports.append(
+                            'from lale.expressions import ' + node.func.id)
             return str(value)
         elif hasattr(value, '__module__') and hasattr(value, '__name__'):
             modules = {'numpy': 'np', 'pandas': 'pd'}
@@ -97,7 +104,6 @@ def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, ge
         elif hasattr(value, 'get_params'):
             module = value.__module__
             name = value.__class__.__name__
-            from lale.helpers import println_pos
             if module.startswith('sklearn.'):
                 i = module.rfind('.')
                 if module[i+1] == '_':
