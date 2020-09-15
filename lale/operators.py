@@ -2016,6 +2016,7 @@ class BasePipeline(Operator, Generic[OpType]):
         from sklearn.base import clone
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.lale.no_op import NoOpImpl
+        from lale.lib.lale.relational import RelationalImpl
         from sklearn.pipeline import FeatureUnion
 
         def convert_nested_objects(node):
@@ -2043,6 +2044,8 @@ class BasePipeline(Operator, Generic[OpType]):
             if isinstance(sink_node, OperatorChoice):
                 raise ValueError("A pipeline that has an OperatorChoice can not be converted to "
                 " a scikit-learn pipeline:{}".format(self.to_json()))
+            if isinstance(sink_node._impl, RelationalImpl):
+                return None
             convert_nested_objects(sink_node._impl)
             if sink_node._impl_class() == ConcatFeaturesImpl:
                 list_of_transformers = []
@@ -2067,7 +2070,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     else:
                         output_pipeline_steps = []
                         previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
-                        if not isinstance(previous_sklearn_op, NoOpImpl):
+                        if previous_sklearn_op is not None and not isinstance(previous_sklearn_op, NoOpImpl):
                             if isinstance(previous_sklearn_op, list):
                                 output_pipeline_steps = previous_sklearn_op
                             else:
