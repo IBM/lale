@@ -8,8 +8,9 @@ hyperopt==0.2.3
 jsonschema
 jsonsubschema
 numpy
+black
 PyYAML
-scikit-learn==0.20.3
+scikit-learn>=0.20.3
 scipy
 pandas<=0.25.3
 xgboost
@@ -18,6 +19,6 @@ decorator
 h5py
 autoai-libs
 liac-arff>=2.4.0
-aif360
+aif360<=0.2.3
 numba
-imbalanced-learn==0.4.3
+imbalanced-learn
