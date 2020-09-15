@@ -194,7 +194,8 @@ def _get_cls2label(call_depth: int) -> Dict[str, str]:
                 insert = (
                     (cls2state[cls] == 'trainable' and state == 'planned') or
                     (cls2state[cls] == 'trained' and
-                     state in ['trainable', 'planned']))
+                     state in ['trainable', 'planned']) or
+                    (cls2state[cls] == state and label[0].isupper()))
             else:
                 insert = True
             if insert:
