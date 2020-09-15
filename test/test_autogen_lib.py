@@ -57,6 +57,7 @@ classifiers = [
     'MLPClassifier',
     'MultinomialNB',
     'NearestCentroid',
+    'NuSVC',
     'PassiveAggressiveClassifier',
     'Perceptron',
     'QuadraticDiscriminantAnalysis',
@@ -65,13 +66,12 @@ classifiers = [
     'RidgeClassifier',
     'RidgeClassifierCV',
     'SGDClassifier',
+    'SVC',
     'SVR',
 ]
 
 failed_classifiers = [
     ('LinearRegression', 'Input predict type (matrix with one column)'),
-    ('SVC', 'Requires sklearn 0.23'),
-    ('NuSVC','Requires sklearn 0.23'),
 ]
 
 @pytest.mark.parametrize('name, Op',
@@ -114,6 +114,7 @@ regressors = [
     'GradientBoostingRegressor',
     'HuberRegressor',
     'KNeighborsRegressor',
+    'Lars',
     'LarsCV',
     'Lasso',
     'LassoCV',
@@ -139,7 +140,6 @@ regressors = [
 failed_regressors = [
     ('MLPRegressor', 'Input predict type (matrix with one column)'),
     ('RadiusNeighborsRegressor', 'Radius argument is data dependent'),
-    ('Lars', 'Requires sklearn 0.23'),
 ]
 
 @pytest.mark.parametrize('name, Op', [(n, Op) for (n, Op) in kls if n in regressors])
