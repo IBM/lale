@@ -215,7 +215,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Bagging classifier`_ from scikit-learn for bagging ensemble.
 
-.. _`Bagging classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.BaggingClassifier.html#sklearn-ensemble-baggingclassifier
+.. _`Bagging classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingClassifier.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.bagging_classifier.html',
     'import_from': 'sklearn.ensemble',

@@ -170,7 +170,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Ridge`_ regression estimator from scikit-learn.
 
-.. _`Ridge`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.Ridge.html#sklearn-linear-model-ridge
+.. _`Ridge`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ridge.html',
     'import_from': 'sklearn.linear_model',

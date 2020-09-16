@@ -164,7 +164,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Ordinal encoder`_ transformer from scikit-learn that encodes categorical features as numbers.
 
-.. _`Ordinal encoder`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OrdinalEncoder.html#sklearn-preprocessing-ordinalencoder
+.. _`Ordinal encoder`: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OrdinalEncoder.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ordinal_encoder.html',
     'import_from': 'sklearn.preprocessing',

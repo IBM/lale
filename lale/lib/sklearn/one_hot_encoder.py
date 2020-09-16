@@ -114,7 +114,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`One-hot encoder`_ transformer from scikit-learn that encodes categorical features as numbers.
 
-.. _`One-hot encoder`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html#sklearn-preprocessing-onehotencoder
+.. _`One-hot encoder`: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.one_hot_encoder.html',
     'import_from': 'sklearn.preprocessing',

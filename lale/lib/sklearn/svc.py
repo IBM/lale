@@ -233,7 +233,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Support Vector Classification`_ from scikit-learn.
 
-.. _`Support Vector Classification`: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVC.html#sklearn-svm-svc
+.. _`Support Vector Classification`: https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.svc.html',
     'import_from': 'sklearn.svm',

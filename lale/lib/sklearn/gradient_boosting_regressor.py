@@ -242,7 +242,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Gradient boosting regressor`_ random forest from scikit-learn.
 
-.. _`Gradient boosting regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html#sklearn-ensemble-gradientboostingregressor
+.. _`Gradient boosting regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_regressor.html',
     'import_from': 'sklearn.ensemble',

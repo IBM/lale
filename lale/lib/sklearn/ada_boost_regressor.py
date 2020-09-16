@@ -135,7 +135,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`AdaBoost regressor`_ from scikit-learn for boosting ensemble.
 
-.. _`AdaBoost regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.AdaBoostRegressor.html#sklearn-ensemble-adaboostregressor
+.. _`AdaBoost regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostRegressor.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ada_boost_regressor.html',
     'import_from': 'sklearn.ensemble',

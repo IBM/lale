@@ -106,7 +106,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Recursive feature elimination`_ transformer from scikit-learn.
 
-.. _`Recursive feature elimination`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.RFE.html#sklearn-feature-selection-rfe
+.. _`Recursive feature elimination`: https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.RFE.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.rfe.html',
     'import_from': 'sklearn.feature_selection',
