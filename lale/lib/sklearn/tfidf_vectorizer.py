@@ -222,7 +222,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`TF-IDF vectorizer`_ transformer from scikit-learn for turning text into term frequency - inverse document frequency numeric features.
 
-.. _`TF-IDF vectorizer`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html#sklearn-feature-extraction-text-tfidfvectorizer
+.. _`TF-IDF vectorizer`: https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.tfidf_vectorizer.html',
     'import_from': 'sklearn.feature_extraction.text',

@@ -120,7 +120,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Linear regression`_ linear model from scikit-learn for classification.
 
-.. _`Linear regression`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LinearRegression.html#sklearn-linear-model-linearregression
+.. _`Linear regression`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.linear_regression.html',
     'import_from': 'sklearn.linear_model',

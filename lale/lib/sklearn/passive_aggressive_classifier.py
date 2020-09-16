@@ -213,7 +213,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Passive aggressive`_ classifier from scikit-learn.
 
-.. _`Passive aggressive`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html#sklearn-linear-model-passiveaggressiveclassifier
+.. _`Passive aggressive`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.passive_aggressive_classifier.html',
     'import_from': 'sklearn.linear_model',

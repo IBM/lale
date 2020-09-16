@@ -93,7 +93,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Polynomial features`_ transformer from scikit-learn.
 
-.. _`Polynomial features`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.PolynomialFeatures.html#sklearn-preprocessing-polynomialfeatures
+.. _`Polynomial features`: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.PolynomialFeatures.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.polynomial_features.html',
     'import_from': 'sklearn.preprocessing',

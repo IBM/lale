@@ -138,7 +138,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Nystroem`_ transformer from scikit-learn.
 
-.. _`Nystroem`: https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_approximation.Nystroem.html#sklearn-kernel-approximation-nystroem
+.. _`Nystroem`: https://scikit-learn.org/stable/modules/generated/sklearn.kernel_approximation.Nystroem.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.nystroem.html',
     'import_from': 'sklearn.kernel_approximation',

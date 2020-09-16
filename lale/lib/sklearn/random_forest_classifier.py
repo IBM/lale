@@ -243,7 +243,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Random forest classifier`_ from scikit-learn.
 
-.. _`Random forest classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestClassifier.html#sklearn-ensemble-randomforestclassifier
+.. _`Random forest classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_classifier.html',
     'import_from': 'sklearn.ensemble',

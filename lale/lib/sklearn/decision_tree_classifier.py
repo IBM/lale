@@ -223,7 +223,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Decision tree classifier`_ from scikit-learn.
 
-.. _`Decision tree classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn-tree-decisiontreeclassifier
+.. _`Decision tree classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.decision_tree_classifier.html',
     'import_from': 'sklearn.tree',

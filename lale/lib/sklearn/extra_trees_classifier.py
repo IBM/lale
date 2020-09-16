@@ -228,7 +228,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Extra trees classifier`_ random forest from scikit-learn.
 
-.. _`Extra trees classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html#sklearn-ensemble-extratreesclassifier
+.. _`Extra trees classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.extra_trees_classifier.html',
     'import_from': 'sklearn.ensemble',

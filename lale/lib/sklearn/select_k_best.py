@@ -107,7 +107,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Select k best`_ feature selection transformer from scikit-learn.
 
-.. _`Select k best`: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.SelectKBest.html#sklearn-feature-selection-selectkbest
+.. _`Select k best`: https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SelectKBest.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.select_k_best.html',
     'import_from': 'sklearn.feature_selection',

@@ -122,7 +122,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Quantile transformer`_ from scikit-learn.
 
-.. _`Quantile transformer`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.QuantileTransformer.html#sklearn-preprocessing-quantiletransformer
+.. _`Quantile transformer`: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.QuantileTransformer.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.quantile_transformer.html',
     'import_from': 'sklearn.preprocessing',

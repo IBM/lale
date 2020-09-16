@@ -187,7 +187,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Principal component analysis`_ transformer from scikit-learn for linear dimensionality reduction.
 
-.. _`Principal component analysis`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.PCA.html#sklearn-decomposition-pca
+.. _`Principal component analysis`: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html',
     'import_from': 'sklearn.decomposition',

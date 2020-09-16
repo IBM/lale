@@ -175,7 +175,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Non-negative matrix factorization`_ transformer from scikit-learn for linear dimensionality reduction.
 
-.. _`Non-negative matrix factorization`: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html#sklearn-decomposition-nmf
+.. _`Non-negative matrix factorization`: https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.NMF.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.nmf.html',
     'import_from': 'sklearn.decomposition',
