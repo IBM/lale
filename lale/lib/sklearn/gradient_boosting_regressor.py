@@ -266,7 +266,7 @@ if sklearn.__version__ >= '0.22':
     from lale.schemas import AnyOf, Bool, Enum, Float
     GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
         presort=AnyOf(
-            types=[Bool(), Enum(['deprecated'])],
+            types=[Bool(), Enum(['deprecated', 'auto'])],
             desc='This parameter is deprecated and will be removed in v0.24.',
             default='deprecated'),
         ccp_alpha=Float(
