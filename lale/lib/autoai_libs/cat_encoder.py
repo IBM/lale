@@ -108,7 +108,7 @@ In the inverse transform, an unknown category will be denoted as None.""",
                 'default': 'ignore'},
             'sklearn_version_family': {
                 'description': 'The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.',
-                'enum': ['20', None],
+                'enum': ['20', '23', None],
                 'default': None},
             'activate_flag': {
                 'description': 'If False, transform(X) outputs the input numpy array X unmodified.',
