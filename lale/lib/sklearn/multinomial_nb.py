@@ -125,7 +125,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Multinomial Naive Bayes`_ classifier from scikit-learn.
 
-.. _`Multinomial Naive Bayes`: https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.MultinomialNB.html#sklearn-naive-bayes-multinomialnb
+.. _`Multinomial Naive Bayes`: https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.multinomial_naive_bayes.html',
     'import_from': 'sklearn.naive_bayes',

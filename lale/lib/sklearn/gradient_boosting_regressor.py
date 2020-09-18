@@ -242,7 +242,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Gradient boosting regressor`_ random forest from scikit-learn.
 
-.. _`Gradient boosting regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html#sklearn-ensemble-gradientboostingregressor
+.. _`Gradient boosting regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_regressor.html',
     'import_from': 'sklearn.ensemble',
@@ -266,7 +266,7 @@ if sklearn.__version__ >= '0.22':
     from lale.schemas import AnyOf, Bool, Enum, Float
     GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
         presort=AnyOf(
-            types=[Bool(), Enum(['deprecated'])],
+            types=[Bool(), Enum(['deprecated', 'auto'])],
             desc='This parameter is deprecated and will be removed in v0.24.',
             default='deprecated'),
         ccp_alpha=Float(

@@ -93,7 +93,7 @@ _combined_schemas = {
   '$schema': 'http://json-schema.org/draft-04/schema#',
   'description': """`Min-max scaler`_ transformer from scikit-learn.
 
-.. _`Min-max scaler`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.MinMaxScaler.html#sklearn-preprocessing-minmaxscaler
+.. _`Min-max scaler`: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html
 """,
   'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.min_max_scaler.html',
   'import_from': 'sklearn.preprocessing',

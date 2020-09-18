@@ -121,7 +121,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Missing values indicator`_ transformer from scikit-learn.
 
-.. _`Missing values indicator`: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.MissingIndicator.html#sklearn-impute-missingindicator
+.. _`Missing values indicator`: https://scikit-learn.org/stable/modules/generated/sklearn.impute.MissingIndicator.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.missing_indicator.html',
     'import_from': 'sklearn.impute',

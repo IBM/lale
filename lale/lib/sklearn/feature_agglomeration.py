@@ -155,7 +155,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Feature agglomeration`_ transformer from scikit-learn.
 
-.. _`Feature agglomeration`: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html#sklearn-cluster-featureagglomeration
+.. _`Feature agglomeration`: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.FeatureAgglomeration.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.feature_agglomeration.html',
     'import_from': 'sklearn.cluster',

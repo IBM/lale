@@ -159,7 +159,7 @@ _output_decision_function_schema = {
 _combined_schemas = {
     'description': """`Quadratic discriminant analysis`_ classifier with a quadratic decision boundary from scikit-learn.
 
-.. _`Quadratic discriminant analysis`: https://scikit-learn.org/0.20/modules/generated/sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis.html#sklearn-discriminant-analysis-quadraticdiscriminantanalysis 
+.. _`Quadratic discriminant analysis`: https://scikit-learn.org/stable/modules/generated/sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.quadratic_discriminant_analysis.html',
     'import_from': 'sklearn.discriminant_analysis',

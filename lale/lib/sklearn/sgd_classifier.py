@@ -315,7 +315,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`SGD classifier`_ from scikit-learn uses linear classifiers (SVM, logistic regression, a.o.) with stochastic gradient descent training.
 
-.. _`SGD classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDClassifier.html#sklearn-linear-model-sgdclassifier
+.. _`SGD classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.sgd_classifier.html',
     'import_from': 'sklearn.linear_model',

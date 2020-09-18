@@ -153,7 +153,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`K nearest neighbors regressor`_ from scikit-learn.
 
-.. _`K nearest neighbors regressor`: https://scikit-learn.org/0.20/modules/generated/sklearn.neighbors.KNeighborsRegressor.html
+.. _`K nearest neighbors regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.k_neighbors_regressor.html',
     'import_from': 'sklearn.neighbors',

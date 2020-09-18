@@ -175,7 +175,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`K nearest neighbors classifier`_ from scikit-learn.
 
-.. _`K nearest neighbors classifier`: https://scikit-learn.org/0.20/modules/generated/sklearn.neighbors.KNeighborsClassifier.html#sklearn-neighbors-kneighborsclassifier
+.. _`K nearest neighbors classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.k_neighbors_classifier.html',
     'import_from': 'sklearn.neighbors',

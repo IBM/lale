@@ -123,7 +123,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Simple imputer`_ transformer from scikit-learn for completing missing values.
 
-.. _`Simple imputer`: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer
+.. _`Simple imputer`: https://scikit-learn.org/stable/modules/generated/sklearn.impute.SimpleImputer.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.simple_imputer.html',
     'import_from': 'sklearn.impute',

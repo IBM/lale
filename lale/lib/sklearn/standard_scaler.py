@@ -102,7 +102,7 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`Standard scaler`_ transformer from scikit-learn.
 
-.. _`Standard scaler`: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.StandardScaler.html#sklearn-preprocessing-standardscaler
+.. _`Standard scaler`: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html
 """,
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.standard_scaler.html',
     'import_from': 'sklearn.preprocessing',
