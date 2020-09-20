@@ -20,6 +20,7 @@ Operators
 
 Estimators:
 
+* lale.lib.lale. `AutoPipeline`_
 * lale.lib.lale. `BaselineClassifier`_
 * lale.lib.lale. `BaselineRegressor`_
 * lale.lib.lale. `GridSearchCV`_
@@ -47,6 +48,7 @@ Estimators and transformers:
 * lale.lib.lale. `IdentityWrapper`_
 * lale.lib.lale. `Observing`_
 
+.. _`AutoPipeline`: lale.lib.lale.auto_pipeline.html
 .. _`BaselineClassifier`: lale.lib.lale.baseline_classifier.html
 .. _`BaselineRegressor`: lale.lib.lale.baseline_regressor.html
 .. _`GridSearchCV`: lale.lib.lale.grid_search_cv.html
@@ -79,6 +81,7 @@ Functions:
 """
 
 #estimators
+from .auto_pipeline import AutoPipeline
 from .baseline_classifier import BaselineClassifier
 from .baseline_regressor import BaselineRegressor
 from .grid_search_cv import GridSearchCV
