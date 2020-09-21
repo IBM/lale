@@ -348,10 +348,12 @@ import lale
 
 lale.wrap_imported_operators()
 cat_encoder = CatEncoder(
+    activate_flag=True,
     categories="auto",
     dtype=np.float64,
     encoding="ordinal",
     handle_unknown="error",
+    sklearn_version_family="23",
 )
 pipeline = cat_encoder >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -389,12 +391,15 @@ from sklearn.pipeline import make_pipeline
 tam = TAM(
     tans_class=autoai_libs.cognito.transforms.transform_extras.IsolationForestAnomaly,
     name="isoforestanomaly",
+    tgraph=None,
+    apply_all=True,
     col_names=["a", "b", "c"],
     col_dtypes=[
         np.dtype("float32"),
         np.dtype("float32"),
         np.dtype("float32"),
     ],
+    col_as_json_objects=None,
 )
 pipeline = make_pipeline(tam, LR())"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline, astype='sklearn'))
@@ -424,6 +429,9 @@ tam = TAM(
         np.dtype("float32"),
         np.dtype("float32"),
     ],
+    tgraph=None,
+    apply_all=True,
+    col_as_json_objects=None,
 )
 lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
 pipeline = make_pipeline(tam, lgbm_classifier)"""
@@ -450,12 +458,15 @@ lale.wrap_imported_operators()
 tam = TAM(
     tans_class=FeatureAgglomeration(),
     name="featureagglomeration",
+    tgraph=None,
+    apply_all=True,
     col_names=["a", "b", "c"],
     col_dtypes=[
         np.dtype("float32"),
         np.dtype("float32"),
         np.dtype("float32"),
     ],
+    col_as_json_objects=None,
 )
 logistic_regression = LogisticRegression(
     multi_class="ovr", solver="liblinear"
@@ -484,12 +495,15 @@ lale.wrap_imported_operators()
 tam = TAM(
     tans_class=PCA(),
     name="pca",
+    tgraph=None,
+    apply_all=True,
     col_names=["a", "b", "c"],
     col_dtypes=[
         np.dtype("float32"),
         np.dtype("float32"),
         np.dtype("float32"),
     ],
+    col_as_json_objects=None,
 )
 logistic_regression = LogisticRegression(
     multi_class="ovr", solver="liblinear"
@@ -521,12 +535,15 @@ ta1 = TA1(
     name="round",
     datatypes=["numeric"],
     feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical],
+    tgraph=None,
+    apply_all=True,
     col_names=["a", "b", "c"],
     col_dtypes=[
         np.dtype("float32"),
         np.dtype("float32"),
         np.dtype("float32"),
     ],
+    col_as_json_objects=None,
 )
 pipeline = ta1 >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))

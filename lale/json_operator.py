@@ -274,8 +274,11 @@ def _op_to_json_rec(op: 'lale.operators.Operator', cls2label: Dict[str, str], ge
                 jsn['hyperparams'] = None
             else:
                 steps: Dict[str, JSON_TYPE] = {}
+                op_hyperparams = (op.hyperparams()
+                                  if op.class_name().find('autoai_libs.') == -1
+                                  else op._get_params_all())
                 jsn['hyperparams'] = _hps_to_json_rec(
-                    op.hyperparams(), cls2label, gensym, steps)
+                    op_hyperparams, cls2label, gensym, steps)
                 if len(steps) > 0:
                     jsn['steps'] = steps
             jsn['is_frozen_trainable'] = op.is_frozen_trainable()
