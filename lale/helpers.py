@@ -599,12 +599,12 @@ def add_missing_values(orig_X, missing_rate=0.1, seed=None):
     # see scikit-learn.org/stable/auto_examples/impute/plot_missing_values.html
     n_samples, n_features = orig_X.shape
     n_missing_samples = int(n_samples * missing_rate)
-    missing_samples = np.zeros(n_samples, dtype=np.bool)
-    missing_samples[:n_missing_samples] = True
     if seed is None:
         rng = np.random.RandomState()
     else:
         rng = np.random.RandomState(seed)
+    missing_samples = np.zeros(n_samples, dtype=np.bool)
+    missing_samples[:n_missing_samples] = True
     rng.shuffle(missing_samples)
     missing_features = rng.randint(0, n_features, n_missing_samples)
     missing_X = orig_X.copy()
@@ -612,5 +612,10 @@ def add_missing_values(orig_X, missing_rate=0.1, seed=None):
         missing_X[missing_samples, missing_features] = np.nan
     else:
         assert isinstance(missing_X, pd.DataFrame)
-        missing_X.iloc[missing_samples, missing_features] = np.nan
+        i_missing_sample = 0
+        for i_sample in range(n_samples):
+            if missing_samples[i_sample]:
+                i_feature = missing_features[i_missing_sample]
+                i_missing_sample += 1
+                missing_X.iloc[i_sample, i_feature] = np.nan
     return missing_X

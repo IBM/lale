@@ -16,19 +16,15 @@ import unittest
 import jsonschema
 import warnings
 import sklearn.datasets
-import sklearn.metrics
-import sklearn.model_selection
 import inspect
 import logging
 import io
-import traceback
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import KNeighborsClassifier
 from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import LinearRegression
 from lale.lib.sklearn import MLPClassifier
 from lale.lib.sklearn import Nystroem
 from lale.lib.sklearn import OneHotEncoder
@@ -45,8 +41,7 @@ from lale.lib.lale import Relational, Scan, Join, Aggregate
 from lale.expressions import it, count
 
 import lale.operators as Ops
-import lale.datasets.openml
-import lale.helpers
+
 import lale.type_checking
 
 class TestFeaturePreprocessing(unittest.TestCase):
@@ -1207,72 +1202,3 @@ class TestRelationalOperator(unittest.TestCase):
         pipeline = relational >> LogisticRegression()
         trained_pipeline = pipeline.fit(self.X_train, self.y_train)
         output = trained_pipeline.predict(self.X_test)
-
-class TestAutoPipeline(unittest.TestCase):
-    def _fit_predict(self, prediction_type, all_X, all_y, verbose=True):
-        if verbose:
-            file_name, line, fn_name, text = traceback.extract_stack()[-2]
-            print(f'--- TestAutoPipeline.{fn_name}() ---')
-        from lale.lib.lale import AutoPipeline
-        train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(all_X, all_y)
-        trainable = AutoPipeline(prediction_type=prediction_type, max_evals=10)
-        trained = trainable.fit(train_X, train_y)
-        predicted = trained.predict(test_X)
-        if prediction_type == 'regression':
-            score = f'r2 score {sklearn.metrics.r2_score(test_y, predicted):.2f}'
-        else:
-            score = f'accuracy {sklearn.metrics.accuracy_score(test_y, predicted):.1%}'
-        if verbose:
-            print(score)
-            print(trained.get_pipeline().pretty_print(show_imports=False))
-
-    def test_sklearn_iris(self):
-        #classification, only numbers, no missing values
-        all_X, all_y = sklearn.datasets.load_iris(return_X_y=True)
-        self._fit_predict('classification', all_X, all_y)
-
-    def test_sklearn_digits(self):
-        #classification, numbers but some appear categorical, no missing values
-        all_X, all_y = sklearn.datasets.load_digits(return_X_y=True)
-        self._fit_predict('classification', all_X, all_y)
-
-    def test_sklearn_boston(self):
-        #regression, categoricals+numbers, no missing values
-        all_X, all_y = sklearn.datasets.load_boston(return_X_y=True)
-        self._fit_predict('regression', all_X, all_y)
-
-    def test_sklearn_diabetes(self):
-        #regression, categoricals+numbers, no missing values
-        all_X, all_y = sklearn.datasets.load_diabetes(return_X_y=True)
-        self._fit_predict('regression', all_X, all_y)
-
-    def test_openml_creditg(self):
-        #classification, categoricals+numbers incl. string, no missing values
-        (orig_train_X, orig_train_y), _ = lale.datasets.openml.fetch('credit-g', 'classification', preprocess=False)
-        subsample_X, _, subsample_y, _ = sklearn.model_selection.train_test_split(orig_train_X, orig_train_y, train_size=0.05)
-        self._fit_predict('classification', subsample_X, subsample_y)
-
-    def test_missing_iris(self):
-        #classification, only numbers, synthetically added missing values
-        all_X, all_y = sklearn.datasets.load_iris(return_X_y=True)
-        with_missing_X = lale.helpers.add_missing_values(all_X)
-        with self.assertRaisesRegex(ValueError, 'Input contains NaN'):
-            lr_trainable = LogisticRegression()
-            lr_trained = lr_trainable.fit(with_missing_X, all_y)
-        self._fit_predict('classification', with_missing_X, all_y)
-
-    def test_missing_boston(self):
-        #regression, categoricals+numbers, synthetically added missing values
-        all_X, all_y = sklearn.datasets.load_boston(return_X_y=True)
-        with_missing_X = lale.helpers.add_missing_values(all_X)
-        with self.assertRaisesRegex(ValueError, 'Input contains NaN'):
-            lr_trainable = LinearRegression()
-            lr_trained = lr_trainable.fit(with_missing_X, all_y)
-        self._fit_predict('regression', with_missing_X, all_y)
-
-    def test_missing_creditg(self):
-        #classification, categoricals+numbers incl. string, synth. missing
-        (orig_train_X, orig_train_y), _ = lale.datasets.openml.fetch('credit-g', 'classification', preprocess=False)
-        subsample_X, _, subsample_y, _ = sklearn.model_selection.train_test_split(orig_train_X, orig_train_y, train_size=0.05)
-        with_missing_X = lale.helpers.add_missing_values(subsample_X)
-        self._fit_predict('classification', with_missing_X, subsample_y)

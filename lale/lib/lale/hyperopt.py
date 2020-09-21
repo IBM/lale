@@ -298,7 +298,12 @@ Returns
 -------
 result : Trained operator if best, trainable operator otherwise.
 """
+        best_name = None
+        if self._best_estimator is not None:
+            best_name = f'p{self._trials.best_trial["tid"]}'
         if pipeline_name is None:
+            pipeline_name = best_name
+        if pipeline_name == best_name:
             result = getattr(self, '_best_estimator', None)
         else:
             tid = int(pipeline_name[1:])

@@ -15,6 +15,10 @@
 import hyperopt
 import lale.docstrings
 import lale.operators
+import pandas as pd
+import sklearn.metrics
+import sklearn.model_selection
+import time
 
 def auto_prep(X):
     from lale.lib.lale import ConcatFeatures
@@ -40,17 +44,40 @@ def auto_prep(X):
     return result
 
 class AutoPipelineImpl:
-    def __init__(self, prediction_type='classification', scoring=None,
+    def __init__(self, prediction_type='classification',
+                 scoring=None, best_score=0.0,
                  max_evals=100, max_opt_time=600.0, max_eval_time=120.0):
         self.prediction_type = prediction_type
         if scoring is None:
             scoring = 'r2' if prediction_type=='regression' else 'accuracy'
         self.scoring = scoring
+        self._scorer = sklearn.metrics.get_scorer(scoring)
+        self.best_score = best_score
         self.max_evals = max_evals
         self.max_opt_time = max_opt_time
         self.max_eval_time = max_eval_time
 
-    def fit(self, X, y):
+    def _fit_baseline(self, train_X, test_X, train_y, test_y):
+        from lale.lib.lale import BaselineRegressor
+        from lale.lib.lale import BaselineClassifier
+        start = time.time()
+        if self.prediction_type == 'regression':
+            trainable = BaselineRegressor()
+        else:
+            trainable = BaselineClassifier()
+        trained = trainable.fit(train_X, train_y)
+        assert self._name_of_best is None
+        self._name_of_best = 'baseline'
+        record = {
+            'name': 'baseline',
+            'time': time.time() - start,
+            'loss': self.best_score - self._scorer(trained, test_X, test_y),
+            'status': hyperopt.STATUS_OK}
+        assert self._summary is None
+        self._summary = pd.DataFrame.from_records([record], index='name')
+        self._pipelines['baseline'] = trained
+
+    def _fit_hyperopt(self, X, y):
         from lale.lib.lale import Hyperopt
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.lib.sklearn import KNeighborsRegressor
@@ -65,19 +92,40 @@ class AutoPipelineImpl:
         else:
             estimator = (LogisticRegression | RandomForestClassifier
                          | KNeighborsClassifier)
-        planned_pipeline = prep >> estimator
-        self.hyperopt = Hyperopt(
-            estimator=planned_pipeline,
-            max_evals=self.max_evals,
+        planned = prep >> estimator
+        trainable = Hyperopt(
+            estimator=planned,
+            max_evals=self.max_evals - self._summary.shape[0],
             scoring=self.scoring,
-            max_opt_time=self.max_opt_time,
+            best_score=self.best_score,
+            max_opt_time=self.max_opt_time - (time.time() - self._start_fit),
             max_eval_time=self.max_eval_time,
             verbose=True)
-        self.hyperopt.fit(X, y)
+        trained = trainable.fit(X, y)
+        best_trial = trained._impl._trials.best_trial
+        if 'loss' in best_trial['result']:
+            if (best_trial['result']['loss']
+                < self._summary.at[self._name_of_best, 'loss']):
+                self._name_of_best = f'p{best_trial["tid"]}'
+        summary = trained.summary()
+        self._summary = pd.concat([self._summary, summary], axis=0)
+        for name in summary.index:
+            assert name not in self._pipelines
+            self._pipelines[name] = trained.get_pipeline(name)
+
+    def fit(self, X, y):
+        self._start_fit = time.time()
+        self._name_of_best = None
+        self._summary = None
+        self._pipelines = {}
+        train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(X, y)
+        self._fit_baseline(train_X, test_X, train_y, test_y)
+        self._fit_hyperopt(X, y)
         return self
 
     def predict(self, X):
-        result = self.hyperopt.predict(X)
+        best_pipeline = self._pipelines[self._name_of_best]
+        result = best_pipeline.predict(X)
         return result
 
     def summary(self):
@@ -85,8 +133,7 @@ class AutoPipelineImpl:
 Returns
 -------
 result : DataFrame"""
-        result = self.hyperopt.summary()
-        return result
+        return self._summary
 
     def get_pipeline(self, pipeline_name=None, astype='lale'):
         """Retrieve one of the trials.
@@ -103,8 +150,13 @@ Returns
 -------
 result : Trained operator if best, trainable operator otherwise.
 """
-        result = self.hyperopt.get_pipeline(pipeline_name, astype)
-        return result
+        if pipeline_name is None:
+            pipeline_name = self._name_of_best
+        result = self._pipelines[pipeline_name]
+        if result is None or astype == 'lale':
+            return result
+        assert astype == 'sklearn', astype
+        return result.export_to_sklearn_pipeline()
 
 _hyperparams_schema = {
     'allOf': [
@@ -154,6 +206,13 @@ better.
                         'neg_mean_squared_log_error',
                         'neg_median_absolute_error']}],
                 'default': None},
+            'best_score': {
+                'description': """The best score for the specified scorer.
+
+This allows us to return a loss that is >=0,
+where zero is the best loss.""",
+                'type': 'number',
+                'default': 0.0},
             'max_evals': {
                 'description': 'Number of trials of Hyperopt search.',
                 'type': 'integer',
