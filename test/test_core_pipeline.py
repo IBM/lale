@@ -513,7 +513,8 @@ class TestAutoPipeline(unittest.TestCase):
             print(f'--- TestAutoPipeline.{fn_name}() ---')
         from lale.lib.lale import AutoPipeline
         train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(all_X, all_y)
-        trainable = AutoPipeline(prediction_type=prediction_type, max_evals=10)
+        trainable = AutoPipeline(
+            prediction_type=prediction_type, max_evals=10, verbose=verbose)
         trained = trainable.fit(train_X, train_y)
         predicted = trained.predict(test_X)
         if prediction_type == 'regression':
