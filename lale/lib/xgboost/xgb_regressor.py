@@ -401,8 +401,11 @@ _output_predict_probaschema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn',
+    'description': """`XGBRegressor` gradient boosted decision trees.
+
+.. _`XGBRegressor`: https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBRegressor
+""",
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.xgboost.xgb_regressor.html',
     'import_from': 'xgboost',
     'tags': {
         'pre': [],
@@ -416,6 +419,20 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_schema,
         'output_predict_proba': _output_predict_schema}}
 
-lale.docstrings.set_docstrings(XGBRegressorImpl, _combined_schemas)
-
+XGBRegressor : lale.operators.IndividualOp
 XGBRegressor = lale.operators.make_operator(XGBRegressorImpl, _combined_schemas)
+
+if xgboost.__version__ >= '0.90':
+    # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/
+    import lale.schemas
+    XGBRegressor = XGBRegressor.customize_schema(
+        silent=None,
+        objective=lale.schemas.JSON({
+            'description': 'Specify the learning task and the corresponding learning objective or a custom objective function to be used.',
+            'anyOf': [
+            {   'enum': ['reg:squarederror', 'reg:logistic',
+                         'reg:gamma','reg:tweedie']},
+            {   'laleType': 'callable'}],
+            'default': 'reg:squarederror'}))
+
+lale.docstrings.set_docstrings(XGBRegressorImpl, XGBRegressor._schemas)

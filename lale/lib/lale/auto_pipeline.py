@@ -56,7 +56,7 @@ def auto_prep(X):
         ) >> ConcatFeatures
     return result
 
-def auto_forest(prediction_type):
+def auto_gbt(prediction_type):
     if prediction_type == 'regression':
         if xgboost_installed:
             from lale.lib.xgboost import XGBRegressor
@@ -65,10 +65,10 @@ def auto_forest(prediction_type):
             from lale.lib.lightgbm import LGBMRegressor
             return LGBMRegressor
         else:
-            from lale.lib.sklearn import RandomForestRegressor
-            return RandomForestRegressor
+            from lale.lib.sklearn import GradientBoostingRegressor
+            return GradientBoostingRegressor
     else:
-        assert prediction_type == 'classification'
+        assert prediction_type in ['binary', 'multiclass', 'classification']
         if xgboost_installed:
             from lale.lib.xgboost import XGBClassifier
             return XGBClassifier
@@ -76,8 +76,8 @@ def auto_forest(prediction_type):
             from lale.lib.lightgbm import LGBMClassifier
             return LGBMClassifier
         else:
-            from lale.lib.sklearn import RandomForestClassifier
-            return RandomForestClassifier
+            from lale.lib.sklearn import GradientBoostingClassifier
+            return GradientBoostingClassifier
 
 class AutoPipelineImpl:
     def __init__(self, prediction_type='classification',
@@ -129,20 +129,20 @@ class AutoPipelineImpl:
             trainable = BaselineClassifier()
         self._try_and_add('baseline', trainable, X, y)
 
-    def _fit_forest_num(self, X, y):
+    def _fit_gbt_num(self, X, y):
         from lale.lib.lale import Project
         from lale.lib.sklearn import SimpleImputer
-        forest = auto_forest(self.prediction_type)
+        gbt = auto_gbt(self.prediction_type)
         trainable = (Project(columns={'type': 'number'})
                      >> SimpleImputer(strategy='mean')
-                     >> forest())
-        self._try_and_add('forest_num', trainable, X, y)
+                     >> gbt())
+        self._try_and_add('gbt_num', trainable, X, y)
 
-    def _fit_forest_all(self, X, y):
+    def _fit_gbt_all(self, X, y):
         prep = auto_prep(X)
-        forest = auto_forest(self.prediction_type)
-        trainable = prep >> forest()
-        self._try_and_add('forest_all', trainable, X, y)
+        gbt = auto_gbt(self.prediction_type)
+        trainable = prep >> gbt()
+        self._try_and_add('gbt_all', trainable, X, y)
 
     def _fit_hyperopt(self, X, y):
         from lale.lib.lale import Hyperopt
@@ -151,23 +151,28 @@ class AutoPipelineImpl:
         from lale.lib.sklearn import DecisionTreeRegressor
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.lib.sklearn import KNeighborsRegressor
-        from lale.lib.sklearn import LinearRegression
-        from lale.lib.sklearn import LogisticRegression
         from lale.lib.sklearn import MinMaxScaler
         from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import RandomForestClassifier
+        from lale.lib.sklearn import RandomForestRegressor
         from lale.lib.sklearn import RobustScaler
         from lale.lib.sklearn import SelectKBest
+        from lale.lib.sklearn import SGDClassifier
+        from lale.lib.sklearn import SGDRegressor
+        from lale.lib.sklearn import StandardScaler
         prep = auto_prep(X)
-        scale = MinMaxScaler | RobustScaler | NoOp
-        fsel = PCA | SelectKBest | NoOp
-        forest = auto_forest(self.prediction_type)
+        scale = MinMaxScaler | StandardScaler | RobustScaler | NoOp
+        reduce_dims = PCA | SelectKBest | NoOp
+        gbt = auto_gbt(self.prediction_type)
         if self.prediction_type == 'regression':
-            estimator = (forest | LinearRegression | KNeighborsRegressor
-                         | DecisionTreeRegressor)
+            estim_trees = gbt | DecisionTreeRegressor | RandomForestRegressor
+            estim_notree = SGDRegressor | KNeighborsRegressor
         else:
-            estimator = (forest | LogisticRegression | KNeighborsClassifier
-                         | DecisionTreeClassifier)
-        planned = prep >> scale >> fsel >> estimator
+            estim_trees = gbt | DecisionTreeClassifier | RandomForestClassifier
+            estim_notree = SGDClassifier | KNeighborsClassifier
+        model_trees = reduce_dims >> estim_trees
+        model_notree = scale >> reduce_dims >> estim_notree
+        planned = prep >> (model_trees | model_notree)
         trainable = Hyperopt(
             estimator=planned,
             max_evals=self.max_evals - self._summary.shape[0],
@@ -196,8 +201,8 @@ class AutoPipelineImpl:
         self._summary = None
         self._pipelines = {}
         self._fit_baseline(X, y)
-        self._fit_forest_num(X, y)
-        self._fit_forest_all(X, y)
+        self._fit_gbt_num(X, y)
+        self._fit_gbt_all(X, y)
         self._fit_hyperopt(X, y)
         return self
 
