@@ -83,6 +83,7 @@ regressors = ['lale.lib.lale.BaselineRegressor',
               'lale.lib.xgboost.XGBRegressor',
               'lale.lib.sklearn.AdaBoostRegressor',
               'lale.lib.sklearn.SGDRegressor',
+              'lale.lib.sklearn.SVR',
               'lale.lib.sklearn.KNeighborsRegressor']
 for clf in regressors:
     setattr(

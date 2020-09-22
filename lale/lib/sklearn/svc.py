@@ -94,7 +94,7 @@ _hyperparams_schema = {
                 'minimum': 0.0,
                 'exclusiveMinimum': True,
                 'maximumForOptimizer': 0.01,
-                'default': 0.0001,
+                'default': 0.001,
                 'description': 'Tolerance for stopping criteria.'},
             'cache_size': {
                 'type': 'integer',
@@ -102,14 +102,14 @@ _hyperparams_schema = {
                 'description': 'Specify the size of the kernel cache (in MB).'},
             'class_weight': {
                 'anyOf': [
-                    { 'description': 'By default, all classes have weight 1.',
-                      'enum': [None]},
-                    { 'description': 'Adjust weights by inverse frequency.',
-                      'enum': ['balanced']},
-                    { 'description': 'Dictionary mapping class labels to weights.',
-                      'type': 'object',
-                      'additionalProperties': {'type': 'number'},
-                      'forOptimizer': False}],
+                {   'description': 'By default, all classes have weight 1.',
+                    'enum': [None]},
+                {   'description': 'Adjust weights by inverse frequency.',
+                    'enum': ['balanced']},
+                {   'description': 'Dictionary mapping class labels to weights.',
+                    'type': 'object',
+                    'additionalProperties': {'type': 'number'},
+                    'forOptimizer': False}],
                 'default': None},
             'verbose': {
                 'type': 'boolean',

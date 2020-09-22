@@ -46,11 +46,12 @@ Regressors:
 * lale.lib.sklearn. `DecisionTreeRegressor`_
 * lale.lib.sklearn. `ExtraTreesRegressor`_
 * lale.lib.sklearn. `GradientBoostingRegressor`_
+* lale.lib.sklearn. `KNeighborsRegressor`_
 * lale.lib.sklearn. `LinearRegression`_
 * lale.lib.sklearn. `RandomForestRegressor`_
 * lale.lib.sklearn. `Ridge`_
 * lale.lib.sklearn. `SGDRegressor`_
-* lale.lib.sklearn. `KNeighborsRegressor`_
+* lale.lib.sklearn. `SVR`_
 
 Transformers:
 
@@ -119,6 +120,7 @@ Transformers:
 .. _`SimpleImputer`: lale.lib.sklearn.simple_imputer.html
 .. _`StandardScaler`: lale.lib.sklearn.standard_scaler.html
 .. _`SVC`: lale.lib.sklearn.svc.html
+.. _`SVR`: lale.lib.sklearn.svr.html
 .. _`TfidfVectorizer`: lale.lib.sklearn.tfidf_vectorizer.html
 .. _`VotingClassifier`: lale.lib.sklearn.voting_classifier.html
 """
@@ -167,5 +169,6 @@ from .sgd_regressor import SGDRegressor
 from .simple_imputer import SimpleImputer
 from .standard_scaler import StandardScaler
 from .svc import SVC
+from .svr import SVR
 from .tfidf_vectorizer import TfidfVectorizer
 from .voting_classifier import VotingClassifier
