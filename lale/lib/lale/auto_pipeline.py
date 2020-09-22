@@ -52,7 +52,7 @@ def auto_prep(X):
         result = (
             (Project(columns={'type': 'number'}, drop_columns=categorical())
              >> prep_num)
-            & (Project(columns=categorical()) >> prep_cat)
+          & (Project(columns=categorical()) >> prep_cat)
         ) >> ConcatFeatures
     return result
 
