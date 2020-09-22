@@ -413,9 +413,9 @@ _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
     'description': """`XGBClassifier` gradient boosted decision trees.
 
-.. _`XGBClassifier`: https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+.. _`XGBClassifier`: https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBClassifier
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.xgboost.XGBClassifier.html',
+    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.xgboost.xgb_classifier.html',
     'import_from': 'xgboost',
     'tags': {
         'pre': [],
@@ -429,6 +429,11 @@ _combined_schemas = {
         'input_predict_proba': _input_predict_proba_schema,
         'output_predict_proba': _output_predict_proba_schema}}
 
-lale.docstrings.set_docstrings(XGBClassifierImpl, _combined_schemas)
-
+XGBClassifier : lale.operators.IndividualOp
 XGBClassifier = lale.operators.make_operator(XGBClassifierImpl, _combined_schemas)
+
+if xgboost.__version__ >= '0.90':
+    XGBClassifier = XGBClassifier.customize_schema(
+        silent=None)
+
+lale.docstrings.set_docstrings(XGBClassifierImpl, XGBClassifier._schemas)
