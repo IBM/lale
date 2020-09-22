@@ -155,7 +155,7 @@ _combined_schemas = {
     'type': 'object',
     'tags': {
         'pre': [],
-        'op': ['estimator', 'classifier'],
+        'op': ['estimator', 'regressor'],
         'post': []},
     'properties': {
         'hyperparams': _hyperparams_schema,
