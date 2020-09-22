@@ -14,11 +14,24 @@
 
 import hyperopt
 import lale.docstrings
+import lale.helpers
 import lale.operators
 import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
 import time
+import warnings
+
+try:
+    import xgboost
+    xgboost_installed=True
+except ImportError:
+    xgboost_installed=False
+try:
+    import lightgbm.sklearn
+    lightgbm_installed=True
+except ImportError:
+    lightgbm_installed=False
 
 def auto_prep(X):
     from lale.lib.lale import ConcatFeatures
@@ -43,56 +56,118 @@ def auto_prep(X):
         ) >> ConcatFeatures
     return result
 
+def auto_forest(prediction_type):
+    if prediction_type == 'regression':
+        if xgboost_installed:
+            from lale.lib.xgboost import XGBRegressor
+            return XGBRegressor
+        elif lightgbm_installed:
+            from lale.lib.lightgbm import LGBMRegressor
+            return LGBMRegressor
+        else:
+            from lale.lib.sklearn import RandomForestRegressor
+            return RandomForestRegressor
+    else:
+        assert prediction_type == 'classification'
+        if xgboost_installed:
+            from lale.lib.xgboost import XGBClassifier
+            return XGBClassifier
+        elif lightgbm_installed:
+            from lale.lib.lightgbm import LGBMClassifier
+            return LGBMClassifier
+        else:
+            from lale.lib.sklearn import RandomForestClassifier
+            return RandomForestClassifier
+
 class AutoPipelineImpl:
     def __init__(self, prediction_type='classification',
-                 scoring=None, best_score=0.0,
-                 max_evals=100, max_opt_time=600.0, max_eval_time=120.0):
+                 max_opt_time=600.0, max_eval_time=120.0, max_evals=100,
+                 verbose=False, scoring=None, best_score=0.0):
         self.prediction_type = prediction_type
+        self.max_opt_time = max_opt_time
+        self.max_eval_time = max_eval_time
+        self.max_evals = max_evals
+        self.verbose = verbose
         if scoring is None:
             scoring = 'r2' if prediction_type=='regression' else 'accuracy'
         self.scoring = scoring
         self._scorer = sklearn.metrics.get_scorer(scoring)
         self.best_score = best_score
-        self.max_evals = max_evals
-        self.max_opt_time = max_opt_time
-        self.max_eval_time = max_eval_time
 
-    def _fit_baseline(self, train_X, test_X, train_y, test_y):
+    def _try_and_add(self, name, trainable, X, y):
+        assert name not in self._pipelines
+        if self._name_of_best is not None:
+            if time.time() > self._start_fit + self.max_opt_time:
+                return
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            cv = sklearn.model_selection.check_cv(
+                cv=5, classifier=(self.prediction_type!='regression'))
+            cv_score, logloss, execution_time = lale.helpers.cross_val_score_track_trials(trainable, X, y, self.scoring, cv)
+        loss = self.best_score - cv_score
+        if (self._name_of_best is None or
+            loss < self._summary.at[self._name_of_best, 'loss']):
+            self._name_of_best = name
+        record = {'name': name, 'loss': loss, 'time': execution_time,
+                  'log_loss': logloss, 'status': hyperopt.STATUS_OK}
+        singleton_summary = pd.DataFrame.from_records([record], index='name')
+        if self._summary is None:
+            self._summary = singleton_summary
+        else:
+            self._summary = pd.concat([self._summary, singleton_summary])
+        if name == self._name_of_best:
+            self._pipelines[name] = trainable.fit(X, y)
+        else:
+            self._pipelines[name] = trainable
+
+    def _fit_baseline(self, X, y):
         from lale.lib.lale import BaselineRegressor
         from lale.lib.lale import BaselineClassifier
-        start = time.time()
         if self.prediction_type == 'regression':
             trainable = BaselineRegressor()
         else:
             trainable = BaselineClassifier()
-        trained = trainable.fit(train_X, train_y)
-        assert self._name_of_best is None
-        self._name_of_best = 'baseline'
-        record = {
-            'name': 'baseline',
-            'time': time.time() - start,
-            'loss': self.best_score - self._scorer(trained, test_X, test_y),
-            'status': hyperopt.STATUS_OK}
-        assert self._summary is None
-        self._summary = pd.DataFrame.from_records([record], index='name')
-        self._pipelines['baseline'] = trained
+        self._try_and_add('baseline', trainable, X, y)
+
+    def _fit_forest_num(self, X, y):
+        from lale.lib.lale import Project
+        from lale.lib.sklearn import SimpleImputer
+        forest = auto_forest(self.prediction_type)
+        trainable = (Project(columns={'type': 'number'})
+                     >> SimpleImputer(strategy='mean')
+                     >> forest())
+        self._try_and_add('forest_num', trainable, X, y)
+
+    def _fit_forest_all(self, X, y):
+        prep = auto_prep(X)
+        forest = auto_forest(self.prediction_type)
+        trainable = prep >> forest()
+        self._try_and_add('forest_all', trainable, X, y)
 
     def _fit_hyperopt(self, X, y):
         from lale.lib.lale import Hyperopt
+        from lale.lib.lale import NoOp
+        from lale.lib.sklearn import DecisionTreeClassifier
+        from lale.lib.sklearn import DecisionTreeRegressor
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.lib.sklearn import KNeighborsRegressor
         from lale.lib.sklearn import LinearRegression
         from lale.lib.sklearn import LogisticRegression
-        from lale.lib.sklearn import RandomForestClassifier
-        from lale.lib.sklearn import RandomForestRegressor
+        from lale.lib.sklearn import MinMaxScaler
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import RobustScaler
+        from lale.lib.sklearn import SelectKBest
         prep = auto_prep(X)
+        scale = MinMaxScaler | RobustScaler | NoOp
+        fsel = PCA | SelectKBest | NoOp
+        forest = auto_forest(self.prediction_type)
         if self.prediction_type == 'regression':
-            estimator = (LinearRegression | RandomForestRegressor
-                         | KNeighborsRegressor)
+            estimator = (forest | LinearRegression | KNeighborsRegressor
+                         | DecisionTreeRegressor)
         else:
-            estimator = (LogisticRegression | RandomForestClassifier
-                         | KNeighborsClassifier)
-        planned = prep >> estimator
+            estimator = (forest | LogisticRegression | KNeighborsClassifier
+                         | DecisionTreeClassifier)
+        planned = prep >> scale >> fsel >> estimator
         trainable = Hyperopt(
             estimator=planned,
             max_evals=self.max_evals - self._summary.shape[0],
@@ -100,7 +175,8 @@ class AutoPipelineImpl:
             best_score=self.best_score,
             max_opt_time=self.max_opt_time - (time.time() - self._start_fit),
             max_eval_time=self.max_eval_time,
-            verbose=True)
+            verbose=self.verbose,
+            show_progressbar=False)
         trained = trainable.fit(X, y)
         best_trial = trained._impl._trials.best_trial
         if 'loss' in best_trial['result']:
@@ -108,18 +184,20 @@ class AutoPipelineImpl:
                 < self._summary.at[self._name_of_best, 'loss']):
                 self._name_of_best = f'p{best_trial["tid"]}'
         summary = trained.summary()
-        self._summary = pd.concat([self._summary, summary], axis=0)
+        self._summary = pd.concat([self._summary, summary])
         for name in summary.index:
             assert name not in self._pipelines
-            self._pipelines[name] = trained.get_pipeline(name)
+            if summary.at[name, 'status'] == hyperopt.STATUS_OK:
+                self._pipelines[name] = trained.get_pipeline(name)
 
     def fit(self, X, y):
         self._start_fit = time.time()
         self._name_of_best = None
         self._summary = None
         self._pipelines = {}
-        train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(X, y)
-        self._fit_baseline(train_X, test_X, train_y, test_y)
+        self._fit_baseline(X, y)
+        self._fit_forest_num(X, y)
+        self._fit_forest_all(X, y)
         self._fit_hyperopt(X, y)
         return self
 
@@ -133,6 +211,7 @@ class AutoPipelineImpl:
 Returns
 -------
 result : DataFrame"""
+        self._summary.sort_values(by='loss', inplace=True)
         return self._summary
 
     def get_pipeline(self, pipeline_name=None, astype='lale'):
@@ -172,6 +251,32 @@ _hyperparams_schema = {
                 'enum': [
                     'binary', 'multiclass', 'classification', 'regression'],
                 'default': 'classification'},
+            'max_opt_time': {
+                'description': 'Maximum time in seconds for the optimization.',
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0, 'exclusiveMinimum': True},
+                {   'description': 'No runtime bound.',
+                    'enum': [None]}],
+                'default': 600.0},
+            'max_eval_time': {
+                'description': 'Maximum time in seconds for each evaluation.',
+                'anyOf': [
+                {   'type': 'number',
+                    'minimum': 0.0, 'exclusiveMinimum': True},
+                {   'description': 'No runtime bound.',
+                    'enum': [None]}],
+                'default': 120.0},
+            'max_evals': {
+                'description': 'Number of trials of Hyperopt search.',
+                'type': 'integer',
+                'minimum': 1,
+                'default': 100},
+            'verbose':{
+                'description':"""Whether to print errors from each of the trials if any. 
+This is also logged using logger.warning in Hyperopt.""",
+                'type':'boolean',
+                'default':False},
             'scoring': {
                 'description': 'Scorer object or known scorer named by string.',
                 'anyOf': [
@@ -212,28 +317,7 @@ better.
 This allows us to return a loss that is >=0,
 where zero is the best loss.""",
                 'type': 'number',
-                'default': 0.0},
-            'max_evals': {
-                'description': 'Number of trials of Hyperopt search.',
-                'type': 'integer',
-                'minimum': 1,
-                'default': 100},
-            'max_opt_time': {
-                'description': 'Maximum time in seconds for the optimization.',
-                'anyOf': [
-                {   'type': 'number',
-                    'minimum': 0.0, 'exclusiveMinimum': True},
-                {   'description': 'No runtime bound.',
-                    'enum': [None]}],
-                'default': 600.0},
-            'max_eval_time': {
-                'description': 'Maximum time in seconds for each evaluation.',
-                'anyOf': [
-                {   'type': 'number',
-                    'minimum': 0.0, 'exclusiveMinimum': True},
-                {   'description': 'No runtime bound.',
-                    'enum': [None]}],
-                'default': 120.0}}}]}
+                'default': 0.0}}}]}
 
 _input_fit_schema = {
     'type': 'object',
@@ -271,7 +355,11 @@ _combined_schemas = {
 
 This is a high-level entry point to get an initial trained pipeline
 without having to specify your own planned pipeline first. It is
-designed to be simple at the expense of not offering much control.""",
+designed to be simple at the expense of not offering much control.
+For an example, see `demo_auto_pipeline.ipynb`_.
+
+.. _`demo_auto_pipeline.ipynb`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_auto_pipeline.ipynb
+""",
     'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.auto_pipelines.html',
     'import_from': 'lale.lib.lale',
     'type': 'object',

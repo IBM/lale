@@ -51,20 +51,20 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'score_func':  {
-                'anyOf': [{}, {
-                    'enum': [None]}],
-                'default': None,
+                'laleType': 'callable',
+                'default': sklearn.feature_selection.f_classif,
                 'description': 'Function taking two arrays X and y, and returning a pair of arrays (scores, pvalues) or a single array with scores.'},
             'k': {
-                'anyOf': [{
-                    'type': 'integer',
+                'anyOf': [
+                {   'type': 'integer',
+                    'minimum': 1,
                     'minimumForOptimizer': 2,
-                    'maximumForOptimizer': 15}, {
-                    'enum': ['all']}],
+                    'laleMaximum': 'X/items/maxItems', #number of columns
+                    'maximumForOptimizer': 15},
+                {   'enum': ['all']}],
                 'default': 10,
-                'description': 'Number of top features to select'},
-        }}],
-}
+                'description': 'Number of top features to select'}}}]}
+
 _input_fit_schema = {
     'description': 'Run score function on (X, y) and get the appropriate features.',
     'type': 'object',
@@ -93,9 +93,8 @@ _input_transform_schema = {
                 'items': {
                     'type': 'number'},
             },
-            'description': 'The input samples'},
-    },
-}
+            'description': 'The input samples'}}}
+
 _output_transform_schema = {
     'description': 'The input samples with only the selected features.',
     'type': 'array',
