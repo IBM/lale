@@ -43,7 +43,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 class SMACImpl:
-    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring='accuracy', best_score=0.0, max_opt_time=None, lale_num_grids=None):
+    def __init__(self, estimator=None, max_evals=50, cv=5, handle_cv_failure=False, scoring=None, best_score=0.0, max_opt_time=None, lale_num_grids=None):
         assert smac_installed, """Your Python environment does not have smac installed. You can install it with
     pip install smac<=0.10.0
 or with
@@ -55,6 +55,13 @@ or with
             self.estimator = estimator
 
         self.scoring = scoring
+        if self.scoring is None:
+            is_clf = self.estimator.is_classifier()
+            if is_clf:
+                self.scoring = "accuracy"
+            else:
+                self.scoring = "r2"
+
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
@@ -216,7 +223,8 @@ validation part. If False, terminate the trial with FAIL status.""",
                 'type': 'boolean',
                 'default': False},
             'scoring': {
-                'description': 'Scorer object, or known scorer named by string.',
+                'description': """Scorer object, or known scorer named by string. 
+Default of None translates to `accuracy` for classification and `r2` for regression.""",
                 'anyOf': [
                 {    'description': """Custom scorer object created with `make_scorer`_.
 
@@ -247,7 +255,7 @@ better. Since SMAC solves a minimization problem, we pass
                         'neg_root_mean_squared_error',
                         'neg_mean_squared_log_error',
                         'neg_median_absolute_error']}],
-                'default': 'accuracy'},
+                'default': None},
             'best_score': {
                 'description': """The best score for the specified scorer.
 

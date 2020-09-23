@@ -25,10 +25,16 @@ from .observing import ObservingImpl
 from typing import Any, Dict
 
 class GridSearchCVImpl:
-    def __init__(self, estimator=None, cv=5, scoring='accuracy', n_jobs=None, lale_num_samples=None, lale_num_grids=None, param_grid=None, pgo=None, observer=None):
+    def __init__(self, estimator=None, cv=5, scoring=None, n_jobs=None, lale_num_samples=None, lale_num_grids=None, param_grid=None, pgo=None, observer=None):
         if observer is not None and isinstance(observer, type):
             # if we are given a class name, instantiate it
             observer = observer()
+        if scoring is None:
+            is_clf = estimator.is_classifier()
+            if is_clf:
+                scoring = "accuracy"
+            else:
+                scoring = "r2"
 
         self._hyperparams = {
             'estimator': estimator,
@@ -131,7 +137,8 @@ _hyperparams_schema = {
                 'minimum': 1,
                 'default': 5},
             'scoring': {
-                'description': 'Scorer object, or known scorer named by string.',
+                'description': """Scorer object, or known scorer named by string. 
+Default of None translates to `accuracy` for classification and `r2` for regression.""",
                 'anyOf': [
                 {   'description': 'Custom scorer object, see https://scikit-learn.org/stable/modules/model_evaluation.html',
                     'not': {'type': 'string'}},
@@ -149,7 +156,7 @@ _hyperparams_schema = {
                         'neg_root_mean_squared_error',
                         'neg_mean_squared_log_error',
                         'neg_median_absolute_error']}],
-                'default': 'accuracy'},
+                'default': None},
             'n_jobs': {
                 'description': 'Number of jobs to run in parallel.',
                 'anyOf': [

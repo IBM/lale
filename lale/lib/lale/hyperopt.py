@@ -44,7 +44,7 @@ class HyperoptImpl:
 
     def __init__(self, estimator=None, max_evals=50, frac_evals_with_defaults = 0, algo='tpe',
                  cv=5, handle_cv_failure=False,
-                 scoring='accuracy', best_score=0.0,
+                 scoring=None, best_score=0.0,
                  max_opt_time=None, max_eval_time=None, pgo:Optional[PGO]=None,
                  show_progressbar=True, args_to_scorer=None, verbose=False):
         self.max_evals = max_evals
@@ -58,6 +58,12 @@ class HyperoptImpl:
             self.evals_with_defaults = 0
         self.algo = algo
         self.scoring = scoring
+        if self.scoring is None:
+            is_clf = self.estimator.is_classifier()
+            if is_clf:
+                self.scoring = "accuracy"
+            else:
+                self.scoring = "r2"
         self.best_score = best_score
         self.handle_cv_failure = handle_cv_failure
         self.cv = cv
@@ -378,7 +384,8 @@ validation part. If False, terminate the trial with FAIL status.""",
                 'type': 'boolean',
                 'default': False},
             'scoring': {
-                'description': 'Scorer object, or known scorer named by string.',
+                'description': """Scorer object, or known scorer named by string. 
+Default of None translates to `accuracy` for classification and `r2` for regression.""",
                 'anyOf': [
                 {    'description': """Custom scorer object created with `make_scorer`_.
 
@@ -388,7 +395,7 @@ custom scorer objects, following the `model_evaluation`_ example.
 The metric has to return a scalar value. Note that scikit-learns's
 scorer object always returns values such that higher score is
 better. Since Hyperopt solves a minimization problem, we pass
-(best_score - score) to Hyperopt.
+(best_score - score) to Hyperopt. 
 
 .. _`make_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
 .. _metrics: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
@@ -409,7 +416,7 @@ better. Since Hyperopt solves a minimization problem, we pass
                         'neg_root_mean_squared_error',
                         'neg_mean_squared_log_error',
                         'neg_median_absolute_error']}],
-                'default': 'accuracy'},
+                'default': None},
             'best_score': {
                 'description': """The best score for the specified scorer.
 
