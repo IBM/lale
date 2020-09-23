@@ -17,7 +17,7 @@ import lale.operators
 import autoai_libs.transformers.exportable
 
 class NumpyColumnSelectorImpl():
-    def __init__(self, columns):
+    def __init__(self, columns=None):
         self._hyperparams = {
             'columns': columns}
         self._wrapped_model = autoai_libs.transformers.exportable.NumpyColumnSelector(**self._hyperparams)

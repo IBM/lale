@@ -15,9 +15,10 @@
 import lale.docstrings
 import lale.operators
 import autoai_libs.transformers.exportable
+import numpy as np
 
 class NumpyReplaceMissingValuesImpl():
-    def __init__(self, missing_values, filling_values):
+    def __init__(self, missing_values, filling_values=np.nan):
         self._hyperparams = {
             'missing_values': missing_values,
             'filling_values': filling_values}

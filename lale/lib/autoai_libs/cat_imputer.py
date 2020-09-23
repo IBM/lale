@@ -18,7 +18,7 @@ import lale.operators
 import numpy as np
 
 class CatImputerImpl():
-    def __init__(self, strategy, missing_values, sklearn_version_family, activate_flag):
+    def __init__(self, strategy, missing_values, sklearn_version_family=None, activate_flag=True):
         self._hyperparams = {
             'strategy': strategy,
             'missing_values': missing_values,

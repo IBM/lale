@@ -20,7 +20,7 @@ import numpy as np
 import pandas as pd
 
 class float32_transformImpl():
-    def __init__(self, activate_flag):
+    def __init__(self, activate_flag=True):
         self._hyperparams = {
             'activate_flag': activate_flag}
         self._wrapped_model = autoai_libs.transformers.exportable.float32_transform(**self._hyperparams)

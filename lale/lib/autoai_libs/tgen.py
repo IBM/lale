@@ -19,7 +19,7 @@ import lale.helpers
 import lale.operators
 
 class TGenImpl():
-    def __init__(self, fun, name, arg_count, datatypes_list, feat_constraints_list, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
+    def __init__(self, fun, name, arg_count, datatypes_list, feat_constraints_list, tgraph=None, apply_all=True, col_names=None, col_dtypes=None, col_as_json_objects=None):
         self._hyperparams = {
             'fun': fun,
             'name': name,

@@ -17,7 +17,7 @@ import lale.docstrings
 import lale.operators
 
 class TA2Impl():
-    def __init__(self, fun, name, datatypes1, feat_constraints1, datatypes2, feat_constraints2, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
+    def __init__(self, fun, name, datatypes1, feat_constraints1, datatypes2, feat_constraints2, tgraph=None, apply_all=True, col_names=None, col_dtypes=None, col_as_json_objects=None):
         self._hyperparams = {
             'fun': fun,
             'name': name,

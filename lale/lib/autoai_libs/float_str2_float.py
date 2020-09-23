@@ -17,7 +17,7 @@ import lale.operators
 import autoai_libs.transformers.exportable
 
 class FloatStr2FloatImpl():
-    def __init__(self, dtypes_list, missing_values_reference_list, activate_flag):
+    def __init__(self, dtypes_list, missing_values_reference_list=None, activate_flag=True):
         self._hyperparams = {
             'dtypes_list': dtypes_list,
             'missing_values_reference_list': missing_values_reference_list,
