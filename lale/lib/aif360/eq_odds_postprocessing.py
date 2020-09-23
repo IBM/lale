@@ -33,7 +33,7 @@ _additional_hyperparams = {
         'default': None}}
 
 class EqOddsPostprocessingImpl(_BasePostprocessingImpl):
-    def __init__(self, estimator, favorable_label, unfavorable_label, protected_attribute_names, unprivileged_groups, privileged_groups, seed):
+    def __init__(self, estimator, favorable_label, unfavorable_label, protected_attribute_names, unprivileged_groups, privileged_groups, seed=None):
         mitigator = aif360.algorithms.postprocessing.EqOddsPostprocessing(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,

@@ -41,7 +41,7 @@ class TestAutoaiLibs(unittest.TestCase):
         trainable_pipeline = trainable >> float32_transform() >> LR()
         trained_pipeline = trainable_pipeline.fit(train_X, train_y)
         trained_pipeline.predict(test_X)
-        hyperopt = Hyperopt(estimator=trainable_pipeline, max_evals=1)
+        hyperopt = Hyperopt(estimator=trainable_pipeline, max_evals=1, verbose=True)
         trained_hyperopt = hyperopt.fit(train_X, train_y)
         trained_hyperopt.predict(test_X)
 
@@ -74,7 +74,9 @@ class TestAutoaiLibs(unittest.TestCase):
         self.doTest(trainable, **self._iris)
 
     def test_CatEncoder(self):
-        trainable = lale.lib.autoai_libs.CatEncoder()
+        trainable = lale.lib.autoai_libs.CatEncoder(
+            encoding='ordinal', categories='auto', dtype='float64',
+            handle_unknown='ignore')
         self.doTest(trainable, **self._iris)
 
     def test_float32_transform(self):

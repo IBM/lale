@@ -17,7 +17,7 @@ import lale.operators
 from lale.expressions import Expr
 
 class MapImpl:
-    def __init__(self, columns, remainder):
+    def __init__(self, columns, remainder='passthrough'):
         self._hyperparams = { 'columns': columns, 'remainder': remainder }
 
     def transform(self, X):

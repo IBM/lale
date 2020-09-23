@@ -17,7 +17,7 @@ import lale.operators
 import autoai_libs.transformers.exportable
 
 class NumpyPermuteArrayImpl():
-    def __init__(self, permutation_indices, axis):
+    def __init__(self, permutation_indices=None, axis=None):
         self._hyperparams = {
             'permutation_indices': permutation_indices,
             'axis': axis}

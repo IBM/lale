@@ -17,7 +17,7 @@ import lale.operators
 import autoai_libs.transformers.exportable
 
 class CompressStringsImpl():
-    def __init__(self, compress_type, dtypes_list, misslist_list, missing_values_reference_list, activate_flag):
+    def __init__(self, compress_type='string', dtypes_list=None, misslist_list=None, missing_values_reference_list=None, activate_flag=True):
         self._hyperparams = {
             'compress_type': compress_type,
             'dtypes_list': dtypes_list,

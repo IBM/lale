@@ -17,7 +17,7 @@ import lale.docstrings
 import lale.operators
 
 class TAMImpl():
-    def __init__(self, tans_class, name, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
+    def __init__(self, tans_class, name, tgraph=None, apply_all=True, col_names=None, col_dtypes=None, col_as_json_objects=None):
         self._hyperparams = {
             'tans_class': tans_class,
             'name': name,

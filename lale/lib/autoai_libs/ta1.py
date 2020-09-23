@@ -16,8 +16,9 @@ import autoai_libs.cognito.transforms.transform_utils
 import lale.docstrings
 import lale.operators
 import numpy as np
+
 class TA1Impl():
-    def __init__(self, fun, name, datatypes, feat_constraints, tgraph, apply_all, col_names, col_dtypes, col_as_json_objects):
+    def __init__(self, fun, name=None, datatypes=None, feat_constraints=None, tgraph=None, apply_all=None, col_names=None, col_dtypes=None, col_as_json_objects=None):
         self._hyperparams = {
             'fun': fun,
             'name': name,

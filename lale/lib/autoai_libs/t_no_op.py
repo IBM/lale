@@ -17,7 +17,7 @@ import lale.docstrings
 import lale.operators
 
 class TNoOpImpl():
-    def __init__(self, fun, name, datatypes, feat_constraints, tgraph):
+    def __init__(self, fun, name, datatypes, feat_constraints, tgraph=None):
         self._hyperparams = {
             'fun': fun,
             'name': name,

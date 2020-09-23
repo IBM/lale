@@ -1525,9 +1525,21 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def hyperparams(self):
         if self._hyperparams is None:
             return None
-        actuals, defaults = self._hyperparams, self.hyperparam_defaults()
-        return {k: actuals[k] for k in actuals if
-                k not in defaults or actuals[k] != defaults[k]}
+        actuals = self._hyperparams
+        defaults = self.hyperparam_defaults()
+        actuals_minus_defaults = {k: actuals[k] for k in actuals
+                                  if k not in defaults
+                                  or actuals[k] != defaults[k]}
+        if not hasattr(self, '_hyperparam_positionals'):
+            sig = inspect.signature(self._impl_class().__init__)
+            positionals = {
+                name: defaults[name] for name, param in sig.parameters.items()
+                if name != 'self'
+                and param.kind == inspect.Parameter.POSITIONAL_OR_KEYWORD
+                and param.default == inspect.Parameter.empty}
+            self._hyperparam_positionals = positionals
+        result = {**self._hyperparam_positionals, **actuals_minus_defaults}
+        return result
 
     def _get_params_all(self):
         output = {}

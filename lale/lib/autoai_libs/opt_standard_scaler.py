@@ -17,7 +17,7 @@ import lale.operators
 import autoai_libs.transformers.exportable
 
 class OptStandardScalerImpl():
-    def __init__(self, use_scaler_flag, num_scaler_copy, num_scaler_with_mean, num_scaler_with_std):
+    def __init__(self, use_scaler_flag=True, num_scaler_copy=True, num_scaler_with_mean=True, num_scaler_with_std=True):
         self._hyperparams = {
             'use_scaler_flag': use_scaler_flag,
             'num_scaler_copy': num_scaler_copy,

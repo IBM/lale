@@ -18,7 +18,7 @@ import autoai_libs.transformers.exportable
 import numpy as np
 
 class NumImputerImpl():
-    def __init__(self, strategy, missing_values, activate_flag):
+    def __init__(self, strategy, missing_values, activate_flag=True):
         self._hyperparams = {
             'strategy': strategy,
             'missing_values': missing_values,

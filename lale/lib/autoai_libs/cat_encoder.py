@@ -19,7 +19,7 @@ import numpy as np
 
 class CatEncoderImpl():
     def __init__(self, encoding, categories, dtype, handle_unknown,
-                 sklearn_version_family, activate_flag=True, encode_unknown_with='auto'):
+                 sklearn_version_family=None, activate_flag=True, encode_unknown_with='auto'):
         self._hyperparams = {
             'encoding': encoding,
             'categories': categories,
@@ -68,7 +68,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['encoding', 'categories', 'dtype', 'handle_unknown', 'sklearn_version_family', 'activate_flag', 'encode_unknown_with'],
+        'required': ['encoding', 'categories', 'dtype', 'handle_unknown'],
         'relevantToOptimizer': ['encoding'],
         'properties': {
             'encoding': {
