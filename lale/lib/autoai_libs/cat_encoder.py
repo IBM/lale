@@ -68,7 +68,7 @@ _hyperparams_schema = {
         'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
         'type': 'object',
         'additionalProperties': False,
-        'required': ['encoding', 'categories', 'dtype', 'handle_unknown'],
+        'required': ['encoding', 'categories', 'dtype', 'handle_unknown', 'sklearn_version_family', 'activate_flag', 'encode_unknown_with'],
         'relevantToOptimizer': ['encoding'],
         'properties': {
             'encoding': {
