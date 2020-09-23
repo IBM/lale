@@ -65,7 +65,7 @@ def create_function_test_regressor(clf_name):
         from lale.lib.sklearn.ridge import RidgeImpl
         if regr._impl_class() != RidgeImpl:
             from lale.lib.lale import Hyperopt
-            hyperopt = Hyperopt(estimator=pipeline, max_evals=1, scoring='r2')
+            hyperopt = Hyperopt(estimator=pipeline, max_evals=1)
             trained = hyperopt.fit(self.X_train, self.y_train)
             predictions = trained.predict(self.X_test)
 
