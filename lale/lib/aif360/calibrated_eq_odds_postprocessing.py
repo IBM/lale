@@ -36,7 +36,7 @@ _additional_hyperparams = {
         'default': None}}
 
 class CalibratedEqOddsPostprocessingImpl(_BasePostprocessingImpl):
-    def __init__(self, estimator, favorable_label, unfavorable_label, protected_attribute_names, unprivileged_groups, privileged_groups, cost_constraint, seed):
+    def __init__(self, estimator, favorable_label, unfavorable_label, protected_attribute_names, unprivileged_groups, privileged_groups, cost_constraint='weighted', seed=None):
         mitigator = aif360.algorithms.postprocessing.CalibratedEqOddsPostprocessing(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,

@@ -19,7 +19,7 @@ import numpy as np
 
 class CatEncoderImpl():
     def __init__(self, encoding, categories, dtype, handle_unknown,
-                 sklearn_version_family, activate_flag=True, encode_unknown_with='auto'):
+                 sklearn_version_family=None, activate_flag=True, encode_unknown_with='auto'):
         self._hyperparams = {
             'encoding': encoding,
             'categories': categories,

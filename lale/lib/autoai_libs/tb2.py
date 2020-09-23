@@ -17,7 +17,7 @@ import lale.docstrings
 import lale.operators
 
 class TB2Impl():
-    def __init__(self, tans_class, name, datatypes1, feat_constraints1, datatypes2, feat_constraints2, tgraph, apply_all):
+    def __init__(self, tans_class, name, datatypes1, feat_constraints1, datatypes2, feat_constraints2, tgraph=None, apply_all=True):
         self._hyperparams = {
             'tans_class': tans_class,
             'name': name,

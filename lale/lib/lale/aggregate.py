@@ -17,7 +17,7 @@ import lale.operators
 from lale.expressions import Expr
 
 class AggregateImpl:
-    def __init__(self, columns, group_by):
+    def __init__(self, columns, group_by=[]):
         self._hyperparams = { 'columns': columns, 'group_by': group_by}
 
     def transform(self, X):

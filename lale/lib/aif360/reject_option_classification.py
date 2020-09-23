@@ -76,7 +76,7 @@ _additional_hyperparams = {
         'default': -0.05}}
 
 class RejectOptionClassificationImpl(_BasePostprocessingImpl):
-    def __init__(self, estimator, favorable_label, unfavorable_label, protected_attribute_names, unprivileged_groups, privileged_groups, low_class_thresh, high_class_thresh, num_class_thresh, num_ROC_margin, metric_name, metric_ub, metric_lb):
+    def __init__(self, estimator, favorable_label, unfavorable_label, protected_attribute_names, unprivileged_groups, privileged_groups, low_class_thresh=0.01, high_class_thresh=0.99, num_class_thresh=100, num_ROC_margin=50, metric_name='Statistical parity difference', metric_ub=0.05, metric_lb=-0.05):
         mitigator = aif360.algorithms.postprocessing.RejectOptionClassification(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
