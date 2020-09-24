@@ -359,7 +359,8 @@ class TestHyperparamRanges(unittest.TestCase):
             'max_depth': (3, 5, None),
             'min_samples_split': (0.01, 0.5, 0.05),
             'min_samples_leaf': (0.01, 0.5, 0.05),
-            'max_features': (0.01, 1.0, 0.5)}
+            'max_features': (0.01, 1.0, 0.5),
+        }
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
 
