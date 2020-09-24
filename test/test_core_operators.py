@@ -35,6 +35,7 @@ from lale.lib.sklearn import MissingIndicator
 from lale.lib.sklearn import RFE
 from lale.lib.sklearn import TfidfVectorizer
 from lale.lib.sklearn import RidgeClassifier
+from lale.lib.sklearn import RandomForestClassifier
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.sklearn_compat import make_sklearn_compat
 from lale.lib.lale import Relational, Scan, Join, Aggregate
@@ -337,16 +338,30 @@ class TestHyperparamRanges(unittest.TestCase):
 
     def test_get_param_ranges_and_dist(self):
         for op in [ConcatFeatures, KNeighborsClassifier, LogisticRegression,
-                   MLPClassifier, Nystroem, OneHotEncoder, PCA]:
+                   MLPClassifier, Nystroem, OneHotEncoder, PCA,
+                   RandomForestClassifier]:
             self.validate_get_param_ranges(op)
             self.validate_get_param_dist(op)
 
     def test_sklearn_get_param_ranges_and_dist(self):
         for op in [ConcatFeatures, KNeighborsClassifier, LogisticRegression,
-                   MLPClassifier, Nystroem, OneHotEncoder, PCA]:
+                   MLPClassifier, Nystroem, OneHotEncoder, PCA,
+                   RandomForestClassifier]:
             skop = make_sklearn_compat(op)
             self.validate_get_param_ranges(skop)
             self.validate_get_param_dist(skop)
+
+    def test_random_forest_classifier(self):
+        ranges, dists = RandomForestClassifier.get_param_ranges()
+        expected_ranges = {
+            'n_estimators': (10, 100, 100),
+            'criterion': ['entropy', 'gini'],
+            'max_depth': (3, 5, None),
+            'min_samples_split': (0.01, 0.5, 0.05),
+            'min_samples_leaf': (0.01, 0.5, 0.05),
+            'max_features': (0.01, 1.0, 0.5)}
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
 
 class TestKNeighborsClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
