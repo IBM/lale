@@ -42,8 +42,20 @@ class TestPrettyPrint(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(expected, printed)
         globals2 = {}
-        exec(printed, globals2)
-        pipeline2 = globals2['pipeline']
+        locals2 = {}
+        try:
+            exec(printed, globals2, locals2)
+        except Exception as e:
+            import pprint
+            print('error during exec(printed, globals2, locals2) where:')
+            print(f'printed = """{printed}"""')
+            print(f'globals2 = {pprint.pformat(globals2)}')
+            print(f'locals2 = {pprint.pformat(locals2)}')
+            raise e
+        pipeline2 = locals2['pipeline']
+        import sklearn.pipeline
+        self.assertIsInstance(pipeline2, (
+            lale.operators.PlannedOperator, sklearn.pipeline.Pipeline))
 
     def test_indiv_op_1(self):
         from lale.lib.sklearn import LogisticRegression
@@ -552,6 +564,33 @@ t_no_op = TNoOp(
 lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
 pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline, combinators=False))
+
+    def test_autoai_libs_two_ops_with_combinator(self):
+        from autoai_libs.transformers.exportable import NumpyColumnSelector
+        from autoai_libs.transformers.exportable import CompressStrings
+        import lale.operators
+        numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3, 5])
+        compress_strings = CompressStrings(
+            compress_type='hash',
+            dtypes_list=['char_str', 'char_str', 'char_str', 'char_str'],
+            misslist_list=[[], [], [], []])
+        pipeline = lale.operators.make_pipeline(
+            numpy_column_selector, compress_strings)
+        expected = """from autoai_libs.transformers.exportable import NumpyColumnSelector
+from autoai_libs.transformers.exportable import CompressStrings
+import lale
+
+lale.wrap_imported_operators()
+numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3, 5])
+compress_strings = CompressStrings(
+    compress_type="hash",
+    dtypes_list=["char_str", "char_str", "char_str", "char_str"],
+    missing_values_reference_list=["?", "", "-", float("nan")],
+    misslist_list=[[], [], [], []],
+)
+pipeline = numpy_column_selector >> compress_strings"""
+        printed = lale.pretty_print.to_string(pipeline, combinators=True)
+        self._roundtrip(expected, printed)
 
     def test_expression(self):
         from lale.lib.lale import Scan, Join, Aggregate
