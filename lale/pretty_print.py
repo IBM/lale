@@ -43,7 +43,7 @@ class _CodeGenState:
         self.combinators = combinators
         self.astype= astype
         self._names = (
-            { 'get_pipeline_of_applicable_type', 'lale', 'make_choice',
+            { 'make_pipeline_graph', 'lale', 'make_choice',
               'make_pipeline', 'make_union', 'make_union_no_concat',
               'np', 'pd', 'pipeline'}
             | set(keyword.kwlist) | names)
@@ -320,7 +320,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             else:
                 step2name[step_uid] = step_uid
                 gen.assigns.append(f'{step_uid} = {expr}')
-        make_pipeline = 'get_pipeline_of_applicable_type'
+        make_pipeline = 'make_pipeline_graph'
         gen.imports.append(f'from lale.operators import {make_pipeline}')
         result = '{}(steps=[{}], edges=[{}])'.format(
             make_pipeline,

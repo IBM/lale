@@ -295,7 +295,7 @@ def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
             op._subst_steps(step_map)
             if not isinstance(op, Ops.TrainablePipeline):
                 # As a result of choices made, we may now be a TrainableIndividualOp
-                ret = Ops.get_pipeline_of_applicable_type(op.steps(), op.edges(), ordered=True)
+                ret = Ops.make_pipeline_graph(op.steps(), op.edges(), ordered=True)
                 if not isinstance(ret, Ops.TrainableOperator):
                     assert False
                 return ret

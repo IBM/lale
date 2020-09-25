@@ -29,7 +29,7 @@ operators, pipelines, and operator choices.
 - Function `make_choice` creates an operator choice. Instead of this
   function you can also use the `|` combinator.
 
-- Function `get_pipeline_of_applicable_type`_ creates a pipeline from
+- Function `make_pipeline_graph`_ creates a pipeline from
   steps and edges, thus supporting any arbitrary acyclic directed
   graph topology.
 
@@ -45,7 +45,7 @@ operators, pipelines, and operator choices.
 .. _get_available_operators: lale.operators.html#lale.operators.get_available_operators
 .. _get_available_estimators: lale.operators.html#lale.operators.get_available_estimators
 .. _get_available_transformers: lale.operators.html#lale.operators.get_available_transformers
-.. _get_pipeline_of_applicable_type: lale.operators.html#lale.operators.get_pipeline_of_applicable_type
+.. _make_pipeline_graph: lale.operators.html#lale.operators.make_pipeline_graph
 .. _make_pipeline: lale.operators.html#lale.operators.make_pipeline
 .. _Pipeline: Lale.Operators.Html#Lale.Operators.Pipeline
 .. _make_union_no_concat: lale.operators.html#lale.operators.make_union_no_concat
@@ -2132,7 +2132,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
             frozen_map[liquid] = frozen
             frozen_steps.append(frozen)
         frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
-        result = get_pipeline_of_applicable_type(
+        result = make_pipeline_graph(
             frozen_steps, frozen_edges, ordered=True)
         assert result.is_frozen_trainable()
         return result
@@ -2287,7 +2287,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             frozen_map[liquid] = frozen
             frozen_steps.append(frozen)
         frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
-        result = cast(TrainablePipeline, get_pipeline_of_applicable_type(
+        result = cast(TrainablePipeline, make_pipeline_graph(
             frozen_steps, frozen_edges, ordered=True))
         assert result.is_frozen_trainable()
         return result
@@ -2797,7 +2797,7 @@ class _PipelineFactory:
 
 Pipeline = _PipelineFactory()
 
-def get_pipeline_of_applicable_type(steps, edges, ordered=False)->PlannedPipeline:
+def make_pipeline_graph(steps, edges, ordered=False)->PlannedPipeline:
     """
     Based on the state of the steps, it is important to decide an appropriate type for
     a new Pipeline. This method will decide the type, create a new Pipeline of that type and return it.
@@ -2840,7 +2840,7 @@ def make_pipeline(*orig_steps:Union[Operator,Any])->PlannedPipeline:
             steps.append(curr_op)
         edges.extend([(src, tgt) for src in prev_leaves for tgt in curr_roots])
         prev_op = curr_op
-    return get_pipeline_of_applicable_type(steps, edges, ordered=True)
+    return make_pipeline_graph(steps, edges, ordered=True)
 
 def make_union_no_concat(*orig_steps:Union[Operator,Any])->PlannedPipeline:
     steps, edges = [], []
@@ -2852,7 +2852,7 @@ def make_union_no_concat(*orig_steps:Union[Operator,Any])->PlannedPipeline:
             if not isinstance(curr_op, Operator):
                 curr_op = make_operator(curr_op, name = curr_op.__class__.__name__)
             steps.append(curr_op)
-    return get_pipeline_of_applicable_type(steps, edges, ordered=True)
+    return make_pipeline_graph(steps, edges, ordered=True)
 
 def make_union(*orig_steps:Union[Operator,Any])->PlannedPipeline:
     from lale.lib.lale import ConcatFeatures

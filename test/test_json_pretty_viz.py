@@ -265,9 +265,9 @@ pipeline = (
         from lale.lib.sklearn import MinMaxScaler
         from lale.lib.sklearn import LogisticRegression
         from lale.lib.sklearn import KNeighborsClassifier
-        from lale.operators import get_pipeline_of_applicable_type
+        from lale.operators import make_pipeline_graph
         choice = PCA | Nystroem
-        pipeline = get_pipeline_of_applicable_type(
+        pipeline = make_pipeline_graph(
             steps=[choice, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
             edges=[(choice,LogisticRegression), (MinMaxScaler,LogisticRegression), (MinMaxScaler,KNeighborsClassifier)])
         expected = """from sklearn.decomposition import PCA
@@ -275,12 +275,12 @@ from sklearn.kernel_approximation import Nystroem
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
-from lale.operators import get_pipeline_of_applicable_type
+from lale.operators import make_pipeline_graph
 import lale
 
 lale.wrap_imported_operators()
 choice = PCA | Nystroem
-pipeline = get_pipeline_of_applicable_type(
+pipeline = make_pipeline_graph(
     steps=[choice, MinMaxScaler, LogisticRegression, KNeighborsClassifier],
     edges=[
         (choice, LogisticRegression),
@@ -296,9 +296,9 @@ pipeline = get_pipeline_of_applicable_type(
         from lale.lib.lale import ConcatFeatures as HStack
         from lale.lib.sklearn import KNeighborsClassifier as KNN
         from lale.lib.sklearn import LogisticRegression as LR
-        from lale.operators import get_pipeline_of_applicable_type
+        from lale.operators import make_pipeline_graph
         pipeline_0 = HStack >> LR
-        pipeline = get_pipeline_of_applicable_type(
+        pipeline = make_pipeline_graph(
             steps=[PCA, MMS, KNN, pipeline_0],
             edges=[(PCA, KNN), (PCA, pipeline_0), (MMS, pipeline_0)])
         expected = """from sklearn.decomposition import PCA
@@ -306,12 +306,12 @@ from sklearn.preprocessing import MinMaxScaler as MMS
 from sklearn.neighbors import KNeighborsClassifier as KNN
 from lale.lib.lale import ConcatFeatures as HStack
 from sklearn.linear_model import LogisticRegression as LR
-from lale.operators import get_pipeline_of_applicable_type
+from lale.operators import make_pipeline_graph
 import lale
 
 lale.wrap_imported_operators()
 pipeline_0 = HStack >> LR
-pipeline = get_pipeline_of_applicable_type(
+pipeline = make_pipeline_graph(
     steps=[PCA, MMS, KNN, pipeline_0],
     edges=[(PCA, KNN), (PCA, pipeline_0), (MMS, pipeline_0)],
 )"""

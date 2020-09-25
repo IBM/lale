@@ -1,5 +1,5 @@
 from lale.operators import PlannedOperator, Operator, BasePipeline, OperatorChoice, IndividualOp
-from lale.operators import make_choice, make_pipeline, get_pipeline_of_applicable_type
+from lale.operators import make_choice, make_pipeline, make_pipeline_graph
 from lale.lib.lale import NoOp
 from typing import Optional
 from lale.sklearn_compat import clone_op
@@ -104,7 +104,7 @@ class Grammar(Operator):
             step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
             new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
             if not None in new_steps:
-                return get_pipeline_of_applicable_type(new_steps, new_edges, True)
+                return make_pipeline_graph(new_steps, new_edges, True)
             return None
         if isinstance(op, OperatorChoice):
             steps = [s for s in (self._unfold(sop, n) for sop in op.steps()) if s]
@@ -155,7 +155,7 @@ class Grammar(Operator):
             step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
             new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
             if not None in new_steps:
-                return get_pipeline_of_applicable_type(new_steps, new_edges, True)
+                return make_pipeline_graph(new_steps, new_edges, True)
             return None
         if isinstance(op, OperatorChoice):
             return self._sample(random.choice(op.steps()), n)
