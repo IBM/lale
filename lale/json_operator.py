@@ -352,7 +352,7 @@ def _op_from_json_rec(jsn: JSON_TYPE) -> 'lale.operators.Operator':
             uid: _op_from_json_rec(jsn['steps'][uid]) for uid in jsn['steps']}
         steps = [steps_dict[i] for i in steps_dict]
         edges = [(steps_dict[x], steps_dict[y]) for (x,y) in jsn['edges']]
-        return lale.operators.get_pipeline_of_applicable_type(steps, edges)
+        return lale.operators.make_pipeline_graph(steps, edges)
     elif kind == 'OperatorChoice':
         steps = [_op_from_json_rec(s) for s in jsn['steps'].values()]
         name = jsn['operator']

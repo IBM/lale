@@ -7,9 +7,7 @@ import importlib
 
 logger = logging.getLogger(__name__)
 
-def wrap_imported_operators():
-    calling_frame = inspect.stack()[1][0]
-    symtab = calling_frame.f_globals
+def _wrap_operators_in_symtab(symtab):
     for name, impl in symtab.items():
         if (inspect.isclass(impl) and not issubclass(impl, Operator) and
             (hasattr(impl, 'predict') or hasattr(impl, 'transform'))):
@@ -29,3 +27,9 @@ def wrap_imported_operators():
                     hasattr(impl, 'predict') or hasattr(impl, 'transform')):
                         logger.info(f'Lale:Wrapped unkwnown operator:{name}')
                         symtab[name] = make_operator(impl=impl, name=name)
+
+def wrap_imported_operators():
+    calling_frame = inspect.stack()[1][0]
+    _wrap_operators_in_symtab(calling_frame.f_globals)
+    if calling_frame.f_code.co_name == '<module>': #for testing with exec()
+        _wrap_operators_in_symtab(calling_frame.f_locals)
