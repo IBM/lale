@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import autoai_libs.transformers.exportable
+
 import lale.docstrings
 import lale.operators
-import autoai_libs.transformers.exportable
+
 
 class CompressStringsImpl():
     def __init__(self, compress_type='string', dtypes_list=None, misslist_list=None, missing_values_reference_list=None, activate_flag=True):

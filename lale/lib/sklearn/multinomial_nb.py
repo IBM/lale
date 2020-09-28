@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import sklearn.naive_bayes
+
 import lale.docstrings
 import lale.operators
+
 
 class MultinomialNBImpl():
 

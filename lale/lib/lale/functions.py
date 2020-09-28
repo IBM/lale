@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import datetime
+
 import numpy as np
 import pandas as pd
+
 
 class categorical:
     """Creates a callable for projecting categorical columns with sklearn's ColumnTransformer or Lale's Project operator.

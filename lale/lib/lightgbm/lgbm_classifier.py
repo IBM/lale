@@ -14,6 +14,7 @@
 
 import lale.docstrings
 import lale.operators
+
 try:
     import lightgbm.sklearn
     lightgbm_installed=True

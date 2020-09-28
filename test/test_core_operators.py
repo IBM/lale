@@ -12,38 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-import jsonschema
-import warnings
-import sklearn.datasets
 import inspect
-import logging
 import io
+import logging
+import unittest
+import warnings
+
+import jsonschema
+import sklearn.datasets
 
 import lale.lib.lale
-from lale.lib.lale import ConcatFeatures
-from lale.lib.lale import NoOp
-from lale.lib.sklearn import KNeighborsClassifier
-from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import MLPClassifier
-from lale.lib.sklearn import Nystroem
-from lale.lib.sklearn import OneHotEncoder
-from lale.lib.sklearn import PCA
-from lale.lib.sklearn import NMF
-from lale.lib.sklearn import FunctionTransformer
-from lale.lib.sklearn import MissingIndicator
-from lale.lib.sklearn import RFE
-from lale.lib.sklearn import TfidfVectorizer
-from lale.lib.sklearn import RidgeClassifier
-from lale.lib.sklearn import RandomForestClassifier
+import lale.operators as Ops
+import lale.type_checking
+from lale.expressions import count, it
+from lale.lib.lale import (Aggregate, ConcatFeatures, Join, NoOp, Relational,
+                           Scan)
+from lale.lib.sklearn import (NMF, PCA, RFE, FunctionTransformer,
+                              KNeighborsClassifier, LogisticRegression,
+                              MissingIndicator, MLPClassifier, Nystroem,
+                              OneHotEncoder, RandomForestClassifier,
+                              RidgeClassifier, TfidfVectorizer)
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.sklearn_compat import make_sklearn_compat
-from lale.lib.lale import Relational, Scan, Join, Aggregate
-from lale.expressions import it, count
 
-import lale.operators as Ops
-
-import lale.type_checking
 
 class TestFeaturePreprocessing(unittest.TestCase):
 
@@ -140,6 +131,7 @@ class TestNMF(unittest.TestCase):
 class TestFunctionTransformer(unittest.TestCase):
     def test_init_fit_predict(self):
         import numpy as np
+
         import lale.datasets
         ft = FunctionTransformer(func=np.log1p)
         lr = LogisticRegression()
@@ -193,8 +185,8 @@ class TestBoth(unittest.TestCase):
 
 class TestMap(unittest.TestCase):
     def test_init(self):
-        from lale.lib.lale import Map
         from lale.expressions import it, replace
+        from lale.lib.lale import Map
         gender_map = {'m': 'Male', 'f': 'Female'}
         state_map = {'NY': 'New York', 'CA': 'California'}
         map_replace = Map(columns=[replace(it.gender, gender_map),
@@ -229,9 +221,10 @@ class TestConcatFeatures(unittest.TestCase):
     def test_comparison_with_scikit(self):
         import warnings
         warnings.filterwarnings("ignore")
-        from lale.lib.sklearn import PCA
         import sklearn.datasets
+
         from lale.helpers import cross_val_score
+        from lale.lib.sklearn import PCA
         pca = PCA(n_components=3, random_state=42, svd_solver='arpack')
         nys = Nystroem(n_components=10, random_state=42)
         concat = ConcatFeatures()
@@ -243,11 +236,11 @@ class TestConcatFeatures(unittest.TestCase):
         cv_results = cross_val_score(trainable, X, y)
         cv_results = ['{0:.1%}'.format(score) for score in cv_results]
 
-        from sklearn.pipeline import make_pipeline, FeatureUnion
         from sklearn.decomposition import PCA as SklearnPCA
         from sklearn.kernel_approximation import Nystroem as SklearnNystroem
         from sklearn.linear_model import LogisticRegression as SklearnLR
         from sklearn.model_selection import cross_val_score
+        from sklearn.pipeline import FeatureUnion, make_pipeline
         union = FeatureUnion([("pca", SklearnPCA(n_components=3, random_state=42, svd_solver='arpack')),
                             ("nys", SklearnNystroem(n_components=10, random_state=42))])
         lr = SklearnLR(random_state=42, C=0.1)
@@ -258,8 +251,9 @@ class TestConcatFeatures(unittest.TestCase):
         self.assertEqual(cv_results, scikit_cv_results)
         warnings.resetwarnings()
     def test_with_pandas(self):
-        from lale.datasets import load_iris_df
         import warnings
+
+        from lale.datasets import load_iris_df
         warnings.filterwarnings("ignore")
         pca = PCA(n_components=3)
         nys = Nystroem(n_components=10)
@@ -285,8 +279,8 @@ class TestConcatFeatures(unittest.TestCase):
         clf.predict(iris_data.data)
 
     def test_concat_with_hyperopt2(self):
-        from lale.operators import make_pipeline, make_union
         from lale.lib.lale import Hyperopt
+        from lale.operators import make_pipeline, make_union
         pca = PCA(n_components=3)
         nys = Nystroem(n_components=10)
         concat = ConcatFeatures()
@@ -366,8 +360,8 @@ class TestHyperparamRanges(unittest.TestCase):
 
 class TestKNeighborsClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
-        from sklearn.datasets import make_classification, load_iris
         import numpy as np
+        from sklearn.datasets import load_iris, make_classification
         from sklearn.utils import shuffle
 
         X, y1 = make_classification(n_samples=10, n_features=100, n_informative=30, n_classes=3, random_state=1)
@@ -419,9 +413,9 @@ class TestLogisticRegression(unittest.TestCase):
         predicted = trained_lr.decision_function(iris.data)
 
     def test_with_sklearn_gridsearchcv(self):
-        from sklearn.model_selection import GridSearchCV
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import GridSearchCV
         lr = LogisticRegression()
         parameters = {'solver':('liblinear', 'lbfgs'), 'penalty':['l2']}
         with warnings.catch_warnings():
@@ -432,11 +426,11 @@ class TestLogisticRegression(unittest.TestCase):
             clf.fit(iris.data, iris.target)
 
     def test_with_randomizedsearchcv(self):
-        from sklearn.model_selection import RandomizedSearchCV
+        import numpy as np
+        from scipy.stats.distributions import uniform
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
-        from scipy.stats.distributions import uniform
-        import numpy as np
+        from sklearn.model_selection import RandomizedSearchCV
         lr = LogisticRegression()
         parameters = {'solver':('liblinear', 'lbfgs'), 'penalty':['l2']}
         ranges, cat_idx = lr.get_param_ranges()
@@ -455,9 +449,9 @@ class TestLogisticRegression(unittest.TestCase):
             iris = load_iris()
             random_search.fit(iris.data, iris.target)
     def test_grid_search_on_trained(self):
-        from sklearn.model_selection import GridSearchCV
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import GridSearchCV
         iris = load_iris()
         X, y = iris.data, iris.target
         lr = LogisticRegression()
@@ -466,9 +460,9 @@ class TestLogisticRegression(unittest.TestCase):
 
         clf = GridSearchCV(trained, parameters, cv=5, scoring=make_scorer(accuracy_score))
     def test_grid_search_on_trained_auto(self):
-        from sklearn.model_selection import GridSearchCV
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import GridSearchCV
         iris = load_iris()
         X, y = iris.data, iris.target
         lr = LogisticRegression()
@@ -477,9 +471,10 @@ class TestLogisticRegression(unittest.TestCase):
 
         clf = GridSearchCV(trained, parameters, cv=5, scoring=make_scorer(accuracy_score))
     def test_doc(self):
+        from test.mock_custom_operators import MyLR
+
         import sklearn.datasets
         import sklearn.utils
-        from test.mock_custom_operators import MyLR
         iris = sklearn.datasets.load_iris()
         X_all, y_all = sklearn.utils.shuffle(iris.data, iris.target, random_state=42)
         X_train, y_train = X_all[10:], y_all[10:]
@@ -510,10 +505,10 @@ class TestClone(unittest.TestCase):
             self.assertEqual(predicted[i], predicted_clone[i])
         # Testing clone with pipelines having OperatorChoice
     def test_clone_operator_choice(self):
-        from sklearn.model_selection import cross_val_score
-        from sklearn.metrics import accuracy_score, make_scorer
         from sklearn.base import clone
         from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import cross_val_score
         iris = load_iris()
         X, y = iris.data, iris.target
 
@@ -532,9 +527,9 @@ class TestClone(unittest.TestCase):
 
     def test_clone_with_scikit2(self):
         lr = LogisticRegression()
-        from sklearn.model_selection import cross_val_score
-        from sklearn.metrics import accuracy_score, make_scorer
         from sklearn.datasets import load_iris
+        from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import cross_val_score
         pca = PCA()
         trainable = pca >> lr
         from sklearn.base import clone
@@ -600,8 +595,8 @@ class TestClone(unittest.TestCase):
 
 class TestMLPClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
-        from sklearn.datasets import make_classification, load_iris
         import numpy as np
+        from sklearn.datasets import load_iris, make_classification
         from sklearn.utils import shuffle
 
         X, y1 = make_classification(n_samples=10, n_features=100, n_informative=30, n_classes=3, random_state=1)
@@ -621,8 +616,9 @@ class TestMLPClassifier(unittest.TestCase):
 
 class TestOperatorChoice(unittest.TestCase):
     def test_make_choice_with_instance(self):
-        from lale.operators import make_union, make_choice, make_pipeline
         from sklearn.datasets import load_iris
+
+        from lale.operators import make_choice, make_pipeline, make_union
         iris = load_iris()
         X, y = iris.data, iris.target
         tfm = PCA() | Nystroem() | NoOp()
@@ -677,36 +673,38 @@ class TestTags(unittest.TestCase):
 
 class TestOperatorWithoutSchema(unittest.TestCase):
     def test_trainable_pipe_left(self):
+        from sklearn.decomposition import PCA
+
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression
-        from sklearn.decomposition import PCA
         iris = sklearn.datasets.load_iris()
         pipeline = PCA() >> LogisticRegression(random_state=42)
         pipeline.fit(iris.data, iris.target)
     
     def test_trainable_pipe_right(self):
+        from sklearn.decomposition import PCA
+
         from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression
-        from sklearn.decomposition import PCA
         iris = sklearn.datasets.load_iris()
         pipeline = NoOp() >> PCA() >> LogisticRegression(random_state=42)
         pipeline.fit(iris.data, iris.target)
 
     def dont_test_planned_pipe_left(self):
-        from lale.lib.lale import NoOp
-        from lale.lib.sklearn import LogisticRegression
         from sklearn.decomposition import PCA
-        from lale.lib.lale import Hyperopt
+
+        from lale.lib.lale import Hyperopt, NoOp
+        from lale.lib.sklearn import LogisticRegression
         iris = sklearn.datasets.load_iris()
         pipeline = NoOp() >> PCA >> LogisticRegression
         clf = Hyperopt(estimator=pipeline, max_evals=1)
         clf.fit(iris.data, iris.target)
         
     def dont_test_planned_pipe_right(self):
-        from lale.lib.lale import NoOp
-        from lale.lib.sklearn import LogisticRegression
         from sklearn.decomposition import PCA
-        from lale.lib.lale import Hyperopt
+
+        from lale.lib.lale import Hyperopt, NoOp
+        from lale.lib.sklearn import LogisticRegression
         iris = sklearn.datasets.load_iris()
         pipeline = PCA >> LogisticRegression
         clf = Hyperopt(estimator=pipeline, max_evals=1)
@@ -735,26 +733,26 @@ class TestVotingClassifier(unittest.TestCase):
         trained.predict(self.X_test)
 
     def test_with_hyperopt(self):
-        from lale.lib.sklearn import VotingClassifier
         from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import VotingClassifier
         clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('lr', LogisticRegression())])
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
     def test_with_gridsearch(self):
-        from lale.lib.sklearn import VotingClassifier
-        from lale.lib.lale import GridSearchCV
         from sklearn.metrics import accuracy_score, make_scorer
+
+        from lale.lib.lale import GridSearchCV
+        from lale.lib.sklearn import VotingClassifier
         clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('rc', RidgeClassifier())], voting='hard')
         trained = clf.auto_configure(self.X_train, self.y_train, GridSearchCV, lale_num_samples=1, lale_num_grids=1, cv=2, scoring=make_scorer(accuracy_score))
 
     @unittest.skip('TODO: get this working with sklearn 0.23')
     def test_with_observed_gridsearch(self):
-        from lale.lib.sklearn import VotingClassifier
-        from lale.lib.lale import GridSearchCV
-        from lale.lib.lale import Observing
-        from lale.lib.lale.observing import LoggingObserver
-
         from sklearn.metrics import accuracy_score, make_scorer
+
+        from lale.lib.lale import GridSearchCV, Observing
+        from lale.lib.lale.observing import LoggingObserver
+        from lale.lib.sklearn import VotingClassifier
         clf = VotingClassifier(estimators=[('knn', KNeighborsClassifier()), ('rc', RidgeClassifier())], voting='hard')
         trained = clf.auto_configure(self.X_train, self.y_train, GridSearchCV, lale_num_samples=1, lale_num_grids=1, cv=2, scoring=make_scorer(accuracy_score), observer=LoggingObserver)
 
@@ -780,21 +778,21 @@ class TestBaggingClassifier(unittest.TestCase):
         trained.predict(self.X_test)
 
     def test_with_hyperopt(self):
-        from lale.lib.sklearn import BaggingClassifier
         from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import BaggingClassifier
         clf = BaggingClassifier(base_estimator=LogisticRegression())
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
         print(trained.to_json())
 
     def test_pipeline_with_hyperopt(self):
-        from lale.lib.sklearn import BaggingClassifier
         from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import BaggingClassifier
         clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
     def test_pipeline_choice_with_hyperopt(self):
-        from lale.lib.sklearn import BaggingClassifier
         from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import BaggingClassifier
         clf = BaggingClassifier(base_estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier()))
         trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
@@ -828,7 +826,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         predictions = trained.predict(self.X_test)
 
     def test_inverse_transform(self):
-        from lale.lib.sklearn import OrdinalEncoder, OneHotEncoder
+        from lale.lib.sklearn import OneHotEncoder, OrdinalEncoder
         X_train, y_train = self.X_train, self.y_train
         X_test, y_test = self.X_test, self.y_test
 
@@ -857,8 +855,9 @@ class TestOrdinalEncoder(unittest.TestCase):
             transformed_X = trained_oe.transform(self.X_test)
 
     def test_encode_unknown_with(self):
-        from lale.lib.sklearn import OrdinalEncoder
         import numpy as np
+
+        from lale.lib.sklearn import OrdinalEncoder
         X_train, y_train = self.X_train, self.y_train
         X_test, y_test = self.X_test, self.y_test
 
@@ -891,8 +890,9 @@ class TestOperatorErrors(unittest.TestCase):
             self.assertRegex(msg, "underlying operator")
  
     def test_trained_get_pipeline_success(self):
-        from lale.lib.lale import Hyperopt
         from sklearn.datasets import load_iris
+
+        from lale.lib.lale import Hyperopt
         iris_data = load_iris()
         op = Hyperopt(estimator=LogisticRegression(), max_evals=1)
         with warnings.catch_warnings():
@@ -918,8 +918,9 @@ class TestOperatorErrors(unittest.TestCase):
             self.assertRegex(msg, "underlying operator")
 
     def test_trained_summary_success(self):
-        from lale.lib.lale import Hyperopt
         from sklearn.datasets import load_iris
+
+        from lale.lib.lale import Hyperopt
         iris_data = load_iris()
         op = Hyperopt(estimator=LogisticRegression(), max_evals=1, show_progressbar=False)
         with warnings.catch_warnings():

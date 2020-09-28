@@ -44,6 +44,7 @@ release = ''
 
 import os
 import sys
+
 sys.path.append(os.path.join(os.path.dirname(__name__), '../lale'))
 import sphinx_rtd_theme
 

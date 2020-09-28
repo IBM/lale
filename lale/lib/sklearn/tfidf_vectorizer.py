@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.docstrings
-import lale.operators
 import numpy as np
 import pandas as pd
 import sklearn.feature_extraction.text
+
+import lale.docstrings
+import lale.operators
+
 
 class TfidfVectorizerImpl():
     def __init__(self, **hyperparams):

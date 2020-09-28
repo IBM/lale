@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, Optional, List, Set, Tuple, TypeVar, Union
-import random
 import math
+import random
 import warnings
+from typing import (Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar,
+                    Union)
 
 import lale.operators as Ops
 from lale.pretty_print import hyperparams_to_string

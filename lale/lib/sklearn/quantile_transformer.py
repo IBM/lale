@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from sklearn.preprocessing import QuantileTransformer as SKLModel
+
 import lale.docstrings
 import lale.operators
+
 
 class QuantileTransformerImpl():
 

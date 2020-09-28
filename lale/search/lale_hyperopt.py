@@ -12,20 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, List, Optional
-import os
 import math
+import os
 import re
-
-from lale.search.search_space import *
-from lale.util.Visitor import Visitor, accept
-from lale.search import schema2search_space as opt
-from lale import helpers
-from lale.sklearn_compat import make_indexed_name
-from lale.operators import Operator
+from typing import Any, Dict, Iterable, List, Optional
 
 from hyperopt import hp
 from hyperopt.pyll import scope
+
+from lale import helpers
+from lale.operators import Operator
+from lale.search import schema2search_space as opt
+from lale.search.search_space import *
+from lale.sklearn_compat import make_indexed_name
+from lale.util.Visitor import Visitor, accept
+
 
 def search_space_to_hp_expr(space:SearchSpace, name:str):
     return SearchSpaceHPExprVisitor.run(space, name)

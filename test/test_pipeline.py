@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import random
 import unittest
 import warnings
-import random
-from lale.lib.lale import Batching, NoOp
-from lale.lib.sklearn import MinMaxScaler
-from lale.lib.sklearn import MLPClassifier, LogisticRegression, RandomForestClassifier
-from lale.lib.sklearn import Nystroem
-from lale.lib.sklearn import PCA
 
 from sklearn.metrics import accuracy_score
+
+from lale.lib.lale import Batching, NoOp
+from lale.lib.sklearn import (PCA, LogisticRegression, MinMaxScaler,
+                              MLPClassifier, Nystroem, RandomForestClassifier)
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+
 
 class TestBatching(unittest.TestCase):
     def setUp(self):
@@ -42,8 +42,8 @@ class TestBatching(unittest.TestCase):
         predictions = trained.predict(self.X_test)
         lale_accuracy = accuracy_score(self.y_test, predictions)
 
-        from sklearn.preprocessing import MinMaxScaler
         from sklearn.neural_network import MLPClassifier
+        from sklearn.preprocessing import MinMaxScaler
         prep = MinMaxScaler()
         trained_prep = prep.partial_fit(self.X_train, self.y_train)
         X_transformed = trained_prep.transform(self.X_train)
@@ -65,8 +65,8 @@ class TestBatching(unittest.TestCase):
         predictions = trained.predict(self.X_test)
         lale_accuracy = accuracy_score(self.y_test, predictions)
 
-        from sklearn.preprocessing import MinMaxScaler
         from sklearn.neural_network import MLPClassifier
+        from sklearn.preprocessing import MinMaxScaler
         prep = MinMaxScaler()
         trained_prep = prep.partial_fit(self.X_train, self.y_train)
         X_transformed = trained_prep.transform(self.X_train)
@@ -102,7 +102,7 @@ class TestBatching(unittest.TestCase):
                 self.assertAlmostEqual(lale_transforms[i, j], sklearn_transforms[i, j])                
 
     def test_fit3(self):
-        from lale.lib.sklearn import MinMaxScaler, MLPClassifier, PCA
+        from lale.lib.sklearn import PCA, MinMaxScaler, MLPClassifier
         pipeline = PCA() >> Batching(operator = MinMaxScaler() >> MLPClassifier(random_state=42), 
                                                  batch_size = 10)        
         trained = pipeline.fit(self.X_train, self.y_train)
@@ -122,8 +122,8 @@ class TestBatching(unittest.TestCase):
         predictions = trained.predict(self.X_test)
         lale_accuracy = accuracy_score(self.y_test, predictions)
 
-        from sklearn.preprocessing import MinMaxScaler
         from sklearn.neural_network import MLPClassifier
+        from sklearn.preprocessing import MinMaxScaler
         prep = MinMaxScaler()
         trained_prep = prep.partial_fit(self.X_train, self.y_train)
         X_transformed = trained_prep.transform(self.X_train)
@@ -147,9 +147,9 @@ class TestBatching(unittest.TestCase):
 class TestPipeline(unittest.TestCase):
 
     def dont_test_with_gridsearchcv2_auto(self):
-        from sklearn.model_selection import GridSearchCV
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import GridSearchCV
         lr = LogisticRegression(random_state = 42)
         pca = PCA(random_state = 42, svd_solver = 'arpack')
         trainable = pca >> lr
@@ -166,9 +166,9 @@ class TestPipeline(unittest.TestCase):
             predicted = clf.predict(iris.data)
             accuracy_with_lale_operators = accuracy_score(iris.target, predicted)
 
-        from sklearn.pipeline import Pipeline
         from sklearn.decomposition import PCA as SklearnPCA
         from sklearn.linear_model import LogisticRegression as SklearnLR
+        from sklearn.pipeline import Pipeline
         scikit_pipeline = Pipeline([(pca.name(), SklearnPCA(random_state = 42, svd_solver = 'arpack')), (lr.name(), SklearnLR(random_state = 42))])
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -180,9 +180,9 @@ class TestPipeline(unittest.TestCase):
         self.assertEqual(accuracy_with_lale_operators, accuracy_with_scikit_operators)
 
     def test_with_gridsearchcv3(self):
-        from sklearn.model_selection import GridSearchCV
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import GridSearchCV
         lr = LogisticRegression()
         from sklearn.pipeline import Pipeline
         scikit_pipeline = Pipeline([("nystroem", Nystroem()), ("lr", LogisticRegression())])
@@ -195,9 +195,9 @@ class TestPipeline(unittest.TestCase):
         predicted = clf.predict(iris.data)
 
     def test_with_gridsearchcv3_auto(self):
-        from sklearn.model_selection import GridSearchCV
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
+        from sklearn.model_selection import GridSearchCV
         lr = LogisticRegression()
         from sklearn.pipeline import Pipeline
         scikit_pipeline = Pipeline([(Nystroem().name(), Nystroem()), (lr.name(), LogisticRegression())])
@@ -236,9 +236,10 @@ class TestBatching(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
 
     def test_batching_with_hyperopt(self):
-        from lale.lib.sklearn import MinMaxScaler, SGDClassifier
-        from lale.lib.lale import Hyperopt, Batching
         from sklearn.metrics import accuracy_score
+
+        from lale.lib.lale import Batching, Hyperopt
+        from lale.lib.sklearn import MinMaxScaler, SGDClassifier
 
         pipeline = Batching(operator=MinMaxScaler() >> SGDClassifier())
         trained = pipeline.auto_configure(self.X_train, self.y_train, optimizer=Hyperopt, max_evals=1) 

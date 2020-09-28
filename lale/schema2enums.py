@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import enum
 import itertools
+import logging
+from typing import (Any, Callable, Dict, Iterable, Iterator, List, Optional,
+                    Set, Tuple, Union)
 
-from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union, Callable
-from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify
+from lale.schema_simplifier import (findRelevantFields,
+                                    narrowToGivenRelevantFields, simplify)
 
 from .schema_utils import Schema, SchemaEnum
 

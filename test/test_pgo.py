@@ -16,16 +16,13 @@ import unittest
 import warnings
 from typing import List
 
-import lale.search.PGO as PGO
-
 import lale.lib.lale
-from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
+import lale.search.PGO as PGO
+from lale.lib.sklearn import PCA, LogisticRegression
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.search_space import SearchSpace
-
-from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import PCA
 
 example_pgo_fp = 'test/lale-pgo-example.json'
 
@@ -83,8 +80,9 @@ class TestPGOHyperopt(unittest.TestCase):
     def test_lr_run(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
-        from lale.lib.lale import Hyperopt
         from sklearn.datasets import load_iris
+
+        from lale.lib.lale import Hyperopt
 
         lr = LogisticRegression()
         clf = Hyperopt(estimator=lr, max_evals=5, pgo=pgo)

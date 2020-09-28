@@ -13,12 +13,19 @@
 # limitations under the License.
 
 from imblearn.over_sampling import SVMSMOTE as OrigModel
-import lale.operators 
-from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schema,\
-                                            _input_transform_schema, _output_transform_schema,\
-                                            _input_predict_schema, _output_predict_schema,\
-                                            _input_predict_proba_schema, _output_predict_proba_schema,\
-                                            _input_decision_function_schema, _output_decision_function_schema
+
+import lale.operators
+from lale.lib.imblearn.base_resampler import (BaseResamplerImpl,
+                                              _input_decision_function_schema,
+                                              _input_fit_schema,
+                                              _input_predict_proba_schema,
+                                              _input_predict_schema,
+                                              _input_transform_schema,
+                                              _output_decision_function_schema,
+                                              _output_predict_proba_schema,
+                                              _output_predict_schema,
+                                              _output_transform_schema)
+
 
 class SVMSMOTEImpl(BaseResamplerImpl):
 

@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import autoai_libs.cognito.transforms.transform_utils
+import numpy as np
+
 import lale.docstrings
 import lale.operators
-import numpy as np
+
 
 class TA1Impl():
     def __init__(self, fun, name=None, datatypes=None, feat_constraints=None, tgraph=None, apply_all=None, col_names=None, col_dtypes=None, col_as_json_objects=None):

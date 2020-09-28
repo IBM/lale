@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict
 import os
+from typing import Dict
+
 try:
     import arff
 except ModuleNotFoundError:
@@ -22,13 +23,13 @@ except ModuleNotFoundError:
 or with
     pip install 'lale[full]'""")
 import urllib
-import pandas as pd
+
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
+import pandas as pd
 from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 download_data_dir = os.path.join(os.path.dirname(__file__), 'download_data')
 experiments_dict:Dict[str,Dict[str,str]] = {}

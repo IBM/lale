@@ -12,44 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-import warnings
 import random
 import sys
-import lale.operators as Ops
-from lale.lib.lale import ConcatFeatures
-from lale.lib.lale import NoOp
-from lale.lib.sklearn import KNeighborsClassifier
-from lale.lib.sklearn import LinearSVC
-from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import MinMaxScaler
-from lale.lib.sklearn import MLPClassifier
-from lale.lib.sklearn import Nystroem
-from lale.lib.sklearn import OneHotEncoder
-from lale.lib.sklearn import PCA
-from lale.lib.sklearn import TfidfVectorizer
-from lale.lib.sklearn import MultinomialNB
-from lale.lib.sklearn import SimpleImputer
-from lale.lib.sklearn import SVC
-from lale.lib.xgboost import XGBClassifier
-from lale.lib.sklearn import PassiveAggressiveClassifier
-from lale.lib.sklearn import StandardScaler
-from lale.lib.sklearn import FeatureAgglomeration
+import unittest
+import warnings
 from typing import List
-import lale.type_checking
 
 import sklearn.datasets
+from jsonschema.exceptions import ValidationError
 
-from lale.sklearn_compat import make_sklearn_compat
+import lale.operators as Ops
+import lale.type_checking
+from lale.lib.lale import ConcatFeatures, NoOp
+from lale.lib.sklearn import (PCA, SVC, FeatureAgglomeration,
+                              KNeighborsClassifier, LinearSVC,
+                              LogisticRegression, MinMaxScaler, MLPClassifier,
+                              MultinomialNB, Nystroem, OneHotEncoder,
+                              PassiveAggressiveClassifier, SimpleImputer,
+                              StandardScaler, TfidfVectorizer)
+from lale.lib.xgboost import XGBClassifier
 from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
-from jsonschema.exceptions import ValidationError
+from lale.sklearn_compat import make_sklearn_compat
+
 
 @unittest.skip("Skipping here because travis-ci fails to allocate memory. This runs on internal travis.")
 class TestResNet50(unittest.TestCase):
     def test_init_fit_predict(self):
         import torchvision.datasets as datasets
         import torchvision.transforms as transforms
+
         from lale.lib.pytorch import ResNet50
 
         transform = transforms.Compose([transforms.ToTensor()])
@@ -72,8 +64,9 @@ class TestResamplers(unittest.TestCase):
 
 def create_function_test_resampler(res_name):
     def test_resampler(self):
-        from lale.lib.sklearn import PCA, Nystroem, LogisticRegression, RandomForestClassifier
-        from lale.lib.lale import NoOp, ConcatFeatures
+        from lale.lib.lale import ConcatFeatures, NoOp
+        from lale.lib.sklearn import (PCA, LogisticRegression, Nystroem,
+                                      RandomForestClassifier)
         X_train, y_train = self.X_train, self.y_train
         X_test, y_test = self.X_test, self.y_test
         import importlib
@@ -158,8 +151,8 @@ class TestImblearn(unittest.TestCase):
 
     def test_decision_function(self):
         from lale.lib.imblearn import SMOTE
-        from lale.operators import make_pipeline
         from lale.lib.sklearn import RandomForestClassifier
+        from lale.operators import make_pipeline
         smote = SMOTE(operator=make_pipeline(RandomForestClassifier()))
         trained = smote.fit(self.X_train, self.y_train)
         trained.predict(self.X_test)

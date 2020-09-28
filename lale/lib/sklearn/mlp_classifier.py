@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.operators
-import lale.docstrings
 import sklearn.neural_network
+
+import lale.docstrings
+import lale.operators
+
 
 class MLPClassifierImpl():
     def __init__(self, **hyperparams):

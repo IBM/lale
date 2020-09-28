@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import sklearn.discriminant_analysis
+
 import lale.docstrings
 import lale.operators
+
 
 class QuadraticDiscriminantAnalysisImpl():
     def __init__(self, **hyperparams):

@@ -12,21 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, sys
+import os
+import sys
+
 sys.path.append(os.getcwd())
+
+import collections
+import pickle
+import re
+import warnings
+from collections import Counter
+from typing import List
 
 import numpy as np
 from scipy.signal import resample
 from sklearn import preprocessing
-import warnings
-import collections
-import pickle
+
 import lale.docstrings
 import lale.operators
-import numpy as np
-from collections import Counter
-import re
-from typing import List
 
 seizure_type_data = collections.namedtuple('seizure_type_data', ['seizure_type', 'data'])
 

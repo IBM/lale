@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.docstrings
-import lale.operators
-import torch
-from pytorch_pretrained_bert import BertTokenizer, BertModel, BertForMaskedLM
+import logging
+
 import numpy as np
 import pandas as pd
-import logging
+import torch
+from pytorch_pretrained_bert import BertForMaskedLM, BertModel, BertTokenizer
+
+import lale.docstrings
+import lale.operators
+
 logging.basicConfig(level=logging.INFO)
 
 class BertPretrainedEncoderImpl():

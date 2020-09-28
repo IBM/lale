@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.operators
 import numpy as np
+
+import lale.operators
+
 
 class IncreaseRowsImpl():
     def __init__(self, n_rows = 5):
@@ -91,6 +93,7 @@ _combined_schemas = {
 IncreaseRows = lale.operators.make_operator(IncreaseRowsImpl, _combined_schemas)
 
 import sklearn.linear_model
+
 
 class MyLRImpl:
     def __init__(self, penalty='l2', solver='liblinear', C=1.0):

@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import aif360.algorithms.postprocessing
+
 import lale.docstrings
 import lale.operators
-from .util import _BasePostprocessingImpl
-from .util import _numeric_supervised_input_fit_schema
-from .util import _numeric_input_predict_schema
-from .util import _numeric_output_predict_schema
-from .util import _postprocessing_base_hyperparams
+
+from .util import (_BasePostprocessingImpl, _numeric_input_predict_schema,
+                   _numeric_output_predict_schema,
+                   _numeric_supervised_input_fit_schema,
+                   _postprocessing_base_hyperparams)
 
 _additional_hyperparams = {
     'unprivileged_groups': {

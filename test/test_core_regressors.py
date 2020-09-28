@@ -13,10 +13,13 @@
 # limitations under the License.
 
 import unittest
+
 import sklearn.datasets
+
 import lale.lib.lale
-from lale.lib.lale import NoOp
 import lale.type_checking
+from lale.lib.lale import NoOp
+
 
 class TestRegression(unittest.TestCase):
 

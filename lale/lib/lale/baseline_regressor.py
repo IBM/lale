@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+
 import lale.docstrings
 import lale.operators
-import numpy as np
+
 
 class BaselineRegressorImpl:
     def __init__(self):

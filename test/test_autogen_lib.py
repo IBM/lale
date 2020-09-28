@@ -1,13 +1,15 @@
-import lale.lib.autogen as autogen
-import logging
 import inspect
+import logging
+from random import choice
+
+import pytest
 from sklearn import datasets
-from lale.operators import Operator, make_choice
+
+import lale.lib.autogen as autogen
 from lale.lib.lale import Hyperopt
 from lale.lib.lale.hyperopt import logger
 from lale.lib.sklearn import LogisticRegression
-from random import choice
-import pytest
+from lale.operators import Operator, make_choice
 
 logger.setLevel(logging.ERROR)
 

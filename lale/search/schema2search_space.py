@@ -12,24 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
 import logging
-import numpy
-import jsonschema
+import math
 import os
+from typing import (Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple,
+                    Union)
 
-from lale.util.Visitor import Visitor, accept
-from lale.util import VisitorPathError
-
-from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
-from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
-
-from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer, has_operator, atomize_schema_enumerations, check_operators_schema
-from lale.search.search_space import *
-from lale.search.lale_hyperopt import search_space_to_str_for_comparison
-from lale.search.PGO import PGO, FrequencyDistribution, Freqs
+import jsonschema
+import numpy
 
 from lale.operators import *
+from lale.schema_simplifier import (filterForOptimizer, findRelevantFields,
+                                    narrowToGivenRelevantFields, simplify)
+from lale.schema_utils import (Schema, SFalse, STrue,
+                               atomize_schema_enumerations,
+                               check_operators_schema, forOptimizer,
+                               getMaximum, getMinimum, has_operator,
+                               is_false_schema, is_true_schema)
+from lale.search.lale_hyperopt import search_space_to_str_for_comparison
+from lale.search.PGO import PGO, Freqs, FrequencyDistribution
+from lale.search.search_space import *
+from lale.util import VisitorPathError
+from lale.util.Visitor import Visitor, accept
 
 logger = logging.getLogger(__name__)              
 

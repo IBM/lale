@@ -17,9 +17,10 @@ try:
     pai4sk_installed=True
 except ImportError:
     pai4sk_installed=False
+import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-import lale.datasets.data_schemas
+
 
 class DecisionTreeClassifierImpl():
     def __init__(self, criterion='gini', splitter='best', max_depth=None, min_samples_leaf=1, max_features=None, random_state=None, n_threads=1, use_histograms=False, hist_nbins=256, use_gpu=False, gpu_id=0, verbose=False):

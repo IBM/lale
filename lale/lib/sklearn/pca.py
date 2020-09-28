@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn.decomposition
+
 import lale.docstrings
 import lale.operators
-import sklearn.decomposition
+
 
 class PCAImpl():
     def __init__(self, **hyperparams):

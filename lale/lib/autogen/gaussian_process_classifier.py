@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.gaussian_process import GaussianProcessClassifier as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class GaussianProcessClassifierImpl:

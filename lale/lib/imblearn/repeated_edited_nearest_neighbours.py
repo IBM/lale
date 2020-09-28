@@ -12,13 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from imblearn.under_sampling import RepeatedEditedNearestNeighbours as OrigModel
-import lale.operators 
-from lale.lib.imblearn.base_resampler import BaseResamplerImpl, _input_fit_schema,\
-                                            _input_transform_schema, _output_transform_schema,\
-                                            _input_predict_schema, _output_predict_schema,\
-                                            _input_predict_proba_schema, _output_predict_proba_schema,\
-                                            _input_decision_function_schema, _output_decision_function_schema
+from imblearn.under_sampling import \
+    RepeatedEditedNearestNeighbours as OrigModel
+
+import lale.operators
+from lale.lib.imblearn.base_resampler import (BaseResamplerImpl,
+                                              _input_decision_function_schema,
+                                              _input_fit_schema,
+                                              _input_predict_proba_schema,
+                                              _input_predict_schema,
+                                              _input_transform_schema,
+                                              _output_decision_function_schema,
+                                              _output_predict_proba_schema,
+                                              _output_predict_schema,
+                                              _output_transform_schema)
+
 
 class RepeatedEditedNearestNeighboursImpl(BaseResamplerImpl):
     def __init__(self, operator=None, **hyperparams):

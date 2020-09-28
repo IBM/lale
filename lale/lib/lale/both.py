@@ -16,6 +16,7 @@ import lale.docstrings
 import lale.operators
 from lale.lib.lale import NoOp
 
+
 class BothImpl():
     # This should be equivalent to:
     # (op1 >> op2) | (op2 >> op1)

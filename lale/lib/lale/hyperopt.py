@@ -12,29 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import hyperopt
-from hyperopt.exceptions import AllTrialsFailed
-import lale.helpers
-from lale.helpers import cross_val_score_track_trials, create_instance_from_hyperopt_search_space
-from lale.search.op2hp import hyperopt_search_space
-from lale.search.PGO import PGO
-from sklearn.model_selection import train_test_split
-from sklearn.model_selection._split import check_cv
-from sklearn.metrics import log_loss, check_scoring
+import copy
+import logging
+import multiprocessing
+import sys
+import time
+import traceback
 import warnings
+from typing import Any, Dict, Optional
+
+import hyperopt
 import numpy as np
 import pandas as pd
-import traceback
+from hyperopt.exceptions import AllTrialsFailed
+from sklearn.metrics import check_scoring, log_loss
+from sklearn.model_selection import train_test_split
+from sklearn.model_selection._split import check_cv
 
-import time
-import logging
-from typing import Any, Dict, Optional
-import copy
-import sys
 import lale.docstrings
+import lale.helpers
 import lale.operators
+from lale.helpers import (create_instance_from_hyperopt_search_space,
+                          cross_val_score_track_trials)
 from lale.lib.sklearn import LogisticRegression
-import multiprocessing
+from lale.search.op2hp import hyperopt_search_space
+from lale.search.PGO import PGO
 
 SEED=42
 logger = logging.getLogger(__name__)

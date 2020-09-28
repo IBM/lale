@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lale.lib.autoai_libs import float32_transform
-from lale.lib.lale import Hyperopt, ConcatFeatures, NoOp
-from lale.lib.sklearn import LogisticRegression as LR
+import unittest
+
 import autoai_libs.utils.fc_methods
-import lale.lib.autoai_libs
 import numpy as np
 import sklearn.datasets
 import sklearn.model_selection
-import unittest
+
+import lale.lib.autoai_libs
+from lale.lib.autoai_libs import float32_transform
+from lale.lib.lale import ConcatFeatures, Hyperopt, NoOp
+from lale.lib.sklearn import LogisticRegression as LR
+
 
 class TestAutoaiLibs(unittest.TestCase):
     @classmethod
@@ -135,8 +138,8 @@ class TestAutoaiLibs(unittest.TestCase):
         self.doTest(trainable, **self._iris)
 
     def test_TB1(self):
-        from sklearn.preprocessing import StandardScaler
         from autoai_libs.utils.fc_methods import is_not_categorical
+        from sklearn.preprocessing import StandardScaler
         float32 = np.dtype('float32')
         trainable = lale.lib.autoai_libs.TB1(
             tans_class=StandardScaler, name='stdscaler',
@@ -150,7 +153,8 @@ class TestAutoaiLibs(unittest.TestCase):
         pass #TODO: not sure how to instantiate, what to pass for tans_class
 
     def test_TAM(self):
-        from autoai_libs.cognito.transforms.transform_extras import IsolationForestAnomaly
+        from autoai_libs.cognito.transforms.transform_extras import \
+            IsolationForestAnomaly
         float32 = np.dtype('float32')
         trainable = lale.lib.autoai_libs.TAM(
             tans_class=IsolationForestAnomaly, name='isoforestanomaly',

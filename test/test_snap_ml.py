@@ -13,9 +13,12 @@
 # limitations under the License.
 
 import unittest
+
 import sklearn.datasets
 import sklearn.metrics
+
 import lale.sklearn_compat
+
 
 class TestSnapMLClassifiers(unittest.TestCase):
     def setUp(self):

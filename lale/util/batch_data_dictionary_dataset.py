@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from torch.utils.data import Dataset
+
+
 class BatchDataDict(Dataset):
     """Pytorch Dataset subclass that takes a dictionary of format {'<batch_idx>': <batch_data>}."""
 

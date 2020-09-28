@@ -14,9 +14,11 @@
 
 import pandas as pd
 import sklearn.datasets
-import lale.datasets.data_schemas
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
+
+import lale.datasets.data_schemas
+
 
 def _bunch_to_df(bunch, schema_X, schema_y, test_size=0.2, random_state=42):
     train_X_arr, test_X_arr, train_y_arr, test_y_arr = train_test_split(

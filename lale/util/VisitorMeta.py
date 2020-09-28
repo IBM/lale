@@ -14,6 +14,7 @@
 
 from abc import ABCMeta
 
+
 class VisitorMeta(object):
     """ This meta class adds a private _accept method that calls visitCLASSNAME on the visitor.
         It does not currently support inheritance: you need to define the visitC method for subclasses
@@ -42,8 +43,9 @@ class VisitorMeta(object):
 # to use Generic (which we want to do)
 # post 3.7, GenericMeta no longer exists
 import sys
+
 if sys.version_info < (3, 7, 0):
-    from typing import GenericMeta # type: ignore 
+    from typing import GenericMeta  # type: ignore 
 else:
     global GenericMeta 
     GenericMeta = ABCMeta # type: ignore 
