@@ -183,6 +183,7 @@ class SubschemaError(Exception):
         self.sup_name = sup_name
 
     def __str__(self):
+        summary = f'Got data of schema {self.sub_name}, which is not compatible with the required schema {self.sup_name}.'
         summary = f'Expected {self.sub_name} to be a subschema of {self.sup_name}.'
         import lale.pretty_print
         sub = lale.pretty_print.json_to_string(self.sub)

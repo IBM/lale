@@ -1104,7 +1104,7 @@ class IndividualOp(Operator):
                 + f'due to {reason}.\n' \
                 + f'Schema of {schema_path}: {schema}\n' \
                 + f'Value: {e.instance}'
-            raise jsonschema.ValidationError(msg) from e
+            raise jsonschema.ValidationError(msg)
 
     def _validate_hyperparam_data_constraints(self, X, y=None):
         hp_schema = self.hyperparam_schema()
@@ -1150,7 +1150,8 @@ class IndividualOp(Operator):
                     sup = schema['properties'][arg_name]
                     lale.type_checking.validate_schema_or_subschema(arg, sup)
                 except Exception as e:
-                    raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {e}') from e
+                    exception_type = f'{type(e).__module__}.{type(e).__name__}'
+                    raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {exception_type}: {e}') from None
         return arg
 
     def _validate_output_schema(self, result, method):
