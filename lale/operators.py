@@ -1149,6 +1149,10 @@ class IndividualOp(Operator):
                 try:
                     sup = schema['properties'][arg_name]
                     lale.type_checking.validate_schema_or_subschema(arg, sup)
+                except lale.type_checking.SubschemaError as e:
+                    sub = lale.pretty_print.json_to_string(e.sub)
+                    sup = lale.pretty_print.json_to_string(e.sup)
+                    raise ValueError(f'{self.name()}.{method}() invalid {arg_name}, the schema of the actual data is not a subschema of the expected schema of the argument.\nactual_schema = {sub}\nexpected_schema = {sup}')
                 except Exception as e:
                     exception_type = f'{type(e).__module__}.{type(e).__name__}'
                     raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {exception_type}: {e}') from None
