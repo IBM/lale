@@ -1,5 +1,6 @@
 import pprint
 
+
 def _indent(prefix, string, first_prefix=None):
     lines = string.splitlines()
     if lines:

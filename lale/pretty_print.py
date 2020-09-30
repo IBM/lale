@@ -13,21 +13,22 @@
 # limitations under the License.
 
 import ast
-import black
 import importlib
 import inspect
 import json
 import keyword
 import math
-import numpy as np
 import pprint
 import re
 from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
+import black
+import numpy as np
+
+import lale.expressions
 import lale.json_operator
 import lale.operators
 import lale.type_checking
-import lale.expressions
 
 JSON_TYPE = Dict[str, Any]
 _black78 = black.Mode(line_length=78)

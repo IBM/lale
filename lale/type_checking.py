@@ -31,18 +31,21 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 """
 
 import functools
+import inspect
+import logging
+import os
+from typing import Any, Dict, List, Union
+
 import jsonschema
 import jsonschema.exceptions
 import jsonschema.validators
 import jsonsubschema
-import lale.helpers
 import numpy as np
-import os
 import pandas as pd
 import scipy.sparse
-import logging
-import inspect
-from typing import Any, Dict, List, Union
+
+import lale.helpers
+
 JSON_TYPE = Dict[str, Any]
 
 def _validate_lale_type(validator, laleType, instance, schema):
@@ -54,8 +57,9 @@ def _validate_lale_type(validator, laleType, instance, schema):
             yield jsonschema.exceptions.ValidationError(
                 f'expected {laleType}, got {type(instance)}')
     elif laleType == 'operator':
-        import lale.operators
         import sklearn.base
+
+        import lale.operators
         if not (isinstance(instance, lale.operators.Operator) or
                 isinstance(instance, sklearn.base.BaseEstimator) or
                 ( inspect.isclass(instance) and

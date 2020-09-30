@@ -99,31 +99,33 @@ The following picture illustrates the core operator class hierarchy.
 
 """
 
-import lale.helpers
-import lale.type_checking
-from abc import abstractmethod
-import enum as enumeration
-import os
-from lale import schema2enums as enum_gen
-import pandas as pd
-import lale.datasets.data_schemas
-
-from typing import AbstractSet, Any, Callable, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union, cast
-import warnings
 import copy
-from lale.util.VisitorMeta import AbstractVisitorMeta
-from lale.search.PGO import remove_defaults_dict
+import enum as enumeration
 import inspect
-from lale.schemas import Schema
-import jsonschema
-import lale.pretty_print
 import logging
+import os
 import shutil
-import lale.json_operator
-from lale.json_operator import JSON_TYPE
-from sklearn.pipeline import if_delegate_has_method
-import sklearn.base
 import time
+import warnings
+from abc import abstractmethod
+from typing import (AbstractSet, Any, Callable, Dict, Generic, Iterable,
+                    Iterator, List, Optional, Tuple, TypeVar, Union, cast)
+
+import jsonschema
+import pandas as pd
+import sklearn.base
+from sklearn.pipeline import if_delegate_has_method
+
+import lale.datasets.data_schemas
+import lale.helpers
+import lale.json_operator
+import lale.pretty_print
+import lale.type_checking
+from lale import schema2enums as enum_gen
+from lale.json_operator import JSON_TYPE
+from lale.schemas import Schema
+from lale.search.PGO import remove_defaults_dict
+from lale.util.VisitorMeta import AbstractVisitorMeta
 
 logger = logging.getLogger(__name__)
 
@@ -2029,12 +2031,12 @@ class BasePipeline(Operator, Generic[OpType]):
             return old_clf
 
     def export_to_sklearn_pipeline(self):
-        from sklearn.pipeline import make_pipeline
         from sklearn.base import clone
+        from sklearn.pipeline import FeatureUnion, make_pipeline
+
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.lale.no_op import NoOpImpl
         from lale.lib.lale.relational import RelationalImpl
-        from sklearn.pipeline import FeatureUnion
 
         def convert_nested_objects(node):
             for element in dir(node):#Looking at only 1 level for now.
