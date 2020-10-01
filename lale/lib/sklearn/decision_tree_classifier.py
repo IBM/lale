@@ -85,6 +85,8 @@ _hyperparams_schema = {
                     'exclusiveMinimum': True,
                     'maximum': 1.0,
                     'distribution': 'uniform',
+                    'minimumForOptimizer': 0.01,
+                    'default': 0.5,
                     'description': 'max_features is a fraction and int(max_features * n_features) features are considered at each split.'},
                 {   'enum': ['auto', 'sqrt', 'log2', None]}],
                 'default': 'auto',
@@ -271,7 +273,7 @@ if sklearn.__version__ >= '0.22':
         ccp_alpha=Float(
             desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
             default=0.0,
-            forOptimizer=True,
+            forOptimizer=False,
             min=0.0,
             maxForOptimizer=0.1))
 
