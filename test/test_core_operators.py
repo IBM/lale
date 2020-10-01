@@ -357,8 +357,8 @@ class TestHyperparamRanges(unittest.TestCase):
             'n_estimators': (10, 100, 100),
             'criterion': ['entropy', 'gini'],
             'max_depth': (3, 5, None),
-            'min_samples_split': (0.01, 0.5, 0.05),
-            'min_samples_leaf': (0.01, 0.5, 0.05),
+            'min_samples_split': (2, 5, 2),
+            'min_samples_leaf': (1, 5, 1),
             'max_features': (0.01, 1.0, 0.5),
         }
         self.maxDiff = None
