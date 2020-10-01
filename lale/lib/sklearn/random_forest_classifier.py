@@ -63,7 +63,9 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'type': 'integer',
                     'minimum': 2,
-                    'forOptimizer': False,
+                    'minimumForOptimizer': 2,
+                    'maximumForOptimizer': 5,
+                    'default': 2,
                     'description': 'Consider min_samples_split as the minimum number.'},
                 {   'type': 'number',
                     'minimum': 0.0,
@@ -79,7 +81,9 @@ _hyperparams_schema = {
                 'anyOf': [
                 {   'type': 'integer',
                     'minimum': 1,
-                    'forOptimizer': False,
+                    'minimumForOptimizer':1,
+                    'maximumForOptimizer':5,
+                    'default':1,
                     'description': 'Consider min_samples_leaf as the minimum number.'},
                 {   'type': 'number',
                     'minimum': 0.0,

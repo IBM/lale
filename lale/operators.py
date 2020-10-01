@@ -834,7 +834,7 @@ class IndividualOp(Operator):
             if 'anyOf' in schema:
                 def by_type(typ):
                     for s in schema['anyOf']:
-                        if 'type' in s and s['type'] == typ:
+                        if ('type' in s and s['type'] == typ):
                             if ('forOptimizer' not in s) or s['forOptimizer']:
                                 return s
                     return None
@@ -842,6 +842,10 @@ class IndividualOp(Operator):
                     s = by_type(typ)
                     if s:
                         return s
+                if s is None:
+                    for s in schema['anyOf']:
+                        if 'enum' in s:
+                            return s
                 return schema['anyOf'][0]
             return schema
         unityped = {hp: pick_one_type(relevant[hp]) for hp in relevant}
@@ -888,6 +892,11 @@ class IndividualOp(Operator):
                 return None
             return (0, len(schema['enum'])-1, len(schema['enum'])-1)
         autoai_ranges = {hp: get_range(hp, s) for hp, s in defaulted.items()}
+        if 'min_samples_split' in autoai_ranges and 'min_samples_leaf' in autoai_ranges:
+            if self._impl.__name__ != 'GradientBoostingRegressorImpl' \
+                and self._impl.__name__ != 'GradientBoostingClassifierImpl':
+                autoai_ranges['min_samples_leaf'] = (1, 5, 1)
+                autoai_ranges['min_samples_split'] = (2, 5, 2)
         autoai_cat_idx = {hp: get_cat_idx(s)
                        for hp, s in defaulted.items() if 'enum' in s}
         return autoai_ranges, autoai_cat_idx

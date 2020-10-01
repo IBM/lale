@@ -100,8 +100,8 @@ _hyperparams_schema = {
         'class_weight', 'random_state', 'solver', 'max_iter', 'multi_class',
         'verbose', 'warm_start', 'n_jobs'],
       'relevantToOptimizer': [
-        'penalty', 'dual', 'tol', 'C', 'fit_intercept', 'class_weight',
-        'solver', 'multi_class'],
+        'penalty', 'dual', 'tol', 'fit_intercept', 
+        'solver', 'multi_class', 'intercept_scaling', 'max_iter'],
       'properties': {
         'solver': {
           'description': """Algorithm for optimization problem.
@@ -125,7 +125,9 @@ preprocess the data with a scaler from sklearn.preprocessing.""",
 The 'newton-cg', 'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
 only supported by the 'saga' solver. If 'none' (not supported by the
 liblinear solver), no regularization is applied.""",
-          'enum': ['l1', 'l2'],
+          'anyOf':[
+            {'enum': ['l2']},
+            {'enum': ['l1'], 'forOptimizer': False}],
           'default': 'l2'},
         'dual': {
           'description': """Dual or primal formulation. 
@@ -150,8 +152,8 @@ Dual formulation is only implemented for l2 penalty with liblinear solver. Prefe
           'minimum': 0.0,
           'exclusiveMinimum': True,
           'default': 0.0001,
-          'minimumForOptimizer': 1e-05,
-          'maximumForOptimizer': 0.1},
+          'minimumForOptimizer': 1e-08,
+          'maximumForOptimizer': 0.01},
         'fit_intercept': {
           'description':
             'Specifies whether a constant (bias or intercept) should be '
@@ -203,6 +205,8 @@ proportional to class frequencies in the input data as "n_samples / (n_classes *
           'type': 'integer',
           'distribution': 'uniform',
           'minimum': 1,
+          'minimumForOptimizer': 10,
+          'maximumForOptimizer': 1000,
           'default': 100},
         'multi_class': {
           'description':"""Approach for handling a multi-class problem.
