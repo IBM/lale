@@ -65,7 +65,8 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'default': 0.05}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node:'},
             'min_samples_leaf': {
@@ -76,7 +77,8 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'default': 0.05}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node.'},
             'min_weight_fraction_leaf': {
@@ -90,9 +92,10 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
-                    'minimumForOptimizer': 0.0,
+                    'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform'}, {
+                    'distribution': 'uniform',
+                    'default': 0.5}, {
                     'enum': ['auto', 'sqrt', 'log2', None]}],
                 'default': 'auto',
                 'description': 'The number of features to consider when looking for the best split:'},
@@ -262,7 +265,7 @@ if sklearn.__version__ >= '0.22':
         ccp_alpha=Float(
             desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
             default=0.0,
-            forOptimizer=True,
+            forOptimizer=False,
             min=0.0,
             maxForOptimizer=0.1),
         max_samples=AnyOf(
