@@ -893,8 +893,8 @@ class IndividualOp(Operator):
             return (0, len(schema['enum'])-1, len(schema['enum'])-1)
         autoai_ranges = {hp: get_range(hp, s) for hp, s in defaulted.items()}
         if 'min_samples_split' in autoai_ranges and 'min_samples_leaf' in autoai_ranges:
-            if self._impl.__name__ != 'GradientBoostingRegressorImpl' \
-                and self._impl.__name__ != 'GradientBoostingClassifierImpl':
+            if self._impl.__name__ not in ('GradientBoostingRegressorImpl', 'GradientBoostingClassifierImpl',\
+                'ExtraTreesClassifierImpl'):
                 autoai_ranges['min_samples_leaf'] = (1, 5, 1)
                 autoai_ranges['min_samples_split'] = (2, 5, 2)
         autoai_cat_idx = {hp: get_cat_idx(s)
