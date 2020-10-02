@@ -845,7 +845,8 @@ class IndividualOp(Operator):
                 if s is None:
                     for s in schema['anyOf']:
                         if 'enum' in s:
-                            return s
+                            if ('forOptimizer' not in s) or s['forOptimizer']:
+                                return s
                 return schema['anyOf'][0]
             return schema
         unityped = {hp: pick_one_type(relevant[hp]) for hp in relevant}
