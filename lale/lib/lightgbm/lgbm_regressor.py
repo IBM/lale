@@ -72,16 +72,21 @@ _hyperparams_schema = {
     'description': 'LightGBM classifier. (https://lightgbm.readthedocs.io/en/latest/Python-API.html#scikit-learn-api)',
     'allOf': [{
         'type': 'object',
-        'relevantToOptimizer': ['boosting_type', 'max_depth', 'learning_rate', 'n_estimators',
-            'min_child_samples', 'subsample'],
+        'relevantToOptimizer': ['boosting_type', 'num_leaves', 'learning_rate', 'n_estimators',
+            'min_child_weight', 'min_child_samples', 'subsample', 'subsample_freq', 'colsample_bytree', 'reg_alpha',
+            'reg_lambda'],
         'additionalProperties': False,
         'properties': {
             'boosting_type': {
-                'enum': ['gbdt', 'dart', 'goss', 'rf'],
+                'anyOf':[
+                    {'enum': ['gbdt', 'dart']},
+                    {'enum': ['goss', 'rf'], 'forOptimizer':False}],
                 'default': 'gbdt',
                 'description': '‘gbdt’, traditional Gradient Boosting Decision Tree. ‘dart’, Dropouts meet Multiple Additive Regression Trees. ‘goss’, Gradient-based One-Side Sampling. ‘rf’, Random Forest.'},
             'num_leaves': {
-                'type': 'integer',
+                'anyOf':[
+                    {'type': 'integer', 'forOptimizer':False},
+                    {'enum':[2, 4, 8, 32, 64, 128, 16]}],
                 'default': 31,
                 'description': 'Maximum tree leaves for base learners'}, 
             'max_depth': {
@@ -93,7 +98,7 @@ _hyperparams_schema = {
                 'description': 'Maximum tree depth for base learners, <=0 means no limit'},
             'learning_rate': {
                 'type': 'number',
-                'minimumForOptimizer': 0.01,
+                'minimumForOptimizer': 0.02,
                 'maximumForOptimizer': 1.0,
                 'distribution': 'loguniform',
                 'default': 0.1,
@@ -103,7 +108,7 @@ _hyperparams_schema = {
                 'minimumForOptimizer': 50,
                 'maximumForOptimizer': 1000,
                 'distribution': 'uniform',
-                'default': 100,
+                'default': 200,
                 'description': 'Number of boosted trees to fit.'},
             'subsample_for_bin': {
                 'type': 'integer',
@@ -127,11 +132,13 @@ _hyperparams_schema = {
                 'description': 'Minimum loss reduction required to make a further partition on a leaf node of the tree.'},
             'min_child_weight': {
                 'type': 'number',
+                'minimumForOptimizer':0.0001,
+                'maximumForOptimizer': 0.01,
                 'default': 1e-3,
                 'description': 'Minimum sum of instance weight (hessian) needed in a child (leaf).'},
             'min_child_samples': {
                 'type': 'integer',
-                'minimumForOptimizer': 1,
+                'minimumForOptimizer': 5,
                 'maximumForOptimizer': 30,
                 'distribution': 'uniform',
                 'default': 20,
@@ -145,11 +152,16 @@ _hyperparams_schema = {
                 'description': 'Subsample ratio of the training instance.'},
             'subsample_freq': {
                 'type': 'integer',
+                'minimumForOptimizer': 0,
+                'maximumForOptimizer': 5,
+                'distribution': 'uniform',
                 'default': 0,
                 'description': 'Frequence of subsample, <=0 means no enable.'},
             'colsample_bytree': {
                 'type': 'number',
                 'default': 1.0,
+                'minimumForOptimizer':0.01,
+                'maximumForOptimizer':1.0,
                 'description': 'Subsample ratio of columns when constructing each tree.'},
             'reg_alpha': {
                 'type': 'number',
