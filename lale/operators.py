@@ -1753,6 +1753,9 @@ _all_available_operators: List[PlannedOperator] = []
 def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
     if name is None:
         name = lale.helpers.assignee_name()
+        if name is None:
+            if inspect.isclass(impl) and impl.__name__.endswith('Impl'):
+                name = impl.__name__[:-len('Impl')]
     if inspect.isclass(impl):
         if hasattr(impl, 'fit'):
             operatorObj = PlannedIndividualOp(name, impl, schemas)
