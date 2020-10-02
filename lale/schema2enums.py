@@ -21,7 +21,7 @@ from typing import (Any, Callable, Dict, Iterable, Iterator, List, Optional,
 from lale.schema_simplifier import (findRelevantFields,
                                     narrowToGivenRelevantFields, simplify)
 
-from .schema_utils import Schema, SchemaEnum
+from .schema_utils import JsonSchema, SchemaEnum
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +54,7 @@ class DiscoveredEnums(object):
 
         return "<" + en + ch + ">"
 
-def schemaToDiscoveredEnums(schema:Schema)->Optional[DiscoveredEnums]:
+def schemaToDiscoveredEnums(schema:JsonSchema)->Optional[DiscoveredEnums]:
     """ Given a schema, returns a positive enumeration set.
     This is very conservative, and even includes negated enum constants
     (since the assumption is that they may, in some contexts, be valid)
@@ -175,7 +175,7 @@ def discoveredEnumsToPythonEnums(de:Optional[DiscoveredEnums])->Dict[str, enum.E
     accumulateDiscoveredEnumsToPythonEnums(de, [], acc)
     return acc
 
-def schemaToPythonEnums(schema:Schema)->Dict[str, enum.Enum]:
+def schemaToPythonEnums(schema:JsonSchema)->Dict[str, enum.Enum]:
     de = schemaToDiscoveredEnums(schema)
     enums = discoveredEnumsToPythonEnums(de)
     return enums
@@ -191,6 +191,6 @@ def addDictAsFields(obj:Any, d:Dict[str, Any], force=False)->None:
         else:
             setattr(obj, k, v) 
 
-def addSchemaEnumsAsFields(obj:Any, schema:Schema, force=False)->None:
+def addSchemaEnumsAsFields(obj:Any, schema:JsonSchema, force=False)->None:
     enums = schemaToPythonEnums(schema)
     addDictAsFields(obj, enums, force)

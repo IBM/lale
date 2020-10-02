@@ -26,7 +26,7 @@ from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFiel
 from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGrid
 from lale.sklearn_compat import make_sklearn_compat
 
-from lale.schema_utils import Schema, getMinimum, getMaximum
+from lale.schema_utils import JsonSchema, getMinimum, getMaximum
 from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray, should_print_search_space
 from lale.search.PGO import PGO
 import numpy as np

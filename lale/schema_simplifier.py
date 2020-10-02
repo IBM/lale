@@ -20,7 +20,7 @@ from typing import (Any, Dict, Generic, Iterable, Iterator, List, Optional,
 import jsonschema
 
 from .schema_ranges import SchemaRange
-from .schema_utils import (Schema, SFalse, STrue, forOptimizer, getMaximum,
+from .schema_utils import (JsonSchema, SFalse, STrue, forOptimizer, getMaximum,
                            getMinimum, is_false_schema, is_lale_any_schema,
                            is_true_schema, isForOptimizer, makeAllOf,
                            makeAnyOf, makeOneOf)
@@ -85,19 +85,19 @@ class set_with_str_for_keys(Generic[VV]):
         return set_with_str_for_keys(d)
     
 
-def toAnyOfList(schema:Schema)->List[Schema]:
+def toAnyOfList(schema:JsonSchema)->List[JsonSchema]:
     if 'anyOf' in schema:
         return schema['anyOf']
     else:
         return [schema]
 
-def toAllOfList(schema:Schema)->List[Schema]:
+def toAllOfList(schema:JsonSchema)->List[JsonSchema]:
     if 'allOf' in schema:
         return schema['allOf']
     else:
         return [schema]
 
-def liftAllOf(schemas:List[Schema])->Iterator[Schema]:
+def liftAllOf(schemas:List[JsonSchema])->Iterator[JsonSchema]:
     """ Given a list of schemas, if any of them are 
         allOf schemas, lift them out to the top level
     """
@@ -107,7 +107,7 @@ def liftAllOf(schemas:List[Schema])->Iterator[Schema]:
             yield s
 
 
-def liftAnyOf(schemas:List[Schema])->Iterator[Schema]:
+def liftAnyOf(schemas:List[JsonSchema])->Iterator[JsonSchema]:
     """ Given a list of schemas, if any of them are 
         anyOf schemas, lift them out to the top level
     """
@@ -117,10 +117,10 @@ def liftAnyOf(schemas:List[Schema])->Iterator[Schema]:
             yield s
 
 # This is a great function for a breakpoint :-)
-def impossible()->Schema:
+def impossible()->JsonSchema:
     return SFalse
 
-def enumValues(es:set_with_str_for_keys[Any], s:Schema)->set_with_str_for_keys[Any]:
+def enumValues(es:set_with_str_for_keys[Any], s:JsonSchema)->set_with_str_for_keys[Any]:
     """Given an enumeration set and a schema, return all the consistent values of the enumeration."""
     # TODO: actually check.  This should call the json schema validator
     ret = list()
@@ -144,7 +144,7 @@ def enumValues(es:set_with_str_for_keys[Any], s:Schema)->set_with_str_for_keys[A
 
 extra_field_names:List[str] = ['default', 'description']
 
-def hasAllOperatorSchemas(schemas:List[Schema]):
+def hasAllOperatorSchemas(schemas:List[JsonSchema]):
     if not schemas:
         return False
     for s in schemas:
@@ -160,7 +160,7 @@ def hasAllOperatorSchemas(schemas:List[Schema]):
                 return False
     return True
 
-def hasAnyOperatorSchemas(schemas:List[Schema]):
+def hasAnyOperatorSchemas(schemas:List[JsonSchema]):
     for s in schemas:
         if 'anyOf' in s:
             if hasAnyOperatorSchemas(s['anyOf']):
@@ -175,30 +175,31 @@ def hasAnyOperatorSchemas(schemas:List[Schema]):
     return False
 
 
-def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
+def simplifyAll(schemas:List[JsonSchema], floatAny:bool)->JsonSchema:
     # First, we partition the schemas into the different types
     # that we care about
-    combined_original_schema:Schema = {'allOf':schemas}
-    s_all:List[Schema] = schemas
-    s_any:List[List[Schema]] = []
-    s_one:List[Schema] = []
+    combined_original_schema:JsonSchema = {'allOf':schemas}
+    s_all:List[JsonSchema] = schemas
+    s_any:List[List[JsonSchema]] = []
+    s_one:List[JsonSchema] = []
 
-    s_not:List[Schema] = []
-    s_not_number_list:List[Schema] = [] # a list of schemas that are a top level 'not' with a type='integer' or 'number' under it
+    s_not:List[JsonSchema] = []
+    s_not_number_list:List[JsonSchema] = [] # a list of schemas that are a top level 'not' with a type='integer' or 'number' under it
 
     s_not_enum_list:List[set_with_str_for_keys[Any]] = []
     s_enum_list:List[set_with_str_for_keys[Any]] = []
 
-    s_type = None
-    s_type_for_optimizer = None
-    s_typed = []
-    s_other = []
-    s_not_for_optimizer:List[Schema] = []
+    s_type:Optional[str] = None
+    s_type_for_optimizer:Optional[str] = None
+    s_typed:List[JsonSchema] = []
+    s_other:List[JsonSchema] = []
+    s_not_for_optimizer:List[JsonSchema] = []
     s_extra:Dict[str,Any] = {}
 
     while s_all:
-        l = s_all
+        l:List[JsonSchema] = s_all
         s_all = []
+        s:JsonSchema
         for s in l:
             if s is None:
                 continue
@@ -289,9 +290,10 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         # This provides a workaround to #42 amongst other problems
 
         # first gather the set of extras
-        pos_k = set()
-        for k in s_typed:
-            pos_k.add(str(k))
+        pos_k:Set[str] = set()
+        pk:JsonSchema
+        for pk in s_typed:
+            pos_k.add(str(pk))
 
         for sn in itertools.chain(s_not, s_not_number_list):
             snn = sn['not']
@@ -419,7 +421,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     elif s_type == 'object':
         # if this is an object type, we want to merge the properties
         s_required:Set[str] = set()
-        s_props:Dict[str, Schema] = {}
+        s_props:Dict[str, List[JsonSchema]] = {}
         # TODO: generalize this to handle schema types here
         s_additionalProperties = True
         # propertyNames = []
@@ -470,7 +472,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         merged_props = {p:simplifyAll(s_props[p], False) for p in s_props}
         if s_required:
             for k in s_required:
-                if is_false_schema(merged_props.get(k, False)):
+                if is_false_schema(merged_props.get(k, SFalse)):
                     logger.info(f"simplifyAll: required key {k} is False, so the entire conjugation of schemas {schemas} is False")
                     return impossible()
 
@@ -490,8 +492,8 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         min_size_for_optimizer:int = 0
         max_size_for_optimizer:Optional[int] = None
         longest_item_list:int = 0
-        items_schemas:List[Schema] = []
-        item_list_entries:List[Tuple[List[Schema], Optional[Schema]]] = []
+        items_schemas:List[JsonSchema] = []
+        item_list_entries:List[Tuple[List[JsonSchema], Optional[JsonSchema]]] = []
 
         for arr in s_typed:
             arr_min_size = arr.get('minItems', 0)
@@ -544,7 +546,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
         if min_size_for_optimizer > min_size:
             ret_arr['minItemsForOptimizer'] = min_size_for_optimizer
 
-        all_items_schema:Optional[Schema] = None
+        all_items_schema:Optional[JsonSchema] = None
         if items_schemas:
             all_items_schema = simplifyAll(items_schemas, floatAny=floatAny)
 
@@ -562,13 +564,13 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
 
                 ret_arr['items'] = all_items_schema
         else:
-            ret_item_list_list:List[List[Schema]] = [[] for _ in range(longest_item_list)]
-            additional_schemas:List[Schema] = []
+            ret_item_list_list:List[List[JsonSchema]] = [[] for _ in range(longest_item_list)]
+            additional_schemas:List[JsonSchema] = []
             for (arr_item_list, arr_additional_schema) in item_list_entries:
                 for x in range(longest_item_list):
                     ils = ret_item_list_list[x]
                     if x < len(arr_item_list):
-                         ils.append(arr_item_list[x])
+                        ils.append(arr_item_list[x])
                     elif arr_additional_schema:
                         ils.append(arr_additional_schema)
                     if all_items_schema:
@@ -588,7 +590,7 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
                 if all_items_schema is not None:
                     ret_arr['additionalItems'] = all_items_schema
 
-            ret_item_list:List[Schema] = [simplifyAll(x, floatAny=True) for x in ret_item_list_list]
+            ret_item_list:List[JsonSchema] = [simplifyAll(x, floatAny=True) for x in ret_item_list_list]
             first_false:Optional[int]=None
             for i, s in enumerate(ret_item_list):
                 if is_false_schema(s):
@@ -687,14 +689,14 @@ def simplifyAll(schemas:List[Schema], floatAny:bool)->Schema:
     else:
         return ret_all_schema
 
-def simplifyAny(schema:List[Schema], floatAny:bool)->Schema:
+def simplifyAny(schema:List[JsonSchema], floatAny:bool)->JsonSchema:
     s_any = schema
 
     s_enum_list:List[set_with_str_for_keys[Any]] = []
     s_not_enum_list:List[set_with_str_for_keys[Any]] = []
 
-    s_other:List[Schema] = []
-    s_not_for_optimizer:List[Schema] = []
+    s_other:List[JsonSchema] = []
+    s_not_for_optimizer:List[JsonSchema] = []
 
     while s_any:
         l = s_any
@@ -744,7 +746,7 @@ def simplifyAny(schema:List[Schema], floatAny:bool)->Schema:
 
     
     assert not s_any
-    ret:List[Schema] = []
+    ret:List[JsonSchema] = []
 
     if s_enum:
         ret.append({'enum':list(s_enum)})
@@ -754,10 +756,10 @@ def simplifyAny(schema:List[Schema], floatAny:bool)->Schema:
     ret.extend(s_not_for_optimizer)
     return makeAnyOf(ret)
 
-def simplifyNot(schema:Schema, floatAny:bool)->Schema:
+def simplifyNot(schema:JsonSchema, floatAny:bool)->JsonSchema:
     return simplifyNot_(schema, floatAny, alreadySimplified=False)
 
-def simplifyNot_(schema:Schema, floatAny:bool, alreadySimplified:bool=False)->Schema:   
+def simplifyNot_(schema:JsonSchema, floatAny:bool, alreadySimplified:bool=False)->JsonSchema:   
     """alreadySimplified=true implies that schema has already been simplified"""
     if 'not' in schema:
         # if there is a not/not, we can just skip it
@@ -782,7 +784,7 @@ def simplifyNot_(schema:Schema, floatAny:bool, alreadySimplified:bool=False)->Sc
     else:
         return {'not':schema}
 
-def simplify(schema:Schema, floatAny:bool)->Schema:
+def simplify(schema:JsonSchema, floatAny:bool)->JsonSchema:
     """ Tries to simplify a schema into an equivalent but
         more compact/simpler one.  If floatAny if true, then
         the only anyOf in the return value will be at the top level.
@@ -841,7 +843,7 @@ def simplify(schema:Schema, floatAny:bool)->Schema:
 
 # TODO: semantically, allOf should force an intersection
 # of relevantFields, yet union seems kinder to the user/more modular (at least if additionalProperties:True)
-def findRelevantFields(schema:Schema) -> Optional[Set[str]]:
+def findRelevantFields(schema:JsonSchema) -> Optional[Set[str]]:
     """Either returns the relevant fields for the schema, or None if there was none specified"""
     if 'allOf' in schema:
         fields_list:List[Optional[Set[str]]] = [findRelevantFields(s) for s in schema['allOf']]
@@ -857,7 +859,7 @@ def findRelevantFields(schema:Schema) -> Optional[Set[str]]:
             return None
 
     # does not handle nested objects and nested relevant fields well
-def narrowToGivenRelevantFields(schema:Schema, relevantFields:Set[str])->Schema:
+def narrowToGivenRelevantFields(schema:JsonSchema, relevantFields:Set[str])->JsonSchema:
     if schema is False:
         return False
     if 'anyOf' in schema:
@@ -878,7 +880,7 @@ def narrowToGivenRelevantFields(schema:Schema, relevantFields:Set[str])->Schema:
     else:
         return schema
 
-def narrowToRelevantFields(schema:Schema)->Schema:
+def narrowToRelevantFields(schema:JsonSchema)->JsonSchema:
     relevantFields:Optional[Set[str]] = findRelevantFields(schema)
     if relevantFields is not None:
         return narrowToGivenRelevantFields(schema, relevantFields)
@@ -887,7 +889,7 @@ def narrowToRelevantFields(schema:Schema)->Schema:
 
 # Given a json schema, removes any elements marked as 'forOptimizer:false'
 # also does some basic simplifications
-def filterForOptimizer(schema:Schema)->Optional[Schema]:
+def filterForOptimizer(schema:JsonSchema)->Optional[JsonSchema]:
     if schema is None or is_true_schema(schema) or is_false_schema(schema):
         return schema
     if not isForOptimizer(schema):
@@ -950,7 +952,7 @@ def filterForOptimizer(schema:Schema)->Optional[Schema]:
 
     return schema
 
-def narrowSimplifyAndFilter(schema:Schema, floatAny:bool)->Optional[Schema]:
+def narrowSimplifyAndFilter(schema:JsonSchema, floatAny:bool)->Optional[JsonSchema]:
     n_schema = narrowToRelevantFields(schema)
     simplified_schema = simplify(n_schema, floatAny)
     filtered_schema = filterForOptimizer(simplified_schema)

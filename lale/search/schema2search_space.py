@@ -24,7 +24,7 @@ from lale.util import VisitorPathError
 from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
 from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
 
-from lale.schema_utils import Schema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer, has_operator, atomize_schema_enumerations, check_operators_schema
+from lale.schema_utils import JsonSchema, getMinimum, getMaximum, STrue, SFalse, is_false_schema, is_true_schema, forOptimizer, has_operator, atomize_schema_enumerations, check_operators_schema
 from lale.search.search_space import *
 from lale.search.lale_hyperopt import search_space_to_str_for_comparison
 from lale.search.PGO import PGO, FrequencyDistribution, Freqs
@@ -175,10 +175,10 @@ class SearchSpaceOperatorVisitor(Visitor):
 
     # functions to actually convert an individual operator
     # schema into a search space
-    def schemaObjToSearchSpaceHelper(self,
+    def JsonSchemaToSearchSpaceHelper(self,
         longName:str, 
         path:str, 
-        schema:Schema, 
+        schema:JsonSchema, 
         relevantFields:Optional[Set[str]],
         pgo_freqs:pgo_part=None)->Dict[str,SearchSpace]:
         if 'properties' not in schema:
@@ -203,7 +203,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     def schemaToSearchSpaceHelper_(self,
                                     longName,
                                     path:str, 
-                                    schema:Schema, 
+                                    schema:JsonSchema, 
                                     relevantFields:Optional[Set[str]],
                                     pgo_freqs:pgo_part=None)->Optional[SearchSpace]:
         # TODO: handle degenerate cases
@@ -334,7 +334,7 @@ class SearchSpaceOperatorVisitor(Visitor):
             elif typ == "object":
                 if 'properties' not in schema:
                     return SearchSpaceObject(longName, [], [])
-                o = self.schemaObjToSearchSpaceHelper(longName, path, schema, relevantFields, pgo_freqs=pgo_freqs)
+                o = self.JsonSchemaToSearchSpaceHelper(longName, path, schema, relevantFields, pgo_freqs=pgo_freqs)
                 all_keys = list(o.keys())
                 all_keys.sort()
                 o_choice = tuple([o.get(k, None) for k in all_keys])
@@ -365,7 +365,7 @@ class SearchSpaceOperatorVisitor(Visitor):
             objs = []
             for s_obj in schema['anyOf']:
                 if 'type' in s_obj and s_obj['type'] == "object":
-                    o = self.schemaObjToSearchSpaceHelper(longName, path, s_obj, relevantFields, pgo_freqs=pgo_freqs)
+                    o = self.JsonSchemaToSearchSpaceHelper(longName, path, s_obj, relevantFields, pgo_freqs=pgo_freqs)
                     if o: objs.append(o)
             if objs:
                 # First, gather a list of all the properties
@@ -392,7 +392,7 @@ class SearchSpaceOperatorVisitor(Visitor):
         
         if 'allOf' in schema:
             # if all but one are negated constraints, we will just ignore them
-            pos_sub_schema:List[Schema] = []
+            pos_sub_schema:List[JsonSchema] = []
             for sub_schema in schema['allOf']:
                 if 'not' not in sub_schema:
                     pos_sub_schema.append(sub_schema)
@@ -413,10 +413,10 @@ class SearchSpaceOperatorVisitor(Visitor):
 
     def schemaToSearchSpaceHelper(self,
                                 longName, 
-                                schema:Schema, 
+                                schema:Optional[JsonSchema], 
                                 relevantFields:Optional[Set[str]],
                                 pgo_freqs:pgo_part=None)->Optional[SearchSpace]:
-        if not is_false_schema(schema) and not schema:
+        if schema is None or is_false_schema(schema):
             return None
         else:
             return self.schemaToSearchSpaceHelper_(longName, longName, schema, relevantFields, pgo_freqs=pgo_freqs)
@@ -425,7 +425,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     def schemaToSimplifiedAndSearchSpace(self,
         longName:str, 
         name:str, 
-        schema:Schema)->Tuple[Schema, Optional[SearchSpace]]:
+        schema:JsonSchema)->Tuple[Optional[JsonSchema], Optional[SearchSpace]]:
         relevantFields = findRelevantFields(schema)
         if relevantFields:
             schema = narrowToGivenRelevantFields(schema, relevantFields)
@@ -436,7 +436,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     #    from . import pretty_print
     #    print(f'SIMPLIFIED_{longName}: {pretty_print.to_string(simplified_schema)}')
 
-        filtered_schema = filterForOptimizer(simplified_schema)
+        filtered_schema:Optional[JsonSchema] = filterForOptimizer(simplified_schema)
     #    print(f'SIMPLIFIED_{longName}: {pretty_print.to_string(filtered_schema)}')
 
         if logger.isEnabledFor(logging.WARNING):
@@ -456,7 +456,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     def schemaToSearchSpace(self,
                             longName:str, 
                             name:str, 
-                            schema:Schema
+                            schema:JsonSchema
                             )->Optional[SearchSpace]:
         (s, h) = self.schemaToSimplifiedAndSearchSpace(longName, name, schema)
         return h
