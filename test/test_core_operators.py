@@ -440,11 +440,10 @@ class TestLogisticRegression(unittest.TestCase):
         lr = LogisticRegression()
         parameters = {'solver':('liblinear', 'lbfgs'), 'penalty':['l2']}
         ranges, cat_idx = lr.get_param_ranges()
-        min_C, max_C, default_C = ranges['C']
         # specify parameters and distributions to sample from
         #the loguniform distribution needs to be taken care of properly
         param_dist = {"solver": ranges['solver'],
-                      "C": uniform(min_C, np.log(max_C))}
+                      "C": uniform(0.03125, np.log(32768))}
         # run randomized search
         n_iter_search = 5
         with warnings.catch_warnings():
