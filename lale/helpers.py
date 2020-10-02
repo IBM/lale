@@ -13,22 +13,24 @@
 # limitations under the License.
 
 import ast
-import numpy as np
-import pandas as pd
+import copy
+import importlib
+import logging
 import os
 import re
 import sys
 import time
 import traceback
-import scipy.sparse
-import importlib
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import accuracy_score, log_loss, check_scoring
-from sklearn.utils.metaestimators import _safe_split
-import copy
-import logging
-import h5py
 from typing import Any, Dict, List, Optional, Union
+
+import h5py
+import numpy as np
+import pandas as pd
+import scipy.sparse
+from sklearn.metrics import accuracy_score, check_scoring, log_loss
+from sklearn.model_selection import StratifiedKFold
+from sklearn.utils.metaestimators import _safe_split
+
 import lale.datasets.data_schemas
 
 try:
@@ -355,11 +357,8 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
     #Validate that the number of elements in the n-tuple is the same
     #as the number of steps in the current pipeline
 
-    from lale.operators import IndividualOp
-    from lale.operators import BasePipeline
-    from lale.operators import TrainablePipeline
-    from lale.operators import Operator
-    from lale.operators import OperatorChoice
+    from lale.operators import (BasePipeline, IndividualOp, Operator,
+                                OperatorChoice, TrainablePipeline)
     if isinstance(lale_object, IndividualOp):
         new_hyperparams:Dict[str,Any] = dict_without(hyperparams, 'name')
         if lale_object._hyperparams is not None:
@@ -421,7 +420,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         if sklearn_obj is None or not hasattr(sklearn_obj, 'get_params'):
             raise ValueError("The input pipeline has a step that is not scikit-learn compatible.")
         module_names = ["lale.lib.sklearn", "lale.lib.autoai_libs"]
-        from lale.operators import make_operator, TrainedIndividualOp
+        from lale.operators import TrainedIndividualOp, make_operator
 
         lale_wrapper_found = False
         class_name = sklearn_obj.__class__.__name__
@@ -464,8 +463,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             class_._impl = copy.deepcopy(sklearn_obj) 
         return class_
 
-    from sklearn.pipeline import FeatureUnion, Pipeline
     from sklearn.base import BaseEstimator
+    from sklearn.pipeline import FeatureUnion, Pipeline
+
     from lale.operators import make_pipeline, make_union
     if isinstance(sklearn_pipeline, Pipeline):
         nested_pipeline_steps = sklearn_pipeline.named_steps.values()
@@ -522,11 +522,12 @@ def append_batch(data, batch_data):
     #TODO:Handle dataframes
 
 def create_data_loader(X, y = None, batch_size = 1):
-    from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
-    from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
-    from torch.utils.data import DataLoader, TensorDataset
-    from lale.util.batch_data_dictionary_dataset import BatchDataDict
     import torch
+    from torch.utils.data import DataLoader, TensorDataset
+
+    from lale.util.batch_data_dictionary_dataset import BatchDataDict
+    from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
+    from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
         if isinstance(y, pd.Series):

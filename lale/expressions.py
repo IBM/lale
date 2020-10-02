@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast #see also https://greentreesnakes.readthedocs.io/
-import astunparse
+import ast  # see also https://greentreesnakes.readthedocs.io/
 import pprint
 import typing
 from typing import Any, Dict, List, Optional, Union
+
+import astunparse
 
 AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict)
 AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict]
