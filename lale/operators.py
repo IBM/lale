@@ -1001,19 +1001,24 @@ class IndividualOp(Operator):
         cp = self.__class__(self._name, impl, self._schemas)
         return cp
 
-    def customize_schema(self, **kwargs: Optional[Schema]) -> 'IndividualOp':
+    def customize_schema(self,
+        schemas:Optional[Schema]=None,
+        relevantToOptimizer:Optional[List[str]]=None,
+        constraint:Optional[Schema]=None,
+        tags:Optional[Dict]=None,
+        **kwargs: Optional[Schema]) -> 'IndividualOp':
         """Return a new operator with a customized schema
         
         Parameters
         ----------
-        schema : Schema
+        schemas : Schema
             A dictionary of json schemas for the operator. Override the entire schema and ignore other arguments
         input : Schema
             (or `input_*`) override the input schema for method `*`.
-            `input_*` must be an existing method (already defined in the schema for lale operators, exising method for external operators)
+            `input_*` must be an existing method (already defined in the schema for lale operators, existing method for external operators)
         output : Schema
             (or `output_*`) override the output schema for method `*`.
-            `output_*` must be an existing method (already defined in the schema for lale operators, exising method for external operators)
+            `output_*` must be an existing method (already defined in the schema for lale operators, existing method for external operators)
         constraint : Schema
             Add a constraint in JSON schema format.
         relevantToOptimizer : String list
@@ -1037,38 +1042,38 @@ class IndividualOp(Operator):
             'predict_proba',
             'decision_function'
         ]
-        for arg in kwargs:
-            value = kwargs[arg]
-            if arg == 'schemas':
-                assert value is not None
-                value.schema['$schema'] = 'http://json-schema.org/draft-04/schema#'
-                lale.type_checking.validate_is_schema(value.schema)
-                op._schemas = value.schema
-                break
-            elif arg in [p+n for p in ['input_', 'output_'] for n in methods]:
-            # multiple input types (e.g., fit, predict)
-                assert value is not None
-                lale.type_checking.validate_method(op, arg)
-                lale.type_checking.validate_is_schema(value.schema)
-                op._schemas['properties'][arg] = value.schema
-            elif arg == 'constraint':
-                assert value is not None
-                op._schemas['properties']['hyperparams']['allOf'].append(value.schema)
-            elif arg == 'relevantToOptimizer':
-                assert isinstance(value, list)
-                op._schemas['properties']['hyperparams']['allOf'][0]['relevantToOptimizer'] = value
-            elif arg == 'tags':
-                assert isinstance(value, dict)
-                op._schemas['tags'] = value
-            elif value is None:
-                scm = op._schemas['properties']['hyperparams']['allOf'][0]
-                scm['required'] = [k for k in scm['required'] if k != arg]
-                scm['relevantToOptimizer'] = [
-                    k for k in scm['relevantToOptimizer'] if k != arg]
-                scm['properties'] = {k: scm['properties'][k]
-                                     for k in scm['properties'] if k != arg}
-            else:
-                op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
+
+        if schemas is not None:
+            schemas.schema['$schema'] = 'http://json-schema.org/draft-04/schema#'
+            lale.type_checking.validate_is_schema(schemas.schema)
+            op._schemas = schemas.schema
+        else:
+            if relevantToOptimizer is not None:
+                assert isinstance(relevantToOptimizer, list)
+                op._schemas['properties']['hyperparams']['allOf'][0]['relevantToOptimizer'] = relevantToOptimizer
+            if constraint is not None:
+                op._schemas['properties']['hyperparams']['allOf'].append(constraint.schema)
+            if tags is not None:
+                assert isinstance(tags, dict)
+                op._schemas['tags'] = tags
+
+            for arg in kwargs:
+                value = kwargs[arg]
+                if arg in [p+n for p in ['input_', 'output_'] for n in methods]:
+                # multiple input types (e.g., fit, predict)
+                    assert value is not None
+                    lale.type_checking.validate_method(op, arg)
+                    lale.type_checking.validate_is_schema(value.schema)
+                    op._schemas['properties'][arg] = value.schema
+                elif value is None:
+                    scm = op._schemas['properties']['hyperparams']['allOf'][0]
+                    scm['required'] = [k for k in scm['required'] if k != arg]
+                    scm['relevantToOptimizer'] = [
+                        k for k in scm['relevantToOptimizer'] if k != arg]
+                    scm['properties'] = {k: scm['properties'][k]
+                                        for k in scm['properties'] if k != arg}
+                else:
+                    op._schemas['properties']['hyperparams']['allOf'][0]['properties'][arg] = value.schema
         # since the schema has changed, we need to invalidate any
         # cached enum attributes
         self._invalidate_enum_attributes()

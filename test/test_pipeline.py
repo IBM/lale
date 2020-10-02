@@ -227,7 +227,7 @@ class TestPipeline(unittest.TestCase):
             clf.fit(iris.data, iris.target)
             predicted = clf.predict(iris.data)
 
-class TestBatching(unittest.TestCase):
+class TestBatching2(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
