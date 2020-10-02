@@ -1,4 +1,5 @@
 import unittest
+from typing import Optional
 import os
 import lale
 import urllib
@@ -21,7 +22,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
     prefix_model = None
     refined_model = None
     pipeline_content = None
-    pp_pipeline: lale.operators.TrainablePipeline = None
+    pp_pipeline: Optional[lale.operators.TrainablePipeline] = None
 
     @classmethod
     def setUp(cls) -> None:
