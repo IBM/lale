@@ -38,7 +38,9 @@ _hyperparams_schema = {
         'properties': {
             'criterion': {
                 'description': 'Function to measure the quality of a split.',
-                'enum': ['mse', 'friedman_mse', 'mae'],
+                'anyOf':[
+                    {'enum': ['mse', 'friedman_mse']},
+                    {'enum': ['mae'], 'forOptimizer': False}],
                 'default': 'mse'},
             'splitter': {
                 'enum': ['best', 'random'],
@@ -66,6 +68,7 @@ _hyperparams_schema = {
                     'maximum': 1.0,
                     'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 0.5,
+                    'default': 0.05,
                     'description': 'min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.'}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node.'},
@@ -79,6 +82,8 @@ _hyperparams_schema = {
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
                     'maximum': 0.5,
+                    'minimumForOptimizer': 0.01,
+                    'default': 0.05,
                     'description': 'min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.'}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node.'},
@@ -96,6 +101,8 @@ _hyperparams_schema = {
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
                     'maximum': 1.0,
+                    'minimumForOptimizer': 0.01,
+                    'default': 0.5,
                     'distribution': 'uniform',
                     'description': 'max_features is a fraction and int(max_features * n_features) features are considered at each split.'},
                 {   'enum': ['auto', 'sqrt', 'log2', None]}],
@@ -230,7 +237,7 @@ if sklearn.__version__ >= '0.22':
         ccp_alpha=Float(
             desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
             default=0.0,
-            forOptimizer=True,
+            forOptimizer=False,
             min=0.0,
             maxForOptimizer=0.1))
 
