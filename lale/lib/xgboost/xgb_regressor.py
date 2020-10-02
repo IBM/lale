@@ -158,7 +158,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             'description': 'Minimum loss reduction required to make a further partition on a leaf node of the tree.',
             'default': 0,
             'minimum': 0,
-            'MaximumForOptimizer': 1.0
+            'maximumForOptimizer': 1.0
         },
         'min_child_weight': {
             'type': 'integer',

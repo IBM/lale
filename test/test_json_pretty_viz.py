@@ -469,10 +469,7 @@ tam = TAM(
         np.dtype("float32"),
     ],
 )
-logistic_regression = LogisticRegression(
-    multi_class="ovr", solver="liblinear"
-)
-pipeline = tam >> logistic_regression"""
+pipeline = tam >> LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_tam_4(self):
@@ -503,10 +500,7 @@ tam = TAM(
         np.dtype("float32"),
     ],
 )
-logistic_regression = LogisticRegression(
-    multi_class="ovr", solver="liblinear"
-)
-pipeline = tam >> logistic_regression"""
+pipeline = tam >> LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
         import pandas as pd
         import numpy as np
