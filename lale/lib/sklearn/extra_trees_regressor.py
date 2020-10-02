@@ -43,7 +43,9 @@ _hyperparams_schema = {
                 'default': 10,
                 'description': 'The number of trees in the forest.'},
             'criterion': {
-                'enum': ['mae', 'mse', 'friedman_mse'],
+                'anyOf':[
+                    {'enum':['mae'], 'forOptimizer':False},
+                    {'enum': ['mse', 'friedman_mse']}],
                 'default': 'mse',
                 'description': 'The function to measure the quality of a split. Supported criteria'},
             'max_depth': {
@@ -62,7 +64,8 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'default': 0.05}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node:'},
             'min_samples_leaf': {
@@ -73,7 +76,8 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'default': 0.05}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node.'},
             'min_weight_fraction_leaf': {
@@ -87,8 +91,9 @@ _hyperparams_schema = {
                     'type': 'number',
                     'minimum': 0.0,
                     'exclusiveMinimum': True,
-                    'minimumForOptimizer': 0.0,
+                    'minimumForOptimizer': 0.01,
                     'maximumForOptimizer': 1.0,
+                    'default': 0.5,
                     'distribution': 'uniform'}, {
                     'enum': ['auto', 'sqrt', 'log2', None]}],
                 'default': 'auto',
