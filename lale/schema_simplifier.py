@@ -12,14 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 import itertools
+import logging
+from typing import (Any, Dict, Generic, Iterable, Iterator, List, Optional,
+                    Set, Tuple, TypeVar, Union)
+
 import jsonschema
 
 from .schema_ranges import SchemaRange
-
-from typing import Any, Dict, Generic, List, Set, Iterable, Iterator, Optional, Tuple, TypeVar, Union
-from .schema_utils import Schema, getMinimum, getMaximum, isForOptimizer, makeAllOf, makeAnyOf, makeOneOf, forOptimizer, STrue, SFalse, is_true_schema, is_false_schema, is_lale_any_schema
+from .schema_utils import (Schema, SFalse, STrue, forOptimizer, getMaximum,
+                           getMinimum, is_false_schema, is_lale_any_schema,
+                           is_true_schema, isForOptimizer, makeAllOf,
+                           makeAnyOf, makeOneOf)
 
 logger = logging.getLogger(__name__)
 
