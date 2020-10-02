@@ -87,12 +87,13 @@ setup(
             'torch>=1.0',
             'BlackBoxAuditing',
             'imbalanced-learn'],
+        'dev': [
+            'pre-commit'
+        ],
         'test':[
             'autoai-libs',
             'joblib',
             'jupyter',
-            'mypy',
-            'flake8',
             'numpydoc',
             'sphinx',
             'm2r',
