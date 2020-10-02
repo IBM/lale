@@ -33,7 +33,7 @@ _hyperparams_schema = {
     'allOf': [{
         'type': 'object',
         'required': ['init', 'presort'],
-        'relevantToOptimizer': ['loss', 'n_estimators', 'min_samples_split', 'min_samples_leaf', 'max_depth', 'max_features', 'alpha', 'presort', 'n_iter_no_change', 'tol'],
+        'relevantToOptimizer': ['loss', 'n_estimators', 'min_samples_split', 'min_samples_leaf', 'max_depth', 'max_features', 'alpha', 'presort'],
         'additionalProperties': False,
         'properties': {
             'loss': {
@@ -73,7 +73,8 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'default': 0.05}],
                 'default': 2,
                 'description': 'The minimum number of samples required to split an internal node:'},
             'min_samples_leaf': {
@@ -84,7 +85,8 @@ _hyperparams_schema = {
                     'distribution': 'uniform'}, {
                     'type': 'number',
                     'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5}],
+                    'maximumForOptimizer': 0.5,
+                    'default': 0.05}],
                 'default': 1,
                 'description': 'The minimum number of samples required to be at a leaf node.'},
             'min_weight_fraction_leaf': {
@@ -131,6 +133,8 @@ _hyperparams_schema = {
                     'exclusiveMinimum': True,
                     'maximum': 1.0,
                     'exclusiveMaximum': True,
+                    'minimumForOptimizer': 0.01,
+                    'default': 0.5,
                     'distribution': 'uniform'},
                 {   'enum': ['auto', 'sqrt', 'log2', None]}],
                 'default': None,
@@ -138,7 +142,7 @@ _hyperparams_schema = {
             'alpha': {
                 'type': 'number',
                 'minimumForOptimizer': 1e-10,
-                'maximumForOptimizer': 1.0,
+                'maximumForOptimizer': 0.9999999999,
                 'distribution':'loguniform',
                 'default': 0.9,
                 'description': 'The alpha-quantile of the huber loss function and the quantile'},
@@ -272,7 +276,7 @@ if sklearn.__version__ >= '0.22':
         ccp_alpha=Float(
             desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
             default=0.0,
-            forOptimizer=True,
+            forOptimizer=False,
             min=0.0,
             maxForOptimizer=0.1))
 
