@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import List, Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
-from .schema_utils import Schema, getMinimum, getMaximum, getExclusiveMinimum, getExclusiveMaximum
+from .schema_utils import (Schema, getExclusiveMaximum, getExclusiveMinimum,
+                           getMaximum, getMinimum)
+
 
 class SchemaRange(object):
     def __init__(self, minimum=None, maximum=None, exclusive_minimum=False, exclusive_maximum=False, is_integer:bool=False) -> None:

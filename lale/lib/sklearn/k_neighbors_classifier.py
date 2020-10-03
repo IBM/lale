@@ -209,4 +209,6 @@ class KNeighborsClassifierImpl():
 
 lale.docstrings.set_docstrings(KNeighborsClassifierImpl, _combined_schemas)
 
-KNeighborsClassifier = lale.operators.make_operator(KNeighborsClassifierImpl, _combined_schemas)
+KNeighborsClassifier = lale.operators.make_operator(
+    KNeighborsClassifierImpl, _combined_schemas,
+)

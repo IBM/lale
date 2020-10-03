@@ -99,31 +99,33 @@ The following picture illustrates the core operator class hierarchy.
 
 """
 
-import lale.helpers
-import lale.type_checking
-from abc import abstractmethod
-import enum as enumeration
-import os
-from lale import schema2enums as enum_gen
-import pandas as pd
-import lale.datasets.data_schemas
-
-from typing import AbstractSet, Any, Callable, Dict, Generic, Iterable, Iterator, List, Tuple, TypeVar, Optional, Union, cast
-import warnings
 import copy
-from lale.util.VisitorMeta import AbstractVisitorMeta
-from lale.search.PGO import remove_defaults_dict
+import enum as enumeration
 import inspect
-from lale.schemas import Schema
-import jsonschema
-import lale.pretty_print
 import logging
+import os
 import shutil
-import lale.json_operator
-from lale.json_operator import JSON_TYPE
-from sklearn.pipeline import if_delegate_has_method
-import sklearn.base
 import time
+import warnings
+from abc import abstractmethod
+from typing import (AbstractSet, Any, Callable, Dict, Generic, Iterable,
+                    Iterator, List, Optional, Tuple, TypeVar, Union, cast)
+
+import jsonschema
+import pandas as pd
+import sklearn.base
+from sklearn.pipeline import if_delegate_has_method
+
+import lale.datasets.data_schemas
+import lale.helpers
+import lale.json_operator
+import lale.pretty_print
+import lale.type_checking
+from lale import schema2enums as enum_gen
+from lale.json_operator import JSON_TYPE
+from lale.schemas import Schema
+from lale.search.PGO import remove_defaults_dict
+from lale.util.VisitorMeta import AbstractVisitorMeta
 
 logger = logging.getLogger(__name__)
 
@@ -1114,7 +1116,7 @@ class IndividualOp(Operator):
                 + f'due to {reason}.\n' \
                 + f'Schema of {schema_path}: {schema}\n' \
                 + f'Value: {e.instance}'
-            raise jsonschema.ValidationError(msg) from e
+            raise jsonschema.ValidationError(msg)
 
     def _validate_hyperparam_data_constraints(self, X, y=None):
         hp_schema = self.hyperparam_schema()
@@ -1159,8 +1161,13 @@ class IndividualOp(Operator):
                 try:
                     sup = schema['properties'][arg_name]
                     lale.type_checking.validate_schema_or_subschema(arg, sup)
+                except lale.type_checking.SubschemaError as e:
+                    sub = lale.pretty_print.json_to_string(e.sub)
+                    sup = lale.pretty_print.json_to_string(e.sup)
+                    raise ValueError(f'{self.name()}.{method}() invalid {arg_name}, the schema of the actual data is not a subschema of the expected schema of the argument.\nactual_schema = {sub}\nexpected_schema = {sup}')
                 except Exception as e:
-                    raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {e}') from e
+                    exception_type = f'{type(e).__module__}.{type(e).__name__}'
+                    raise ValueError(f'{self.name()}.{method}() invalid {arg_name}: {exception_type}: {e}') from None
         return arg
 
     def _validate_output_schema(self, result, method):
@@ -1756,6 +1763,9 @@ _all_available_operators: List[PlannedOperator] = []
 def make_operator(impl, schemas = None, name = None) -> PlannedIndividualOp:
     if name is None:
         name = lale.helpers.assignee_name()
+        if name is None:
+            if inspect.isclass(impl) and impl.__name__.endswith('Impl'):
+                name = impl.__name__[:-len('Impl')]
     if inspect.isclass(impl):
         if hasattr(impl, 'fit'):
             operatorObj = PlannedIndividualOp(name, impl, schemas)
@@ -2034,12 +2044,12 @@ class BasePipeline(Operator, Generic[OpType]):
             return old_clf
 
     def export_to_sklearn_pipeline(self):
-        from sklearn.pipeline import make_pipeline
         from sklearn.base import clone
+        from sklearn.pipeline import FeatureUnion, make_pipeline
+
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.lale.no_op import NoOpImpl
         from lale.lib.lale.relational import RelationalImpl
-        from sklearn.pipeline import FeatureUnion
 
         def convert_nested_objects(node):
             for element in dir(node):#Looking at only 1 level for now.

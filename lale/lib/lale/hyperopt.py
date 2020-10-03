@@ -79,6 +79,16 @@ class HyperoptImpl:
             self.args_to_scorer = {}
         self.verbose = verbose
 
+    def _summarize_statuses(self):
+        status_list = self._trials.statuses()
+        status_hist = {}
+        for status in status_list:
+            status_hist[status] = 1 + status_hist.get(status, 0)
+        if hyperopt.STATUS_FAIL in status_hist:
+            print(f'{status_hist[hyperopt.STATUS_FAIL]} out of {len(status_list)} trials failed, call summary() for details.')
+            if not self.verbose:
+                print('Run with verbose=True to see per-trial exceptions.')
+
     def fit(self, X_train, y_train):
         opt_start_time = time.time()
         is_clf = self.estimator.is_classifier()
@@ -154,9 +164,16 @@ class HyperoptImpl:
                 return_dict['log_loss'] = logloss
                 return_dict['status'] = hyperopt.STATUS_OK
             except BaseException as e:
-                logger.warning(f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}, setting status to FAIL")
+                exception_type = f'{type(e).__module__}.{type(e).__name__}'
+                try:
+                    trainable = create_instance_from_hyperopt_search_space(self.estimator, params)
+                    trial_info = f'pipeline: """{trainable.pretty_print(show_imports=False)}"""'
+                except BaseException:
+                    trial_info = f'hyperparams: {params}'
+                error_msg = f'Exception caught in Hyperopt: {exception_type}, {traceback.format_exc()}with {trial_info}'
+                logger.warning(error_msg + ', setting status to FAIL')
                 return_dict['status'] = hyperopt.STATUS_FAIL
-                return_dict['error_msg'] = f"Exception caught in Hyperopt:{type(e)}, {traceback.format_exc()} with hyperparams: {params}"
+                return_dict['error_msg'] = error_msg
                 if self.verbose:
                     print(return_dict['error_msg'])
 
@@ -214,9 +231,11 @@ class HyperoptImpl:
         except AllTrialsFailed:
             self._best_estimator = None
             if hyperopt.STATUS_OK not in self._trials.statuses():
+                self._summarize_statuses()
                 raise ValueError('Error from hyperopt, none of the trials succeeded.')
-
         self._trials = merge_trials(self._trials, self._default_trials)
+        if self.show_progressbar:
+            self._summarize_statuses()
         try :
             best_trial = self._trials.best_trial
             val_loss = self._trials.best_trial['result']['loss']

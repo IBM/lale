@@ -1,9 +1,12 @@
-from lale.operators import PlannedOperator, Operator, BasePipeline, OperatorChoice, IndividualOp
-from lale.operators import make_choice, make_pipeline, make_pipeline_graph
-from lale.lib.lale import NoOp
-from typing import Optional
-from lale.sklearn_compat import clone_op
 import random
+from typing import Optional
+
+from lale.lib.lale import NoOp
+from lale.operators import (BasePipeline, IndividualOp, Operator,
+                            OperatorChoice, PlannedOperator, make_choice,
+                            make_pipeline, make_pipeline_graph)
+from lale.sklearn_compat import clone_op
+
 
 class NonTerminal(Operator):
     """ Abstract operator for non-terminal grammar rules.

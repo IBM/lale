@@ -401,7 +401,7 @@ _output_predict_probaschema = {
 
 _combined_schemas = {
     '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`XGBRegressor` gradient boosted decision trees.
+    'description': """`XGBRegressor`_ gradient boosted decision trees.
 
 .. _`XGBRegressor`: https://xgboost.readthedocs.io/en/latest/python/python_api.html#xgboost.XGBRegressor
 """,
@@ -426,7 +426,6 @@ if xgboost.__version__ >= '0.90':
     # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/
     import lale.schemas
     XGBRegressor = XGBRegressor.customize_schema(
-        silent=None,
         objective=lale.schemas.JSON({
             'description': 'Specify the learning task and the corresponding learning objective or a custom objective function to be used.',
             'anyOf': [

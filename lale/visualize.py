@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import graphviz
-import lale.json_operator
-import lale.pretty_print
 import re
 from typing import Any, Dict, List, Optional, Tuple
+
+import graphviz
+
+import lale.json_operator
+import lale.pretty_print
+
 
 def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
     """For each cluster (Pipeline, OperatorChoice, or higher-order IndividualOp), get two representatives (first-order IndividualOps).
