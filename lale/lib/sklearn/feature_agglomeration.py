@@ -42,7 +42,7 @@ _hyperparams_schema = {
                 {   'type': 'integer',
                     'minimumForOptimizer': 2,
                     'maximumForOptimizer': 8},
-                {   'enum': [None]}],
+                {   'enum': [None], 'forOptimizer': False}],
                 'default': 2,
                 'description': 'The number of clusters to find.'},
             'affinity': {
