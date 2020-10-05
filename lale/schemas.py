@@ -101,7 +101,8 @@ class Int(Schema):
                  max: Option[int] = undefined,
                  exclusiveMax: Option[bool] = undefined,
                  maxForOptimizer: Option[int] = undefined,
-                 distribution: Option[str] = undefined):
+                 distribution: Option[str] = undefined,
+                 laleMaximum: Option[str] = undefined):
         super().__init__(desc, default, forOptimizer)
         self.set('type', 'integer')
         self.set('minimum', min)
@@ -111,7 +112,7 @@ class Int(Schema):
         self.set('exclusiveMaximum', exclusiveMax)
         self.set('maximumForOptimizer', maxForOptimizer)
         self.set('distribution', distribution)
-
+        self.set('laleMaximum', laleMaximum)
 
 class Null(Schema):
     def __init__(self,

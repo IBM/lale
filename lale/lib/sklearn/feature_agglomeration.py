@@ -42,6 +42,7 @@ _hyperparams_schema = {
                 'minimumForOptimizer': 2,
                 'maximumForOptimizer': 8,
                 'default': 2,
+                'laleMaximum': 'X/items/maxItems', #number of columns 
                 'description': 'The number of clusters to find.'},
             'affinity': {
                 'anyOf': [
@@ -167,7 +168,7 @@ if sklearn.__version__ >= '0.21':
             desc='The linkage distance threshold above which, clusters will not be merged.',
             default=None),
         n_clusters=AnyOf(
-            types=[Int(minForOptimizer=2, maxForOptimizer=8), Null()],
+            types=[Int(minForOptimizer=2, maxForOptimizer=8, laleMaximum= 'X/items/maxItems'), Null()],
             default=2,
             desc='The number of clusters to find.'),
         constraint=AnyOf([Object(n_clusters=Null()), Object(distance_threshold=Null())], 
