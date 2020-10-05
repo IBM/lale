@@ -14,7 +14,8 @@
 
 import lale.docstrings
 import lale.operators
-from lale.lib.lale import NoOp
+from lale.lib.lale.no_op import NoOp
+
 
 class BothImpl():
     # This should be equivalent to:

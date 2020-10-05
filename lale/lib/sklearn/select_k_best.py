@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 import sklearn.feature_selection
+
 import lale.docstrings
 import lale.operators
-import pandas as pd
+
 
 class SelectKBestImpl():
     def __init__(self, score_func=None, k=10):

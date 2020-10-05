@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
+import warnings
+
 import hyperopt
-import lale.docstrings
-import lale.helpers
-import lale.operators
 import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
-import time
-import warnings
+
+import lale.docstrings
+import lale.helpers
+import lale.operators
 
 try:
     import xgboost
@@ -34,11 +36,8 @@ except ImportError:
     lightgbm_installed=False
 
 def auto_prep(X):
-    from lale.lib.lale import ConcatFeatures
-    from lale.lib.lale import Project
-    from lale.lib.lale import categorical
-    from lale.lib.sklearn import OneHotEncoder
-    from lale.lib.sklearn import SimpleImputer
+    from lale.lib.lale import ConcatFeatures, Project, categorical
+    from lale.lib.sklearn import OneHotEncoder, SimpleImputer
     n_cols = X.shape[1]
     n_cats = len(categorical()(X))
     prep_num = SimpleImputer(strategy='mean')
@@ -121,8 +120,7 @@ class AutoPipelineImpl:
             self._pipelines[name] = trainable
 
     def _fit_baseline(self, X, y):
-        from lale.lib.lale import BaselineRegressor
-        from lale.lib.lale import BaselineClassifier
+        from lale.lib.lale import BaselineClassifier, BaselineRegressor
         if self.prediction_type == 'regression':
             trainable = BaselineRegressor()
         else:
@@ -145,21 +143,22 @@ class AutoPipelineImpl:
         self._try_and_add('gbt_all', trainable, X, y)
 
     def _fit_hyperopt(self, X, y):
-        from lale.lib.lale import Hyperopt
-        from lale.lib.lale import NoOp
-        from lale.lib.sklearn import DecisionTreeClassifier
-        from lale.lib.sklearn import DecisionTreeRegressor
-        from lale.lib.sklearn import KNeighborsClassifier
-        from lale.lib.sklearn import KNeighborsRegressor
-        from lale.lib.sklearn import MinMaxScaler
-        from lale.lib.sklearn import PCA
-        from lale.lib.sklearn import RandomForestClassifier
-        from lale.lib.sklearn import RandomForestRegressor
-        from lale.lib.sklearn import RobustScaler
-        from lale.lib.sklearn import SelectKBest
-        from lale.lib.sklearn import SGDClassifier
-        from lale.lib.sklearn import SGDRegressor
-        from lale.lib.sklearn import StandardScaler
+        from lale.lib.lale import Hyperopt, NoOp
+        from lale.lib.sklearn import (
+            PCA,
+            DecisionTreeClassifier,
+            DecisionTreeRegressor,
+            KNeighborsClassifier,
+            KNeighborsRegressor,
+            MinMaxScaler,
+            RandomForestClassifier,
+            RandomForestRegressor,
+            RobustScaler,
+            SelectKBest,
+            SGDClassifier,
+            SGDRegressor,
+            StandardScaler,
+        )
         prep = auto_prep(X)
         scale = MinMaxScaler | StandardScaler | RobustScaler | NoOp
         reduce_dims = PCA | SelectKBest | NoOp

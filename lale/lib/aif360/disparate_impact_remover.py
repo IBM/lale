@@ -14,8 +14,10 @@
 
 import aif360.algorithms.preprocessing
 import aif360.datasets
-import lale.operators
 import pandas as pd
+
+import lale.operators
+
 
 class DisparateImpactRemoverImpl:
     def __init__(self, repair_level=1.0, sensitive_attribute=None):

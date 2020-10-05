@@ -1,15 +1,18 @@
-import unittest
-from typing import Optional
 import os
-import lale
+import unittest
 import urllib
+from typing import Optional
+
 import pandas as pd
 import sklearn
-assert sklearn.__version__ == '0.20.3', 'This test is for scikit-learn 0.20.3.'
 from sklearn.externals import joblib
 from sklearn.linear_model import LogisticRegression as LR
-from sklearn.tree import DecisionTreeClassifier as Tree
 from sklearn.neighbors import KNeighborsClassifier as KNN
+from sklearn.tree import DecisionTreeClassifier as Tree
+
+import lale
+
+assert sklearn.__version__ == '0.20.3', 'This test is for scikit-learn 0.20.3.'
 
 class TestAutoAIOutputConsumption(unittest.TestCase):
 
@@ -60,6 +63,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
                 pipeline_f.write(TestAutoAIOutputConsumption.pipeline_content)
 
             import importlib.util
+
             import lale.operators
 
             spec = importlib.util.spec_from_file_location("pp_pipeline", "pp_pipeline.py")
@@ -100,8 +104,8 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             assert False, f"Exception was thrown during model prediction: {e}"
 
     def test_08_refine_model_with_lale(self):
-        from lale.lib.lale import Hyperopt
         from lale import wrap_imported_operators
+        from lale.lib.lale import Hyperopt
 
         wrap_imported_operators()
         try:

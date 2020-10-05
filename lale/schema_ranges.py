@@ -14,8 +14,14 @@
 
 from typing import Any, Dict, List, Optional, Union
 
-from .schema_utils import (JsonSchema, getExclusiveMaximum, getExclusiveMinimum,
-                           getMaximum, getMinimum)
+from .schema_utils import (
+    JsonSchema,
+    getExclusiveMaximum,
+    getExclusiveMinimum,
+    getMaximum,
+    getMinimum,
+)
+
 
 class SchemaRange(object):
     def __init__(self, minimum=None, maximum=None, exclusive_minimum=False, exclusive_maximum=False, is_integer:bool=False) -> None:

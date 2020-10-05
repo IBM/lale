@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import autoai_libs.cognito.transforms.transform_utils
+
 import lale.docstrings
 import lale.operators
+
 
 class TAMImpl():
     def __init__(self, tans_class, name, tgraph=None, apply_all=True, col_names=None, col_dtypes=None, col_as_json_objects=None):

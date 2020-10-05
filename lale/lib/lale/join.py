@@ -16,6 +16,7 @@ import lale.docstrings
 import lale.operators
 from lale.expressions import Expr
 
+
 class JoinImpl:
     def __init__(self, pred=None, join_limit=None, sliding_window_length=None):
         self._hyperparams = { 'pred': pred, 'join_limit': join_limit, 'sliding_window_length': sliding_window_length }

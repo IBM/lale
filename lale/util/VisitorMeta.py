@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# A shim for compatibility across 3.7.
+# pre 3.7, we need to inherit from the GenericMeta class (which inherits from ABCmeta)
+# to use Generic (which we want to do)
+# post 3.7, GenericMeta no longer exists
+import sys
 from abc import ABCMeta
+
 
 class VisitorMeta(object):
     """ This meta class adds a private _accept method that calls visitCLASSNAME on the visitor.
@@ -37,13 +43,8 @@ class VisitorMeta(object):
         exec(_accept_code, globals(), l)
         setattr(cls, "_accept", l["_accept"])
 
-# A shim for compatibility across 3.7.
-# pre 3.7, we need to inherit from the GenericMeta class (which inherits from ABCmeta)
-# to use Generic (which we want to do)
-# post 3.7, GenericMeta no longer exists
-import sys
 if sys.version_info < (3, 7, 0):
-    from typing import GenericMeta # type: ignore 
+    from typing import GenericMeta  # type: ignore 
 else:
     global GenericMeta 
     GenericMeta = ABCMeta # type: ignore 

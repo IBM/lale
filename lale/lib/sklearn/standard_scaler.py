@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import sklearn.preprocessing
+
 import lale.docstrings
 import lale.operators
+
 
 class StandardScalerImpl():
     def __init__(self, copy=True, with_mean=True, with_std=True):

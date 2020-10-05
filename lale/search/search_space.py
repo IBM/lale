@@ -12,17 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
-import numpy
-
 import abc
-from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple, Union
+import math
+import os
+from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
+
+import numpy
 from hyperopt import hp
 from hyperopt.pyll import scope
+
+from lale.search.PGO import FrequencyDistribution
 from lale.util import VisitorPathError
 from lale.util.VisitorMeta import AbstractVisitorMeta
-from lale.search.PGO import FrequencyDistribution
-import os
 
 PGO_input_type = Union[FrequencyDistribution, Iterable[Tuple[Any, int]], None]
 
@@ -382,4 +383,3 @@ def should_print_search_space(*s:str):
         if x in options:
             return True
     return False
-  

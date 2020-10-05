@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn.compose
+
 import lale.docstrings
 import lale.operators
-import sklearn.compose
+
 
 class ColumnTransformerImpl:
     def __init__(self, **hyperparams):

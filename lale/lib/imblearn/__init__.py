@@ -45,14 +45,14 @@ Operators:
 
 """
 
-from .smote import SMOTE
-from .smoteenn import SMOTEENN
+from .adasyn import ADASYN
+from .all_knn import AllKNN
+from .borderline_smote import BorderlineSMOTE
 from .condensed_nearest_neighbour import CondensedNearestNeighbour
 from .edited_nearest_neighbours import EditedNearestNeighbours
-from .repeated_edited_nearest_neighbours import RepeatedEditedNearestNeighbours
-from .all_knn import AllKNN
 from .instance_hardness_threshold import InstanceHardnessThreshold
-from .adasyn import ADASYN
-from .borderline_smote import BorderlineSMOTE
-from .svm_smote import SVMSMOTE
 from .random_over_sampler import RandomOverSampler
+from .repeated_edited_nearest_neighbours import RepeatedEditedNearestNeighbours
+from .smote import SMOTE
+from .smoteenn import SMOTEENN
+from .svm_smote import SVMSMOTE

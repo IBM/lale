@@ -108,8 +108,21 @@ import shutil
 import time
 import warnings
 from abc import abstractmethod
-from typing import (AbstractSet, Any, Callable, Dict, Generic, Iterable,
-                    Iterator, List, Optional, Tuple, TypeVar, Union, cast)
+from typing import (
+    AbstractSet,
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+    cast,
+)
 
 import jsonschema
 import pandas as pd

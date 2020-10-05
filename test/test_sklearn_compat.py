@@ -17,9 +17,9 @@ from typing import Any, Dict
 
 from sklearn.base import clone
 
+from lale.lib.lale import ConcatFeatures as Concat
 from lale.operators import make_operator
 from lale.sklearn_compat import make_sklearn_compat
-from lale.lib.lale import ConcatFeatures as Concat
 
 
 class MutatingOpImpl():

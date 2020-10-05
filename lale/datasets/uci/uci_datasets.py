@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import numpy as np
 import os
-import pandas as pd
 import tempfile
 import urllib.request
 import zipfile
+
+import numpy as np
+import pandas as pd
+
 import lale.datasets.data_schemas
 
 download_data_dir = os.path.join(os.path.dirname(__file__), 'download_data')

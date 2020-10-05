@@ -12,8 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict
 import os
+import urllib
+from typing import Dict
+
+import numpy as np
+import pandas as pd
+from sklearn.compose import ColumnTransformer
+from sklearn.impute import SimpleImputer
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
 try:
     import arff
 except ModuleNotFoundError:
@@ -21,14 +30,6 @@ except ModuleNotFoundError:
     pip install 'liac-arff>=2.4.0'
 or with
     pip install 'lale[full]'""")
-import urllib
-import pandas as pd
-import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import LabelEncoder
-from sklearn.impute import SimpleImputer
-from sklearn.preprocessing import OneHotEncoder
-from sklearn.compose import ColumnTransformer
 
 download_data_dir = os.path.join(os.path.dirname(__file__), 'download_data')
 experiments_dict:Dict[str,Dict[str,str]] = {}
@@ -467,4 +468,3 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
         X_train, X_test, y_train, y_test = add_schemas( \
             schema_orig, target_col, X_train, X_test, y_train, y_test)
     return (X_train, y_train), (X_test, y_test)
-

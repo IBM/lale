@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.docstrings
-import lale.operators
 import autoai_libs.transformers.exportable
 import numpy as np
+
+import lale.docstrings
+import lale.operators
+
 
 class NumImputerImpl():
     def __init__(self, strategy, missing_values, activate_flag=True):

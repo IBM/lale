@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+from functools import wraps
+
 import lale.docstrings
 import lale.operators
-from functools import wraps
-import logging
 
 logger = logging.getLogger(__name__)
 # since we want the LoggingObserver

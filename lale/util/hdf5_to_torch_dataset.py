@@ -21,6 +21,7 @@ except ModuleNotFoundError:
                                     pip install 'lale[full]'""")
 import h5py
 
+
 class HDF5TorchDataset(Dataset):
     """Pytorch Dataset subclass that takes a hdf5 file pointer."""
 

@@ -12,16 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup, find_packages
-from datetime import datetime
+import logging
 import os
 import sys
-import logging
+from datetime import datetime
+
+from setuptools import find_packages, setup
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 
 try:
     import builtins
+
     # This trick is borrowed from scikit-learn
     # This is a bit (!) hackish: we are setting a global variable so that the
     # main lale __init__ can detect if it is being loaded by the setup
@@ -51,7 +54,7 @@ else:
         'h5py',
         'astunparse']
 
-import lale
+import lale # isort:skip
 if "TRAVIS" in os.environ:
     now = datetime.now().strftime("%y%m%d%H%M")
     VERSION=f'{lale.__version__}-{now}'

@@ -12,12 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Generic, Iterator, Iterable, List, Optional, Sequence, Tuple, TypeVar, Union, overload
 import json
-import jsonschema
 import random
-import numpy as np
 from enum import Enum
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    TypeVar,
+    Union,
+    overload,
+)
+
+import jsonschema
+import numpy as np
 
 Freqs = Dict[str, int]
 PGO = Dict[str, Dict[str, Freqs]]

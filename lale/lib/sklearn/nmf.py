@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from sklearn.decomposition import NMF as SKLModel
+
 import lale.docstrings
 import lale.operators
+
 
 class NMFImpl():
     def __init__(self, n_components=None, init=None, solver='cd', beta_loss='frobenius', tol=0.0001, max_iter=200, random_state=None, alpha=0.0, l1_ratio=0.0, verbose=0, shuffle=False):

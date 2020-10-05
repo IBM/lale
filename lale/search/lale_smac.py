@@ -13,30 +13,52 @@
 # limitations under the License.
 
 
-import random
 import math
-import numpy
+import random
 import warnings
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+)
 
-from typing import Any, Dict, List, Set, Iterable, Iterator, Optional, Tuple
+import numpy as np
+from ConfigSpace.conditions import EqualsCondition
+from ConfigSpace.hyperparameters import (
+    CategoricalHyperparameter,
+    Hyperparameter,
+    UniformFloatHyperparameter,
+    UniformIntegerHyperparameter,
+)
 from hyperopt import hp
 from hyperopt.pyll import scope
-from lale.schema_simplifier import findRelevantFields, narrowToGivenRelevantFields, simplify, filterForOptimizer
+from smac.configspace import ConfigurationSpace
 
-from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGrid
+from lale.schema_simplifier import (
+    filterForOptimizer,
+    findRelevantFields,
+    narrowToGivenRelevantFields,
+    simplify,
+)
+from lale.schema_utils import JsonSchema, getMaximum, getMinimum
+from lale.search.PGO import PGO
+from lale.search.search_space import (
+    SearchSpace,
+    SearchSpaceArray,
+    SearchSpaceEnum,
+    SearchSpaceNumber,
+    SearchSpaceObject,
+    should_print_search_space,
+)
+from lale.search.search_space_grid import SearchSpaceGrid, get_search_space_grids
 from lale.sklearn_compat import make_sklearn_compat
 
-from lale.schema_utils import JsonSchema, getMinimum, getMaximum
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray, should_print_search_space
-from lale.search.PGO import PGO
-import numpy as np
-
-from smac.configspace import ConfigurationSpace
-from ConfigSpace.hyperparameters import CategoricalHyperparameter, \
-    UniformFloatHyperparameter, UniformIntegerHyperparameter, Hyperparameter
-from ConfigSpace.conditions import EqualsCondition
-
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     import lale.operators as Ops
 
@@ -176,4 +198,3 @@ def hp_grids_to_smac_cs(grids:List[SearchSpaceGrid])->ConfigurationSpace:
     cs:ConfigurationSpace = ConfigurationSpace()
     addSearchSpaceGrids(grids, cs)
     return cs
-

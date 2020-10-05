@@ -14,16 +14,38 @@
 
 import itertools
 import logging
-from typing import (Any, Dict, Generic, Iterable, Iterator, List, Optional,
-                    Set, Tuple, TypeVar, Union)
+from typing import (
+    Any,
+    Dict,
+    Generic,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Set,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import jsonschema
 
 from .schema_ranges import SchemaRange
-from .schema_utils import (JsonSchema, SFalse, STrue, forOptimizer, getMaximum,
-                           getMinimum, is_false_schema, is_lale_any_schema,
-                           is_true_schema, isForOptimizer, makeAllOf,
-                           makeAnyOf, makeOneOf)
+from .schema_utils import (
+    JsonSchema,
+    SFalse,
+    STrue,
+    forOptimizer,
+    getMaximum,
+    getMinimum,
+    is_false_schema,
+    is_lale_any_schema,
+    is_true_schema,
+    isForOptimizer,
+    makeAllOf,
+    makeAnyOf,
+    makeOneOf,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -957,4 +979,3 @@ def narrowSimplifyAndFilter(schema:JsonSchema, floatAny:bool)->Optional[JsonSche
     simplified_schema = simplify(n_schema, floatAny)
     filtered_schema = filterForOptimizer(simplified_schema)
     return simplified_schema
-

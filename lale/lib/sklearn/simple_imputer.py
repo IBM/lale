@@ -13,10 +13,11 @@
 # limitations under the License.
 
 
+import numpy as np
 import sklearn.impute
+
 import lale.docstrings
 import lale.operators
-import numpy as np
 
 
 class SimpleImputerImpl():

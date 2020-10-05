@@ -15,14 +15,14 @@
 from typing import Any, Dict
 
 import lale.lib.sklearn
-import lale.search.lale_grid_search_cv
 import lale.operators
+import lale.search.lale_grid_search_cv
 import lale.sklearn_compat
-from .observing import Observing
-from .observing import ObservingImpl
+
+from .observing import Observing, ObservingImpl
+
 # from abc import ABC
 
-from typing import Any, Dict
 
 class GridSearchCVImpl:
     def __init__(self, estimator=None, cv=5, scoring=None, n_jobs=None, lale_num_samples=None, lale_num_grids=None, param_grid=None, pgo=None, observer=None):
