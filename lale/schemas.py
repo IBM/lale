@@ -142,8 +142,9 @@ class AnyOf(Schema):
     def __init__(self,
                  types: List[Schema] = [],
                  desc: Option[str] = undefined,
-                 default: Option[Any] = undefined):
-        super().__init__(desc, default)
+                 default: Option[Any] = undefined,
+                 forOptimizer: Option[bool] = undefined):
+        super().__init__(desc, default, forOptimizer)
         self.set('anyOf', [t.schema for t in types])
 
 

@@ -34,7 +34,7 @@ _hyperparams_schema = {
     'allOf': [{
         'type': 'object',
         'required': ['memory', 'compute_full_tree', 'pooling_func'],
-        'relevantToOptimizer': ['n_clusters', 'affinity', 'compute_full_tree', 'linkage'],
+        'relevantToOptimizer': ['affinity', 'compute_full_tree', 'linkage'],
         'additionalProperties': False,
         'properties': {
             'n_clusters': {
@@ -168,13 +168,13 @@ if sklearn.__version__ >= '0.21':
             desc='The linkage distance threshold above which, clusters will not be merged.',
             default=None),
         n_clusters=AnyOf(
-            types=[Int(minForOptimizer=2, maxForOptimizer=8, laleMaximum= 'X/items/maxItems'), Null()],
+            types=[Int(minForOptimizer=2, maxForOptimizer=8, laleMaximum= 'X/items/maxItems'), Null(forOptimizer=False)],
             default=2,
+            forOptimizer=False,
             desc='The number of clusters to find.'),
         constraint=AnyOf([Object(n_clusters=Null()), Object(distance_threshold=Null())], 
             desc='n_clusters must be None if distance_threshold is not None.'))
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
-        constraint=AnyOf([Object(compute_full_tree=Enum([True])), Object(distance_threshold=Null())], 
+        constraint=AnyOf([Object(compute_full_tree=Enum(['True'])), Object(distance_threshold=Null())], 
         desc='compute_full_tree must be True if distance_threshold is not None.'))
-
 lale.docstrings.set_docstrings(FeatureAgglomerationImpl, FeatureAgglomeration._schemas)
