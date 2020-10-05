@@ -325,4 +325,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(GradientBoostingClassifierImpl, _combined_schemas)
-GradientBoostingClassifier = make_operator(GradientBoostingClassifierImpl, _combined_schemas)
+GradientBoostingClassifier = make_operator(
+    GradientBoostingClassifierImpl, _combined_schemas
+)

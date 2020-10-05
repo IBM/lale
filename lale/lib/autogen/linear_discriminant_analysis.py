@@ -246,4 +246,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(LinearDiscriminantAnalysisImpl, _combined_schemas)
-LinearDiscriminantAnalysis = make_operator(LinearDiscriminantAnalysisImpl, _combined_schemas)
+LinearDiscriminantAnalysis = make_operator(
+    LinearDiscriminantAnalysisImpl, _combined_schemas
+)

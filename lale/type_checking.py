@@ -48,41 +48,55 @@ import lale.helpers
 
 JSON_TYPE = Dict[str, Any]
 
+
 def _validate_lale_type(validator, laleType, instance, schema):
-    #https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
-    if laleType == 'Any':
+    # https://github.com/Julian/jsonschema/blob/master/jsonschema/_validators.py
+    if laleType == "Any":
         return
-    elif laleType == 'callable':
+    elif laleType == "callable":
         if not callable(instance):
             yield jsonschema.exceptions.ValidationError(
-                f'expected {laleType}, got {type(instance)}')
-    elif laleType == 'operator':
+                f"expected {laleType}, got {type(instance)}"
+            )
+    elif laleType == "operator":
         import sklearn.base
 
         import lale.operators
-        if not (isinstance(instance, lale.operators.Operator) or
-                isinstance(instance, sklearn.base.BaseEstimator) or
-                ( inspect.isclass(instance) and
-                  issubclass(instance, sklearn.base.BaseEstimator))):
+
+        if not (
+            isinstance(instance, lale.operators.Operator)
+            or isinstance(instance, sklearn.base.BaseEstimator)
+            or (
+                inspect.isclass(instance)
+                and issubclass(instance, sklearn.base.BaseEstimator)
+            )
+        ):
             yield jsonschema.exceptions.ValidationError(
-                f'expected {laleType}, got {type(instance)}')
-    elif laleType == 'expression':
+                f"expected {laleType}, got {type(instance)}"
+            )
+    elif laleType == "expression":
         import lale.expressions
+
         if not isinstance(instance, lale.expressions.Expr):
             yield jsonschema.exceptions.ValidationError(
-                f'expected {laleType}, got {type(instance)}')
-    elif laleType == 'numpy.random.RandomState':
+                f"expected {laleType}, got {type(instance)}"
+            )
+    elif laleType == "numpy.random.RandomState":
         import numpy.random
+
         if not isinstance(instance, numpy.random.RandomState):
             yield jsonschema.exceptions.ValidationError(
-                f'expected {laleType}, got {type(instance)}')
+                f"expected {laleType}, got {type(instance)}"
+            )
+
 
 # https://github.com/Julian/jsonschema/blob/master/jsonschema/validators.py
 _lale_validator = jsonschema.validators.extend(
-    validator=jsonschema.Draft4Validator,
-    validators={u'laleType': _validate_lale_type})
+    validator=jsonschema.Draft4Validator, validators={"laleType": _validate_lale_type}
+)
 
-def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
+
+def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
     """Validate that the value is an instance of the schema.
 
     Parameters
@@ -102,21 +116,25 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array:bool=True):
         The value was invalid for the schema.
     """
     disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower()=='true':
-        return True #if schema validation is disabled, always return as valid
+    if disable_schema is not None and disable_schema.lower() == "true":
+        return True  # if schema validation is disabled, always return as valid
     json_value = lale.helpers.data_to_json(value, subsample_array)
     jsonschema.validate(json_value, schema, _lale_validator)
 
-_JSON_META_SCHEMA_URL = 'http://json-schema.org/draft-04/schema#'
+
+_JSON_META_SCHEMA_URL = "http://json-schema.org/draft-04/schema#"
+
 
 def _json_meta_schema() -> Dict[str, Any]:
     return jsonschema.Draft4Validator.META_SCHEMA
 
+
 def validate_is_schema(value: Dict[str, Any]):
-    #TODO: move this function to lale.type_checking
-    if '$schema' in value:
-        assert value['$schema'] == _JSON_META_SCHEMA_URL
+    # TODO: move this function to lale.type_checking
+    if "$schema" in value:
+        assert value["$schema"] == _JSON_META_SCHEMA_URL
     jsonschema.validate(value, _json_meta_schema())
+
 
 def is_schema(value) -> bool:
     if isinstance(value, dict):
@@ -126,6 +144,7 @@ def is_schema(value) -> bool:
             return False
         return True
     return False
+
 
 def _json_replace(subject, old, new):
     if subject == old:
@@ -153,7 +172,8 @@ def _json_replace(subject, old, new):
         for k in subject:
             if subject[k] != result[k]:
                 return result
-    return subject #nothing changed so share original object (not a copy)
+    return subject  # nothing changed so share original object (not a copy)
+
 
 def is_subschema(sub_schema, super_schema) -> bool:
     """Is sub_schema a subschema of super_schema?
@@ -171,32 +191,39 @@ def is_subschema(sub_schema, super_schema) -> bool:
     bool
         True if `sub_schema <: super_schema`, False otherwise.
     """
-    new_sub = _json_replace(sub_schema, {'laleType': 'Any'}, {'not': {}})
+    new_sub = _json_replace(sub_schema, {"laleType": "Any"}, {"not": {}})
     try:
         return jsonsubschema.isSubschema(new_sub, super_schema)
     except Exception as e:
-        raise ValueError(f'unexpected internal error checking ({new_sub} <: {super_schema})') from e
+        raise ValueError(
+            f"unexpected internal error checking ({new_sub} <: {super_schema})"
+        ) from e
+
 
 class SubschemaError(Exception):
     """Raised when a subschema check (sub `<:` sup) failed.
     """
-    def __init__(self, sub, sup, sub_name='sub', sup_name='super'):
+
+    def __init__(self, sub, sup, sub_name="sub", sup_name="super"):
         self.sub = sub
         self.sup = sup
         self.sub_name = sub_name
         self.sup_name = sup_name
 
     def __str__(self):
-        summary = f'Expected {self.sub_name} to be a subschema of {self.sup_name}.'
+        summary = f"Expected {self.sub_name} to be a subschema of {self.sup_name}."
         import lale.pretty_print
+
         sub = lale.pretty_print.json_to_string(self.sub)
         sup = lale.pretty_print.json_to_string(self.sup)
-        details = f'\n{self.sub_name} = {sub}\n{self.sup_name} = {sup}'
+        details = f"\n{self.sub_name} = {sub}\n{self.sup_name} = {sup}"
         return summary + details
 
-def _validate_subschema(sub, sup, sub_name='sub', sup_name='super'):
+
+def _validate_subschema(sub, sup, sub_name="sub", sup_name="super"):
     if not is_subschema(sub, sup):
         raise SubschemaError(sub, sup, sub_name, sup_name)
+
 
 def validate_schema_or_subschema(lhs, super_schema):
     """Validate that lhs is an instance of or a subschema of super_schema.
@@ -218,12 +245,13 @@ def validate_schema_or_subschema(lhs, super_schema):
         The lhs was or had a schema that was not a subschema of super_schema.
     """
     disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower()=='true':
-        return True #If schema validation is disabled, always return as valid
+    if disable_schema is not None and disable_schema.lower() == "true":
+        return True  # If schema validation is disabled, always return as valid
     if is_schema(lhs):
         sub_schema = lhs
     else:
         import lale.datasets.data_schemas
+
         try:
             sub_schema = lale.datasets.data_schemas.to_schema(lhs)
         except ValueError as e:
@@ -232,6 +260,7 @@ def validate_schema_or_subschema(lhs, super_schema):
         validate_schema(lhs, super_schema)
     else:
         _validate_subschema(sub_schema, super_schema)
+
 
 def join_schemas(*schemas: JSON_TYPE) -> JSON_TYPE:
     """Compute the lattice join (union type, disjunction) of the arguments.
@@ -246,22 +275,25 @@ def join_schemas(*schemas: JSON_TYPE) -> JSON_TYPE:
     JSON schema
         The joined schema.
     """
+
     def join_two_schemas(s_a, s_b):
         if s_a is None:
             return s_b
-        s_a = lale.helpers.dict_without(s_a, 'description')
-        s_b = lale.helpers.dict_without(s_b, 'description')
+        s_a = lale.helpers.dict_without(s_a, "description")
+        s_b = lale.helpers.dict_without(s_b, "description")
         if is_subschema(s_a, s_b):
             return s_b
         if is_subschema(s_b, s_a):
             return s_a
         return jsonsubschema.joinSchemas(s_a, s_b)
+
     if len(schemas) == 0:
-        return {'not':{}}
+        return {"not": {}}
     result = functools.reduce(join_two_schemas, schemas)
     return result
-        
-def get_hyperparam_names(op: 'lale.operators.IndividualOp') -> List[str]:
+
+
+def get_hyperparam_names(op: "lale.operators.IndividualOp") -> List[str]:
     """Names of the arguments to the constructor of the impl.
 
     Parameters
@@ -274,14 +306,15 @@ def get_hyperparam_names(op: 'lale.operators.IndividualOp') -> List[str]:
     List[str]
         List of hyperparameter names.
     """
-    if op._impl.__module__.startswith('lale'):
+    if op._impl.__module__.startswith("lale"):
         hp_schema = op.hyperparam_schema()
-        params = next(iter(hp_schema.get('allOf', []))).get('properties', {})
+        params = next(iter(hp_schema.get("allOf", []))).get("properties", {})
         return list(params.keys())
     else:
         return inspect.getargspec(op._impl_class().__init__).args
-                
-def validate_method(op: 'lale.operators.IndividualOp', schema_name: str):
+
+
+def validate_method(op: "lale.operators.IndividualOp", schema_name: str):
     """Check whether the operator has the given method schema.
 
     Parameters
@@ -297,40 +330,44 @@ def validate_method(op: 'lale.operators.IndividualOp', schema_name: str):
     AssertionError
         The operator does not have the given schema.
     """
-    if op._impl.__module__.startswith('lale'):
-        assert schema_name in op._schemas['properties']
+    if op._impl.__module__.startswith("lale"):
+        assert schema_name in op._schemas["properties"]
     else:
-        method_name = ''
-        if schema_name.startswith('input_'):
-            method_name = schema_name[len('input_'):]
-        elif schema_name.startswith('output_'):
-            method_name = schema_name[len('output_'):]
+        method_name = ""
+        if schema_name.startswith("input_"):
+            method_name = schema_name[len("input_") :]
+        elif schema_name.startswith("output_"):
+            method_name = schema_name[len("output_") :]
         if method_name:
             assert hasattr(op._impl, method_name)
 
+
 def _get_args_schema(fun):
     sig = inspect.signature(fun)
-    result = {'type': 'object', 'properties': {}}
+    result = {"type": "object", "properties": {}}
     required = []
     additional_properties = False
     for name, param in sig.parameters.items():
-        ignored_kinds = [inspect.Parameter.VAR_POSITIONAL,
-                         inspect.Parameter.VAR_KEYWORD]
-        if name != 'self':
+        ignored_kinds = [
+            inspect.Parameter.VAR_POSITIONAL,
+            inspect.Parameter.VAR_KEYWORD,
+        ]
+        if name != "self":
             if param.kind in ignored_kinds:
                 additional_properties = True
             else:
                 if param.default == inspect.Parameter.empty:
-                    param_schema = {'laleType': 'Any'}
+                    param_schema = {"laleType": "Any"}
                     required.append(name)
                 else:
-                    param_schema = {'default': param.default}
-                result['properties'][name] = param_schema
+                    param_schema = {"default": param.default}
+                result["properties"][name] = param_schema
     if not additional_properties:
-        result['additionalProperties'] = False
+        result["additionalProperties"] = False
     if len(required) > 0:
-        result['required'] = required
+        result["required"] = required
     return result
+
 
 def get_default_schema(impl):
     """Creates combined schemas for a bare operator implementation class.
@@ -346,35 +383,37 @@ def get_default_schema(impl):
         Combined schema with properties for hyperparams and
         all applicable method inputs and outputs.
     """
-    if hasattr(impl, '__init__'):
+    if hasattr(impl, "__init__"):
         hyperparams_schema = _get_args_schema(impl.__init__)
     else:
-        hyperparams_schema = {'type': 'object', 'properties': {}}
-    hyperparams_schema['relevantToOptimizer'] = []
-    method_schemas = {'hyperparams': {'allOf': [hyperparams_schema]}}
-    if hasattr(impl, 'fit'):
-        method_schemas['input_fit'] = _get_args_schema(impl.fit)
-    for method_name in ['predict', 'predict_proba', 'transform']:
+        hyperparams_schema = {"type": "object", "properties": {}}
+    hyperparams_schema["relevantToOptimizer"] = []
+    method_schemas = {"hyperparams": {"allOf": [hyperparams_schema]}}
+    if hasattr(impl, "fit"):
+        method_schemas["input_fit"] = _get_args_schema(impl.fit)
+    for method_name in ["predict", "predict_proba", "transform"]:
         if hasattr(impl, method_name):
             method_args_schema = _get_args_schema(getattr(impl, method_name))
-            method_schemas['input_' + method_name] = method_args_schema
-            method_schemas['output_' + method_name] = {'laleType': 'Any'}
+            method_schemas["input_" + method_name] = method_args_schema
+            method_schemas["output_" + method_name] = {"laleType": "Any"}
     tags = {
-        'pre': [],
-        'op': (['transformer'] if hasattr(impl, 'transform') else [])
-            + (['estimator'] if hasattr(impl, 'predict') else []),
-        'post': []}
+        "pre": [],
+        "op": (["transformer"] if hasattr(impl, "transform") else [])
+        + (["estimator"] if hasattr(impl, "predict") else []),
+        "post": [],
+    }
     result = {
-        '$schema': 'http://json-schema.org/draft-04/schema#',
-        'description': f'Schema for {type(impl)} auto-generated by lale.type_checking.get_default_schema().',
-        'type': 'object',
-        'tags': tags,
-        'properties': method_schemas}
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "description": f"Schema for {type(impl)} auto-generated by lale.type_checking.get_default_schema().",
+        "type": "object",
+        "tags": tags,
+        "properties": method_schemas,
+    }
     return result
 
-_data_info_keys = {
-    'laleMaximum': 'maximum',
-    'laleNot': 'not'}
+
+_data_info_keys = {"laleMaximum": "maximum", "laleNot": "not"}
+
 
 def has_data_constraints(hyperparam_schema: JSON_TYPE) -> bool:
     def recursive_check(subject: JSON_TYPE) -> bool:
@@ -387,10 +426,14 @@ def has_data_constraints(hyperparam_schema: JSON_TYPE) -> bool:
                 if k in _data_info_keys or recursive_check(v):
                     return True
         return False
+
     result = recursive_check(hyperparam_schema)
     return result
 
-def replace_data_constraints(hyperparam_schema: JSON_TYPE, data_schema: JSON_TYPE) -> JSON_TYPE:
+
+def replace_data_constraints(
+    hyperparam_schema: JSON_TYPE, data_schema: JSON_TYPE
+) -> JSON_TYPE:
     def recursive_replace(subject: JSON_TYPE) -> JSON_TYPE:
         any_changes = False
         if isinstance(subject, (list, tuple)):
@@ -405,8 +448,7 @@ def replace_data_constraints(hyperparam_schema: JSON_TYPE, data_schema: JSON_TYP
             result = {}
             for k, v in subject.items():
                 if k in _data_info_keys:
-                    new_v = lale.helpers.json_lookup(
-                        'properties/' + v, data_schema)
+                    new_v = lale.helpers.json_lookup("properties/" + v, data_schema)
                     if new_v is None:
                         new_k = k
                         new_v = v
@@ -418,5 +460,6 @@ def replace_data_constraints(hyperparam_schema: JSON_TYPE, data_schema: JSON_TYP
                 result[new_k] = new_v
                 any_changes = any_changes or k != new_k or v is not new_v
         return result if any_changes else subject
+
     result = recursive_replace(hyperparam_schema)
     return result

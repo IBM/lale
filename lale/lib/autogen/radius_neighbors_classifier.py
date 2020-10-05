@@ -165,4 +165,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(RadiusNeighborsClassifierImpl, _combined_schemas)
-RadiusNeighborsClassifier = make_operator(RadiusNeighborsClassifierImpl, _combined_schemas)
+RadiusNeighborsClassifier = make_operator(
+    RadiusNeighborsClassifierImpl, _combined_schemas
+)

@@ -82,19 +82,19 @@ Functions:
 
 from .aggregate import Aggregate
 
-#estimators
+# estimators
 from .auto_pipeline import AutoPipeline
 from .baseline_classifier import BaselineClassifier
 from .baseline_regressor import BaselineRegressor
 
-#transformers
+# transformers
 from .batching import Batching
 
-#estimators and transformers
+# estimators and transformers
 from .both import Both
 from .concat_features import ConcatFeatures
 
-#functions
+# functions
 from .functions import categorical, date_time
 from .grid_search_cv import GridSearchCV
 from .group_by import GroupBy

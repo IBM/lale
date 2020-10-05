@@ -295,4 +295,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(GradientBoostingRegressorImpl, _combined_schemas)
-GradientBoostingRegressor = make_operator(GradientBoostingRegressorImpl, _combined_schemas)
+GradientBoostingRegressor = make_operator(
+    GradientBoostingRegressorImpl, _combined_schemas
+)

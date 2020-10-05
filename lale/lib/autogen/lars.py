@@ -104,12 +104,9 @@ _hyperparams_schema = {
                     "description": "If True the full path is stored in the ``coef_path_`` attribute",
                 },
                 "jitter": {
-                    "anyOf": [
-                        {"type": "number"},
-                        {"enum": [None]},
-                    ],
+                    "anyOf": [{"type": "number"}, {"enum": [None]},],
                     "default": None,
-                    "description": "Upper bound on a uniform noise parameter to be added to the y values, to satisfy the model’s assumption of one-at-a-time computations"
+                    "description": "Upper bound on a uniform noise parameter to be added to the y values, to satisfy the model’s assumption of one-at-a-time computations",
                 },
                 "random_state": {
                     "anyOf": [

@@ -15,13 +15,13 @@
 from typing import Any, Dict, List, Optional, Tuple, TypeVar, Union, cast
 
 
-class Undefined():
+class Undefined:
     pass
 
 
 undefined = Undefined()
 
-T = TypeVar('T')
+T = TypeVar("T")
 Option = Union[Undefined, T]
 
 
@@ -29,171 +29,190 @@ class Schema:
 
     schema: Dict[str, Any]
 
-    def __init__(self,
-                 desc: Option[str] = undefined,
-                 default: Option[Any] = undefined,
-                 forOptimizer: bool = True):
+    def __init__(
+        self,
+        desc: Option[str] = undefined,
+        default: Option[Any] = undefined,
+        forOptimizer: bool = True,
+    ):
         self.schema: Dict[str, Any] = {}
         if not isinstance(default, Undefined):
-            self.schema['default'] = default
+            self.schema["default"] = default
         if not isinstance(desc, Undefined):
-            self.schema['description'] = desc
+            self.schema["description"] = desc
         if not forOptimizer:
-            self.schema['forOptimizer'] = forOptimizer
+            self.schema["forOptimizer"] = forOptimizer
 
     def set(self, prop: str, value: Option[Any]):
         if not isinstance(value, Undefined):
             self.schema[prop] = value
 
 
-#Base Type
+# Base Type
+
 
 class Bool(Schema):
-    def __init__(self,
-                 desc: Option[str] = undefined,
-                 default: Option[bool] = undefined,
-                 forOptimizer: bool = True):
+    def __init__(
+        self,
+        desc: Option[str] = undefined,
+        default: Option[bool] = undefined,
+        forOptimizer: bool = True,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('type', 'boolean')
+        self.set("type", "boolean")
 
 
 class Enum(Schema):
-    def __init__(self,
-                 values: List[str] = [],
-                 desc: Option[str] = undefined,
-                 default: Option[str] = undefined,
-                 forOptimizer: bool = True):
+    def __init__(
+        self,
+        values: List[str] = [],
+        desc: Option[str] = undefined,
+        default: Option[str] = undefined,
+        forOptimizer: bool = True,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('enum', values)
+        self.set("enum", values)
 
 
 class Float(Schema):
-    def __init__(self,
-                 desc: Option[str] = undefined,
-                 default: Option[float] = undefined,
-                 forOptimizer: bool = True,
-                 min: Option[float] = undefined,
-                 exclusiveMin: Option[bool] = undefined,
-                 minForOptimizer: Option[float] = undefined,
-                 max: Option[float] = undefined,
-                 exclusiveMax: Option[bool] = undefined,
-                 maxForOptimizer: Option[float] = undefined,
-                 distribution: Option[str] = undefined):
+    def __init__(
+        self,
+        desc: Option[str] = undefined,
+        default: Option[float] = undefined,
+        forOptimizer: bool = True,
+        min: Option[float] = undefined,
+        exclusiveMin: Option[bool] = undefined,
+        minForOptimizer: Option[float] = undefined,
+        max: Option[float] = undefined,
+        exclusiveMax: Option[bool] = undefined,
+        maxForOptimizer: Option[float] = undefined,
+        distribution: Option[str] = undefined,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('type', 'number')
-        self.set('minimum', min)
-        self.set('exclusiveMinimum', exclusiveMin)
-        self.set('minimumForOptimizer', minForOptimizer)
-        self.set('maximum', max)
-        self.set('exclusiveMaximum', exclusiveMax)
-        self.set('maximumForOptimizer', maxForOptimizer)
-        self.set('distribution', distribution)
+        self.set("type", "number")
+        self.set("minimum", min)
+        self.set("exclusiveMinimum", exclusiveMin)
+        self.set("minimumForOptimizer", minForOptimizer)
+        self.set("maximum", max)
+        self.set("exclusiveMaximum", exclusiveMax)
+        self.set("maximumForOptimizer", maxForOptimizer)
+        self.set("distribution", distribution)
 
 
 class Int(Schema):
-    def __init__(self,
-                 desc: Option[str] = undefined,
-                 default: Option[int] = undefined,
-                 forOptimizer: bool = True,
-                 min: Option[int] = undefined,
-                 exclusiveMin: Option[bool] = undefined,
-                 minForOptimizer: Option[int] = undefined,
-                 max: Option[int] = undefined,
-                 exclusiveMax: Option[bool] = undefined,
-                 maxForOptimizer: Option[int] = undefined,
-                 distribution: Option[str] = undefined):
+    def __init__(
+        self,
+        desc: Option[str] = undefined,
+        default: Option[int] = undefined,
+        forOptimizer: bool = True,
+        min: Option[int] = undefined,
+        exclusiveMin: Option[bool] = undefined,
+        minForOptimizer: Option[int] = undefined,
+        max: Option[int] = undefined,
+        exclusiveMax: Option[bool] = undefined,
+        maxForOptimizer: Option[int] = undefined,
+        distribution: Option[str] = undefined,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('type', 'integer')
-        self.set('minimum', min)
-        self.set('exclusiveMinimum', exclusiveMin)
-        self.set('minimumForOptimizer', minForOptimizer)
-        self.set('maximum', max)
-        self.set('exclusiveMaximum', exclusiveMax)
-        self.set('maximumForOptimizer', maxForOptimizer)
-        self.set('distribution', distribution)
+        self.set("type", "integer")
+        self.set("minimum", min)
+        self.set("exclusiveMinimum", exclusiveMin)
+        self.set("minimumForOptimizer", minForOptimizer)
+        self.set("maximum", max)
+        self.set("exclusiveMaximum", exclusiveMax)
+        self.set("maximumForOptimizer", maxForOptimizer)
+        self.set("distribution", distribution)
 
 
 class Null(Schema):
-    def __init__(self,
-                 desc: Option[str] = undefined,
-                 forOptimizer: bool = True):
+    def __init__(self, desc: Option[str] = undefined, forOptimizer: bool = True):
         super().__init__(desc=desc, forOptimizer=forOptimizer)
-        self.set('enum', [None])
+        self.set("enum", [None])
 
 
 class Not(Schema):
-    def __init__(self,
-                 body: Schema):
+    def __init__(self, body: Schema):
         super().__init__()
-        self.schema = {'not': body.schema}
+        self.schema = {"not": body.schema}
 
 
 class JSON(Schema):
-    def __init__(self,
-                 body: Dict[str, Any]):
+    def __init__(self, body: Dict[str, Any]):
         super().__init__()
         self.schema = body
+
 
 # Combinator
 
 
 class AnyOf(Schema):
-    def __init__(self,
-                 types: List[Schema] = [],
-                 desc: Option[str] = undefined,
-                 default: Option[Any] = undefined):
+    def __init__(
+        self,
+        types: List[Schema] = [],
+        desc: Option[str] = undefined,
+        default: Option[Any] = undefined,
+    ):
         super().__init__(desc, default)
-        self.set('anyOf', [t.schema for t in types])
+        self.set("anyOf", [t.schema for t in types])
 
 
 class AllOf(Schema):
-    def __init__(self,
-                 types: List[Schema] = [],
-                 desc: Option[str] = undefined,
-                 default: Option[Any] = undefined):
+    def __init__(
+        self,
+        types: List[Schema] = [],
+        desc: Option[str] = undefined,
+        default: Option[Any] = undefined,
+    ):
         super().__init__(desc, default)
-        self.set('allOf', [t.schema for t in types])
+        self.set("allOf", [t.schema for t in types])
 
 
 class Array(Schema):
-    def __init__(self,
-                 items: Schema,
-                 desc: Option[str] = undefined,
-                 default: Option[List[Any]] = undefined,
-                 forOptimizer: bool = True,
-                 minItems: Option[int] = undefined,
-                 minItemsForOptimizer: Option[int] = undefined,
-                 maxItems: Option[int] = undefined,
-                 maxItemsForOptimizer: Option[int] = undefined,
-                 laleType: Option[str] = undefined,):
+    def __init__(
+        self,
+        items: Schema,
+        desc: Option[str] = undefined,
+        default: Option[List[Any]] = undefined,
+        forOptimizer: bool = True,
+        minItems: Option[int] = undefined,
+        minItemsForOptimizer: Option[int] = undefined,
+        maxItems: Option[int] = undefined,
+        maxItemsForOptimizer: Option[int] = undefined,
+        laleType: Option[str] = undefined,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('type', 'array')
-        self.set('items', items.schema)
-        self.set('minItems', minItems)
-        self.set('minItemsForOptimizer', minItemsForOptimizer)
-        self.set('maxItems', maxItems)
-        self.set('maxItemsForOptimizer', maxItemsForOptimizer)
-        self.set('laleType', laleType)
+        self.set("type", "array")
+        self.set("items", items.schema)
+        self.set("minItems", minItems)
+        self.set("minItemsForOptimizer", minItemsForOptimizer)
+        self.set("maxItems", maxItems)
+        self.set("maxItemsForOptimizer", maxItemsForOptimizer)
+        self.set("laleType", laleType)
 
 
 class Object(Schema):
-    def __init__(self,
-                 default: Option[Any] = undefined,
-                 desc: Option[str] = undefined,
-                 forOptimizer: bool = True,
-                 required: Option[List[str]] = undefined,
-                 additionalProperties: Option[bool] = undefined,
-                 **kwargs: Schema):
+    def __init__(
+        self,
+        default: Option[Any] = undefined,
+        desc: Option[str] = undefined,
+        forOptimizer: bool = True,
+        required: Option[List[str]] = undefined,
+        additionalProperties: Option[bool] = undefined,
+        **kwargs: Schema
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('type', 'object')
-        self.set('required', required)
-        self.set('additionalProperties', additionalProperties)
-        self.set('properties', {k: p.schema for (k, p) in kwargs.items()})
+        self.set("type", "object")
+        self.set("required", required)
+        self.set("additionalProperties", additionalProperties)
+        self.set("properties", {k: p.schema for (k, p) in kwargs.items()})
+
 
 class String(Schema):
-    def __init__(self,
-                desc: Option[str] = undefined,
-                default: Option[str] = undefined,
-                forOptimizer: bool = False):
+    def __init__(
+        self,
+        desc: Option[str] = undefined,
+        default: Option[str] = undefined,
+        forOptimizer: bool = False,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('type', 'string')
+        self.set("type", "string")

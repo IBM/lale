@@ -226,4 +226,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(PassiveAggressiveRegressorImpl, _combined_schemas)
-PassiveAggressiveRegressor = make_operator(PassiveAggressiveRegressorImpl, _combined_schemas)
+PassiveAggressiveRegressor = make_operator(
+    PassiveAggressiveRegressorImpl, _combined_schemas
+)

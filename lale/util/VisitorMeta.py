@@ -26,6 +26,7 @@ class VisitorMeta(object):
         explicitly.
         The private _accept method should be called via the Visitor#acccept method
     """
+
     def __init__(cls, *args, **kwargs):
         super(VisitorMeta, cls).__init__(*args, **kwargs)
         selector = """
@@ -37,17 +38,23 @@ class VisitorMeta(object):
             raise
         except BaseException as e:
             raise VisitorPathError([self]) from e
-        """.format(cls.__name__)
-        _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(selector)
+        """.format(
+            cls.__name__
+        )
+        _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(
+            selector
+        )
         l = {}
         exec(_accept_code, globals(), l)
         setattr(cls, "_accept", l["_accept"])
 
+
 if sys.version_info < (3, 7, 0):
-    from typing import GenericMeta  # type: ignore 
+    from typing import GenericMeta  # type: ignore
 else:
-    global GenericMeta 
-    GenericMeta = ABCMeta # type: ignore 
+    global GenericMeta
+    GenericMeta = ABCMeta  # type: ignore
+
 
 class AbstractVisitorMeta(VisitorMeta, GenericMeta):
     """ This meta class adds an _accept method that calls visitCLASSNAME on the visitor.
@@ -55,5 +62,6 @@ class AbstractVisitorMeta(VisitorMeta, GenericMeta):
         explicitly.
         The private _accept method should be called via the Visitor#acccept method.
     """
+
     def __init__(cls, *args, **kwargs):
         super(AbstractVisitorMeta, cls).__init__(*args, **kwargs)

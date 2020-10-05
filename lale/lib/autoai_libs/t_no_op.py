@@ -18,15 +18,18 @@ import lale.docstrings
 import lale.operators
 
 
-class TNoOpImpl():
+class TNoOpImpl:
     def __init__(self, fun, name, datatypes, feat_constraints, tgraph=None):
         self._hyperparams = {
-            'fun': fun,
-            'name': name,
-            'datatypes': datatypes,
-            'feat_constraints': feat_constraints,
-            'tgraph': tgraph}
-        self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TNoOp(**self._hyperparams)
+            "fun": fun,
+            "name": name,
+            "datatypes": datatypes,
+            "feat_constraints": feat_constraints,
+            "tgraph": tgraph,
+        }
+        self._wrapped_model = autoai_libs.cognito.transforms.transform_utils.TNoOp(
+            **self._hyperparams
+        )
 
     def fit(self, X, y=None, **fit_params):
         self._wrapped_model.fit(X, y, **fit_params)
@@ -36,75 +39,84 @@ class TNoOpImpl():
         result = self._wrapped_model.transform(X)
         return result
 
+
 _hyperparams_schema = {
-    'allOf': [{
-        'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['fun', 'name', 'datatypes', 'feat_constraints', 'tgraph'],
-        'relevantToOptimizer': [],
-        'properties': {
-            'fun': {
-                'description': 'Function pointer (ignored).',
-                'laleType': 'Any',
-                'default': None},
-            'name': {
-                'description': 'A string name that uniquely identifies this transformer from others.',
-                'anyOf': [
-                {   'type': 'string'},
-                {   'enum': [None]}],
-                'default': None},
-            'datatypes': {
-                'description': 'List of datatypes that are valid input (ignored).',
-                'laleType': 'Any',
-                'default': None},
-            'feat_constraints': {
-                'description': 'Constraints that must be satisfied by a column to be considered a valid input to this transform (ignored).',
-                'laleType': 'Any',
-                'default': None},
-            'tgraph': {
-                'description': 'Should be the invoking TGraph() object.',
-                'anyOf': [
-                {   'laleType': 'Any'},
-                {   'enum': [None]}],
-                'default': None}}}]}
+    "allOf": [
+        {
+            "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["fun", "name", "datatypes", "feat_constraints", "tgraph"],
+            "relevantToOptimizer": [],
+            "properties": {
+                "fun": {
+                    "description": "Function pointer (ignored).",
+                    "laleType": "Any",
+                    "default": None,
+                },
+                "name": {
+                    "description": "A string name that uniquely identifies this transformer from others.",
+                    "anyOf": [{"type": "string"}, {"enum": [None]}],
+                    "default": None,
+                },
+                "datatypes": {
+                    "description": "List of datatypes that are valid input (ignored).",
+                    "laleType": "Any",
+                    "default": None,
+                },
+                "feat_constraints": {
+                    "description": "Constraints that must be satisfied by a column to be considered a valid input to this transform (ignored).",
+                    "laleType": "Any",
+                    "default": None,
+                },
+                "tgraph": {
+                    "description": "Should be the invoking TGraph() object.",
+                    "anyOf": [{"laleType": "Any"}, {"enum": [None]}],
+                    "default": None,
+                },
+            },
+        }
+    ]
+}
 
 _input_fit_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {'description': 'Features; no restrictions on data type.'},
-        'y': {'laleType': 'Any'}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {"description": "Features; no restrictions on data type."},
+        "y": {"laleType": "Any"},
+    },
+}
 
 _input_transform_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {'description': 'Features; no restrictions on data type.'}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {"X": {"description": "Features; no restrictions on data type."}},
+}
 
 _output_transform_schema = {
-    'description': 'Features; no restrictions on data type.',
-    'laleType': 'Any'}
+    "description": "Features; no restrictions on data type.",
+    "laleType": "Any",
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Passes the data through unchanged.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """Operator from `autoai_libs`_. Passes the data through unchanged.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.t_no_op.html',
-    'import_from': 'autoai_libs.cognito.transforms.transform_utils',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_transform': _input_transform_schema,
-        'output_transform': _output_transform_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.t_no_op.html",
+    "import_from": "autoai_libs.cognito.transforms.transform_utils",
+    "type": "object",
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(TNoOpImpl, _combined_schemas)
 

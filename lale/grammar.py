@@ -18,81 +18,84 @@ from lale.sklearn_compat import clone_op
 class NonTerminal(Operator):
     """ Abstract operator for non-terminal grammar rules.
     """
+
     def __init__(self, name):
         self._name = name
-        
+
     def _lale_clone(self, cloner):
         return NonTerminal(self.name())
-    
+
     def _has_same_impl(self):
         pass
-    
+
     def is_supervised(self):
         return False
 
     def validate_schema(self, X, y=None):
-        raise NotImplementedError() #TODO
+        raise NotImplementedError()  # TODO
 
     def transform_schema(self, s_X):
-        raise NotImplementedError() #TODO
+        raise NotImplementedError()  # TODO
 
     def input_schema_fit(self):
-        raise NotImplementedError() #TODO
+        raise NotImplementedError()  # TODO
 
-    def freeze_trainable(self)->'Operator':
-        raise NotImplementedError() #TODO
+    def freeze_trainable(self) -> "Operator":
+        raise NotImplementedError()  # TODO
 
-    def is_frozen_trainable(self)->bool:
-        raise NotImplementedError() #TODO
+    def is_frozen_trainable(self) -> bool:
+        raise NotImplementedError()  # TODO
 
-    def is_classifier(self)->bool:
-        return False #TODO
-        
+    def is_classifier(self) -> bool:
+        return False  # TODO
+
+
 class Grammar(Operator):
     """ Base class for Lale grammars.
     """
+
     def __init__(self):
         self._variables = {}
 
     def __getattr__(self, name):
-        if name.startswith('_'):
+        if name.startswith("_"):
             return self.__dict__[name]
         if name not in self._variables:
             self._variables[name] = NonTerminal(name)
         return clone_op(self._variables[name])
-        
+
     def __setattr__(self, name, value):
-        if name.startswith('_'):
+        if name.startswith("_"):
             self.__dict__[name] = value
         else:
             self._variables[name] = value
-            
+
     def _lale_clone(self):
         pass
-    
+
     def _has_same_impl(self):
         pass
-    
+
     def is_supervised(self):
         return False
-            
+
     def validate_schema(self, X, y=None):
-        raise NotImplementedError() #TODO
+        raise NotImplementedError()  # TODO
 
     def transform_schema(self, s_X):
-        raise NotImplementedError() #TODO
+        raise NotImplementedError()  # TODO
 
     def input_schema_fit(self):
-        raise NotImplementedError() #TODO
+        raise NotImplementedError()  # TODO
 
-    def freeze_trainable(self)->'Operator':
-        raise NotImplementedError() #TODO
+    def freeze_trainable(self) -> "Operator":
+        raise NotImplementedError()  # TODO
 
-    def is_frozen_trainable(self)->bool:
-        raise NotImplementedError() #TODO
+    def is_frozen_trainable(self) -> bool:
+        raise NotImplementedError()  # TODO
 
-    def is_classifier(self)->bool:
-        raise NotImplementedError() #TODO
+    def is_classifier(self) -> bool:
+        raise NotImplementedError()  # TODO
 
     def _unfold(self, op: Operator, n: int) -> Optional[Operator]:
         """ Unroll all possible operators from the grammar `g` starting from    non-terminal `op` after `n` derivations.
@@ -120,11 +123,11 @@ class Grammar(Operator):
             steps = [s for s in (self._unfold(sop, n) for sop in op.steps()) if s]
             return make_choice(*steps) if steps else None
         if isinstance(op, NonTerminal):
-            return self._unfold(self._variables[op.name()], n-1) if n > 0 else None
+            return self._unfold(self._variables[op.name()], n - 1) if n > 0 else None
         if isinstance(op, IndividualOp):
             return op
         assert False, f"Unknown operator {op}"
-                
+
     def unfold(self, n: int) -> PlannedOperator:
         """
         Explore the grammar `g` starting from `g.start` and generate all possible   choices after `n` derivations.
@@ -140,10 +143,10 @@ class Grammar(Operator):
         -------
         PlannedOperator
         """
-        assert hasattr(self, 'start'), "Rule start must be defined"
+        assert hasattr(self, "start"), "Rule start must be defined"
         op = self._unfold(self.start, n)
         return make_pipeline(op) if op else NoOp
-    
+
     def _sample(self, op: Operator, n: int) -> Optional[Operator]:
         """
         Sample the grammar `g` starting from `g.start`, that is, choose one element at random for each possible choices.
@@ -170,11 +173,11 @@ class Grammar(Operator):
         if isinstance(op, OperatorChoice):
             return self._sample(random.choice(op.steps()), n)
         if isinstance(op, NonTerminal):
-            return self._sample(getattr(self, op.name()), n-1) if n > 0 else None
+            return self._sample(getattr(self, op.name()), n - 1) if n > 0 else None
         if isinstance(op, IndividualOp):
             return op
         assert False, f"Unknown operator {op}"
-            
+
     def sample(self, n: int) -> PlannedOperator:
         """
         Sample the grammar `g` starting from `g.start`, that is, choose one element at random for each possible choices.
@@ -188,6 +191,6 @@ class Grammar(Operator):
         -------
         PlannedOperator
         """
-        assert hasattr(self, 'start'), "Rule start must be defined"
+        assert hasattr(self, "start"), "Rule start must be defined"
         op = self._sample(self.start, n)
         return make_pipeline(op) if op else NoOp

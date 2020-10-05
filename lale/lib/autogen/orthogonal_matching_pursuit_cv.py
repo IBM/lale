@@ -160,4 +160,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(OrthogonalMatchingPursuitCVImpl, _combined_schemas)
-OrthogonalMatchingPursuitCV = make_operator(OrthogonalMatchingPursuitCVImpl, _combined_schemas)
+OrthogonalMatchingPursuitCV = make_operator(
+    OrthogonalMatchingPursuitCVImpl, _combined_schemas
+)

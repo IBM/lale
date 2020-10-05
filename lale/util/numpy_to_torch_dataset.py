@@ -15,10 +15,13 @@
 try:
     from torch.utils.data import Dataset
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("""Your Python environment does not have torch installed. You can install it with 
+    raise ModuleNotFoundError(
+        """Your Python environment does not have torch installed. You can install it with 
                                 pip install torch
                                 or with
-                                    pip install 'lale[full]'""")
+                                    pip install 'lale[full]'"""
+    )
+
 
 class NumpyTorchDataset(Dataset):
     """Pytorch Dataset subclass that takes a numpy array and an optional label array."""
@@ -50,4 +53,4 @@ class NumpyTorchDataset(Dataset):
         if self.y is None:
             return self.X
         else:
-            return self.X, self.y                
+            return self.X, self.y

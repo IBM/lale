@@ -17,24 +17,24 @@ from typing import Any, Iterator, List, Optional
 
 class VisitorPathError(ValueError):
 
-    _path:List[Any]
+    _path: List[Any]
 
-    def __init__(self, path:List[Any], message:Optional[str]=None):
+    def __init__(self, path: List[Any], message: Optional[str] = None):
         super().__init__(message)
 
         self._path = path
 
-    def push_parent_path(self, part:Any)->None:
+    def push_parent_path(self, part: Any) -> None:
         self._path.append(part)
 
     @property
-    def path(self)->Iterator[Any]:
+    def path(self) -> Iterator[Any]:
         return reversed(self._path)
 
-    def get_message_str(self)->str:
+    def get_message_str(self) -> str:
         return super().__str__()
 
-    def path_string(self)->str:
+    def path_string(self) -> str:
         return "->".join(map(str, self.path))
 
     def __str__(self):

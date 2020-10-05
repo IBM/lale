@@ -20,15 +20,16 @@ class Visitor(object):
         raise NotImplementedError
 
     def __getattr__(self, attr):
-        if attr.startswith('visit'):
+        if attr.startswith("visit"):
             return self.defaultVisit
         return self.__getattribute__(attr)
 
     def _visitAll(self, iterable, *args, **kwargs):
         filter = lambda x: (x is not None) or None
-        return [filter(x) and accept(x, self, *args, **kwargs) for x in iterable ]
+        return [filter(x) and accept(x, self, *args, **kwargs) for x in iterable]
+
 
 # Because of the magic way we add accept methods, mypy does not know they exist
 # so this method is important for accept calls to typecheck
-def accept(obj:Any, v:Visitor, *args, **kwargs):
+def accept(obj: Any, v: Visitor, *args, **kwargs):
     return obj._accept(v, *args, **kwargs)

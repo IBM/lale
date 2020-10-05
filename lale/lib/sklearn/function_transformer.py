@@ -17,11 +17,12 @@ import sklearn.preprocessing
 import lale.operators
 
 
-class FunctionTransformerImpl():
+class FunctionTransformerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.FunctionTransformer(
-            **self._hyperparams)
+            **self._hyperparams
+        )
 
     def fit(self, X, y=None):
         if y is not None:
@@ -33,120 +34,145 @@ class FunctionTransformerImpl():
     def transform(self, X):
         return self._wrapped_model.transform(X)
 
+
 _hyperparams_schema = {
-    'allOf': [
-    {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['func', 'inverse_func', 'validate', 'accept_sparse', 'pass_y', 'check_inverse', 'kw_args', 'inv_kw_args'],
-        'relevantToOptimizer': [],
-        'properties': {
-            'func': {
-                'anyOf': [
-                {   'laleType': 'callable'},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'The callable to use for the transformation.'},
-            'inverse_func': {
-                'anyOf': [
-                {   'laleType': 'callable'},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'The callable to use for the inverse transformation.'},
-            'validate': {
-                'type': 'boolean',
-                'default': True,
-                'description': 'Indicate that the input X array should be checked before calling ``func``.'},
-            'accept_sparse': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'Indicate that func accepts a sparse matrix as input.'},
-            'pass_y': {
-                'anyOf': [{
-                    'type': 'boolean'}, {
-                    'enum': ['deprecated']}],
-                'default': 'deprecated',
-                'description': 'Indicate that transform should forward the y argument to the inner callable.'},
-            'check_inverse': {
-                'type': 'boolean',
-                'default': True,
-                'description': 'Whether to check that or ``func`` followed by ``inverse_func`` leads to the original inputs.'},
-            'kw_args': {
-                'anyOf': [
-                {   'type': 'object'},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'Dictionary of additional keyword arguments to pass to func.'},
-            'inv_kw_args': {
-                'anyOf': [
-                {   'type': 'object'},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'Dictionary of additional keyword arguments to pass to inverse_func.'}}},
-    {   'description': 'If validate is False, then accept_sparse has no effect.',
-        'anyOf': [
-        {   'type': 'object',
-            'properties': {'validate': {'not': {'enum': [False]}}}},
-        {   'type': 'object',
-            'properties': {'accept_sparse': {'enum': [False]}}}]}]}
+    "allOf": [
+        {
+            "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "func",
+                "inverse_func",
+                "validate",
+                "accept_sparse",
+                "pass_y",
+                "check_inverse",
+                "kw_args",
+                "inv_kw_args",
+            ],
+            "relevantToOptimizer": [],
+            "properties": {
+                "func": {
+                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "The callable to use for the transformation.",
+                },
+                "inverse_func": {
+                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "The callable to use for the inverse transformation.",
+                },
+                "validate": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Indicate that the input X array should be checked before calling ``func``.",
+                },
+                "accept_sparse": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Indicate that func accepts a sparse matrix as input.",
+                },
+                "pass_y": {
+                    "anyOf": [{"type": "boolean"}, {"enum": ["deprecated"]}],
+                    "default": "deprecated",
+                    "description": "Indicate that transform should forward the y argument to the inner callable.",
+                },
+                "check_inverse": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Whether to check that or ``func`` followed by ``inverse_func`` leads to the original inputs.",
+                },
+                "kw_args": {
+                    "anyOf": [{"type": "object"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Dictionary of additional keyword arguments to pass to func.",
+                },
+                "inv_kw_args": {
+                    "anyOf": [{"type": "object"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Dictionary of additional keyword arguments to pass to inverse_func.",
+                },
+            },
+        },
+        {
+            "description": "If validate is False, then accept_sparse has no effect.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"validate": {"not": {"enum": [False]}}},
+                },
+                {"type": "object", "properties": {"accept_sparse": {"enum": [False]}}},
+            ],
+        },
+    ]
+}
 
 _input_fit_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'anyOf':[{'type': 'number'}, {'type':'string'}]}}},
-        'y': {'laleType': 'Any'}}}
+    "type": "object",
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        },
+        "y": {"laleType": "Any"},
+    },
+}
 
 _input_transform_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'anyOf':[{'type': 'number'}, {'type':'string'}]}}}}}
+    "type": "object",
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        }
+    },
+}
 
-_output_transform_schema = {
-    'type': 'array',
-    'items': {'laleType': 'Any'}}
+_output_transform_schema = {"type": "array", "items": {"laleType": "Any"}}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """FunctionTransformer_ from scikit-learn constructs a transformer from an arbitrary callable that operates at the level of an entire dataset.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """FunctionTransformer_ from scikit-learn constructs a transformer from an arbitrary callable that operates at the level of an entire dataset.
 
 .. _FunctionTransformer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.function_transformer.html',
-    'import_from': 'sklearn.preprocessing',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_transform': _input_transform_schema,
-        'output_transform': _output_transform_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.function_transformer.html",
+    "import_from": "sklearn.preprocessing",
+    "type": "object",
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
-FunctionTransformer : lale.operators.IndividualOp
-FunctionTransformer = lale.operators.make_operator(FunctionTransformerImpl, _combined_schemas)
+FunctionTransformer: lale.operators.IndividualOp
+FunctionTransformer = lale.operators.make_operator(
+    FunctionTransformerImpl, _combined_schemas
+)
 
-if sklearn.__version__ >= '0.22':
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.FunctionTransformer.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.FunctionTransformer.html
     from lale.schemas import Bool
+
     FunctionTransformer = FunctionTransformer.customize_schema(
         validate=Bool(
-            desc='Indicate that the input X array should be checked before calling ``func``.',
-            default=False),
-        pass_y=None)
+            desc="Indicate that the input X array should be checked before calling ``func``.",
+            default=False,
+        ),
+        pass_y=None,
+    )
 
 lale.docstrings.set_docstrings(FunctionTransformerImpl, FunctionTransformer._schemas)

@@ -126,4 +126,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(TransformedTargetRegressorImpl, _combined_schemas)
-TransformedTargetRegressor = make_operator(TransformedTargetRegressorImpl, _combined_schemas)
+TransformedTargetRegressor = make_operator(
+    TransformedTargetRegressorImpl, _combined_schemas
+)

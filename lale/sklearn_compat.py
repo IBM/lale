@@ -22,7 +22,7 @@ from lale.pretty_print import hyperparams_to_string
 from lale.search.PGO import remove_defaults_dict
 from lale.util.Visitor import Visitor, accept
 
-# We support an argument encoding schema intended to be a 
+# We support an argument encoding schema intended to be a
 # conservative extension to sklearn's encoding schema
 # sklearn uses __ to separate elements in a hierarchy
 # (pipeline's have operators that have keys)
@@ -49,7 +49,7 @@ from lale.util.Visitor import Visitor, accept
 
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
-def make_sklearn_compat(op:Ops.Operator)->'SKlearnCompatWrapper':
+def make_sklearn_compat(op: Ops.Operator) -> "SKlearnCompatWrapper":
     """Top level function for providing compatibiltiy with sklearn operations
        This returns a wrapper around the provided sklearn operator graph which can be passed
        to sklearn methods such as clone and GridSearchCV
@@ -61,20 +61,25 @@ def make_sklearn_compat(op:Ops.Operator)->'SKlearnCompatWrapper':
     """
     return SKlearnCompatWrapper.make_wrapper(op)
 
-def sklearn_compat_clone(impl:Any)->Any:
+
+def sklearn_compat_clone(impl: Any) -> Any:
     if impl is None:
         return None
-    
+
     from sklearn.base import clone
+
     cp = clone(impl, safe=False)
     return cp
 
-def clone_lale(op:Ops.Operator)->Ops.Operator:
+
+def clone_lale(op: Ops.Operator) -> Ops.Operator:
     return op._lale_clone(sklearn_compat_clone)
+
 
 class WithoutGetParams(object):
     """ This wrapper forwards everything except "get_attr" to what it is wrapping
     """
+
     def __init__(self, base):
         self._base = base
         assert self._base != self
@@ -83,33 +88,36 @@ class WithoutGetParams(object):
         # This is needed because in python copy skips calling the __init__ method
         if name == "_base":
             raise AttributeError
-        if name == 'get_params':
+        if name == "get_params":
             raise AttributeError
-        if name in ['__getstate__', '__setstate__', '__repr__']:
+        if name in ["__getstate__", "__setstate__", "__repr__"]:
             raise AttributeError
         else:
             return getattr(self._base, name)
-    
+
     @classmethod
-    def clone_wgp(cls, obj:'WithoutGetParams')->'WithoutGetParams':
+    def clone_wgp(cls, obj: "WithoutGetParams") -> "WithoutGetParams":
         while isinstance(obj, WithoutGetParams):
             obj = obj._base
         assert isinstance(obj, Ops.Operator)
         return WithoutGetParams(clone_lale(obj))
 
     def __str__(self):
-        b = getattr(self, '_base', None)
-        s:str
+        b = getattr(self, "_base", None)
+        s: str
         if b is None:
             s = ""
         else:
-            s = str(b)       
+            s = str(b)
         return f"WGP<{s}>"
 
-def partition_sklearn_params(d:Dict[str, Any])->Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
-    sub_parts:Dict[str, Dict[str, Any]] = {}
-    main_parts:Dict[str,Any] = {}
-    
+
+def partition_sklearn_params(
+    d: Dict[str, Any]
+) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    sub_parts: Dict[str, Dict[str, Any]] = {}
+    main_parts: Dict[str, Any] = {}
+
     for k, v in d.items():
         ks = k.split("__", 1)
         if len(ks) == 1:
@@ -117,9 +125,9 @@ def partition_sklearn_params(d:Dict[str, Any])->Tuple[Dict[str, Any], Dict[str, 
             main_parts[k] = v
         else:
             assert len(ks) == 2
-            bucket:Dict[str, Any] = {}
-            group:str = ks[0]
-            param:str = ks[1]
+            bucket: Dict[str, Any] = {}
+            group: str = ks[0]
+            param: str = ks[1]
             if group in sub_parts:
                 bucket = sub_parts[group]
             else:
@@ -128,9 +136,10 @@ def partition_sklearn_params(d:Dict[str, Any])->Tuple[Dict[str, Any], Dict[str, 
             bucket[param] = v
     return (main_parts, sub_parts)
 
-def partition_sklearn_choice_params(d:Dict[str, Any])->Tuple[int, Dict[str, Any]]:
-    discriminant_value:int = -1
-    choice_parts:Dict[str,Any] = {}
+
+def partition_sklearn_choice_params(d: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    discriminant_value: int = -1
+    choice_parts: Dict[str, Any] = {}
 
     for k, v in d.items():
         if k == discriminant_name:
@@ -142,27 +151,30 @@ def partition_sklearn_choice_params(d:Dict[str, Any])->Tuple[int, Dict[str, Any]
     assert discriminant_value != -1
     return (discriminant_value, choice_parts)
 
-DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:str = "$"
-discriminant_name:str = "?"
-choice_prefix:str = "?"
-structure_type_name:str = "#"
-structure_type_list:str = "list"
-structure_type_tuple:str = "tuple"
-structure_type_dict:str = "dict"
+
+DUMMY_SEARCH_SPACE_GRID_PARAM_NAME: str = "$"
+discriminant_name: str = "?"
+choice_prefix: str = "?"
+structure_type_name: str = "#"
+structure_type_list: str = "list"
+structure_type_tuple: str = "tuple"
+structure_type_dict: str = "dict"
 
 
-def get_name_and_index(name:str)->Tuple[str,int]:
+def get_name_and_index(name: str) -> Tuple[str, int]:
     """ given a name of the form "name@i", returns (name, i)
         if given a name of the form "name", returns (name, 0)
     """
-    splits = name.split("@",1)
+    splits = name.split("@", 1)
     if len(splits) == 1:
         return splits[0], 0
     else:
         return splits[0], int(splits[1])
 
+
 def make_degen_indexed_name(name, index):
     return f"{name}@{index}"
+
 
 def make_indexed_name(name, index):
     if index == 0:
@@ -170,11 +182,13 @@ def make_indexed_name(name, index):
     else:
         return f"{name}@{index}"
 
-def make_array_index_name(index, is_tuple:bool=False):
+
+def make_array_index_name(index, is_tuple: bool = False):
     sep = "##" if is_tuple else "#"
     return f"{sep}{str(index)}"
 
-def is_numeric_structure(structure_type:str):
+
+def is_numeric_structure(structure_type: str):
 
     if structure_type == "list" or structure_type == "tuple":
         return True
@@ -183,7 +197,8 @@ def is_numeric_structure(structure_type:str):
     else:
         assert False, f"Unknown structure type {structure_type} found"
 
-def set_structured_params(k, params:Dict[str, Any], hyper_parent):
+
+def set_structured_params(k, params: Dict[str, Any], hyper_parent):
     # need to handle the different encoding schemes used
     if params is None:
         return None
@@ -198,13 +213,13 @@ def set_structured_params(k, params:Dict[str, Any], hyper_parent):
         elif isinstance(hyper_parent, list) and k < len(hyper_parent):
             hyper = hyper_parent[k]
         if hyper is None:
-                hyper = {}
+            hyper = {}
         elif isinstance(hyper, tuple):
             # to make it mutable
             hyper = list(hyper)
 
         del type_params[structure_type_name]
-        actual_key:Union[str,int]
+        actual_key: Union[str, int]
         for elem_key, elem_value in type_params.items():
             if elem_value is not None:
                 if not isinstance(hyper, dict):
@@ -222,7 +237,7 @@ def set_structured_params(k, params:Dict[str, Any], hyper_parent):
                 actual_key = elem_key
             set_structured_params(actual_key, elem_params, hyper)
         if isinstance(hyper, dict) and is_numeric_structure(structure_type):
-            max_key = max(map(int,hyper.keys()))
+            max_key = max(map(int, hyper.keys()))
             hyper = [hyper.get(str(x), None) for x in range(max_key)]
         if structure_type == "tuple":
             hyper = tuple(hyper)
@@ -242,7 +257,8 @@ def set_structured_params(k, params:Dict[str, Any], hyper_parent):
         trainable_sub_op = set_operator_params(sub_op, **params)
         hyper_parent[k] = trainable_sub_op
 
-def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
+
+def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperator:
     """May return a new operator, in which case the old one should be overwritten
     """
     if isinstance(op, Ops.PlannedIndividualOp):
@@ -254,26 +270,26 @@ def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
         for sub_key, sub_params in partitioned_sub_params.items():
             set_structured_params(sub_key, sub_params, hyper)
 
-         # we have now updated any nested operators
-         # (if this is a higher order operator)
-         # and can work on the main operator
+        # we have now updated any nested operators
+        # (if this is a higher order operator)
+        # and can work on the main operator
         all_params = {**main_params, **hyper}
         return op.set_params(**all_params)
     elif isinstance(op, Ops.BasePipeline):
         steps = op.steps()
         main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
         assert not main_params, f"Unexpected non-nested arguments {main_params}"
-        found_names:Dict[str, int] = {}
-        step_map:Dict[Ops.Operator, Ops.TrainableOperator] = {}
+        found_names: Dict[str, int] = {}
+        step_map: Dict[Ops.Operator, Ops.TrainableOperator] = {}
         for s in steps:
             name = s.name()
             name_index = 0
-            params:Dict[str, Any] = {}
+            params: Dict[str, Any] = {}
             if name in found_names:
                 name_index = found_names[name] + 1
                 found_names[name] = name_index
                 uname = make_indexed_name(name, name_index)
-                if uname  in partitioned_sub_params:
+                if uname in partitioned_sub_params:
                     params = partitioned_sub_params[uname]
             else:
                 found_names[name] = 0
@@ -289,7 +305,7 @@ def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
         # make sure that no parameters were passed in for operations
         # that are not actually part of this pipeline
         for k in partitioned_sub_params.keys():
-            n,i = get_name_and_index(k)
+            n, i = get_name_and_index(k)
             assert n in found_names and i <= found_names[n]
         if step_map:
             op._subst_steps(step_map)
@@ -306,16 +322,16 @@ def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
             return op
     elif isinstance(op, Ops.OperatorChoice):
         choices = op.steps()
-        choice_index:int
-        choice_params:Dict[str, Any]
-        if len(choices)==1:
+        choice_index: int
+        choice_params: Dict[str, Any]
+        if len(choices) == 1:
             choice_index = 0
             chosen_params = impl_params
         else:
             (choice_index, chosen_params) = partition_sklearn_choice_params(impl_params)
 
         assert 0 <= choice_index and choice_index < len(choices)
-        choice:Ops.Operator = choices[choice_index]
+        choice: Ops.Operator = choices[choice_index]
 
         new_step = set_operator_params(choice, **chosen_params)
         # we remove the OperatorChoice, replacing it with the branch that was taken
@@ -323,14 +339,15 @@ def set_operator_params(op:Ops.Operator, **impl_params)->Ops.TrainableOperator:
     else:
         assert False, f"Not yet supported operation of type: {op.__class__.__name__}"
 
+
 class SKlearnCompatWrapper(object):
-    _base:WithoutGetParams
+    _base: WithoutGetParams
     # This is used to trick clone into leaving us alone
-    _old_params_for_clone:Optional[Dict[str, Any]]
+    _old_params_for_clone: Optional[Dict[str, Any]]
 
     @classmethod
-    def make_wrapper(cls, base:Ops.Operator):
-        b:Any = base
+    def make_wrapper(cls, base: Ops.Operator):
+        b: Any = base
         if isinstance(base, SKlearnCompatWrapper):
             return base
         elif not isinstance(base, WithoutGetParams):
@@ -338,10 +355,10 @@ class SKlearnCompatWrapper(object):
         return cls(__lale_wrapper_init_base=b)
 
     def __init__(self, **kwargs):
-        if '__lale_wrapper_init_base' in kwargs:
+        if "__lale_wrapper_init_base" in kwargs:
             # if we are being called by make_wrapper
             # then we don't need to make a copy
-            self._base = kwargs['__lale_wrapper_init_base']
+            self._base = kwargs["__lale_wrapper_init_base"]
             self._old_params_for_clone = None
 
         else:
@@ -351,22 +368,22 @@ class SKlearnCompatWrapper(object):
         assert self._base != self
 
     def init_params_internal(self, **kwargs):
-        op = kwargs['__lale_wrapper_base']
+        op = kwargs["__lale_wrapper_base"]
         self._base = WithoutGetParams.clone_wgp(op)
         self._old_params_for_clone = kwargs
 
-    def get_params_internal(self, out:Dict[str,Any]):
-        out['__lale_wrapper_base'] = self._base
+    def get_params_internal(self, out: Dict[str, Any]):
+        out["__lale_wrapper_base"] = self._base
 
     def set_params_internal(self, **impl_params):
-        self._base = impl_params['__lale_wrapper_base']
+        self._base = impl_params["__lale_wrapper_base"]
         assert self._base != self
 
     def fixup_params_internal(self, **params):
         return params
 
-    def to_lale(self)->Ops.Operator:
-        cur:Any = self
+    def to_lale(self) -> Ops.Operator:
+        cur: Any = self
         assert cur != None
         assert cur._base != None
         cur = cur._base
@@ -406,11 +423,9 @@ class SKlearnCompatWrapper(object):
             except AttributeError:
                 raise e
 
-
-
-    def get_params(self, deep:bool = True)->Dict[str,Any]:
+    def get_params(self, deep: bool = True) -> Dict[str, Any]:
         # TODO: We currently ignore deep
-        out:Dict[str,Any] = {}
+        out: Dict[str, Any] = {}
         if self._old_params_for_clone is not None:
             # lie to clone to make it happy
             params = self._old_params_for_clone
@@ -421,7 +436,7 @@ class SKlearnCompatWrapper(object):
         return out
 
     def fit(self, X, y=None, **fit_params):
-        if hasattr(self._base, 'fit'):
+        if hasattr(self._base, "fit"):
             filtered_params = remove_defaults_dict(fit_params)
             return self._base.fit(X, y=y, **filtered_params)
         else:
@@ -429,7 +444,7 @@ class SKlearnCompatWrapper(object):
 
     def set_params(self, **impl_params):
 
-        if '__lale_wrapper_base' in impl_params:
+        if "__lale_wrapper_base" in impl_params:
             self.set_params_internal(**impl_params)
         else:
             prev = self
@@ -448,14 +463,14 @@ class SKlearnCompatWrapper(object):
             if not isinstance(new_s, Ops.TrainableOperator):
                 assert False
             if new_s != cur:
-                prev._base = new_s                
+                prev._base = new_s
         return self
 
-    def hyperparam_defaults(self)->Dict[str,Any]:
+    def hyperparam_defaults(self) -> Dict[str, Any]:
         return DefaultsVisitor.run(self.to_lale())
 
-    def _final_individual_op(self)->Optional[Ops.IndividualOp]:
-        op:Optional[Ops.Operator] = self.to_lale()
+    def _final_individual_op(self) -> Optional[Ops.IndividualOp]:
+        op: Optional[Ops.Operator] = self.to_lale()
         while op is not None and isinstance(op, Ops.BasePipeline):
             op = op._get_last()
         if op is not None and not isinstance(op, Ops.IndividualOp):
@@ -464,17 +479,17 @@ class SKlearnCompatWrapper(object):
 
     @property
     def _final_estimator(self):
-        op:Optional[Ops.IndividualOp] = self._final_individual_op()
+        op: Optional[Ops.IndividualOp] = self._final_individual_op()
         model = None
         if op is not None:
             # if fit was called, we want to use trained result
             # even if the code uses the original operrator
             # since sklearn assumes that fit mutates the operator
-            if hasattr(op, '_trained'):
+            if hasattr(op, "_trained"):
                 op = op._trained
-            if hasattr(op, '_impl') and hasattr(op._impl_instance(), '_wrapped_model'):
+            if hasattr(op, "_impl") and hasattr(op._impl_instance(), "_wrapped_model"):
                 model = op._impl_instance()._wrapped_model
-        return 'passthrough' if model is None else model
+        return "passthrough" if model is None else model
 
     @property
     def classes_(self):
@@ -488,7 +503,7 @@ class SKlearnCompatWrapper(object):
     def _estimator_type(self):
         return self._final_estimator._estimator_type
 
-    def get_param_ranges(self)->Tuple[Dict[str,Any], Dict[str,Any]]:
+    def get_param_ranges(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """Returns two dictionaries, ranges and cat_idx, for hyperparameters.
 
         The ranges dictionary has two kinds of entries. Entries for
@@ -500,7 +515,7 @@ class SKlearnCompatWrapper(object):
         into the corresponding list of values.
 
         Warning: ignores side constraints and unions."""
-        op:Optional[Ops.IndividualOp] = self._final_individual_op()
+        op: Optional[Ops.IndividualOp] = self._final_individual_op()
         if op is None:
             raise ValueError("This pipeline does not end with an individual operator")
         else:
@@ -513,7 +528,7 @@ class SKlearnCompatWrapper(object):
         it returns up to `size` uniformly distributed values.
 
         Warning: ignores side constraints, unions, and distributions."""
-        op:Optional[Ops.IndividualOp] = self._final_individual_op()
+        op: Optional[Ops.IndividualOp] = self._final_individual_op()
         if op is None:
             raise ValueError("This pipeline does not end with an individual operator")
         else:
@@ -527,29 +542,31 @@ class SKlearnCompatWrapper(object):
 
     #     estimator = self.steps[-1][1]
     #     return 'passthrough' if estimator is None else estimator
-        
+
+
 class DefaultsVisitor(Visitor):
     @classmethod
-    def run(cls, op:Ops.Operator)->Dict[str,Any]:
+    def run(cls, op: Ops.Operator) -> Dict[str, Any]:
         visitor = cls()
         return accept(op, visitor)
 
     def __init__(self):
         super(DefaultsVisitor, self).__init__()
 
-    def visitIndividualOp(self, op:Ops.IndividualOp)->Dict[str,Any]:
+    def visitIndividualOp(self, op: Ops.IndividualOp) -> Dict[str, Any]:
         return op.hyperparam_defaults()
 
     visitPlannedIndividualOp = visitIndividualOp
     visitTrainableIndividualOp = visitIndividualOp
     visitTrainedIndividualOp = visitIndividualOp
 
-    def visitPipeline(self, op:Ops.PlannedPipeline)->Dict[str,Any]:
+    def visitPipeline(self, op: Ops.PlannedPipeline) -> Dict[str, Any]:
 
-        defaults_list:Iterable[Dict[str,Any]] = (
-            nest_HPparams(s.name(), accept(s, self)) for s in op.steps())
+        defaults_list: Iterable[Dict[str, Any]] = (
+            nest_HPparams(s.name(), accept(s, self)) for s in op.steps()
+        )
 
-        defaults:Dict[str,Any] = {}
+        defaults: Dict[str, Any] = {}
         for d in defaults_list:
             defaults.update(d)
 
@@ -559,59 +576,71 @@ class DefaultsVisitor(Visitor):
     visitTrainablePipeline = visitPipeline
     visitTrainedPipeline = visitPipeline
 
-    def visitOperatorChoice(self, op:Ops.OperatorChoice)->Dict[str,Any]:
+    def visitOperatorChoice(self, op: Ops.OperatorChoice) -> Dict[str, Any]:
 
-        defaults_list:Iterable[Dict[str,Any]] = (
-            accept(s, self) for s in op.steps())
+        defaults_list: Iterable[Dict[str, Any]] = (accept(s, self) for s in op.steps())
 
-        defaults : Dict[str,Any] = {}
+        defaults: Dict[str, Any] = {}
         for d in defaults_list:
             defaults.update(d)
 
         return defaults
 
-# Auxiliary functions
-V = TypeVar('V')
 
-def nest_HPparam(name:str, key:str):
+# Auxiliary functions
+V = TypeVar("V")
+
+
+def nest_HPparam(name: str, key: str):
     if key == DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:
         # we can get rid of the dummy now, since we have a name for it
         return name
     return name + "__" + key
 
-def nest_HPparams(name:str, grid:Dict[str,V])->Dict[str,V]:
-    return {(nest_HPparam(name, k)):v for k, v in grid.items()}
 
-def nest_all_HPparams(name:str, grids:List[Dict[str,V]])->List[Dict[str,V]]:
+def nest_HPparams(name: str, grid: Dict[str, V]) -> Dict[str, V]:
+    return {(nest_HPparam(name, k)): v for k, v in grid.items()}
+
+
+def nest_all_HPparams(name: str, grids: List[Dict[str, V]]) -> List[Dict[str, V]]:
     """ Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
         to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
     """
     return [nest_HPparams(name, grid) for grid in grids]
 
-def nest_choice_HPparam(key:str):
+
+def nest_choice_HPparam(key: str):
     return choice_prefix + key
 
-def nest_choice_HPparams(grid:Dict[str,V])->Dict[str,V]:
-    return {(nest_choice_HPparam(k)):v for k, v in grid.items()}
 
-def nest_choice_all_HPparams(grids:List[Dict[str,V]])->List[Dict[str,V]]:
+def nest_choice_HPparams(grid: Dict[str, V]) -> Dict[str, V]:
+    return {(nest_choice_HPparam(k)): v for k, v in grid.items()}
+
+
+def nest_choice_all_HPparams(grids: List[Dict[str, V]]) -> List[Dict[str, V]]:
     """ this transforms every key(parameter name) in the grids
         to be nested under a choice, using a ? as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
     """
     return [nest_choice_HPparams(grid) for grid in grids]
 
-def unnest_choice(k:str)->str:
+
+def unnest_choice(k: str) -> str:
     assert k.startswith(choice_prefix)
-    return k[len(choice_prefix):]
+    return k[len(choice_prefix) :]
 
-def unnest_HPparams(k:str)->List[str]:
-    return k.split("__")    
 
-OpType = TypeVar('OpType', bound=Ops.Operator)
-def clone_op(op: OpType, name:str=None) -> OpType:
+def unnest_HPparams(k: str) -> List[str]:
+    return k.split("__")
+
+
+OpType = TypeVar("OpType", bound=Ops.Operator)
+
+
+def clone_op(op: OpType, name: str = None) -> OpType:
     """ Clone any operator.
     """
     from sklearn.base import clone
+
     nop = clone(make_sklearn_compat(op)).to_lale()
     if name:
         nop._set_name(name)

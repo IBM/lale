@@ -27,13 +27,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": [
-                "categories",
-                "drop",
-                "sparse",
-                "dtype",
-                "handle_unknown",
-            ],
+            "required": ["categories", "drop", "sparse", "dtype", "handle_unknown",],
             "relevantToOptimizer": [],
             "additionalProperties": False,
             "properties": {
@@ -43,7 +37,7 @@ _hyperparams_schema = {
                     "enum": ["auto"],
                     "default": "auto",
                 },
-                "drop":{
+                "drop": {
                     "anyOf": [
                         {"type": "array", "items": {"type": "number"}},
                         {"enum": ["first", "if_binary", None]},

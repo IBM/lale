@@ -32,11 +32,12 @@ class categorical:
     callable
         Function that, given a dataset X, returns a list of columns,
         containing either string column names or integer column indices."""
-    def __init__(self, max_values:int=5):
+
+    def __init__(self, max_values: int = 5):
         self._max_values = max_values
 
     def __repr__(self):
-        return f'lale.lib.lale.categorical(max_values={self._max_values})'
+        return f"lale.lib.lale.categorical(max_values={self._max_values})"
 
     def __call__(self, X):
         def is_categorical(column_values):
@@ -47,13 +48,15 @@ class categorical:
                     if len(unique_values) > self._max_values:
                         return False
             return True
+
         if isinstance(X, pd.DataFrame):
             result = [c for c in X.columns if is_categorical(X[c])]
         elif isinstance(X, np.ndarray):
-            result = [c for c in range(X.shape[1]) if is_categorical(X[:,c])]
+            result = [c for c in range(X.shape[1]) if is_categorical(X[:, c])]
         else:
-            raise TypeError(f'unexpected type {type(X)}')
+            raise TypeError(f"unexpected type {type(X)}")
         return result
+
 
 class date_time:
     """Creates a callable for projecting date/time columns with sklearn's ColumnTransformer or Lale's Project operator.
@@ -69,11 +72,12 @@ class date_time:
     callable
         Function that, given a dataset X, returns a list of columns,
         containing either string column names or integer column indices."""
+
     def __init__(self, fmt):
         self._fmt = fmt
 
     def __repr__(self):
-        return f'lale.lib.lale.date_time(fmt={self._fmt})'
+        return f"lale.lib.lale.date_time(fmt={self._fmt})"
 
     def __call__(self, X):
         def is_date_time(column_values):
@@ -86,10 +90,11 @@ class date_time:
             except ValueError:
                 return False
             return True
+
         if isinstance(X, pd.DataFrame):
             result = [c for c in X.columns if is_date_time(X[c])]
         elif isinstance(X, np.ndarray):
-            result = [c for c in range(X.shape[1]) if is_date_time(X[:,c])]
+            result = [c for c in range(X.shape[1]) if is_date_time(X[:, c])]
         else:
-            raise TypeError(f'unexpected type {type(X)}')
+            raise TypeError(f"unexpected type {type(X)}")
         return result

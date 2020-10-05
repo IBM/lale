@@ -21,56 +21,65 @@ from lale.expressions import Expr
 
 class ScanImpl:
     def __init__(self, table=None):
-        self._hyperparams = { 'table': table }
+        self._hyperparams = {"table": table}
 
     def transform(self, X):
         raise NotImplementedError()
 
     def viz_label(self) -> str:
-        return 'Scan:\n' + str(self._hyperparams['table'])
+        return "Scan:\n" + str(self._hyperparams["table"])
+
 
 _hyperparams_schema = {
-  'allOf': [
-    { 'description':
-        'This first sub-object lists all constructor arguments with their '
-        'types, one at a time, omitting cross-argument constraints, if any.',
-      'type': 'object',
-      'additionalProperties': False,
-      'required': ['table'],
-      'relevantToOptimizer': [],
-      'properties': {
-        'table': {
-          'description': 'Which table to scan. Given as Python AST expression.',
-          'laleType': 'Any' }}}]}
+    "allOf": [
+        {
+            "description": "This first sub-object lists all constructor arguments with their "
+            "types, one at a time, omitting cross-argument constraints, if any.",
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["table"],
+            "relevantToOptimizer": [],
+            "properties": {
+                "table": {
+                    "description": "Which table to scan. Given as Python AST expression.",
+                    "laleType": "Any",
+                }
+            },
+        }
+    ]
+}
 
 _input_transform_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'List of table file names.',
-      'type': 'array',
-      'items': {'type': 'string'},
-      'minItems': 1 }}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "List of table file names.",
+            "type": "array",
+            "items": {"type": "string"},
+            "minItems": 1,
+        }
+    },
+}
 
 _output_transform_schema = {
-  'description': 'Features; no restrictions on data type.',
-  'laleType': 'Any'}
+    "description": "Features; no restrictions on data type.",
+    "laleType": "Any",
+}
 
 _combined_schemas = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': 'Scans a database table.',
-  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.scan.html',
-  'type': 'object',
-  'tags': {
-    'pre': [],
-    'op': ['transformer'],
-    'post': []},
-  'properties': {
-    'hyperparams': _hyperparams_schema,
-    'input_transform': _input_transform_schema,
-    'output_transform': _output_transform_schema}}
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Scans a database table.",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.scan.html",
+    "type": "object",
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(ScanImpl, _combined_schemas)
 

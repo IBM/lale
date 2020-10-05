@@ -15,10 +15,12 @@
 try:
     from torch.utils.data import Dataset
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("""Your Python environment does not have torch installed. You can install it with 
+    raise ModuleNotFoundError(
+        """Your Python environment does not have torch installed. You can install it with 
                                 pip install torch
                                 or with
-                                    pip install 'lale[full]'""")
+                                    pip install 'lale[full]'"""
+    )
 import h5py
 
 
@@ -34,16 +36,16 @@ class HDF5TorchDataset(Dataset):
         """
         self.file_path = file_path
         h5_file = h5py.File(file_path)
-        self.length = h5_file['X'].shape[0]
+        self.length = h5_file["X"].shape[0]
 
     def __len__(self):
         return self.length
 
     def __getitem__(self, idx):
         with h5py.File(self.file_path) as h5_file:
-            X = h5_file['X']
+            X = h5_file["X"]
             try:
-                y = h5_file['y']
+                y = h5_file["y"]
             except KeyError:
                 y = None
             if y is None:
@@ -54,9 +56,9 @@ class HDF5TorchDataset(Dataset):
 
     def get_data(self):
         with h5py.File(self.file_path) as h5_file:
-            X = h5_file['X'][:]
+            X = h5_file["X"][:]
             try:
-                y = h5_file['y'][:]
+                y = h5_file["y"][:]
             except KeyError:
                 y = None
             if y is None:

@@ -33,6 +33,7 @@ import lale.type_checking
 JSON_TYPE = Dict[str, Any]
 _black78 = black.Mode(line_length=78)
 
+
 class _CodeGenState:
     imports: List[str]
     assigns: List[str]
@@ -42,82 +43,98 @@ class _CodeGenState:
         self.imports = []
         self.assigns = []
         self.combinators = combinators
-        self.astype= astype
+        self.astype = astype
         self._names = (
-            { 'make_pipeline_graph', 'lale', 'make_choice',
-              'make_pipeline', 'make_union', 'make_union_no_concat',
-              'np', 'pd', 'pipeline'}
-            | set(keyword.kwlist) | names)
+            {
+                "make_pipeline_graph",
+                "lale",
+                "make_choice",
+                "make_pipeline",
+                "make_union",
+                "make_union_no_concat",
+                "np",
+                "pd",
+                "pipeline",
+            }
+            | set(keyword.kwlist)
+            | names
+        )
 
     def gensym(self, prefix: str) -> str:
         if prefix in self._names:
             suffix = 0
-            while f'{prefix}_{suffix}' in self._names:
+            while f"{prefix}_{suffix}" in self._names:
                 suffix += 1
-            result = f'{prefix}_{suffix}'
+            result = f"{prefix}_{suffix}"
         else:
             result = prefix
         self._names |= {result}
         return result
 
-def hyperparams_to_string(hps: JSON_TYPE, steps:Optional[Dict[str,str]]=None, gen: _CodeGenState=None) -> str:
+
+def hyperparams_to_string(
+    hps: JSON_TYPE, steps: Optional[Dict[str, str]] = None, gen: _CodeGenState = None
+) -> str:
     def value_to_string(value):
         if isinstance(value, dict):
-            if '$ref' in value and steps is not None:
-                step_uid = value['$ref'].split('/')[-1]
+            if "$ref" in value and steps is not None:
+                step_uid = value["$ref"].split("/")[-1]
                 return steps[step_uid]
             else:
-                sl = {f"'{k}': {value_to_string(v)}" for k,v in value.items()}
-                return '{' + ', '.join(sl) + '}'
+                sl = {f"'{k}': {value_to_string(v)}" for k, v in value.items()}
+                return "{" + ", ".join(sl) + "}"
         elif isinstance(value, tuple):
             sl = [value_to_string(v) for v in value]
-            return '(' + ', '.join(sl) + ')'
+            return "(" + ", ".join(sl) + ")"
         elif isinstance(value, list):
             sl = [value_to_string(v) for v in value]
-            return '[' + ', '.join(sl) + ']'
+            return "[" + ", ".join(sl) + "]"
         elif isinstance(value, (int, float)) and math.isnan(value):
             return "float('nan')"
         elif isinstance(value, np.dtype):
             if gen is not None:
-                gen.imports.append('import numpy as np')
-            return f'np.{value.__repr__()}'
+                gen.imports.append("import numpy as np")
+            return f"np.{value.__repr__()}"
         elif isinstance(value, np.ufunc):
             if gen is not None:
-                gen.imports.append('import numpy as np')
-            return f'np.{value.__name__}'
+                gen.imports.append("import numpy as np")
+            return f"np.{value.__name__}"
         elif isinstance(value, lale.expressions.Expr):
             if gen is not None:
-                gen.imports.append('from lale.expressions import it')
+                gen.imports.append("from lale.expressions import it")
                 for node in ast.walk(value._expr):
                     if isinstance(node, ast.Call):
                         gen.imports.append(
-                            'from lale.expressions import ' + node.func.id)
+                            "from lale.expressions import " + node.func.id
+                        )
             return str(value)
-        elif hasattr(value, '__module__') and hasattr(value, '__name__'):
-            modules = {'numpy': 'np', 'pandas': 'pd'}
+        elif hasattr(value, "__module__") and hasattr(value, "__name__"):
+            modules = {"numpy": "np", "pandas": "pd"}
             module = modules.get(value.__module__, value.__module__)
             if gen is not None:
                 if value.__module__ == module:
-                    gen.imports.append(f'import {module}')
+                    gen.imports.append(f"import {module}")
                 else:
-                    gen.imports.append(f'import {value.__module__} as {module}')
-            return f'{module}.{value.__name__}'
-        elif hasattr(value, 'get_params'):
+                    gen.imports.append(f"import {value.__module__} as {module}")
+            return f"{module}.{value.__name__}"
+        elif hasattr(value, "get_params"):
             module = value.__module__
             name = value.__class__.__name__
-            if module.startswith('sklearn.'):
-                i = module.rfind('.')
-                if module[i+1] == '_':
+            if module.startswith("sklearn."):
+                i = module.rfind(".")
+                if module[i + 1] == "_":
                     module = module[:i]
             if gen is not None:
-                gen.imports.append(f'import {module}')
+                gen.imports.append(f"import {module}")
             printed = pprint.pformat(value, width=10000, compact=True)
-            compacted = printed.replace('\n', ' ')
-            return f'{module}.{compacted}'
+            compacted = printed.replace("\n", " ")
+            return f"{module}.{compacted}"
         else:
             return pprint.pformat(value, width=10000, compact=True)
-    strings = [f'{k}={value_to_string(v)}' for k, v in hps.items()]
-    return ', '.join(strings)
+
+    strings = [f"{k}={value_to_string(v)}" for k, v in hps.items()]
+    return ", ".join(strings)
+
 
 def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
     def find_op(module_name, sym):
@@ -127,15 +144,16 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
             if isinstance(op, lale.operators.IndividualOp):
                 if op.class_name() == class_name:
                     return op
-            elif hasattr(op, '__init__') and hasattr(op, 'fit'):
-                if hasattr(op, 'predict') or hasattr(op, 'transform'):
+            elif hasattr(op, "__init__") and hasattr(op, "fit"):
+                if hasattr(op, "predict") or hasattr(op, "transform"):
                     return op
         return None
-    mod_name_long = class_name[:class_name.rfind('.')]
-    mod_name_short = mod_name_long[:mod_name_long.rfind('.')]
-    unqualified = class_name[class_name.rfind('.')+1:]
-    if class_name.startswith('lale.') and unqualified.endswith('Impl'):
-        unqualified = unqualified[:-len('Impl')]
+
+    mod_name_long = class_name[: class_name.rfind(".")]
+    mod_name_short = mod_name_long[: mod_name_long.rfind(".")]
+    unqualified = class_name[class_name.rfind(".") + 1 :]
+    if class_name.startswith("lale.") and unqualified.endswith("Impl"):
+        unqualified = unqualified[: -len("Impl")]
     op = find_op(mod_name_short, op_name)
     if op is not None:
         mod = mod_name_short
@@ -153,117 +171,131 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
                     mod = mod_name_long
     assert op is not None, (op_label, op_name, class_name)
     if isinstance(op, lale.operators.IndividualOp):
-        if 'import_from' in op._schemas:
-            mod = op._schemas['import_from']
-    return mod        
+        if "import_from" in op._schemas:
+            mod = op._schemas["import_from"]
+    return mod
+
 
 def _op_kind(op: JSON_TYPE) -> str:
     assert isinstance(op, dict)
-    if 'kind' in op:
-        return op['kind']
+    if "kind" in op:
+        return op["kind"]
     return lale.json_operator.json_op_kind(op)
 
-_OP_KIND_TO_COMBINATOR = {
-    'Seq': '>>',
-    'Par': '&',
-    'OperatorChoice': '|'}
+
+_OP_KIND_TO_COMBINATOR = {"Seq": ">>", "Par": "&", "OperatorChoice": "|"}
 _OP_KIND_TO_FUNCTION = {
-    'Seq': 'make_pipeline',
-    'Par': 'make_union_no_concat',
-    'OperatorChoice': 'make_choice',
-    'Union': 'make_union'}
+    "Seq": "make_pipeline",
+    "Par": "make_union_no_concat",
+    "OperatorChoice": "make_choice",
+    "Union": "make_union",
+}
+
 
 def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
-    assert _op_kind(pipeline) == 'Pipeline'
+    assert _op_kind(pipeline) == "Pipeline"
+
     def make_graph(pipeline: JSON_TYPE) -> JSON_TYPE:
-        steps = pipeline['steps']
-        preds: Dict[str, List[str]] = { step: [] for step in steps }
-        succs: Dict[str, List[str]] = { step: [] for step in steps }
-        for (src, dst) in pipeline['edges']:
+        steps = pipeline["steps"]
+        preds: Dict[str, List[str]] = {step: [] for step in steps}
+        succs: Dict[str, List[str]] = {step: [] for step in steps}
+        for (src, dst) in pipeline["edges"]:
             preds[dst].append(src)
             succs[src].append(dst)
-        return {'kind':'Graph', 'steps':steps, 'preds':preds, 'succs':succs}
-    def find_seq(graph: JSON_TYPE) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
-        for src in graph['steps']:
-            if len(graph['succs'][src]) == 1:
-                dst = graph['succs'][src][0]
-                if len(graph['preds'][dst]) == 1:
-                    old = {uid: graph['steps'][uid] for uid in [src, dst]}
+        return {"kind": "Graph", "steps": steps, "preds": preds, "succs": succs}
+
+    def find_seq(
+        graph: JSON_TYPE,
+    ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
+        for src in graph["steps"]:
+            if len(graph["succs"][src]) == 1:
+                dst = graph["succs"][src][0]
+                if len(graph["preds"][dst]) == 1:
+                    old = {uid: graph["steps"][uid] for uid in [src, dst]}
                     new_uid = None
                     new_steps: Dict[str, JSON_TYPE] = {}
                     for step_uid, step_jsn in old.items():
-                        if _op_kind(step_jsn) == 'Seq': #flatten
-                            new_steps.update(step_jsn['steps'])
+                        if _op_kind(step_jsn) == "Seq":  # flatten
+                            new_steps.update(step_jsn["steps"])
                             if new_uid is None:
                                 new_uid = step_uid
                         else:
                             new_steps[step_uid] = step_jsn
                     if new_uid is None:
-                        new_uid = gen.gensym('pipeline')
-                    new = {new_uid: {'kind': 'Seq', 'steps': new_steps}}
+                        new_uid = gen.gensym("pipeline")
+                    new = {new_uid: {"kind": "Seq", "steps": new_steps}}
                     return old, new
         return None
-    def find_par(graph: JSON_TYPE) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
-        step_uids = list(graph['steps'].keys())
+
+    def find_par(
+        graph: JSON_TYPE,
+    ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
+        step_uids = list(graph["steps"].keys())
         for i0 in range(len(step_uids)):
             for i1 in range(i0 + 1, len(step_uids)):
                 s0, s1 = step_uids[i0], step_uids[i1]
-                preds0, preds1 = graph['preds'][s0], graph['preds'][s1]
+                preds0, preds1 = graph["preds"][s0], graph["preds"][s1]
                 if len(preds0) == len(preds1) and set(preds0) == set(preds1):
-                    succs0, succs1 = graph['succs'][s0], graph['succs'][s1]
-                    if len(succs0)==len(succs1) and set(succs0)==set(succs1):
-                        old = {uid: graph['steps'][uid] for uid in [s0, s1]}
+                    succs0, succs1 = graph["succs"][s0], graph["succs"][s1]
+                    if len(succs0) == len(succs1) and set(succs0) == set(succs1):
+                        old = {uid: graph["steps"][uid] for uid in [s0, s1]}
                         new_uid = None
                         new_steps: Dict[str, JSON_TYPE] = {}
                         for step_uid, step_jsn in old.items():
-                            if _op_kind(step_jsn) == 'Par': #flatten
-                                new_steps.update(step_jsn['steps'])
+                            if _op_kind(step_jsn) == "Par":  # flatten
+                                new_steps.update(step_jsn["steps"])
                                 if new_uid is None:
                                     new_uid = step_uid
                             else:
                                 new_steps[step_uid] = step_jsn
                         if new_uid is None:
-                            new_uid = gen.gensym('union')
-                        new = {new_uid: {'kind': 'Par', 'steps': new_steps}}
+                            new_uid = gen.gensym("union")
+                        new = {new_uid: {"kind": "Par", "steps": new_steps}}
                         return old, new
         return None
-    def find_union(graph: JSON_TYPE) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
-        cat_cls = 'lale.lib.lale.concat_features.ConcatFeaturesImpl'
-        for seq_uid, seq_jsn in graph['steps'].items():
-            if _op_kind(seq_jsn) == 'Seq':
-                seq_uids = list(seq_jsn['steps'].keys())
+
+    def find_union(
+        graph: JSON_TYPE,
+    ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
+        cat_cls = "lale.lib.lale.concat_features.ConcatFeaturesImpl"
+        for seq_uid, seq_jsn in graph["steps"].items():
+            if _op_kind(seq_jsn) == "Seq":
+                seq_uids = list(seq_jsn["steps"].keys())
                 for i in range(len(seq_uids) - 1):
-                    src, dst = seq_uids[i], seq_uids[i+1]
-                    src_jsn = seq_jsn['steps'][src]
-                    if _op_kind(src_jsn) == 'Par':
-                        dst_jsn = seq_jsn['steps'][dst]
-                        if dst_jsn.get('class', None) == cat_cls:
+                    src, dst = seq_uids[i], seq_uids[i + 1]
+                    src_jsn = seq_jsn["steps"][src]
+                    if _op_kind(src_jsn) == "Par":
+                        dst_jsn = seq_jsn["steps"][dst]
+                        if dst_jsn.get("class", None) == cat_cls:
                             old = {seq_uid: seq_jsn}
-                            union = {'kind': 'Union', 'steps': src_jsn['steps']}
+                            union = {"kind": "Union", "steps": src_jsn["steps"]}
                             if len(seq_uids) == 2:
                                 new = {src: union}
                             else:
                                 new_steps: Dict[str, JSON_TYPE] = {}
-                                for uid, jsn in seq_jsn['steps'].items():
+                                for uid, jsn in seq_jsn["steps"].items():
                                     if uid == src:
                                         new_steps[uid] = union
                                     elif uid != dst:
                                         new_steps[uid] = jsn
-                                new = {src: {'kind': 'Seq', 'steps': new_steps}}
+                                new = {src: {"kind": "Seq", "steps": new_steps}}
                             return old, new
         return None
-    def replace(subject: JSON_TYPE, old: Dict[str, JSON_TYPE], new: Dict[str, JSON_TYPE]) -> JSON_TYPE:
-        assert _op_kind(subject) == 'Graph'
+
+    def replace(
+        subject: JSON_TYPE, old: Dict[str, JSON_TYPE], new: Dict[str, JSON_TYPE]
+    ) -> JSON_TYPE:
+        assert _op_kind(subject) == "Graph"
         new_uid, new_jsn = list(new.items())[0]
-        assert _op_kind(new_jsn) in ['Seq', 'Par', 'Union']
-        subj_steps = subject['steps']
-        subj_preds = subject['preds']
-        subj_succs = subject['succs']
+        assert _op_kind(new_jsn) in ["Seq", "Par", "Union"]
+        subj_steps = subject["steps"]
+        subj_preds = subject["preds"]
+        subj_succs = subject["succs"]
         res_steps: Dict[str, JSON_TYPE] = {}
         res_preds: Dict[str, List[str]] = {}
         res_succs: Dict[str, List[str]] = {}
         old_steps_uids = list(old.keys())
-        for step_uid in subj_steps: #careful to keep topological order
+        for step_uid in subj_steps:  # careful to keep topological order
             if step_uid == old_steps_uids[0]:
                 res_steps[new_uid] = new_jsn
                 res_preds[new_uid] = subj_preds[old_steps_uids[0]]
@@ -282,9 +314,14 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
                         res_succs[step_uid].append(new_uid)
                     elif succ not in old_steps_uids:
                         res_succs[step_uid].append(succ)
-        result = {'kind': 'Graph', 'steps': res_steps,
-                  'preds': res_preds, 'succs': res_succs}
+        result = {
+            "kind": "Graph",
+            "steps": res_steps,
+            "preds": res_preds,
+            "succs": res_succs,
+        }
         return result
+
     def find_and_replace(graph: JSON_TYPE) -> JSON_TYPE:
         progress = True
         while progress:
@@ -297,148 +334,180 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
             if not gen.combinators:
                 union = find_union(graph)
                 if union is not None:
-                    graph = replace(graph, *union)                
+                    graph = replace(graph, *union)
             progress = seq is not None or par is not None
-        if len(graph['steps']) == 1: #flatten
-            return list(graph['steps'].values())[0]
+        if len(graph["steps"]) == 1:  # flatten
+            return list(graph["steps"].values())[0]
         else:
             return graph
+
     graph = make_graph(pipeline)
     result = find_and_replace(graph)
     return result
 
+
 def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) -> str:
-    if _op_kind(jsn) == 'Pipeline':
+    if _op_kind(jsn) == "Pipeline":
         structured = _introduce_structure(jsn, gen)
         return _operator_jsn_to_string_rec(uid, structured, gen)
-    elif _op_kind(jsn) == 'Graph':
-        steps, preds, succs = jsn['steps'], jsn['preds'], jsn['succs']
+    elif _op_kind(jsn) == "Graph":
+        steps, preds, succs = jsn["steps"], jsn["preds"], jsn["succs"]
         step2name: Dict[str, str] = {}
         for step_uid, step_val in steps.items():
             expr = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            if re.fullmatch('[A-Za-z][A-Za-z0-9_]*', expr):
+            if re.fullmatch("[A-Za-z][A-Za-z0-9_]*", expr):
                 step2name[step_uid] = expr
             else:
                 step2name[step_uid] = step_uid
-                gen.assigns.append(f'{step_uid} = {expr}')
-        make_pipeline = 'make_pipeline_graph'
-        gen.imports.append(f'from lale.operators import {make_pipeline}')
-        result = '{}(steps=[{}], edges=[{}])'.format(
+                gen.assigns.append(f"{step_uid} = {expr}")
+        make_pipeline = "make_pipeline_graph"
+        gen.imports.append(f"from lale.operators import {make_pipeline}")
+        result = "{}(steps=[{}], edges=[{}])".format(
             make_pipeline,
-            ', '.join([step2name[step] for step in steps]),
-            ', '.join([f'({step2name[src]},{step2name[tgt]})'
-                       for src in steps for tgt in succs[src]]))
+            ", ".join([step2name[step] for step in steps]),
+            ", ".join(
+                [
+                    f"({step2name[src]},{step2name[tgt]})"
+                    for src in steps
+                    for tgt in succs[src]
+                ]
+            ),
+        )
         return result
-    elif _op_kind(jsn) in ['Seq', 'Par', 'OperatorChoice', 'Union']:
+    elif _op_kind(jsn) in ["Seq", "Par", "OperatorChoice", "Union"]:
         if gen.combinators:
+
             def print_for_comb(step_uid, step_val):
                 printed = _operator_jsn_to_string_rec(step_uid, step_val, gen)
-                parens = (_op_kind(step_val) != _op_kind(jsn) and
-                          _op_kind(step_val) in ['Seq','Par','OperatorChoice'])
-                return f'({printed})' if parens else printed
-            printed_steps = {step_uid: print_for_comb(step_uid, step_val)
-                             for step_uid, step_val in jsn['steps'].items()}
+                parens = _op_kind(step_val) != _op_kind(jsn) and _op_kind(step_val) in [
+                    "Seq",
+                    "Par",
+                    "OperatorChoice",
+                ]
+                return f"({printed})" if parens else printed
+
+            printed_steps = {
+                step_uid: print_for_comb(step_uid, step_val)
+                for step_uid, step_val in jsn["steps"].items()
+            }
             combinator = _OP_KIND_TO_COMBINATOR[_op_kind(jsn)]
-            return f' {combinator} '.join(printed_steps.values())
+            return f" {combinator} ".join(printed_steps.values())
         else:
             printed_steps = {
                 step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
-                for step_uid, step_val in jsn['steps'].items()}
+                for step_uid, step_val in jsn["steps"].items()
+            }
             function = _OP_KIND_TO_FUNCTION[_op_kind(jsn)]
-            if (gen.astype == 'sklearn' and
-                function in ['make_union', 'make_pipeline']):
-                gen.imports.append(f'from sklearn.pipeline import {function}')
+            if gen.astype == "sklearn" and function in ["make_union", "make_pipeline"]:
+                gen.imports.append(f"from sklearn.pipeline import {function}")
             else:
-                gen.imports.append(f'from lale.operators import {function}')
-            op_expr = '{}({})'.format(function,
-                                      ', '.join(printed_steps.values()))
-            gen.assigns.append(f'{uid} = {op_expr}')
+                gen.imports.append(f"from lale.operators import {function}")
+            op_expr = "{}({})".format(function, ", ".join(printed_steps.values()))
+            gen.assigns.append(f"{uid} = {op_expr}")
             return uid
-    elif _op_kind(jsn) == 'IndividualOp':
-        label = jsn['label']
-        class_name = jsn['class']
-        module_name = _get_module_name(label, jsn['operator'], class_name)
-        if module_name.startswith('lale.'):
-            op_name = jsn['operator']
+    elif _op_kind(jsn) == "IndividualOp":
+        label = jsn["label"]
+        class_name = jsn["class"]
+        module_name = _get_module_name(label, jsn["operator"], class_name)
+        if module_name.startswith("lale."):
+            op_name = jsn["operator"]
         else:
-            op_name = class_name[class_name.rfind('.')+1:]
-        if op_name.endswith('Impl'):
-            op_name = op_name[:-len('Impl')]
+            op_name = class_name[class_name.rfind(".") + 1 :]
+        if op_name.endswith("Impl"):
+            op_name = op_name[: -len("Impl")]
         if op_name == label:
-            import_stmt = f'from {module_name} import {op_name}'
+            import_stmt = f"from {module_name} import {op_name}"
         else:
-            import_stmt = f'from {module_name} import {op_name} as {label}'
+            import_stmt = f"from {module_name} import {op_name} as {label}"
         gen.imports.append(import_stmt)
         printed_steps = {
             step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
-            for step_uid, step_val in jsn.get('steps', {}).items()}
-        if 'hyperparams' in jsn and jsn['hyperparams'] is not None:
-            hp_string = hyperparams_to_string(
-                jsn['hyperparams'], printed_steps, gen)
-            op_expr = f'{label}({hp_string})'
+            for step_uid, step_val in jsn.get("steps", {}).items()
+        }
+        if "hyperparams" in jsn and jsn["hyperparams"] is not None:
+            hp_string = hyperparams_to_string(jsn["hyperparams"], printed_steps, gen)
+            op_expr = f"{label}({hp_string})"
         else:
             op_expr = label
-        if re.fullmatch(r'.+\(.+\)', op_expr):
-            gen.assigns.append(f'{uid} = {op_expr}')
+        if re.fullmatch(r".+\(.+\)", op_expr):
+            gen.assigns.append(f"{uid} = {op_expr}")
             return uid
         else:
             return op_expr
     else:
-        assert False, f'unexpected type {type(jsn)} of jsn {jsn}'
+        assert False, f"unexpected type {type(jsn)} of jsn {jsn}"
+
 
 def _collect_names(jsn: JSON_TYPE) -> Set[str]:
     result: Set[str] = set()
-    if 'steps' in jsn:
-        for step_uid, step_jsn in jsn['steps'].items():
+    if "steps" in jsn:
+        for step_uid, step_jsn in jsn["steps"].items():
             result |= {step_uid}
             result |= _collect_names(step_jsn)
-    if 'label' in jsn:
-        result |= {jsn['label']}
+    if "label" in jsn:
+        result |= {jsn["label"]}
     return result
 
-def _operator_jsn_to_string(jsn: JSON_TYPE, show_imports: bool, combinators: bool, astype=str) -> str:
+
+def _operator_jsn_to_string(
+    jsn: JSON_TYPE, show_imports: bool, combinators: bool, astype=str
+) -> str:
     gen = _CodeGenState(_collect_names(jsn), combinators, astype)
-    expr = _operator_jsn_to_string_rec('pipeline', jsn, gen)
-    if expr != 'pipeline':
-        gen.assigns.append(f'pipeline = {expr}')
+    expr = _operator_jsn_to_string_rec("pipeline", jsn, gen)
+    if expr != "pipeline":
+        gen.assigns.append(f"pipeline = {expr}")
     if show_imports and len(gen.imports) > 0:
         if combinators:
-            gen.imports.append('import lale')
+            gen.imports.append("import lale")
         imports_set: Set[str] = set()
         imports_list: List[str] = []
         for imp in gen.imports:
             if imp not in imports_set:
                 imports_set |= {imp}
                 imports_list.append(imp)
-        result = '\n'.join(imports_list)
+        result = "\n".join(imports_list)
         if combinators:
-            result += '\nlale.wrap_imported_operators()'
-        result += '\n'
-        result += '\n'.join(gen.assigns)
+            result += "\nlale.wrap_imported_operators()"
+        result += "\n"
+        result += "\n".join(gen.assigns)
     else:
-        result = '\n'.join(gen.assigns)
+        result = "\n".join(gen.assigns)
     formatted = black.format_str(result, mode=_black78).rstrip()
     return formatted
+
 
 def json_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
     s2 = black.format_str(s1, mode=_black78).rstrip()
     return s2
 
-def to_string(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True, astype:str='lale', call_depth:int=1) -> str:
-    assert astype in ['lale', 'sklearn'], astype
-    if astype == 'sklearn':
+
+def to_string(
+    arg: Union[JSON_TYPE, "lale.operators.Operator"],
+    show_imports: bool = True,
+    combinators: bool = True,
+    astype: str = "lale",
+    call_depth: int = 1,
+) -> str:
+    assert astype in ["lale", "sklearn"], astype
+    if astype == "sklearn":
         combinators = False
     if lale.type_checking.is_schema(arg):
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
-        jsn = lale.json_operator.to_json(arg, call_depth=call_depth+1)
+        jsn = lale.json_operator.to_json(arg, call_depth=call_depth + 1)
         return _operator_jsn_to_string(jsn, show_imports, combinators, astype)
     else:
-        raise ValueError(f'Unexpected argument type {type(arg)} for {arg}')
+        raise ValueError(f"Unexpected argument type {type(arg)} for {arg}")
 
-def ipython_display(arg: Union[JSON_TYPE, 'lale.operators.Operator'], show_imports:bool=True, combinators:bool=True):
+
+def ipython_display(
+    arg: Union[JSON_TYPE, "lale.operators.Operator"],
+    show_imports: bool = True,
+    combinators: bool = True,
+):
     import IPython.display
+
     pretty_printed = to_string(arg, show_imports, combinators, call_depth=3)
-    markdown = IPython.display.Markdown(f'```python\n{pretty_printed}\n```')
+    markdown = IPython.display.Markdown(f"```python\n{pretty_printed}\n```")
     IPython.display.display(markdown)
