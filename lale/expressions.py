@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast  # see also https://greentreesnakes.readthedocs.io/
+from copy import deepcopy
 import pprint
 import typing
 from typing import Any, Dict, List, Optional, Union
