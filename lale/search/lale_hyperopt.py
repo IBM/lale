@@ -19,7 +19,6 @@ import re
 
 from lale.search.search_space import *
 from lale.util.Visitor import Visitor, accept
-from lale.search import schema2search_space as opt
 from lale import helpers
 from lale.sklearn_compat import make_indexed_name
 from lale.operators import Operator
