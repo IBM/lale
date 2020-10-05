@@ -143,7 +143,7 @@ class AnyOf(Schema):
                  types: List[Schema] = [],
                  desc: Option[str] = undefined,
                  default: Option[Any] = undefined,
-                 forOptimizer: Option[bool] = undefined):
+                 forOptimizer: bool = True):
         super().__init__(desc, default, forOptimizer)
         self.set('anyOf', [t.schema for t in types])
 
