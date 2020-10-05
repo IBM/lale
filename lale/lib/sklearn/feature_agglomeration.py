@@ -38,11 +38,9 @@ _hyperparams_schema = {
         'additionalProperties': False,
         'properties': {
             'n_clusters': {
-                'anyOf': [
-                {   'type': 'integer',
-                    'minimumForOptimizer': 2,
-                    'maximumForOptimizer': 8},
-                {   'enum': [None], 'forOptimizer': False}],
+                'type': 'integer',
+                'minimumForOptimizer': 2,
+                'maximumForOptimizer': 8,
                 'default': 2,
                 'description': 'The number of clusters to find.'},
             'affinity': {
@@ -59,7 +57,7 @@ _hyperparams_schema = {
                     'forOptimizer':False,
                     'type': 'object' }, { #object with the joblib.Memory interface
                     'enum':[None]}],  
-                'default': None,             
+                'default': None,
                 'description': 'Used to cache the output of the computation of the tree.'},
             'connectivity': {
                 'anyOf': [
@@ -95,21 +93,7 @@ _hyperparams_schema = {
               'properties': {'affinity': {'enum': ['euclidean']}}},
             { 'type': 'object',
               'properties': {
-                'linkage':{'not': {'enum': ['ward']}}}}]},
-    {   'description': 'n_clusters must be None if distance_threshold is not None.',
-        'anyOf': [
-        { 'type': 'object',
-            'properties': {'n_clusters': {'enum': [None]}}},
-        { 'type': 'object',
-            'properties': {
-            'distance_threshold': {'enum': [None]}}}]},
-    {   'description': 'compute_full_tree must be True if distance_threshold is not None.',
-        'anyOf': [
-        { 'type': 'object',
-            'properties': {'compute_full_tree': {'enum': [True]}}},
-        { 'type': 'object',
-            'properties': {
-            'distance_threshold': {'enum': [None]}}}]}]}
+                'linkage':{'not': {'enum': ['ward']}}}}]}]}
 
 _input_fit_schema = {
     'description': 'Fit the hierarchical clustering on the data',
@@ -176,11 +160,20 @@ FeatureAgglomeration = lale.operators.make_operator(FeatureAgglomerationImpl, _c
 if sklearn.__version__ >= '0.21':
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.cluster.FeatureAgglomeration.html
-    from lale.schemas import AnyOf, Float, Null
+    from lale.schemas import AnyOf, Float, Null, Int, Object, Enum
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
         distance_threshold=AnyOf(
             types=[Float(), Null()],
             desc='The linkage distance threshold above which, clusters will not be merged.',
-            default=None))
+            default=None),
+        n_clusters=AnyOf(
+            types=[Int(minForOptimizer=2, maxForOptimizer=8), Null()],
+            default=2,
+            desc='The number of clusters to find.'),
+        constraint=AnyOf([Object(n_clusters=Null()), Object(distance_threshold=Null())], 
+            desc='n_clusters must be None if distance_threshold is not None.'))
+    FeatureAgglomeration = FeatureAgglomeration.customize_schema(
+        constraint=AnyOf([Object(compute_full_tree=Enum([True])), Object(distance_threshold=Null())], 
+        desc='compute_full_tree must be True if distance_threshold is not None.'))
 
 lale.docstrings.set_docstrings(FeatureAgglomerationImpl, FeatureAgglomeration._schemas)
