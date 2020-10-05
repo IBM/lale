@@ -1,5 +1,7 @@
 import unittest
+
 import lale.type_checking
+
 
 class TestTextEncoders(unittest.TestCase):
 

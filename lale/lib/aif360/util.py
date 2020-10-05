@@ -15,9 +15,11 @@
 import aif360.algorithms.postprocessing
 import aif360.datasets
 import aif360.metrics
+import pandas as pd
+
 import lale.datasets.data_schemas
 import lale.type_checking
-import pandas as pd
+
 
 def dataset_to_pandas(dataset, return_only='Xy'):
     """

@@ -14,6 +14,7 @@
 
 from typing import Any
 
+
 class Visitor(object):
     def defaultVisit(self, node, *args, **kwargs):
         raise NotImplementedError

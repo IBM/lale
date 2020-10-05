@@ -13,29 +13,35 @@
 # limitations under the License.
 
 import logging
-import numpy as np
 import sys
-
 import time
 import traceback
+
+import numpy as np
+from sklearn.metrics import check_scoring, log_loss
 from sklearn.model_selection import train_test_split
 from sklearn.model_selection._split import check_cv
-from sklearn.metrics import log_loss, check_scoring
 
-import lale.sklearn_compat
 import lale.docstrings
+import lale.operators
+import lale.sklearn_compat
 from lale.helpers import cross_val_score_track_trials
 from lale.lib.sklearn import LogisticRegression
-import lale.operators
 
 try:
     # Import ConfigSpace and different types of parameters
     from smac.configspace import ConfigurationSpace
+
     # Import SMAC-utilities
     from smac.facade.smac_facade import SMAC as orig_SMAC
     from smac.scenario.scenario import Scenario
     from smac.tae.execute_ta_run import BudgetExhaustedException
-    from lale.search.lale_smac import lale_op_smac_tae, get_smac_space, lale_trainable_op_from_config
+
+    from lale.search.lale_smac import (
+        get_smac_space,
+        lale_op_smac_tae,
+        lale_trainable_op_from_config,
+    )
     smac_installed=True
 except ImportError:
     smac_installed=False

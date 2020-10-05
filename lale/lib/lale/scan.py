@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import ast
+
 import lale.docstrings
 import lale.operators
 from lale.expressions import Expr
+
 
 class ScanImpl:
     def __init__(self, table=None):

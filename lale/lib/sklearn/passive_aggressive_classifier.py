@@ -13,8 +13,14 @@
 # limitations under the License.
 
 import sklearn.linear_model
+
 import lale.docstrings
 import lale.operators
+
+# old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+# new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+from lale.schemas import Int
+
 
 class PassiveAggressiveClassifierImpl():
     def __init__(self, **hyperparams):
@@ -234,9 +240,6 @@ _combined_schemas = {
 PassiveAggressiveClassifier : lale.operators.IndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(PassiveAggressiveClassifierImpl, _combined_schemas)
 
-# old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
-# new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
-from lale.schemas import Int
 
 if sklearn.__version__ >= '0.21':
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(

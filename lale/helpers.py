@@ -357,8 +357,13 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
     #Validate that the number of elements in the n-tuple is the same
     #as the number of steps in the current pipeline
 
-    from lale.operators import (BasePipeline, IndividualOp, Operator,
-                                OperatorChoice, TrainablePipeline)
+    from lale.operators import (
+        BasePipeline,
+        IndividualOp,
+        Operator,
+        OperatorChoice,
+        TrainablePipeline,
+    )
     if isinstance(lale_object, IndividualOp):
         new_hyperparams:Dict[str,Any] = dict_without(hyperparams, 'name')
         if lale_object._hyperparams is not None:

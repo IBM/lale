@@ -13,14 +13,16 @@
 # limitations under the License.
 
 import logging
-from spacy.lang.en import English
+import os
+import urllib.request
+import zipfile
+
 import numpy as np
+from sklearn.utils.validation import _is_arraylike
+from spacy.lang.en import English
+
 import lale.docstrings
 import lale.operators
-from sklearn.utils.validation import _is_arraylike
-import urllib.request
-import os
-import zipfile
 
 logging.basicConfig(level=logging.INFO)
 

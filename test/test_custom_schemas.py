@@ -13,21 +13,25 @@
 # limitations under the License.
 
 import unittest
-import lale
-import sklearn
-import lale.type_checking
-import lale.schemas as schemas
-from sklearn.decomposition import PCA as foo
-from xgboost import XGBClassifier as bar
-from lightgbm import LGBMClassifier as baz
-from sklearn.linear_model.least_angle import Lars as foobar
 from test.mock_module import UnknownOp
-from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+
 import numpy as np
+import sklearn
+from lightgbm import LGBMClassifier as baz
+from sklearn.decomposition import PCA as foo
+from sklearn.linear_model.least_angle import Lars as foobar
+from xgboost import XGBClassifier as bar
+
+import lale
+import lale.schemas as schemas
+import lale.type_checking
+from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+
 
 class TestCustomSchema(unittest.TestCase):
     def setUp(self):
         import sklearn.decomposition
+
         import lale.lib.sklearn
         from lale.operators import make_operator
         self.sk_pca = make_operator(sklearn.decomposition.PCA, schemas={})
@@ -276,10 +280,10 @@ class TestCustomSchema(unittest.TestCase):
     def test_wrap_imported_operators(self):
         old_globals = {**globals()}
         try:
+            from lale.lib.autogen import Lars
+            from lale.lib.lightgbm import LGBMClassifier
             from lale.lib.sklearn import PCA
             from lale.lib.xgboost import XGBClassifier
-            from lale.lib.lightgbm import LGBMClassifier
-            from lale.lib.autogen import Lars
             lale.wrap_imported_operators()
             self.assertEqual(foo._schemas, PCA._schemas)
             self.assertEqual(bar._schemas, XGBClassifier._schemas)
@@ -301,7 +305,7 @@ class TestWrapUnknownOps(unittest.TestCase):
                 'algorithm': {'default': 'auto'}}}]}
 
     def test_wrap_from_class(self):
-        from lale.operators import make_operator, PlannedIndividualOp
+        from lale.operators import PlannedIndividualOp, make_operator
         self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
         Wrapped = make_operator(UnknownOp)
         self.assertTrue(isinstance(Wrapped, PlannedIndividualOp))
@@ -312,7 +316,7 @@ class TestWrapUnknownOps(unittest.TestCase):
     def test_wrapped_from_import(self):
         old_globals = {**globals()}
         try:
-            from lale.operators import make_operator, PlannedIndividualOp
+            from lale.operators import PlannedIndividualOp, make_operator
             self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
             lale.wrap_imported_operators()
             self.assertTrue(isinstance(UnknownOp, PlannedIndividualOp))
@@ -325,9 +329,10 @@ class TestWrapUnknownOps(unittest.TestCase):
                 globals()[sym] = obj
 
     def test_wrap_from_instance(self):
-        from lale.operators import make_operator, TrainableIndividualOp
-        from lale.sklearn_compat import make_sklearn_compat
         from sklearn.base import clone
+
+        from lale.operators import TrainableIndividualOp, make_operator
+        from lale.sklearn_compat import make_sklearn_compat
         self.assertFalse(isinstance(UnknownOp, TrainableIndividualOp))
         instance = UnknownOp(n_neighbors=3)
         self.assertFalse(isinstance(instance, TrainableIndividualOp))
@@ -382,7 +387,7 @@ class TestFreeze(unittest.TestCase):
         self.assertEqual(list(frozen_new.predict(X)), list(y_old))
 
     def test_pipeline_freeze_trained(self):
-        from lale.lib.sklearn import MinMaxScaler, LogisticRegression
+        from lale.lib.sklearn import LogisticRegression, MinMaxScaler
         trainable = MinMaxScaler() >> LogisticRegression()
         X = [[0.0], [1.0], [2.0]]
         y = [0.0, 0.0, 1.0]
@@ -408,7 +413,7 @@ class TestFreeze(unittest.TestCase):
         self.assertEqual(len(frozen.free_hyperparams()), 0)
 
     def test_trained_pipeline_freeze_trainable(self):
-        from lale.lib.sklearn import MinMaxScaler, LogisticRegression
+        from lale.lib.sklearn import LogisticRegression, MinMaxScaler
         from lale.operators import TrainedPipeline
         trainable = MinMaxScaler() >> LogisticRegression()
         X = [[0.0], [1.0], [2.0]]

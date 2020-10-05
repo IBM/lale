@@ -15,8 +15,7 @@
 import math
 import random
 import warnings
-from typing import (Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar,
-                    Union)
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
 
 import lale.operators as Ops
 from lale.pretty_print import hyperparams_to_string

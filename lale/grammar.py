@@ -2,9 +2,16 @@ import random
 from typing import Optional
 
 from lale.lib.lale import NoOp
-from lale.operators import (BasePipeline, IndividualOp, Operator,
-                            OperatorChoice, PlannedOperator, make_choice,
-                            make_pipeline, make_pipeline_graph)
+from lale.operators import (
+    BasePipeline,
+    IndividualOp,
+    Operator,
+    OperatorChoice,
+    PlannedOperator,
+    make_choice,
+    make_pipeline,
+    make_pipeline_graph,
+)
 from lale.sklearn_compat import clone_op
 
 

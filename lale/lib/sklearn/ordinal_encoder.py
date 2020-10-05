@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.operators
-import lale.docstrings
-import sklearn.preprocessing
 import numpy as np
+import sklearn.preprocessing
+
+import lale.docstrings
+import lale.operators
+
 
 class OrdinalEncoderImpl():
     def __init__(self, categories='auto', dtype='float64', handle_unknown='ignore', encode_unknown_with='auto'):

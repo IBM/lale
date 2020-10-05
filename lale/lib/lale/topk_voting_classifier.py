@@ -12,14 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from hyperopt import STATUS_OK
-from lale.lib.sklearn import VotingClassifier
-from lale.lib.lale import Hyperopt
-import lale.operators
 import copy
+import logging
 from typing import Any, Dict, Optional
 
-import logging
+from hyperopt import STATUS_OK
+
+import lale.operators
+from lale.lib.lale import Hyperopt
+from lale.lib.sklearn import VotingClassifier
+
 logger = logging.getLogger(__name__)
 
 class TopKVotingClassifierImpl:

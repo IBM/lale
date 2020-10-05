@@ -12,14 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.docstrings
-import lale.operators
-import lale.type_checking
 import functools
+
 import numpy as np
 import pandas as pd
 import scipy.sparse
+
+import lale.docstrings
+import lale.operators
 import lale.pretty_print
+import lale.type_checking
+
 try:
     import torch
     torch_installed=True

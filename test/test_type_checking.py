@@ -12,19 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-import jsonschema
 import os
+import unittest
+
+import jsonschema
+import sklearn.datasets
 
 import lale.lib.lale
-from lale.lib.lale import ConcatFeatures
-from lale.lib.lale import NoOp
-from lale.lib.lale import IdentityWrapper
-from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import TfidfVectorizer
-from lale.lib.sklearn import NMF
+from lale.lib.lale import ConcatFeatures, IdentityWrapper, NoOp
+from lale.lib.sklearn import NMF, LogisticRegression, TfidfVectorizer
 
-import sklearn.datasets
 
 class TestDatasetSchemas(unittest.TestCase):
     @classmethod
@@ -95,9 +92,10 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(all_y_schema, all_y_expected)
 
     def test_pandas_to_schema(self):
+        import pandas as pd
+
         from lale.datasets.data_schemas import to_schema
         from lale.type_checking import validate_schema
-        import pandas as pd
         train_X, train_y = self._irisDf['X'], self._irisDf['y']
         assert isinstance(train_X, pd.DataFrame)
         assert not hasattr(train_X, 'json_schema')
@@ -484,16 +482,17 @@ class TestSchemaValidation(unittest.TestCase):
         df = pd.DataFrame.from_records(data_records)
         X = df.drop(['IS_TENT'], axis=1).values
         y = df['IS_TENT'].values
-        from lale.lib.sklearn import OneHotEncoder as Enc
         from lale.lib.sklearn import GradientBoostingClassifier as Clf
+        from lale.lib.sklearn import OneHotEncoder as Enc
         trainable = Enc() >> Clf()
         trained = trainable.fit(X, y)
 
 class TestWithScorer(unittest.TestCase):
     def test_bare_array(self):
-        from lale.datasets.data_schemas import NDArrayWithSchema
-        from numpy import ndarray
         import sklearn.metrics
+        from numpy import ndarray
+
+        from lale.datasets.data_schemas import NDArrayWithSchema
         X, y = sklearn.datasets.load_iris(return_X_y=True)
         self.assertIsInstance(X, ndarray)
         self.assertIsInstance(y, ndarray)
@@ -516,8 +515,8 @@ class TestDisablingSchemaValidation(unittest.TestCase):
 
     def test_disable_schema_validation_individual_op(self):
         os.environ["LALE_DISABLE_SCHEMA_VALIDATION"]='True'
-        from lale.lib.sklearn import PCA
         import lale.schemas as schemas
+        from lale.lib.sklearn import PCA
 
         pca_input = schemas.Object(X=schemas.AnyOf([
             schemas.Array(
@@ -544,8 +543,8 @@ class TestDisablingSchemaValidation(unittest.TestCase):
 
     def test_disable_schema_validation_pipeline(self):
         os.environ["LALE_DISABLE_SCHEMA_VALIDATION"]='True'
-        from lale.lib.sklearn import PCA, LogisticRegression
         import lale.schemas as schemas
+        from lale.lib.sklearn import PCA, LogisticRegression
 
         lr_input = schemas.Object(required=['X', 'y'], X=schemas.AnyOf([
             schemas.Array(

@@ -15,6 +15,7 @@
 import lale.docstrings
 import lale.operators
 
+
 class IdentityWrapperImpl():
     # This should be equivalent to:
     # the underlying operator:

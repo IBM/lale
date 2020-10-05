@@ -16,6 +16,7 @@ import lale.docstrings
 import lale.operators
 from lale.expressions import Expr
 
+
 class GroupByImpl:
     def __init__(self, key=None):
         self._hyperparams = { 'key': key }

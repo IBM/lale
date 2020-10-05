@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+import pandas as pd
+
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 import lale.type_checking
 from lale.type_checking import is_schema
-import pandas as pd
-import numpy as np
+
 
 def _columns_schema_to_list(X, schema):
     s_all = lale.datasets.data_schemas.to_schema(X)

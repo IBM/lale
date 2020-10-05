@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import autoai_libs.transformers.exportable
+
 import lale.docstrings
 import lale.operators
-import autoai_libs.transformers.exportable
+
 
 class OptStandardScalerImpl():
     def __init__(self, use_scaler_flag=True, num_scaler_copy=True, num_scaler_with_mean=True, num_scaler_with_std=True):

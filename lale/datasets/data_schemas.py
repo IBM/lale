@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.type_checking
-import numpy as np
 import os
+
+import numpy as np
 import pandas as pd
 import scipy.sparse
+
+import lale.type_checking
+
 try:
     import torch
     torch_installed=True

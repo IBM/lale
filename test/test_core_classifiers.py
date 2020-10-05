@@ -14,10 +14,13 @@
 
 import unittest
 import warnings
+
 import sklearn.datasets
+
 import lale.lib.lale
-from lale.lib.lale import NoOp
 import lale.type_checking
+from lale.lib.lale import NoOp
+
 
 class TestClassification(unittest.TestCase):
 
@@ -65,7 +68,9 @@ def create_function_test_classifier(clf_name):
         from sklearn.metrics import accuracy_score, make_scorer
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            from lale.lib.sklearn.gradient_boosting_classifier import GradientBoostingClassifierImpl
+            from lale.lib.sklearn.gradient_boosting_classifier import (
+                GradientBoostingClassifierImpl,
+            )
             if clf._impl_class() == GradientBoostingClassifierImpl:
                 #because exponential loss does not work with iris dataset as it is not binary classification
                 import lale.schemas as schemas

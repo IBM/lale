@@ -12,21 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import torch
-from torch.utils.data import DataLoader
 import copy
-import torchvision.transforms as transforms
-from torchvision.models import resnet50
-import torch.optim as optim
+import math
+import sys
+
+import numpy as np
+import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
+import torch.optim as optim
+import torchvision.transforms as transforms
 from torch.autograd import Variable
-import sys
-import numpy as np
-import math
-import lale.operators
+from torch.utils.data import DataLoader
+from torchvision.models import resnet50
+
 import lale.docstrings
+import lale.operators
+
 
 class ResNet50Impl():
     def __init__(self, num_classes=10, model = None, 

@@ -12,33 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import unittest
+
 import jsonschema
 import numpy as np
-import unittest
 import sklearn.datasets
 import sklearn.metrics
 import sklearn.model_selection
 import xgboost
+
 from lale.lib.lale import Hyperopt
-from lale.lib.sklearn import DecisionTreeClassifier
-from lale.lib.sklearn import DecisionTreeRegressor
-from lale.lib.sklearn import ExtraTreesClassifier
-from lale.lib.sklearn import ExtraTreesRegressor
-from lale.lib.sklearn import FeatureAgglomeration
-from lale.lib.sklearn import FunctionTransformer
-from lale.lib.sklearn import GradientBoostingClassifier
-from lale.lib.sklearn import GradientBoostingRegressor
-from lale.lib.sklearn import LinearRegression
-from lale.lib.sklearn import LogisticRegression
-from lale.lib.sklearn import MLPClassifier
-from lale.lib.sklearn import PolynomialFeatures
-from lale.lib.sklearn import RandomForestClassifier
-from lale.lib.sklearn import RandomForestRegressor
-from lale.lib.sklearn import Ridge
-from lale.lib.sklearn import SVC
-from lale.lib.sklearn import VotingClassifier
-from lale.lib.xgboost import XGBClassifier
-from lale.lib.xgboost import XGBRegressor
+from lale.lib.sklearn import (
+    SVC,
+    DecisionTreeClassifier,
+    DecisionTreeRegressor,
+    ExtraTreesClassifier,
+    ExtraTreesRegressor,
+    FeatureAgglomeration,
+    FunctionTransformer,
+    GradientBoostingClassifier,
+    GradientBoostingRegressor,
+    LinearRegression,
+    LogisticRegression,
+    MLPClassifier,
+    PolynomialFeatures,
+    RandomForestClassifier,
+    RandomForestRegressor,
+    Ridge,
+    VotingClassifier,
+)
+from lale.lib.xgboost import XGBClassifier, XGBRegressor
 
 assert sklearn.__version__ == '0.20.3', 'This test is for scikit-learn 0.20.3.'
 assert xgboost.__version__ == '0.90', 'This test is for XGBoost 0.90.'

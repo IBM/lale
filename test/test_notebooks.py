@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import subprocess
 import tempfile
-import os
 import time
-import pytest
-from typing import List, Optional
 import warnings
+from typing import List, Optional
+
+import pytest
+
 
 def should_test(f:str)->bool:
     notebooks_categories_str:Optional[str] = os.environ.get("NOTEBOOK_CATEGORY", None)

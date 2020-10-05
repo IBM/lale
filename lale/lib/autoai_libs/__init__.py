@@ -76,27 +76,28 @@ Feature transformation:
 .. _`FS2`: lale.lib.autoai_libs.fs2.html
 """
 
+from .boolean2float import boolean2float
+from .cat_encoder import CatEncoder
+from .cat_imputer import CatImputer
+from .compress_strings import CompressStrings
+from .float32_transform import float32_transform
+from .float_str2_float import FloatStr2Float
+from .fs1 import FS1
+from .fs2 import FS2
+from .num_imputer import NumImputer
+
 # from autoai_libs.transformers.exportable
-from .numpy_column_selector        import NumpyColumnSelector
-from .compress_strings             import CompressStrings
+from .numpy_column_selector import NumpyColumnSelector
+from .numpy_permute_array import NumpyPermuteArray
 from .numpy_replace_missing_values import NumpyReplaceMissingValues
 from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
-from .boolean2float                import boolean2float
-from .cat_imputer                  import CatImputer
-from .cat_encoder                  import CatEncoder
-from .float32_transform            import float32_transform
-from .float_str2_float             import FloatStr2Float
-from .num_imputer                  import NumImputer
-from .opt_standard_scaler          import OptStandardScaler
-from .numpy_permute_array          import NumpyPermuteArray
+from .opt_standard_scaler import OptStandardScaler
 
 # from autoai_libs.cognito.transforms.transform_utils
 from .t_no_op import TNoOp
-from .ta1  import TA1
-from .ta2  import TA2
-from .tb1  import TB1
-from .tb2  import TB2
-from .tam  import TAM
+from .ta1 import TA1
+from .ta2 import TA2
+from .tam import TAM
+from .tb1 import TB1
+from .tb2 import TB2
 from .tgen import TGen
-from .fs1  import FS1
-from .fs2  import FS2

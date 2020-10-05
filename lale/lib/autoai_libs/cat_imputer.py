@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import autoai_libs.transformers.exportable
+import numpy as np
+
 import lale.docstrings
 import lale.operators
-import numpy as np
+
 
 class CatImputerImpl():
     def __init__(self, strategy, missing_values, sklearn_version_family=None, activate_flag=True):

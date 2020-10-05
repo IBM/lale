@@ -13,8 +13,10 @@
 # limitations under the License.
 
 from sklearn.preprocessing import QuantileTransformer as SKLModel
+
 import lale.docstrings
 import lale.operators
+
 
 class QuantileTransformerImpl():
 
@@ -140,4 +142,3 @@ _combined_schemas = {
 lale.docstrings.set_docstrings(QuantileTransformerImpl, _combined_schemas)
 
 QuantileTransformer = lale.operators.make_operator(QuantileTransformerImpl, _combined_schemas)
-

@@ -12,9 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn.linear_model
+
 import lale.docstrings
 import lale.operators
-import sklearn.linear_model
 
 _input_fit_schema = {
   'type': 'object',
@@ -316,8 +317,9 @@ LogisticRegression = lale.operators.make_operator(LogisticRegressionImpl, _combi
 if sklearn.__version__ >= '0.22':
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.LogisticRegression.html
-    from lale.schemas import AnyOf, Enum, Float, Null
     import typing
+
+    from lale.schemas import AnyOf, Enum, Float, Null
     LogisticRegression = typing.cast(lale.operators.PlannedIndividualOp, LogisticRegression.customize_schema(
         solver=Enum(
             values=['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],

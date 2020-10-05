@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import os
-import shutil
 import random
-import tensorflow_hub as hub
-import tensorflow as tf
+import shutil
+
 import numpy as np
+import tensorflow as tf
+import tensorflow_hub as hub
+
 import lale.docstrings
 import lale.operators
+
 
 class USEPretrainedEncoderImpl(object):
     """

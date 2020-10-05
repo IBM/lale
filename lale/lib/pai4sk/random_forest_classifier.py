@@ -17,9 +17,10 @@ try:
     pai4sk_installed=True
 except ImportError:
     pai4sk_installed=False
+import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-import lale.datasets.data_schemas
+
 
 class RandomForestClassifierImpl():
     def __init__(self, n_estimators=10, criterion='gini', max_depth=None, min_samples_leaf=1, max_features='auto', bootstrap=True, n_jobs=None, random_state=None, verbose=False, use_histograms=False, hist_nbins=256, use_gpu=False, gpu_ids=None):

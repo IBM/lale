@@ -12,20 +12,49 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 import itertools
-import warnings
-import random
 import math
+import random
+import warnings
 from collections import ChainMap
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
 
-from lale.util.Visitor import Visitor, accept
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceConstant, SearchSpaceEnum, SearchSpaceSum, SearchSpaceProduct, SearchSpacePrimitive, SearchSpaceArray, SearchSpaceOperator, should_print_search_space, SearchSpaceEmpty, SearchSpaceError
-from lale.search.schema2search_space import op_to_search_space
+from lale.operators import (
+    Operator,
+    OperatorChoice,
+    PlannedIndividualOp,
+    PlannedOperator,
+    PlannedPipeline,
+)
 from lale.search.PGO import PGO
-from lale.sklearn_compat import nest_all_HPparams, nest_choice_all_HPparams, DUMMY_SEARCH_SPACE_GRID_PARAM_NAME, discriminant_name, make_indexed_name, make_array_index_name, structure_type_name, structure_type_list, structure_type_tuple, structure_type_dict
-
-from lale.operators import PlannedOperator, OperatorChoice, PlannedIndividualOp, PlannedPipeline, Operator
+from lale.search.schema2search_space import op_to_search_space
+from lale.search.search_space import (
+    SearchSpace,
+    SearchSpaceArray,
+    SearchSpaceConstant,
+    SearchSpaceEmpty,
+    SearchSpaceEnum,
+    SearchSpaceError,
+    SearchSpaceObject,
+    SearchSpaceOperator,
+    SearchSpacePrimitive,
+    SearchSpaceProduct,
+    SearchSpaceSum,
+    should_print_search_space,
+)
+from lale.sklearn_compat import (
+    DUMMY_SEARCH_SPACE_GRID_PARAM_NAME,
+    discriminant_name,
+    make_array_index_name,
+    make_indexed_name,
+    nest_all_HPparams,
+    nest_choice_all_HPparams,
+    structure_type_dict,
+    structure_type_list,
+    structure_type_name,
+    structure_type_tuple,
+)
+from lale.util.Visitor import Visitor, accept
 
 SearchSpaceGrid = Dict[str,SearchSpacePrimitive]
 

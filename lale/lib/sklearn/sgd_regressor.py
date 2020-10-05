@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import sklearn.linear_model
+
 import lale.docstrings
 import lale.operators
+
 
 class SGDRegressorImpl():
 
@@ -263,8 +265,9 @@ SGDRegressor = lale.operators.make_operator(SGDRegressorImpl, _combined_schemas)
 if sklearn.__version__ >= '0.21':
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDRegressor.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.SGDRegressor.html
-    from lale.schemas import Int
     import typing
+
+    from lale.schemas import Int
     SGDRegressor = typing.cast(lale.operators.PlannedIndividualOp, SGDRegressor.customize_schema(
         max_iter=Int(
             minForOptimizer=5,

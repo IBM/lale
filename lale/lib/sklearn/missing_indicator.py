@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from numpy import nan
 from sklearn.impute import MissingIndicator as SKLModel
+
 import lale.docstrings
 import lale.operators
-from numpy import nan
+
 
 class MissingIndicatorImpl():
 

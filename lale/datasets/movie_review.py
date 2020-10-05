@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import os
-import numpy as np 
-import urllib.request
 import tarfile
+import urllib.request
+
+import numpy as np
+
 
 def load_movie_review():
     """Loads the sentiment classification from a movie reviews dataset.
@@ -50,4 +52,3 @@ def load_movie_review():
     X, y = shuffle(X, y)
     
     return X, y
-
