@@ -1,0 +1,19 @@
+default_language_version:
+    python: python3
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.4.0
+    hooks:
+    - id: check-case-conflict # Check for files that would conflict in case-insensitive filesystems
+    - id: check-merge-conflict # Check for files that contain merge conflict strings.
+    - id: debug-statements # Check for debugger imports and py37+ `breakpoint()` calls in python source.
+
+-   repo: https://gitlab.com/pycqa/flake8
+    rev: 3.8.3 
+    hooks:
+    - id: flake8
+-   repo: https://github.com/pre-commit/mirrors-mypy
+    rev: 'v0.782'
+    hooks:
+    -   id: mypy
+

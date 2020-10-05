@@ -14,6 +14,7 @@
 
 import lale.operators
 import numpy as np
+from typing import Any, Dict
 
 class IncreaseRowsImpl():
     def __init__(self, n_rows = 5):
@@ -57,7 +58,7 @@ _input_transform_schema = {
       'items': {'type': 'array', 'items': {'type': 'number'}}},
     'y': {}}}
 
-_output_transform_schema = {}
+_output_transform_schema:Dict[str,Any] = {}
 #,
 #  'type': 'array',
 #  'items': {'type': 'number'}

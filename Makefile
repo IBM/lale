@@ -6,8 +6,7 @@ run_tests:
 
 check:
 	python -m compileall .
-	flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
-	mypy -p lale
+	pre-commit run --all-files
 
 PYTHON_VERSION ?= 3.6
 

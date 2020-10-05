@@ -14,9 +14,8 @@
 
 from typing import Any, Dict, List, Optional, Union
 
-from .schema_utils import (Schema, getExclusiveMaximum, getExclusiveMinimum,
+from .schema_utils import (JsonSchema, getExclusiveMaximum, getExclusiveMinimum,
                            getMaximum, getMinimum)
-
 
 class SchemaRange(object):
     def __init__(self, minimum=None, maximum=None, exclusive_minimum=False, exclusive_maximum=False, is_integer:bool=False) -> None:
@@ -100,8 +99,8 @@ class SchemaRange(object):
         )
     
     @classmethod
-    def to_schema_with_optimizer(cls, actual_range:'SchemaRange', optimizer_range:'SchemaRange')->Schema:
-        number_schema:Dict[str,Schema] = {}
+    def to_schema_with_optimizer(cls, actual_range:'SchemaRange', optimizer_range:'SchemaRange')->JsonSchema:
+        number_schema:JsonSchema = {}
         if actual_range.is_integer:
             number_schema['type'] = 'integer'
         else:

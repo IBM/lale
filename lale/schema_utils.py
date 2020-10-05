@@ -16,22 +16,22 @@ from typing import (Any, Callable, Dict, Iterable, Iterator, List, Optional,
                     Set, Tuple, Union)
 
 # Type definitions
-Schema = Any
+JsonSchema = Dict[str,Any]
 SchemaEnum = Set[Any]
 
-STrue:Schema = {}
-SFalse:Schema = {"not":STrue}
+STrue:JsonSchema = {}
+SFalse:JsonSchema = {"not":STrue}
 
 forOptimizerConstant:str = 'forOptimizer'
 forOptimizerConstantSuffix:str = 'ForOptimizer'
 
-def is_true_schema(s:Schema)->bool:
+def is_true_schema(s:JsonSchema)->bool:
     return s is True or s == STrue
 
-def is_false_schema(s:Schema)->bool:
+def is_false_schema(s:JsonSchema)->bool:
     return s is False or s == SFalse
 
-def is_lale_any_schema(s:Schema)->bool:
+def is_lale_any_schema(s:JsonSchema)->bool:
     if isinstance(s, dict):
         t = s.get('laleType', None)
         return t == 'Any'
@@ -82,13 +82,13 @@ def getExclusiveMaximum(obj):
         return mfo
 
 
-def isForOptimizer(s:Schema)->bool:
+def isForOptimizer(s:JsonSchema)->bool:
     if isinstance(s, dict):
         return s.get(forOptimizerConstant, True)
     else:
         return True
 
-def makeSingleton_(k:str, schemas:List[Schema])->Schema:
+def makeSingleton_(k:str, schemas:List[JsonSchema])->JsonSchema:
     if len(schemas) == 0:
         return {}
     if len(schemas) == 1:
@@ -96,14 +96,14 @@ def makeSingleton_(k:str, schemas:List[Schema])->Schema:
     else:
         return {k:schemas}
 
-def makeAllOf(schemas:List[Schema])->Schema:
+def makeAllOf(schemas:List[JsonSchema])->JsonSchema:
     return makeSingleton_('allOf', schemas)
-def makeAnyOf(schemas:List[Schema])->Schema:
+def makeAnyOf(schemas:List[JsonSchema])->JsonSchema:
     return makeSingleton_('anyOf', schemas)
-def makeOneOf(schemas:List[Schema])->Schema:
+def makeOneOf(schemas:List[JsonSchema])->JsonSchema:
     return makeSingleton_('oneOf', schemas)
 
-def forOptimizer(schema:Schema)->Schema:
+def forOptimizer(schema:JsonSchema)->Optional[JsonSchema]:
     if schema is None or schema is True or schema is False:
         return schema
     if not isForOptimizer(schema):
@@ -147,7 +147,7 @@ def forOptimizer(schema:Schema)->Schema:
         else:
             return {'not':s}
 
-    transformedSchema:Schema = {}
+    transformedSchema:JsonSchema = {}
     for k,v in schema.items():
         if k.endswith(forOptimizerConstantSuffix):
             base:str = k[:-len(forOptimizerConstantSuffix)]
@@ -176,7 +176,7 @@ def forOptimizer(schema:Schema)->Schema:
 
     return schema
 
-def has_operator(schema:Schema)->bool:
+def has_operator(schema:JsonSchema)->bool:
     to = schema.get('laleType', None)
     if to == 'operator':
         return True
@@ -222,7 +222,7 @@ def has_operator(schema:Schema)->bool:
     # if we survived all of the checks, then we
     return False
 
-def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
+def atomize_schema_enumerations(schema:Union[None, JsonSchema, List[JsonSchema]])->None:
     """ Given a schema, converts structured enumeration values (records, arrays)
         into schemas where the structured part is specified as a schema, with the
         primitive as the enum.
@@ -249,11 +249,11 @@ def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
     ev = schema.get('enum', None)
     if ev is not None:
         simple_evs:List[Any]=[]
-        complex_evs:List[Schema]=[]
+        complex_evs:List[JsonSchema]=[]
         for e in ev:
             if isinstance(e, dict):
                 required:List[str] = []
-                props:Dict[str,Schema] = {}
+                props:Dict[str,JsonSchema] = {}
                 for k,v in e:
                     required.append(k)
                     vs = {'enum': [v]}
@@ -268,7 +268,7 @@ def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
             elif isinstance(e, list) or isinstance(e, tuple):
                 is_tuple = isinstance(e, tuple)
                 items_len = len(e)
-                items:List[Schema] = []
+                items:List[JsonSchema] = []
                 for v in e:
                     vs = {'enum': [v]}
                     atomize_schema_enumerations(vs)
@@ -296,7 +296,7 @@ def atomize_schema_enumerations(schema:Union[None, Schema, List[Schema]])->None:
             else:
                 schema['anyOf'] = complex_evs
 
-def check_operators_schema(schema:Schema, warnings:List[str])->None:
+def check_operators_schema(schema:Optional[Union[List[JsonSchema],JsonSchema]], warnings:List[str])->None:
     """ Given a schema, collect warnings if there
     are any enumeration with all Operator values
     that are not marked as `'laleType':'operator'`.

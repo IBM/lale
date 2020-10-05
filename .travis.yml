@@ -76,13 +76,10 @@ jobs:
         - echo -e "${ANSI_GREEN}Compiling all...${ANSI_RESET}" && echo -en 'travis_fold:start:compile\\r'
         - python -m compileall .
         - echo -en 'travis_fold:end:compile\\r'
-        - echo -e "${ANSI_GREEN}Running flake8...${ANSI_RESET}" && echo -en 'travis_fold:start:flake8\\r'
-        - flake8 . --count --select=E9,F63,F72,F82 --show-source --statistics
-        - echo -en 'travis_fold:end:flake8\\r'
-        - echo -e "${ANSI_GREEN}Running mypy...${ANSI_RESET}" && echo -en 'travis_fold:start:mypy\\r'
-        - mypy -p lale
-        - echo -en 'travis_fold:end:mypy\\r'
-      env: SETUP_TARGET=.[test]
+        - echo -e "${ANSI_GREEN}Running pre-commit checks..${ANSI_RESET}" && echo -en 'travis_fold:start:precommit\\r'
+        - pre-commit run --all-files
+        - echo -en 'travis_fold:end:precommit\\r'
+      env: SETUP_TARGET=.[dev]
     - stage: deploy
       install: skip
       script: skip

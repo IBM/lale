@@ -16,7 +16,7 @@ from typing import Any, Dict, Iterable, Optional, List, Set, Tuple, Union
 from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGrid
 from lale.sklearn_compat import make_sklearn_compat, unnest_HPparams
 import lale.operators as Ops
-from lale.schema_utils import Schema, getMinimum, getMaximum
+from lale.schema_utils import JsonSchema, getMinimum, getMaximum
 from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray, should_print_search_space
 from lale.search.PGO import PGO
 

@@ -1038,13 +1038,13 @@ class TestSpuriousSideConstraintsClassification(unittest.TestCase):
         reg = MLPClassifier(beta_1=0.8, solver='sgd')
         reg.fit(self.X_train, self.y_train)
 
-    def test_mlp_classifier_2(self):
+    def test_mlp_classifier_2b(self):
         from lale.lib.sklearn import MLPClassifier
 
         reg = MLPClassifier(beta_2=0.8, solver='sgd')
         reg.fit(self.X_train, self.y_train)
 
-    def test_mlp_classifier_2(self):
+    def test_mlp_classifier_2e(self):
         from lale.lib.sklearn import MLPClassifier
 
         reg = MLPClassifier(epsilon=0.8, solver='sgd')

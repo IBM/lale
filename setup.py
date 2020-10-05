@@ -26,7 +26,7 @@ try:
     # This is a bit (!) hackish: we are setting a global variable so that the
     # main lale __init__ can detect if it is being loaded by the setup
     # routine, to avoid attempting to import components before installation.
-    builtins.__LALE_SETUP__ = True
+    builtins.__LALE_SETUP__ = True # type: ignore
 except ImportError:
     pass
 
@@ -87,12 +87,13 @@ setup(
             'torch>=1.0',
             'BlackBoxAuditing',
             'imbalanced-learn'],
+        'dev': [
+            'pre-commit'
+        ],
         'test':[
             'autoai-libs',
             'joblib',
             'jupyter',
-            'mypy',
-            'flake8',
             'numpydoc',
             'sphinx',
             'm2r',
