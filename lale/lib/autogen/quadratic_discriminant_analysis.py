@@ -33,12 +33,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": [
-                "priors",
-                "reg_param",
-                "store_covariance",
-                "tol",
-            ],
+            "required": ["priors", "reg_param", "store_covariance", "tol",],
             "relevantToOptimizer": ["tol"],
             "additionalProperties": False,
             "properties": {
@@ -162,4 +157,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(QuadraticDiscriminantAnalysisImpl, _combined_schemas)
-QuadraticDiscriminantAnalysis = make_operator(QuadraticDiscriminantAnalysisImpl, _combined_schemas)
+QuadraticDiscriminantAnalysis = make_operator(
+    QuadraticDiscriminantAnalysisImpl, _combined_schemas
+)

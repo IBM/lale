@@ -24,10 +24,10 @@ from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.search_space import SearchSpace
 
-example_pgo_fp = 'test/lale-pgo-example.json'
+example_pgo_fp = "test/lale-pgo-example.json"
+
 
 class TestPGOLoad(unittest.TestCase):
-    
     def test_pgo_load(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
         lr_c = pgo["LogisticRegression"]["C"]
@@ -36,46 +36,56 @@ class TestPGOLoad(unittest.TestCase):
         pgo = PGO.load_pgo_file(example_pgo_fp)
         lr_c = pgo["LogisticRegression"]["C"]
         dist = PGO.FrequencyDistribution.asIntegerValues(lr_c.items())
-        samples:List[str] = dist.samples(10)
+        samples: List[str] = dist.samples(10)
+
+
 #        print(f"LR[C] samples: {samples}")
+
 
 class TestPGOGridSearchCV(unittest.TestCase):
     def test_lr_parameters(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
         lr = LogisticRegression()
-        parameters = get_grid_search_parameter_grids(lr,num_samples=2, pgo=pgo)
-#        print(parameters)
+        parameters = get_grid_search_parameter_grids(lr, num_samples=2, pgo=pgo)
+
+    #        print(parameters)
 
     def test_lr_run(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
         from sklearn.datasets import load_iris
         from sklearn.metrics import accuracy_score, make_scorer
-  
+
         lr = LogisticRegression()
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             clf = lale.lib.lale.GridSearchCV(
-                estimator=lr, lale_num_samples=2, lale_num_grids=5,
-                cv=5, pgo=pgo, scoring=make_scorer(accuracy_score))
+                estimator=lr,
+                lale_num_samples=2,
+                lale_num_grids=5,
+                cv=5,
+                pgo=pgo,
+                scoring=make_scorer(accuracy_score),
+            )
             iris = load_iris()
             clf.fit(iris.data, iris.target)
 
     def test_pipeline_parameters(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
-        trainable = PCA() >> LogisticRegression() 
-        parameters = get_grid_search_parameter_grids(trainable,num_samples=2, pgo=pgo)
+        trainable = PCA() >> LogisticRegression()
+        parameters = get_grid_search_parameter_grids(trainable, num_samples=2, pgo=pgo)
         # print(parameters)
+
 
 class TestPGOHyperopt(unittest.TestCase):
     def test_lr_parameters(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
         lr = LogisticRegression()
-        parameters:SearchSpace = hyperopt_search_space(lr, pgo=pgo)
+        parameters: SearchSpace = hyperopt_search_space(lr, pgo=pgo)
 
     def test_lr_run(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
@@ -88,10 +98,10 @@ class TestPGOHyperopt(unittest.TestCase):
         clf = Hyperopt(estimator=lr, max_evals=5, pgo=pgo)
         iris = load_iris()
         clf.fit(iris.data, iris.target)
- 
+
     def test_pipeline_parameters(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
-        trainable = PCA() >> LogisticRegression() 
-        parameters = get_grid_search_parameter_grids(trainable,num_samples=2, pgo=pgo)
+        trainable = PCA() >> LogisticRegression()
+        parameters = get_grid_search_parameter_grids(trainable, num_samples=2, pgo=pgo)
         # print(parameters)

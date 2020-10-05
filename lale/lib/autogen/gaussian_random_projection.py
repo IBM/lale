@@ -139,4 +139,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(GaussianRandomProjectionImpl, _combined_schemas)
-GaussianRandomProjection = make_operator(GaussianRandomProjectionImpl, _combined_schemas)
+GaussianRandomProjection = make_operator(
+    GaussianRandomProjectionImpl, _combined_schemas
+)

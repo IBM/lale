@@ -31,17 +31,19 @@ if TYPE_CHECKING:
         PlannedPipeline,
     )
 
-def hyperopt_search_space(op:'PlannedOperator', 
-                          schema=None,
-                          pgo:Optional[PGO]=None,
-                          data_schema={}):
+
+def hyperopt_search_space(
+    op: "PlannedOperator", schema=None, pgo: Optional[PGO] = None, data_schema={}
+):
 
     search_space = op_to_search_space(op, pgo=pgo, data_schema=data_schema)
     if search_space:
         name = op.name()
 
         if should_print_search_space("true", "all", "backend", "hyperopt"):
-            print(f"hyperopt search space for {name}: {search_space_to_hp_str(search_space, name)}")
+            print(
+                f"hyperopt search space for {name}: {search_space_to_hp_str(search_space, name)}"
+            )
         return search_space_to_hp_expr(search_space, name)
     else:
         return None

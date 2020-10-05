@@ -21,11 +21,12 @@ import lale.docstrings
 import lale.operators
 
 
-class float32_transformImpl():
+class float32_transformImpl:
     def __init__(self, activate_flag=True):
-        self._hyperparams = {
-            'activate_flag': activate_flag}
-        self._wrapped_model = autoai_libs.transformers.exportable.float32_transform(**self._hyperparams)
+        self._hyperparams = {"activate_flag": activate_flag}
+        self._wrapped_model = autoai_libs.transformers.exportable.float32_transform(
+            **self._hyperparams
+        )
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)
@@ -44,72 +45,95 @@ class float32_transformImpl():
 
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""
-        if self._hyperparams['activate_flag']:
+        if self._hyperparams["activate_flag"]:
             result = {
-                'type': 'array',
-                'items': {'type': 'array', 'items': {'type': 'number'}}}
+                "type": "array",
+                "items": {"type": "array", "items": {"type": "number"}},
+            }
         else:
             result = s_X
         return result
 
+
 _hyperparams_schema = {
-    'allOf': [{
-        'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['activate_flag'],
-        'relevantToOptimizer': [],
-        'properties': {
-            'activate_flag': {
-                'description': 'If False, transform(X) outputs the input numpy array X unmodified.',
-                'type': 'boolean',
-                'default': True}}}]}
+    "allOf": [
+        {
+            "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["activate_flag"],
+            "relevantToOptimizer": [],
+            "properties": {
+                "activate_flag": {
+                    "description": "If False, transform(X) outputs the input numpy array X unmodified.",
+                    "type": "boolean",
+                    "default": True,
+                }
+            },
+        }
+    ]
+}
 
 _input_fit_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {#Handles 1-D arrays as well
-            'anyOf': [
-                {'type': 'array', 'items': {'laleType': 'Any'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType': 'Any'}}}]},
-        'y': {
-            'laleType': 'Any'}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {  # Handles 1-D arrays as well
+            "anyOf": [
+                {"type": "array", "items": {"laleType": "Any"}},
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"laleType": "Any"}},
+                },
+            ]
+        },
+        "y": {"laleType": "Any"},
+    },
+}
 
 _input_transform_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {#Handles 1-D arrays as well
-            'anyOf': [
-                {'type': 'array', 'items': {'laleType': 'Any'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType': 'Any'}}}]}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {  # Handles 1-D arrays as well
+            "anyOf": [
+                {"type": "array", "items": {"laleType": "Any"}},
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"laleType": "Any"}},
+                },
+            ]
+        }
+    },
+}
 
 _output_transform_schema = {
-    'description': 'Features; the outer array is over samples.',
-    'type': 'array',
-    'items': {'type': 'array', 'items': {'laleType': 'Any'}}}
+    "description": "Features; the outer array is over samples.",
+    "type": "array",
+    "items": {"type": "array", "items": {"laleType": "Any"}},
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Transforms a numpy array to float32.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """Operator from `autoai_libs`_. Transforms a numpy array to float32.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.float32_transform.html',
-    'import_from': 'autoai_libs.transformers.exportable',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_transform': _input_transform_schema,
-        'output_transform': _output_transform_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.float32_transform.html",
+    "import_from": "autoai_libs.transformers.exportable",
+    "type": "object",
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(float32_transformImpl, _combined_schemas)
 
-float32_transform = lale.operators.make_operator(float32_transformImpl, _combined_schemas)
+float32_transform = lale.operators.make_operator(
+    float32_transformImpl, _combined_schemas
+)

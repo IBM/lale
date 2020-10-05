@@ -34,5 +34,5 @@ class BatchDataDict(Dataset):
         return len(self.data_dict)
 
     def __getitem__(self, idx):
-        # This returns the batch at idx instead of a single element. 
+        # This returns the batch at idx instead of a single element.
         return self.data_dict[idx]

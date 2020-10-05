@@ -154,4 +154,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(OrthogonalMatchingPursuitImpl, _combined_schemas)
-OrthogonalMatchingPursuit = make_operator(OrthogonalMatchingPursuitImpl, _combined_schemas)
+OrthogonalMatchingPursuit = make_operator(
+    OrthogonalMatchingPursuitImpl, _combined_schemas
+)

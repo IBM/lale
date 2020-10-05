@@ -17,33 +17,33 @@ import lale.operators
 from lale.lib.lale.no_op import NoOp
 
 
-class BothImpl():
+class BothImpl:
     # This should be equivalent to:
     # (op1 >> op2) | (op2 >> op1)
     # but with a smaller search space
-    def __init__(self, op1, op2, order:str='forward'):
-        self._hyperparams = {'order':order, 'op1':op1, 'op2':op2}
+    def __init__(self, op1, op2, order: str = "forward"):
+        self._hyperparams = {"order": order, "op1": op1, "op2": op2}
 
     def getPipeline(self):
         params = self._hyperparams
-        op1 = params.get('op1', None)
+        op1 = params.get("op1", None)
         if op1 is None:
             op1 = NoOp()
-            
-        op2 = params.get('op2', None)
+
+        op2 = params.get("op2", None)
         if op2 is None:
             op2 = NoOp()
 
-        if params['order'] == 'backward':
+        if params["order"] == "backward":
             return op2 >> op1
         else:
             return op1 >> op2
 
-    def transform(self, X, y = None):
+    def transform(self, X, y=None):
         return self.getPipeline().transform(X, y=y)
 
-#    def transform_schema(self, s_X):
-#        return self.getPipeline().transform_schema(s_X)
+    #    def transform_schema(self, s_X):
+    #        return self.getPipeline().transform_schema(s_X)
 
     def predict(self, X):
         return self.getPipeline().predict(X)
@@ -62,67 +62,64 @@ class BothImpl():
     #     else:
     #         raise ValueError('Can only call get_feature_names on a trained operator. Please call fit to get a trained operator.')
 
+
 _hyperparams_schema = {
-    'description': 'Hyperparameter schema for the both Higher Order Operator, which wraps another operator and runs it a given number of times',
-    'allOf': [
-    {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
-        'type': 'object',
-        'additionalProperties': False,
-        'relevantToOptimizer': ['order', 'op1', 'op2'],
-        'properties': {
-            'order': {
-                'enum': ['forward', 'backward'],
-                'default': 'forward'
+    "description": "Hyperparameter schema for the both Higher Order Operator, which wraps another operator and runs it a given number of times",
+    "allOf": [
+        {
+            "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters",
+            "type": "object",
+            "additionalProperties": False,
+            "relevantToOptimizer": ["order", "op1", "op2"],
+            "properties": {
+                "order": {"enum": ["forward", "backward"], "default": "forward"},
+                "op1": {"laleType": "operator"},
+                "op2": {"laleType": "operator"},
             },
-            'op1': {
-                'laleType': 'operator'
-            },
-            'op2': {
-                'laleType': 'operator'
-            }
-        }}]}
+        }
+    ],
+}
 
 # TODO: can we surface the base op input/output schema?
 _input_fit_schema = {
-    'description': 'Input data schema for training both.',
-    'type': 'object',
-    'required': ['X'],  
-    'additionalProperties': False,
-    'properties': {
-        'X': {}}}
+    "description": "Input data schema for training both.",
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {"X": {}},
+}
 
-_input_predict_transform_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    'description': 'Input data schema for transformations using both.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {},
-        'y': {}}}
+_input_predict_transform_schema = {  # TODO: separate predict vs. predict_proba vs. transform
+    "description": "Input data schema for transformations using both.",
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {"X": {}, "y": {}},
+}
 
-_output_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    'description': 'Output data schema for transformations using both.',
-    'laleType': 'Any'}
+_output_schema = {  # TODO: separate predict vs. predict_proba vs. transform
+    "description": "Output data schema for transformations using both.",
+    "laleType": "Any",
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.both.html',
-    'import_from': 'lale.lib.lale',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_transform_schema,
-        'output_predict': _output_schema,
-        'input_predict_proba': _input_predict_transform_schema,
-        'output_predict_proba': _output_schema,
-        'input_transform': _input_predict_transform_schema,
-        'output_transform': _output_schema}}
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters.",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.both.html",
+    "import_from": "lale.lib.lale",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_transform_schema,
+        "output_predict": _output_schema,
+        "input_predict_proba": _input_predict_transform_schema,
+        "output_predict_proba": _output_schema,
+        "input_transform": _input_predict_transform_schema,
+        "output_transform": _output_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(BothImpl, _combined_schemas)
 

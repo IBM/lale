@@ -280,4 +280,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(PassiveAggressiveClassifierImpl, _combined_schemas)
-PassiveAggressiveClassifier = make_operator(PassiveAggressiveClassifierImpl, _combined_schemas)
+PassiveAggressiveClassifier = make_operator(
+    PassiveAggressiveClassifierImpl, _combined_schemas
+)

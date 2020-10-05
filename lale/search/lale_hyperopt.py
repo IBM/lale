@@ -27,42 +27,48 @@ from lale.sklearn_compat import make_indexed_name
 from lale.util.Visitor import Visitor, accept
 
 
-def search_space_to_hp_expr(space:SearchSpace, name:str):
+def search_space_to_hp_expr(space: SearchSpace, name: str):
     return SearchSpaceHPExprVisitor.run(space, name)
 
-def search_space_to_hp_str(space:SearchSpace, name:str)->str:
+
+def search_space_to_hp_str(space: SearchSpace, name: str) -> str:
     return SearchSpaceHPStrVisitor.run(space, name)
 
-def search_space_to_str_for_comparison(space:SearchSpace, name:str)->str:
+
+def search_space_to_str_for_comparison(space: SearchSpace, name: str) -> str:
     return SearchSpaceHPStrVisitor.run(space, name, counter=None, useCounter=False)
 
-def _mk_label(label, counter, useCounter = True):
+
+def _mk_label(label, counter, useCounter=True):
     if counter is None or not useCounter:
         return label
     else:
         return f"{label}{counter}"
 
+
 @scope.define
 def pgo_sample(pgo, sample):
-     return pgo[sample]
+    return pgo[sample]
+
 
 @scope.define
 def make_nested_hyperopt(space):
     return helpers.make_nested_hyperopt_space(space)
 
+
 class SearchSpaceHPExprVisitor(Visitor):
-    names:Dict[str,int]
+    names: Dict[str, int]
 
     @classmethod
-    def run(cls, space:SearchSpace, name:str):
+    def run(cls, space: SearchSpace, name: str):
         visitor = cls(name)
         return accept(space, visitor, name)
 
-    def __init__(self, name:str):
+    def __init__(self, name: str):
         super(SearchSpaceHPExprVisitor, self).__init__()
         self.names = {}
 
-    def get_unique_name(self, name:str)->str:
+    def get_unique_name(self, name: str) -> str:
         if name in self.names:
             counter = self.names[name] + 1
             self.names[name] = counter
@@ -71,13 +77,13 @@ class SearchSpaceHPExprVisitor(Visitor):
             self.names[name] = 0
             return name
 
-    def mk_label(self, label, counter, useCounter = True):
+    def mk_label(self, label, counter, useCounter=True):
         return self.get_unique_name(_mk_label(label, counter, useCounter=useCounter))
 
-    def visitSearchSpaceEnum(self, space:SearchSpaceEnum, path:str, counter=None):
+    def visitSearchSpaceEnum(self, space: SearchSpaceEnum, path: str, counter=None):
         def as_hp_vals(v):
             # Lists are not "safe" to pass to hyperopt without wrapping
-            if isinstance(v, (list,tuple,Operator)):
+            if isinstance(v, (list, tuple, Operator)):
                 return helpers.val_wrapper(v)
             else:
                 return v
@@ -85,33 +91,44 @@ class SearchSpaceHPExprVisitor(Visitor):
         if len(space.vals) == 1:
             return as_hp_vals(space.vals[0])
         else:
-            return hp.choice(self.mk_label(path, counter), [ as_hp_vals(v) for v in space.vals])
+            return hp.choice(
+                self.mk_label(path, counter), [as_hp_vals(v) for v in space.vals]
+            )
 
     visitSearchSpaceConstant = visitSearchSpaceEnum
     visitSearchSpaceBool = visitSearchSpaceEnum
 
-    def visitSearchSpaceNumber(self, space:SearchSpaceNumber, path:str, counter=None):
+    def visitSearchSpaceNumber(self, space: SearchSpaceNumber, path: str, counter=None):
         label = self.mk_label(path, counter)
 
         if space.pgo is not None:
-            return scope.pgo_sample(space.pgo, hp.quniform(label, 0, len(space.pgo)-1, 1))
+            return scope.pgo_sample(
+                space.pgo, hp.quniform(label, 0, len(space.pgo) - 1, 1)
+            )
 
         dist = "uniform"
         if space.distribution:
             dist = space.distribution
 
         if space.maximum is None:
-            raise SearchSpaceError(path, f"maximum not specified for a number with distribution {dist}")
+            raise SearchSpaceError(
+                path, f"maximum not specified for a number with distribution {dist}"
+            )
         max = space.getInclusiveMax()
 
         # These distributions need only a maximum
         if dist == "integer":
             if not space.discrete:
-                raise SearchSpaceError(path, "integer distribution specified for a non discrete numeric type")
+                raise SearchSpaceError(
+                    path,
+                    "integer distribution specified for a non discrete numeric type",
+                )
             return hp.randint(label, max)
 
         if space.minimum is None:
-            raise SearchSpaceError(path, f"minimum not specified for a number with distribution {dist}")
+            raise SearchSpaceError(
+                path, f"minimum not specified for a number with distribution {dist}"
+            )
         min = space.getInclusiveMin()
 
         if dist == "uniform":
@@ -122,7 +139,10 @@ class SearchSpaceHPExprVisitor(Visitor):
         elif dist == "loguniform":
             # for log distributions, hyperopt requires that we provide the log of the min/max
             if min <= 0:
-                raise SearchSpaceError(path, f"minimum of 0 specified with a {dist} distribution.  This is not allowed; please set it (possibly using minimumForOptimizer) to be positive")
+                raise SearchSpaceError(
+                    path,
+                    f"minimum of 0 specified with a {dist} distribution.  This is not allowed; please set it (possibly using minimumForOptimizer) to be positive",
+                )
             if min > 0:
                 min = math.log(min)
             if max > 0:
@@ -135,13 +155,13 @@ class SearchSpaceHPExprVisitor(Visitor):
         else:
             raise SearchSpaceError(path, f"Unknown distribution type: {dist}")
 
-    def array_single_expr_(self, space:SearchSpaceArray, path:str, num):
+    def array_single_expr_(self, space: SearchSpaceArray, path: str, num):
         p = _mk_label(path, num) + "_"
-        items:Iterable[SearchSpace] = space.items()
-        ret = [accept(sub, self, p, counter=x) for x,sub in enumerate(items)]
+        items: Iterable[SearchSpace] = space.items()
+        ret = [accept(sub, self, p, counter=x) for x, sub in enumerate(items)]
         return tuple(ret) if space.is_tuple else ret
 
-    def visitSearchSpaceArray(self, space:SearchSpaceArray, path:str, counter=None):
+    def visitSearchSpaceArray(self, space: SearchSpaceArray, path: str, counter=None):
         assert space.maximum >= space.minimum
         p = _mk_label(path, counter)
         cp = p + "_"
@@ -150,17 +170,20 @@ class SearchSpaceHPExprVisitor(Visitor):
             expr = self.array_single_expr_(space, cp, space.minimum)
             return expr
         else:
-            exprs = [self.array_single_expr_(space, cp, x) for x in range(space.minimum, space.maximum+1)]
+            exprs = [
+                self.array_single_expr_(space, cp, x)
+                for x in range(space.minimum, space.maximum + 1)
+            ]
             res = hp.choice(p, exprs)
             return res
 
-
-    def visitSearchSpaceObject(self, space:SearchSpaceObject, path:str, counter=None):
+    def visitSearchSpaceObject(self, space: SearchSpaceObject, path: str, counter=None):
         search_space = {}
         any_path = self.get_unique_name(_mk_label(path, counter) + "_" + "combos")
-        search_space['name']=space.longName
+        search_space["name"] = space.longName
 
         child_counter = None
+
         def asexpr(key, e):
             nonlocal child_counter
             if e is None:
@@ -187,36 +210,49 @@ class SearchSpaceHPExprVisitor(Visitor):
             i = i + 1
         return search_space
 
-    def visitSearchSpaceProduct(self, prod:SearchSpaceProduct, path:str, counter=None):
-        search_spaces = [accept(space, self, self.get_unique_name(make_indexed_name(name, index))) for name, index, space in prod.get_indexed_spaces()]
+    def visitSearchSpaceProduct(
+        self, prod: SearchSpaceProduct, path: str, counter=None
+    ):
+        search_spaces = [
+            accept(space, self, self.get_unique_name(make_indexed_name(name, index)))
+            for name, index, space in prod.get_indexed_spaces()
+        ]
         return search_spaces
 
-    def visitSearchSpaceSum(self, sum:SearchSpaceSum, path:str, counter=None):
+    def visitSearchSpaceSum(self, sum: SearchSpaceSum, path: str, counter=None):
         if len(sum.sub_spaces) == 1:
             return accept(sum.sub_spaces[0], self, "")
         else:
-            unique_name:str = self.get_unique_name("choice")
-            search_spaces = hp.choice(unique_name, [{str(i) : accept(m, self, "")} for i, m in enumerate(sum.sub_spaces)])
+            unique_name: str = self.get_unique_name("choice")
+            search_spaces = hp.choice(
+                unique_name,
+                [{str(i): accept(m, self, "")} for i, m in enumerate(sum.sub_spaces)],
+            )
             return search_spaces
 
-    def visitSearchSpaceOperator(self, op:SearchSpaceOperator, path:str, counter=None):
+    def visitSearchSpaceOperator(
+        self, op: SearchSpaceOperator, path: str, counter=None
+    ):
         return scope.make_nested_hyperopt(accept(op.sub_space, self, path))
 
-    def visitSearchSpaceEmpty(self, op:SearchSpaceEmpty, path:str, counter=None):
-        raise SearchSpaceError(path, "The hyperopt backend can't compile an empty (sub-) search space")
+    def visitSearchSpaceEmpty(self, op: SearchSpaceEmpty, path: str, counter=None):
+        raise SearchSpaceError(
+            path, "The hyperopt backend can't compile an empty (sub-) search space"
+        )
+
 
 class SearchSpaceHPStrVisitor(Visitor):
-    pgo_dict:Dict[str, FrequencyDistribution]
-    names:Dict[str,int]
+    pgo_dict: Dict[str, FrequencyDistribution]
+    names: Dict[str, int]
 
-    pgo_header:Optional[str]
-    nested_header:Optional[str]
-    decls:str
+    pgo_header: Optional[str]
+    nested_header: Optional[str]
+    decls: str
 
     @classmethod
-    def run(cls, space:SearchSpace, name:str, counter=None, useCounter=True):
+    def run(cls, space: SearchSpace, name: str, counter=None, useCounter=True):
         visitor = cls(name)
-        ret:str = ""
+        ret: str = ""
         body = accept(space, visitor, name, counter=counter, useCounter=useCounter)
         if visitor.pgo_header is not None:
             ret += visitor.pgo_header
@@ -227,8 +263,7 @@ class SearchSpaceHPStrVisitor(Visitor):
         ret += "return " + body
         return ret
 
-
-    def get_unique_name(self, name:str)->str:
+    def get_unique_name(self, name: str) -> str:
         if name in self.names:
             counter = self.names[name] + 1
             self.names[name] = counter
@@ -237,7 +272,7 @@ class SearchSpaceHPStrVisitor(Visitor):
             self.names[name] = 0
             return name
 
-    def get_unique_variable_name(self, name:str)->str:
+    def get_unique_variable_name(self, name: str) -> str:
         if name in self.names:
             counter = self.names[name] + 1
             self.names[name] = counter
@@ -246,10 +281,10 @@ class SearchSpaceHPStrVisitor(Visitor):
             self.names[name] = 0
             return name
 
-    def mk_label(self, label, counter, useCounter = True):
+    def mk_label(self, label, counter, useCounter=True):
         return self.get_unique_name(_mk_label(label, counter, useCounter=useCounter))
 
-    def __init__(self, name:str):
+    def __init__(self, name: str):
         super(SearchSpaceHPStrVisitor, self).__init__()
         self.pgo_dict = {}
         self.names = {}
@@ -257,8 +292,9 @@ class SearchSpaceHPStrVisitor(Visitor):
         self.nested_header = None
         self.decls = ""
 
-    def visitSearchSpaceEnum(self, space:SearchSpaceEnum, path:str, counter=None, useCounter=True):
-
+    def visitSearchSpaceEnum(
+        self, space: SearchSpaceEnum, path: str, counter=None, useCounter=True
+    ):
         def val_as_str(v):
             if v is None:
                 return "null"
@@ -271,36 +307,46 @@ class SearchSpaceHPStrVisitor(Visitor):
             return val_as_str(space.vals[0])
         else:
             vals_str = "[" + ", ".join([val_as_str(v) for v in space.vals]) + "]"
-            return f"hp.choice('{self.mk_label(path, counter, useCounter)}', {vals_str})"
+            return (
+                f"hp.choice('{self.mk_label(path, counter, useCounter)}', {vals_str})"
+            )
 
     visitSearchSpaceConstant = visitSearchSpaceEnum
     visitSearchSpaceBool = visitSearchSpaceEnum
 
-    def visitSearchSpaceNumber(self, space:SearchSpaceNumber, path:str, counter=None, useCounter=True):
+    def visitSearchSpaceNumber(
+        self, space: SearchSpaceNumber, path: str, counter=None, useCounter=True
+    ):
         label = self.mk_label(path, counter, useCounter=useCounter)
 
         if space.pgo is not None:
             self.pgo_dict[label] = space.pgo
             return f"scope.pgo_sample(pgo_{label}, hp.quniform('{label}', {0}, {len(space.pgo)-1}, 1))"
 
-
         dist = "uniform"
         if space.distribution:
             dist = space.distribution
 
         if space.maximum is None:
-            SearchSpaceError(path, f"maximum not specified for a number with distribution {dist}")
+            SearchSpaceError(
+                path, f"maximum not specified for a number with distribution {dist}"
+            )
         max = space.getInclusiveMax()
 
         # These distributions need only a maximum
         if dist == "integer":
             if not space.discrete:
-                raise SearchSpaceError(path, "integer distribution specified for a non discrete numeric type....")
+                raise SearchSpaceError(
+                    path,
+                    "integer distribution specified for a non discrete numeric type....",
+                )
 
             return f"hp.randint('{label}', {max})"
 
         if space.minimum is None:
-            raise SearchSpaceError(path, f"minimum not specified for a number with distribution {dist}")
+            raise SearchSpaceError(
+                path, f"minimum not specified for a number with distribution {dist}"
+            )
         min = space.getInclusiveMin()
 
         if dist == "uniform":
@@ -311,7 +357,10 @@ class SearchSpaceHPStrVisitor(Visitor):
         elif dist == "loguniform":
             # for log distributions, hyperopt requires that we provide the log of the min/max
             if min <= 0:
-                    raise SearchSpaceError(path, f"minimum of 0 specified with a {dist} distribution.  This is not allowed; please set it (possibly using minimumForOptimizer) to be positive")
+                raise SearchSpaceError(
+                    path,
+                    f"minimum of 0 specified with a {dist} distribution.  This is not allowed; please set it (possibly using minimumForOptimizer) to be positive",
+                )
             if min > 0:
                 min = math.log(min)
             if max > 0:
@@ -324,32 +373,52 @@ class SearchSpaceHPStrVisitor(Visitor):
         else:
             raise SearchSpaceError(path, f"Unknown distribution type: {dist}")
 
-    def array_single_str_(self, space:SearchSpaceArray, path:str, num, useCounter=True)->str:
+    def array_single_str_(
+        self, space: SearchSpaceArray, path: str, num, useCounter=True
+    ) -> str:
         p = _mk_label(path, num, useCounter=useCounter) + "_"
         ret = "(" if space.is_tuple else "["
-        items:Iterable[SearchSpace] = space.items()
-        ret += ",".join((accept(sub, self, p, counter=x, useCounter=useCounter) for x,sub in enumerate(items)))
+        items: Iterable[SearchSpace] = space.items()
+        ret += ",".join(
+            (
+                accept(sub, self, p, counter=x, useCounter=useCounter)
+                for x, sub in enumerate(items)
+            )
+        )
         ret += ")" if space.is_tuple else "]"
         return ret
-    
-    def visitSearchSpaceArray(self, space:SearchSpaceArray, path:str, counter=None, useCounter=True)->str:
+
+    def visitSearchSpaceArray(
+        self, space: SearchSpaceArray, path: str, counter=None, useCounter=True
+    ) -> str:
         assert space.maximum >= space.minimum
         p = _mk_label(path, counter, useCounter=useCounter)
         cp = p + "_"
 
         if space.minimum == space.maximum:
-            return self.array_single_str_(space, cp, space.minimum, useCounter=useCounter)
+            return self.array_single_str_(
+                space, cp, space.minimum, useCounter=useCounter
+            )
         else:
             res = "hp.choice(" + p + ", ["
-            res += ",".join((self.array_single_str_(space, cp, x, useCounter=useCounter) for x in range(space.minimum, space.maximum+1)))
+            res += ",".join(
+                (
+                    self.array_single_str_(space, cp, x, useCounter=useCounter)
+                    for x in range(space.minimum, space.maximum + 1)
+                )
+            )
             res += "])"
             return res
 
-    def visitSearchSpaceObject(self, space:SearchSpaceObject, path:str, counter=None, useCounter=True):
+    def visitSearchSpaceObject(
+        self, space: SearchSpaceObject, path: str, counter=None, useCounter=True
+    ):
         s_decls = []
         space_name = self.get_unique_variable_name("search_space")
         any_name = self.get_unique_variable_name("valid_hyperparam_combinations")
-        any_path = self.get_unique_name(_mk_label(path, counter, useCounter=useCounter) + "_" + "combos")
+        any_path = self.get_unique_name(
+            _mk_label(path, counter, useCounter=useCounter) + "_" + "combos"
+        )
         s_decls.append(space_name + " = {}")
         s_decls.append(f"{space_name}['name'] = {space.longName}")
         child_counter = None
@@ -359,7 +428,9 @@ class SearchSpaceHPStrVisitor(Visitor):
             if x is None:
                 return "None"
             else:
-                s = accept(x, self, path + "_" + key, child_counter, useCounter=useCounter)
+                s = accept(
+                    x, self, path + "_" + key, child_counter, useCounter=useCounter
+                )
                 if child_counter is None:
                     child_counter = 1
                 else:
@@ -371,14 +442,20 @@ class SearchSpaceHPStrVisitor(Visitor):
             ret = [cstr(space.keys[ind], e) for ind, e in enumerate(c)]
             return ret
 
-        str_choices = "[" + ",".join(["(" + ",".join(choice_as_tuple_str(c)) + ")" for c in space.choices]) + "]"
+        str_choices = (
+            "["
+            + ",".join(
+                ["(" + ",".join(choice_as_tuple_str(c)) + ")" for c in space.choices]
+            )
+            + "]"
+        )
         s_decls.append(f"{any_name} = hp.choice('{any_path}', {str_choices})")
         i = 0
         for k in space.keys:
             s_decls.append(f"{space_name}['{k}'] = {any_name}[{i}]")
             i = i + 1
-        
-        pgo_decls_str:str = ""
+
+        pgo_decls_str: str = ""
         if self.pgo_dict:
             if not self.pgo_header:
                 self.pgo_header = """
@@ -393,14 +470,14 @@ def pgo_sample(pgo, sample):
             # This puts them in the order they appear in the hyperopt
             # expression, making it easier to read
             def last_num(kv):
-                matches = re.search('(\d+)$', kv[0])
+                matches = re.search("(\d+)$", kv[0])
                 if matches is None:
                     return 0
                 else:
                     return int(matches.group(0))
 
-            pgo_decls:List[str] = []
-            for k,v in sorted(self.pgo_dict.items(), key=last_num):
+            pgo_decls: List[str] = []
+            for k, v in sorted(self.pgo_dict.items(), key=last_num):
                 l = v.freq_dist.tolist()
                 pgo_decls.append(f"pgo_{k} = {l}")
             if self.decls:
@@ -409,17 +486,29 @@ def pgo_sample(pgo, sample):
         self.decls += "\n".join(s_decls) + "\n"
         return space_name
 
-    def visitSearchSpaceProduct(self, prod:SearchSpaceProduct, path:str, counter=None, useCounter=True):
-        search_spaces = (accept(space, self, self.get_unique_name(make_indexed_name(name, index))) for name, index, space in prod.get_indexed_spaces())
+    def visitSearchSpaceProduct(
+        self, prod: SearchSpaceProduct, path: str, counter=None, useCounter=True
+    ):
+        search_spaces = (
+            accept(space, self, self.get_unique_name(make_indexed_name(name, index)))
+            for name, index, space in prod.get_indexed_spaces()
+        )
         return "[" + ",".join(search_spaces) + "]"
 
-    def visitSearchSpaceSum(self, sum_space:SearchSpaceSum, path:str, counter=None, useCounter=True):
-        unique_name:str = self.get_unique_name("choice")
-        sub_str:Iterable[str] = ("\"" + str(i) + "\"" + " : " + "\"" + accept(m, self, "") + "\"" for i, m in enumerate(sum_space.sub_spaces))
-        sub_spaces_str:str = "[" + ",".join(sub_str) + "]"
+    def visitSearchSpaceSum(
+        self, sum_space: SearchSpaceSum, path: str, counter=None, useCounter=True
+    ):
+        unique_name: str = self.get_unique_name("choice")
+        sub_str: Iterable[str] = (
+            '"' + str(i) + '"' + " : " + '"' + accept(m, self, "") + '"'
+            for i, m in enumerate(sum_space.sub_spaces)
+        )
+        sub_spaces_str: str = "[" + ",".join(sub_str) + "]"
         return f"hp.choice({unique_name}, {sub_spaces_str})"
 
-    def visitSearchSpaceOperator(self, op:SearchSpaceOperator, path:str, counter=None, useCounter=True):
+    def visitSearchSpaceOperator(
+        self, op: SearchSpaceOperator, path: str, counter=None, useCounter=True
+    ):
         if not self.nested_header:
             self.nested_header = """
 @scope.define
@@ -430,5 +519,7 @@ def make_nested_hyperopt(space):
 """
         return f"scope.make_nested_hyperopt({accept(op.sub_space, self, path, counter=counter, useCounter=useCounter)})"
 
-    def visitSearchSpaceEmpty(self, op:SearchSpaceEmpty, path:str, counter=None, useCounter=True)->str:
+    def visitSearchSpaceEmpty(
+        self, op: SearchSpaceEmpty, path: str, counter=None, useCounter=True
+    ) -> str:
         return "***EMPTY**"

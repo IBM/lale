@@ -16,17 +16,17 @@ import lale.docstrings
 import lale.operators
 
 
-class IdentityWrapperImpl():
+class IdentityWrapperImpl:
     # This should be equivalent to:
     # the underlying operator:
     # IdentityWrapper(op) should behave the same as op
     def __init__(self, op=None):
-        self._hyperparams = {'op':op}
+        self._hyperparams = {"op": op}
 
     def getOp(self):
-        return self._hyperparams['op']
+        return self._hyperparams["op"]
 
-    def transform(self, X, y = None):
+    def transform(self, X, y=None):
         return self.getOp().transform(X, y=y)
 
     def transform_schema(self, s_X):
@@ -52,60 +52,60 @@ class IdentityWrapperImpl():
     #     else:
     #         raise ValueError('Can only call get_feature_names on a trained operator. Please call fit to get a trained operator.')
 
+
 _hyperparams_schema = {
-    'description': 'Hyperparameter schema for the identity Higher Order Operator, which wraps another operator and runs it as usual',
-    'allOf': [
-    {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
-        'type': 'object',
-        'additionalProperties': False,
-        'relevantToOptimizer': ['op'],
-        'properties': {
-            'op': {
-                'laleType': 'operator'
-            }
-        }}]}
+    "description": "Hyperparameter schema for the identity Higher Order Operator, which wraps another operator and runs it as usual",
+    "allOf": [
+        {
+            "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters",
+            "type": "object",
+            "additionalProperties": False,
+            "relevantToOptimizer": ["op"],
+            "properties": {"op": {"laleType": "operator"}},
+        }
+    ],
+}
 
 # TODO: can we surface the base op input/output schema?
 _input_fit_schema = {
-    'description': 'Input data schema for training identity.',
-    'type': 'object',
-    'required': ['X'],  
-    'additionalProperties': False,
-    'properties': {
-        'X': {}}}
+    "description": "Input data schema for training identity.",
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {"X": {}},
+}
 
-_input_predict_transform_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    'description': 'Input data schema for transformations using identity.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {},
-        'y': {}}}
+_input_predict_transform_schema = {  # TODO: separate predict vs. predict_proba vs. transform
+    "description": "Input data schema for transformations using identity.",
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {"X": {}, "y": {}},
+}
 
-_output_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    'description': 'Output data schema for transformations using identity.',
-    'laleType': 'Any'}
+_output_schema = {  # TODO: separate predict vs. predict_proba vs. transform
+    "description": "Output data schema for transformations using identity.",
+    "laleType": "Any",
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.identity.html',
-    'import_from': 'lale.lib.lale',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_transform_schema,
-        'output_predict': _output_schema,
-        'input_predict_proba': _input_predict_transform_schema,
-        'output_predict_proba': _output_schema,
-        'input_transform': _input_predict_transform_schema,
-        'output_transform': _output_schema}}
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters.",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.identity.html",
+    "import_from": "lale.lib.lale",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_transform_schema,
+        "output_predict": _output_schema,
+        "input_predict_proba": _input_predict_transform_schema,
+        "output_predict_proba": _output_schema,
+        "input_transform": _input_predict_transform_schema,
+        "output_transform": _output_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(IdentityWrapperImpl, _combined_schemas)
 

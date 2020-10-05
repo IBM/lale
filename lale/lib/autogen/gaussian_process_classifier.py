@@ -186,4 +186,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(GaussianProcessClassifierImpl, _combined_schemas)
-GaussianProcessClassifier = make_operator(GaussianProcessClassifierImpl, _combined_schemas)
+GaussianProcessClassifier = make_operator(
+    GaussianProcessClassifierImpl, _combined_schemas
+)

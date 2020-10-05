@@ -168,4 +168,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(GaussianProcessRegressorImpl, _combined_schemas)
-GaussianProcessRegressor = make_operator(GaussianProcessRegressorImpl, _combined_schemas)
+GaussianProcessRegressor = make_operator(
+    GaussianProcessRegressorImpl, _combined_schemas
+)

@@ -77,7 +77,7 @@ _hyperparams_schema = {
                 "gamma": {
                     "anyOf": [
                         {"type": "number", "forOptimizer": False},
-                        {"enum": ["scale","auto"]},
+                        {"enum": ["scale", "auto"]},
                     ],
                     "default": "scale",
                     "description": "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'",

@@ -219,4 +219,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(MiniBatchDictionaryLearningImpl, _combined_schemas)
-MiniBatchDictionaryLearning = make_operator(MiniBatchDictionaryLearningImpl, _combined_schemas)
+MiniBatchDictionaryLearning = make_operator(
+    MiniBatchDictionaryLearningImpl, _combined_schemas
+)
