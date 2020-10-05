@@ -163,9 +163,9 @@ class TestFeatureAgglomeration(unittest.TestCase):
             trainable = FeatureAgglomeration(distance_threshold=0.5, n_clusters=None, compute_full_tree=True) >> LogisticRegression()
 
     def test_with_hyperopt(self):
-        planned = FeatureAgglomeration >> LogisticRegression
+        planned = FeatureAgglomeration(n_clusters=3) >> LogisticRegression
         trained = planned.auto_configure(self.train_X, self.train_y,
-                                         optimizer=Hyperopt, cv=3, max_evals=3)
+                                         optimizer=Hyperopt, cv=3, max_evals=3, verbose=True)
         predicted = trained.predict(self.test_X)
 
 class TestFunctionTransformer(unittest.TestCase):
