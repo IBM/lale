@@ -30,6 +30,9 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import os
+import sys
+from typing import Dict
 
 # -- Project information -----------------------------------------------------
 
@@ -42,12 +45,9 @@ version = ""
 # The full version, including alpha/beta/rc tags
 release = ""
 
-import os
-import sys
-from typing import Dict
 
 sys.path.append(os.path.join(os.path.dirname(__name__), "../lale"))
-import sphinx_rtd_theme  # isort:skip
+import sphinx_rtd_theme  # isort:skip # noqa:E402
 
 # -- General configuration ---------------------------------------------------
 

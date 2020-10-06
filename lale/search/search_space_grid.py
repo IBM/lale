@@ -17,15 +17,9 @@ import math
 import random
 import warnings
 from collections import ChainMap
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
-from lale.operators import (
-    Operator,
-    OperatorChoice,
-    PlannedIndividualOp,
-    PlannedOperator,
-    PlannedPipeline,
-)
+from lale.operators import PlannedOperator
 from lale.search.PGO import PGO
 from lale.search.schema2search_space import op_to_search_space
 from lale.search.search_space import (
@@ -33,7 +27,6 @@ from lale.search.search_space import (
     SearchSpaceArray,
     SearchSpaceConstant,
     SearchSpaceEmpty,
-    SearchSpaceEnum,
     SearchSpaceError,
     SearchSpaceObject,
     SearchSpaceOperator,
@@ -45,11 +38,9 @@ from lale.search.search_space import (
 from lale.sklearn_compat import (
     DUMMY_SEARCH_SPACE_GRID_PARAM_NAME,
     discriminant_name,
-    make_array_index_name,
     make_indexed_name,
     nest_all_HPparams,
     nest_choice_all_HPparams,
-    structure_type_dict,
     structure_type_list,
     structure_type_name,
     structure_type_tuple,
@@ -228,7 +219,7 @@ class SearchSpaceToGridVisitor(Visitor):
                 map((lambda x: list(x)), nested_space_choices)
             )
             nested_space_choices_filtered: List[List[SearchSpaceGrid]] = [
-                l for l in nested_space_choices_lists if l
+                ll for ll in nested_space_choices_lists if ll
             ]
             if nested_space_choices_filtered:
                 chained_grids: Iterable[SearchSpaceGrid] = [

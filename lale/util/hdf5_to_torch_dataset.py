@@ -16,7 +16,7 @@ try:
     from torch.utils.data import Dataset
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
-        """Your Python environment does not have torch installed. You can install it with 
+        """Your Python environment does not have torch installed. You can install it with
                                 pip install torch
                                 or with
                                     pip install 'lale[full]'"""
@@ -29,7 +29,7 @@ class HDF5TorchDataset(Dataset):
 
     def __init__(self, file_path):
         """.
-        
+
         Parameters
         ----------
         file : file is an object of class h5py.File

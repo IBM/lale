@@ -12,39 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import random
-import sys
 import unittest
-import warnings
-from typing import List
 
-import sklearn.datasets
 from jsonschema.exceptions import ValidationError
 
-import lale.operators as Ops
 import lale.type_checking
 from lale.lib.lale import ConcatFeatures, NoOp
-from lale.lib.sklearn import (
-    PCA,
-    SVC,
-    FeatureAgglomeration,
-    KNeighborsClassifier,
-    LinearSVC,
-    LogisticRegression,
-    MinMaxScaler,
-    MLPClassifier,
-    MultinomialNB,
-    Nystroem,
-    OneHotEncoder,
-    PassiveAggressiveClassifier,
-    SimpleImputer,
-    StandardScaler,
-    TfidfVectorizer,
-)
-from lale.lib.xgboost import XGBClassifier
-from lale.search.lale_smac import get_smac_space, lale_trainable_op_from_config
-from lale.search.op2hp import hyperopt_search_space
-from lale.sklearn_compat import make_sklearn_compat
+from lale.lib.sklearn import PCA, LogisticRegression, Nystroem
 
 
 @unittest.skip(
@@ -64,7 +38,7 @@ class TestResNet50(unittest.TestCase):
         )  # , target_transform = transform)
         clf = ResNet50(num_classes=2, num_epochs=1)
         clf.fit(data_train)
-        predicted = clf.predict(data_train)
+        _ = clf.predict(data_train)
 
 
 class TestResamplers(unittest.TestCase):
@@ -89,16 +63,10 @@ class TestResamplers(unittest.TestCase):
 
 def create_function_test_resampler(res_name):
     def test_resampler(self):
-        from lale.lib.lale import ConcatFeatures, NoOp
-        from lale.lib.sklearn import (
-            PCA,
-            LogisticRegression,
-            Nystroem,
-            RandomForestClassifier,
-        )
+        from lale.lib.sklearn import PCA, LogisticRegression
 
         X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
+        X_test = self.X_test
         import importlib
 
         module_name = ".".join(res_name.split(".")[0:-1])
@@ -107,7 +75,7 @@ def create_function_test_resampler(res_name):
 
         class_ = getattr(module, class_name)
         with self.assertRaises(ValidationError):
-            res = class_()
+            _ = class_()
 
         # test_schemas_are_schemas
         lale.type_checking.validate_is_schema(class_.input_schema_fit())
@@ -120,11 +88,11 @@ def create_function_test_resampler(res_name):
 
         pipeline1 = PCA() >> class_(operator=make_pipeline(LogisticRegression()))
         trained = pipeline1.fit(X_train, y_train)
-        predictions = trained.predict(X_test)
+        _ = trained.predict(X_test)
 
         pipeline2 = class_(operator=make_pipeline(PCA(), LogisticRegression()))
         trained = pipeline2.fit(X_train, y_train)
-        predictions = trained.predict(X_test)
+        _ = trained.predict(X_test)
 
         # test_with_hyperopt
         from lale.lib.lale import Hyperopt
@@ -135,7 +103,7 @@ def create_function_test_resampler(res_name):
             show_progressbar=False,
         )
         trained_optimizer = optimizer.fit(X_train, y_train)
-        predictions = trained_optimizer.predict(X_test)
+        _ = trained_optimizer.predict(X_test)
 
         pipeline3 = class_(
             operator=PCA()
@@ -145,7 +113,7 @@ def create_function_test_resampler(res_name):
         )
         optimizer = Hyperopt(estimator=pipeline3, max_evals=1, show_progressbar=False)
         trained_optimizer = optimizer.fit(X_train, y_train)
-        predictions = trained_optimizer.predict(X_test)
+        _ = trained_optimizer.predict(X_test)
 
         pipeline4 = (
             (
@@ -159,7 +127,7 @@ def create_function_test_resampler(res_name):
             estimator=pipeline4, max_evals=1, scoring="roc_auc", show_progressbar=False
         )
         trained_optimizer = optimizer.fit(X_train, y_train)
-        predictions = trained_optimizer.predict(X_test)
+        _ = trained_optimizer.predict(X_test)
 
         # test_cross_validation
         from lale.helpers import cross_val_score
@@ -238,4 +206,4 @@ class TestImblearn(unittest.TestCase):
             sampling_strategy=["high"],
         )
         trained = pipeline.fit(self.X_train, y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)

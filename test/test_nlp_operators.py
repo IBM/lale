@@ -37,7 +37,7 @@ def create_function_test_encoder(encoder_name):
 
         # test_init_fit_transform
         trained = encoder.fit(self.X_train, self.y_train)
-        transformed = trained.transform(self.X_train)
+        _ = trained.transform(self.X_train)
 
     test_encoder.__name__ = "test_{0}".format(encoder_name.split(".")[-1])
     return test_encoder

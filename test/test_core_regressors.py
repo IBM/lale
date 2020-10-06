@@ -14,8 +14,6 @@
 
 import unittest
 
-import sklearn.datasets
-
 import lale.lib.lale
 import lale.type_checking
 from lale.lib.lale import NoOp
@@ -35,7 +33,6 @@ class TestRegression(unittest.TestCase):
 def create_function_test_regressor(clf_name):
     def test_regressor(self):
         X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
         import importlib
 
         module_name = ".".join(clf_name.split(".")[0:-1])
@@ -53,7 +50,7 @@ def create_function_test_regressor(clf_name):
 
         # test_init_fit_predict
         trained = regr.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
         # test_predict_on_trainable
         trained = regr.fit(X_train, y_train)
@@ -65,7 +62,7 @@ def create_function_test_regressor(clf_name):
         # test_in_a_pipeline
         pipeline = NoOp() >> regr
         trained = pipeline.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
         # test_with_hyperopt
         from lale.lib.sklearn.ridge import RidgeImpl
@@ -75,7 +72,7 @@ def create_function_test_regressor(clf_name):
 
             hyperopt = Hyperopt(estimator=pipeline, max_evals=1)
             trained = hyperopt.fit(self.X_train, self.y_train)
-            predictions = trained.predict(self.X_test)
+            _ = trained.predict(self.X_test)
 
     test_regressor.__name__ = "test_{0}".format(clf_name.split(".")[-1])
     return test_regressor

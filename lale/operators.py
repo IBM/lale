@@ -115,7 +115,6 @@ from typing import (
     Dict,
     Generic,
     Iterable,
-    Iterator,
     List,
     Optional,
     Tuple,
@@ -348,7 +347,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         result = lale.pretty_print.to_string(
             self, show_imports, combinators, astype, call_depth=2
         )
-        if ipython_display == False:
+        if ipython_display is False:
             return result
         elif ipython_display == "input":
             import IPython.core
@@ -747,16 +746,16 @@ class IndividualOp(Operator):
 
     def get_schema(self, schema_kind: str) -> Dict[str, Any]:
         """Return a schema of the operator.
-        
+
         Parameters
         ----------
         schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
-                Type of the schema to be returned.    
-                    
+                Type of the schema to be returned.
+
         Returns
         -------
         dict
-            The python object containing the json schema of the operator. 
+            The python object containing the json schema of the operator.
             For all the schemas currently present, this would be a dictionary.
         """
         props = self._schemas["properties"]
@@ -773,7 +772,7 @@ class IndividualOp(Operator):
 
     def get_tags(self) -> Dict[str, List[str]]:
         """Return the tags of an operator.
-        
+
         Returns
         -------
         list
@@ -783,18 +782,18 @@ class IndividualOp(Operator):
 
     def has_tag(self, tag: str) -> bool:
         """Check the presence of a tag for an operator.
-        
+
         Parameters
         ----------
         tag : string
-        
+
         Returns
         -------
         boolean
-            Flag indicating the presence or absence of the given tag 
+            Flag indicating the presence or absence of the given tag
             in this operator's schemas.
         """
-        tags = [t for l in self.get_tags().values() for t in l]
+        tags = [t for ll in self.get_tags().values() for t in ll]
         return tag in tags
 
     def input_schema_fit(self) -> JSON_TYPE:
@@ -835,16 +834,16 @@ class IndividualOp(Operator):
 
     def hyperparam_schema(self, name: Optional[str] = None) -> JSON_TYPE:
         """Returns the hyperparameter schema for the operator.
-        
+
         Parameters
         ----------
         name : string, optional
             Name of the hyperparameter.
-        
+
         Returns
         -------
         dict
-            Full hyperparameter schema for this operator or part of the schema 
+            Full hyperparameter schema for this operator or part of the schema
             corresponding to the hyperparameter given by parameter `name`.
         """
         hp_schema = self.get_schema("hyperparams")
@@ -856,11 +855,11 @@ class IndividualOp(Operator):
 
     def hyperparam_defaults(self):
         """Returns the default values of hyperparameters for the operator.
-        
+
         Returns
         -------
         dict
-            A dictionary with names of the hyperparamers as keys and 
+            A dictionary with names of the hyperparamers as keys and
             their default values as values.
         """
         if not hasattr(self, "_hyperparam_defaults"):
@@ -1022,17 +1021,17 @@ class IndividualOp(Operator):
 
     def _enum_to_strings(self, arg: "enumeration.Enum") -> Tuple[str, Any]:
         """[summary]
-        
+
         Parameters
         ----------
         arg : [type]
             [description]
-        
+
         Raises
         ------
         ValueError
             [description]
-        
+
         Returns
         -------
         [type]
@@ -1098,7 +1097,7 @@ class IndividualOp(Operator):
         **kwargs: Optional[Schema],
     ) -> "IndividualOp":
         """Return a new operator with a customized schema
-        
+
         Parameters
         ----------
         schemas : Schema
@@ -1118,7 +1117,7 @@ class IndividualOp(Operator):
             `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
         tags : Dict
             Override the tags of the operator.
-        
+
         Returns
         -------
         IndividualOp
@@ -1365,7 +1364,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
 
     def _hyperparam_schema_with_hyperparams(self, data_schema={}):
         def fix_hyperparams(schema):
-            params = None
+            hyperparams = None
             try:
                 hyperparams = self._hyperparams
             except AttributeError:
@@ -1432,7 +1431,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         else:
             try:
                 result = copy.deepcopy(impl_instance)
-            except:
+            except Exception:
                 impl_class = self._impl_class()
                 params_all = self._get_params_all()
                 result = impl_class(**params_all)
@@ -1621,10 +1620,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return result
 
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
-        """Get parameters for this operator. 
+        """Get parameters for this operator.
 
         This method follows scikit-learn's convention that all operators
-        have a constructor which takes a list of keyword arguments. 
+        have a constructor which takes a list of keyword arguments.
         This is not required for operator impls which do not desire
         scikit-compatibility.
 
@@ -1745,10 +1744,10 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
     @if_delegate_has_method(delegate="_impl")
     def transform(self, X, y=None):
         """Transform the data.
-        
+
         Parameters
         ----------
-        X : 
+        X :
             Features; see input_transform schema of the operator.
 
         Returns
@@ -1779,10 +1778,10 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
     @if_delegate_has_method(delegate="_impl")
     def predict(self, X):
         """Make predictions.
-        
+
         Parameters
         ----------
-        X : 
+        X :
             Features; see input_predict schema of the operator.
 
         Returns
@@ -2222,7 +2221,6 @@ class BasePipeline(Operator, Generic[OpType]):
             return old_clf
 
     def export_to_sklearn_pipeline(self):
-        from sklearn.base import clone
         from sklearn.pipeline import FeatureUnion, make_pipeline
 
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
@@ -2558,13 +2556,13 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
     def fit_with_batches(self, X, y=None, serialize=True, num_epochs_batching=None):
         """[summary]
-        
+
         Parameters
         ----------
-        X : 
+        X :
             [description]
         y : [type], optional
-            For a supervised pipeline, this is an array with the unique class labels 
+            For a supervised pipeline, this is an array with the unique class labels
             in the entire dataset, by default None
         Returns
         -------
@@ -2621,8 +2619,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 )
             inputs_for_transform = inputs
             for epoch in range(num_epochs):
-                training_loss = 0
-                nb_tr_examples, nb_tr_steps = 0, 0
                 for _, batch_data in enumerate(
                     inputs
                 ):  # batching_transformer will output only one obj
@@ -2936,7 +2932,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
 
     def transform_with_batches(self, X, y=None, serialize=True):
         """[summary]
-        
+
         Parameters
         ----------
         X : [type]

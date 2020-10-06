@@ -12,15 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
-from .schema_utils import (
-    JsonSchema,
-    getExclusiveMaximum,
-    getExclusiveMinimum,
-    getMaximum,
-    getMinimum,
-)
+from .schema_utils import JsonSchema
 
 
 class SchemaRange(object):

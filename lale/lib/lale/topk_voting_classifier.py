@@ -14,7 +14,7 @@
 
 import copy
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from hyperopt import STATUS_OK
 
@@ -148,8 +148,8 @@ _hyperparams_schema = {
                     "default": None,
                 },
                 "k": {
-                    "description": """Number of top pipelines to be used for the voting ensemble. If the number of 
-                            successful trials of the optimizer are less than k, the ensemble will use 
+                    "description": """Number of top pipelines to be used for the voting ensemble. If the number of
+                            successful trials of the optimizer are less than k, the ensemble will use
                             only successful trials.""",
                     "type": "integer",
                     "minimum": 1,

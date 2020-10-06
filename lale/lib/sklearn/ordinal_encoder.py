@@ -137,8 +137,8 @@ In the inverse transform, an unknown category will be denoted as None.""",
                     "default": "ignore",
                 },
                 "encode_unknown_with": {
-                    "description": """When an unknown categorical feature value is found during transform, and 'handle_unknown' is 
-set to 'ignore', that value is encoded with this value. Default of 'auto' sets it to an integer equal to n+1, where 
+                    "description": """When an unknown categorical feature value is found during transform, and 'handle_unknown' is
+set to 'ignore', that value is encoded with this value. Default of 'auto' sets it to an integer equal to n+1, where
 n is the maximum encoding value based on known categories.""",
                     "anyOf": [{"type": "integer"}, {"enum": ["auto"]}],
                     "default": "auto",

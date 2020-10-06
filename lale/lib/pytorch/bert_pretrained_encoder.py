@@ -17,7 +17,7 @@ import logging
 import numpy as np
 import pandas as pd
 import torch
-from pytorch_pretrained_bert import BertForMaskedLM, BertModel, BertTokenizer
+from pytorch_pretrained_bert import BertModel, BertTokenizer
 
 import lale.docstrings
 import lale.operators

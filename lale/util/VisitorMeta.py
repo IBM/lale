@@ -44,9 +44,9 @@ class VisitorMeta(object):
         _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(
             selector
         )
-        l = {}
-        exec(_accept_code, globals(), l)
-        setattr(cls, "_accept", l["_accept"])
+        ll = {}
+        exec(_accept_code, globals(), ll)
+        setattr(cls, "_accept", ll["_accept"])
 
 
 if sys.version_info < (3, 7, 0):

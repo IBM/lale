@@ -25,7 +25,9 @@ class Visitor(object):
         return self.__getattribute__(attr)
 
     def _visitAll(self, iterable, *args, **kwargs):
-        filter = lambda x: (x is not None) or None
+        def filter(x):
+            return (x is not None) or None
+
         return [filter(x) and accept(x, self, *args, **kwargs) for x in iterable]
 
 

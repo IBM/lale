@@ -25,13 +25,13 @@ import lale.helpers
 import lale.operators
 
 try:
-    import xgboost
+    import xgboost  # noqa: F401
 
     xgboost_installed = True
 except ImportError:
     xgboost_installed = False
 try:
-    import lightgbm.sklearn
+    import lightgbm.sklearn  # noqa: F401
 
     lightgbm_installed = True
 except ImportError:
@@ -328,7 +328,7 @@ _hyperparams_schema = {
                     "default": 100,
                 },
                 "verbose": {
-                    "description": """Whether to print errors from each of the trials if any. 
+                    "description": """Whether to print errors from each of the trials if any.
 This is also logged using logger.warning in Hyperopt.""",
                     "type": "boolean",
                     "default": False,

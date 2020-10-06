@@ -14,14 +14,13 @@
 
 import unittest
 
-import autoai_libs.utils.fc_methods
 import numpy as np
 import sklearn.datasets
 import sklearn.model_selection
 
 import lale.lib.autoai_libs
 from lale.lib.autoai_libs import float32_transform
-from lale.lib.lale import ConcatFeatures, Hyperopt, NoOp
+from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import LogisticRegression as LR
 
 
@@ -45,7 +44,7 @@ class TestAutoaiLibs(unittest.TestCase):
 
     def doTest(self, trainable, train_X, train_y, test_X, test_y):
         trained = trainable.fit(train_X, train_y)
-        transformed = trained.transform(test_X)
+        _ = trained.transform(test_X)
         with self.assertWarns(DeprecationWarning):
             trainable.transform(train_X)
         trainable.to_json()

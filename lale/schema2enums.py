@@ -13,26 +13,8 @@
 # limitations under the License.
 
 import enum
-import itertools
 import logging
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
-
-from lale.schema_simplifier import (
-    findRelevantFields,
-    narrowToGivenRelevantFields,
-    simplify,
-)
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from .schema_utils import JsonSchema, SchemaEnum
 

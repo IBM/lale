@@ -1,7 +1,6 @@
 import unittest
 
 import lale.datasets
-from lale import wrap_imported_operators
 from lale.grammar import Grammar
 from lale.lib.lale import ConcatFeatures as Concat
 from lale.lib.lale import Hyperopt, NoOp
@@ -10,12 +9,7 @@ from lale.lib.sklearn import AdaBoostClassifier as Boost
 from lale.lib.sklearn import KNeighborsClassifier as KNN
 from lale.lib.sklearn import LogisticRegression as LR
 from lale.lib.sklearn import StandardScaler as Scaler
-from lale.operators import (
-    PlannedOperator,
-    PlannedPipeline,
-    TrainedOperator,
-    make_choice,
-)
+from lale.operators import PlannedOperator, PlannedPipeline, TrainedOperator
 
 
 class TestGrammar(unittest.TestCase):

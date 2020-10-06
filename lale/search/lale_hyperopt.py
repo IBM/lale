@@ -13,16 +13,27 @@
 # limitations under the License.
 
 import math
-import os
 import re
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional
 
 from hyperopt import hp
 from hyperopt.pyll import scope
 
 from lale import helpers
 from lale.operators import Operator
-from lale.search.search_space import *
+from lale.search.PGO import FrequencyDistribution
+from lale.search.search_space import (
+    SearchSpace,
+    SearchSpaceArray,
+    SearchSpaceEmpty,
+    SearchSpaceEnum,
+    SearchSpaceError,
+    SearchSpaceNumber,
+    SearchSpaceObject,
+    SearchSpaceOperator,
+    SearchSpaceProduct,
+    SearchSpaceSum,
+)
 from lale.sklearn_compat import make_indexed_name
 from lale.util.Visitor import Visitor, accept
 
@@ -455,7 +466,6 @@ class SearchSpaceHPStrVisitor(Visitor):
             s_decls.append(f"{space_name}['{k}'] = {any_name}[{i}]")
             i = i + 1
 
-        pgo_decls_str: str = ""
         if self.pgo_dict:
             if not self.pgo_header:
                 self.pgo_header = """
@@ -470,7 +480,7 @@ def pgo_sample(pgo, sample):
             # This puts them in the order they appear in the hyperopt
             # expression, making it easier to read
             def last_num(kv):
-                matches = re.search("(\d+)$", kv[0])
+                matches = re.search(r"(\d+)$", kv[0])
                 if matches is None:
                     return 0
                 else:
@@ -478,8 +488,8 @@ def pgo_sample(pgo, sample):
 
             pgo_decls: List[str] = []
             for k, v in sorted(self.pgo_dict.items(), key=last_num):
-                l = v.freq_dist.tolist()
-                pgo_decls.append(f"pgo_{k} = {l}")
+                fl = v.freq_dist.tolist()
+                pgo_decls.append(f"pgo_{k} = {fl}")
             if self.decls:
                 self.decls = self.decls + "\n"
             self.decls = self.decls + "\n".join(pgo_decls)

@@ -15,8 +15,6 @@
 import unittest
 import warnings
 
-import sklearn.datasets
-
 import lale.lib.lale
 import lale.type_checking
 from lale.lib.lale import NoOp
@@ -35,7 +33,6 @@ class TestClassification(unittest.TestCase):
 def create_function_test_classifier(clf_name):
     def test_classifier(self):
         X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
         import importlib
 
         module_name = ".".join(clf_name.split(".")[0:-1])
@@ -53,14 +50,14 @@ def create_function_test_classifier(clf_name):
 
         # test_init_fit_predict
         trained = clf.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
         # test_with_hyperopt
         from lale.lib.lale import Hyperopt
 
         hyperopt = Hyperopt(estimator=clf, max_evals=1)
         trained = hyperopt.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
         # test_cross_validation
         from lale.helpers import cross_val_score
@@ -103,7 +100,7 @@ def create_function_test_classifier(clf_name):
         # test_in_a_pipeline
         pipeline = NoOp() >> clf
         trained = pipeline.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
     test_classifier.__name__ = "test_{0}".format(clf.split(".")[-1])
     return test_classifier
