@@ -246,6 +246,82 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             'minimumForOptimizer' : 0.1,
             'maximumForOptimizer': 1.0
         },
+        'colsample_bynode': {
+            'type': 'number',
+            'description': 'Subsample ratio of columns for each split.',
+            'default': 1,
+            'minimum': 0,
+            'exclusiveMinimum': True,
+            'maximum': 1
+        },
+        'reg_alpha': {
+            'type': 'number',
+            'description': 'L1 regularization term on weights',
+            'default': 0,
+            'distribution': 'uniform',
+            'minimumForOptimizer': 0.0,
+            'maximumForOptimizer': 1.0
+        },
+        'reg_lambda': {
+            'type': 'number',
+            'description': 'L2 regularization term on weights',
+            'default': 1,
+            'distribution': 'uniform',
+            'minimumForOptimizer': 0.1,
+            'maximumForOptimizer': 1.0
+        },
+        'scale_pos_weight': {
+            'type': 'number',
+            'description': 'Balancing of positive and negative weights.',
+            'default': 1
+        },
+        'base_score': {
+            'type': 'number',
+            'description': 'The initial prediction score of all instances, global bias.',
+            'default': 0.5
+        },
+        'random_state': {
+            'type': 'integer',
+            'description': 'Random number seed.  (replaces seed)',
+            'default': 0
+        },
+        'missing': {
+            'anyOf': [{
+                'type': 'number',
+            }, {
+                'enum': [None],
+            }],
+            'default': None,
+            'description': 'Value in the data which needs to be present as a missing value. If'
+            ' If None, defaults to np.nan.'
+        },
+        'silent':{
+            'anyOf': [{
+                'type': 'boolean',
+            }, {
+                'enum': [None],
+            }],
+            'default': None,
+            'description': 'deprecated and replaced with verbosity, but adding to be backward compatible. '
+        },
+        'seed': {
+            'default': None,
+            'description': 'deprecated and replaced with random_state, but adding to be backward compatible. '
+        }
+        },
+    }],
+}
+
+_input_fit_schema = {
+    "description": "Fit gradient boosting classifier",
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "Feature matrix",
+        },
         "y": {
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
@@ -301,7 +377,9 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             "anyOf": [{"type": "array", "items": {"type": "object"}}, {"enum": [None]}],
             "default": None,
             "description": "List of callback functions that are applied at each iteration. "}
-    }}]}
+    }
+}
+
 
 _input_predict_schema = {
     "description": "Predict with `data`.",
