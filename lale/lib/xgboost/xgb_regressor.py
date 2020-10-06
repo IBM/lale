@@ -223,7 +223,7 @@ _hyperparams_schema = {
                     "default": "gbtree",
                 },
                 "tree_method": {
-                    "description": """Specify which tree method to use. 
+                    "description": """Specify which tree method to use.
 Default to auto. If this parameter is set to default, XGBoost will choose the most conservative option available.
 Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     "enum": ["auto", "exact", "approx", "hist", "gpu_hist"],

@@ -58,7 +58,6 @@ class TestFeaturePreprocessing(unittest.TestCase):
 def create_function_test_feature_preprocessor(fproc_name):
     def test_feature_preprocessor(self):
         X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
         import importlib
 
         module_name = ".".join(fproc_name.split(".")[0:-1])
@@ -82,7 +81,7 @@ def create_function_test_feature_preprocessor(fproc_name):
 
         # test_init_fit_transform
         trained = fproc.fit(self.X_train, self.y_train)
-        predictions = trained.transform(self.X_test)
+        _ = trained.transform(self.X_test)
 
         # test_predict_on_trainable
         trained = fproc.fit(X_train, y_train)
@@ -97,14 +96,14 @@ def create_function_test_feature_preprocessor(fproc_name):
 
         pipeline = fproc >> LogisticRegression()
         trained = pipeline.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
         # Tune the pipeline with LR using Hyperopt
         from lale.lib.lale import Hyperopt
 
         hyperopt = Hyperopt(estimator=pipeline, max_evals=1, verbose=True, cv=3)
         trained = hyperopt.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
     test_feature_preprocessor.__name__ = "test_{0}".format(fproc_name.split(".")[-1])
     return test_feature_preprocessor
@@ -140,11 +139,11 @@ class TestNMF(unittest.TestCase):
         trainable = nmf >> lr
         (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
-        predicted = trained.predict(test_X)
+        _ = trained.predict(test_X)
 
     def test_not_randome_state(self):
         with self.assertRaises(jsonschema.ValidationError):
-            nmf = NMF(random_state='"not RandomState"')
+            _ = NMF(random_state='"not RandomState"')
 
 
 class TestFunctionTransformer(unittest.TestCase):
@@ -158,11 +157,11 @@ class TestFunctionTransformer(unittest.TestCase):
         trainable = ft >> lr
         (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
-        predicted = trained.predict(test_X)
+        _ = trained.predict(test_X)
 
     def test_not_callable(self):
         with self.assertRaises(jsonschema.ValidationError):
-            ft = FunctionTransformer(func='"not callable"')
+            _ = FunctionTransformer(func='"not callable"')
 
 
 class TestMissingIndicator(unittest.TestCase):
@@ -190,11 +189,11 @@ class TestRFE(unittest.TestCase):
         data = sklearn.datasets.load_iris()
         X, y = data.data, data.target
         trained = trainable.fit(X, y)
-        predicted = trained.predict(X)
+        _ = trained.predict(X)
 
     def test_not_operator(self):
         with self.assertRaises(jsonschema.ValidationError):
-            rfe = RFE(estimator='"not an operator"', n_features_to_select=2)
+            _ = RFE(estimator='"not an operator"', n_features_to_select=2)
 
 
 class TestBoth(unittest.TestCase):
@@ -207,7 +206,7 @@ class TestBoth(unittest.TestCase):
         trainable = Both(op1=nmf, op2=pca)
         (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
         trained = trainable.fit(train_X, train_y)
-        transformed = trained.transform(test_X)
+        _ = trained.transform(test_X)
 
 
 class TestMap(unittest.TestCase):
@@ -217,20 +216,18 @@ class TestMap(unittest.TestCase):
 
         gender_map = {"m": "Male", "f": "Female"}
         state_map = {"NY": "New York", "CA": "California"}
-        map_replace = Map(
-            columns=[replace(it.gender, gender_map), replace(it.state, state_map)]
-        )
+        _ = Map(columns=[replace(it.gender, gender_map), replace(it.state, state_map)])
 
     def test_not_expression(self):
         from lale.lib.lale import Map
 
         with self.assertRaises(jsonschema.ValidationError):
-            map_replace = Map(columns=[123, "hello"])
+            _ = Map(columns=[123, "hello"])
 
 
 class TestConcatFeatures(unittest.TestCase):
     def test_hyperparam_defaults(self):
-        cf = ConcatFeatures()
+        _ = ConcatFeatures()
 
     def test_init_fit_predict(self):
         trainable_cf = ConcatFeatures()
@@ -303,7 +300,7 @@ class TestConcatFeatures(unittest.TestCase):
 
         (X_train, y_train), (X_test, y_test) = load_iris_df()
         trained = trainable.fit(X_train, y_train)
-        predicted = trained.predict(X_test)
+        _ = trained.predict(X_test)
 
     def test_concat_with_hyperopt(self):
         from lale.lib.lale import Hyperopt
@@ -327,7 +324,6 @@ class TestConcatFeatures(unittest.TestCase):
 
         pca = PCA(n_components=3)
         nys = Nystroem(n_components=10)
-        concat = ConcatFeatures()
         lr = LogisticRegression(random_state=42, C=0.1)
 
         trainable = make_pipeline(make_union(pca, nys), lr)
@@ -341,8 +337,8 @@ class TestConcatFeatures(unittest.TestCase):
 
 class TestHyperparamRanges(unittest.TestCase):
     def exactly_relevant_properties(self, keys1, operator):
-        def sorted(l):
-            l_copy = [*l]
+        def sorted(ll):
+            l_copy = [*ll]
             l_copy.sort()
             return l_copy
 
@@ -353,11 +349,10 @@ class TestHyperparamRanges(unittest.TestCase):
         ranges, cat_idx = operator.get_param_ranges()
         self.exactly_relevant_properties(ranges.keys(), operator)
         # all defaults are in-range
-        hp_defaults = operator.hyperparam_defaults()
         for hp, r in ranges.items():
             if isinstance(r, tuple):
                 minimum, maximum, default = r
-                if minimum != None and maximum != None and default != None:
+                if minimum is not None and maximum is not None and default is not None:
                     assert minimum <= default and default <= maximum
             else:
                 minimum, maximum, default = cat_idx[hp]
@@ -423,7 +418,7 @@ class TestHyperparamRanges(unittest.TestCase):
 class TestKNeighborsClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
         import numpy as np
-        from sklearn.datasets import load_iris, make_classification
+        from sklearn.datasets import make_classification
         from sklearn.utils import shuffle
 
         X, y1 = make_classification(
@@ -434,36 +429,36 @@ class TestKNeighborsClassifier(unittest.TestCase):
         Y = np.vstack((y1, y2, y3)).T
         trainable = KNeighborsClassifier()
         trained = trainable.fit(X, Y)
-        predictions = trained.predict(X)
+        _ = trained.predict(X)
 
     def test_predict_proba(self):
         trainable = KNeighborsClassifier()
         iris = sklearn.datasets.load_iris()
         trained = trainable.fit(iris.data, iris.target)
         # with self.assertWarns(DeprecationWarning):
-        predicted = trainable.predict_proba(iris.data)
-        predicted = trained.predict_proba(iris.data)
+        _ = trainable.predict_proba(iris.data)
+        _ = trained.predict_proba(iris.data)
 
 
 class TestLogisticRegression(unittest.TestCase):
     def test_hyperparam_keyword_enum(self):
-        lr = LogisticRegression(
+        _ = LogisticRegression(
             LogisticRegression.penalty.l1, C=0.1, solver=LogisticRegression.solver.saga
         )
 
     def test_hyperparam_exclusive_min(self):
         with self.assertRaises(jsonschema.ValidationError):
-            lr = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
+            _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
 
     def test_hyperparam_penalty_solver_dependence(self):
         with self.assertRaises(jsonschema.ValidationError):
-            lr = LogisticRegression(
+            _ = LogisticRegression(
                 LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
             )
 
     def test_hyperparam_dual_penalty_solver_dependence(self):
         with self.assertRaises(jsonschema.ValidationError):
-            lr = LogisticRegression(
+            _ = LogisticRegression(
                 LogisticRegression.penalty.l2, LogisticRegression.solver.sag, dual=True
             )
 
@@ -475,7 +470,7 @@ class TestLogisticRegression(unittest.TestCase):
         trained_lr = trainable_lr.fit(
             iris.data, iris.target, sample_weight=np.arange(len(iris.target))
         )
-        predicted = trained_lr.predict(iris.data)
+        _ = trained_lr.predict(iris.data)
 
     def test_predict_proba(self):
         import numpy as np
@@ -486,8 +481,8 @@ class TestLogisticRegression(unittest.TestCase):
             iris.data, iris.target, sample_weight=np.arange(len(iris.target))
         )
         # with self.assertWarns(DeprecationWarning):
-        predicted = trainable_lr.predict_proba(iris.data)
-        predicted = trained_lr.predict_proba(iris.data)
+        _ = trainable_lr.predict_proba(iris.data)
+        _ = trained_lr.predict_proba(iris.data)
 
     def test_decision_function(self):
         import numpy as np
@@ -497,7 +492,7 @@ class TestLogisticRegression(unittest.TestCase):
         trained_lr = trainable_lr.fit(
             iris.data, iris.target, sample_weight=np.arange(len(iris.target))
         )
-        predicted = trained_lr.decision_function(iris.data)
+        _ = trained_lr.decision_function(iris.data)
 
     def test_with_sklearn_gridsearchcv(self):
         from sklearn.datasets import load_iris
@@ -522,7 +517,6 @@ class TestLogisticRegression(unittest.TestCase):
         from sklearn.model_selection import RandomizedSearchCV
 
         lr = LogisticRegression()
-        parameters = {"solver": ("liblinear", "lbfgs"), "penalty": ["l2"]}
         ranges, cat_idx = lr.get_param_ranges()
         # specify parameters and distributions to sample from
         # the loguniform distribution needs to be taken care of properly
@@ -552,9 +546,7 @@ class TestLogisticRegression(unittest.TestCase):
         trained = lr.fit(X, y)
         parameters = {"solver": ("liblinear", "lbfgs"), "penalty": ["l2"]}
 
-        clf = GridSearchCV(
-            trained, parameters, cv=5, scoring=make_scorer(accuracy_score)
-        )
+        _ = GridSearchCV(trained, parameters, cv=5, scoring=make_scorer(accuracy_score))
 
     def test_grid_search_on_trained_auto(self):
         from sklearn.datasets import load_iris
@@ -567,9 +559,7 @@ class TestLogisticRegression(unittest.TestCase):
         trained = lr.fit(X, y)
         parameters = get_grid_search_parameter_grids(lr, num_samples=2)
 
-        clf = GridSearchCV(
-            trained, parameters, cv=5, scoring=make_scorer(accuracy_score)
-        )
+        _ = GridSearchCV(trained, parameters, cv=5, scoring=make_scorer(accuracy_score))
 
     def test_doc(self):
         from test.mock_custom_operators import MyLR
@@ -680,7 +670,7 @@ class TestClone(unittest.TestCase):
         iris = load_iris()
         X, y = iris.data, iris.target
         trained = lr.fit(X, y)
-        trained2 = clone(trained)
+        _ = clone(trained)
 
     def test_with_voting_classifier1(self):
         lr = LogisticRegression()
@@ -721,7 +711,7 @@ class TestClone(unittest.TestCase):
 class TestMLPClassifier(unittest.TestCase):
     def test_with_multioutput_targets(self):
         import numpy as np
-        from sklearn.datasets import load_iris, make_classification
+        from sklearn.datasets import make_classification
         from sklearn.utils import shuffle
 
         X, y1 = make_classification(
@@ -732,37 +722,35 @@ class TestMLPClassifier(unittest.TestCase):
         Y = np.vstack((y1, y2, y3)).T
         trainable = KNeighborsClassifier()
         trained = trainable.fit(X, Y)
-        predictions = trained.predict(X)
+        _ = trained.predict(X)
 
     def test_predict_proba(self):
         trainable = MLPClassifier()
         iris = sklearn.datasets.load_iris()
         trained = trainable.fit(iris.data, iris.target)
         #        with self.assertWarns(DeprecationWarning):
-        predicted = trainable.predict_proba(iris.data)
-        predicted = trained.predict_proba(iris.data)
+        _ = trainable.predict_proba(iris.data)
+        _ = trained.predict_proba(iris.data)
 
 
 class TestOperatorChoice(unittest.TestCase):
     def test_make_choice_with_instance(self):
         from sklearn.datasets import load_iris
 
-        from lale.operators import make_choice, make_pipeline, make_union
+        from lale.operators import make_choice
 
         iris = load_iris()
         X, y = iris.data, iris.target
         tfm = PCA() | Nystroem() | NoOp()
         with self.assertRaises(AttributeError):
-            trained = tfm.fit(X, y)
-        planned_pipeline1 = (
-            (OneHotEncoder | NoOp) >> tfm >> (LogisticRegression | KNeighborsClassifier)
-        )
-        planned_pipeline2 = (
+            _ = tfm.fit(X, y)
+        _ = (OneHotEncoder | NoOp) >> tfm >> (LogisticRegression | KNeighborsClassifier)
+        _ = (
             (OneHotEncoder | NoOp)
             >> (PCA | Nystroem)
             >> (LogisticRegression | KNeighborsClassifier)
         )
-        planned_pipeline3 = (
+        _ = (
             make_choice(OneHotEncoder, NoOp)
             >> make_choice(PCA, Nystroem)
             >> make_choice(LogisticRegression, KNeighborsClassifier)
@@ -772,11 +760,11 @@ class TestOperatorChoice(unittest.TestCase):
 class TestTfidfVectorizer(unittest.TestCase):
     def test_more_hyperparam_values(self):
         with self.assertRaises(jsonschema.ValidationError):
-            tf_idf = TfidfVectorizer(
+            _ = TfidfVectorizer(
                 max_df=2.5, min_df=2, max_features=1000, stop_words="english"
             )
         with self.assertRaises(jsonschema.ValidationError):
-            tf_idf = TfidfVectorizer(
+            _ = TfidfVectorizer(
                 max_df=2,
                 min_df=2,
                 max_features=1000,
@@ -790,7 +778,7 @@ class TestTfidfVectorizer(unittest.TestCase):
             return "abc"
 
         with self.assertRaises(jsonschema.ValidationError):
-            tf_idf = TfidfVectorizer(
+            _ = TfidfVectorizer(
                 max_df=2,
                 min_df=2,
                 max_features=1000,
@@ -827,7 +815,6 @@ class TestOperatorWithoutSchema(unittest.TestCase):
     def test_trainable_pipe_left(self):
         from sklearn.decomposition import PCA
 
-        from lale.lib.lale import NoOp
         from lale.lib.sklearn import LogisticRegression
 
         iris = sklearn.datasets.load_iris()
@@ -858,7 +845,7 @@ class TestOperatorWithoutSchema(unittest.TestCase):
     def dont_test_planned_pipe_right(self):
         from sklearn.decomposition import PCA
 
-        from lale.lib.lale import Hyperopt, NoOp
+        from lale.lib.lale import Hyperopt
         from lale.lib.sklearn import LogisticRegression
 
         iris = sklearn.datasets.load_iris()
@@ -907,7 +894,7 @@ class TestVotingClassifier(unittest.TestCase):
         clf = VotingClassifier(
             estimators=[("knn", KNeighborsClassifier()), ("lr", LogisticRegression())]
         )
-        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+        _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
     def test_with_gridsearch(self):
         from sklearn.metrics import accuracy_score, make_scorer
@@ -919,7 +906,7 @@ class TestVotingClassifier(unittest.TestCase):
             estimators=[("knn", KNeighborsClassifier()), ("rc", RidgeClassifier())],
             voting="hard",
         )
-        trained = clf.auto_configure(
+        _ = clf.auto_configure(
             self.X_train,
             self.y_train,
             GridSearchCV,
@@ -933,7 +920,7 @@ class TestVotingClassifier(unittest.TestCase):
     def test_with_observed_gridsearch(self):
         from sklearn.metrics import accuracy_score, make_scorer
 
-        from lale.lib.lale import GridSearchCV, Observing
+        from lale.lib.lale import GridSearchCV
         from lale.lib.lale.observing import LoggingObserver
         from lale.lib.sklearn import VotingClassifier
 
@@ -941,7 +928,7 @@ class TestVotingClassifier(unittest.TestCase):
             estimators=[("knn", KNeighborsClassifier()), ("rc", RidgeClassifier())],
             voting="hard",
         )
-        trained = clf.auto_configure(
+        _ = clf.auto_configure(
             self.X_train,
             self.y_train,
             GridSearchCV,
@@ -964,7 +951,6 @@ class TestBaggingClassifier(unittest.TestCase):
 
     def test_with_lale_classifiers(self):
         from lale.lib.sklearn import BaggingClassifier
-        from lale.sklearn_compat import make_sklearn_compat
 
         clf = BaggingClassifier(base_estimator=LogisticRegression())
         trained = clf.fit(self.X_train, self.y_train)
@@ -990,7 +976,7 @@ class TestBaggingClassifier(unittest.TestCase):
         from lale.lib.sklearn import BaggingClassifier
 
         clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
-        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+        _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
     def test_pipeline_choice_with_hyperopt(self):
         from lale.lib.lale import Hyperopt
@@ -999,7 +985,7 @@ class TestBaggingClassifier(unittest.TestCase):
         clf = BaggingClassifier(
             base_estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier())
         )
-        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+        _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
 
 class TestLazyImpl(unittest.TestCase):
@@ -1022,9 +1008,6 @@ class TestOrdinalEncoder(unittest.TestCase):
     def test_with_hyperopt(self):
         from lale.lib.sklearn import OrdinalEncoder
 
-        X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
-
         fproc = OrdinalEncoder()
         from lale.lib.sklearn import LogisticRegression
 
@@ -1035,13 +1018,10 @@ class TestOrdinalEncoder(unittest.TestCase):
 
         hyperopt = Hyperopt(estimator=pipeline, max_evals=1)
         trained = hyperopt.fit(self.X_train, self.y_train)
-        predictions = trained.predict(self.X_test)
+        _ = trained.predict(self.X_test)
 
     def test_inverse_transform(self):
         from lale.lib.sklearn import OneHotEncoder, OrdinalEncoder
-
-        X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
 
         fproc_ohe = OneHotEncoder(handle_unknown="ignore")
         # test_init_fit_transform
@@ -1059,24 +1039,16 @@ class TestOrdinalEncoder(unittest.TestCase):
     def test_handle_unknown_error(self):
         from lale.lib.sklearn import OrdinalEncoder
 
-        X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
-
         fproc_oe = OrdinalEncoder(handle_unknown="error")
         # test_init_fit_transform
         trained_oe = fproc_oe.fit(self.X_train, self.y_train)
         with self.assertRaises(
             ValueError
         ):  # This is repying on the train_test_split, so may fail randomly
-            transformed_X = trained_oe.transform(self.X_test)
+            _ = trained_oe.transform(self.X_test)
 
     def test_encode_unknown_with(self):
-        import numpy as np
-
         from lale.lib.sklearn import OrdinalEncoder
-
-        X_train, y_train = self.X_train, self.y_train
-        X_test, y_test = self.X_test, self.y_test
 
         fproc_oe = OrdinalEncoder(handle_unknown="ignore", encode_unknown_with=1000)
         # test_init_fit_transform
@@ -1085,13 +1057,13 @@ class TestOrdinalEncoder(unittest.TestCase):
         # This is repying on the train_test_split, so may fail randomly
         self.assertTrue(1000 in transformed_X)
         # Testing that inverse_transform works even for encode_unknown_with=1000
-        orig_X_oe = trained_oe._impl.inverse_transform(transformed_X)
+        _ = trained_oe._impl.inverse_transform(transformed_X)
 
 
 class TestOperatorErrors(unittest.TestCase):
     def test_trainable_get_pipeline_fail(self):
         try:
-            x = LogisticRegression().get_pipeline
+            _ = LogisticRegression().get_pipeline
             self.fail("get_pipeline did not fail")
         except AttributeError as e:
             msg: str = str(e)
@@ -1100,7 +1072,7 @@ class TestOperatorErrors(unittest.TestCase):
 
     def test_trained_get_pipeline_fail(self):
         try:
-            x = NoOp().get_pipeline
+            _ = NoOp().get_pipeline
             self.fail("get_pipeline did not fail")
         except AttributeError as e:
             msg: str = str(e)
@@ -1116,11 +1088,11 @@ class TestOperatorErrors(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             op2 = op.fit(iris_data.data[10:], iris_data.target[10:])
-            x = op2.get_pipeline
+            _ = op2.get_pipeline
 
     def test_trainable_summary_fail(self):
         try:
-            x = LogisticRegression().summary
+            _ = LogisticRegression().summary
             self.fail("summary did not fail")
         except AttributeError as e:
             msg: str = str(e)
@@ -1129,7 +1101,7 @@ class TestOperatorErrors(unittest.TestCase):
 
     def test_trained_summary_fail(self):
         try:
-            x = NoOp().summary
+            _ = NoOp().summary
             self.fail("summary did not fail")
         except AttributeError as e:
             msg: str = str(e)
@@ -1147,7 +1119,7 @@ class TestOperatorErrors(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             op2 = op.fit(iris_data.data[10:], iris_data.target[10:])
-            x = op2.summary
+            _ = op2.summary
 
 
 class TestFriedmanMSE(unittest.TestCase):
@@ -1432,7 +1404,7 @@ class TestOperatorLogging(unittest.TestCase):
         trainable = LogisticRegression()
         (X_train, y_train), (X_test, y_test) = lale.datasets.load_iris_df()
         trained = trainable.fit(X_train, y_train)
-        predicted = trained.predict(X_test)
+        _ = trained.predict(X_test)
         self.handler.flush()
         s1, s2, s3, s4 = self.stream.getvalue().strip().split("\n")
         self.assertTrue(s1.endswith("enter fit LogisticRegression"))
@@ -1467,7 +1439,7 @@ class TestRelationalOperator(unittest.TestCase):
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
         trained_relational = relational.fit(self.X_train, self.y_train)
-        output = trained_relational.transform(self.X_test)
+        _ = trained_relational.transform(self.X_test)
 
     def test_fit_error(self):
         relational = Relational(
@@ -1481,7 +1453,7 @@ class TestRelationalOperator(unittest.TestCase):
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
         with self.assertRaises(ValueError):
-            trained_relational = relational.fit([self.X_train], self.y_train)
+            _ = relational.fit([self.X_train], self.y_train)
 
     def test_transform_error(self):
         relational = Relational(
@@ -1496,7 +1468,7 @@ class TestRelationalOperator(unittest.TestCase):
         )
         trained_relational = relational.fit(self.X_train, self.y_train)
         with self.assertRaises(ValueError):
-            output = trained_relational.transform([self.X_test])
+            _ = trained_relational.transform([self.X_test])
 
     def test_fit_transform_in_pipeline(self):
         relational = Relational(
@@ -1511,4 +1483,4 @@ class TestRelationalOperator(unittest.TestCase):
         )
         pipeline = relational >> LogisticRegression()
         trained_pipeline = pipeline.fit(self.X_train, self.y_train)
-        output = trained_pipeline.predict(self.X_test)
+        _ = trained_pipeline.predict(self.X_test)

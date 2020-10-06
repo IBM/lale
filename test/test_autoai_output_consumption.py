@@ -91,7 +91,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
         finally:
             try:
                 os.remove("pp_pipeline.py")
-            except:
+            except OSError:
                 print("Couldn't remove pp_pipeline.py file")
 
     def test_05_train_pretty_print_pipeline(self):

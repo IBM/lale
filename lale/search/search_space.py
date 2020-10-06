@@ -13,13 +13,10 @@
 # limitations under the License.
 
 import abc
-import math
 import os
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import numpy
-from hyperopt import hp
-from hyperopt.pyll import scope
 
 from lale.search.PGO import FrequencyDistribution
 from lale.util import VisitorPathError
@@ -323,8 +320,8 @@ class SearchSpaceObject(SearchSpace):
                 if vv is not None:
                     opts.append(k + "->" + vv)
             if opts:
-                l = ";".join(opts)
-                choice_strs.append("{" + l + "}")
+                ll = ";".join(opts)
+                choice_strs.append("{" + ll + "}")
             else:
                 choice_strs.append("")
 

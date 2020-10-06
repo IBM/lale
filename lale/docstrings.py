@@ -91,7 +91,7 @@ def _schema_docstring(name, schema, required=True, relevant=True):
         )
     if not required:
         tags.append("optional")
-    if not relevant or schema.get("forOptimizer", True) == False:
+    if not relevant or schema.get("forOptimizer", True) is False:
         tags.append("not for optimizer")
     if "default" in schema:
         tags.append("default " + _value_docstring(schema["default"]))

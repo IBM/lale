@@ -12,24 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-from typing import TYPE_CHECKING, Dict, Optional
-
-from hyperopt import hp
+from typing import TYPE_CHECKING, Optional
 
 from lale.search.lale_hyperopt import search_space_to_hp_expr, search_space_to_hp_str
 from lale.search.PGO import PGO
 from lale.search.schema2search_space import op_to_search_space
-from lale.search.search_space import *
-from lale.util.Visitor import Visitor
+from lale.search.search_space import should_print_search_space
 
 if TYPE_CHECKING:
-    from lale.operators import (
-        OperatorChoice,
-        PlannedIndividualOp,
-        PlannedOperator,
-        PlannedPipeline,
-    )
+    from lale.operators import PlannedOperator
 
 
 def hyperopt_search_space(

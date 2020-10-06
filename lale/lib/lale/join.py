@@ -14,7 +14,6 @@
 
 import lale.docstrings
 import lale.operators
-from lale.expressions import Expr
 
 
 class JoinImpl:

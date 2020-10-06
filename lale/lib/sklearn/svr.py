@@ -220,7 +220,7 @@ SVR = lale.operators.make_operator(SVRImpl, _combined_schemas)
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVR.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.svm.SVR.html
-    from lale.schemas import AnyOf, Bool, Enum, Float
+    from lale.schemas import AnyOf, Enum, Float
 
     SVR = SVR.customize_schema(
         gamma=AnyOf(

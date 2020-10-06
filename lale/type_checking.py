@@ -32,17 +32,13 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
-import logging
 import os
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List
 
 import jsonschema
 import jsonschema.exceptions
 import jsonschema.validators
 import jsonsubschema
-import numpy as np
-import pandas as pd
-import scipy.sparse
 
 import lale.helpers
 
@@ -140,7 +136,7 @@ def is_schema(value) -> bool:
     if isinstance(value, dict):
         try:
             jsonschema.validate(value, _json_meta_schema())
-        except:
+        except jsonschema.ValidationError:
             return False
         return True
     return False
@@ -254,7 +250,7 @@ def validate_schema_or_subschema(lhs, super_schema):
 
         try:
             sub_schema = lale.datasets.data_schemas.to_schema(lhs)
-        except ValueError as e:
+        except ValueError:
             sub_schema = None
     if sub_schema is None:
         validate_schema(lhs, super_schema)

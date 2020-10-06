@@ -164,7 +164,7 @@ Observing = lale.operators.make_operator(ObservingImpl, _combined_schemas)
 
 
 class LoggingObserver:
-    """An observer that logs everything.  
+    """An observer that logs everything.
         This is also useful for debugging, since you can set breakpoints here
     """
 

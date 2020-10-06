@@ -15,7 +15,6 @@
 import os
 import subprocess
 import tempfile
-import time
 import warnings
 from typing import List, Optional
 

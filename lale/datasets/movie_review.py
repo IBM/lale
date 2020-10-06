@@ -21,7 +21,7 @@ import numpy as np
 
 def load_movie_review():
     """Loads the sentiment classification from a movie reviews dataset.
-    Read the readme from data/movie_review for more details.    
+    Read the readme from data/movie_review for more details.
     """
     download_base_url = "https://www.cs.cornell.edu/people/pabo/movie%2Dreview%2Ddata/rt-polaritydata.tar.gz"
     download_data_dir = os.path.join(

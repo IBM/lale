@@ -16,7 +16,7 @@ try:
     from torch.utils.data import Dataset
 except ModuleNotFoundError:
     raise ModuleNotFoundError(
-        """Your Python environment does not have torch installed. You can install it with 
+        """Your Python environment does not have torch installed. You can install it with
                                 pip install torch
                                 or with
                                     pip install 'lale[full]'"""
@@ -28,7 +28,7 @@ class NumpyTorchDataset(Dataset):
 
     def __init__(self, X, y=None):
         """X and y are the dataset and labels respectively.
-        
+
         Parameters
         ----------
         X : numpy array
@@ -43,7 +43,6 @@ class NumpyTorchDataset(Dataset):
         return self.X.shape[0]
 
     def __getitem__(self, idx):
-        label = None
         if self.y is not None:
             return self.X[idx], self.y[idx]
         else:

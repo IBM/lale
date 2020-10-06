@@ -28,7 +28,6 @@ from lale.lib.autogen import SGDClassifier
 from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import (
     PCA,
-    SVC,
     KNeighborsClassifier,
     LinearRegression,
     LinearSVC,
@@ -39,7 +38,6 @@ from lale.lib.sklearn import (
     StandardScaler,
 )
 from lale.lib.xgboost import XGBClassifier
-from lale.operators import TrainablePipeline, TrainedPipeline
 
 
 class TestCreation(unittest.TestCase):
@@ -80,7 +78,7 @@ class TestCreation(unittest.TestCase):
         trainable = lale.operators.make_pipeline(tfm, clf)
         digits = sklearn.datasets.load_digits()
         trained = trainable.fit(digits.data, digits.target)
-        predicted = trained.predict(digits.data)
+        _ = trained.predict(digits.data)
 
     def test_compose2(self):
         tfm = PCA(n_components=10)
@@ -88,7 +86,7 @@ class TestCreation(unittest.TestCase):
         trainable = tfm >> clf
         digits = sklearn.datasets.load_digits()
         trained = trainable.fit(digits.data, digits.target)
-        predicted = trained.predict(digits.data)
+        _ = trained.predict(digits.data)
 
     def test_compose3(self):
         nys = Nystroem(n_components=15)
@@ -97,7 +95,7 @@ class TestCreation(unittest.TestCase):
         trainable = nys >> pca >> lr
         digits = sklearn.datasets.load_digits()
         trained = trainable.fit(digits.data, digits.target)
-        predicted = trained.predict(digits.data)
+        _ = trained.predict(digits.data)
 
     def test_pca_nys_lr(self):
         from lale.operators import make_union
@@ -108,12 +106,12 @@ class TestCreation(unittest.TestCase):
         trainable = make_union(nys, pca) >> lr
         digits = sklearn.datasets.load_digits()
         trained = trainable.fit(digits.data, digits.target)
-        predicted = trained.predict(digits.data)
+        _ = trained.predict(digits.data)
 
     def test_compose4(self):
-        from lale.operators import make_choice
 
         digits = sklearn.datasets.load_digits()
+        _ = digits
         ohe = OneHotEncoder(handle_unknown=OneHotEncoder.handle_unknown.ignore)
         ohe.get_params()
         no_op = NoOp()
@@ -125,6 +123,7 @@ class TestCreation(unittest.TestCase):
         step2 = pca | nys
         step3 = lr | knn
         model_plan = step1 >> step2 >> step3
+        _ = model_plan
         # TODO: optimize on this plan and then fit and predict
 
     def test_compose5(self):
@@ -393,7 +392,7 @@ class TestImportExport(unittest.TestCase):
 
         pipe = Pipeline([("noop", None), ("gbc", GradientBoostingClassifier())])
         with self.assertRaises(ValueError):
-            imported_pipeline = import_from_sklearn_pipeline(pipe)
+            _ = import_from_sklearn_pipeline(pipe)
 
     def test_import_from_sklearn_pipeline_noop1(self):
         from sklearn.ensemble import GradientBoostingClassifier
@@ -402,7 +401,7 @@ class TestImportExport(unittest.TestCase):
         from lale.helpers import import_from_sklearn_pipeline
 
         pipe = Pipeline([("noop", NoOp()), ("gbc", GradientBoostingClassifier())])
-        imported_pipeline = import_from_sklearn_pipeline(pipe)
+        _ = import_from_sklearn_pipeline(pipe)
 
     def test_export_to_sklearn_pipeline(self):
         lale_pipeline = PCA(n_components=3) >> KNeighborsClassifier()
@@ -465,8 +464,6 @@ class TestImportExport(unittest.TestCase):
         from sklearn.feature_selection import SelectKBest
         from sklearn.pipeline import FeatureUnion
 
-        from lale.lib.sklearn import SVC
-
         lale_pipeline = (
             (
                 (PCA() >> SelectKBest(k=2))
@@ -504,7 +501,7 @@ class TestImportExport(unittest.TestCase):
     def test_export_to_sklearn_pipeline5(self):
         lale_pipeline = PCA() >> (XGBClassifier() | SGDClassifier())
         with self.assertRaises(ValueError):
-            sklearn_pipeline = lale_pipeline.export_to_sklearn_pipeline()
+            _ = lale_pipeline.export_to_sklearn_pipeline()
 
     def test_export_to_pickle(self):
         lale_pipeline = lale.operators.make_pipeline(LogisticRegression())
@@ -554,7 +551,7 @@ class TestImportExport(unittest.TestCase):
         # This test is probably unnecessary, but doesn't harm at this point
         lale_pipeline = PCA(n_components=3) >> KNeighborsClassifier() >> NoOp()
         trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)
-        sklearn_pipeline = trained_lale_pipeline.export_to_sklearn_pipeline()
+        _ = trained_lale_pipeline.export_to_sklearn_pipeline()
 
     def test_export_to_sklearn_pipeline_with_noop_4(self):
         lale_pipeline = NoOp() >> KNeighborsClassifier()
@@ -625,8 +622,8 @@ class TestComposition(unittest.TestCase):
             >> KNeighborsClassifier()
         )
         pipeline.fit(self.X_train, self.y_train)
-        tmp = pipeline.predict_proba(self.X_test)
-        tmp = pipeline.predict(self.X_test)
+        _ = pipeline.predict_proba(self.X_test)
+        _ = pipeline.predict(self.X_test)
 
     def test_two_transformers(self):
         tfm1 = PCA()
@@ -634,7 +631,7 @@ class TestComposition(unittest.TestCase):
         trainable = tfm1 >> tfm2
         digits = sklearn.datasets.load_digits()
         trained = trainable.fit(digits.data, digits.target)
-        predicted = trained.transform(digits.data)
+        _ = trained.transform(digits.data)
 
     def test_duplicate_instances(self):
         tfm = PCA()
@@ -642,7 +639,7 @@ class TestComposition(unittest.TestCase):
             LogisticRegression.solver.lbfgs, LogisticRegression.multi_class.auto
         )
         with self.assertRaises(ValueError):
-            trainable = lale.operators.make_pipeline(tfm, tfm, clf)
+            _ = lale.operators.make_pipeline(tfm, tfm, clf)
 
     def test_increase_num_rows(self):
         from test.mock_custom_operators import IncreaseRows
@@ -653,7 +650,7 @@ class TestComposition(unittest.TestCase):
         X, y = iris.data, iris.target
 
         trained = trainable.fit(X, y)
-        predicted = trained.transform(X, y)
+        _ = trained.transform(X, y)
 
     def test_remove_last1(self):
         pipeline = (
@@ -770,7 +767,7 @@ class TestAutoPipeline(unittest.TestCase):
         with_missing_X = lale.helpers.add_missing_values(all_X)
         with self.assertRaisesRegex(ValueError, "Input contains NaN"):
             lr_trainable = LogisticRegression()
-            lr_trained = lr_trainable.fit(with_missing_X, all_y)
+            _ = lr_trainable.fit(with_missing_X, all_y)
         self._fit_predict("classification", with_missing_X, all_y)
 
     def test_missing_boston(self):
@@ -779,7 +776,7 @@ class TestAutoPipeline(unittest.TestCase):
         with_missing_X = lale.helpers.add_missing_values(all_X)
         with self.assertRaisesRegex(ValueError, "Input contains NaN"):
             lr_trainable = LinearRegression()
-            lr_trained = lr_trainable.fit(with_missing_X, all_y)
+            _ = lr_trainable.fit(with_missing_X, all_y)
         self._fit_predict("regression", with_missing_X, all_y)
 
     def test_missing_creditg(self):

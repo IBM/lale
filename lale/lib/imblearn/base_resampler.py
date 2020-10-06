@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from imblearn.over_sampling import SMOTE as OrigModel
-
-import lale.operators
-
 
 class BaseResamplerImpl:
     def __init__(self, operator=None, resampler=None):

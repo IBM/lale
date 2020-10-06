@@ -99,14 +99,14 @@ class Grammar(Operator):
 
     def _unfold(self, op: Operator, n: int) -> Optional[Operator]:
         """ Unroll all possible operators from the grammar `g` starting from    non-terminal `op` after `n` derivations.
-        
+
         Parameters
         ----------
         op : Operator
             starting rule (e.g., `g.start`)
         n : int
             number of derivations
-        
+
         Returns
         -------
         Optional[Operator]
@@ -116,7 +116,7 @@ class Grammar(Operator):
             new_steps = [self._unfold(sop, n) for sop in op.steps()]
             step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
             new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
-            if not None in new_steps:
+            if None not in new_steps:
                 return make_pipeline_graph(new_steps, new_edges, True)
             return None
         if isinstance(op, OperatorChoice):
@@ -131,14 +131,14 @@ class Grammar(Operator):
     def unfold(self, n: int) -> PlannedOperator:
         """
         Explore the grammar `g` starting from `g.start` and generate all possible   choices after `n` derivations.
-        
+
         Parameters
         ----------
         g : Grammar
             input grammar
         n : int
             number of derivations
-        
+
         Returns
         -------
         PlannedOperator
@@ -150,14 +150,14 @@ class Grammar(Operator):
     def _sample(self, op: Operator, n: int) -> Optional[Operator]:
         """
         Sample the grammar `g` starting from `g.start`, that is, choose one element at random for each possible choices.
-        
+
         Parameters
         ----------
         op : Operator
             starting rule (e.g., `g.start`)
         n : int
             number of derivations
-        
+
         Returns
         -------
         Optional[Operator]
@@ -167,7 +167,7 @@ class Grammar(Operator):
             new_steps = [self._sample(sop, n) for sop in op.steps()]
             step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
             new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
-            if not None in new_steps:
+            if None not in new_steps:
                 return make_pipeline_graph(new_steps, new_edges, True)
             return None
         if isinstance(op, OperatorChoice):
@@ -181,12 +181,12 @@ class Grammar(Operator):
     def sample(self, n: int) -> PlannedOperator:
         """
         Sample the grammar `g` starting from `g.start`, that is, choose one element at random for each possible choices.
-          
+
         Parameters
         ----------
         n : int
             number of derivations
-        
+
         Returns
         -------
         PlannedOperator
