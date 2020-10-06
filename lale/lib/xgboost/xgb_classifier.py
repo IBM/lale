@@ -301,8 +301,8 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             "anyOf": [{"type": "array", "items": {"type": "object"}}, {"enum": [None]}],
             "default": None,
             "description": "List of callback functions that are applied at each iteration. "}
-    }
-}
+    }}]}
+
 _input_predict_schema = {
     "description": "Predict with `data`.",
     "type": "object",
