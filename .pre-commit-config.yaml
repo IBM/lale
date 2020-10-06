@@ -10,7 +10,7 @@ repos:
 -   repo: https://github.com/pycqa/isort
     rev: 5.3.2
     hooks:
-      - id: isort
+    -   id: isort
         args: [--filter-files]
 -   repo: https://github.com/psf/black
     rev: 19.10b0
