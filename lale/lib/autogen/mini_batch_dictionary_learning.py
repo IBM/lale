@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.decomposition import MiniBatchDictionaryLearning as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class MiniBatchDictionaryLearningImpl:
@@ -218,4 +219,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(MiniBatchDictionaryLearningImpl, _combined_schemas)
-MiniBatchDictionaryLearning = make_operator(MiniBatchDictionaryLearningImpl, _combined_schemas)
+MiniBatchDictionaryLearning = make_operator(
+    MiniBatchDictionaryLearningImpl, _combined_schemas
+)

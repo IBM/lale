@@ -14,20 +14,20 @@
 
 import sys
 
-__version__ = '0.4.4'
+__version__ = "0.4.4"
 
 try:
     # This variable is injected in the __builtins__ by the build
-    # process. It is used to not try to import rest of the lale packages when 
+    # process. It is used to not try to import rest of the lale packages when
     # it is being installed.
-    __LALE_SETUP__ # type: ignore
+    __LALE_SETUP__  # type: ignore
 except NameError:
     __LALE_SETUP__ = False
 
 if __LALE_SETUP__:
-    sys.stderr.write('Partial import of lale during the build process.\n')
+    sys.stderr.write("Partial import of lale during the build process.\n")
     # We are not importing the rest of lale during the build
     # process.
 else:
-    #all other code will go here.
+    # all other code will go here.
     from .operator_wrapper import wrap_imported_operators

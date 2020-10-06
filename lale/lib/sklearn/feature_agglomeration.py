@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import sklearn.cluster
+
 import lale.docstrings
 import lale.operators
-import numpy as np
 
-class FeatureAgglomerationImpl():
+
+class FeatureAgglomerationImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.cluster.FeatureAgglomeration(**self._hyperparams)
@@ -28,6 +30,7 @@ class FeatureAgglomerationImpl():
 
     def transform(self, X):
         return self._wrapped_model.transform(X)
+
 
 _hyperparams_schema = {
     'description': 'Agglomerate features.',
@@ -97,68 +100,60 @@ _hyperparams_schema = {
                 'linkage':{'not': {'enum': ['ward']}}}}]}]}
 
 _input_fit_schema = {
-    'description': 'Fit the hierarchical clustering on the data',
-    'type': 'object',
-    'required': ['X'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The data'},
-        'y': {'description': 'Ignored'},
-}}
+    "description": "Fit the hierarchical clustering on the data",
+    "type": "object",
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The data",
+        },
+        "y": {"description": "Ignored"},
+    },
+}
 
 _input_transform_schema = {
-    'description': 'Transform a new matrix using the built clustering',
-    'type': 'object',
-    'required': ['X'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'A M by N array of M observations in N dimensions or a length'},
+    "description": "Transform a new matrix using the built clustering",
+    "type": "object",
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "A M by N array of M observations in N dimensions or a length",
+        },
     },
 }
 _output_transform_schema = {
-    'description': 'The pooled values for each feature cluster.',
-    'type': 'array',
-    'items': {
-        'type': 'array',
-        'items': {
-            'type': 'number'},
-    },
+    "description": "The pooled values for each feature cluster.",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"},},
 }
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Feature agglomeration`_ transformer from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Feature agglomeration`_ transformer from scikit-learn.
 
 .. _`Feature agglomeration`: https://scikit-learn.org/stable/modules/generated/sklearn.cluster.FeatureAgglomeration.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.feature_agglomeration.html',
-    'import_from': 'sklearn.cluster',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_transform': _input_transform_schema,
-        'output_transform': _output_transform_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.feature_agglomeration.html",
+    "import_from": "sklearn.cluster",
+    "type": "object",
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
-FeatureAgglomeration : lale.operators.IndividualOp
-FeatureAgglomeration = lale.operators.make_operator(FeatureAgglomerationImpl, _combined_schemas)
+FeatureAgglomeration: lale.operators.IndividualOp
+FeatureAgglomeration = lale.operators.make_operator(
+    FeatureAgglomerationImpl, _combined_schemas
+)
 
-if sklearn.__version__ >= '0.21':
+if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     from lale.schemas import AnyOf, Float, Null, Int, Object, Enum
@@ -177,4 +172,5 @@ if sklearn.__version__ >= '0.21':
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
         constraint=AnyOf([Object(compute_full_tree=Enum(['True'])), Object(distance_threshold=Null())], 
         desc='compute_full_tree must be True if distance_threshold is not None.'))
+
 lale.docstrings.set_docstrings(FeatureAgglomerationImpl, FeatureAgglomeration._schemas)

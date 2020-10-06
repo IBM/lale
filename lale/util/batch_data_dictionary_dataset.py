@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from torch.utils.data import Dataset
+
+
 class BatchDataDict(Dataset):
     """Pytorch Dataset subclass that takes a dictionary of format {'<batch_idx>': <batch_data>}."""
 
@@ -32,6 +34,5 @@ class BatchDataDict(Dataset):
         return len(self.data_dict)
 
     def __getitem__(self, idx):
-        # This returns the batch at idx instead of a single element. 
+        # This returns the batch at idx instead of a single element.
         return self.data_dict[idx]
-

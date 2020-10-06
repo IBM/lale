@@ -26,3 +26,7 @@ Italics in the visualization indicate parts you have to substitute:
 *user* (your user name), *email* (your email associated with github),
 *feature* (the name of the feature branch you are working on), and
 *message* (a description of your commit).
+
+We have a pre-commit hook setup to help ensure that your code is properly formatted
+and passes various static checks.  We highly recommend that you enable it, or at least run the check
+before submitting a PR.  To do so, install the `pre-commit` python package (this is done automatically if you `pip install lale[dev]`).  Run `pre-commit install` in your `lale` repository to enable pre-commit checking, or `pre-commit run --all-files` to just run the checks once.

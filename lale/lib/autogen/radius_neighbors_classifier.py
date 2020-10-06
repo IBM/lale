@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.neighbors import RadiusNeighborsClassifier as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class RadiusNeighborsClassifierImpl:
@@ -164,4 +165,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(RadiusNeighborsClassifierImpl, _combined_schemas)
-RadiusNeighborsClassifier = make_operator(RadiusNeighborsClassifierImpl, _combined_schemas)
+RadiusNeighborsClassifier = make_operator(
+    RadiusNeighborsClassifierImpl, _combined_schemas
+)

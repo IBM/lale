@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.compose import TransformedTargetRegressor as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class TransformedTargetRegressorImpl:
@@ -125,4 +126,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(TransformedTargetRegressorImpl, _combined_schemas)
-TransformedTargetRegressor = make_operator(TransformedTargetRegressorImpl, _combined_schemas)
+TransformedTargetRegressor = make_operator(
+    TransformedTargetRegressorImpl, _combined_schemas
+)

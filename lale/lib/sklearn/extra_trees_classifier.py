@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import sklearn.ensemble
+
 import lale.docstrings
 import lale.operators
 
-class ExtraTreesClassifierImpl():
+
+class ExtraTreesClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.ensemble.ExtraTreesClassifier(**self._hyperparams)
@@ -30,6 +32,7 @@ class ExtraTreesClassifierImpl():
 
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
+
 
 _hyperparams_schema = {
     'description': 'An extra-trees classifier.',
@@ -151,130 +154,135 @@ _hyperparams_schema = {
                     {'enum': ['balanced', 'balanced_subsample', None]}],
                 'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
                 'default': None},
-        }}]
-}
+        }}]}
+
 _input_fit_schema = {
-    'description': 'Build a forest of trees from the training set (X, y).',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'properties': {
-        'X': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'},
-                }}],
-            'description': 'The training input samples. Internally, its dtype will be converted'},
-        'y': {
-            'anyOf': [
-                {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}},
-                {'type': 'array', 'items': {'type': 'boolean'}}],
-            'description': 'The target values (class labels in classification, real numbers in'},
-        'sample_weight': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }, {
-                'enum': [None]}],
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
+    "description": "Build a forest of trees from the training set (X, y).",
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"},},
+                }
+            ],
+            "description": "The training input samples. Internally, its dtype will be converted",
+        },
+        "y": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+            "description": "The target values (class labels in classification, real numbers in",
+        },
+        "sample_weight": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"},},
+                {"enum": [None]},
+            ],
+            "description": "Sample weights. If None, then samples are equally weighted. Splits",
+        },
     },
 }
 _input_predict_schema = {
-    'description': 'Predict class for X.',
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, its dtype will be converted to'},
+    "description": "Predict class for X.",
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The input samples. Internally, its dtype will be converted to",
+        },
     },
 }
 _output_predict_schema = {
-    'description': 'The predicted classes.',
-    'anyOf': [
-        {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}},
-        {'type': 'array', 'items': {'type': 'boolean'}}]}
+    "description": "The predicted classes.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "array", "items": {"type": "boolean"}},
+    ],
+}
 
 _input_predict_proba_schema = {
-    'description': 'Predict class probabilities for X.',
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, its dtype will be converted to'},
+    "description": "Predict class probabilities for X.",
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The input samples. Internally, its dtype will be converted to",
+        },
     },
 }
 _output_predict_proba_schema = {
-    'description': 'such arrays if n_outputs > 1.',
-    'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }    
+    "description": "such arrays if n_outputs > 1.",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"},},
 }
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Extra trees classifier`_ random forest from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Extra trees classifier`_ random forest from scikit-learn.
 
 .. _`Extra trees classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.extra_trees_classifier.html',
-    'import_from': 'sklearn.ensemble',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'classifier'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema,
-        'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.extra_trees_classifier.html",
+    "import_from": "sklearn.ensemble",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
+    },
+}
 
-ExtraTreesClassifier : lale.operators.IndividualOp
-ExtraTreesClassifier = lale.operators.make_operator(ExtraTreesClassifierImpl, _combined_schemas)
+ExtraTreesClassifier: lale.operators.IndividualOp
+ExtraTreesClassifier = lale.operators.make_operator(
+    ExtraTreesClassifierImpl, _combined_schemas
+)
 
-if sklearn.__version__ >= '0.22':
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
     from lale.schemas import AnyOf, Float, Int, Null
+
     ExtraTreesClassifier = ExtraTreesClassifier.customize_schema(
         n_estimators=Int(
-            desc='The number of trees in the forest.',
+            desc="The number of trees in the forest.",
             default=100,
             forOptimizer=True,
             minForOptimizer=10,
-            maxForOptimizer=100),
+            maxForOptimizer=100,
+        ),
         ccp_alpha=Float(
-            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
             forOptimizer=False,
             min=0.0,
-            maxForOptimizer=0.1),
+            maxForOptimizer=0.1,
+        ),
         max_samples=AnyOf(
             types=[
-                Null(desc='Draw X.shape[0] samples.'),
-                Int(desc='Draw max_samples samples.', min=1),
-                Float(desc='Draw max_samples * X.shape[0] samples.',
-                      min=0.0, exclusiveMin=True, max=1.0, exclusiveMax=True)],
-            desc='If bootstrap is True, the number of samples to draw from X to train each base estimator.',
-            default=None))
+                Null(desc="Draw X.shape[0] samples."),
+                Int(desc="Draw max_samples samples.", min=1),
+                Float(
+                    desc="Draw max_samples * X.shape[0] samples.",
+                    min=0.0,
+                    exclusiveMin=True,
+                    max=1.0,
+                    exclusiveMax=True,
+                ),
+            ],
+            desc="If bootstrap is True, the number of samples to draw from X to train each base estimator.",
+            default=None,
+        ),
+    )
 
 lale.docstrings.set_docstrings(ExtraTreesClassifierImpl, ExtraTreesClassifier._schemas)

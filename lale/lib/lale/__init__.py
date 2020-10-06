@@ -80,33 +80,33 @@ Functions:
 .. _`date_time`: lale.lib.lale.functions.html#lale.lib.lale.functions.date_time
 """
 
-#estimators
+from .aggregate import Aggregate
+
+# estimators
 from .auto_pipeline import AutoPipeline
 from .baseline_classifier import BaselineClassifier
 from .baseline_regressor import BaselineRegressor
-from .grid_search_cv import GridSearchCV
-from .hyperopt import Hyperopt
-from .topk_voting_classifier import TopKVotingClassifier
-from .smac import SMAC
 
-#transformers
+# transformers
 from .batching import Batching
-from .concat_features import ConcatFeatures
-from .no_op import NoOp
-from .project import Project
-from .sample_based_voting import SampleBasedVoting
-from .aggregate import Aggregate
-from .group_by import GroupBy
-from .map import Map
-from .join import Join
-from .scan import Scan
-from .relational import Relational
 
-#estimators and transformers
+# estimators and transformers
 from .both import Both
-from .identity_wrapper import IdentityWrapper
-from .observing import Observing
+from .concat_features import ConcatFeatures
 
-#functions
-from .functions import categorical
-from .functions import date_time
+# functions
+from .functions import categorical, date_time
+from .grid_search_cv import GridSearchCV
+from .group_by import GroupBy
+from .hyperopt import Hyperopt
+from .identity_wrapper import IdentityWrapper
+from .join import Join
+from .map import Map
+from .no_op import NoOp
+from .observing import Observing
+from .project import Project
+from .relational import Relational
+from .sample_based_voting import SampleBasedVoting
+from .scan import Scan
+from .smac import SMAC
+from .topk_voting_classifier import TopKVotingClassifier

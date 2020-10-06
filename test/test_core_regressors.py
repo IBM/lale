@@ -13,81 +13,92 @@
 # limitations under the License.
 
 import unittest
+
 import sklearn.datasets
+
 import lale.lib.lale
-from lale.lib.lale import NoOp
 import lale.type_checking
+from lale.lib.lale import NoOp
+
 
 class TestRegression(unittest.TestCase):
-
     def setUp(self):
         from sklearn.datasets import make_regression
         from sklearn.model_selection import train_test_split
-        X, y = make_regression(n_samples=200, n_features=4, n_informative=2,
-                               random_state=0, shuffle=False)
-        self.X_train, self.X_test, self.y_train, self.y_test =  train_test_split(X, y)    
+
+        X, y = make_regression(
+            n_samples=200, n_features=4, n_informative=2, random_state=0, shuffle=False
+        )
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
 
 def create_function_test_regressor(clf_name):
     def test_regressor(self):
         X_train, y_train = self.X_train, self.y_train
         X_test, y_test = self.X_test, self.y_test
         import importlib
-        module_name = ".".join(clf_name.split('.')[0:-1])
-        class_name = clf_name.split('.')[-1]
+
+        module_name = ".".join(clf_name.split(".")[0:-1])
+        class_name = clf_name.split(".")[-1]
         module = importlib.import_module(module_name)
 
         class_ = getattr(module, class_name)
         regr = class_()
 
-        #test_schemas_are_schemas
+        # test_schemas_are_schemas
         lale.type_checking.validate_is_schema(regr.input_schema_fit())
         lale.type_checking.validate_is_schema(regr.input_schema_predict())
         lale.type_checking.validate_is_schema(regr.output_schema_predict())
         lale.type_checking.validate_is_schema(regr.hyperparam_schema())
 
-        #test_init_fit_predict
+        # test_init_fit_predict
         trained = regr.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
-        #test_predict_on_trainable
+        # test_predict_on_trainable
         trained = regr.fit(X_train, y_train)
         regr.predict(X_train)
 
-        #test_to_json
+        # test_to_json
         regr.to_json()
 
-        #test_in_a_pipeline
+        # test_in_a_pipeline
         pipeline = NoOp() >> regr
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
-        #test_with_hyperopt
+        # test_with_hyperopt
         from lale.lib.sklearn.ridge import RidgeImpl
+
         if regr._impl_class() != RidgeImpl:
             from lale.lib.lale import Hyperopt
+
             hyperopt = Hyperopt(estimator=pipeline, max_evals=1)
             trained = hyperopt.fit(self.X_train, self.y_train)
             predictions = trained.predict(self.X_test)
 
-    test_regressor.__name__ = 'test_{0}'.format(clf_name.split('.')[-1])
+    test_regressor.__name__ = "test_{0}".format(clf_name.split(".")[-1])
     return test_regressor
 
-regressors = ['lale.lib.lale.BaselineRegressor',
-              'lale.lib.sklearn.RandomForestRegressor',
-              'lale.lib.sklearn.DecisionTreeRegressor',
-              'lale.lib.sklearn.ExtraTreesRegressor',
-              'lale.lib.sklearn.GradientBoostingRegressor',
-              'lale.lib.sklearn.LinearRegression',
-              'lale.lib.sklearn.Ridge',
-              'lale.lib.lightgbm.LGBMRegressor',
-              'lale.lib.xgboost.XGBRegressor',
-              'lale.lib.sklearn.AdaBoostRegressor',
-              'lale.lib.sklearn.SGDRegressor',
-              'lale.lib.sklearn.SVR',
-              'lale.lib.sklearn.KNeighborsRegressor']
+
+regressors = [
+    "lale.lib.lale.BaselineRegressor",
+    "lale.lib.sklearn.RandomForestRegressor",
+    "lale.lib.sklearn.DecisionTreeRegressor",
+    "lale.lib.sklearn.ExtraTreesRegressor",
+    "lale.lib.sklearn.GradientBoostingRegressor",
+    "lale.lib.sklearn.LinearRegression",
+    "lale.lib.sklearn.Ridge",
+    "lale.lib.lightgbm.LGBMRegressor",
+    "lale.lib.xgboost.XGBRegressor",
+    "lale.lib.sklearn.AdaBoostRegressor",
+    "lale.lib.sklearn.SGDRegressor",
+    "lale.lib.sklearn.SVR",
+    "lale.lib.sklearn.KNeighborsRegressor",
+]
 for clf in regressors:
     setattr(
         TestRegression,
-        'test_{0}'.format(clf.split('.')[-1]),
-        create_function_test_regressor(clf)
+        "test_{0}".format(clf.split(".")[-1]),
+        create_function_test_regressor(clf),
     )

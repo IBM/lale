@@ -13,13 +13,17 @@
 # limitations under the License.
 
 import sklearn.ensemble
+
 import lale.docstrings
 import lale.operators
 
-class RandomForestRegressorImpl():
+
+class RandomForestRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.RandomForestRegressor(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.RandomForestRegressor(
+            **self._hyperparams
+        )
 
     def fit(self, X, y, **fit_params):
         self._wrapped_model.fit(X, y, **fit_params)
@@ -27,6 +31,7 @@ class RandomForestRegressorImpl():
 
     def predict(self, X):
         return self._wrapped_model.predict(X)
+
 
 _hyperparams_schema = {
     'description': 'A random forest regressor.',
@@ -167,95 +172,115 @@ _hyperparams_schema = {
                 'description': 'When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just fit a whole new forest.'}}}]}
 
 _input_fit_schema = {
-    'description': 'Build a forest of trees from the training set (X, y).',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}},
-        'y': {
-            'description': 'The predicted classes.',
-            'type': 'array',
-            'items': {
-                'type': 'number'}},
-        'sample_weight': {
-            'anyOf': [
-            {   'type': 'array',
-                'items': {'type': 'number'}},
-            {   'enum': [None],
-                'description': 'Samples are equally weighted.'}],
-            'description': 'Sample weights.'}}}
+    "description": "Build a forest of trees from the training set (X, y).",
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        },
+        "y": {
+            "description": "The predicted classes.",
+            "type": "array",
+            "items": {"type": "number"},
+        },
+        "sample_weight": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"enum": [None], "description": "Samples are equally weighted."},
+            ],
+            "description": "Sample weights.",
+        },
+    },
+}
 
 _input_predict_schema = {
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}}}}
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        }
+    },
+}
 
 _output_predict_schema = {
-    'description': 'The predicted values.',
-    'type': 'array',
-    'items': {
-        'type': 'number'}}
+    "description": "The predicted values.",
+    "type": "array",
+    "items": {"type": "number"},
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Random forest regressor`_ from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Random forest regressor`_ from scikit-learn.
 
 .. _`Random forest regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_regressor.html',
-    'import_from': 'sklearn.ensemble',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'regressor'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_regressor.html",
+    "import_from": "sklearn.ensemble",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+    },
+}
 
-RandomForestRegressor : lale.operators.IndividualOp
-RandomForestRegressor = lale.operators.make_operator(RandomForestRegressorImpl, _combined_schemas)
+RandomForestRegressor: lale.operators.IndividualOp
+RandomForestRegressor = lale.operators.make_operator(
+    RandomForestRegressorImpl, _combined_schemas
+)
 
-if sklearn.__version__ >= '0.22':
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestRegressor.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.RandomForestRegressor.html
     from lale.schemas import AnyOf, Float, Int, Null
+
     RandomForestRegressor = RandomForestRegressor.customize_schema(
         n_estimators=Int(
-            desc='The number of trees in the forest.',
+            desc="The number of trees in the forest.",
             default=100,
             forOptimizer=True,
             minForOptimizer=10,
-            maxForOptimizer=100),
+            maxForOptimizer=100,
+        ),
         ccp_alpha=Float(
-            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
             forOptimizer=False,
             min=0.0,
-            maxForOptimizer=0.1),
+            maxForOptimizer=0.1,
+        ),
         max_samples=AnyOf(
             types=[
-                Null(desc='Draw X.shape[0] samples.'),
-                Int(desc='Draw max_samples samples.', min=1),
-                Float(desc='Draw max_samples * X.shape[0] samples.',
-                      min=0.0, exclusiveMin=True, max=1.0, exclusiveMax=True)],
-            desc='If bootstrap is True, the number of samples to draw from X to train each base estimator.',
-            default=None))
+                Null(desc="Draw X.shape[0] samples."),
+                Int(desc="Draw max_samples samples.", min=1),
+                Float(
+                    desc="Draw max_samples * X.shape[0] samples.",
+                    min=0.0,
+                    exclusiveMin=True,
+                    max=1.0,
+                    exclusiveMax=True,
+                ),
+            ],
+            desc="If bootstrap is True, the number of samples to draw from X to train each base estimator.",
+            default=None,
+        ),
+    )
 
-lale.docstrings.set_docstrings(RandomForestRegressorImpl, RandomForestRegressor._schemas)
+lale.docstrings.set_docstrings(
+    RandomForestRegressorImpl, RandomForestRegressor._schemas
+)

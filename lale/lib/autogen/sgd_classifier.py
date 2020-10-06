@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.linear_model import SGDClassifier as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class SGDClassifierImpl:

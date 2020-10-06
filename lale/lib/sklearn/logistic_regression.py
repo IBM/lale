@@ -12,80 +12,101 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.docstrings
-import lale.operators
 import sklearn.linear_model
 
+import lale.docstrings
+import lale.operators
+
 _input_fit_schema = {
-  'type': 'object',
-  'required': ['X', 'y'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}},
-    'y': {
-      'description': 'Target class labels; the array is over samples.',
-        'anyOf': [
-            {'type': 'array', 'items': {'type': 'number'}},
-            {'type': 'array', 'items': {'type': 'string'}},
-            {'type': 'array', 'items': {'type': 'boolean'}}]}}}
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        },
+        "y": {
+            "description": "Target class labels; the array is over samples.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+        },
+    },
+}
 
 _input_predict_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        }
+    },
+}
 
 _output_predict_schema = {
-    'description': 'Predicted class label per sample.',
-    'anyOf': [
-        {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}},
-        {'type': 'array', 'items': {'type': 'boolean'}}]}
+    "description": "Predicted class label per sample.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "array", "items": {"type": "boolean"}},
+    ],
+}
 
 _input_predict_proba_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        }
+    },
+}
 
 _output_predict_proba_schema = {
-    'description': 'Probability of the sample for each class in the model.',
-    'type': 'array',
-    'items': {
-        'type': 'array',
-        'items': {
-            'type': 'number'}}}
+    "description": "Probability of the sample for each class in the model.",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
+}
 
 _input_decision_function_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        }
+    },
+}
 
 _output_decision_function_schema = {
-    'description': 'Confidence scores for samples for each class in the model.',
-    'anyOf': [
-    {   'description': 'In the multi-way case, score per (sample, class) combination.',
-        'type': 'array',
-        'items': {'type': 'array', 'items': {'type': 'number'}}},
-    {   'description': 'In the binary case, score for `self._classes[1]`.',
-        'type': 'array',
-        'items': {'type': 'number'}}]}
+    "description": "Confidence scores for samples for each class in the model.",
+    "anyOf": [
+        {
+            "description": "In the multi-way case, score per (sample, class) combination.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        },
+        {
+            "description": "In the binary case, score for `self._classes[1]`.",
+            "type": "array",
+            "items": {"type": "number"},
+        },
+    ],
+}
 
 _hyperparams_schema = {
   'description': 'Hyperparameter schema.',
@@ -105,7 +126,6 @@ _hyperparams_schema = {
       'properties': {
         'solver': {
           'description': """Algorithm for optimization problem.
-
 - For small datasets, 'liblinear' is a good choice, whereas 'sag' and
   'saga' are faster for large ones.
 - For multiclass problems, only 'newton-cg', 'sag', 'saga' and 'lbfgs'
@@ -118,10 +138,11 @@ _hyperparams_schema = {
 Note that 'sag' and 'saga' fast convergence is only guaranteed on
 features with approximately the same scale. You can
 preprocess the data with a scaler from sklearn.preprocessing.""",
-          'enum': ['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
-          'default': 'liblinear'},
-        'penalty': {
-          'description': """Norm used in the penalization.  
+                    "enum": ["newton-cg", "lbfgs", "liblinear", "sag", "saga"],
+                    "default": "liblinear",
+                },
+                "penalty": {
+                    "description": """Norm used in the penalization.  
 The 'newton-cg', 'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
 only supported by the 'saga' solver. If 'none' (not supported by the
 liblinear solver), no regularization is applied.""",
@@ -217,91 +238,118 @@ across the entire probability distribution, *even when the data is
 binary*. 'multinomial' is unavailable when solver='liblinear'.
 'auto' selects 'ovr' if the data is binary, or if solver='liblinear',
 and otherwise selects 'multinomial'.""",
-          'enum': ['ovr', 'multinomial', 'auto'],
-          'default': 'ovr'},
-        'verbose': {
-          'description':
-            'For the liblinear and lbfgs solvers set verbose to any positive '
-            'number for verbosity.',
-          'type': 'integer',
-          'default': 0},
-        'warm_start': {
-          'description':"""When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution.
+                    "enum": ["ovr", "multinomial", "auto"],
+                    "default": "ovr",
+                },
+                "verbose": {
+                    "description": "For the liblinear and lbfgs solvers set verbose to any positive "
+                    "number for verbosity.",
+                    "type": "integer",
+                    "default": 0,
+                },
+                "warm_start": {
+                    "description": """When set to True, reuse the solution of the previous call to fit as initialization, otherwise, just erase the previous solution.
 Useless for liblinear solver.""",
-          'type': 'boolean',
-          'default': False},
-        'n_jobs': {
-          'description':"""Number of CPU cores when parallelizing over classes if 
+                    "type": "boolean",
+                    "default": False,
+                },
+                "n_jobs": {
+                    "description": """Number of CPU cores when parallelizing over classes if 
 multi_class is ovr.  This parameter is ignored when the "solver" is
 set to 'liblinear' regardless of whether 'multi_class' is specified or
 not.""",
-          'anyOf': [
-            { 'description': '1 unless in joblib.parallel_backend context.',
-              'enum': [None]},
-            { 'description': 'Use all processors.',
-              'enum': [-1]},
-            { 'description': 'Number of CPU cores.',
-              'type': 'integer',
-              'minimum': 1}],
-            'default': None}}},
-      { 'description':
-          'The newton-cg, sag, and lbfgs solvers support only l2 penalties.',
-        'anyOf': [
-          { 'type': 'object',
-            'properties': {
-              'solver': {'not': {'enum': ['newton-cg', 'sag', 'lbfgs']}}}},
-          { 'type': 'object',
-            'properties': {'penalty': {'enum': ['l2']}}}]},
-      { 'description':
-          'The dual formulation is only implemented for l2 '
-          'penalty with the liblinear solver.',
-        'anyOf': [
-          { 'type': 'object',
-            'properties': {'dual': {'enum': [False]}}},
-          { 'type': 'object',
-            'properties': {
-              'penalty': {'enum': ['l2']},
-              'solver': {'enum': ['liblinear']}}}]},
-      { 'description':
-          'The multi_class multinomial option is unavailable when the '
-          'solver is liblinear.',
-        'anyOf': [
-          { 'type': 'object',
-            'properties': {
-              'multi_class': {'not': {'enum': ['multinomial']}}}},
-          { 'type': 'object',
-            'properties': {
-              'solver': {'not': {'enum': ['liblinear']}}}}]}]}
+                    "anyOf": [
+                        {
+                            "description": "1 unless in joblib.parallel_backend context.",
+                            "enum": [None],
+                        },
+                        {"description": "Use all processors.", "enum": [-1]},
+                        {
+                            "description": "Number of CPU cores.",
+                            "type": "integer",
+                            "minimum": 1,
+                        },
+                    ],
+                    "default": None,
+                },
+            },
+        },
+        {
+            "description": "The newton-cg, sag, and lbfgs solvers support only l2 penalties.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "solver": {"not": {"enum": ["newton-cg", "sag", "lbfgs"]}}
+                    },
+                },
+                {"type": "object", "properties": {"penalty": {"enum": ["l2"]}}},
+            ],
+        },
+        {
+            "description": "The dual formulation is only implemented for l2 "
+            "penalty with the liblinear solver.",
+            "anyOf": [
+                {"type": "object", "properties": {"dual": {"enum": [False]}}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "penalty": {"enum": ["l2"]},
+                        "solver": {"enum": ["liblinear"]},
+                    },
+                },
+            ],
+        },
+        {
+            "description": "The multi_class multinomial option is unavailable when the "
+            "solver is liblinear.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"multi_class": {"not": {"enum": ["multinomial"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"solver": {"not": {"enum": ["liblinear"]}}},
+                },
+            ],
+        },
+    ],
+}
 
 _combined_schemas = {
-  '$schema': 'http://json-schema.org/draft-04/schema#',
-  'description': """`Logistic regression`_ linear model from scikit-learn for classification.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Logistic regression`_ linear model from scikit-learn for classification.
 
 .. _`Logistic regression`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
 """,
-  'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html',
-  'import_from': 'sklearn.linear_model',
-  'type': 'object',
-  'tags': {
-    'pre': ['~categoricals'],
-    'op': ['estimator', 'classifier', 'interpretable'],
-    'post': ['probabilities']},
-  'properties': {
-    'hyperparams': _hyperparams_schema,
-    'input_fit': _input_fit_schema,
-    'input_predict': _input_predict_schema,
-    'output_predict': _output_predict_schema,
-    'input_predict_proba': _input_predict_proba_schema,
-    'output_predict_proba': _output_predict_proba_schema,
-    'input_decision_function': _input_decision_function_schema,
-    'output_decision_function': _output_decision_function_schema,
-}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html",
+    "import_from": "sklearn.linear_model",
+    "type": "object",
+    "tags": {
+        "pre": ["~categoricals"],
+        "op": ["estimator", "classifier", "interpretable"],
+        "post": ["probabilities"],
+    },
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
+        "input_decision_function": _input_decision_function_schema,
+        "output_decision_function": _output_decision_function_schema,
+    },
+}
+
 
 class LogisticRegressionImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.linear_model.LogisticRegression(
-            **self._hyperparams)
+            **self._hyperparams
+        )
 
     def fit(self, X, y, **fit_params):
         self._wrapped_model.fit(X, y, **fit_params)
@@ -316,27 +364,37 @@ class LogisticRegressionImpl:
     def decision_function(self, X):
         return self._wrapped_model.decision_function(X)
 
-LogisticRegression = lale.operators.make_operator(LogisticRegressionImpl, _combined_schemas)
 
-if sklearn.__version__ >= '0.22':
+LogisticRegression = lale.operators.make_operator(
+    LogisticRegressionImpl, _combined_schemas
+)
+
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.LogisticRegression.html
-    from lale.schemas import AnyOf, Enum, Float, Null
     import typing
-    LogisticRegression = typing.cast(lale.operators.PlannedIndividualOp, LogisticRegression.customize_schema(
-        solver=Enum(
-            values=['newton-cg', 'lbfgs', 'liblinear', 'sag', 'saga'],
-            desc='Algorithm for optimization problem.',
-            default='lbfgs'),
-        multi_class=Enum(
-            values=['auto', 'ovr', 'multinomial'],
-            desc='If the option chosen is `ovr`, then a binary problem is fit for each label. For `multinomial` the loss minimised is the multinomial loss fit across the entire probability distribution, even when the data is binary. `multinomial` is unavailable when solver=`liblinear`. `auto` selects `ovr` if the data is binary, or if solver=`liblinear`, and otherwise selects `multinomial`.',
-            default='auto'),
-        l1_ratio=AnyOf(
-            types=[
-                Float(min=0.0, max=1.0),
-                Null()],
-            desc='The Elastic-Net mixing parameter.',
-            default=None)))
+
+    from lale.schemas import AnyOf, Enum, Float, Null
+
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            solver=Enum(
+                values=["newton-cg", "lbfgs", "liblinear", "sag", "saga"],
+                desc="Algorithm for optimization problem.",
+                default="lbfgs",
+            ),
+            multi_class=Enum(
+                values=["auto", "ovr", "multinomial"],
+                desc="If the option chosen is `ovr`, then a binary problem is fit for each label. For `multinomial` the loss minimised is the multinomial loss fit across the entire probability distribution, even when the data is binary. `multinomial` is unavailable when solver=`liblinear`. `auto` selects `ovr` if the data is binary, or if solver=`liblinear`, and otherwise selects `multinomial`.",
+                default="auto",
+            ),
+            l1_ratio=AnyOf(
+                types=[Float(min=0.0, max=1.0), Null()],
+                desc="The Elastic-Net mixing parameter.",
+                default=None,
+            ),
+        ),
+    )
 
 lale.docstrings.set_docstrings(LogisticRegressionImpl, LogisticRegression._schemas)

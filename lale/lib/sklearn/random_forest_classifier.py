@@ -13,13 +13,17 @@
 # limitations under the License.
 
 import sklearn.ensemble
+
 import lale.docstrings
 import lale.operators
 
-class RandomForestClassifierImpl():
+
+class RandomForestClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.RandomForestClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.RandomForestClassifier(
+            **self._hyperparams
+        )
 
     def fit(self, X, y, **fit_params):
         self._wrapped_model.fit(X, y, **fit_params)
@@ -30,6 +34,7 @@ class RandomForestClassifierImpl():
 
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
+
 
 _hyperparams_schema = {
     'description': 'A random forest classifier.',
@@ -183,119 +188,147 @@ _hyperparams_schema = {
                 'default': None}}}]}
 
 _input_fit_schema = {
-    'type': 'object',
-    'required': ['X', 'y'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}},
-        'y': {
-            'description': 'The predicted classes.',
-            'anyOf': [
-            {   'type': 'array', 'items': {'type': 'number'}},
-            {   'type': 'array', 'items': {'type': 'string'}},
-            {   'type': 'array', 'items': {'type': 'boolean'}}]},
-        'sample_weight': {
-            'anyOf': [
-            {   'type': 'array',
-                'items': {'type': 'number'}},
-            {   'enum': [None],
-                'description': 'Samples are equally weighted.'}],
-            'description': 'Sample weights.'}}}
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        },
+        "y": {
+            "description": "The predicted classes.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+        },
+        "sample_weight": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"enum": [None], "description": "Samples are equally weighted."},
+            ],
+            "description": "Sample weights.",
+        },
+    },
+}
 
 _input_predict_schema = {
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}}}}
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        }
+    },
+}
 
 _output_predict_schema = {
-    'description': 'The predicted classes.',
-    'anyOf': [
-    {   'type': 'array', 'items': {'type': 'number'}},
-    {   'type': 'array', 'items': {'type': 'string'}},
-    {   'type': 'array', 'items': {'type': 'boolean'}}]}
+    "description": "The predicted classes.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "array", "items": {"type": "boolean"}},
+    ],
+}
 
 _input_predict_proba_schema = {
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}}}}
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        }
+    },
+}
 
 _output_predict_proba_schema = {
-    'type': 'array',
-    'description': 'The outer array is over samples aka rows.',
-    'items': {
-        'type': 'array',
-        'description': 'The inner array has items corresponding to each class.',
-        'items': {
-            'type': 'number'}}}
+    "type": "array",
+    "description": "The outer array is over samples aka rows.",
+    "items": {
+        "type": "array",
+        "description": "The inner array has items corresponding to each class.",
+        "items": {"type": "number"},
+    },
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Random forest classifier`_ from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Random forest classifier`_ from scikit-learn.
 
 .. _`Random forest classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_classifier.html',
-    'import_from': 'sklearn.ensemble',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'classifier'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema,
-        'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.random_forest_classifier.html",
+    "import_from": "sklearn.ensemble",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
+    },
+}
 
-RandomForestClassifier : lale.operators.IndividualOp
-RandomForestClassifier = lale.operators.make_operator(RandomForestClassifierImpl, _combined_schemas)
+RandomForestClassifier: lale.operators.IndividualOp
+RandomForestClassifier = lale.operators.make_operator(
+    RandomForestClassifierImpl, _combined_schemas
+)
 
-if sklearn.__version__ >= '0.22':
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.RandomForestClassifier.html
     from lale.schemas import AnyOf, Float, Int, Null
+
     RandomForestClassifier = RandomForestClassifier.customize_schema(
         n_estimators=Int(
-            desc='The number of trees in the forest.',
+            desc="The number of trees in the forest.",
             default=100,
             forOptimizer=True,
             minForOptimizer=10,
-            maxForOptimizer=100),
+            maxForOptimizer=100,
+        ),
         ccp_alpha=Float(
-            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
             forOptimizer=False,
             min=0.0,
-            maxForOptimizer=0.1),
+            maxForOptimizer=0.1,
+        ),
         max_samples=AnyOf(
             types=[
-                Null(desc='Draw X.shape[0] samples.'),
-                Int(desc='Draw max_samples samples.', min=1),
-                Float(desc='Draw max_samples * X.shape[0] samples.',
-                      min=0.0, exclusiveMin=True, max=1.0, exclusiveMax=True)],
-            desc='If bootstrap is True, the number of samples to draw from X to train each base estimator.',
-            default=None))
+                Null(desc="Draw X.shape[0] samples."),
+                Int(desc="Draw max_samples samples.", min=1),
+                Float(
+                    desc="Draw max_samples * X.shape[0] samples.",
+                    min=0.0,
+                    exclusiveMin=True,
+                    max=1.0,
+                    exclusiveMax=True,
+                ),
+            ],
+            desc="If bootstrap is True, the number of samples to draw from X to train each base estimator.",
+            default=None,
+        ),
+    )
 
-lale.docstrings.set_docstrings(RandomForestClassifierImpl, RandomForestClassifier._schemas)
+lale.docstrings.set_docstrings(
+    RandomForestClassifierImpl, RandomForestClassifier._schemas
+)

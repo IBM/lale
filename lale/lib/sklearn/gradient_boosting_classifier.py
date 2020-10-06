@@ -13,13 +13,17 @@
 # limitations under the License.
 
 import sklearn.ensemble
+
 import lale.docstrings
 import lale.operators
 
-class GradientBoostingClassifierImpl():
+
+class GradientBoostingClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.GradientBoostingClassifier(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.GradientBoostingClassifier(
+            **self._hyperparams
+        )
 
     def fit(self, X, y, **fit_params):
         self._wrapped_model.fit(X, y, **fit_params)
@@ -33,6 +37,7 @@ class GradientBoostingClassifierImpl():
 
     def decision_function(self, X):
         return self._wrapped_model.decision_function(X)
+
 
 _hyperparams_schema = {
     'description': 'Gradient Boosting for classification.',
@@ -186,147 +191,151 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    'description': 'Fit the gradient boosting model.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, it will be converted to'},
-        'y': {
-            'anyOf': [
-                {'type': 'array', 'items': {'type': 'number'}},
-                {'type': 'array', 'items': {'type': 'string'}},
-                {'type': 'array', 'items': {'type': 'boolean'}}],
-            'description': 'Target values (strings or integers in classification, real numbers'},
-        'sample_weight': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }, {
-                'enum': [None]}],
-            'default': None,
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
-        'monitor': {
-            'anyOf': [
-            {   'laleType': 'callable'},
-            {   'enum': [None]}],
-            'default': None,
-            'description': 'The monitor is called after each iteration with the current the current iteration, a reference to the estimator and the local variables of _fit_stages as keyword arguments callable(i, self, locals()).'},
+    "description": "Fit the gradient boosting model.",
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The input samples. Internally, it will be converted to",
+        },
+        "y": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+            "description": "Target values (strings or integers in classification, real numbers",
+        },
+        "sample_weight": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"},},
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "Sample weights. If None, then samples are equally weighted. Splits",
+        },
+        "monitor": {
+            "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+            "default": None,
+            "description": "The monitor is called after each iteration with the current the current iteration, a reference to the estimator and the local variables of _fit_stages as keyword arguments callable(i, self, locals()).",
+        },
     },
 }
 _input_predict_schema = {
-    'description': 'Predict class for X.',
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, it will be converted to'},
+    "description": "Predict class for X.",
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The input samples. Internally, it will be converted to",
+        },
     },
 }
 _output_predict_schema = {
-    'description': 'The predicted values.',
-    'anyOf': [
-        {'type': 'array', 'items': {'type': 'number'}},
-        {'type': 'array', 'items': {'type': 'string'}},
-        {'type': 'array', 'items': {'type': 'boolean'}}]}
+    "description": "The predicted values.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "array", "items": {"type": "boolean"}},
+    ],
+}
 
 _input_predict_proba_schema = {
-    'description': 'Predict class probabilities for X.',
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, it will be converted to'},
+    "description": "Predict class probabilities for X.",
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The input samples. Internally, it will be converted to",
+        },
     },
 }
 _output_predict_proba_schema = {
-    'description': 'The class probabilities of the input samples. The order of the',
-    'type': 'array',
-    'items': {
-        'type': 'array',
-        'items': {
-            'type': 'number'},
-    },
+    "description": "The class probabilities of the input samples. The order of the",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"},},
 }
 
 _input_decision_function_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        }
+    },
+}
 
 _output_decision_function_schema = {
-    'description': 'Confidence scores for samples for each class in the model.',
-    'anyOf': [
-    {   'description': 'In the multi-way case, score per (sample, class) combination.',
-        'type': 'array',
-        'items': {'type': 'array', 'items': {'type': 'number'}}},
-    {   'description': 'In the binary case, score for `self._classes[1]`.',
-        'type': 'array',
-        'items': {'type': 'number'}}]}
+    "description": "Confidence scores for samples for each class in the model.",
+    "anyOf": [
+        {
+            "description": "In the multi-way case, score per (sample, class) combination.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        },
+        {
+            "description": "In the binary case, score for `self._classes[1]`.",
+            "type": "array",
+            "items": {"type": "number"},
+        },
+    ],
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Gradient boosting classifier`_ random forest from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Gradient boosting classifier`_ random forest from scikit-learn.
 
 .. _`Gradient boosting classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_classifier.html',
-    'import_from': 'sklearn.ensemble',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'classifier'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema,
-        'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema,
-        'input_decision_function': _input_decision_function_schema,
-        'output_decision_function': _output_decision_function_schema,
-}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_classifier.html",
+    "import_from": "sklearn.ensemble",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
+        "input_decision_function": _input_decision_function_schema,
+        "output_decision_function": _output_decision_function_schema,
+    },
+}
 
-GradientBoostingClassifier : lale.operators.IndividualOp
-GradientBoostingClassifier = lale.operators.make_operator(GradientBoostingClassifierImpl, _combined_schemas)
+GradientBoostingClassifier: lale.operators.IndividualOp
+GradientBoostingClassifier = lale.operators.make_operator(
+    GradientBoostingClassifierImpl, _combined_schemas
+)
 
-if sklearn.__version__ >= '0.22':
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     from lale.schemas import AnyOf, Bool, Enum, Float
+
     GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
         presort=AnyOf(
-            types=[Bool(), Enum(['deprecated', 'auto'])],
-            desc='This parameter is deprecated and will be removed in v0.24.',
-            default='deprecated'),
+            types=[Bool(), Enum(["deprecated", "auto"])],
+            desc="This parameter is deprecated and will be removed in v0.24.",
+            default="deprecated",
+        ),
         ccp_alpha=Float(
-            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
             forOptimizer=False,
             min=0.0,
-            maxForOptimizer=0.1))
+            maxForOptimizer=0.1,
+        ),
+    )
 
-lale.docstrings.set_docstrings(GradientBoostingClassifierImpl, GradientBoostingClassifier._schemas)
+lale.docstrings.set_docstrings(
+    GradientBoostingClassifierImpl, GradientBoostingClassifier._schemas
+)

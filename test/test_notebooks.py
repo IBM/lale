@@ -12,24 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import subprocess
 import tempfile
-import os
 import time
-import pytest
-from typing import List, Optional
 import warnings
+from typing import List, Optional
 
-def should_test(f:str)->bool:
-    notebooks_categories_str:Optional[str] = os.environ.get("NOTEBOOK_CATEGORY", None)
-    notebooks_categories:Optional[List[str]] = notebooks_categories_str.split() if notebooks_categories_str is not None else None
-    all_notebooks_categories_str:Optional[str] = os.environ.get("ALL_NOTEBOOK_CATEGORIES", None)
-    all_notebooks_categories:Optional[List[str]] = all_notebooks_categories_str.split() if all_notebooks_categories_str is not None else None
+import pytest
+
+
+def should_test(f: str) -> bool:
+    notebooks_categories_str: Optional[str] = os.environ.get("NOTEBOOK_CATEGORY", None)
+    notebooks_categories: Optional[
+        List[str]
+    ] = notebooks_categories_str.split() if notebooks_categories_str is not None else None
+    all_notebooks_categories_str: Optional[str] = os.environ.get(
+        "ALL_NOTEBOOK_CATEGORIES", None
+    )
+    all_notebooks_categories: Optional[
+        List[str]
+    ] = all_notebooks_categories_str.split() if all_notebooks_categories_str is not None else None
 
     if notebooks_categories is None:
         if all_notebooks_categories is None:
             # run everything (with a warning)
-            warnings.warn("Running all notebook tests.  To run a subset, specify appropriate filters using the NOTEBOOK_CATEGORY and ALL_NOTEBOOK_CATEGORIES environment variables")
+            warnings.warn(
+                "Running all notebook tests.  To run a subset, specify appropriate filters using the NOTEBOOK_CATEGORY and ALL_NOTEBOOK_CATEGORIES environment variables"
+            )
             return True
         else:
             # we want to run all tests that are *not* in the all list
@@ -51,11 +61,22 @@ def should_test(f:str)->bool:
         return False
 
 
-@pytest.mark.parametrize('filename', [f for f in os.listdir('examples') if f.endswith('.ipynb') and should_test(f)])
+@pytest.mark.parametrize(
+    "filename",
+    [f for f in os.listdir("examples") if f.endswith(".ipynb") and should_test(f)],
+)
 def test_notebook(filename):
-    path = os.path.join('examples', filename)
+    path = os.path.join("examples", filename)
     with tempfile.NamedTemporaryFile(suffix=".ipynb") as fout:
-        args = ["jupyter", "nbconvert", "--to", "notebook", "--execute",
-                "--ExecutePreprocessor.timeout=1000",
-                "--output", fout.name, path]
+        args = [
+            "jupyter",
+            "nbconvert",
+            "--to",
+            "notebook",
+            "--execute",
+            "--ExecutePreprocessor.timeout=1000",
+            "--output",
+            fout.name,
+            path,
+        ]
         subprocess.check_call(args)

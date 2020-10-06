@@ -12,40 +12,51 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict, Iterable, Optional, List, Set, Tuple, Union
-from lale.search.search_space_grid import get_search_space_grids, SearchSpaceGrid
-from lale.sklearn_compat import make_sklearn_compat, unnest_HPparams
-import lale.operators as Ops
-from lale.schema_utils import Schema, getMinimum, getMaximum
-from lale.search.search_space import SearchSpace, SearchSpaceObject, SearchSpaceEnum, SearchSpaceNumber, SearchSpaceArray, should_print_search_space
-from lale.search.PGO import PGO
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import numpy as np
 import sklearn.model_selection
 
-from typing import TYPE_CHECKING
+import lale.operators as Ops
+from lale.schema_utils import JsonSchema, getMaximum, getMinimum
+from lale.search.PGO import PGO
+from lale.search.search_space import (
+    SearchSpace,
+    SearchSpaceArray,
+    SearchSpaceEnum,
+    SearchSpaceNumber,
+    SearchSpaceObject,
+    should_print_search_space,
+)
+from lale.search.search_space_grid import SearchSpaceGrid, get_search_space_grids
+from lale.sklearn_compat import make_sklearn_compat, unnest_HPparams
+
 if TYPE_CHECKING:
     from lale.operators import PlannedOperator
 
-def get_defaults_as_param_grid(op:'Ops.IndividualOp'):
+
+def get_defaults_as_param_grid(op: "Ops.IndividualOp"):
     defaults = op.hyperparam_defaults()
-    return {k : [v] for k,v in defaults.items()}
+    return {k: [v] for k, v in defaults.items()}
+
 
 def get_lale_gridsearchcv_op(op, params, **kwargs):
-    g = sklearn.model_selection.GridSearchCV(
-        make_sklearn_compat(op), params, **kwargs)
+    g = sklearn.model_selection.GridSearchCV(make_sklearn_compat(op), params, **kwargs)
     return g
+
+
 #    TODO: turn it into a Lale TrainableOperator
 #    name = f"GridSearchCV[{op.name()}]"
 #    return Ops.TrainableIndividualOp(_name=name, _impl=g, _schemas=None)
 
 
 def get_parameter_grids(
-    op:'PlannedOperator', 
-    num_samples:Optional[int]=None, 
-    num_grids:Optional[float]=None,
-    pgo:Optional[PGO]=None,
-    data_schema:Dict[str,Any]={}):
+    op: "PlannedOperator",
+    num_samples: Optional[int] = None,
+    num_grids: Optional[float] = None,
+    pgo: Optional[PGO] = None,
+    data_schema: Dict[str, Any] = {},
+):
     """
     Parameters
     ----------
@@ -57,21 +68,30 @@ def get_parameter_grids(
         if set to an float between 0 and 1, it will determine what fraction should be returned
         note that setting it to 1 is treated as in integer.  To return all results, use None
     """
-    return get_grid_search_parameter_grids(op, num_samples=num_samples, num_grids=num_grids, pgo=pgo, data_schema=data_schema)
+    return get_grid_search_parameter_grids(
+        op,
+        num_samples=num_samples,
+        num_grids=num_grids,
+        pgo=pgo,
+        data_schema=data_schema,
+    )
+
 
 def get_grid_search_parameter_grids(
-        op:'PlannedOperator', 
-        num_samples:Optional[int]=None, 
-        num_grids:Optional[float]=None,
-        pgo:Optional[PGO]=None,
-        data_schema:Dict[str,Any]={})->List[Dict[str, List[Any]]]:
+    op: "PlannedOperator",
+    num_samples: Optional[int] = None,
+    num_grids: Optional[float] = None,
+    pgo: Optional[PGO] = None,
+    data_schema: Dict[str, Any] = {},
+) -> List[Dict[str, List[Any]]]:
     """ Top level function: given a lale operator, returns a list of parameter grids
         suitable for passing to GridSearchCV.
         Note that you will need to wrap the lale operator for sklearn compatibility to call GridSearchCV
         directly.  The lale GridSearchCV wrapper takes care of that for you
     """
-    hp_grids = get_search_space_grids(op, num_grids=num_grids, pgo=pgo,
-                                      data_schema=data_schema)
+    hp_grids = get_search_space_grids(
+        op, num_grids=num_grids, pgo=pgo, data_schema=data_schema
+    )
     grids = SearchSpaceGridstoGSGrids(hp_grids, num_samples=num_samples)
     if should_print_search_space("true", "all", "backend", "gridsearchcv"):
         name = op.name()
@@ -81,17 +101,18 @@ def get_grid_search_parameter_grids(
 
     return grids
 
+
 GSValue = Any
-GSGrid = Dict[str,List[GSValue]]
+GSGrid = Dict[str, List[GSValue]]
 
-DEFAULT_SAMPLES_PER_DISTRIBUTION=2
+DEFAULT_SAMPLES_PER_DISTRIBUTION = 2
 
-def SearchSpaceNumberToGSValues( key:str, 
-                        hp:SearchSpaceNumber, 
-                        num_samples:Optional[int]=None
-                        )->List[GSValue]:
+
+def SearchSpaceNumberToGSValues(
+    key: str, hp: SearchSpaceNumber, num_samples: Optional[int] = None
+) -> List[GSValue]:
     """Returns either a list of values intended to be sampled uniformly """
-    samples:int
+    samples: int
     if num_samples is None:
         samples = DEFAULT_SAMPLES_PER_DISTRIBUTION
     else:
@@ -105,15 +126,19 @@ def SearchSpaceNumberToGSValues( key:str,
     # if we are not doing PGO
     dist = "uniform"
     if hp.distribution:
-        dist = hp.distribution    
+        dist = hp.distribution
     if hp.maximum is None:
-        raise ValueError(f"maximum not specified for a number with distribution {dist} for {key}")
+        raise ValueError(
+            f"maximum not specified for a number with distribution {dist} for {key}"
+        )
     max = hp.getInclusiveMax()
     if hp.minimum is None:
-        raise ValueError(f"minimum not specified for a number with distribution {dist} for {key}")
+        raise ValueError(
+            f"minimum not specified for a number with distribution {dist} for {key}"
+        )
     min = hp.getInclusiveMin()
 
-    dt:np.dtype
+    dt: np.dtype
     if hp.discrete:
         dt = np.dtype(int)
     else:
@@ -136,29 +161,39 @@ def SearchSpaceNumberToGSValues( key:str,
         ret.append(default)
     return ret
 
-def HPValuetoGSValue(key:str, 
-                     hp:SearchSpace, 
-                     num_samples:Optional[int]=None)->List[GSValue]:
+
+def HPValuetoGSValue(
+    key: str, hp: SearchSpace, num_samples: Optional[int] = None
+) -> List[GSValue]:
     if isinstance(hp, SearchSpaceEnum):
         return hp.vals
     elif isinstance(hp, SearchSpaceNumber):
         return SearchSpaceNumberToGSValues(key, hp, num_samples=num_samples)
     elif isinstance(hp, SearchSpaceArray):
-        raise ValueError(f"Arrays are not yet supported by the GridSearchCV backend (key: {key})")
+        raise ValueError(
+            f"Arrays are not yet supported by the GridSearchCV backend (key: {key})"
+        )
     else:
-        raise ValueError(f"Not yet supported hp description ({type(hp)}) (key: {key}) in the GridSearchCV backend")
+        raise ValueError(
+            f"Not yet supported hp description ({type(hp)}) (key: {key}) in the GridSearchCV backend"
+        )
 
-def SearchSpaceGridtoGSGrid( hp:SearchSpaceGrid,
-                    num_samples:Optional[int]=None)->GSGrid:
-    return {k:HPValuetoGSValue(k, v, num_samples=num_samples) for k,v in hp.items()}
 
-def SearchSpaceGridstoGSGrids(hp_grids:List[SearchSpaceGrid],
-                     num_samples:Optional[int]=None)->List[GSGrid]:
+def SearchSpaceGridtoGSGrid(
+    hp: SearchSpaceGrid, num_samples: Optional[int] = None
+) -> GSGrid:
+    return {k: HPValuetoGSValue(k, v, num_samples=num_samples) for k, v in hp.items()}
+
+
+def SearchSpaceGridstoGSGrids(
+    hp_grids: List[SearchSpaceGrid], num_samples: Optional[int] = None
+) -> List[GSGrid]:
     return [SearchSpaceGridtoGSGrid(g, num_samples=num_samples) for g in hp_grids]
 
-def gridsearchcv_grid_to_string(grid:GSGrid)->str:
-    return "{" + ";".join(f"{k}->{str(v)}" for k,v in grid.items()) + "}"
 
-def gridsearchcv_grids_to_string(grids:List[GSGrid])->str:
+def gridsearchcv_grid_to_string(grid: GSGrid) -> str:
+    return "{" + ";".join(f"{k}->{str(v)}" for k, v in grid.items()) + "}"
+
+
+def gridsearchcv_grids_to_string(grids: List[GSGrid]) -> str:
     return "|".join(gridsearchcv_grid_to_string(grid) for grid in grids)
-

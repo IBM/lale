@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from .sklearn_to_pandas import load_iris_df
-from .sklearn_to_pandas import digits_df
-from .sklearn_to_pandas import covtype_df
-from .sklearn_to_pandas import california_housing_df
 from .movie_review import load_movie_review
+from .sklearn_to_pandas import (
+    california_housing_df,
+    covtype_df,
+    digits_df,
+    load_iris_df,
+)

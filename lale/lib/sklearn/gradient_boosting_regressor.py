@@ -13,13 +13,17 @@
 # limitations under the License.
 
 import sklearn.ensemble
+
 import lale.docstrings
 import lale.operators
 
-class GradientBoostingRegressorImpl():
+
+class GradientBoostingRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.GradientBoostingRegressor(**self._hyperparams)
+        self._wrapped_model = sklearn.ensemble.GradientBoostingRegressor(
+            **self._hyperparams
+        )
 
     def fit(self, X, y, **fit_params):
         self._wrapped_model.fit(X, y, **fit_params)
@@ -27,6 +31,7 @@ class GradientBoostingRegressorImpl():
 
     def predict(self, X):
         return self._wrapped_model.predict(X)
+
 
 _hyperparams_schema = {
     'description': 'Gradient Boosting for regression.',
@@ -188,96 +193,94 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    'description': 'Fit the gradient boosting model.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, it will be converted to'},
-        'y': {
-            'type': 'array',
-            'items': {
-                'type': 'number'},
-            'description': 'Target values (strings or integers in classification, real numbers'},
-        'sample_weight': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }, {
-                'enum': [None]}],
-            'default': None,
-            'description': 'Sample weights. If None, then samples are equally weighted. Splits'},
-        'monitor': {
-            'anyOf': [
-            {   'laleType': 'callable'},
-            {   'enum': [None]}],
-            'default': None,
-            'description': 'The monitor is called after each iteration with the current the current iteration, a reference to the estimator and the local variables of _fit_stages as keyword arguments callable(i, self, locals()).'},
+    "description": "Fit the gradient boosting model.",
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The input samples. Internally, it will be converted to",
+        },
+        "y": {
+            "type": "array",
+            "items": {"type": "number"},
+            "description": "Target values (strings or integers in classification, real numbers",
+        },
+        "sample_weight": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"},},
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "Sample weights. If None, then samples are equally weighted. Splits",
+        },
+        "monitor": {
+            "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+            "default": None,
+            "description": "The monitor is called after each iteration with the current the current iteration, a reference to the estimator and the local variables of _fit_stages as keyword arguments callable(i, self, locals()).",
+        },
     },
 }
 _input_predict_schema = {
-    'description': 'Predict regression target for X.',
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'The input samples. Internally, it will be converted to'},
+    "description": "Predict regression target for X.",
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "The input samples. Internally, it will be converted to",
+        },
     },
 }
 _output_predict_schema = {
-    'description': 'The predicted values.',
-    'type': 'array',
-    'items': {
-        'type': 'number'},
+    "description": "The predicted values.",
+    "type": "array",
+    "items": {"type": "number"},
 }
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Gradient boosting regressor`_ random forest from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Gradient boosting regressor`_ random forest from scikit-learn.
 
 .. _`Gradient boosting regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_regressor.html',
-    'import_from': 'sklearn.ensemble',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'regressor'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.gradient_boosting_regressor.html",
+    "import_from": "sklearn.ensemble",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+    },
+}
 
-GradientBoostingRegressor : lale.operators.IndividualOp
-GradientBoostingRegressor = lale.operators.make_operator(GradientBoostingRegressorImpl, _combined_schemas)
+GradientBoostingRegressor: lale.operators.IndividualOp
+GradientBoostingRegressor = lale.operators.make_operator(
+    GradientBoostingRegressorImpl, _combined_schemas
+)
 
-if sklearn.__version__ >= '0.22':
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
     from lale.schemas import AnyOf, Bool, Enum, Float
+
     GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
         presort=AnyOf(
-            types=[Bool(), Enum(['deprecated', 'auto'])],
-            desc='This parameter is deprecated and will be removed in v0.24.',
-            default='deprecated'),
+            types=[Bool(), Enum(["deprecated", "auto"])],
+            desc="This parameter is deprecated and will be removed in v0.24.",
+            default="deprecated",
+        ),
         ccp_alpha=Float(
-            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
             forOptimizer=False,
             min=0.0,
-            maxForOptimizer=0.1))
+            maxForOptimizer=0.1,
+        ),
+    )
 
-lale.docstrings.set_docstrings(GradientBoostingRegressorImpl, GradientBoostingRegressor._schemas)
+lale.docstrings.set_docstrings(
+    GradientBoostingRegressorImpl, GradientBoostingRegressor._schemas
+)

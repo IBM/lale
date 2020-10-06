@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.svm import NuSVR as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class NuSVRImpl:
@@ -76,7 +77,7 @@ _hyperparams_schema = {
                 "gamma": {
                     "anyOf": [
                         {"type": "number", "forOptimizer": False},
-                        {"enum": ["scale","auto"]},
+                        {"enum": ["scale", "auto"]},
                     ],
                     "default": "scale",
                     "description": "Kernel coefficient for 'rbf', 'poly' and 'sigmoid'",

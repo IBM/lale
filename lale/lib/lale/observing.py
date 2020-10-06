@@ -12,15 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
+from functools import wraps
+
 import lale.docstrings
 import lale.operators
-from functools import wraps
-import logging
 
 logger = logging.getLogger(__name__)
 # since we want the LoggingObserver
 
 logger.setLevel(logging.INFO)
+
 
 def observe(f):
     @wraps(f)
@@ -34,24 +36,27 @@ def observe(f):
             self.failObserving(name, e)
             raise
         return ret
+
     return wrapper
+
 
 start_prefix = "start_"
 end_prefix = "end_"
 fail_prefix = "fail_"
 
-class ObservingImpl():
+
+class ObservingImpl:
     def __init__(self, op=None, observer=None):
         if observer is not None and isinstance(observer, type):
             # if we are given a class name, instantiate it
             observer = observer()
-        self._hyperparams = {'op':op, 'observer':observer}
+        self._hyperparams = {"op": op, "observer": observer}
 
     def getOp(self):
-        return self._hyperparams['op']
-    
+        return self._hyperparams["op"]
+
     def getObserver(self):
-        return self._hyperparams['observer']
+        return self._hyperparams["observer"]
 
     def _observe(self, methodName, *args, **kwargs):
         o = self.getObserver()
@@ -66,13 +71,13 @@ class ObservingImpl():
     def endObserving(self, methodName, *args, **kwargs):
         self._observe(f"{end_prefix}{methodName}", *args, **kwargs)
 
-    def failObserving(self, methodName, e:BaseException):
+    def failObserving(self, methodName, e: BaseException):
         self._observe(f"{fail_prefix}{methodName}", e)
 
     @observe
-    def transform(self, X, y = None):
+    def transform(self, X, y=None):
         ret = self.getOp().transform(X, y=y)
-        self.endObserving('transform', ret)
+        self.endObserving("transform", ret)
         return ret
 
     @observe
@@ -95,121 +100,124 @@ class ObservingImpl():
     def fit(self, X, y=None):
         return self.getOp().fit(X, y=y)
 
+
 _hyperparams_schema = {
-    'description': 'Hyperparameter schema for the identity Higher Order Operator, which wraps another operator and runs it as usual',
-    'allOf': [
-    {   'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters',
-        'type': 'object',
-        'additionalProperties': False,
-        'relevantToOptimizer': ['op'],
-        'properties': {
-            'op': {
-                'laleType': 'operator'
+    "description": "Hyperparameter schema for the identity Higher Order Operator, which wraps another operator and runs it as usual",
+    "allOf": [
+        {
+            "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters",
+            "type": "object",
+            "additionalProperties": False,
+            "relevantToOptimizer": ["op"],
+            "properties": {
+                "op": {"laleType": "operator"},
+                "observer": {"laleType": "Any"},
             },
-            'observer': {
-                'laleType': 'Any'
-            }
-        }}]}
+        }
+    ],
+}
 
 # TODO: can we surface the base op input/output schema?
 _input_fit_schema = {
-    'description': 'Input data schema for training identity.',
-    'type': 'object',
-    'required': ['X'],  
-    'additionalProperties': False,
-    'properties': {
-        'X': {}}}
+    "description": "Input data schema for training identity.",
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {"X": {}},
+}
 
-_input_predict_transform_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    'description': 'Input data schema for transformations using identity.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {},
-        'y': {}}}
+_input_predict_transform_schema = {  # TODO: separate predict vs. predict_proba vs. transform
+    "description": "Input data schema for transformations using identity.",
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {"X": {}, "y": {}},
+}
 
-_output_schema = { #TODO: separate predict vs. predict_proba vs. transform
-    'description': 'Output data schema for transformations using identity.',
-    'laleType': 'Any'}
+_output_schema = {  # TODO: separate predict vs. predict_proba vs. transform
+    "description": "Output data schema for transformations using identity.",
+    "laleType": "Any",
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """This should functionally be identical to the identity wrapper, except that it calls methods on the observer (if they exist) before and after calls to the underlying wrapper. This is similar to aspect-oriented programming.""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.identity.html',
-    'import_from': 'lale.lib.lale',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_transform_schema,
-        'output_predict': _output_schema,
-        'input_predict_proba': _input_predict_transform_schema,
-        'output_predict_proba': _output_schema,
-        'input_transform': _input_predict_transform_schema,
-        'output_transform': _output_schema}}
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """This should functionally be identical to the identity wrapper, except that it calls methods on the observer (if they exist) before and after calls to the underlying wrapper. This is similar to aspect-oriented programming.""",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.identity.html",
+    "import_from": "lale.lib.lale",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_transform_schema,
+        "output_predict": _output_schema,
+        "input_predict_proba": _input_predict_transform_schema,
+        "output_predict_proba": _output_schema,
+        "input_transform": _input_predict_transform_schema,
+        "output_transform": _output_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(ObservingImpl, _combined_schemas)
 
 Observing = lale.operators.make_operator(ObservingImpl, _combined_schemas)
 
-class LoggingObserver():
+
+class LoggingObserver:
     """An observer that logs everything.  
         This is also useful for debugging, since you can set breakpoints here
     """
-    _indent:int
+
+    _indent: int
 
     def __init__(self):
         self._indent = 0
 
-    def __getattr__(self, prop:str):
+    def __getattr__(self, prop: str):
         if prop.startswith("_"):
             raise AttributeError
         elif prop.startswith(start_prefix):
-            suffix = prop[len(start_prefix):]
+            suffix = prop[len(start_prefix) :]
+
             def startfun(*args, **kwargs):
                 if logger.isEnabledFor(logging.INFO):
-                    s:str = "  " * self._indent
+                    s: str = "  " * self._indent
                     s += f"[observing({suffix})->] "
                     s += ",".join(map(str, args))
                     if len(args) > 0 and len(kwargs) > 0:
                         s += ", "
-                    for k,v in kwargs.items():
+                    for k, v in kwargs.items():
                         s += f"{k}->{v}"
                     logger.info(s)
                 self._indent += 1
 
             return startfun
         elif prop.startswith(end_prefix):
-            suffix = prop[len(end_prefix):]
+            suffix = prop[len(end_prefix) :]
 
             def endfun(*args, **kwargs):
                 assert self._indent > 0
                 self._indent -= 1
                 if logger.isEnabledFor(logging.INFO):
-                    s:str = "  " * self._indent
+                    s: str = "  " * self._indent
                     s += f"[<-observed({suffix})] "
                     s += ",".join(map(str, args))
-                    for k,v in kwargs.items():
+                    for k, v in kwargs.items():
                         s += f"{k}->{v}"
                     logger.info(s)
 
             return endfun
         elif prop.startswith(fail_prefix):
-            suffix = prop[len(fail_prefix):]
+            suffix = prop[len(fail_prefix) :]
 
             def failfun(*args, **kwargs):
                 assert self._indent > 0
                 self._indent -= 1
                 if logger.isEnabledFor(logging.INFO):
-                    s:str = "  " * self._indent
+                    s: str = "  " * self._indent
                     s += f"[!error!<-observed({suffix})] "
                     s += ",".join(map(str, args))
-                    for k,v in kwargs.items():
+                    for k, v in kwargs.items():
                         s += f"{k}->{v}"
                     logger.info(s)
 

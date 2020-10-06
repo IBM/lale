@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sklearn.tree
+
 import lale.docstrings
 import lale.operators
 
@@ -135,115 +136,129 @@ _hyperparams_schema = {
                 'description': 'Whether to presort the data to speed up the finding of best splits in splitting.'}}}]}
 
 _input_fit_schema = {
-    'required': ['X', 'y'],
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}},
-        'y': {
-            'description': 'The predicted classes.',
-            'anyOf': [
-            {   'type': 'array', 'items': {'type': 'number'}},
-            {   'type': 'array', 'items': {'type': 'string'}},
-            {   'type': 'array', 'items': {'type': 'boolean'}}]},
-        'sample_weight': {
-            'anyOf': [
-            {   'type': 'array',
-                'items': {'type': 'number'}},
-            {   'enum': [None],
-                'description': 'Samples are equally weighted.'}],
-            'description': 'Sample weights.'},
-        'check_input': {
-            'type': 'boolean',
-            'default': True,
-            'description': 'Allow to bypass several input checking.'},
-        'X_idx_sorted': {
-            'anyOf': [
-            {   'type': 'array',
-                'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'}}},
-            {   'enum': [None]}],
-            'default': None,
-            'description': 'The indexes of the sorted training input samples. If many tree'}}}
+    "required": ["X", "y"],
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        },
+        "y": {
+            "description": "The predicted classes.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+        },
+        "sample_weight": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"enum": [None], "description": "Samples are equally weighted."},
+            ],
+            "description": "Sample weights.",
+        },
+        "check_input": {
+            "type": "boolean",
+            "default": True,
+            "description": "Allow to bypass several input checking.",
+        },
+        "X_idx_sorted": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"}},
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "The indexes of the sorted training input samples. If many tree",
+        },
+    },
+}
 
 _input_predict_schema = {
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}},
-        'check_input': {
-            'type': 'boolean',
-            'default': True,
-            'description': 'Allow to bypass several input checking.'}}}
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        },
+        "check_input": {
+            "type": "boolean",
+            "default": True,
+            "description": "Allow to bypass several input checking.",
+        },
+    },
+}
 
 _output_predict_schema = {
-    'description': 'The predicted classes.',
-    'anyOf': [
-    {   'type': 'array', 'items': {'type': 'number'}},
-    {   'type': 'array', 'items': {'type': 'string'}},
-    {   'type': 'array', 'items': {'type': 'boolean'}}]}
+    "description": "The predicted classes.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "array", "items": {"type": "boolean"}},
+    ],
+}
 
 _input_predict_proba_schema = {
-    'type': 'object',
-    'properties': {
-        'X': {
-            'type': 'array',
-            'description': 'The outer array is over samples aka rows.',
-            'items': {
-                'type': 'array',
-                'description': 'The inner array is over features aka columns.',
-                'items': {
-                    'type': 'number'}}},
-        'check_input': {
-            'type': 'boolean',
-            'description': 'Run check_array on X.'}}}
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        },
+        "check_input": {"type": "boolean", "description": "Run check_array on X."},
+    },
+}
 
 _output_predict_proba_schema = {
-    'type': 'array',
-    'description': 'The outer array is over samples aka rows.',
-    'items': {
-        'type': 'array',
-        'description': 'The inner array has items corresponding to each class.',
-        'items': {
-            'type': 'number'}}}
+    "type": "array",
+    "description": "The outer array is over samples aka rows.",
+    "items": {
+        "type": "array",
+        "description": "The inner array has items corresponding to each class.",
+        "items": {"type": "number"},
+    },
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Decision tree classifier`_ from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Decision tree classifier`_ from scikit-learn.
 
 .. _`Decision tree classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.decision_tree_classifier.html',
-    'import_from': 'sklearn.tree',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'classifier'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema,
-        'input_predict_proba': _input_predict_proba_schema,
-        'output_predict_proba': _output_predict_proba_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.decision_tree_classifier.html",
+    "import_from": "sklearn.tree",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
+    },
+}
 
 
-class DecisionTreeClassifierImpl():        
+class DecisionTreeClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.tree.DecisionTreeClassifier(**self._hyperparams)
@@ -258,23 +273,32 @@ class DecisionTreeClassifierImpl():
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
 
-DecisionTreeClassifier : lale.operators.IndividualOp
-DecisionTreeClassifier = lale.operators.make_operator(DecisionTreeClassifierImpl, _combined_schemas)
 
-if sklearn.__version__ >= '0.22':
+DecisionTreeClassifier: lale.operators.IndividualOp
+DecisionTreeClassifier = lale.operators.make_operator(
+    DecisionTreeClassifierImpl, _combined_schemas
+)
+
+if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     from lale.schemas import AnyOf, Bool, Enum, Float
+
     DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
         presort=AnyOf(
-            types=[Bool(), Enum(['deprecated'])],
-            desc='This parameter is deprecated and will be removed in v0.24.',
-            default='deprecated'),
+            types=[Bool(), Enum(["deprecated"])],
+            desc="This parameter is deprecated and will be removed in v0.24.",
+            default="deprecated",
+        ),
         ccp_alpha=Float(
-            desc='Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.',
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
             forOptimizer=False,
             min=0.0,
-            maxForOptimizer=0.1))
+            maxForOptimizer=0.1,
+        ),
+    )
 
-lale.docstrings.set_docstrings(DecisionTreeClassifierImpl, DecisionTreeClassifier._schemas)
+lale.docstrings.set_docstrings(
+    DecisionTreeClassifierImpl, DecisionTreeClassifier._schemas
+)

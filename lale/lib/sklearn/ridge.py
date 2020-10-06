@@ -13,20 +13,32 @@
 # limitations under the License.
 
 import sklearn.linear_model
+
 import lale.operators
 
-class RidgeImpl():
 
-    def __init__(self, alpha=None, fit_intercept=None, normalize=False, copy_X=True, max_iter=None, tol=0.001, solver=None, random_state=None):
+class RidgeImpl:
+    def __init__(
+        self,
+        alpha=None,
+        fit_intercept=None,
+        normalize=False,
+        copy_X=True,
+        max_iter=None,
+        tol=0.001,
+        solver=None,
+        random_state=None,
+    ):
         self._hyperparams = {
-            'alpha': alpha,
-            'fit_intercept': fit_intercept,
-            'normalize': normalize,
-            'copy_X': copy_X,
-            'max_iter': max_iter,
-            'tol': tol,
-            'solver': solver,
-            'random_state': random_state}
+            "alpha": alpha,
+            "fit_intercept": fit_intercept,
+            "normalize": normalize,
+            "copy_X": copy_X,
+            "max_iter": max_iter,
+            "tol": tol,
+            "solver": solver,
+            "random_state": random_state,
+        }
         self._wrapped_model = sklearn.linear_model.Ridge(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
@@ -35,6 +47,7 @@ class RidgeImpl():
 
     def predict(self, X):
         return self._wrapped_model.predict(X)
+
 
 _hyperparams_schema = {
     'description': 'Linear least squares with l2 regularization.',
@@ -103,88 +116,79 @@ _hyperparams_schema = {
         }}]}
 
 _input_fit_schema = {
-    'description': 'Fit Ridge regression model',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            },
-            'description': 'Training data'},
-        'y': {
-            'anyOf': [
-            {   'type': 'array',
-                'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'},
-                }},
-            {   'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }],
-            'description': 'Target values'},
-        'sample_weight': {
-            'anyOf': [{
-                'type': 'number'}, {
-                'type': 'array',
-                'items': {
-                    'type': 'number'},
-            }, {'enum': [None]}],
-            'description': 'Individual weights for each sample'},
+    "description": "Fit Ridge regression model",
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+            "description": "Training data",
+        },
+        "y": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"},},
+                },
+                {"type": "array", "items": {"type": "number"},},
+            ],
+            "description": "Target values",
+        },
+        "sample_weight": {
+            "anyOf": [
+                {"type": "number"},
+                {"type": "array", "items": {"type": "number"},},
+                {"enum": [None]},
+            ],
+            "description": "Individual weights for each sample",
+        },
     },
 }
 _input_predict_schema = {
-    'description': 'Predict using the linear model',
-    'type': 'object',
-    'properties': {
-        'X': {
-            'anyOf': [{
-                'type': 'array',
-                'items': {'type': 'number'}}, {
-                'type': 'array',
-                'items': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'number'},
-                }}],
-            'description': 'Samples.'},
+    "description": "Predict using the linear model",
+    "type": "object",
+    "properties": {
+        "X": {
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"},},
+                },
+            ],
+            "description": "Samples.",
+        },
     },
 }
 _output_predict_schema = {
-    'description': 'Returns predicted values.',
-    'anyOf': [{
-        'type': 'array',
-        'items': {'type': 'number'}}, {#There was a case where Ridge returned 2-d predictions for a single target.
-        'type': 'array',
-        'items': {
-            'type': 'array',
-            'items': {
-                'type': 'number'},
-        }}]}
+    "description": "Returns predicted values.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {  # There was a case where Ridge returned 2-d predictions for a single target.
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"},},
+        },
+    ],
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """`Ridge`_ regression estimator from scikit-learn.
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """`Ridge`_ regression estimator from scikit-learn.
 
 .. _`Ridge`: https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge.html
 """,
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ridge.html',
-    'import_from': 'sklearn.linear_model',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['estimator', 'regressor'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_predict': _input_predict_schema,
-        'output_predict': _output_predict_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.ridge.html",
+    "import_from": "sklearn.linear_model",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(RidgeImpl, _combined_schemas)
 
