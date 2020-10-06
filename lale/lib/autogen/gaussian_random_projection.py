@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.random_projection import GaussianRandomProjection as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class GaussianRandomProjectionImpl:
@@ -138,4 +139,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(GaussianRandomProjectionImpl, _combined_schemas)
-GaussianRandomProjection = make_operator(GaussianRandomProjectionImpl, _combined_schemas)
+GaussianRandomProjection = make_operator(
+    GaussianRandomProjectionImpl, _combined_schemas
+)

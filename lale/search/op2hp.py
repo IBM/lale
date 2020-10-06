@@ -12,32 +12,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Dict
 import os
-
-from lale.search.search_space import *
-from lale.util.Visitor import Visitor
-from lale.search.schema2search_space import op_to_search_space
-from lale.search.lale_hyperopt import search_space_to_hp_expr, search_space_to_hp_str
-from lale.search.PGO import PGO
+from typing import TYPE_CHECKING, Dict, Optional
 
 from hyperopt import hp
 
-from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from lale.operators import PlannedOperator, OperatorChoice, PlannedIndividualOp, PlannedPipeline
+from lale.search.lale_hyperopt import search_space_to_hp_expr, search_space_to_hp_str
+from lale.search.PGO import PGO
+from lale.search.schema2search_space import op_to_search_space
+from lale.search.search_space import *
+from lale.util.Visitor import Visitor
 
-def hyperopt_search_space(op:'PlannedOperator', 
-                          schema=None,
-                          pgo:Optional[PGO]=None,
-                          data_schema={}):
+if TYPE_CHECKING:
+    from lale.operators import (
+        OperatorChoice,
+        PlannedIndividualOp,
+        PlannedOperator,
+        PlannedPipeline,
+    )
+
+
+def hyperopt_search_space(
+    op: "PlannedOperator", schema=None, pgo: Optional[PGO] = None, data_schema={}
+):
 
     search_space = op_to_search_space(op, pgo=pgo, data_schema=data_schema)
     if search_space:
         name = op.name()
 
         if should_print_search_space("true", "all", "backend", "hyperopt"):
-            print(f"hyperopt search space for {name}: {search_space_to_hp_str(search_space, name)}")
+            print(
+                f"hyperopt search space for {name}: {search_space_to_hp_str(search_space, name)}"
+            )
         return search_space_to_hp_expr(search_space, name)
     else:
         return None

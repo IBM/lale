@@ -7,7 +7,15 @@ repos:
     - id: check-case-conflict # Check for files that would conflict in case-insensitive filesystems
     - id: check-merge-conflict # Check for files that contain merge conflict strings.
     - id: debug-statements # Check for debugger imports and py37+ `breakpoint()` calls in python source.
-
+-   repo: https://github.com/pycqa/isort
+    rev: 5.3.2
+    hooks:
+      - id: isort
+        args: [--filter-files]
+-   repo: https://github.com/psf/black
+    rev: 19.10b0
+    hooks:
+    - id: black
 -   repo: https://gitlab.com/pycqa/flake8
     rev: 3.8.3 
     hooks:

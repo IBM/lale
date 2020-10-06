@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class LinearDiscriminantAnalysisImpl:
@@ -245,4 +246,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(LinearDiscriminantAnalysisImpl, _combined_schemas)
-LinearDiscriminantAnalysis = make_operator(LinearDiscriminantAnalysisImpl, _combined_schemas)
+LinearDiscriminantAnalysis = make_operator(
+    LinearDiscriminantAnalysisImpl, _combined_schemas
+)

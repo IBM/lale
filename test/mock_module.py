@@ -17,30 +17,32 @@ import sklearn.neighbors
 # class that follows scikit-learn conventions but lacks schemas,
 # for the purpose of testing how to wrap an operator without schemas
 
-class UnknownOp:
-    def __init__(self, n_neighbors=5, algorithm='auto'):
-        self._hyperparams = {
-            'n_neighbors': n_neighbors, 'algorithm': algorithm}
 
-    def get_params(self, deep:bool=False):
+class UnknownOp:
+    def __init__(self, n_neighbors=5, algorithm="auto"):
+        self._hyperparams = {"n_neighbors": n_neighbors, "algorithm": algorithm}
+
+    def get_params(self, deep: bool = False):
         return self._hyperparams
 
     def fit(self, X, y):
         self._wrapped_model = sklearn.neighbors.KNeighborsClassifier(
-            **self._hyperparams)
+            **self._hyperparams
+        )
 
     def predict(self, X):
         return self._wrapped_model.predict(X)
 
+
 class BadClassifier:
     def __init__(self, is_good=False):
-        self._hyperparams = {'is_good': is_good}
+        self._hyperparams = {"is_good": is_good}
 
-    def get_params(self, deep:bool=False):
+    def get_params(self, deep: bool = False):
         return self._hyperparams
 
     def fit(self, X, y):
-        assert False, 'Bad fit method.'
+        assert False, "Bad fit method."
 
     def predict(self, X):
-        assert False, 'Bad predict method.'
+        assert False, "Bad predict method."

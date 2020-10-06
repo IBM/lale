@@ -12,25 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, sys
-sys.path.append(os.getcwd())
+import collections
+import os
+import pickle
+import re
+import sys
+import warnings
+from collections import Counter
+from typing import List
 
 import numpy as np
 from scipy.signal import resample
 from sklearn import preprocessing
-import warnings
-import collections
-import pickle
+
 import lale.docstrings
 import lale.operators
-import numpy as np
-from collections import Counter
-import re
-from typing import List
 
-seizure_type_data = collections.namedtuple('seizure_type_data', ['seizure_type', 'data'])
+sys.path.append(os.getcwd())
 
-#Some of the classes and modules have been taken from https://github.com/MichaelHills/seizure-detection
+
+seizure_type_data = collections.namedtuple(
+    "seizure_type_data", ["seizure_type", "data"]
+)
+
+# Some of the classes and modules have been taken from https://github.com/MichaelHills/seizure-detection
+
 
 class Slice:
     """
@@ -50,20 +56,24 @@ class Slice:
         s[-1] = slice(self.start, self.stop)
         return data[s]
 
+
 class Magnitude:
     """
     Job: Take magnitudes of Complex data
     """
+
     def get_name(self):
         return "mag"
 
     def apply(self, data):
         return np.absolute(data)
 
+
 class Log10:
     """
     Apply Log10
     """
+
     def get_name(self):
         return "log10"
 
@@ -71,8 +81,9 @@ class Log10:
         # 10.0 * log10(re * re + im * im)
         indices = np.where(data <= 0)
         data[indices] = np.max(data)
-        data[indices] = (np.min(data) * 0.1)
+        data[indices] = np.min(data) * 0.1
         return np.log10(data)
+
 
 class Pipeline(object):
     """
@@ -80,10 +91,11 @@ class Pipeline(object):
     on the input data, finally outputting extracted features.
     pipeline: List of transforms to apply one by one to the input data
     """
+
     def __init__(self, pipeline):
         self.transforms = pipeline
         names = [t.get_name() for t in self.transforms]
-        self.name = 'empty' if len(names) == 0 else '_'.join(names)
+        self.name = "empty" if len(names) == 0 else "_".join(names)
 
     def get_name(self):
         return self.name
@@ -93,10 +105,12 @@ class Pipeline(object):
             data = transform.apply(data)
         return data
 
+
 class FFT:
     """
     Apply Fast Fourier Transform to the last axis.
     """
+
     def get_name(self):
         return "fft"
 
@@ -104,10 +118,12 @@ class FFT:
         axis = data.ndim - 1
         return np.fft.rfft(data, axis=axis)
 
+
 class Resample:
     """
     Resample time-series data.
     """
+
     def __init__(self, sample_rate):
         self.f = sample_rate
 
@@ -120,22 +136,26 @@ class Resample:
             return resample(data, self.f, axis=axis)
         return data
 
+
 class StandardizeLast:
     """
     Scale across the last axis.
     """
+
     def get_name(self):
-        return 'standardize-last'
+        return "standardize-last"
 
     def apply(self, data):
-        return preprocessing.scale(data, axis=data.ndim-1)
+        return preprocessing.scale(data, axis=data.ndim - 1)
+
 
 class StandardizeFirst:
     """
     Scale across the first axis.
     """
+
     def get_name(self):
-        return 'standardize-first'
+        return "standardize-first"
 
     def apply(self, data):
         return preprocessing.scale(data, axis=0)
@@ -145,8 +165,9 @@ class CorrelationMatrix:
     """
     Calculate correlation coefficients matrix across all EEG channels.
     """
+
     def get_name(self):
-        return 'correlation-matrix'
+        return "correlation-matrix"
 
     def apply(self, data):
         return np.corrcoef(data)
@@ -157,8 +178,9 @@ class Eigenvalues:
     Take eigenvalues of a matrix, and sort them by magnitude in order to
     make them useful as features (as they have no inherent order).
     """
+
     def get_name(self):
-        return 'eigenvalues'
+        return "eigenvalues"
 
     def apply(self, data):
         w, v = np.linalg.eig(data)
@@ -171,10 +193,11 @@ class Eigenvalues:
 def upper_right_triangle(matrix):
     accum = []
     for i in range(matrix.shape[0]):
-        for j in range(i+1, matrix.shape[1]):
+        for j in range(i + 1, matrix.shape[1]):
             accum.append(matrix[i, j])
 
     return np.array(accum)
+
 
 class FreqCorrelation:
     """
@@ -184,28 +207,36 @@ class FreqCorrelation:
     The output features are (fft, upper_right_diagonal(correlation_coefficients), eigenvalues)
     Features can be selected/omitted using the constructor arguments.
     """
-    def __init__(self, start, end, scale_option, with_fft=False, with_corr=True, with_eigen=True):
+
+    def __init__(
+        self, start, end, scale_option, with_fft=False, with_corr=True, with_eigen=True
+    ):
         self.start = start
         self.end = end
         self.scale_option = scale_option
         self.with_fft = with_fft
         self.with_corr = with_corr
         self.with_eigen = with_eigen
-        assert scale_option in ('first_axis', 'last_axis', 'none')
+        assert scale_option in ("first_axis", "last_axis", "none")
         assert with_corr or with_eigen
 
     def get_name(self):
         selections = []
         if not self.with_corr:
-            selections.append('nocorr')
+            selections.append("nocorr")
         if not self.with_eigen:
-            selections.append('noeig')
+            selections.append("noeig")
         if len(selections) > 0:
-            selection_str = '-' + '-'.join(selections)
+            selection_str = "-" + "-".join(selections)
         else:
-            selection_str = ''
-        return 'freq-correlation-%d-%d-%s-%s%s' % (self.start, self.end, 'withfft' if self.with_fft else 'nofft',
-                                                   self.scale_option, selection_str)
+            selection_str = ""
+        return "freq-correlation-%d-%d-%s-%s%s" % (
+            self.start,
+            self.end,
+            "withfft" if self.with_fft else "nofft",
+            self.scale_option,
+            selection_str,
+        )
 
     def apply(self, data):
         data1 = FFT().apply(data)
@@ -214,9 +245,9 @@ class FreqCorrelation:
         data1 = Log10().apply(data1)
 
         data2 = data1
-        if self.scale_option == 'first_axis':
+        if self.scale_option == "first_axis":
             data2 = StandardizeFirst().apply(data2)
-        elif self.scale_option == 'last_axis':
+        elif self.scale_option == "last_axis":
             data2 = StandardizeLast().apply(data2)
 
         data2 = CorrelationMatrix().apply(data2)
@@ -246,25 +277,30 @@ class TimeCorrelation:
     The output features are (upper_right_diagonal(correlation_coefficients), eigenvalues)
     Features can be selected/omitted using the constructor arguments.
     """
+
     def __init__(self, max_hz, scale_option, with_corr=True, with_eigen=True):
         self.max_hz = max_hz
         self.scale_option = scale_option
         self.with_corr = with_corr
         self.with_eigen = with_eigen
-        assert scale_option in ('first_axis', 'last_axis', 'none')
+        assert scale_option in ("first_axis", "last_axis", "none")
         assert with_corr or with_eigen
 
     def get_name(self):
         selections = []
         if not self.with_corr:
-            selections.append('nocorr')
+            selections.append("nocorr")
         if not self.with_eigen:
-            selections.append('noeig')
+            selections.append("noeig")
         if len(selections) > 0:
-            selection_str = '-' + '-'.join(selections)
+            selection_str = "-" + "-".join(selections)
         else:
-            selection_str = ''
-        return 'time-correlation-r%d-%s%s' % (self.max_hz, self.scale_option, selection_str)
+            selection_str = ""
+        return "time-correlation-r%d-%s%s" % (
+            self.max_hz,
+            self.scale_option,
+            selection_str,
+        )
 
     def apply(self, data):
         # so that correlation matrix calculation doesn't crash
@@ -276,9 +312,9 @@ class TimeCorrelation:
         if data1.shape[1] > self.max_hz:
             data1 = Resample(self.max_hz).apply(data1)
 
-        if self.scale_option == 'first_axis':
+        if self.scale_option == "first_axis":
             data1 = StandardizeFirst().apply(data1)
-        elif self.scale_option == 'last_axis':
+        elif self.scale_option == "last_axis":
             data1 = StandardizeLast().apply(data1)
 
         data1 = CorrelationMatrix().apply(data1)
@@ -298,6 +334,7 @@ class TimeCorrelation:
 
         return np.concatenate(out, axis=0)
 
+
 class FFTWithTimeFreqCorrelation:
     """
     Combines FFT with time and frequency correlation, taking both correlation coefficients and eigenvalues.
@@ -308,36 +345,60 @@ class FFTWithTimeFreqCorrelation:
         self.end = end
         self.max_hz = max_hz
         self.scale_option = scale_option
-        assert scale_option in ('first_axis', 'last_axis', 'none')
+        assert scale_option in ("first_axis", "last_axis", "none")
 
     def get_name(self):
-        return 'fft-with-time-freq-corr-%d-%d-r%d-%s' % (self.start, self.end, self.max_hz, self.scale_option)
+        return "fft-with-time-freq-corr-%d-%d-r%d-%s" % (
+            self.start,
+            self.end,
+            self.max_hz,
+            self.scale_option,
+        )
 
     def apply(self, data):
         data1 = TimeCorrelation(self.max_hz, self.scale_option).apply(data)
-        data2 = FreqCorrelation(self.start, self.end, self.scale_option, with_fft=True).apply(data)
+        data2 = FreqCorrelation(
+            self.start, self.end, self.scale_option, with_fft=True
+        ).apply(data)
         assert data1.ndim == data2.ndim
 
         return np.concatenate((data1, data2), axis=data1.ndim - 1)
 
-class TimeFreqEigenVectorsImpl():
-    def __init__(self, window_length=1, window_step=0.5, 
-        fft_min_freq=1, fft_max_freq=24, sampling_frequency=250):
+
+class TimeFreqEigenVectorsImpl:
+    def __init__(
+        self,
+        window_length=1,
+        window_step=0.5,
+        fft_min_freq=1,
+        fft_max_freq=24,
+        sampling_frequency=250,
+    ):
         self.window_length = window_length
         self.window_step = window_step
         self.fft_min_freq = fft_min_freq
         self.fft_max_freq = fft_max_freq
         self.sampling_frequency = sampling_frequency
 
-    def transform(self, X, y = None):
+    def transform(self, X, y=None):
         warnings.filterwarnings("ignore")
-        pipeline = Pipeline([FFTWithTimeFreqCorrelation(self.fft_min_freq, self.fft_max_freq, 
-        self.sampling_frequency, 'first_axis')])
+        pipeline = Pipeline(
+            [
+                FFTWithTimeFreqCorrelation(
+                    self.fft_min_freq,
+                    self.fft_max_freq,
+                    self.sampling_frequency,
+                    "first_axis",
+                )
+            ]
+        )
         X_transformed = []
         y_transformed = np.empty((0))
-        self.end_index_list = [] #This is the list of end indices for samples generated per seizure
+        self.end_index_list = (
+            []
+        )  # This is the list of end indices for samples generated per seizure
 
-        #The transformation map is just a list of indices corresponding to the last sample generated by each time-series.
+        # The transformation map is just a list of indices corresponding to the last sample generated by each time-series.
         for i in range(len(X)):
             seizure_data = X[i]
             if y is not None:
@@ -353,8 +414,10 @@ class TimeFreqEigenVectorsImpl():
             X_transformed.extend(fft_data)
             if y is not None:
                 labels_for_all_seizure_samples = np.full(len(fft_data), seizure_label)
-                y_transformed = np.hstack((y_transformed, labels_for_all_seizure_samples))
-            previous_element  = self.end_index_list[i-1] if (i-1)>=0 else 0
+                y_transformed = np.hstack(
+                    (y_transformed, labels_for_all_seizure_samples)
+                )
+            previous_element = self.end_index_list[i - 1] if (i - 1) >= 0 else 0
             self.end_index_list.append(previous_element + len(fft_data))
 
         X_transformed = np.array(X_transformed)
@@ -365,86 +428,106 @@ class TimeFreqEigenVectorsImpl():
 
     def get_transform_meta_output(self):
         if self.end_index_list is not None:
-            return {'end_index_list': self.end_index_list}
+            return {"end_index_list": self.end_index_list}
         else:
-            raise ValueError('Must call transform before trying to access its meta output.')
+            raise ValueError(
+                "Must call transform before trying to access its meta output."
+            )
+
 
 _hyperparams_schema = {
-    'description': 'TODO',
-    'allOf': [{
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['window_length', 'window_step', 'fft_min_freq', 'fft_max_freq', 'sampling_frequency'],
-        'relevantToOptimizer': ['window_length', 'window_step', 'fft_max_freq'],        
-        'properties': {
-            'window_length': {
-                'type': 'number',
-                'default': 1,
-                'description': 'TODO',
-                'minimumForOptimizer': 0.25,
-                'maximumForOptimizer': 2,
-                'distribution': 'uniform'},
-            'window_step': {
-                'type': 'number',
-                'default': 0.5,
-                'description': 'TODO',
-                'minimumForOptimizer': 0.25,
-                'maximumForOptimizer': 1, #TODO: This is $data->window_length once $data is implemented
-                'distribution': 'uniform'},
-            'fft_min_freq': {
-                'type': 'integer',
-                'default': 1,
-                'description': 'TODO'},
-            'fft_max_freq': {
-                'type': 'integer',
-                'default': 24,
-                'description': 'TODO',
-                'minimumForOptimizer': 2,
-                'maximumForOptimizer': 30, #TODO: This is $data->sampling_frequency/2 once $data is implemented
-                'distribution': 'uniform'},
-            'sampling_frequency': {
-                'type': 'integer',
-                'default': 250,
-                'description': 'TODO'},
-        }}
-        #TODO: Any constraints on hyper-parameter combinations?
-        ]
+    "description": "TODO",
+    "allOf": [
+        {
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "window_length",
+                "window_step",
+                "fft_min_freq",
+                "fft_max_freq",
+                "sampling_frequency",
+            ],
+            "relevantToOptimizer": ["window_length", "window_step", "fft_max_freq"],
+            "properties": {
+                "window_length": {
+                    "type": "number",
+                    "default": 1,
+                    "description": "TODO",
+                    "minimumForOptimizer": 0.25,
+                    "maximumForOptimizer": 2,
+                    "distribution": "uniform",
+                },
+                "window_step": {
+                    "type": "number",
+                    "default": 0.5,
+                    "description": "TODO",
+                    "minimumForOptimizer": 0.25,
+                    "maximumForOptimizer": 1,  # TODO: This is $data->window_length once $data is implemented
+                    "distribution": "uniform",
+                },
+                "fft_min_freq": {
+                    "type": "integer",
+                    "default": 1,
+                    "description": "TODO",
+                },
+                "fft_max_freq": {
+                    "type": "integer",
+                    "default": 24,
+                    "description": "TODO",
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 30,  # TODO: This is $data->sampling_frequency/2 once $data is implemented
+                    "distribution": "uniform",
+                },
+                "sampling_frequency": {
+                    "type": "integer",
+                    "default": 250,
+                    "description": "TODO",
+                },
+            },
+        }
+        # TODO: Any constraints on hyper-parameter combinations?
+    ],
 }
 
 _input_transform_schema = {
-    'description': 'Input format for data passed to the transform method.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'properties': {
-        'X': {
-            'type': 'array',
-            'items': {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'number'}}},
-            'description': 'The input data to complete.'},
-        'y': {
-            'type': 'array',
-            'items': {'anyOf':[{'type': 'integer'}, {'type':'string'}]}
-        }
+    "description": "Input format for data passed to the transform method.",
+    "type": "object",
+    "required": ["X", "y"],
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"type": "array", "items": {"type": "number"}},
+            },
+            "description": "The input data to complete.",
+        },
+        "y": {
+            "type": "array",
+            "items": {"anyOf": [{"type": "integer"}, {"type": "string"}]},
+        },
     },
 }
 _output_transform_schema = {
-    'description': 'The input data to complete.',
-    'type': 'array', #This is actually a tuple of X and y
-    'items': {'type': 'array'}
+    "description": "The input data to complete.",
+    "type": "array",  # This is actually a tuple of X and y
+    "items": {"type": "array"},
 }
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters.',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_transform': _input_transform_schema,
-        'output_transform': _output_transform_schema}}
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters.",
+    "type": "object",
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(TimeFreqEigenVectorsImpl, _combined_schemas)
 
-TimeFreqEigenVectors = lale.operators.make_operator(TimeFreqEigenVectorsImpl, _combined_schemas)
-
+TimeFreqEigenVectors = lale.operators.make_operator(
+    TimeFreqEigenVectorsImpl, _combined_schemas
+)

@@ -13,19 +13,24 @@
 # limitations under the License.
 
 import unittest
+
 import sklearn.datasets
 import sklearn.metrics
+
 import lale.sklearn_compat
+
 
 class TestSnapMLClassifiers(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_breast_cancer
         from sklearn.model_selection import train_test_split
+
         X, y = load_breast_cancer(return_X_y=True)
-        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)    
+        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_without_lale(self):
         import pai4sk
+
         clf = pai4sk.RandomForestClassifier()
         self.assertIsInstance(clf, pai4sk.RandomForestClassifier)
         fit_result = clf.fit(self.train_X, self.train_y)
@@ -35,6 +40,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
 
     def test_random_forest_classifier(self):
         import lale.lib.pai4sk
+
         trainable = lale.lib.pai4sk.RandomForestClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
@@ -42,6 +48,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
 
     def test_decision_tree_classifier(self):
         import lale.lib.pai4sk
+
         trainable = lale.lib.pai4sk.DecisionTreeClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
@@ -49,21 +56,25 @@ class TestSnapMLClassifiers(unittest.TestCase):
 
     def test_sklearn_compat(self):
         import lale.lib.pai4sk
+
         trainable = lale.lib.pai4sk.RandomForestClassifier()
         compat = lale.sklearn_compat.make_sklearn_compat(trainable)
         trained = compat.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         accuracy = scorer(trained, self.test_X, self.test_y)
 
+
 class TestSnapMLRegressors(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_diabetes
         from sklearn.model_selection import train_test_split
+
         X, y = load_diabetes(return_X_y=True)
-        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)    
+        self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_random_forest_regressor(self):
         import lale.lib.pai4sk
+
         trainable = lale.lib.pai4sk.RandomForestRegressor()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)

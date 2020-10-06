@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.linear_model import PassiveAggressiveClassifier as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class PassiveAggressiveClassifierImpl:
@@ -279,4 +280,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(PassiveAggressiveClassifierImpl, _combined_schemas)
-PassiveAggressiveClassifier = make_operator(PassiveAggressiveClassifierImpl, _combined_schemas)
+PassiveAggressiveClassifier = make_operator(
+    PassiveAggressiveClassifierImpl, _combined_schemas
+)

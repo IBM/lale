@@ -1,7 +1,8 @@
+from numpy import inf, nan
 from sklearn.linear_model import OrthogonalMatchingPursuit as Op
-from lale.operators import make_operator
+
 from lale.docstrings import set_docstrings
-from numpy import nan, inf
+from lale.operators import make_operator
 
 
 class OrthogonalMatchingPursuitImpl:
@@ -153,4 +154,6 @@ _combined_schemas = {
     },
 }
 set_docstrings(OrthogonalMatchingPursuitImpl, _combined_schemas)
-OrthogonalMatchingPursuit = make_operator(OrthogonalMatchingPursuitImpl, _combined_schemas)
+OrthogonalMatchingPursuit = make_operator(
+    OrthogonalMatchingPursuitImpl, _combined_schemas
+)

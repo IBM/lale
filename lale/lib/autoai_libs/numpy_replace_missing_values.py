@@ -12,17 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.docstrings
-import lale.operators
 import autoai_libs.transformers.exportable
 import numpy as np
 
-class NumpyReplaceMissingValuesImpl():
+import lale.docstrings
+import lale.operators
+
+
+class NumpyReplaceMissingValuesImpl:
     def __init__(self, missing_values, filling_values=np.nan):
         self._hyperparams = {
-            'missing_values': missing_values,
-            'filling_values': filling_values}
-        self._wrapped_model = autoai_libs.transformers.exportable.NumpyReplaceMissingValues(**self._hyperparams)
+            "missing_values": missing_values,
+            "filling_values": filling_values,
+        }
+        self._wrapped_model = autoai_libs.transformers.exportable.NumpyReplaceMissingValues(
+            **self._hyperparams
+        )
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)
@@ -31,72 +36,96 @@ class NumpyReplaceMissingValuesImpl():
     def transform(self, X):
         return self._wrapped_model.transform(X)
 
+
 _hyperparams_schema = {
-    'allOf': [{
-        'description': 'This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.',
-        'type': 'object',
-        'additionalProperties': False,
-        'required': ['missing_values', 'filling_values'],
-        'relevantToOptimizer': [],
-        'properties': {
-            'missing_values': {
-                'description': 'List of values considered as "missing" for the array.',
-                'anyOf': [
-                {   'type': 'array',
-                    'items': {'laleType': 'Any'}},
-                {   'enum': [None]}],
-                'default': None},
-            'filling_values': {
-                'description': 'Value to replace the missing values.',
-                'laleType': 'Any',
-                'default': None}}}]}
+    "allOf": [
+        {
+            "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["missing_values", "filling_values"],
+            "relevantToOptimizer": [],
+            "properties": {
+                "missing_values": {
+                    "description": 'List of values considered as "missing" for the array.',
+                    "anyOf": [
+                        {"type": "array", "items": {"laleType": "Any"}},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                },
+                "filling_values": {
+                    "description": "Value to replace the missing values.",
+                    "laleType": "Any",
+                    "default": None,
+                },
+            },
+        }
+    ]
+}
 
 _input_fit_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {#Handles 1-D arrays as well
-            'anyOf': [
-                {'type': 'array', 'items': {'laleType': 'Any'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType': 'Any'}}}]},
-        'y': {
-            'laleType': 'Any'}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {  # Handles 1-D arrays as well
+            "anyOf": [
+                {"type": "array", "items": {"laleType": "Any"}},
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"laleType": "Any"}},
+                },
+            ]
+        },
+        "y": {"laleType": "Any"},
+    },
+}
 
 _input_transform_schema = {
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {#Handles 1-D arrays as well
-            'anyOf': [
-                {'type': 'array', 'items': {'laleType': 'Any'}},
-                {'type': 'array', 'items': {'type': 'array', 'items': {'laleType': 'Any'}}}]}}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {  # Handles 1-D arrays as well
+            "anyOf": [
+                {"type": "array", "items": {"laleType": "Any"}},
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"laleType": "Any"}},
+                },
+            ]
+        }
+    },
+}
 
 _output_transform_schema = {
-    'description': 'Features; the outer array is over samples.',
-    'anyOf': [
-        {'type': 'array', 'items': {'laleType': 'Any'}},
-        {'type': 'array', 'items': {'type': 'array', 'items': {'laleType': 'Any'}}}]}
+    "description": "Features; the outer array is over samples.",
+    "anyOf": [
+        {"type": "array", "items": {"laleType": "Any"}},
+        {"type": "array", "items": {"type": "array", "items": {"laleType": "Any"}}},
+    ],
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': """Operator from `autoai_libs`_. Given a numpy array and a reference list of missing values for it, replaces missing values with a special value (typically a special missing value such as np.nan).
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """Operator from `autoai_libs`_. Given a numpy array and a reference list of missing values for it, replaces missing values with a special value (typically a special missing value such as np.nan).
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs""",
-    'documentation_url': 'https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.numpy_replace_missing_values.html',
-    'import_from': 'autoai_libs.transformers.exportable',
-    'type': 'object',
-    'tags': {
-        'pre': [],
-        'op': ['transformer'],
-        'post': []},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_fit_schema,
-        'input_transform': _input_transform_schema,
-        'output_transform': _output_transform_schema}}
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.numpy_replace_missing_values.html",
+    "import_from": "autoai_libs.transformers.exportable",
+    "type": "object",
+    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(NumpyReplaceMissingValuesImpl, _combined_schemas)
 
-NumpyReplaceMissingValues = lale.operators.make_operator(NumpyReplaceMissingValuesImpl, _combined_schemas)
+NumpyReplaceMissingValues = lale.operators.make_operator(
+    NumpyReplaceMissingValuesImpl, _combined_schemas
+)

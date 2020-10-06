@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# A shim for compatibility across 3.7.
+# pre 3.7, we need to inherit from the GenericMeta class (which inherits from ABCmeta)
+# to use Generic (which we want to do)
+# post 3.7, GenericMeta no longer exists
+import sys
 from abc import ABCMeta
+
 
 class VisitorMeta(object):
     """ This meta class adds a private _accept method that calls visitCLASSNAME on the visitor.
@@ -20,6 +26,7 @@ class VisitorMeta(object):
         explicitly.
         The private _accept method should be called via the Visitor#acccept method
     """
+
     def __init__(cls, *args, **kwargs):
         super(VisitorMeta, cls).__init__(*args, **kwargs)
         selector = """
@@ -31,22 +38,23 @@ class VisitorMeta(object):
             raise
         except BaseException as e:
             raise VisitorPathError([self]) from e
-        """.format(cls.__name__)
-        _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(selector)
+        """.format(
+            cls.__name__
+        )
+        _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(
+            selector
+        )
         l = {}
         exec(_accept_code, globals(), l)
         setattr(cls, "_accept", l["_accept"])
 
-# A shim for compatibility across 3.7.
-# pre 3.7, we need to inherit from the GenericMeta class (which inherits from ABCmeta)
-# to use Generic (which we want to do)
-# post 3.7, GenericMeta no longer exists
-import sys
+
 if sys.version_info < (3, 7, 0):
-    from typing import GenericMeta # type: ignore 
+    from typing import GenericMeta  # type: ignore
 else:
-    global GenericMeta 
-    GenericMeta = ABCMeta # type: ignore 
+    global GenericMeta
+    GenericMeta = ABCMeta  # type: ignore
+
 
 class AbstractVisitorMeta(VisitorMeta, GenericMeta):
     """ This meta class adds an _accept method that calls visitCLASSNAME on the visitor.
@@ -54,5 +62,6 @@ class AbstractVisitorMeta(VisitorMeta, GenericMeta):
         explicitly.
         The private _accept method should be called via the Visitor#acccept method.
     """
+
     def __init__(cls, *args, **kwargs):
         super(AbstractVisitorMeta, cls).__init__(*args, **kwargs)

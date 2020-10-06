@@ -12,94 +12,99 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from setuptools import setup, find_packages
-from datetime import datetime
+import logging
 import os
 import sys
-import logging
+from datetime import datetime
+
+from setuptools import find_packages, setup
+
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.StreamHandler())
 
 try:
     import builtins
+
     # This trick is borrowed from scikit-learn
     # This is a bit (!) hackish: we are setting a global variable so that the
     # main lale __init__ can detect if it is being loaded by the setup
     # routine, to avoid attempting to import components before installation.
-    builtins.__LALE_SETUP__ = True # type: ignore
+    builtins.__LALE_SETUP__ = True  # type: ignore
 except ImportError:
     pass
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-on_rtd = os.environ.get('READTHEDOCS') == 'True'
+on_rtd = os.environ.get("READTHEDOCS") == "True"
 if on_rtd:
     install_requires = []
 else:
-    install_requires=[
-        'numpy',
-        'black',
-        'graphviz',
-        'hyperopt==0.2.3',
-        'jsonschema',
-        'jsonsubschema',
-        'scikit-learn>=0.20.3',
-        'scipy',
-        'pandas<=0.25.3',
-        'decorator',
-        'h5py',
-        'astunparse']
+    install_requires = [
+        "numpy",
+        "black",
+        "graphviz",
+        "hyperopt==0.2.3",
+        "jsonschema",
+        "jsonsubschema",
+        "scikit-learn>=0.20.3",
+        "scipy",
+        "pandas<=0.25.3",
+        "decorator",
+        "h5py",
+        "astunparse",
+    ]
 
-import lale
+import lale  # isort:skip
+
 if "TRAVIS" in os.environ:
     now = datetime.now().strftime("%y%m%d%H%M")
-    VERSION=f'{lale.__version__}-{now}'
+    VERSION = f"{lale.__version__}-{now}"
 else:
-    VERSION=lale.__version__
+    VERSION = lale.__version__
 
 setup(
-    name='lale',
+    name="lale",
     version=VERSION,
     author="Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar",
     description="Library for Semi-Automated Data Science",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/IBM/lale",
-    python_requires='>=3.6',
+    python_requires=">=3.6",
     packages=find_packages(),
-    license='',
-    install_requires = install_requires,
+    license="",
+    install_requires=install_requires,
     extras_require={
-        'full': [
-            'xgboost',
-            'lightgbm',
-            'liac-arff>=2.4.0',
-            'pytorch-pretrained-bert>=0.6.1',
-            'torchvision>=0.2.2',
-            'tensorflow-datasets>=1.0.1',
-            'tensorflow>=1.13.1',
-            'tensorflow_hub',
-            'spacy',
-            'smac<=0.10.0',
-            'numba==0.49.0',
-            'aif360<=0.2.3',
-            'torch>=1.0',
-            'BlackBoxAuditing',
-            'imbalanced-learn'],
-        'dev': [
-            'pre-commit'
+        "full": [
+            "xgboost",
+            "lightgbm",
+            "liac-arff>=2.4.0",
+            "pytorch-pretrained-bert>=0.6.1",
+            "torchvision>=0.2.2",
+            "tensorflow-datasets>=1.0.1",
+            "tensorflow>=1.13.1",
+            "tensorflow_hub",
+            "spacy",
+            "smac<=0.10.0",
+            "numba==0.49.0",
+            "aif360<=0.2.3",
+            "torch>=1.0",
+            "BlackBoxAuditing",
+            "imbalanced-learn",
         ],
-        'test':[
-            'autoai-libs',
-            'joblib',
-            'jupyter',
-            'numpydoc',
-            'sphinx',
-            'm2r',
-            'sphinx_rtd_theme',
-            'sphinxcontrib.apidoc',
-            'pytest-cov',
-            'codecov'
-        ]}
+        "dev": ["pre-commit"],
+        "test": [
+            "autoai-libs",
+            "joblib",
+            "jupyter",
+            "numpydoc",
+            "sphinx",
+            "m2r",
+            "sphinx_rtd_theme",
+            "sphinxcontrib.apidoc",
+            "pytest-cov",
+            "codecov",
+        ],
+    },
 )

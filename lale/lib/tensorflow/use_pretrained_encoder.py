@@ -13,13 +13,16 @@
 # limitations under the License.
 
 import os
-import shutil
 import random
-import tensorflow_hub as hub
-import tensorflow as tf
+import shutil
+
 import numpy as np
+import tensorflow as tf
+import tensorflow_hub as hub
+
 import lale.docstrings
 import lale.operators
+
 
 class USEPretrainedEncoderImpl(object):
     """
@@ -36,17 +39,20 @@ class USEPretrainedEncoderImpl(object):
     ----------
     Daniel Cer, et al. Universal Sentence Encoder. arXiv:1803.11175, 2018
     """
-    def __init__(self,
-                 model_path=None,
-                 batch_size=32):
-        self.resources_dir = os.path.join(os.path.dirname(__file__), 'resources')
+
+    def __init__(self, model_path=None, batch_size=32):
+        self.resources_dir = os.path.join(os.path.dirname(__file__), "resources")
 
         if model_path is None:
-            model_path = os.path.join('pretrained_USE', '1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47')
+            model_path = os.path.join(
+                "pretrained_USE", "1fb57c3ffe1a38479233ee9853ddd7a8ac8a8c47"
+            )
         if os.path.exists(os.path.join(self.resources_dir, model_path)):
             self.url = os.path.join(self.resources_dir, model_path)
         else:
-            os.environ['TFHUB_CACHE_DIR'] = os.path.join(self.resources_dir, 'pretrained_USE')
+            os.environ["TFHUB_CACHE_DIR"] = os.path.join(
+                self.resources_dir, "pretrained_USE"
+            )
             self.url = "https://tfhub.dev/google/universal-sentence-encoder/2"
 
         # load the use model from saved location or tensorflow hub
@@ -55,8 +61,7 @@ class USEPretrainedEncoderImpl(object):
         self.epochs = 10
         self.lr = 0.01
         self.batch_size = batch_size
-        self.sess.run([tf.global_variables_initializer(),
-                       tf.tables_initializer()])
+        self.sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
 
     def fit(self, X, y, model_dir=None):
         """
@@ -87,9 +92,9 @@ class USEPretrainedEncoderImpl(object):
                 x_batch = [x[idx] for idx in data_idx]
                 y_batch = [y[idx] for idx in data_idx]
             else:
-                if current_step+batch_size < len(x):
-                    x_batch = x[current_step:current_step+batch_size]
-                    y_batch = y[current_step:current_step+batch_size]
+                if current_step + batch_size < len(x):
+                    x_batch = x[current_step : current_step + batch_size]
+                    y_batch = y[current_step : current_step + batch_size]
                     current_step += batch_size
                 else:
                     x_batch = x[current_step:]
@@ -113,7 +118,7 @@ class USEPretrainedEncoderImpl(object):
         train_opt = optimizer.minimize(loss=los)
 
         curr = 0
-        iterations = int(np.ceil(len(X)/self.batch_size))
+        iterations = int(np.ceil(len(X) / self.batch_size))
         self.sess.run(tf.global_variables_initializer())
         for _ in range(self.epochs):
             for _ in range(iterations):
@@ -122,7 +127,7 @@ class USEPretrainedEncoderImpl(object):
 
         # save model
         if model_dir is None:
-            model_dir = os.path.join(self.resources_dir, 'fine_tuned_USE')
+            model_dir = os.path.join(self.resources_dir, "fine_tuned_USE")
 
         if os.path.exists(model_dir):
             shutil.rmtree(model_dir)
@@ -147,86 +152,108 @@ class USEPretrainedEncoderImpl(object):
 
 
 _input_schema_fit = {
-    'description': 'Input data schema for training.',
-    'type': 'object',
-    'required': ['X', 'y'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {
-            'description': 'Input Text',
-            'anyOf': [
-                {'type': 'array',
-                 'items': {'type': 'string'}},
-                {'type': 'array',
-                 'items': {
-                     'type': 'array', 'minItems': 1, 'maxItems': 1,
-                     'items': {'type': 'string'}}}]},
-        'y': {
-            'description': 'Labels, required',
-            'anyOf': [
-                {'type': 'array',
-                 'items': {'type': 'number'}}
-            ]
-        }
-    }}
+    "description": "Input data schema for training.",
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Input Text",
+            "anyOf": [
+                {"type": "array", "items": {"type": "string"}},
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 1,
+                        "items": {"type": "string"},
+                    },
+                },
+            ],
+        },
+        "y": {
+            "description": "Labels, required",
+            "anyOf": [{"type": "array", "items": {"type": "number"}}],
+        },
+    },
+}
 
 _input_transform_schema = {
-    'description': 'Input data schema for training.',
-    'type': 'object',
-    'required': ['X'],
-    'additionalProperties': False,
-    'properties': {
-        'X': {
-            'description': 'Input Text',
-            'anyOf': [
-                {'type': 'array',
-                 'items': {'type': 'string'}},
-                {'type': 'array',
-                 'items': {
-                     'type': 'array', 'minItems': 1, 'maxItems': 1,
-                     'items': {'type': 'string'}}}]}
-    }}
+    "description": "Input data schema for training.",
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Input Text",
+            "anyOf": [
+                {"type": "array", "items": {"type": "string"}},
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 1,
+                        "items": {"type": "string"},
+                    },
+                },
+            ],
+        }
+    },
+}
 
 _output_transform_schema = {
-    'description': 'Output data schema for transformed data.',
-    'type': 'array',
-    'items': {'type': 'array', 'items': {'type': 'number'}}}
+    "description": "Output data schema for transformed data.",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
+}
 
 _hyperparams_schema = {
-    'description': 'Hyperparameter schema.',
-    'allOf': [
-        {'description':
-             'This first sub-object lists all constructor arguments with their '
-             'types, one at a time, omitting cross-argument constraints.',
-         'type': 'object',
-         'additionalProperties': False,
-         'relevantToOptimizer': [],
-         'properties': {
-             'batch_size': {
-                 'description': 'Batch size used for transform.',
-                 'type': 'integer',
-                 'default': 32,
-                 'minimum': 1,
-                 'distribution': 'uniform',
-                 'minimumForOptimizer': 16,
-                 'maximumForOptimizer': 128}}}]}
+    "description": "Hyperparameter schema.",
+    "allOf": [
+        {
+            "description": "This first sub-object lists all constructor arguments with their "
+            "types, one at a time, omitting cross-argument constraints.",
+            "type": "object",
+            "additionalProperties": False,
+            "relevantToOptimizer": [],
+            "properties": {
+                "batch_size": {
+                    "description": "Batch size used for transform.",
+                    "type": "integer",
+                    "default": 32,
+                    "minimum": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 16,
+                    "maximumForOptimizer": 128,
+                }
+            },
+        }
+    ],
+}
 
 _combined_schemas = {
-    '$schema': 'http://json-schema.org/draft-04/schema#',
-    'description': 'Combined schema for expected data and hyperparameters for a transformer for'
-                   ' a text data transformer based on pre-trained USE model '
-                   '(https://tfhub.dev/google/universal-sentence-encoder/2).',
-    'type': 'object',
-    'tags': {
-        'pre': ['text'],
-        'op': ['transformer', '~interpretable'],
-        'post': ['embedding']},
-    'properties': {
-        'hyperparams': _hyperparams_schema,
-        'input_fit': _input_schema_fit,
-        'input_transform': _input_transform_schema,
-        'output_transform': _output_transform_schema}}
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters for a transformer for"
+    " a text data transformer based on pre-trained USE model "
+    "(https://tfhub.dev/google/universal-sentence-encoder/2).",
+    "type": "object",
+    "tags": {
+        "pre": ["text"],
+        "op": ["transformer", "~interpretable"],
+        "post": ["embedding"],
+    },
+    "properties": {
+        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_schema_fit,
+        "input_transform": _input_transform_schema,
+        "output_transform": _output_transform_schema,
+    },
+}
 
 lale.docstrings.set_docstrings(USEPretrainedEncoderImpl, _combined_schemas)
 
-USEPretrainedEncoder = lale.operators.make_operator(USEPretrainedEncoderImpl, _combined_schemas)
+USEPretrainedEncoder = lale.operators.make_operator(
+    USEPretrainedEncoderImpl, _combined_schemas
+)

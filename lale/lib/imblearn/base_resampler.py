@@ -13,11 +13,12 @@
 # limitations under the License.
 
 from imblearn.over_sampling import SMOTE as OrigModel
+
 import lale.operators
 
-class BaseResamplerImpl():
 
-    def __init__(self, operator = None, resampler = None):
+class BaseResamplerImpl:
+    def __init__(self, operator=None, resampler=None):
         self.operator = operator
         self.resampler = resampler
 
@@ -38,82 +39,103 @@ class BaseResamplerImpl():
     def decision_function(self, X):
         return self.trained_operator.decision_function(X)
 
+
 _input_fit_schema = {
-  'type': 'object',
-  'required': ['X', 'y'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}},
-    'y': {
-      'description': 'Target class labels; the array is over samples.',
-        'anyOf': [
-            {'type': 'array', 'items': {'type': 'number'}},
-            {'type': 'array', 'items': {'type': 'string'}}]}}}
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        },
+        "y": {
+            "description": "Target class labels; the array is over samples.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+            ],
+        },
+    },
+}
 
 _input_transform_schema = {
-  'type': 'object',
-  'required': ['X', 'y'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}},
-    'y': {
-      'description': 'Target class labels; the array is over samples.',
-      'anyOf': [
-          {'type': 'array', 'items': {'type': 'number'}},
-          {'type': 'array', 'items': {'type': 'string'}},
-          {'enum': [None]}]}}}
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        },
+        "y": {
+            "description": "Target class labels; the array is over samples.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"enum": [None]},
+            ],
+        },
+    },
+}
 
 _output_transform_schema = {
-  'description': 'Output data schema for transformed data.',
-  'laleType': 'Any'}
+    "description": "Output data schema for transformed data.",
+    "laleType": "Any",
+}
 
 _input_predict_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}
-}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        }
+    },
+}
 
-_output_predict_schema={
-  'description': 'Output data schema for predictions.',
-  'laleType': 'Any'}
+_output_predict_schema = {
+    "description": "Output data schema for predictions.",
+    "laleType": "Any",
+}
 
 _input_predict_proba_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}
-}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        }
+    },
+}
 
-_output_predict_proba_schema={
-  'description': 'Output data schema for predictions.',
-  'laleType': 'Any'}
+_output_predict_proba_schema = {
+    "description": "Output data schema for predictions.",
+    "laleType": "Any",
+}
 
 _input_decision_function_schema = {
-  'type': 'object',
-  'required': ['X'],
-  'additionalProperties': False,
-  'properties': {
-    'X': {
-      'description': 'Features; the outer array is over samples.',
-      'type': 'array',
-      'items': {'type': 'array', 'items': {'type': 'number'}}}
-}}
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        }
+    },
+}
 
-_output_decision_function_schema={
-  'description': 'Output data schema for predictions.',
-  'laleType': 'Any'}
+_output_decision_function_schema = {
+    "description": "Output data schema for predictions.",
+    "laleType": "Any",
+}
