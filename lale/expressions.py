@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast  # see also https://greentreesnakes.readthedocs.io/
+from copy import deepcopy
 import pprint
 import typing
 from typing import Any, Dict, List, Optional, Union
@@ -58,6 +59,14 @@ class Expr:
             f"Cannot convert expression e1=`{str(self)}` to bool."
             "Instead of `e1 and e2`, try writing `[e1, e2]`."
         )
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            setattr(result, k, deepcopy(v, memo))
+        return result
 
     def __eq__(self, other):
         if isinstance(other, Expr):
