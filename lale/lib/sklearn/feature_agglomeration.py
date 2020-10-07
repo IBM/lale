@@ -33,71 +33,93 @@ class FeatureAgglomerationImpl:
 
 
 _hyperparams_schema = {
-    'description': 'Agglomerate features.',
-    'allOf': [{
-        'type': 'object',
-        'required': ['memory', 'compute_full_tree', 'pooling_func'],
-        'relevantToOptimizer': ['affinity', 'compute_full_tree', 'linkage'],
-        'additionalProperties': False,
-        'properties': {
-            'n_clusters': {
-                'type': 'integer',
-                'minimumForOptimizer': 2,
-                'maximumForOptimizer': 8,
-                'default': 2,
-                'laleMaximum': 'X/items/maxItems', #number of columns 
-                'description': 'The number of clusters to find.'},
-            'affinity': {
-                'anyOf': [
-                {   'enum': ['euclidean', 'l1', 'l2', 'manhattan', 'cosine',
-                    'precomputed']},
-                {   'forOptimizer': False,
-                    'laleType': 'callable' }],
-                'default': 'euclidean',
-                'description': 'Metric used to compute the linkage. Can be "euclidean", "l1", "l2",'},
-            'memory': {
-                'anyOf': [{
-                    'type': 'string'}, {
-                    'forOptimizer':False,
-                    'type': 'object' }, { #object with the joblib.Memory interface
-                    'enum':[None]}],  
-                'default': None,
-                'description': 'Used to cache the output of the computation of the tree.'},
-            'connectivity': {
-                'anyOf': [
-                {   'type': 'array',
-                    'items': {
-                        'type': 'array', 'items': { 'type': 'number' }}},
-                {   'laleType': 'callable',
-                    'forOptimizer': False,
-                    'description': 'A callable that transforms the data into a connectivity matrix, such as derived from kneighbors_graph.'},
-                {'enum': [None]}],
-                'default': None,
-                'description': 'Connectivity matrix. Defines for each feature the neighboring features following a given structure of the data.'},
-            'compute_full_tree': {
-                'anyOf':[{
-                    'type': 'boolean'
-                },{
-                    'enum':['auto']
-                }],
-                'default': 'auto',
-                'description': 'Stop early the construction of the tree at n_clusters. This is'},
-            'linkage': {
-                'enum': ['ward', 'complete', 'average', 'single'],
-                'default': 'ward',
-                'description': 'Which linkage criterion to use. The linkage criterion determines which'},
-            'pooling_func': {
-                'description': 'This combines the values of agglomerated features into a single',
-                'laleType': 'callable',
-                'default': np.mean},
-        }},
-    {   'description': 'affinity, if linkage is "ward", only "euclidean" is accepted',
-          'anyOf': [
-            { 'type': 'object',
-              'properties': {'affinity': {'enum': ['euclidean']}}},
-            { 'type': 'object',
-              'properties': {
-                'linkage':{'not': {'enum': ['ward']}}}}]}]}
+    "description": "Agglomerate features.",
+    "allOf": [
+        {
+            "type": "object",
+            "required": ["memory", "compute_full_tree", "pooling_func"],
+            "relevantToOptimizer": ["affinity", "compute_full_tree", "linkage"],
+            "additionalProperties": False,
+            "properties": {
+                "n_clusters": {
+                    "type": "integer",
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 8,
+                    "default": 2,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "description": "The number of clusters to find.",
+                },
+                "affinity": {
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "euclidean",
+                                "l1",
+                                "l2",
+                                "manhattan",
+                                "cosine",
+                                "precomputed",
+                            ]
+                        },
+                        {"forOptimizer": False, "laleType": "callable"},
+                    ],
+                    "default": "euclidean",
+                    "description": 'Metric used to compute the linkage. Can be "euclidean", "l1", "l2",',
+                },
+                "memory": {
+                    "anyOf": [
+                        {"type": "string"},
+                        {"forOptimizer": False, "type": "object"},
+                        {"enum": [None]},  # object with the joblib.Memory interface
+                    ],
+                    "default": None,
+                    "description": "Used to cache the output of the computation of the tree.",
+                },
+                "connectivity": {
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {"type": "array", "items": {"type": "number"}},
+                        },
+                        {
+                            "laleType": "callable",
+                            "forOptimizer": False,
+                            "description": "A callable that transforms the data into a connectivity matrix, such as derived from kneighbors_graph.",
+                        },
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "Connectivity matrix. Defines for each feature the neighboring features following a given structure of the data.",
+                },
+                "compute_full_tree": {
+                    "anyOf": [{"type": "boolean"}, {"enum": ["auto"]}],
+                    "default": "auto",
+                    "description": "Stop early the construction of the tree at n_clusters. This is",
+                },
+                "linkage": {
+                    "enum": ["ward", "complete", "average", "single"],
+                    "default": "ward",
+                    "description": "Which linkage criterion to use. The linkage criterion determines which",
+                },
+                "pooling_func": {
+                    "description": "This combines the values of agglomerated features into a single",
+                    "laleType": "callable",
+                    "default": np.mean,
+                },
+            },
+        },
+        {
+            "description": 'affinity, if linkage is "ward", only "euclidean" is accepted',
+            "anyOf": [
+                {"type": "object", "properties": {"affinity": {"enum": ["euclidean"]}}},
+                {
+                    "type": "object",
+                    "properties": {"linkage": {"not": {"enum": ["ward"]}}},
+                },
+            ],
+        },
+    ],
+}
 
 _input_fit_schema = {
     "description": "Fit the hierarchical clustering on the data",
@@ -156,21 +178,38 @@ FeatureAgglomeration = lale.operators.make_operator(
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.cluster.FeatureAgglomeration.html
-    from lale.schemas import AnyOf, Float, Null, Int, Object, Enum
+    from lale.schemas import AnyOf, Enum, Float, Int, Null, Object
+
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
         distance_threshold=AnyOf(
             types=[Float(), Null()],
-            desc='The linkage distance threshold above which, clusters will not be merged.',
-            default=None),
+            desc="The linkage distance threshold above which, clusters will not be merged.",
+            default=None,
+        ),
         n_clusters=AnyOf(
-            types=[Int(minForOptimizer=2, maxForOptimizer=8, laleMaximum= 'X/items/maxItems'), Null(forOptimizer=False)],
+            types=[
+                Int(
+                    minForOptimizer=2, maxForOptimizer=8, laleMaximum="X/items/maxItems"
+                ),
+                Null(forOptimizer=False),
+            ],
             default=2,
             forOptimizer=False,
-            desc='The number of clusters to find.'),
-        constraint=AnyOf([Object(n_clusters=Null()), Object(distance_threshold=Null())], 
-            desc='n_clusters must be None if distance_threshold is not None.'))
+            desc="The number of clusters to find.",
+        ),
+        constraint=AnyOf(
+            [Object(n_clusters=Null()), Object(distance_threshold=Null())],
+            desc="n_clusters must be None if distance_threshold is not None.",
+        ),
+    )
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
-        constraint=AnyOf([Object(compute_full_tree=Enum(['True'])), Object(distance_threshold=Null())], 
-        desc='compute_full_tree must be True if distance_threshold is not None.'))
+        constraint=AnyOf(
+            [
+                Object(compute_full_tree=Enum(["True"])),
+                Object(distance_threshold=Null()),
+            ],
+            desc="compute_full_tree must be True if distance_threshold is not None.",
+        )
+    )
 
 lale.docstrings.set_docstrings(FeatureAgglomerationImpl, FeatureAgglomeration._schemas)

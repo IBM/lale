@@ -37,35 +37,48 @@ class LinearRegressionImpl:
 
 
 _hyperparams_schema = {
-    'allOf': [{
-        'type': 'object',
-        'required': ['fit_intercept', 'normalize', 'copy_X'],
-        'relevantToOptimizer': ['fit_intercept', 'normalize', 'copy_X'],
-        'additionalProperties': False,
-        'properties': {
-            'fit_intercept': {
-                'type': 'boolean',
-                'default': True,
-                'description': 'Whether to calculate the intercept for this model.'},
-            'normalize': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'If True, the regressors X will be normalized before regression by subtracting the mean and dividing by the l2-norm.'},
-            'copy_X': {
-                'type': 'boolean',
-                'default': True,
-                'description': 'If True, X will be copied; else, it may be overwritten.'},
-            'n_jobs': {
-                'anyOf': [
-                {   'description': '1 unless in joblib.parallel_backend context.',
-                    'enum': [None]},
-                {   'description': 'Use all processors.',
-                    'enum': [-1]},
-                {   'description': 'Number of CPU cores.',
-                    'type': 'integer',
-                    'minimum': 1}],
-                'default': None,
-                'description': 'The number of jobs to run in parallel.'}}}]}
+    "allOf": [
+        {
+            "type": "object",
+            "required": ["fit_intercept", "normalize", "copy_X"],
+            "relevantToOptimizer": ["fit_intercept", "normalize", "copy_X"],
+            "additionalProperties": False,
+            "properties": {
+                "fit_intercept": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Whether to calculate the intercept for this model.",
+                },
+                "normalize": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "If True, the regressors X will be normalized before regression by subtracting the mean and dividing by the l2-norm.",
+                },
+                "copy_X": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "If True, X will be copied; else, it may be overwritten.",
+                },
+                "n_jobs": {
+                    "anyOf": [
+                        {
+                            "description": "1 unless in joblib.parallel_backend context.",
+                            "enum": [None],
+                        },
+                        {"description": "Use all processors.", "enum": [-1]},
+                        {
+                            "description": "Number of CPU cores.",
+                            "type": "integer",
+                            "minimum": 1,
+                        },
+                    ],
+                    "default": None,
+                    "description": "The number of jobs to run in parallel.",
+                },
+            },
+        }
+    ]
+}
 
 _input_fit_schema = {
     "type": "object",

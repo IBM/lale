@@ -100,28 +100,31 @@ class Float(Schema):
 
 
 class Int(Schema):
-    def __init__(self,
-                 desc: Option[str] = undefined,
-                 default: Option[int] = undefined,
-                 forOptimizer: bool = True,
-                 min: Option[int] = undefined,
-                 exclusiveMin: Option[bool] = undefined,
-                 minForOptimizer: Option[int] = undefined,
-                 max: Option[int] = undefined,
-                 exclusiveMax: Option[bool] = undefined,
-                 maxForOptimizer: Option[int] = undefined,
-                 distribution: Option[str] = undefined,
-                 laleMaximum: Option[str] = undefined):
+    def __init__(
+        self,
+        desc: Option[str] = undefined,
+        default: Option[int] = undefined,
+        forOptimizer: bool = True,
+        min: Option[int] = undefined,
+        exclusiveMin: Option[bool] = undefined,
+        minForOptimizer: Option[int] = undefined,
+        max: Option[int] = undefined,
+        exclusiveMax: Option[bool] = undefined,
+        maxForOptimizer: Option[int] = undefined,
+        distribution: Option[str] = undefined,
+        laleMaximum: Option[str] = undefined,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('type', 'integer')
-        self.set('minimum', min)
-        self.set('exclusiveMinimum', exclusiveMin)
-        self.set('minimumForOptimizer', minForOptimizer)
-        self.set('maximum', max)
-        self.set('exclusiveMaximum', exclusiveMax)
-        self.set('maximumForOptimizer', maxForOptimizer)
-        self.set('distribution', distribution)
-        self.set('laleMaximum', laleMaximum)
+        self.set("type", "integer")
+        self.set("minimum", min)
+        self.set("exclusiveMinimum", exclusiveMin)
+        self.set("minimumForOptimizer", minForOptimizer)
+        self.set("maximum", max)
+        self.set("exclusiveMaximum", exclusiveMax)
+        self.set("maximumForOptimizer", maxForOptimizer)
+        self.set("distribution", distribution)
+        self.set("laleMaximum", laleMaximum)
+
 
 class Null(Schema):
     def __init__(self, desc: Option[str] = undefined, forOptimizer: bool = True):
@@ -145,13 +148,16 @@ class JSON(Schema):
 
 
 class AnyOf(Schema):
-    def __init__(self,
-                 types: List[Schema] = [],
-                 desc: Option[str] = undefined,
-                 default: Option[Any] = undefined,
-                 forOptimizer: bool = True):
+    def __init__(
+        self,
+        types: List[Schema] = [],
+        desc: Option[str] = undefined,
+        default: Option[Any] = undefined,
+        forOptimizer: bool = True,
+    ):
         super().__init__(desc, default, forOptimizer)
-        self.set('anyOf', [t.schema for t in types])
+        self.set("anyOf", [t.schema for t in types])
+
 
 class AllOf(Schema):
     def __init__(

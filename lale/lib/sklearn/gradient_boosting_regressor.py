@@ -34,163 +34,204 @@ class GradientBoostingRegressorImpl:
 
 
 _hyperparams_schema = {
-    'description': 'Gradient Boosting for regression.',
-    'allOf': [{
-        'type': 'object',
-        'required': ['init', 'presort'],
-        'relevantToOptimizer': ['loss', 'n_estimators', 'min_samples_split', 'min_samples_leaf', 'max_depth', 'max_features', 'alpha', 'presort'],
-        'additionalProperties': False,
-        'properties': {
-            'loss': {
-                'enum': ['ls', 'lad', 'huber', 'quantile'],
-                'default': 'ls',
-                'description': "loss function to be optimized. 'ls' refers to least squares"},
-            'learning_rate': {
-                'type': 'number',
-                'minimumForOptimizer': 0.01,
-                'maximumForOptimizer': 1.0,
-                'distribution': 'loguniform',
-                'default': 0.1,
-                'description': 'learning rate shrinks the contribution of each tree by `learning_rate`.'},
-            'n_estimators': {
-                'type': 'integer',
-                'minimumForOptimizer': 10,
-                'maximumForOptimizer': 100,
-                'distribution': 'uniform',
-                'default': 100,
-                'description': 'The number of boosting stages to perform. Gradient boosting'},
-            'subsample': {
-                'type': 'number',
-                'minimumForOptimizer': 0.01,
-                'maximumForOptimizer': 1.0,
-                'distribution': 'uniform',
-                'default': 1.0,
-                'description': 'The fraction of samples to be used for fitting the individual base'},
-            'criterion': {
-                'enum': ['friedman_mse', 'mse', 'mae'],
-                'default': 'friedman_mse',
-                'description': 'The function to measure the quality of a split. Supported criteria'},
-            'min_samples_split': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 2,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5,
-                    'default': 0.05}],
-                'default': 2,
-                'description': 'The minimum number of samples required to split an internal node:'},
-            'min_samples_leaf': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 1,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5,
-                    'default': 0.05}],
-                'default': 1,
-                'description': 'The minimum number of samples required to be at a leaf node.'},
-            'min_weight_fraction_leaf': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all'},
-            'max_depth': {
-                'type': 'integer',
-                'minimumForOptimizer': 3,
-                'maximumForOptimizer': 5,
-                'default': 3,
-                'description': 'maximum depth of the individual regression estimators. The maximum'},
-            'min_impurity_decrease': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity'},
-            'min_impurity_split': {
-                'anyOf':[
-                {'type': 'number'},{
-                    'enum': [None]
-                }],
-                'default': None,
-                'description': 'Threshold for early stopping in tree growth. A node will split'},
-            'init': {
-                'anyOf': [{
-                    'type': 'object'}, {
-                    'enum': ['zero', None]}],
-                'default': None,
-                'description': 'An estimator object that is used to compute the initial'},
-            'random_state': {
-                'anyOf': [
-                {   'type': 'integer'},
-                {   'laleType': 'numpy.random.RandomState'},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
-            'max_features': {
-                'anyOf': [
-                {   'type': 'integer',
-                    'minimum': 1,
-                    'forOptimizer': False},
-                {   'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True,
-                    'maximum': 1.0,
-                    'exclusiveMaximum': True,
-                    'minimumForOptimizer': 0.01,
-                    'default': 0.5,
-                    'distribution': 'uniform'},
-                {   'enum': ['auto', 'sqrt', 'log2', None]}],
-                'default': None,
-                'description': 'The number of features to consider when looking for the best split.'},
-            'alpha': {
-                'type': 'number',
-                'minimumForOptimizer': 1e-10,
-                'maximumForOptimizer': 0.9999999999,
-                'distribution':'loguniform',
-                'default': 0.9,
-                'description': 'The alpha-quantile of the huber loss function and the quantile'},
-            'verbose': {
-                'type': 'integer',
-                'default': 0,
-                'description': 'Enable verbose output. If 1 then it prints progress and performance'},
-            'max_leaf_nodes': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'Grow trees with ``max_leaf_nodes`` in best-first fashion.'},
-            'warm_start': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'When set to ``True``, reuse the solution of the previous call to fit'},
-            'presort': {
-                'anyOf': [{
-                    'type': 'boolean'}, {
-                    'enum': ['auto']}],
-                'default': 'auto',
-                'description': 'Whether to presort the data to speed up the finding of best splits in'},
-            'validation_fraction': {
-                'type': 'number',
-                'default': 0.1,
-                'description': 'The proportion of training data to set aside as validation set for'},
-            'n_iter_no_change': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 5,
-                    'maximumForOptimizer': 10}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': '``n_iter_no_change`` is used to decide if early stopping will be used'},
-            'tol': {
-                'type': 'number',
-                'minimumForOptimizer': 1e-08,
-                'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
-                'default': 0.0001,
-                'description': 'Tolerance for the early stopping. When the loss is not improving'},
-        }}]}
+    "description": "Gradient Boosting for regression.",
+    "allOf": [
+        {
+            "type": "object",
+            "required": ["init", "presort"],
+            "relevantToOptimizer": [
+                "loss",
+                "n_estimators",
+                "min_samples_split",
+                "min_samples_leaf",
+                "max_depth",
+                "max_features",
+                "alpha",
+                "presort",
+            ],
+            "additionalProperties": False,
+            "properties": {
+                "loss": {
+                    "enum": ["ls", "lad", "huber", "quantile"],
+                    "default": "ls",
+                    "description": "loss function to be optimized. 'ls' refers to least squares",
+                },
+                "learning_rate": {
+                    "type": "number",
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 1.0,
+                    "distribution": "loguniform",
+                    "default": 0.1,
+                    "description": "learning rate shrinks the contribution of each tree by `learning_rate`.",
+                },
+                "n_estimators": {
+                    "type": "integer",
+                    "minimumForOptimizer": 10,
+                    "maximumForOptimizer": 100,
+                    "distribution": "uniform",
+                    "default": 100,
+                    "description": "The number of boosting stages to perform. Gradient boosting",
+                },
+                "subsample": {
+                    "type": "number",
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 1.0,
+                    "distribution": "uniform",
+                    "default": 1.0,
+                    "description": "The fraction of samples to be used for fitting the individual base",
+                },
+                "criterion": {
+                    "enum": ["friedman_mse", "mse", "mae"],
+                    "default": "friedman_mse",
+                    "description": "The function to measure the quality of a split. Supported criteria",
+                },
+                "min_samples_split": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 2,
+                            "maximumForOptimizer": 20,
+                            "distribution": "uniform",
+                        },
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 0.5,
+                            "default": 0.05,
+                        },
+                    ],
+                    "default": 2,
+                    "description": "The minimum number of samples required to split an internal node:",
+                },
+                "min_samples_leaf": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 1,
+                            "maximumForOptimizer": 20,
+                            "distribution": "uniform",
+                        },
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 0.5,
+                            "default": 0.05,
+                        },
+                    ],
+                    "default": 1,
+                    "description": "The minimum number of samples required to be at a leaf node.",
+                },
+                "min_weight_fraction_leaf": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The minimum weighted fraction of the sum total of weights (of all",
+                },
+                "max_depth": {
+                    "type": "integer",
+                    "minimumForOptimizer": 3,
+                    "maximumForOptimizer": 5,
+                    "default": 3,
+                    "description": "maximum depth of the individual regression estimators. The maximum",
+                },
+                "min_impurity_decrease": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "A node will be split if this split induces a decrease of the impurity",
+                },
+                "min_impurity_split": {
+                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Threshold for early stopping in tree growth. A node will split",
+                },
+                "init": {
+                    "anyOf": [{"type": "object"}, {"enum": ["zero", None]}],
+                    "default": None,
+                    "description": "An estimator object that is used to compute the initial",
+                },
+                "random_state": {
+                    "anyOf": [
+                        {"type": "integer"},
+                        {"laleType": "numpy.random.RandomState"},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "If int, random_state is the seed used by the random number generator;",
+                },
+                "max_features": {
+                    "anyOf": [
+                        {"type": "integer", "minimum": 1, "forOptimizer": False},
+                        {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
+                            "exclusiveMaximum": True,
+                            "minimumForOptimizer": 0.01,
+                            "default": 0.5,
+                            "distribution": "uniform",
+                        },
+                        {"enum": ["auto", "sqrt", "log2", None]},
+                    ],
+                    "default": None,
+                    "description": "The number of features to consider when looking for the best split.",
+                },
+                "alpha": {
+                    "type": "number",
+                    "minimumForOptimizer": 1e-10,
+                    "maximumForOptimizer": 0.9999999999,
+                    "distribution": "loguniform",
+                    "default": 0.9,
+                    "description": "The alpha-quantile of the huber loss function and the quantile",
+                },
+                "verbose": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Enable verbose output. If 1 then it prints progress and performance",
+                },
+                "max_leaf_nodes": {
+                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Grow trees with ``max_leaf_nodes`` in best-first fashion.",
+                },
+                "warm_start": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "When set to ``True``, reuse the solution of the previous call to fit",
+                },
+                "presort": {
+                    "anyOf": [{"type": "boolean"}, {"enum": ["auto"]}],
+                    "default": "auto",
+                    "description": "Whether to presort the data to speed up the finding of best splits in",
+                },
+                "validation_fraction": {
+                    "type": "number",
+                    "default": 0.1,
+                    "description": "The proportion of training data to set aside as validation set for",
+                },
+                "n_iter_no_change": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 5,
+                            "maximumForOptimizer": 10,
+                        },
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "``n_iter_no_change`` is used to decide if early stopping will be used",
+                },
+                "tol": {
+                    "type": "number",
+                    "minimumForOptimizer": 1e-08,
+                    "maximumForOptimizer": 0.01,
+                    "distribution": "loguniform",
+                    "default": 0.0001,
+                    "description": "Tolerance for the early stopping. When the loss is not improving",
+                },
+            },
+        }
+    ],
+}
 
 _input_fit_schema = {
     "description": "Fit the gradient boosting model.",

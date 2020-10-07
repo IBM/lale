@@ -35,126 +35,165 @@ class ExtraTreesClassifierImpl:
 
 
 _hyperparams_schema = {
-    'description': 'An extra-trees classifier.',
-    'allOf': [{
-        'type': 'object',
-        'required': ['class_weight'],
-        'relevantToOptimizer': ['n_estimators', 'criterion', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features', 'bootstrap'],
-        'additionalProperties': False,
-        'properties': {
-            'n_estimators': {
-                'type': 'integer',
-                'minimumForOptimizer': 10,
-                'maximumForOptimizer': 100,
-                'default': 10,
-                'description': 'The number of trees in the forest.'},
-            'criterion': {
-                'enum': ['gini', 'entropy'],
-                'default': 'gini',
-                'description': 'The function to measure the quality of a split. Supported criteria are'},
-            'max_depth': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 3,
-                    'maximumForOptimizer': 5}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'The maximum depth of the tree. If None, then nodes are expanded until'},
-            'min_samples_split': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 2,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5,
-                    'default': 0.05}],
-                'default': 2,
-                'description': 'The minimum number of samples required to split an internal node:'},
-            'min_samples_leaf': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 1,
-                    'maximumForOptimizer': 20,
-                    'distribution': 'uniform'}, {
-                    'type': 'number',
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5,
-                    'default': 0.05}],
-                'default': 1,
-                'description': 'The minimum number of samples required to be at a leaf node.'},
-            'min_weight_fraction_leaf': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'The minimum weighted fraction of the sum total of weights (of all'},
-            'max_features': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'forOptimizer': False}, {
-                    'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True,
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 1.0,
-                    'distribution': 'uniform',
-                    'default': 0.5}, {
-                    'enum': ['auto', 'sqrt', 'log2', None]}],
-                'default': 'auto',
-                'description': 'The number of features to consider when looking for the best split:'},
-            'max_leaf_nodes': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'Grow trees with ``max_leaf_nodes`` in best-first fashion.'},
-            'min_impurity_decrease': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity'},
-            'min_impurity_split': {
-                'anyOf':[
-                {'type': 'number'},{
-                    'enum': [None]
-                }],
-                'default': None,
-                'description': 'Threshold for early stopping in tree growth. A node will split'},
-            'bootstrap': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'Whether bootstrap samples are used when building trees. If False, the'},
-            'oob_score': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'Whether to use out-of-bag samples to estimate'},
-            'n_jobs': {
-                'anyOf': [{
-                    'type': 'integer'}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'The number of jobs to run in parallel for both `fit` and `predict`.'},
-            'random_state': {
-                'anyOf': [
-                {   'type': 'integer'},
-                {   'laleType': 'numpy.random.RandomState'},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'If int, random_state is the seed used by the random number generator;'},
-            'verbose': {
-                'type': 'integer',
-                'default': 0,
-                'description': 'Controls the verbosity when fitting and predicting.'},
-            'warm_start': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'When set to ``True``, reuse the solution of the previous call to fit'},
-            'class_weight': {
-                'anyOf': [{
-                    'type': 'object'}, #dict, list of dicts, 
-                    {'enum': ['balanced', 'balanced_subsample', None]}],
-                'description': 'Weights associated with classes in the form ``{class_label: weight}``.',
-                'default': None},
-        }}]}
+    "description": "An extra-trees classifier.",
+    "allOf": [
+        {
+            "type": "object",
+            "required": ["class_weight"],
+            "relevantToOptimizer": [
+                "n_estimators",
+                "criterion",
+                "max_depth",
+                "min_samples_split",
+                "min_samples_leaf",
+                "max_features",
+                "bootstrap",
+            ],
+            "additionalProperties": False,
+            "properties": {
+                "n_estimators": {
+                    "type": "integer",
+                    "minimumForOptimizer": 10,
+                    "maximumForOptimizer": 100,
+                    "default": 10,
+                    "description": "The number of trees in the forest.",
+                },
+                "criterion": {
+                    "enum": ["gini", "entropy"],
+                    "default": "gini",
+                    "description": "The function to measure the quality of a split. Supported criteria are",
+                },
+                "max_depth": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 5,
+                        },
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "The maximum depth of the tree. If None, then nodes are expanded until",
+                },
+                "min_samples_split": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 2,
+                            "maximumForOptimizer": 20,
+                            "distribution": "uniform",
+                        },
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 0.5,
+                            "default": 0.05,
+                        },
+                    ],
+                    "default": 2,
+                    "description": "The minimum number of samples required to split an internal node:",
+                },
+                "min_samples_leaf": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 1,
+                            "maximumForOptimizer": 20,
+                            "distribution": "uniform",
+                        },
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 0.5,
+                            "default": 0.05,
+                        },
+                    ],
+                    "default": 1,
+                    "description": "The minimum number of samples required to be at a leaf node.",
+                },
+                "min_weight_fraction_leaf": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "The minimum weighted fraction of the sum total of weights (of all",
+                },
+                "max_features": {
+                    "anyOf": [
+                        {"type": "integer", "forOptimizer": False},
+                        {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 1.0,
+                            "distribution": "uniform",
+                            "default": 0.5,
+                        },
+                        {"enum": ["auto", "sqrt", "log2", None]},
+                    ],
+                    "default": "auto",
+                    "description": "The number of features to consider when looking for the best split:",
+                },
+                "max_leaf_nodes": {
+                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Grow trees with ``max_leaf_nodes`` in best-first fashion.",
+                },
+                "min_impurity_decrease": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "A node will be split if this split induces a decrease of the impurity",
+                },
+                "min_impurity_split": {
+                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Threshold for early stopping in tree growth. A node will split",
+                },
+                "bootstrap": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Whether bootstrap samples are used when building trees. If False, the",
+                },
+                "oob_score": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Whether to use out-of-bag samples to estimate",
+                },
+                "n_jobs": {
+                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "The number of jobs to run in parallel for both `fit` and `predict`.",
+                },
+                "random_state": {
+                    "anyOf": [
+                        {"type": "integer"},
+                        {"laleType": "numpy.random.RandomState"},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "If int, random_state is the seed used by the random number generator;",
+                },
+                "verbose": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Controls the verbosity when fitting and predicting.",
+                },
+                "warm_start": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "When set to ``True``, reuse the solution of the previous call to fit",
+                },
+                "class_weight": {
+                    "anyOf": [
+                        {"type": "object"},  # dict, list of dicts,
+                        {"enum": ["balanced", "balanced_subsample", None]},
+                    ],
+                    "description": "Weights associated with classes in the form ``{class_label: weight}``.",
+                    "default": None,
+                },
+            },
+        }
+    ],
+}
 
 _input_fit_schema = {
     "description": "Build a forest of trees from the training set (X, y).",

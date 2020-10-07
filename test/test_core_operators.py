@@ -101,6 +101,7 @@ def create_function_test_feature_preprocessor(fproc_name):
 
         # Tune the pipeline with LR using Hyperopt
         from lale.lib.lale import Hyperopt
+
         hyperopt = Hyperopt(estimator=pipeline, max_evals=1, verbose=True, cv=3)
         trained = hyperopt.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
@@ -408,12 +409,12 @@ class TestHyperparamRanges(unittest.TestCase):
     def test_random_forest_classifier(self):
         ranges, dists = RandomForestClassifier.get_param_ranges()
         expected_ranges = {
-            'n_estimators': (10, 100, 100),
-            'criterion': ['entropy', 'gini'],
-            'max_depth': (3, 5, None),
-            'min_samples_split': (2, 5, 2),
-            'min_samples_leaf': (1, 5, 1),
-            'max_features': (0.01, 1.0, 0.5),
+            "n_estimators": (10, 100, 100),
+            "criterion": ["entropy", "gini"],
+            "max_depth": (3, 5, None),
+            "min_samples_split": (2, 5, 2),
+            "min_samples_leaf": (1, 5, 1),
+            "max_features": (0.01, 1.0, 0.5),
         }
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
@@ -524,9 +525,8 @@ class TestLogisticRegression(unittest.TestCase):
         parameters = {"solver": ("liblinear", "lbfgs"), "penalty": ["l2"]}
         ranges, cat_idx = lr.get_param_ranges()
         # specify parameters and distributions to sample from
-        #the loguniform distribution needs to be taken care of properly
-        param_dist = {"solver": ranges['solver'],
-                      "C": uniform(0.03125, np.log(32768))}
+        # the loguniform distribution needs to be taken care of properly
+        param_dist = {"solver": ranges["solver"], "C": uniform(0.03125, np.log(32768))}
         # run randomized search
         n_iter_search = 5
         with warnings.catch_warnings():

@@ -109,23 +109,42 @@ _output_decision_function_schema = {
 }
 
 _hyperparams_schema = {
-  'description': 'Hyperparameter schema.',
-  'allOf': [
-    { 'description':
-        'This first sub-object lists all constructor arguments with their '
-        'types, one at a time, omitting cross-argument constraints.',
-      'type': 'object',
-      'additionalProperties': False,
-      'required': [
-        'penalty', 'dual', 'tol', 'C', 'fit_intercept', 'intercept_scaling',
-        'class_weight', 'random_state', 'solver', 'max_iter', 'multi_class',
-        'verbose', 'warm_start', 'n_jobs'],
-      'relevantToOptimizer': [
-        'penalty', 'dual', 'tol', 'fit_intercept', 
-        'solver', 'multi_class', 'intercept_scaling', 'max_iter'],
-      'properties': {
-        'solver': {
-          'description': """Algorithm for optimization problem.
+    "description": "Hyperparameter schema.",
+    "allOf": [
+        {
+            "description": "This first sub-object lists all constructor arguments with their "
+            "types, one at a time, omitting cross-argument constraints.",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "penalty",
+                "dual",
+                "tol",
+                "C",
+                "fit_intercept",
+                "intercept_scaling",
+                "class_weight",
+                "random_state",
+                "solver",
+                "max_iter",
+                "multi_class",
+                "verbose",
+                "warm_start",
+                "n_jobs",
+            ],
+            "relevantToOptimizer": [
+                "penalty",
+                "dual",
+                "tol",
+                "fit_intercept",
+                "solver",
+                "multi_class",
+                "intercept_scaling",
+                "max_iter",
+            ],
+            "properties": {
+                "solver": {
+                    "description": """Algorithm for optimization problem.
 - For small datasets, 'liblinear' is a good choice, whereas 'sag' and
   'saga' are faster for large ones.
 - For multiclass problems, only 'newton-cg', 'sag', 'saga' and 'lbfgs'
@@ -146,43 +165,47 @@ preprocess the data with a scaler from sklearn.preprocessing.""",
 The 'newton-cg', 'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
 only supported by the 'saga' solver. If 'none' (not supported by the
 liblinear solver), no regularization is applied.""",
-          'anyOf':[
-            {'enum': ['l2']},
-            {'enum': ['l1'], 'forOptimizer': False}],
-          'default': 'l2'},
-        'dual': {
-          'description': """Dual or primal formulation. 
+                    "anyOf": [
+                        {"enum": ["l2"]},
+                        {"enum": ["l1"], "forOptimizer": False},
+                    ],
+                    "default": "l2",
+                },
+                "dual": {
+                    "description": """Dual or primal formulation. 
 Dual formulation is only implemented for l2 penalty with liblinear solver. Prefer dual=False when n_samples > n_features.""",
-          'type': 'boolean',
-          'default': False},
-        'C': {
-          'description':
-            'Inverse regularization strength. Smaller values specify '
-            'stronger regularization.',
-          'type': 'number',
-          'distribution': 'loguniform',
-          'minimum': 0.0,
-          'exclusiveMinimum': True,
-          'default': 1.0,
-          'minimumForOptimizer': 0.03125,
-          'maximumForOptimizer': 32768},
-        'tol': {
-          'description': 'Tolerance for stopping criteria.',
-          'type': 'number',
-          'distribution': 'loguniform',
-          'minimum': 0.0,
-          'exclusiveMinimum': True,
-          'default': 0.0001,
-          'minimumForOptimizer': 1e-08,
-          'maximumForOptimizer': 0.01},
-        'fit_intercept': {
-          'description':
-            'Specifies whether a constant (bias or intercept) should be '
-            'added to the decision function.',
-          'type': 'boolean',
-          'default': True},
-        'intercept_scaling': {
-          'description':"""Useful only when the solver 'liblinear' is used
+                    "type": "boolean",
+                    "default": False,
+                },
+                "C": {
+                    "description": "Inverse regularization strength. Smaller values specify "
+                    "stronger regularization.",
+                    "type": "number",
+                    "distribution": "loguniform",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "default": 1.0,
+                    "minimumForOptimizer": 0.03125,
+                    "maximumForOptimizer": 32768,
+                },
+                "tol": {
+                    "description": "Tolerance for stopping criteria.",
+                    "type": "number",
+                    "distribution": "loguniform",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "default": 0.0001,
+                    "minimumForOptimizer": 1e-08,
+                    "maximumForOptimizer": 0.01,
+                },
+                "fit_intercept": {
+                    "description": "Specifies whether a constant (bias or intercept) should be "
+                    "added to the decision function.",
+                    "type": "boolean",
+                    "default": True,
+                },
+                "intercept_scaling": {
+                    "description": """Useful only when the solver 'liblinear' is used
 and self.fit_intercept is set to True. In this case, X becomes
 [X, self.intercept_scaling],
 i.e. a "synthetic" feature with constant value equal to
@@ -192,46 +215,59 @@ Note! the synthetic feature weight is subject to l1/l2 regularization
 as all other features.
 To lessen the effect of regularization on synthetic feature weight
 (and therefore on the intercept) intercept_scaling has to be increased.""",
-          'type': 'number',
-          'distribution': 'uniform',
-          'minimum': 0.0,
-          'exclusiveMinimum': True,
-          'maximum': 1.0,
-          'default': 1.0},
-        'class_weight': {
-          'anyOf': [
-            { 'description': 'By default, all classes have weight 1.',
-              'enum': [None]},
-            { 'description': """Uses the values of y to automatically adjust weights inversely 
+                    "type": "number",
+                    "distribution": "uniform",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1.0,
+                    "default": 1.0,
+                },
+                "class_weight": {
+                    "anyOf": [
+                        {
+                            "description": "By default, all classes have weight 1.",
+                            "enum": [None],
+                        },
+                        {
+                            "description": """Uses the values of y to automatically adjust weights inversely 
 proportional to class frequencies in the input data as "n_samples / (n_classes * np.bincount(y))".""",
-              'enum': ['balanced']},
-            { 'description': 'Weights associated with classes in the form "{class_label: weight}".',
-              'type': 'object',
-              'additionalProperties': {'type': 'number'},
-              'forOptimizer': False}],
-          'default': None},
-        'random_state': {
-          'description':
-            'Seed of pseudo-random number generator for shuffling data when solver == ‘sag’, ‘saga’ or ‘liblinear’.',
-          'anyOf': [
-            { 'description': 'RandomState used by np.random',
-              'enum': [None]},
-            { 'description': 'Use the provided random state, only affecting other users of that same random state instance.',
-              'laleType': 'numpy.random.RandomState' },
-            { 'description': 'Explicit seed.',
-              'type': 'integer'}],
-          'default': None},
-        'max_iter': {
-          'description':
-            'Maximum number of iterations for solvers to converge.',
-          'type': 'integer',
-          'distribution': 'uniform',
-          'minimum': 1,
-          'minimumForOptimizer': 10,
-          'maximumForOptimizer': 1000,
-          'default': 100},
-        'multi_class': {
-          'description':"""Approach for handling a multi-class problem.
+                            "enum": ["balanced"],
+                        },
+                        {
+                            "description": 'Weights associated with classes in the form "{class_label: weight}".',
+                            "type": "object",
+                            "additionalProperties": {"type": "number"},
+                            "forOptimizer": False,
+                        },
+                    ],
+                    "default": None,
+                },
+                "random_state": {
+                    "description": "Seed of pseudo-random number generator for shuffling data when solver == ‘sag’, ‘saga’ or ‘liblinear’.",
+                    "anyOf": [
+                        {
+                            "description": "RandomState used by np.random",
+                            "enum": [None],
+                        },
+                        {
+                            "description": "Use the provided random state, only affecting other users of that same random state instance.",
+                            "laleType": "numpy.random.RandomState",
+                        },
+                        {"description": "Explicit seed.", "type": "integer"},
+                    ],
+                    "default": None,
+                },
+                "max_iter": {
+                    "description": "Maximum number of iterations for solvers to converge.",
+                    "type": "integer",
+                    "distribution": "uniform",
+                    "minimum": 1,
+                    "minimumForOptimizer": 10,
+                    "maximumForOptimizer": 1000,
+                    "default": 100,
+                },
+                "multi_class": {
+                    "description": """Approach for handling a multi-class problem.
 If the option chosen is 'ovr', then a binary problem is fit for each
 label. For 'multinomial' the loss minimised is the multinomial loss fit
 across the entire probability distribution, *even when the data is

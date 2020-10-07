@@ -50,70 +50,108 @@ class RidgeImpl:
 
 
 _hyperparams_schema = {
-    'description': 'Linear least squares with l2 regularization.',
-    'allOf': [{
-        'type': 'object',
-        'required': ['alpha', 'fit_intercept', 'solver'],
-        'relevantToOptimizer': ['alpha', 'fit_intercept', 'normalize', 'copy_X', 'max_iter', 'tol', 'solver'],
-        'additionalProperties': False,
-        'properties': {
-            'alpha': {
-                'description': 'Regularization strength; larger values specify stronger regularization.',
-                'anyOf': [
-                {   'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True,
-                    'minimumForOptimizer': 1e-10,
-                    'maximumForOptimizer': 1.0,
-                    'default': 1.0,
-                    'distribution': 'loguniform'},
-                {   'type': 'array',
-                    'description': 'Penalties specific to the targets.',
-                    'items': {
-                        'type': 'number',
-                        'minimum': 0.0,
-                        'exclusiveMinimum': True},
-                    'forOptimizer': False}],
-                'default': 1.0},
-            'fit_intercept': {
-                'type': 'boolean',
-                'default': True,
-                'description': 'Whether to calculate the intercept for this model.'},
-            'normalize': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'This parameter is ignored when ``fit_intercept`` is set to False.'},
-            'copy_X': {
-                'type': 'boolean',
-                'default': True,
-                'description': 'If True, X will be copied; else, it may be overwritten.'},
-            'max_iter': {
-                'anyOf': [{
-                    'type': 'integer',
-                    'minimumForOptimizer': 10,
-                    'maximumForOptimizer': 1000}, {
-                    'enum': [None]}],
-                'default': None,
-                'description': 'Maximum number of iterations for conjugate gradient solver.'},
-            'tol': {
-                'type': 'number',
-                'minimumForOptimizer': 1e-08,
-                'maximumForOptimizer': 0.01,
-                'distribution': 'loguniform',
-                'default': 0.001,
-                'description': 'Precision of the solution.'},
-            'solver': {
-                'enum': ['auto', 'svd', 'cholesky', 'lsqr', 'sparse_cg', 'sag', 'saga'],
-                'default': 'auto',
-                'description': 'Solver to use in the computational routines.'},
-            'random_state': {
-                'anyOf': [
-                {   'type': 'integer'},
-                {   'laleType': 'numpy.random.RandomState'},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'The seed of the pseudo random number generator to use when shuffling'},
-        }}]}
+    "description": "Linear least squares with l2 regularization.",
+    "allOf": [
+        {
+            "type": "object",
+            "required": ["alpha", "fit_intercept", "solver"],
+            "relevantToOptimizer": [
+                "alpha",
+                "fit_intercept",
+                "normalize",
+                "copy_X",
+                "max_iter",
+                "tol",
+                "solver",
+            ],
+            "additionalProperties": False,
+            "properties": {
+                "alpha": {
+                    "description": "Regularization strength; larger values specify stronger regularization.",
+                    "anyOf": [
+                        {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "minimumForOptimizer": 1e-10,
+                            "maximumForOptimizer": 1.0,
+                            "default": 1.0,
+                            "distribution": "loguniform",
+                        },
+                        {
+                            "type": "array",
+                            "description": "Penalties specific to the targets.",
+                            "items": {
+                                "type": "number",
+                                "minimum": 0.0,
+                                "exclusiveMinimum": True,
+                            },
+                            "forOptimizer": False,
+                        },
+                    ],
+                    "default": 1.0,
+                },
+                "fit_intercept": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Whether to calculate the intercept for this model.",
+                },
+                "normalize": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "This parameter is ignored when ``fit_intercept`` is set to False.",
+                },
+                "copy_X": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "If True, X will be copied; else, it may be overwritten.",
+                },
+                "max_iter": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 10,
+                            "maximumForOptimizer": 1000,
+                        },
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "Maximum number of iterations for conjugate gradient solver.",
+                },
+                "tol": {
+                    "type": "number",
+                    "minimumForOptimizer": 1e-08,
+                    "maximumForOptimizer": 0.01,
+                    "distribution": "loguniform",
+                    "default": 0.001,
+                    "description": "Precision of the solution.",
+                },
+                "solver": {
+                    "enum": [
+                        "auto",
+                        "svd",
+                        "cholesky",
+                        "lsqr",
+                        "sparse_cg",
+                        "sag",
+                        "saga",
+                    ],
+                    "default": "auto",
+                    "description": "Solver to use in the computational routines.",
+                },
+                "random_state": {
+                    "anyOf": [
+                        {"type": "integer"},
+                        {"laleType": "numpy.random.RandomState"},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                    "description": "The seed of the pseudo random number generator to use when shuffling",
+                },
+            },
+        }
+    ],
+}
 
 _input_fit_schema = {
     "description": "Fit Ridge regression model",

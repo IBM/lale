@@ -124,190 +124,226 @@ or with
 
 
 _hyperparams_schema = {
-  'description': 'Hyperparameter schema for a Lale wrapper for XGBoost.',
-  'allOf': [
-    { 'description':
-        'This first sub-object lists all constructor arguments with their '
-        'types, one at a time, omitting cross-argument constraints.',
-      'type': 'object',
-      'additionalProperties': False,
-      'required': ['max_depth', 'learning_rate','n_estimators',
-      'verbosity', 'objective', 'booster', 'tree_method', 'n_jobs', 'gamma','min_child_weight',
-      'max_delta_step', 'subsample', 'colsample_bytree', 'colsample_bylevel',
-      'colsample_bynode', 'reg_alpha', 'reg_lambda', 'scale_pos_weight',
-      'base_score', 'random_state', 'missing'],
-      'relevantToOptimizer': ['max_depth','learning_rate','n_estimators', 'gamma', 'min_child_weight',
-      'subsample', 'reg_alpha', 'reg_lambda'],
-      'properties': {
-        'max_depth': {
-          'description': 'Maximum tree depth for base learners.',
-          'type': 'integer',
-          'default': 10,
-          'minimum': 0,
-          'distribution':'uniform',
-          'minimumForOptimizer': 2,
-          'maximumForOptimizer': 20},
-        'learning_rate': {
-          'description': 'Boosting learning rate (xgb’s “eta”)',
-          'type': 'number',
-          'default': 0.1,
-          'distribution':'loguniform',
-          'minimumForOptimizer': 0.02,
-          'maximumForOptimizer': 1},
-        'n_estimators': {
-          'description': 'Number of trees to fit.',
-          'type': 'integer',
-          'default': 1000,
-          'minimumForOptimizer': 500,
-          'maximumForOptimizer': 1500},
-        'verbosity': {
-          'description': 'The degree of verbosity.',
-          'type': 'integer',
-          'default': 1,
-          'minimum': 0,
-          'maximum': 3},
-        'silent':{
-          'type':'boolean',
-          'default': True,
-          'description':'Whether to print messages while running boosting. Deprecated.'},
-        'objective': {
-          'description': 'Specify the learning task and the corresponding '
-            'learning objective or a custom objective function to be used.',
-          'anyOf': [
-          {   'enum': [
-                  'reg:linear', 'reg:logistic', 'reg:gamma','reg:tweedie']},
-          {   'laleType': 'callable'}],
-          'default': 'reg:linear'},
-        'booster': {
-          'description':
-            'Specify which booster to use.',
-          'enum': ['gbtree', 'gblinear', 'dart'],
-          'default': 'gbtree'},
-        'tree_method':{
-          'description': """Specify which tree method to use. 
+    "description": "Hyperparameter schema for a Lale wrapper for XGBoost.",
+    "allOf": [
+        {
+            "description": "This first sub-object lists all constructor arguments with their "
+            "types, one at a time, omitting cross-argument constraints.",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "max_depth",
+                "learning_rate",
+                "n_estimators",
+                "verbosity",
+                "objective",
+                "booster",
+                "tree_method",
+                "n_jobs",
+                "gamma",
+                "min_child_weight",
+                "max_delta_step",
+                "subsample",
+                "colsample_bytree",
+                "colsample_bylevel",
+                "colsample_bynode",
+                "reg_alpha",
+                "reg_lambda",
+                "scale_pos_weight",
+                "base_score",
+                "random_state",
+                "missing",
+            ],
+            "relevantToOptimizer": [
+                "max_depth",
+                "learning_rate",
+                "n_estimators",
+                "gamma",
+                "min_child_weight",
+                "subsample",
+                "reg_alpha",
+                "reg_lambda",
+            ],
+            "properties": {
+                "max_depth": {
+                    "description": "Maximum tree depth for base learners.",
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 0,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 20,
+                },
+                "learning_rate": {
+                    "description": "Boosting learning rate (xgb’s “eta”)",
+                    "type": "number",
+                    "default": 0.1,
+                    "distribution": "loguniform",
+                    "minimumForOptimizer": 0.02,
+                    "maximumForOptimizer": 1,
+                },
+                "n_estimators": {
+                    "description": "Number of trees to fit.",
+                    "type": "integer",
+                    "default": 1000,
+                    "minimumForOptimizer": 500,
+                    "maximumForOptimizer": 1500,
+                },
+                "verbosity": {
+                    "description": "The degree of verbosity.",
+                    "type": "integer",
+                    "default": 1,
+                    "minimum": 0,
+                    "maximum": 3,
+                },
+                "silent": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Whether to print messages while running boosting. Deprecated.",
+                },
+                "objective": {
+                    "description": "Specify the learning task and the corresponding "
+                    "learning objective or a custom objective function to be used.",
+                    "anyOf": [
+                        {
+                            "enum": [
+                                "reg:linear",
+                                "reg:logistic",
+                                "reg:gamma",
+                                "reg:tweedie",
+                            ]
+                        },
+                        {"laleType": "callable"},
+                    ],
+                    "default": "reg:linear",
+                },
+                "booster": {
+                    "description": "Specify which booster to use.",
+                    "enum": ["gbtree", "gblinear", "dart"],
+                    "default": "gbtree",
+                },
+                "tree_method": {
+                    "description": """Specify which tree method to use. 
 Default to auto. If this parameter is set to default, XGBoost will choose the most conservative option available.
 Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
-          'enum':['auto', 'exact','approx', 'hist', 'gpu_hist'],
-          'default':'auto'},
-        'n_jobs': {
-            'type': 'integer',
-            'description': 'Number of parallel threads used to run xgboost.  (replaces ``nthread``)',
-            'default': 1
-        },
-        'nthread': {
-            'anyOf': [
-            {'type':'integer'},
-            {'enum':[None]}],
-            'default': None,
-            'description': 'Number of parallel threads used to run xgboost.  Deprecated, please use n_jobs'},
-        'gamma': {
-            'type': 'number',
-            'description': 'Minimum loss reduction required to make a further partition on a leaf node of the tree.',
-            'default': 0,
-            'minimum': 0,
-            'maximumForOptimizer': 1.0
-        },
-        'min_child_weight': {
-            'type': 'integer',
-            'description': 'Minimum sum of instance weight(hessian) needed in a child.',
-            'default': 10,
-            'distribution': 'uniform',
-            'minimumForOptimizer' : 2,
-            'maximumForOptimizer': 20
-        },
-        'max_delta_step': {
-            'type': 'integer',
-            'description': "Maximum delta step we allow each tree's weight estimation to be.",
-            'default': 0
-        },
-        'subsample': {
-            'type': 'number',
-            'description': 'Subsample ratio of the training instance.',
-            'default': 1,
-            'minimum': 0,
-            'exclusiveMinimum': True,
-            'distribution': 'uniform',
-            'minimumForOptimizer' : 0.01,
-            'maximumForOptimizer': 1.0
-        },
-        'colsample_bytree': {
-            'type': 'number',
-            'description': 'Subsample ratio of columns when constructing each tree.',
-            'default': 1,
-            'minimum': 0,
-            'exclusiveMinimum': True,
-            'maximum': 1,
-            'distribution': 'uniform',
-            'minimumForOptimizer' : 0.1,
-            'maximumForOptimizer': 1.0
-        },
-        'colsample_bylevel': {
-            'type': 'number',
-            'description': 'Subsample ratio of columns for each split, in each level.',
-            'default': 1,
-            'minimum': 0,
-            'exclusiveMinimum': True,
-            'maximum': 1,
-            'distribution': 'uniform',
-            'minimumForOptimizer' : 0.1,
-            'maximumForOptimizer': 1.0
-        },
-        'colsample_bynode': {
-            'type': 'number',
-            'description': 'Subsample ratio of columns for each split.',
-            'default': 1,
-            'minimum': 0,
-            'exclusiveMinimum': True,
-            'maximum': 1
-        },          
-        'reg_alpha': {
-            'type': 'number',
-            'description': 'L1 regularization term on weights',
-            'default': 0,
-            'distribution': 'uniform',
-            'minimumForOptimizer': 0,
-            'maximumForOptimizer': 1
-        },
-        'reg_lambda': {
-            'type': 'number',
-            'description': 'L2 regularization term on weights',
-            'default': 1,
-            'distribution': 'uniform',
-            'minimumForOptimizer': 0.1,
-            'maximumForOptimizer': 1
-        },
-        'scale_pos_weight': {
-            'type': 'number',
-            'description': 'Balancing of positive and negative weights.',
-            'default': 1
-        },
-        'base_score': {
-            'type': 'number',
-            'description': 'The initial prediction score of all instances, global bias.',
-            'default': 0.5
-        },
-        'random_state': {
-            'type': 'integer',
-            'description': 'Random number seed.  (replaces seed)',
-            'default': 0
-        },
-        'missing': {
-            'anyOf': [{
-                'type': 'number',
-            }, {
-                'enum': [None],
-            }],
-            'default': None,
-            'description': 'Value in the data which needs to be present as a missing value. If'
-            ' If None, defaults to np.nan.'
-        },
-        'importance_type':{
-            'enum': ['gain', 'weight', 'cover', 'total_gain', 'total_cover'],
-            'default':'gain',
-            'description': 'The feature importance type for the feature_importances_ property.'
+                    "enum": ["auto", "exact", "approx", "hist", "gpu_hist"],
+                    "default": "auto",
+                },
+                "n_jobs": {
+                    "type": "integer",
+                    "description": "Number of parallel threads used to run xgboost.  (replaces ``nthread``)",
+                    "default": 1,
+                },
+                "nthread": {
+                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Number of parallel threads used to run xgboost.  Deprecated, please use n_jobs",
+                },
+                "gamma": {
+                    "type": "number",
+                    "description": "Minimum loss reduction required to make a further partition on a leaf node of the tree.",
+                    "default": 0,
+                    "minimum": 0,
+                    "maximumForOptimizer": 1.0,
+                },
+                "min_child_weight": {
+                    "type": "integer",
+                    "description": "Minimum sum of instance weight(hessian) needed in a child.",
+                    "default": 10,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 20,
+                },
+                "max_delta_step": {
+                    "type": "integer",
+                    "description": "Maximum delta step we allow each tree's weight estimation to be.",
+                    "default": 0,
+                },
+                "subsample": {
+                    "type": "number",
+                    "description": "Subsample ratio of the training instance.",
+                    "default": 1,
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 1.0,
+                },
+                "colsample_bytree": {
+                    "type": "number",
+                    "description": "Subsample ratio of columns when constructing each tree.",
+                    "default": 1,
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1.0,
+                },
+                "colsample_bylevel": {
+                    "type": "number",
+                    "description": "Subsample ratio of columns for each split, in each level.",
+                    "default": 1,
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1.0,
+                },
+                "colsample_bynode": {
+                    "type": "number",
+                    "description": "Subsample ratio of columns for each split.",
+                    "default": 1,
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                },
+                "reg_alpha": {
+                    "type": "number",
+                    "description": "L1 regularization term on weights",
+                    "default": 0,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0,
+                    "maximumForOptimizer": 1,
+                },
+                "reg_lambda": {
+                    "type": "number",
+                    "description": "L2 regularization term on weights",
+                    "default": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1,
+                },
+                "scale_pos_weight": {
+                    "type": "number",
+                    "description": "Balancing of positive and negative weights.",
+                    "default": 1,
+                },
+                "base_score": {
+                    "type": "number",
+                    "description": "The initial prediction score of all instances, global bias.",
+                    "default": 0.5,
+                },
+                "random_state": {
+                    "type": "integer",
+                    "description": "Random number seed.  (replaces seed)",
+                    "default": 0,
+                },
+                "missing": {
+                    "anyOf": [{"type": "number",}, {"enum": [None],}],
+                    "default": None,
+                    "description": "Value in the data which needs to be present as a missing value. If"
+                    " If None, defaults to np.nan.",
+                },
+                "importance_type": {
+                    "enum": ["gain", "weight", "cover", "total_gain", "total_cover"],
+                    "default": "gain",
+                    "description": "The feature importance type for the feature_importances_ property.",
+                },
+            },
         }
-        },
-    }],
+    ],
 }
 _input_fit_schema = {
     "description": "Fit gradient boosting classifier",
@@ -317,7 +353,7 @@ _input_fit_schema = {
         "X": {
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"},},
-            "description": "Feature matrix",        
+            "description": "Feature matrix",
         },
         "y": {"type": "array", "items": {"type": "number"}, "description": "Labels",},
         "sample_weight": {

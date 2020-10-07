@@ -32,117 +32,170 @@ class DecisionTreeRegressorImpl:
 
 
 _hyperparams_schema = {
-    'description': 'A decision tree regressor.',
-    'allOf': [
-    {   'type': 'object',
-        'required': ['criterion', 'splitter', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features'],
-        'relevantToOptimizer': ['criterion', 'splitter', 'max_depth', 'min_samples_split', 'min_samples_leaf', 'max_features'],
-        'additionalProperties': False,
-        'properties': {
-            'criterion': {
-                'description': 'Function to measure the quality of a split.',
-                'anyOf':[
-                    {'enum': ['mse', 'friedman_mse']},
-                    {'enum': ['mae'], 'forOptimizer': False}],
-                'default': 'mse'},
-            'splitter': {
-                'enum': ['best', 'random'],
-                'default': 'best',
-                'description': 'Strategy to choose the split at each node.'},
-            'max_depth': {
-                'description': 'Maximum depth of the tree.',
-                'default': None,
-                'anyOf': [
-                {   'type': 'integer',
-                    'minimum': 1,
-                    'minimumForOptimizer': 3,
-                    'maximumForOptimizer': 5},
-                {   'enum': [None],
-                    'description': 'If None, then nodes are expanded until all leaves are pure, or until all leaves contain less than min_samples_split samples.'}]},
-            'min_samples_split': {
-                'anyOf': [
-                {   'type': 'integer',
-                    'minimum': 2,
-                    'forOptimizer': False,
-                    'description': 'Consider min_samples_split as the minimum number.'},
-                {   'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True,
-                    'maximum': 1.0,
-                    'minimumForOptimizer': 0.01,
-                    'maximumForOptimizer': 0.5,
-                    'default': 0.05,
-                    'description': 'min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.'}],
-                'default': 2,
-                'description': 'The minimum number of samples required to split an internal node.'},
-            'min_samples_leaf': {
-                'anyOf': [
-                {   'type': 'integer',
-                    'minimum': 1,
-                    'forOptimizer': False,
-                    'description': 'Consider min_samples_leaf as the minimum number.'},
-                {   'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True,
-                    'maximum': 0.5,
-                    'minimumForOptimizer': 0.01,
-                    'default': 0.05,
-                    'description': 'min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.'}],
-                'default': 1,
-                'description': 'The minimum number of samples required to be at a leaf node.'},
-            'min_weight_fraction_leaf': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'Minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node.'},
-            'max_features': {
-                'anyOf': [
-                {   'type': 'integer',
-                    'minimum': 2,
-                    'forOptimizer': False,
-                    'description': 'Consider max_features features at each split.'},
-                {   'type': 'number',
-                    'minimum': 0.0,
-                    'exclusiveMinimum': True,
-                    'maximum': 1.0,
-                    'minimumForOptimizer': 0.01,
-                    'default': 0.5,
-                    'distribution': 'uniform',
-                    'description': 'max_features is a fraction and int(max_features * n_features) features are considered at each split.'},
-                {   'enum': ['auto', 'sqrt', 'log2', None]}],
-                'default': 'auto',
-                'description': 'The number of features to consider when looking for the best split.'},
-            'random_state': {
-                'description':
-                'Seed of pseudo-random number generator.',
-                'anyOf': [
-                {   'laleType': 'numpy.random.RandomState'},
-                {   'description': 'RandomState used by np.random',
-                    'enum': [None]},
-                {   'description': 'Explicit seed.',
-                    'type': 'integer'}],
-                'default': None},
-            'max_leaf_nodes': {
-                'anyOf': [
-                {   'type': 'integer'},
-                {   'enum': [None],
-                    'description': 'Unlimited number of leaf nodes.'}],
-                'default': None,
-                'description': 'Grow a tree with ``max_leaf_nodes`` in best-first fashion.'},
-            'min_impurity_decrease': {
-                'type': 'number',
-                'default': 0.0,
-                'description': 'A node will be split if this split induces a decrease of the impurity greater than or equal to this value.'},
-            'min_impurity_split': {
-                'anyOf': [
-                {   'type': 'number',
-                    'minimum': 0.0},
-                {   'enum': [None]}],
-                'default': None,
-                'description': 'Threshold for early stopping in tree growth.'},
-            'presort': {
-                'type': 'boolean',
-                'default': False,
-                'description': 'Whether to presort the data to speed up the finding of best splits in fitting.'}}}]}
+    "description": "A decision tree regressor.",
+    "allOf": [
+        {
+            "type": "object",
+            "required": [
+                "criterion",
+                "splitter",
+                "max_depth",
+                "min_samples_split",
+                "min_samples_leaf",
+                "max_features",
+            ],
+            "relevantToOptimizer": [
+                "criterion",
+                "splitter",
+                "max_depth",
+                "min_samples_split",
+                "min_samples_leaf",
+                "max_features",
+            ],
+            "additionalProperties": False,
+            "properties": {
+                "criterion": {
+                    "description": "Function to measure the quality of a split.",
+                    "anyOf": [
+                        {"enum": ["mse", "friedman_mse"]},
+                        {"enum": ["mae"], "forOptimizer": False},
+                    ],
+                    "default": "mse",
+                },
+                "splitter": {
+                    "enum": ["best", "random"],
+                    "default": "best",
+                    "description": "Strategy to choose the split at each node.",
+                },
+                "max_depth": {
+                    "description": "Maximum depth of the tree.",
+                    "default": None,
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 5,
+                        },
+                        {
+                            "enum": [None],
+                            "description": "If None, then nodes are expanded until all leaves are pure, or until all leaves contain less than min_samples_split samples.",
+                        },
+                    ],
+                },
+                "min_samples_split": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 2,
+                            "forOptimizer": False,
+                            "description": "Consider min_samples_split as the minimum number.",
+                        },
+                        {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
+                            "minimumForOptimizer": 0.01,
+                            "maximumForOptimizer": 0.5,
+                            "default": 0.05,
+                            "description": "min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.",
+                        },
+                    ],
+                    "default": 2,
+                    "description": "The minimum number of samples required to split an internal node.",
+                },
+                "min_samples_leaf": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "forOptimizer": False,
+                            "description": "Consider min_samples_leaf as the minimum number.",
+                        },
+                        {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 0.5,
+                            "minimumForOptimizer": 0.01,
+                            "default": 0.05,
+                            "description": "min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.",
+                        },
+                    ],
+                    "default": 1,
+                    "description": "The minimum number of samples required to be at a leaf node.",
+                },
+                "min_weight_fraction_leaf": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "Minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node.",
+                },
+                "max_features": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 2,
+                            "forOptimizer": False,
+                            "description": "Consider max_features features at each split.",
+                        },
+                        {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
+                            "minimumForOptimizer": 0.01,
+                            "default": 0.5,
+                            "distribution": "uniform",
+                            "description": "max_features is a fraction and int(max_features * n_features) features are considered at each split.",
+                        },
+                        {"enum": ["auto", "sqrt", "log2", None]},
+                    ],
+                    "default": "auto",
+                    "description": "The number of features to consider when looking for the best split.",
+                },
+                "random_state": {
+                    "description": "Seed of pseudo-random number generator.",
+                    "anyOf": [
+                        {"laleType": "numpy.random.RandomState"},
+                        {
+                            "description": "RandomState used by np.random",
+                            "enum": [None],
+                        },
+                        {"description": "Explicit seed.", "type": "integer"},
+                    ],
+                    "default": None,
+                },
+                "max_leaf_nodes": {
+                    "anyOf": [
+                        {"type": "integer"},
+                        {
+                            "enum": [None],
+                            "description": "Unlimited number of leaf nodes.",
+                        },
+                    ],
+                    "default": None,
+                    "description": "Grow a tree with ``max_leaf_nodes`` in best-first fashion.",
+                },
+                "min_impurity_decrease": {
+                    "type": "number",
+                    "default": 0.0,
+                    "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
+                },
+                "min_impurity_split": {
+                    "anyOf": [{"type": "number", "minimum": 0.0}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Threshold for early stopping in tree growth.",
+                },
+                "presort": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Whether to presort the data to speed up the finding of best splits in fitting.",
+                },
+            },
+        }
+    ],
+}
 
 _input_fit_schema = {
     "type": "object",
