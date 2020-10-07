@@ -152,26 +152,23 @@ _hyperparams_schema = {
                 "missing",
             ],
             "relevantToOptimizer": [
+                "gamma",
                 "max_depth",
                 "learning_rate",
                 "n_estimators",
-                "booster",
                 "min_child_weight",
                 "subsample",
-                "colsample_bytree",
-                "colsample_bylevel",
                 "reg_alpha",
                 "reg_lambda",
             ],
-            #'objective', 'booster', ],
             "properties": {
                 "max_depth": {
                     "description": "Maximum tree depth for base learners.",
                     "type": "integer",
-                    "default": 3,
+                    "default": 10,
                     "minimum": 0,
                     "distribution": "uniform",
-                    "minimumForOptimizer": 1,
+                    "minimumForOptimizer": 2,
                     "maximumForOptimizer": 20,
                 },
                 "learning_rate": {
@@ -179,14 +176,14 @@ _hyperparams_schema = {
                     "type": "number",
                     "default": 0.1,
                     "distribution": "loguniform",
-                    "minimumForOptimizer": 0.01,
+                    "minimumForOptimizer": 0.02,
                     "maximumForOptimizer": 1,
                 },
                 "n_estimators": {
                     "description": "Number of trees to fit.",
                     "type": "integer",
-                    "default": 100,
-                    "minimumForOptimizer": 10,
+                    "default": 1000,
+                    "minimumForOptimizer": 500,
                     "maximumForOptimizer": 1500,
                 },
                 "verbosity": {
@@ -240,13 +237,14 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     "description": "Minimum loss reduction required to make a further partition on a leaf node of the tree.",
                     "default": 0,
                     "minimum": 0,
+                    "maximumForOptimizer": 1.0,
                 },
                 "min_child_weight": {
                     "type": "integer",
                     "description": "Minimum sum of instance weight(hessian) needed in a child.",
-                    "default": 1,
+                    "default": 10,
                     "distribution": "uniform",
-                    "minimumForOptimizer": 1,
+                    "minimumForOptimizer": 2,
                     "maximumForOptimizer": 20,
                 },
                 "max_delta_step": {
@@ -344,6 +342,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         }
     ],
 }
+
 _input_fit_schema = {
     "description": "Fit gradient boosting classifier",
     "type": "object",
@@ -412,6 +411,7 @@ _input_fit_schema = {
         },
     },
 }
+
 
 _input_predict_schema = {
     "description": "Predict with `data`.",

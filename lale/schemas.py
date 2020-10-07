@@ -112,6 +112,7 @@ class Int(Schema):
         exclusiveMax: Option[bool] = undefined,
         maxForOptimizer: Option[int] = undefined,
         distribution: Option[str] = undefined,
+        laleMaximum: Option[str] = undefined,
     ):
         super().__init__(desc, default, forOptimizer)
         self.set("type", "integer")
@@ -122,6 +123,7 @@ class Int(Schema):
         self.set("exclusiveMaximum", exclusiveMax)
         self.set("maximumForOptimizer", maxForOptimizer)
         self.set("distribution", distribution)
+        self.set("laleMaximum", laleMaximum)
 
 
 class Null(Schema):
@@ -151,8 +153,9 @@ class AnyOf(Schema):
         types: List[Schema] = [],
         desc: Option[str] = undefined,
         default: Option[Any] = undefined,
+        forOptimizer: bool = True,
     ):
-        super().__init__(desc, default)
+        super().__init__(desc, default, forOptimizer)
         self.set("anyOf", [t.schema for t in types])
 
 

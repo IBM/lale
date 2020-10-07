@@ -222,7 +222,12 @@ class TestFeatureAgglomeration(unittest.TestCase):
     def test_with_hyperopt(self):
         planned = FeatureAgglomeration >> LogisticRegression
         trained = planned.auto_configure(
-            self.train_X, self.train_y, optimizer=Hyperopt, cv=3, max_evals=3
+            self.train_X,
+            self.train_y,
+            optimizer=Hyperopt,
+            cv=3,
+            max_evals=3,
+            verbose=True,
         )
         predicted = trained.predict(self.test_X)
 

@@ -41,7 +41,7 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["fit_intercept", "normalize", "copy_X"],
-            "relevantToOptimizer": ["fit_intercept", "normalize"],
+            "relevantToOptimizer": ["fit_intercept", "normalize", "copy_X"],
             "additionalProperties": False,
             "properties": {
                 "fit_intercept": {
