@@ -2876,7 +2876,9 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             else:
                 output = operator._predict(X=inputs)
                 if hasattr(operator._impl, "get_predict_meta_output"):
-                    meta_output = operator._impl_instance().get_predict_meta_output()
+                    meta_output = (  # noqa
+                        operator._impl_instance().get_predict_meta_output()
+                    )
             outputs[operator] = output
         return outputs[self._steps[-1]]
 
