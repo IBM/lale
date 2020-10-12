@@ -133,9 +133,9 @@ class HyperoptImpl:
                     )
                 ],
             )
-        except:
+        except Exception:
             logger.warning(
-                f"Exception caught during generation of default search space, setting frac_evals_with_defaults to zero."
+                "Exception caught during generation of default search space, setting frac_evals_with_defaults to zero."
             )
             self.evals_with_defaults = 0
 
@@ -266,7 +266,7 @@ class HyperoptImpl:
                     )
                     proc_dict["status"] = hyperopt.STATUS_FAIL
                 if "status" not in proc_dict:
-                    logger.warning(f"Corrupted results, setting status to FAIL")
+                    logger.warning("Corrupted results, setting status to FAIL")
                     proc_dict["status"] = hyperopt.STATUS_FAIL
             else:
                 proc_dict = {}
@@ -376,19 +376,6 @@ Returns
 result : DataFrame"""
 
         def make_record(trial_dict):
-            try:
-                loss = trial_dict["result"]["loss"]
-            except BaseException:
-                loss = np.nan
-            try:
-                time = trial_dict["result"]["time"]
-            except BaseException:
-                time = "-"
-            try:
-                log_loss = trial_dict["result"]["log_loss"]
-            except BaseException:
-                log_loss = np.nan
-
             return {
                 "name": f'p{trial_dict["tid"]}',
                 "tid": trial_dict["tid"],
@@ -516,7 +503,7 @@ validation part. If False, terminate the trial with FAIL status.""",
                     "default": False,
                 },
                 "scoring": {
-                    "description": """Scorer object, or known scorer named by string. 
+                    "description": """Scorer object, or known scorer named by string.
 Default of None translates to `accuracy` for classification and `r2` for regression.""",
                     "anyOf": [
                         {
@@ -528,7 +515,7 @@ custom scorer objects, following the `model_evaluation`_ example.
 The metric has to return a scalar value. Note that scikit-learns's
 scorer object always returns values such that higher score is
 better. Since Hyperopt solves a minimization problem, we pass
-(best_score - score) to Hyperopt. 
+(best_score - score) to Hyperopt.
 
 .. _`make_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
 .. _metrics: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
@@ -605,13 +592,13 @@ where zero is the best loss.""",
                         {"type": "object"},  # Python dictionary
                         {"enum": [None]},
                     ],
-                    "description": """A dictionary of additional keyword arguments to pass to the scorer. 
+                    "description": """A dictionary of additional keyword arguments to pass to the scorer.
                 Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
                 """,
                     "default": None,
                 },
                 "verbose": {
-                    "description": """Whether to print errors from each of the trials if any. 
+                    "description": """Whether to print errors from each of the trials if any.
 This is also logged using logger.warning.""",
                     "type": "boolean",
                     "default": False,

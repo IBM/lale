@@ -141,7 +141,7 @@ _hyperparams_schema = {
                     "description": """Whether to raise an error or ignore if an unknown categorical feature is present during transform.
 When this parameter is set to `ignore` and an unknown category is encountered during transform,
 the resulting one-hot encoded columns for this feature will be all zeros for encoding 'onehot' and
-the resulting encoding with be set to the value indicated by `encode_unknown_with` for encoding 'ordinal'. 
+the resulting encoding with be set to the value indicated by `encode_unknown_with` for encoding 'ordinal'.
 In the inverse transform, an unknown category will be denoted as None.""",
                     "enum": ["error", "ignore"],
                     "default": "ignore",
@@ -157,8 +157,8 @@ In the inverse transform, an unknown category will be denoted as None.""",
                     "default": True,
                 },
                 "encode_unknown_with": {
-                    "description": """When an unknown categorical feature value is found during transform, and 'handle_unknown' is 
-set to 'ignore', and encoding is 'ordinal', that value is encoded with this value. Default of 'auto' sets it to an integer equal to n+1, where 
+                    "description": """When an unknown categorical feature value is found during transform, and 'handle_unknown' is
+set to 'ignore', and encoding is 'ordinal', that value is encoded with this value. Default of 'auto' sets it to an integer equal to n+1, where
 n is the maximum encoding value based on known categories.""",
                     "anyOf": [{"type": "integer"}, {"enum": ["auto"]}],
                     "default": "auto",

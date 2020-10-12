@@ -17,8 +17,6 @@ import unittest
 import sklearn.datasets
 import sklearn.metrics
 
-import lale.sklearn_compat
-
 
 class TestSnapMLClassifiers(unittest.TestCase):
     def setUp(self):
@@ -36,7 +34,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         fit_result = clf.fit(self.train_X, self.train_y)
         self.assertIsNone(fit_result)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        accuracy = scorer(clf, self.test_X, self.test_y)
+        _ = scorer(clf, self.test_X, self.test_y)
 
     def test_random_forest_classifier(self):
         import lale.lib.pai4sk
@@ -44,7 +42,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         trainable = lale.lib.pai4sk.RandomForestClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        accuracy = scorer(trained, self.test_X, self.test_y)
+        _ = scorer(trained, self.test_X, self.test_y)
 
     def test_decision_tree_classifier(self):
         import lale.lib.pai4sk
@@ -52,7 +50,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         trainable = lale.lib.pai4sk.DecisionTreeClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        accuracy = scorer(trained, self.test_X, self.test_y)
+        _ = scorer(trained, self.test_X, self.test_y)
 
     def test_sklearn_compat(self):
         import lale.lib.pai4sk
@@ -61,7 +59,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         compat = lale.sklearn_compat.make_sklearn_compat(trainable)
         trained = compat.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        accuracy = scorer(trained, self.test_X, self.test_y)
+        _ = scorer(trained, self.test_X, self.test_y)
 
 
 class TestSnapMLRegressors(unittest.TestCase):
@@ -78,4 +76,4 @@ class TestSnapMLRegressors(unittest.TestCase):
         trainable = lale.lib.pai4sk.RandomForestRegressor()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-        r2 = scorer(trained, self.test_X, self.test_y)
+        _ = scorer(trained, self.test_X, self.test_y)

@@ -161,7 +161,7 @@ preprocess the data with a scaler from sklearn.preprocessing.""",
                     "default": "liblinear",
                 },
                 "penalty": {
-                    "description": """Norm used in the penalization.  
+                    "description": """Norm used in the penalization.
 The 'newton-cg', 'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
 only supported by the 'saga' solver. If 'none' (not supported by the
 liblinear solver), no regularization is applied.""",
@@ -172,7 +172,7 @@ liblinear solver), no regularization is applied.""",
                     "default": "l2",
                 },
                 "dual": {
-                    "description": """Dual or primal formulation. 
+                    "description": """Dual or primal formulation.
 Dual formulation is only implemented for l2 penalty with liblinear solver. Prefer dual=False when n_samples > n_features.""",
                     "type": "boolean",
                     "default": False,
@@ -229,7 +229,7 @@ To lessen the effect of regularization on synthetic feature weight
                             "enum": [None],
                         },
                         {
-                            "description": """Uses the values of y to automatically adjust weights inversely 
+                            "description": """Uses the values of y to automatically adjust weights inversely
 proportional to class frequencies in the input data as "n_samples / (n_classes * np.bincount(y))".""",
                             "enum": ["balanced"],
                         },
@@ -290,7 +290,7 @@ Useless for liblinear solver.""",
                     "default": False,
                 },
                 "n_jobs": {
-                    "description": """Number of CPU cores when parallelizing over classes if 
+                    "description": """Number of CPU cores when parallelizing over classes if
 multi_class is ovr.  This parameter is ignored when the "solver" is
 set to 'liblinear' regardless of whether 'multi_class' is specified or
 not.""",

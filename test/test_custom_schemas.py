@@ -15,8 +15,6 @@
 import unittest
 from test.mock_module import UnknownOp
 
-import numpy as np
-import sklearn
 from lightgbm import LGBMClassifier as baz
 from sklearn.decomposition import PCA as foo
 from sklearn.linear_model.least_angle import Lars as foobar
@@ -353,7 +351,7 @@ class TestWrapUnknownOps(unittest.TestCase):
     def test_wrapped_from_import(self):
         old_globals = {**globals()}
         try:
-            from lale.operators import PlannedIndividualOp, make_operator
+            from lale.operators import PlannedIndividualOp
 
             self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
             lale.wrap_imported_operators()

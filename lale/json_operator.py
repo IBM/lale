@@ -280,8 +280,8 @@ class _GenSym:
             label2count[label] = label2count.get(label, 0) + 1
 
         populate_label2count(op)
-        non_unique_labels = {l for l, c in label2count.items() if c > 1}
-        snakes = {_camelCase_to_snake(l) for l in non_unique_labels}
+        non_unique_labels = {ll for ll, c in label2count.items() if c > 1}
+        snakes = {_camelCase_to_snake(ll) for ll in non_unique_labels}
         self._names = (
             {"lale", "make_pipeline", "make_union", "make_choice"}
             | set(keyword.kwlist)
@@ -397,7 +397,7 @@ def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
             lib_name = ".".join(["lale.lib.autogen", class_name])
             m = importlib.import_module(lib_name)
             return getattr(m, "_combined_schemas")
-        except:
+        except (ModuleNotFoundError, AttributeError):
             return None
 
 

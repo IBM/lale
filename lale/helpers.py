@@ -197,7 +197,7 @@ def cross_val_score_track_trials(
     estimator, X, y=None, scoring=accuracy_score, cv=5, args_to_scorer=None
 ):
     """
-    Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on 
+    Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on
     each of the splits.
 
     Parameters
@@ -205,17 +205,17 @@ def cross_val_score_track_trials(
 
     estimator: A valid sklearn_wrapper estimator
     X, y: Valid data and target values that work with the estimator
-    scoring: string or a scorer object created using 
+    scoring: string or a scorer object created using
         https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
-        A string from sklearn.metrics.SCORERS.keys() can be used or a scorer created from one of 
+        A string from sklearn.metrics.SCORERS.keys() can be used or a scorer created from one of
         sklearn.metrics (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics).
-        A completely custom scorer object can be created from a python function following the example at 
+        A completely custom scorer object can be created from a python function following the example at
         https://scikit-learn.org/stable/modules/model_evaluation.html
         The metric has to return a scalar value,
     cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
         Integer value is used as number of folds in sklearn.model_selection.StratifiedKFold, default is 5.
         Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
-    args_to_scorer: A dictionary of additional keyword arguments to pass to the scorer. 
+    args_to_scorer: A dictionary of additional keyword arguments to pass to the scorer.
                 Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
     Returns
     -------
@@ -412,7 +412,6 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
     from lale.operators import (
         BasePipeline,
         IndividualOp,
-        Operator,
         OperatorChoice,
         TrainablePipeline,
     )
@@ -535,7 +534,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             class_._impl = copy.deepcopy(sklearn_obj)
         return class_
 
-    from sklearn.base import BaseEstimator
     from sklearn.pipeline import FeatureUnion, Pipeline
 
     from lale.operators import make_pipeline, make_union

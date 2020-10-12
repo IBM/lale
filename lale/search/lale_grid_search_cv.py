@@ -12,24 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional, Set, Tuple, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 import numpy as np
 import sklearn.model_selection
 
 import lale.operators as Ops
-from lale.schema_utils import JsonSchema, getMaximum, getMinimum
 from lale.search.PGO import PGO
 from lale.search.search_space import (
     SearchSpace,
     SearchSpaceArray,
     SearchSpaceEnum,
     SearchSpaceNumber,
-    SearchSpaceObject,
     should_print_search_space,
 )
 from lale.search.search_space_grid import SearchSpaceGrid, get_search_space_grids
-from lale.sklearn_compat import make_sklearn_compat, unnest_HPparams
+from lale.sklearn_compat import make_sklearn_compat
 
 if TYPE_CHECKING:
     from lale.operators import PlannedOperator

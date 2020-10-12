@@ -13,14 +13,16 @@
 # limitations under the License.
 
 import logging
-import math
-import os
-from typing import Any, Dict, Iterable, Iterator, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import jsonschema
-import numpy
 
-from lale.operators import *
+from lale.operators import (
+    OperatorChoice,
+    PlannedIndividualOp,
+    PlannedOperator,
+    PlannedPipeline,
+)
 from lale.schema_simplifier import (
     filterForOptimizer,
     findRelevantFields,
@@ -29,20 +31,28 @@ from lale.schema_simplifier import (
 )
 from lale.schema_utils import (
     JsonSchema,
-    SFalse,
-    STrue,
     atomize_schema_enumerations,
     check_operators_schema,
     forOptimizer,
-    getMaximum,
-    getMinimum,
     has_operator,
     is_false_schema,
-    is_true_schema,
 )
 from lale.search.lale_hyperopt import search_space_to_str_for_comparison
-from lale.search.PGO import PGO, Freqs, FrequencyDistribution
-from lale.search.search_space import *
+from lale.search.PGO import PGO, Freqs
+from lale.search.search_space import (
+    SearchSpace,
+    SearchSpaceArray,
+    SearchSpaceBool,
+    SearchSpaceConstant,
+    SearchSpaceEmpty,
+    SearchSpaceEnum,
+    SearchSpaceNumber,
+    SearchSpaceObject,
+    SearchSpaceOperator,
+    SearchSpaceProduct,
+    SearchSpaceSum,
+    should_print_search_space,
+)
 from lale.util import VisitorPathError
 from lale.util.Visitor import Visitor, accept
 
@@ -85,7 +95,7 @@ def get_default(schema) -> Optional[Any]:
             s = forOptimizer(schema)
             jsonschema.validate(d, s, jsonschema.Draft4Validator)
             return d
-        except:
+        except jsonschema.ValidationError:
             logger.debug(
                 f"get_default: default {d} not used because it is not valid for the schema {schema}"
             )
@@ -136,7 +146,7 @@ def asFreqs(part: pgo_part) -> Optional[Iterable[Tuple[Any, int]]]:
 
 
 def add_sub_space(space, k, v):
-    """ Given a search space and a "key", 
+    """ Given a search space and a "key",
         if the defined subschema does not exist,
         set it to be the constant v space
    """
@@ -373,7 +383,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                                 path,
                                 f"An array type was found with provided schemas for {prefix_len} elements, but either an unspecified or too high a maxItems, and no schema for the additionalItems.  Please constraing maxItems to <= {prefix_len} (you can set maxItemsForOptimizer), or provide a schema for additionalItems",
                             )
-                    elif additional_items_schema == False:
+                    elif additional_items_schema is False:
                         if max_items is None:
                             max_items = prefix_len
                         else:
@@ -420,7 +430,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 vals = schema.get("enum", None)
                 if vals is None:
                     logger.error(
-                        f"An operator is required by the schema but was not provided"
+                        "An operator is required by the schema but was not provided"
                     )
                     return None
 

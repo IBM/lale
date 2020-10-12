@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-import sys
 import time
 import traceback
 
@@ -202,7 +201,7 @@ or with
 
     def get_trials(self):
         """Returns the trials i.e. RunHistory object.
-        
+
         Returns
         -------
         smac.runhistory.runhistory.RunHistory
@@ -281,7 +280,7 @@ validation part. If False, terminate the trial with FAIL status.""",
                     "default": False,
                 },
                 "scoring": {
-                    "description": """Scorer object, or known scorer named by string. 
+                    "description": """Scorer object, or known scorer named by string.
 Default of None translates to `accuracy` for classification and `r2` for regression.""",
                     "anyOf": [
                         {

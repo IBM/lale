@@ -112,9 +112,7 @@ class TestClone(unittest.TestCase):
         fit_clone_fit(op)
 
     def test_clone_clones_concat(self):
-        from lale.lib.lale import NoOp
-
-        op = ((MutatingOp(k=1) & MutatingOp(k=2))) >> Concat | MutatingOp(k=4)
+        _ = ((MutatingOp(k=1) & MutatingOp(k=2))) >> Concat | MutatingOp(k=4)
 
     def test_clone_clones_choice(self):
         op = MutatingOp(k=1) | MutatingOp(k=2)

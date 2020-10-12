@@ -562,7 +562,6 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
         print("Loading dataset:", dataset_name)
     # Check that the dataset name exists in experiments_dict
     try:
-        dataset_name_found = experiments_dict[dataset_name]
         if experiments_dict[dataset_name]["task_type"] != task_type.lower():
             raise ValueError(
                 "The task type {} does not match with the given datasets task type {}".format(

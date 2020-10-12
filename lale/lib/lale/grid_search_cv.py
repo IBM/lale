@@ -115,7 +115,7 @@ class GridSearchCVImpl:
             if obs is not None:
                 assert isinstance(be._impl, ObservingImpl)
                 be_base = be._impl.getOp()
-                observed_op._impl.endObserving("optimize", best=be)
+                observed_op._impl.endObserving("optimize", best=be_base)
             self._best_estimator = be
         else:
             assert isinstance(op, lale.operators.TrainableOperator)
@@ -169,7 +169,7 @@ _hyperparams_schema = {
                     "default": 5,
                 },
                 "scoring": {
-                    "description": """Scorer object, or known scorer named by string. 
+                    "description": """Scorer object, or known scorer named by string.
 Default of None translates to `accuracy` for classification and `r2` for regression.""",
                     "anyOf": [
                         {

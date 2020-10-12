@@ -738,7 +738,7 @@ pipeline = numpy_column_selector >> compress_strings"""
         self._roundtrip(expected, printed)
 
     def test_expression(self):
-        from lale.expressions import it, max, mean
+        from lale.expressions import it, mean
         from lale.lib.lale import Aggregate, Join, Scan
 
         scan1 = Scan(table=it["table1.csv"])
