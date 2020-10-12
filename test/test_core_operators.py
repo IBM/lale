@@ -102,7 +102,7 @@ def create_function_test_feature_preprocessor(fproc_name):
         # Tune the pipeline with LR using Hyperopt
         from lale.lib.lale import Hyperopt
 
-        hyperopt = Hyperopt(estimator=pipeline, max_evals=1)
+        hyperopt = Hyperopt(estimator=pipeline, max_evals=1, verbose=True, cv=3)
         trained = hyperopt.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
 
@@ -412,8 +412,8 @@ class TestHyperparamRanges(unittest.TestCase):
             "n_estimators": (10, 100, 100),
             "criterion": ["entropy", "gini"],
             "max_depth": (3, 5, None),
-            "min_samples_split": (0.01, 0.5, 0.05),
-            "min_samples_leaf": (0.01, 0.5, 0.05),
+            "min_samples_split": (2, 5, 2),
+            "min_samples_leaf": (1, 5, 1),
             "max_features": (0.01, 1.0, 0.5),
         }
         self.maxDiff = None
@@ -524,10 +524,9 @@ class TestLogisticRegression(unittest.TestCase):
         lr = LogisticRegression()
         parameters = {"solver": ("liblinear", "lbfgs"), "penalty": ["l2"]}
         ranges, cat_idx = lr.get_param_ranges()
-        min_C, max_C, default_C = ranges["C"]
         # specify parameters and distributions to sample from
         # the loguniform distribution needs to be taken care of properly
-        param_dist = {"solver": ranges["solver"], "C": uniform(min_C, np.log(max_C))}
+        param_dist = {"solver": ranges["solver"], "C": uniform(0.03125, np.log(32768))}
         # run randomized search
         n_iter_search = 5
         with warnings.catch_warnings():

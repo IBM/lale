@@ -38,24 +38,15 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["memory", "compute_full_tree", "pooling_func"],
-            "relevantToOptimizer": [
-                "n_clusters",
-                "affinity",
-                "compute_full_tree",
-                "linkage",
-            ],
+            "relevantToOptimizer": ["affinity", "compute_full_tree", "linkage"],
             "additionalProperties": False,
             "properties": {
                 "n_clusters": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 2,
-                            "maximumForOptimizer": 8,
-                        },
-                        {"enum": [None]},
-                    ],
+                    "type": "integer",
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 8,
                     "default": 2,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
                     "description": "The number of clusters to find.",
                 },
                 "affinity": {
@@ -127,29 +118,6 @@ _hyperparams_schema = {
                 },
             ],
         },
-        {
-            "description": "n_clusters must be None if distance_threshold is not None.",
-            "anyOf": [
-                {"type": "object", "properties": {"n_clusters": {"enum": [None]}}},
-                {
-                    "type": "object",
-                    "properties": {"distance_threshold": {"enum": [None]}},
-                },
-            ],
-        },
-        {
-            "description": "compute_full_tree must be True if distance_threshold is not None.",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {"compute_full_tree": {"enum": [True]}},
-                },
-                {
-                    "type": "object",
-                    "properties": {"distance_threshold": {"enum": [None]}},
-                },
-            ],
-        },
     ],
 }
 
@@ -210,13 +178,37 @@ FeatureAgglomeration = lale.operators.make_operator(
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.cluster.FeatureAgglomeration.html
-    from lale.schemas import AnyOf, Float, Null
+    from lale.schemas import AnyOf, Enum, Float, Int, Null, Object
 
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
         distance_threshold=AnyOf(
             types=[Float(), Null()],
             desc="The linkage distance threshold above which, clusters will not be merged.",
             default=None,
+        ),
+        n_clusters=AnyOf(
+            types=[
+                Int(
+                    minForOptimizer=2, maxForOptimizer=8, laleMaximum="X/items/maxItems"
+                ),
+                Null(forOptimizer=False),
+            ],
+            default=2,
+            forOptimizer=False,
+            desc="The number of clusters to find.",
+        ),
+        constraint=AnyOf(
+            [Object(n_clusters=Null()), Object(distance_threshold=Null())],
+            desc="n_clusters must be None if distance_threshold is not None.",
+        ),
+    )
+    FeatureAgglomeration = FeatureAgglomeration.customize_schema(
+        constraint=AnyOf(
+            [
+                Object(compute_full_tree=Enum(["True"])),
+                Object(distance_threshold=Null()),
+            ],
+            desc="compute_full_tree must be True if distance_threshold is not None.",
         )
     )
 

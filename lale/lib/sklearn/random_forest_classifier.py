@@ -85,7 +85,9 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 2,
-                            "forOptimizer": False,
+                            "minimumForOptimizer": 2,
+                            "maximumForOptimizer": 5,
+                            "default": 2,
                             "description": "Consider min_samples_split as the minimum number.",
                         },
                         {
@@ -107,7 +109,9 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 1,
-                            "forOptimizer": False,
+                            "minimumForOptimizer": 1,
+                            "maximumForOptimizer": 5,
+                            "default": 1,
                             "description": "Consider min_samples_leaf as the minimum number.",
                         },
                         {

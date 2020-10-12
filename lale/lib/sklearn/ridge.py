@@ -73,8 +73,9 @@ _hyperparams_schema = {
                             "type": "number",
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
-                            "minimumForOptimizer": 1e-05,
-                            "maximumForOptimizer": 10.0,
+                            "minimumForOptimizer": 1e-10,
+                            "maximumForOptimizer": 1.0,
+                            "default": 1.0,
                             "distribution": "loguniform",
                         },
                         {

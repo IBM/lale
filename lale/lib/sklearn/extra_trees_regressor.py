@@ -64,7 +64,10 @@ _hyperparams_schema = {
                     "description": "The number of trees in the forest.",
                 },
                 "criterion": {
-                    "enum": ["mae", "mse", "friedman_mse"],
+                    "anyOf": [
+                        {"enum": ["mae"], "forOptimizer": False},
+                        {"enum": ["mse", "friedman_mse"]},
+                    ],
                     "default": "mse",
                     "description": "The function to measure the quality of a split. Supported criteria",
                 },
@@ -92,6 +95,7 @@ _hyperparams_schema = {
                             "type": "number",
                             "minimumForOptimizer": 0.01,
                             "maximumForOptimizer": 0.5,
+                            "default": 0.05,
                         },
                     ],
                     "default": 2,
@@ -109,6 +113,7 @@ _hyperparams_schema = {
                             "type": "number",
                             "minimumForOptimizer": 0.01,
                             "maximumForOptimizer": 0.5,
+                            "default": 0.05,
                         },
                     ],
                     "default": 1,
@@ -126,8 +131,9 @@ _hyperparams_schema = {
                             "type": "number",
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
-                            "minimumForOptimizer": 0.0,
+                            "minimumForOptimizer": 0.01,
                             "maximumForOptimizer": 1.0,
+                            "default": 0.5,
                             "distribution": "uniform",
                         },
                         {"enum": ["auto", "sqrt", "log2", None]},
@@ -188,6 +194,7 @@ _hyperparams_schema = {
         }
     ],
 }
+
 _input_fit_schema = {
     "description": "Build a forest of trees from the training set (X, y).",
     "type": "object",
@@ -267,7 +274,7 @@ if sklearn.__version__ >= "0.22":
         ccp_alpha=Float(
             desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
-            forOptimizer=True,
+            forOptimizer=False,
             min=0.0,
             maxForOptimizer=0.1,
         ),
