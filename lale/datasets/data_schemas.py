@@ -27,6 +27,7 @@ try:
 except ImportError:
     torch_installed = False
 
+
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 class NDArrayWithSchema(np.ndarray):

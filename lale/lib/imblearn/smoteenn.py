@@ -64,18 +64,18 @@ _hyperparams_schema = {
                 "operator": {
                     "description": """Trainable Lale pipeline that is trained using the data obtained from the current imbalance corrector.
 Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
-If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to 
+If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to
 choose a trainable operator first. Please refer to lale/examples for more examples.""",
                     "anyOf": [{"laleType": "operator"}],
                 },
                 "sampling_strategy": {
-                    "description": """sampling_strategy : float, str, dict or callable, default='auto'. 
+                    "description": """sampling_strategy : float, str, dict or callable, default='auto'.
 Sampling information to resample the data set.
 """,
                     "anyOf": [
                         {
-                            "description": """When ``float``, 
-it corresponds to the desired ratio of the number of 
+                            "description": """When ``float``,
+it corresponds to the desired ratio of the number of
 samples in the minority class over the number of samples in the
 majority class after resampling. Therefore, the ratio is expressed as
 :math:`\\alpha_{os} = N_{rm} / N_{M}` where :math:`N_{rm}` is the
@@ -87,7 +87,7 @@ number of samples in the minority class after resampling and
                             "type": "number",
                         },
                         {
-                            "description": """When ``str``, specify the class targeted by the resampling. 
+                            "description": """When ``str``, specify the class targeted by the resampling.
 The number of samples in the different classes will be equalized.
 Possible choices are:
 ``'minority'``: resample only the minority class;
@@ -104,13 +104,13 @@ Possible choices are:
                             ],
                         },
                         {
-                            "description": """- When ``dict``, the keys correspond to the targeted classes. 
+                            "description": """- When ``dict``, the keys correspond to the targeted classes.
 The values correspond to the desired number of samples for each targeted
 class.""",
                             "type": "object",
                         },
                         {
-                            "description": """When callable, function taking ``y`` and returns a ``dict``. 
+                            "description": """When callable, function taking ``y`` and returns a ``dict``.
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
                             "laleType": "callable",
@@ -137,7 +137,7 @@ desired number of samples for each class.""",
                     "default": None,
                 },
                 "smote": {
-                    "description": """The imblearn.over_sampling.SMOTE object to use. 
+                    "description": """The imblearn.over_sampling.SMOTE object to use.
 If not given, a imblearn.over_sampling.SMOTE object with default parameters will be given.""",
                     "anyOf": [{"laleType": "Any"}, {"enum": [None]}],
                     "default": None,
@@ -155,7 +155,7 @@ If not given, a imblearn.under_sampling.EditedNearestNeighbours object with samp
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """Class to perform over-sampling using SMOTE and cleaning using ENN. 
+    "description": """Class to perform over-sampling using SMOTE and cleaning using ENN.
 Combine over- and under-sampling using SMOTE and Edited Nearest Neighbours.""",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.imblearn.smoteenn.html",
     "import_from": "imblearn.over_sampling",

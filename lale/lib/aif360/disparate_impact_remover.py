@@ -41,7 +41,7 @@ class DisparateImpactRemoverImpl:
     def transform(self, X):
         features = X.to_numpy().tolist()
         repaired = self._repairer.repair(features)
-        result = pd.DataFrame(features, columns=X.columns)
+        result = pd.DataFrame(repaired, columns=X.columns)
         return result
 
 

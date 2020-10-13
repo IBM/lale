@@ -49,7 +49,7 @@ class FS2Impl:
                     self.column_dtypes[i]
                     for i in self._wrapped_model.cols_to_keep_final_
                 ]
-        except:
+        except Exception:
             pass
         return result
 

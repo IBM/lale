@@ -13,22 +13,8 @@
 # limitations under the License.
 
 
-import math
-import random
-import warnings
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-)
+from typing import TYPE_CHECKING, Any, Dict, Iterable, List, Optional
 
-import numpy as np
 from ConfigSpace.conditions import EqualsCondition
 from ConfigSpace.hyperparameters import (
     CategoricalHyperparameter,
@@ -36,24 +22,14 @@ from ConfigSpace.hyperparameters import (
     UniformFloatHyperparameter,
     UniformIntegerHyperparameter,
 )
-from hyperopt import hp
-from hyperopt.pyll import scope
 from smac.configspace import ConfigurationSpace
 
-from lale.schema_simplifier import (
-    filterForOptimizer,
-    findRelevantFields,
-    narrowToGivenRelevantFields,
-    simplify,
-)
-from lale.schema_utils import JsonSchema, getMaximum, getMinimum
 from lale.search.PGO import PGO
 from lale.search.search_space import (
     SearchSpace,
     SearchSpaceArray,
     SearchSpaceEnum,
     SearchSpaceNumber,
-    SearchSpaceObject,
     should_print_search_space,
 )
 from lale.search.search_space_grid import SearchSpaceGrid, get_search_space_grids

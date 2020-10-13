@@ -122,10 +122,9 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    "description": "Perform classification on an array of test vectors X.",
+    "description": "Returns the probability of the samples for each class in the model. The columns correspond to the classes in sorted order, as they appear in the attribute classes_.",
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
-    "description": "Returns the probability of the samples for each class in the model. The columns correspond to the classes in sorted order, as they appear in the attribute classes_.",
 }
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",

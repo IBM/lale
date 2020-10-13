@@ -14,7 +14,6 @@
 
 import ast
 import importlib
-import inspect
 import json
 import keyword
 import math
@@ -119,7 +118,6 @@ def hyperparams_to_string(
             return f"{module}.{value.__name__}"
         elif hasattr(value, "get_params"):
             module = value.__module__
-            name = value.__class__.__name__
             if module.startswith("sklearn."):
                 i = module.rfind(".")
                 if module[i + 1] == "_":
@@ -351,7 +349,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
         structured = _introduce_structure(jsn, gen)
         return _operator_jsn_to_string_rec(uid, structured, gen)
     elif _op_kind(jsn) == "Graph":
-        steps, preds, succs = jsn["steps"], jsn["preds"], jsn["succs"]
+        steps, succs = jsn["steps"], jsn["succs"]
         step2name: Dict[str, str] = {}
         for step_uid, step_val in steps.items():
             expr = _operator_jsn_to_string_rec(step_uid, step_val, gen)

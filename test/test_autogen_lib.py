@@ -35,7 +35,7 @@ def base_test(name, pipeline, data_loader, max_evals=250, scoring="accuracy"):
             trained_pipeline = clf.fit(X, y)
             trained_pipeline.predict(X)
             return True
-        except:
+        except Exception:
             test(3 * i)
 
     test(1)

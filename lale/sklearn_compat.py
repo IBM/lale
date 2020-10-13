@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import math
-import random
-import warnings
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, TypeVar, Union
+from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar, Union
 
 import lale.operators as Ops
 from lale.pretty_print import hyperparams_to_string
@@ -32,20 +29,21 @@ from lale.util.Visitor import Visitor, accept
 # should be encoded identically
 
 # our encoding scheme:
-## __ separates nested components (as-in sklearn)
-## ? is the discriminant (choice made) for a choice
-## ? is also a prefix for the nested parts of the chosen branch
-## x@n In a pipeline, if multiple components have identical names,
-### everything but the first are suffixed with a number (starting with 1)
-### indicating which one we are talking about.
-### For example, given (x >> y >> x), we would treat this much the same as
-### (x >> y >> x@1)
-## $ is used in the rare case that sklearn would expect the key of an object,
-### but we allow (and have) a non-object schema.  In that case,
-### $ is used as the key. This should only happen at the top level,
-### since nested occurences should be removed.
-## # is a structure indicator, and the value should be one of 'list', 'tuple', or 'dict'
-## n is used to represent the nth component in an array or tuple
+# * __ separates nested components (as-in sklearn)
+# * ? is the discriminant (choice made) for a choice
+# * ? is also a prefix for the nested parts of the chosen branch
+# * x@n In a pipeline, if multiple components have identical names,
+# ** everything but the first are suffixed with a number (starting with 1)
+# ** indicating which one we are talking about.
+# ** For example, given (x >> y >> x), we would treat this much the same as
+# ** (x >> y >> x@1)
+# * $ is used in the rare case that sklearn would expect the key of an object,
+# ** but we allow (and have) a non-object schema.  In that case,
+# ** $ is used as the key. This should only happen at the top level,
+# ** since nested occurences should be removed.
+# * # is a structure indicator, and the value should be one of 'list', 'tuple', or 'dict'
+# * n is used to represent the nth component in an array or tuple
+
 
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
@@ -55,8 +53,8 @@ def make_sklearn_compat(op: Ops.Operator) -> "SKlearnCompatWrapper":
        to sklearn methods such as clone and GridSearchCV
        The wrapper may modify the wrapped lale operator/pipeline as part of providing
        compatibility with these methods.
-       After the sklearn operation is complete, 
-       SKlearnCompatWrapper.to_lale() can be called to recover the 
+       After the sklearn operation is complete,
+       SKlearnCompatWrapper.to_lale() can be called to recover the
        wrapped lale operator for future use
     """
     return SKlearnCompatWrapper.make_wrapper(op)
@@ -384,8 +382,8 @@ class SKlearnCompatWrapper(object):
 
     def to_lale(self) -> Ops.Operator:
         cur: Any = self
-        assert cur != None
-        assert cur._base != None
+        assert cur is not None
+        assert cur._base is not None
         cur = cur._base
         while isinstance(cur, WithoutGetParams):
             cur = cur._base
@@ -407,7 +405,7 @@ class SKlearnCompatWrapper(object):
 
     def __getattribute__(self, name):
         """ Try proxying unknown attributes to the underlying operator
-            getattribute is used instead of getattr to ensure that the 
+            getattribute is used instead of getattr to ensure that the
             correct underlying error is thrown in case
             a property (such as classes_) throws an AttributeError
         """
@@ -450,7 +448,7 @@ class SKlearnCompatWrapper(object):
             prev = self
             cur = self._base
             assert prev != cur
-            assert cur != None
+            assert cur is not None
             while isinstance(cur, WithoutGetParams):
                 assert cur != cur._base
                 prev = cur

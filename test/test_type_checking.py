@@ -16,7 +16,6 @@ import os
 import unittest
 
 import jsonschema
-import sklearn.datasets
 
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures, IdentityWrapper, NoOp
@@ -282,7 +281,7 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import Project
 
-        train_X, train_y = self._creditG["X"], self._creditG["y"]
+        train_X = self._creditG["X"]
         trainable = Project(columns={"type": "number"})
         trained = trainable.fit(train_X)
         transformed = trained.transform(train_X)
@@ -313,7 +312,7 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import Project
 
-        train_X, train_y = self._creditG["X"], self._creditG["y"]
+        train_X = self._creditG["X"]
         trainable = Project(columns={"not": {"type": "number"}})
         trained = trainable.fit(train_X)
         transformed = trained.transform(train_X)
@@ -587,8 +586,6 @@ class TestDatasetSchemas(unittest.TestCase):
                 LogisticRegression.validate_schema(**dataset)
 
     def test_project_with_all_datasets(self):
-        import lale.lib.lale
-
         should_succeed = [
             "irisArr",
             "irisDf",
@@ -634,7 +631,7 @@ class TestDatasetSchemas(unittest.TestCase):
         train_X, train_y = self._creditG["X"], self._creditG["y"]
         trainable = Project(columns={"type": "number"}) >> LogisticRegression()
         trained = trainable.fit(train_X, train_y)
-        decisions = trained.decision_function(train_X)
+        _ = trained.decision_function(train_X)
 
 
 class TestErrorMessages(unittest.TestCase):
@@ -768,7 +765,7 @@ class TestSchemaValidation(unittest.TestCase):
         from lale.lib.sklearn import OneHotEncoder as Enc
 
         trainable = Enc() >> Clf()
-        trained = trainable.fit(X, y)
+        _ = trainable.fit(X, y)
 
 
 class TestWithScorer(unittest.TestCase):

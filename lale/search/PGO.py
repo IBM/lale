@@ -178,13 +178,13 @@ class FrequencyDistribution(Generic[T]):
             return values
 
     def sample(self) -> T:
-        l = len(self)
-        i = random.randrange(l)
+        ll = len(self)
+        i = random.randrange(ll)
         return self[i]
 
     def samples(self, count: int) -> Sequence[T]:
-        l = len(self)
-        i: Sequence[int] = [random.randrange(l) for _ in range(count)]
+        ll = len(self)
+        i: Sequence[int] = [random.randrange(ll) for _ in range(count)]
         return self[i]
 
 
@@ -210,7 +210,7 @@ def freqsAsIntegerValues(
             if inclusive_max is not None and inclusive_max < i:
                 continue
             yield i, f
-        except:
+        except ValueError:
             pass
 
 
@@ -232,7 +232,7 @@ def freqsAsFloatValues(
                 continue
 
             yield i, f
-        except:
+        except ValueError:
             pass
 
 
@@ -270,6 +270,7 @@ def freqsAsEnumValues(
 
 
 _input_type = Dict[str, Dict[str, Union[int, Dict[str, Union[str, int]]]]]
+
 
 # For now, we skip things of the form
 # alg -> {default: number}

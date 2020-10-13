@@ -68,18 +68,18 @@ _hyperparams_schema = {
                 "operator": {
                     "description": """Trainable Lale pipeline that is trained using the data obtained from the current imbalance corrector.
 Predict, transform, predict_proba or decision_function would just be forwarded to the trained pipeline.
-If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to 
+If operator is a Planned pipeline, the current imbalance corrector can't be trained without using an optimizer to
 choose a trainable operator first. Please refer to lale/examples for more examples.""",
                     "anyOf": [{"laleType": "operator"}],
                 },
                 "sampling_strategy": {
-                    "description": """sampling_strategy : float, str, dict or callable, default='auto'. 
+                    "description": """sampling_strategy : float, str, dict or callable, default='auto'.
 Sampling information to resample the data set.
 """,
                     "anyOf": [
                         {
-                            "description": """When ``float``, 
-it corresponds to the desired ratio of the number of 
+                            "description": """When ``float``,
+it corresponds to the desired ratio of the number of
 samples in the minority class over the number of samples in the
 majority class after resampling. Therefore, the ratio is expressed as
 :math:`\\alpha_{os} = N_{rm} / N_{M}` where :math:`N_{rm}` is the
@@ -91,7 +91,7 @@ number of samples in the minority class after resampling and
                             "type": "number",
                         },
                         {
-                            "description": """When ``str``, specify the class targeted by the resampling. 
+                            "description": """When ``str``, specify the class targeted by the resampling.
 The number of samples in the different classes will be equalized.
 Possible choices are:
 ``'minority'``: resample only the minority class;
@@ -108,13 +108,13 @@ Possible choices are:
                             ],
                         },
                         {
-                            "description": """- When ``dict``, the keys correspond to the targeted classes. 
+                            "description": """- When ``dict``, the keys correspond to the targeted classes.
 The values correspond to the desired number of samples for each targeted
 class.""",
                             "type": "object",
                         },
                         {
-                            "description": """When callable, function taking ``y`` and returns a ``dict``. 
+                            "description": """When callable, function taking ``y`` and returns a ``dict``.
 The keys correspond to the targeted classes. The values correspond to the
 desired number of samples for each class.""",
                             "laleType": "callable",
@@ -141,7 +141,7 @@ desired number of samples for each class.""",
                     "default": None,
                 },
                 "k_neighbors": {
-                    "description": """If ``int``, number of nearest neighbours to used to construct synthetic samples.  
+                    "description": """If ``int``, number of nearest neighbours to used to construct synthetic samples.
 If object, an estimator that inherits from
 :class:`sklearn.neighbors.base.KNeighborsMixin` that will be used to
 find the k_neighbors.""",
@@ -154,7 +154,7 @@ find the k_neighbors.""",
                     "default": 1,
                 },
                 "m_neighbors": {
-                    "description": """If ``int``, number of nearest neighbours to use to determine if a minority sample is in danger.  
+                    "description": """If ``int``, number of nearest neighbours to use to determine if a minority sample is in danger.
 If object, an estimator that inherits from
 :class:`sklearn.neighbors.base.KNeighborsMixin` that will be used to find the m_neighbors.""",
                     "anyOf": [{"laleType": "Any"}, {"type": "integer"}],

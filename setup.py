@@ -14,7 +14,6 @@
 
 import logging
 import os
-import sys
 from datetime import datetime
 
 from setuptools import find_packages, setup
@@ -55,7 +54,7 @@ else:
         "astunparse",
     ]
 
-import lale  # isort:skip
+import lale  # noqa: E402
 
 if "TRAVIS" in os.environ:
     now = datetime.now().strftime("%y%m%d%H%M")

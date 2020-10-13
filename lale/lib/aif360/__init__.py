@@ -50,5 +50,7 @@ from .util import (
     dataset_fairness_info,
     dataset_to_pandas,
     disparate_impact,
+    fetch_adult_df,
+    fetch_creditg_df,
     statistical_parity_difference,
 )

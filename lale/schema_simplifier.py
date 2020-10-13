@@ -18,7 +18,6 @@ from typing import (
     Any,
     Dict,
     Generic,
-    Iterable,
     Iterator,
     List,
     Optional,
@@ -35,9 +34,6 @@ from .schema_utils import (
     JsonSchema,
     SFalse,
     STrue,
-    forOptimizer,
-    getMaximum,
-    getMinimum,
     is_false_schema,
     is_lale_any_schema,
     is_true_schema,
@@ -70,7 +66,7 @@ VV = TypeVar("VV")
 class set_with_str_for_keys(Generic[VV]):
     """ This mimicks a set, but uses the string representation
         of the elements for comparison tests.
-        It can be used for unhashable elements, as long 
+        It can be used for unhashable elements, as long
         as the str function is injective
     """
 
@@ -128,7 +124,7 @@ def toAllOfList(schema: JsonSchema) -> List[JsonSchema]:
 
 
 def liftAllOf(schemas: List[JsonSchema]) -> Iterator[JsonSchema]:
-    """ Given a list of schemas, if any of them are 
+    """ Given a list of schemas, if any of them are
         allOf schemas, lift them out to the top level
     """
     for sch in schemas:
@@ -138,7 +134,7 @@ def liftAllOf(schemas: List[JsonSchema]) -> Iterator[JsonSchema]:
 
 
 def liftAnyOf(schemas: List[JsonSchema]) -> Iterator[JsonSchema]:
-    """ Given a list of schemas, if any of them are 
+    """ Given a list of schemas, if any of them are
         anyOf schemas, lift them out to the top level
     """
     for sch in schemas:
@@ -158,25 +154,20 @@ def enumValues(
     """Given an enumeration set and a schema, return all the consistent values of the enumeration."""
     # TODO: actually check.  This should call the json schema validator
     ret = list()
-    try:
-        for e in es:
-            try:
-                jsonschema.validate(e, s, jsonschema.Draft4Validator)
-                ret.append(e)
-            except:
-                logger.debug(
-                    f"enumValues: {e} removed from {es} because it does not validate according to {s}"
-                )
-        return set_with_str_for_keys(iter(ret))
-    except jsonschema.ValidationError as error:
-        logger.warning(f"enumValues: Schema {s} does not validate: {error}")
-        # Let us be conservative
-        return es
+    for e in es:
+        try:
+            jsonschema.validate(e, s, jsonschema.Draft4Validator)
+            ret.append(e)
+        except jsonschema.ValidationError:
+            logger.debug(
+                f"enumValues: {e} removed from {es} because it does not validate according to {s}"
+            )
+    return set_with_str_for_keys(iter(ret))
 
 
 # invariants for all the simplify* functions:
-## invariant: if floatAny then at most the top level return value will be 'anyOf'
-## invariant: if there is no (nested or top level) 'anyOf' then the result will not have any either
+# - invariant: if floatAny then at most the top level return value will be 'anyOf'
+# - invariant: if there is no (nested or top level) 'anyOf' then the result will not have any either
 
 extra_field_names: List[str] = ["default", "description"]
 
@@ -624,7 +615,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
 
                     arr_additional = arr.get("additionalItems", None)
                     item_list_entries.append((arr_item, arr_additional))
-                    if arr_additional == False:
+                    if arr_additional is False:
                         # If we are not allowed additional elements,
                         # that effectively sets the maximum allowed length
                         if max_size is None:
@@ -809,9 +800,9 @@ def simplifyAny(schema: List[JsonSchema], floatAny: bool) -> JsonSchema:
     s_not_for_optimizer: List[JsonSchema] = []
 
     while s_any:
-        l = s_any
+        schema_list = s_any
         s_any = []
-        for s in l:
+        for s in schema_list:
             if s is None:
                 continue
             s = simplify(s, floatAny)
@@ -904,7 +895,7 @@ def simplify(schema: JsonSchema, floatAny: bool) -> JsonSchema:
     """ Tries to simplify a schema into an equivalent but
         more compact/simpler one.  If floatAny if true, then
         the only anyOf in the return value will be at the top level.
-        Using this option may cause a combinatorial blowup in the size 
+        Using this option may cause a combinatorial blowup in the size
         of the schema
         """
     if is_true_schema(schema):
@@ -927,12 +918,12 @@ def simplify(schema: JsonSchema, floatAny: bool) -> JsonSchema:
         schema2 = schema.copy()
         props = {}
         all_objs = [schema2]
-        ## TODO: how does this interact with required?
-        ## {k1:s_1, k2:anyOf:[s2s], k3:anyOf:[s3s]}
-        ## If floatAny is true and any properties have an anyOf in them
-        ## we need to float it out to the top.  We can then
-        ## give it to simplifyAll, which does the cross product to lift
-        ## them out of the list
+        # TODO: how does this interact with required?
+        # {k1:s_1, k2:anyOf:[s2s], k3:anyOf:[s3s]}
+        # If floatAny is true and any properties have an anyOf in them
+        # we need to float it out to the top.  We can then
+        # give it to simplifyAll, which does the cross product to lift
+        # them out of the list
         for k, v in schema["properties"].items():
             s = simplify(v, floatAny)
             if is_false_schema(s) and "required" in schema and s in schema["required"]:
@@ -1081,7 +1072,7 @@ def filterForOptimizer(schema: JsonSchema) -> Optional[JsonSchema]:
         else:
             return {"not": s}
     if "type" in schema and schema["type"] == "object" and "properties" in schema:
-        required = schema.get("required", None)
+        # required = schema.get("required", None)
 
         props = {}
         for k, v in schema["properties"].items():
@@ -1105,4 +1096,4 @@ def narrowSimplifyAndFilter(schema: JsonSchema, floatAny: bool) -> Optional[Json
     n_schema = narrowToRelevantFields(schema)
     simplified_schema = simplify(n_schema, floatAny)
     filtered_schema = filterForOptimizer(simplified_schema)
-    return simplified_schema
+    return filtered_schema

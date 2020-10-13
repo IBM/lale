@@ -15,9 +15,11 @@
 import aif360.algorithms.postprocessing
 import aif360.datasets
 import aif360.metrics
+import numpy as np
 import pandas as pd
 
 import lale.datasets.data_schemas
+import lale.datasets.openml
 import lale.type_checking
 
 
@@ -189,7 +191,11 @@ class _PandasToDatasetConverter:
         assert isinstance(X, pd.DataFrame), type(X)
         assert isinstance(y, pd.Series), type(y)
         assert X.shape[0] == y.shape[0], f"X.shape {X.shape}, y.shape {y.shape}"
-        df = pd.concat([X, y], axis=1)
+        assert not X.isna().any().any(), f"X\n{X}\n"
+        assert not y.isna().any().any(), f"y\n{X}\n"
+        y_reindexed = pd.Series(data=y.values, index=X.index, name=y.name)
+        df = pd.concat([X, y_reindexed], axis=1)
+        assert df.shape[0] == X.shape[0], f"df.shape {df.shape}, X.shape {X.shape}"
         assert not df.isna().any().any(), f"df\n{df}\nX\n{X}\ny\n{y}"
         label_names = [y.name]
         result = aif360.datasets.BinaryLabelDataset(
@@ -446,3 +452,65 @@ _numeric_output_predict_schema = {
     "type": "array",
     "items": {"type": "number"},
 }
+
+
+def fetch_creditg_df():
+    (orig_train_X, train_y), (orig_test_X, test_y) = lale.datasets.openml.fetch(
+        "credit-g", "classification", astype="pandas"
+    )
+
+    def replace_protected_attr(orig_X):
+        sex = pd.Series(
+            (orig_X["personal_status_male div/sep"] == 1.0)
+            | (orig_X["personal_status_male mar/wid"] == 1.0)
+            | (orig_X["personal_status_male single"] == 1.0),
+            dtype=np.float64,
+        )
+        age = pd.Series(orig_X["age"] > 25, dtype=np.float64)
+        dropped = orig_X.drop(
+            labels=[
+                "personal_status_female div/dep/mar",
+                "personal_status_male div/sep",
+                "personal_status_male mar/wid",
+                "personal_status_male single",
+            ],
+            axis=1,
+        )
+        added = dropped.assign(sex=sex, age=age)
+        return added
+
+    train_X = replace_protected_attr(orig_train_X)
+    test_X = replace_protected_attr(orig_test_X)
+    return (train_X, train_y), (test_X, test_y)
+
+
+def fetch_adult_df(test_size=0.3):
+    (orig_train_X, train_y), (orig_test_X, test_y) = lale.datasets.openml.fetch(
+        "adult", "classification", astype="pandas", test_size=test_size
+    )
+
+    def replace_protected_attr(orig_X):
+        sex = pd.Series(orig_X["sex_Male"] == 1.0, dtype=np.float64)
+        race = pd.Series(orig_X["race_White"] == 1.0, dtype=np.float64)
+        dropped = orig_X.drop(
+            labels=[
+                "race_Amer-Indian-Eskimo",
+                "race_Asian-Pac-Islander",
+                "race_Black",
+                "race_Other",
+                "race_White",
+                "sex_Female",
+                "sex_Male",
+            ],
+            axis=1,
+        )
+        added = dropped.assign(sex=sex, race=race)
+        return added
+
+    train_X = replace_protected_attr(orig_train_X)
+    test_X = replace_protected_attr(orig_test_X)
+    assert not train_X.isna().any().any()
+    assert not train_y.isna().any().any()
+    assert not test_X.isna().any().any()
+    assert not test_y.isna().any().any()
+    return (train_X, train_y), (test_X, test_y)

@@ -12,18 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    Iterator,
-    List,
-    Optional,
-    Set,
-    Tuple,
-    Union,
-)
+from typing import Any, Dict, List, Optional, Set, Union
 
 # Type definitions
 JsonSchema = Dict[str, Any]
@@ -188,7 +177,7 @@ def forOptimizer(schema: JsonSchema) -> Optional[JsonSchema]:
 
     schema = transformedSchema
     if "type" in schema and schema["type"] == "object" and "properties" in schema:
-        required = schema.get("required", None)
+        # required = schema.get("required", None)
 
         props = {}
         for k, v in schema["properties"].items():
