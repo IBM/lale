@@ -557,7 +557,9 @@ def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
 numeric_data_types_list = ["numeric", "integer", "real"]
 
 
-def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.33):
+def fetch(
+    dataset_name, task_type, verbose=False, preprocess=True, test_size=0.33, astype=None
+):
     if verbose:
         print("Loading dataset:", dataset_name)
     # Check that the dataset name exists in experiments_dict
@@ -575,7 +577,7 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
         )
     data_file_name = os.path.join(download_data_dir, dataset_name + ".arff")
     if verbose:
-        print(data_file_name)
+        print(f"data file name: {data_file_name}")
     if not os.path.exists(data_file_name):
         # TODO: Download the data
         if not os.path.exists(download_data_dir):
@@ -601,7 +603,7 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
         attributes = dataDictionary["attributes"]
 
         if verbose:
-            print(attributes)
+            print(f"attributes: {attributes}")
         categorical_cols = []
         numeric_cols = []
         X_columns = []
@@ -668,8 +670,19 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
         preprocessing = make_pipeline(txm1, txm2)
 
         X = preprocessing.fit(X).transform(X)
+
         if verbose:
-            print("Shape of X after preprocessing", X.shape)
+            print(f"shape of X after preprocessing: {X.shape}")
+
+        if astype == "pandas":
+            cat_col_names = [attributes[i][0].lower() for i in categorical_cols]
+            one_hot_encoder = preprocessing.steps[1][1].named_transformers_["ohe"]
+            encoded_names = one_hot_encoder.get_feature_names(cat_col_names)
+            num_col_names = [attributes[i][0].lower() for i in numeric_cols]
+            col_names = list(encoded_names) + list(num_col_names)
+            if verbose:
+                print(f"column names after preprocessing: {col_names}")
+            X = pd.DataFrame(X, columns=col_names)
 
     else:
         col_names = [attr[0].lower() for attr in dataDictionary["attributes"]]
@@ -681,6 +694,8 @@ def fetch(dataset_name, task_type, verbose=False, preprocess=True, test_size=0.3
 
     labelencoder = LabelEncoder()
     y = labelencoder.fit_transform(y)
+    if astype == "pandas":
+        y = pd.Series(y, name=target_col)
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, random_state=0
