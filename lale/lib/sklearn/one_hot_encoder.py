@@ -12,24 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 import sklearn.preprocessing
 
 import lale.docstrings
 import lale.operators
-
-
-class OneHotEncoderImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.OneHotEncoder(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the OneHotEncoder model from scikit-learn.",
@@ -142,6 +129,48 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
+
+
+class OneHotEncoderImpl:
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
+        self._wrapped_model = sklearn.preprocessing.OneHotEncoder(**self._hyperparams)
+
+    def fit(self, X, y=None):
+        self._wrapped_model.fit(X, y)
+        if isinstance(X, pd.DataFrame):
+            self._X_columns = X.columns
+        return self
+
+    def transform(self, X):
+        return self._wrapped_model.transform(X)
+
+    def transform_schema(self, s_X):
+        """Used internally by Lale for type-checking downstream operators."""
+        is_fitted = hasattr(self._wrapped_model, "categories_")
+        if not is_fitted:
+            return _output_transform_schema
+        in_names = None
+        if "items" in s_X and "items" in s_X["items"]:
+            col_schemas = s_X["items"]["items"]
+            if isinstance(col_schemas, list):
+                desc = [s.get("description", "") for s in col_schemas]
+            if "" not in desc and len(desc) == len(set(desc)):
+                in_names = desc
+        if in_names is None and hasattr(self, "_X_columns"):
+            in_names = self._X_columns
+        if in_names is None:
+            return _output_transform_schema
+        out_names = self._wrapped_model.get_feature_names(in_names)
+        result = {
+            **s_X,
+            "items": {
+                **(s_X.get("items", {})),
+                "items": [{"description": n, "type": "number"} for n in out_names],
+            },
+        }
+        return result
+
 
 lale.docstrings.set_docstrings(OneHotEncoderImpl, _combined_schemas)
 
