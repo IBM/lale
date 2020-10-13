@@ -92,6 +92,31 @@ _lale_validator = jsonschema.validators.extend(
 )
 
 
+def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
+    """Validate that the value is an instance of the schema.
+
+    Parameters
+    ----------
+    value: JSON (int, float, str, list, dict) or JSON-like (tuple, np.ndarray, pd.DataFrame ...).
+        Left-hand side of instance check.
+
+    schema: JSON schema
+        Right-hand side of instance check.
+
+    subsample_array: bool
+        Speed up checking by doing only partial conversion to JSON.
+
+    Raises
+    ------
+    jsonschema.ValidationError
+        The value was invalid for the schema.
+    """
+    json_value = lale.helpers.data_to_json(value, subsample_array)
+    jsonschema.validate(
+        json_value, lale.helpers.data_to_json(schema, False), _lale_validator
+    )
+
+
 def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
     """Validate that the value is an instance of the schema.
 
@@ -114,8 +139,7 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
     disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
     if disable_schema is not None and disable_schema.lower() == "true":
         return True  # if schema validation is disabled, always return as valid
-    json_value = lale.helpers.data_to_json(value, subsample_array)
-    jsonschema.validate(json_value, schema, _lale_validator)
+    return always_validate_schema(value, schema, subsample_array=subsample_array)
 
 
 _JSON_META_SCHEMA_URL = "http://json-schema.org/draft-04/schema#"
