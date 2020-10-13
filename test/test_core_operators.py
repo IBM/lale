@@ -224,6 +224,29 @@ class TestMap(unittest.TestCase):
         with self.assertRaises(jsonschema.ValidationError):
             _ = Map(columns=[123, "hello"])
 
+    def test_with_hyperopt(self):
+        from sklearn.datasets import load_iris
+
+        from lale.expressions import it, replace
+        from lale.lib.lale import Hyperopt, Map, Relational
+
+        X, y = load_iris(return_X_y=True)
+        gender_map = {"m": "Male", "f": "Female"}
+        state_map = {"NY": "New York", "CA": "California"}
+        map_replace = Map(
+            columns=[replace(it.gender, gender_map), replace(it.state, state_map)],
+            remainder="drop",
+        )
+        pipeline = (
+            Relational(
+                operator=(Scan(table=it.main) & Scan(table=it.delay)) >> map_replace
+            )
+            >> LogisticRegression()
+        )
+        opt = Hyperopt(estimator=pipeline, cv=3, max_evals=5)
+        trained = opt.fit(X, y)
+        _ = trained
+
 
 class TestConcatFeatures(unittest.TestCase):
     def test_hyperparam_defaults(self):
