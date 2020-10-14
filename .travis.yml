@@ -73,9 +73,6 @@ jobs:
   include:
     - stage: static_tests
       script:
-        - echo -e "${ANSI_GREEN}Compiling all...${ANSI_RESET}" && echo -en 'travis_fold:start:compile\\r'
-        - python -m compileall .
-        - echo -en 'travis_fold:end:compile\\r'
         - echo -e "${ANSI_GREEN}Running pre-commit checks..${ANSI_RESET}" && echo -en 'travis_fold:start:precommit\\r'
         - pre-commit run --all-files
         - echo -en 'travis_fold:end:precommit\\r'
