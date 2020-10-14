@@ -5,7 +5,6 @@ run_tests:
 	python -m unittest discover -v
 
 check:
-	python -m compileall .
 	pre-commit run --all-files
 
 PYTHON_VERSION ?= 3.6
