@@ -48,7 +48,7 @@ else:
         "jsonsubschema",
         "scikit-learn>=0.20.3",
         "scipy",
-        "pandas<=0.25.3",
+        "pandas",
         "decorator",
         "h5py",
         "astunparse",
