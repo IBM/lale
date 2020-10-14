@@ -247,6 +247,180 @@ class TestMap(unittest.TestCase):
         trained = opt.fit(X, y)
         _ = trained
 
+    def test_with_hyperopt2(self):
+        import lale
+        from lale.expressions import (
+            count,
+            it,
+            max,
+            mean,
+            min,
+            string_indexer,
+            sum,
+            variance,
+        )
+        from lale.lib.lale import Aggregate, ConcatFeatures, Join, Map, Relational, Scan
+        from lale.operators import make_pipeline_graph
+
+        lale.wrap_imported_operators()
+        scan = Scan(table=it["main"])
+        scan_0 = Scan(table=it["customers"])
+        join = Join(
+            pred=[
+                (
+                    it["main"]["group_customer_id"]
+                    == it["customers"]["group_customer_id"]
+                )
+            ]
+        )
+        map = Map(
+            columns={
+                "[main](group_customer_id)[customers]|number_children|identity": it[
+                    "number_children"
+                ],
+                "[main](group_customer_id)[customers]|name|identity": it["name"],
+                "[main](group_customer_id)[customers]|income|identity": it["income"],
+                "[main](group_customer_id)[customers]|address|identity": it["address"],
+                "[main](group_customer_id)[customers]|age|identity": it["age"],
+            },
+            remainder="drop",
+        )
+        pipeline_4 = join >> map
+        scan_1 = Scan(table=it["purchase"])
+        join_0 = Join(
+            pred=[(it["main"]["group_id"] == it["purchase"]["group_id"])],
+            join_limit=50.0,
+        )
+        aggregate = Aggregate(
+            columns={
+                "[main](group_id)[purchase]|price|variance": variance(it["price"]),
+                "[main](group_id)[purchase]|time|sum": sum(it["time"]),
+                "[main](group_id)[purchase]|time|mean": mean(it["time"]),
+                "[main](group_id)[purchase]|time|min": min(it["time"]),
+                "[main](group_id)[purchase]|price|sum": sum(it["price"]),
+                "[main](group_id)[purchase]|price|count": count(it["price"]),
+                "[main](group_id)[purchase]|price|mean": mean(it["price"]),
+                "[main](group_id)[purchase]|price|min": min(it["price"]),
+                "[main](group_id)[purchase]|price|max": max(it["price"]),
+                "[main](group_id)[purchase]|time|max": max(it["time"]),
+                "[main](group_id)[purchase]|time|variance": variance(it["time"]),
+            },
+            group_by=it["row_id"],
+        )
+        pipeline_5 = join_0 >> aggregate
+        map_0 = Map(
+            columns={
+                "[main]|group_customer_id|identity": it["group_customer_id"],
+                "[main]|transaction_id|identity": it["transaction_id"],
+                "[main]|group_id|identity": it["group_id"],
+                "[main]|comments|identity": it["comments"],
+                "[main]|id|identity": it["id"],
+                "prefix_0_id": it["prefix_0_id"],
+                "next_purchase": it["next_purchase"],
+                "[main]|time|identity": it["time"],
+            },
+            remainder="drop",
+        )
+        scan_2 = Scan(table=it["transactions"])
+        scan_3 = Scan(table=it["products"])
+        join_1 = Join(
+            pred=[
+                (it["main"]["transaction_id"] == it["transactions"]["transaction_id"]),
+                (it["transactions"]["product_id"] == it["products"]["product_id"]),
+            ]
+        )
+        map_1 = Map(
+            columns={
+                "[main](transaction_id)[transactions](product_id)[products]|price|identity": it[
+                    "price"
+                ],
+                "[main](transaction_id)[transactions](product_id)[products]|type|identity": it[
+                    "type"
+                ],
+            },
+            remainder="drop",
+        )
+        pipeline_6 = join_1 >> map_1
+        join_2 = Join(
+            pred=[
+                (it["main"]["transaction_id"] == it["transactions"]["transaction_id"])
+            ]
+        )
+        map_2 = Map(
+            columns={
+                "[main](transaction_id)[transactions]|description|identity": it[
+                    "description"
+                ],
+                "[main](transaction_id)[transactions]|product_id|identity": it[
+                    "product_id"
+                ],
+            },
+            remainder="drop",
+        )
+        pipeline_7 = join_2 >> map_2
+        map_3 = Map(
+            columns=[
+                string_indexer(it["[main]|comments|identity"]),
+                string_indexer(
+                    it["[main](transaction_id)[transactions]|description|identity"]
+                ),
+                string_indexer(
+                    it[
+                        "[main](transaction_id)[transactions](product_id)[products]|type|identity"
+                    ]
+                ),
+                string_indexer(
+                    it["[main](group_customer_id)[customers]|name|identity"]
+                ),
+                string_indexer(
+                    it["[main](group_customer_id)[customers]|address|identity"]
+                ),
+            ]
+        )
+        pipeline_8 = ConcatFeatures() >> map_3
+        relational = Relational(
+            operator=make_pipeline_graph(
+                steps=[
+                    scan,
+                    scan_0,
+                    pipeline_4,
+                    scan_1,
+                    pipeline_5,
+                    map_0,
+                    scan_2,
+                    scan_3,
+                    pipeline_6,
+                    pipeline_7,
+                    pipeline_8,
+                ],
+                edges=[
+                    (scan, pipeline_4),
+                    (scan, pipeline_5),
+                    (scan, map_0),
+                    (scan, pipeline_6),
+                    (scan, pipeline_7),
+                    (scan_0, pipeline_4),
+                    (pipeline_4, pipeline_8),
+                    (scan_1, pipeline_5),
+                    (pipeline_5, pipeline_8),
+                    (map_0, pipeline_8),
+                    (scan_2, pipeline_6),
+                    (scan_2, pipeline_7),
+                    (scan_3, pipeline_6),
+                    (pipeline_6, pipeline_8),
+                    (pipeline_7, pipeline_8),
+                ],
+            )
+        )
+        pipeline = relational >> (KNeighborsClassifier | LogisticRegression)
+        from sklearn.datasets import load_iris
+
+        X, y = load_iris(return_X_y=True)
+        from lale.lib.lale import Hyperopt
+
+        opt = Hyperopt(estimator=pipeline, max_evals=2)
+        opt.fit(X, y)
+
 
 class TestConcatFeatures(unittest.TestCase):
     def test_hyperparam_defaults(self):
