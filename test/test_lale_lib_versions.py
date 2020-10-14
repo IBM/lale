@@ -216,17 +216,6 @@ class TestFeatureAgglomeration(unittest.TestCase):
         trained = trainable.fit(self.train_X, self.train_y)
         _ = trained.predict(self.test_X)
 
-    def test_distance_threshold(self):
-        with self.assertRaisesRegex(
-            TypeError, "type function is not JSON serializable"
-        ):
-            _ = (
-                FeatureAgglomeration(
-                    distance_threshold=0.5, n_clusters=None, compute_full_tree=True
-                )
-                >> LogisticRegression()
-            )
-
     def test_with_hyperopt(self):
         planned = FeatureAgglomeration >> LogisticRegression
         trained = planned.auto_configure(
