@@ -69,6 +69,19 @@ class TestPrettyPrint(unittest.TestCase):
             pipeline2, (lale.operators.PlannedOperator, sklearn.pipeline.Pipeline)
         )
 
+    def test_distance_threshold_validation_error(self):
+        import jsonschema
+
+        from lale.lib.sklearn import FeatureAgglomeration, LogisticRegression
+
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            _ = (
+                FeatureAgglomeration(
+                    distance_threshold=0.5, n_clusters=None, compute_full_tree=True
+                )
+                >> LogisticRegression()
+            )
+
     def test_indiv_op_1(self):
         from lale.lib.sklearn import LogisticRegression
 
