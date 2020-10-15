@@ -44,6 +44,7 @@ from lale.search.search_space import (
     SearchSpaceArray,
     SearchSpaceBool,
     SearchSpaceConstant,
+    SearchSpaceDict,
     SearchSpaceEmpty,
     SearchSpaceEnum,
     SearchSpaceNumber,
@@ -222,6 +223,7 @@ class SearchSpaceOperatorVisitor(Visitor):
         schema: JsonSchema,
         relevantFields: Optional[Set[str]],
         pgo_freqs: pgo_part = None,
+        sub_space: bool = True,
     ) -> Dict[str, SearchSpace]:
         if "properties" not in schema:
             return {}
@@ -229,11 +231,10 @@ class SearchSpaceOperatorVisitor(Visitor):
         hyp: Dict[str, SearchSpace] = {}
         for p, s in props.items():
             if relevantFields is None or p in relevantFields:
-                # TODO: This does not handle nested relevant fields correctly
                 # We would need to specify what is correct in that case
                 sub_freqs = freqs_wrapper_lookup(pgo_freqs, p)
                 sub_sch = self.schemaToSearchSpaceHelper_(
-                    longName, path + "_" + p, s, relevantFields, pgo_freqs=sub_freqs
+                    longName, path + "_" + p, s, None, pgo_freqs=sub_freqs
                 )
                 if sub_sch is None:
                     # if it is a required field, this entire thing should be None
@@ -251,6 +252,7 @@ class SearchSpaceOperatorVisitor(Visitor):
         schema: JsonSchema,
         relevantFields: Optional[Set[str]],
         pgo_freqs: pgo_part = None,
+        sub_space: bool = True,
     ) -> Optional[SearchSpace]:
         # TODO: handle degenerate cases
         # right now, this handles only a very fixed form
@@ -417,12 +419,21 @@ class SearchSpaceOperatorVisitor(Visitor):
                 if "properties" not in schema:
                     return SearchSpaceObject(longName, [], [])
                 o = self.JsonSchemaToSearchSpaceHelper(
-                    longName, path, schema, relevantFields, pgo_freqs=pgo_freqs
+                    longName,
+                    path,
+                    schema,
+                    relevantFields,
+                    pgo_freqs=pgo_freqs,
+                    sub_space=sub_space,
                 )
-                all_keys = list(o.keys())
-                all_keys.sort()
-                o_choice = tuple([o.get(k, None) for k in all_keys])
-                return SearchSpaceObject(longName, all_keys, [o_choice])
+                if sub_space:
+                    return SearchSpaceDict(o)
+                else:
+                    all_keys = list(o.keys())
+                    all_keys.sort()
+                    o_choice = tuple([o.get(k, None) for k in all_keys])
+                    return SearchSpaceObject(longName, all_keys, [o_choice])
+
             elif typ == "string":
                 pass
             elif typ == "operator":
@@ -457,7 +468,12 @@ class SearchSpaceOperatorVisitor(Visitor):
             for s_obj in schema["anyOf"]:
                 if "type" in s_obj and s_obj["type"] == "object":
                     o = self.JsonSchemaToSearchSpaceHelper(
-                        longName, path, s_obj, relevantFields, pgo_freqs=pgo_freqs
+                        longName,
+                        path,
+                        s_obj,
+                        relevantFields,
+                        pgo_freqs=pgo_freqs,
+                        sub_space=sub_space,
                     )
                     if o:
                         objs.append(o)
@@ -510,7 +526,12 @@ class SearchSpaceOperatorVisitor(Visitor):
                 f"[{path}]: schemaToSearchSpaceHelper: ignoring negated schemas in the conjunction {schema}"
             )
             return self.schemaToSearchSpaceHelper_(
-                longName, path, pos_sub_schema[0], relevantFields, pgo_freqs=pgo_freqs
+                longName,
+                path,
+                pos_sub_schema[0],
+                relevantFields,
+                pgo_freqs=pgo_freqs,
+                sub_space=sub_space,
             )
         # TODO: handle degenerate cases
         raise OperatorSchemaError(
@@ -524,12 +545,20 @@ class SearchSpaceOperatorVisitor(Visitor):
         schema: Optional[JsonSchema],
         relevantFields: Optional[Set[str]],
         pgo_freqs: pgo_part = None,
+        sub_space: bool = True,
     ) -> Optional[SearchSpace]:
         if schema is None or is_false_schema(schema):
             return None
         else:
+            if sub_space:
+                relevantFields = None
             return self.schemaToSearchSpaceHelper_(
-                longName, longName, schema, relevantFields, pgo_freqs=pgo_freqs
+                longName,
+                longName,
+                schema,
+                relevantFields,
+                pgo_freqs=pgo_freqs,
+                sub_space=sub_space,
             )
 
     def schemaToSimplifiedAndSearchSpace(
@@ -542,8 +571,9 @@ class SearchSpaceOperatorVisitor(Visitor):
         if has_operator(schema):
             atomize_schema_enumerations(schema)
         simplified_schema = simplify(schema, True)
-        #    from . import pretty_print
-        #    print(f'SIMPLIFIED_{longName}: {pretty_print.to_string(simplified_schema)}')
+        # from .. import pretty_print
+
+        # print(f"SIMPLIFIED_{longName}: {pretty_print.to_string(simplified_schema)}")
 
         filtered_schema: Optional[JsonSchema] = filterForOptimizer(simplified_schema)
         #    print(f'SIMPLIFIED_{longName}: {pretty_print.to_string(filtered_schema)}')
@@ -562,6 +592,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                 filtered_schema,
                 relevantFields,
                 pgo_freqs=pgo_lookup(self.pgo, name),
+                sub_space=False,
             ),
         )
 

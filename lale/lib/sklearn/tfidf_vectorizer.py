@@ -113,7 +113,7 @@ _hyperparams_schema = {
                 },
                 "token_pattern": {"type": "string", "default": "(?u)\\b\\w\\w+\\b"},
                 "ngram_range": {
-                    "default": [1, 1],
+                    "default": (1, 1),
                     "anyOf": [
                         {
                             "type": "array",

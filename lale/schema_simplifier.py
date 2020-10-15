@@ -42,6 +42,7 @@ from .schema_utils import (
     makeAnyOf,
     makeOneOf,
 )
+from .type_checking import always_validate_schema
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +157,7 @@ def enumValues(
     ret = list()
     for e in es:
         try:
-            jsonschema.validate(e, s, jsonschema.Draft4Validator)
+            always_validate_schema(e, s)
             ret.append(e)
         except jsonschema.ValidationError:
             logger.debug(

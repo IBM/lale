@@ -25,6 +25,7 @@ from lale.search.PGO import FrequencyDistribution
 from lale.search.search_space import (
     SearchSpace,
     SearchSpaceArray,
+    SearchSpaceDict,
     SearchSpaceEmpty,
     SearchSpaceEnum,
     SearchSpaceError,
@@ -220,6 +221,13 @@ class SearchSpaceHPExprVisitor(Visitor):
             search_space[k] = valid_hyperparam_combinations[i]
             i = i + 1
         return search_space
+
+    def visitSearchSpaceDict(self, sd: SearchSpaceDict, path: str, counter=None):
+        search_spaces = {
+            name: accept(space, self, path + "_" + name)
+            for name, space in sd.space_dict.items()
+        }
+        return search_spaces
 
     def visitSearchSpaceProduct(
         self, prod: SearchSpaceProduct, path: str, counter=None
@@ -495,6 +503,15 @@ def pgo_sample(pgo, sample):
             self.decls = self.decls + "\n".join(pgo_decls)
         self.decls += "\n".join(s_decls) + "\n"
         return space_name
+
+    def visitSearchSpaceDict(
+        self, sd: SearchSpaceDict, path: str, counter=None, useCounter=True
+    ):
+        search_spaces = (
+            name + ":" + accept(space, self, path + "_" + name)
+            for name, space in sd.space_dict.items()
+        )
+        return "{" + ",".join(search_spaces) + "}"
 
     def visitSearchSpaceProduct(
         self, prod: SearchSpaceProduct, path: str, counter=None, useCounter=True

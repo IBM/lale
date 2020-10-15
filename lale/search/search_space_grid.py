@@ -26,6 +26,7 @@ from lale.search.search_space import (
     SearchSpace,
     SearchSpaceArray,
     SearchSpaceConstant,
+    SearchSpaceDict,
     SearchSpaceEmpty,
     SearchSpaceError,
     SearchSpaceObject,
@@ -41,6 +42,7 @@ from lale.sklearn_compat import (
     make_indexed_name,
     nest_all_HPparams,
     nest_choice_all_HPparams,
+    structure_type_dict,
     structure_type_list,
     structure_type_name,
     structure_type_tuple,
@@ -283,6 +285,31 @@ class SearchSpaceToGridVisitor(Visitor):
         ]
 
         return chained_grids
+
+    def visitSearchSpaceDict(self, op: SearchSpaceDict) -> SearchSpaceGridInternalType:
+
+        sub_spaces = op.space_dict.items()
+
+        param_grids: List[List[SearchSpaceGrid]] = [
+            nest_all_HPparams(
+                name, self.fixupDegenerateSearchSpaces(accept(space, self)),
+            )
+            for name, space in sub_spaces
+        ]
+
+        param_grids_product: Iterable[Iterable[SearchSpaceGrid]] = itertools.product(
+            *param_grids
+        )
+        chained_grids: List[SearchSpaceGrid] = [
+            dict(ChainMap(*gridline)) for gridline in param_grids_product
+        ]
+
+        discriminated_grids: List[SearchSpaceGrid] = [
+            {**d, structure_type_name: SearchSpaceConstant(structure_type_dict)}
+            for d in chained_grids
+        ]
+
+        return discriminated_grids
 
     def visitSearchSpaceOperator(
         self, op: SearchSpaceOperator
