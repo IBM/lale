@@ -180,9 +180,8 @@ class TestMissingIndicator(unittest.TestCase):
 class TestRFE(unittest.TestCase):
     def test_init_fit_predict(self):
         import sklearn.datasets
-        import sklearn.svm
 
-        svm = sklearn.svm.SVR(kernel="linear")
+        svm = lale.lib.sklearn.SVR(kernel="linear")
         rfe = RFE(estimator=svm, n_features_to_select=2)
         lr = LogisticRegression()
         trainable = rfe >> lr
