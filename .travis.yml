@@ -17,7 +17,7 @@ env:
     - SETUP_TARGET=.[full,test] TEST_CASES="test/test_interoperability.py"
     - SETUP_TARGET=.[full,test] TEST_CASES="test/test_optimizers.py"
     - SETUP_TARGET=.[full,test] TEST_CASES="test/test_pipeline.py"
-    - SETUP_TARGET=.[full,test] TEST_CASES="test/test_autoai_libs.py"
+    - SETUP_TARGET=.[full,test] TEST_CASES="test/test_autoai_libs.py test/test_aif360.py"
     - SETUP_TARGET=.[full,test] NOTEBOOK_CATEGORY="demo_" TEST_CASES="test/test_notebooks.py"
     - SETUP_TARGET=.[full,test] NOTEBOOK_CATEGORY="docs_" TEST_CASES="test/test_notebooks.py"
     - SETUP_TARGET=.[full,test] NOTEBOOK_CATEGORY="talk_" TEST_CASES="test/test_notebooks.py"
