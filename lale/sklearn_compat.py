@@ -501,6 +501,14 @@ class SKlearnCompatWrapper(object):
     def _estimator_type(self):
         return self._final_estimator._estimator_type
 
+    @property
+    def coef_(self):
+        return self._final_estimator.coef_
+
+    @property
+    def feature_importances_(self):
+        return self._final_estimator.feature_importances_
+
     def get_param_ranges(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """Returns two dictionaries, ranges and cat_idx, for hyperparameters.
 
