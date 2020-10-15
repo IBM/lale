@@ -94,6 +94,51 @@ _dataset_fairness_properties: lale.type_checking.JSON_TYPE = {
     },
 }
 
+_categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
+    "favorable_labels": {
+        "description": 'Label values which are considered favorable (i.e. "positive").',
+        "type": "array",
+        "minItems": 1,
+        "items": {"anyOf": [{"type": "string"}, {"type": "number"}]},
+    },
+    "protected_attributes": {
+        "description": "Features for which fairness is desired.",
+        "type": "array",
+        "items": {
+            "type": "object",
+            "required": ["feature", "privileged_groups"],
+            "properties": {
+                "feature": {
+                    "description": "Column name or column index.",
+                    "anyOf": [{"type": "string"}, {"type": "integer"}],
+                },
+                "privileged_groups": {
+                    "description": "Values or ranges that indicate being a member of the privileged group.",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "anyOf": [
+                            {"description": "Literal value", "type": "string"},
+                            {
+                                "description": "Numeric range [a,b] from a to b inclusive.",
+                                "type": "array",
+                                "minItems": 2,
+                                "maxItems": 2,
+                                "items": {"type": "number"},
+                            },
+                        ]
+                    },
+                },
+            },
+        },
+    },
+}
+
+_categorical_fairness_schema = {
+    "type": "object",
+    "properties": _categorical_fairness_properties,
+}
+
 _dataset_fairness_schema = {
     "type": "object",
     "properties": _dataset_fairness_properties,
@@ -206,6 +251,45 @@ class _PandasToDatasetConverter:
             label_names=label_names,
         )
         return result
+
+
+def _group_flag(value, groups):
+    for group in groups:
+        if isinstance(group, list):
+            if group[0] <= value <= group[1]:
+                return 1
+        elif value == group:
+            return 1
+    return 0
+
+
+class _CategoricalFairnessConverter:
+    def __init__(self, favorable_labels, protected_attributes):
+        lale.type_checking.validate_schema(
+            favorable_labels, _categorical_fairness_properties["favorable_labels"]
+        )
+        self.favorable_labels = favorable_labels
+        lale.type_checking.validate_schema(
+            protected_attributes,
+            _categorical_fairness_properties["protected_attributes"],
+        )
+        self.protected_attributes = protected_attributes
+
+    def __call__(self, orig_X, orig_y):
+        assert isinstance(orig_X, pd.DataFrame), type(orig_X)
+        assert isinstance(orig_y, pd.Series), type(orig_y)
+        assert (
+            orig_X.shape[0] == orig_y.shape[0]
+        ), f"orig_X.shape {orig_X.shape}, orig_y.shape {orig_y.shape}"
+        protected = {}
+        for prot_attr in self.protected_attributes:
+            name = prot_attr["feature"]
+            groups = prot_attr["privileged_groups"]
+            series = orig_X[name].apply(lambda v: _group_flag(v, groups))
+            protected[name] = series
+        result_X = orig_X.assign(**protected)
+        result_y = orig_y.apply(lambda v: _group_flag(v, self.favorable_labels))
+        return result_X, result_y
 
 
 def _ensure_series(data, index, dtype, name):

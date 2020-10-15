@@ -86,9 +86,12 @@ _input_fit_schema = {
             "items": {"type": "array", "items": {"type": "number"}},
         },
         "y": {
-            "type": "array",
-            "items": {"type": "number"},
-            "description": "Target values.",
+            "description": "Target values (class labels in classification, real numbers in regression).",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
         },
     },
 }

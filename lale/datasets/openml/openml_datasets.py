@@ -504,7 +504,10 @@ def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
         if item_schema["description"].lower() == target_col
     ][0]
     if "enum" in elem_y:
-        elem_y["enum"] = [*range(len(elem_y["enum"]))]
+        if isinstance(train_y, pd.Series):
+            elem_y["enum"] = list(train_y.unique())
+        else:
+            elem_y["enum"] = [*range(len(elem_y["enum"]))]
     ncols_X = len(elems_X)
     rows_X = {
         **schema_orig["items"],
@@ -692,9 +695,10 @@ def fetch(
         cols_X = [col for col in col_names if col != target_col]
         X = df_all[cols_X]
 
-    labelencoder = LabelEncoder()
-    y = labelencoder.fit_transform(y)
-    if astype == "pandas":
+    if preprocess:
+        labelencoder = LabelEncoder()
+        y = labelencoder.fit_transform(y)
+    if astype == "pandas" and not isinstance(y, pd.Series):
         y = pd.Series(y, name=target_col)
 
     X_train, X_test, y_train, y_test = train_test_split(

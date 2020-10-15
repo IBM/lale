@@ -271,7 +271,7 @@ class TestDatasetSchemas(unittest.TestCase):
             "type": "array",
             "minItems": 670,
             "maxItems": 670,
-            "items": {"description": "class", "enum": [0, 1]},
+            "items": {"description": "class", "enum": ["good", "bad"]},
         }
         self.maxDiff = None
         self.assertEqual(train_X_schema, train_X_expected)
