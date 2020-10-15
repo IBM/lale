@@ -58,9 +58,11 @@ def _validate_lale_type(validator, laleType, instance, schema):
         import sklearn.base
 
         import lale.operators
+        import lale.sklearn_compat
 
         if not (
             isinstance(instance, lale.operators.Operator)
+            or isinstance(instance, lale.sklearn_compat.SKlearnCompatWrapper)
             or isinstance(instance, sklearn.base.BaseEstimator)
             or (
                 inspect.isclass(instance)
