@@ -14,6 +14,8 @@
 
 from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar, Union
 
+import sklearn.base
+
 import lale.operators as Ops
 from lale.pretty_print import hyperparams_to_string
 from lale.search.PGO import remove_defaults_dict
@@ -487,8 +489,12 @@ class SKlearnCompatWrapper(object):
             # since sklearn assumes that fit mutates the operator
             if hasattr(op, "_trained"):
                 op = op._trained
-            if hasattr(op, "_impl") and hasattr(op._impl_instance(), "_wrapped_model"):
-                model = op._impl_instance()._wrapped_model
+            if hasattr(op, "_impl"):
+                impl = op._impl_instance()
+                if hasattr(impl, "_wrapped_model"):
+                    model = impl._wrapped_model
+                elif isinstance(impl, sklearn.base.BaseEstimator):
+                    model = impl
         return "passthrough" if model is None else model
 
     @property

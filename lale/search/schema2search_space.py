@@ -18,6 +18,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 import jsonschema
 
 from lale.operators import (
+    Operator,
     OperatorChoice,
     PlannedIndividualOp,
     PlannedOperator,
@@ -445,12 +446,21 @@ class SearchSpaceOperatorVisitor(Visitor):
                     )
                     return None
 
-                sub_schemas = [accept(op, self) for op in vals]
+                sub_schemas = [
+                    accept(op, self)
+                    if isinstance(op, Operator)
+                    else SearchSpaceConstant(op)
+                    for op in vals
+                ]
                 combined_sub_schema: SearchSpace
                 if len(sub_schemas) == 1:
                     combined_sub_schema = sub_schemas[0]
+                    if isinstance(combined_sub_schema, SearchSpaceConstant):
+                        return combined_sub_schema
                 else:
                     combined_sub_schema = SearchSpaceSum(sub_schemas)
+                    if all((isinstance(x, SearchSpaceConstant) for x in sub_schemas)):
+                        return combined_sub_schema
                 return SearchSpaceOperator(combined_sub_schema)
 
             elif typ == "Any":
