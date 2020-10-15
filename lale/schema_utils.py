@@ -278,7 +278,7 @@ def atomize_schema_enumerations(
             if isinstance(e, dict):
                 required: List[str] = []
                 props: Dict[str, JsonSchema] = {}
-                for k, v in e:
+                for k, v in e.items():
                     required.append(k)
                     vs = {"enum": [v]}
                     atomize_schema_enumerations(vs)

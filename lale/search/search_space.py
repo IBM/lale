@@ -301,6 +301,21 @@ class SearchSpaceArray(SearchSpace):
                     yield self.additional
 
 
+class SearchSpaceDict(SearchSpace):
+    def __init__(self, d: Dict[str, SearchSpace]) -> None:
+        super(SearchSpaceDict, self).__init__()
+        self.space_dict = d
+
+    def _focused_str(self, path: Optional[List[SearchSpace]] = None) -> str:
+        ret: str = ""
+        ret += "Dict{"
+        dict_strs: List[str] = []
+        for k, v in self.space_dict.items():
+            dict_strs.append(k + "->" + v.str_with_focus(path=path, default=None))
+        ret += ",".join(dict_strs) + "}"
+        return ret
+
+
 class SearchSpaceObject(SearchSpace):
     def __init__(self, longName: str, keys: List[str], choices: Iterable[Any]) -> None:
         super(SearchSpaceObject, self).__init__()
