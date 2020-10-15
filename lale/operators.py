@@ -1886,6 +1886,13 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 _all_available_operators: List[PlannedOperator] = []
 
 
+def wrap_operator(impl) -> Operator:
+    if isinstance(impl, Operator):
+        return impl
+    else:
+        return make_operator(impl)
+
+
 def make_operator(impl, schemas=None, name=None) -> PlannedIndividualOp:
     if name is None:
         name = lale.helpers.assignee_name()
