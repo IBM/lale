@@ -1909,6 +1909,13 @@ def make_operator(impl, schemas=None, name=None) -> PlannedIndividualOp:
     return operatorObj
 
 
+def ensure_operator(op) -> Operator:
+    if isinstance(op, Operator):
+        return op
+    else:
+        return make_operator(op)
+
+
 def get_available_operators(
     tag: str, more_tags: AbstractSet[str] = None
 ) -> List[PlannedOperator]:
