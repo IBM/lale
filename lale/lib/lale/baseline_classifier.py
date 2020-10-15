@@ -26,9 +26,9 @@ class BaselineClassifierImpl:
         label_to_count = {}
         for label in y:
             label_to_count[label] = label_to_count.get(label, 0) + 1
-        majority_label = y[0]
+        majority_label = None
         for label, count in label_to_count.items():
-            if count > label_to_count[majority_label]:
+            if majority_label is None or count > label_to_count[majority_label]:
                 majority_label = label
         self._majority_label = majority_label
         return self
