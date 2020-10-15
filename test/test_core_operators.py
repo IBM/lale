@@ -195,6 +195,43 @@ class TestRFE(unittest.TestCase):
         with self.assertRaises(jsonschema.ValidationError):
             _ = RFE(estimator='"not an operator"', n_features_to_select=2)
 
+    def test_attrib_sklearn(self):
+        import sklearn.datasets
+        import sklearn.svm
+
+        from lale.lib.sklearn import RFE, LogisticRegression
+
+        svm = sklearn.svm.SVR(kernel="linear")
+        rfe = RFE(estimator=svm, n_features_to_select=2)
+        lr = LogisticRegression()
+        trainable = rfe >> lr
+        data = sklearn.datasets.load_iris()
+        X, y = data.data, data.target
+        trained = trainable.fit(X, y)
+        _ = trained.predict(X)
+        from lale.lib.lale import Hyperopt
+
+        opt = Hyperopt(estimator=trainable, max_evals=2, verbose=True)
+        opt.fit(X, y)
+
+    def test_attrib(self):
+        import sklearn.datasets
+
+        from lale.lib.sklearn import RFE, LogisticRegression
+
+        svm = lale.lib.sklearn.SVR(kernel="linear")
+        rfe = RFE(estimator=svm, n_features_to_select=2)
+        lr = LogisticRegression()
+        trainable = rfe >> lr
+        data = sklearn.datasets.load_iris()
+        X, y = data.data, data.target
+        trained = trainable.fit(X, y)
+        _ = trained.predict(X)
+        from lale.lib.lale import Hyperopt
+
+        opt = Hyperopt(estimator=trainable, max_evals=2, verbose=True)
+        opt.fit(X, y)
+
 
 class TestBoth(unittest.TestCase):
     def test_init_fit_transform(self):

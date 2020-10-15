@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from lale.sklearn_compat import make_sklearn_compat
+
 
 class BaseResamplerImpl:
     def __init__(self, operator=None, resampler=None):
-        self.operator = operator
+        self.operator = make_sklearn_compat(operator)
         self.resampler = resampler
 
     def fit(self, X, y=None):
