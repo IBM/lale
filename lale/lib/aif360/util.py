@@ -118,7 +118,7 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
                     "minItems": 1,
                     "items": {
                         "anyOf": [
-                            {"description": "Literal value", "type": "string"},
+                            {"description": "Literal value.", "type": "string"},
                             {
                                 "description": "Numeric range [a,b] from a to b inclusive.",
                                 "type": "array",
@@ -263,11 +263,22 @@ def _group_flag(value, groups):
     return 0
 
 
+def _dataframe_replace(dataframe, subst):
+    new_columns = [
+        subst.get(i, subst.get(name, dataframe.iloc[:, i]))
+        for i, name in enumerate(dataframe.columns)
+    ]
+    result = pd.concat(new_columns, axis=1)
+    return result
+
+
 class _CategoricalFairnessConverter:
-    def __init__(self, favorable_labels, protected_attributes):
+    def __init__(self, favorable_labels, protected_attributes, remainder="drop"):
         lale.type_checking.validate_schema(
             favorable_labels, _categorical_fairness_properties["favorable_labels"]
         )
+        assert remainder in ["drop", "passthrough"]
+        self.remainder = remainder
         self.favorable_labels = favorable_labels
         lale.type_checking.validate_schema(
             protected_attributes,
@@ -276,6 +287,10 @@ class _CategoricalFairnessConverter:
         self.protected_attributes = protected_attributes
 
     def __call__(self, orig_X, orig_y):
+        if isinstance(orig_X, np.ndarray):
+            orig_X = lale.datasets.data_schemas.ndarray_to_dataframe(orig_X)
+        if isinstance(orig_y, np.ndarray):
+            orig_y = lale.datasets.data_schemas.ndarray_to_series(orig_y)
         assert isinstance(orig_X, pd.DataFrame), type(orig_X)
         assert isinstance(orig_y, pd.Series), type(orig_y)
         assert (
@@ -283,11 +298,18 @@ class _CategoricalFairnessConverter:
         ), f"orig_X.shape {orig_X.shape}, orig_y.shape {orig_y.shape}"
         protected = {}
         for prot_attr in self.protected_attributes:
-            name = prot_attr["feature"]
+            feature = prot_attr["feature"]
             groups = prot_attr["privileged_groups"]
-            series = orig_X[name].apply(lambda v: _group_flag(v, groups))
-            protected[name] = series
-        result_X = orig_X.assign(**protected)
+            if isinstance(feature, str):
+                column = orig_X[feature]
+            else:
+                column = orig_X.iloc[:, feature]
+            series = column.apply(lambda v: _group_flag(v, groups))
+            protected[feature] = series
+        if self.remainder == "drop":
+            result_X = pd.concat([protected[f] for f in protected], axis=1)
+        else:
+            result_X = _dataframe_replace(orig_X, protected)
         result_y = orig_y.apply(lambda v: _group_flag(v, self.favorable_labels))
         return result_X, result_y
 
@@ -303,14 +325,32 @@ class _BinaryLabelScorer:
     def __init__(
         self,
         metric,
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
+        favorable_label=None,
+        unfavorable_label=None,
+        protected_attribute_names=None,
+        unprivileged_groups=None,
+        privileged_groups=None,
+        favorable_labels=None,
+        protected_attributes=None,
     ):
         assert hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric)
         self.metric = metric
+        if favorable_labels is None:
+            self.cats_to_numeric = None
+        else:
+            self.cat_info = {
+                "favorable_labels": favorable_labels,
+                "protected_attributes": protected_attributes,
+            }
+            lale.type_checking.validate_schema(self.cat_info, _dataset_fairness_schema)
+            assert favorable_label is None and unfavorable_label is None
+            favorable_label, unfavorable_label = 1, 0
+            assert protected_attribute_names is None
+            protected_attribute_names = [pa["feature"] for pa in protected_attributes]
+            assert unprivileged_groups is None and privileged_groups is None
+            unprivileged_groups = [{pa["feature"]: 0 for pa in protected_attributes}]
+            privileged_groups = [{pa["feature"]: 1 for pa in protected_attributes}]
+            self.cats_to_numeric = _CategoricalFairnessConverter(**self.cat_info)
         self.fairness_info = {
             "favorable_label": favorable_label,
             "unfavorable_label": unfavorable_label,
@@ -326,6 +366,8 @@ class _BinaryLabelScorer:
     def __call__(self, estimator, X, y):
         predicted = estimator.predict(X)
         y_pred = _ensure_series(predicted, X.index, y.dtype, y.name)
+        if self.cats_to_numeric is not None:
+            X, y_pred = self.cats_to_numeric(X, y_pred)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
             dataset_pred,
@@ -338,14 +380,21 @@ class _BinaryLabelScorer:
 
 
 def disparate_impact(
-    favorable_label,
-    unfavorable_label,
-    protected_attribute_names,
-    unprivileged_groups,
-    privileged_groups,
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
 ):
     """
     Make a scikit-learn compatible scorer given the fairness info.
+
+    There are two ways to construct it, either with
+    (favorable_label, unfavorable_label, protected_attribute_names,
+     unprivileged_groups, privileged_groups) or with
+    (favorable_labels, protected_attributes).
 
     Parameters
     ----------
@@ -377,6 +426,30 @@ def disparate_impact(
 
           Map from feature names to group-indicating values.
 
+    favorable_labels : array of number
+
+      Label values which are considered favorable (i.e. "positive").
+
+    protected_attributes : array of dict
+
+      Features for which fairness is desired.
+
+      - feature : string or integer
+
+          Column name or column index.
+
+      - privileged_groups : union type
+
+          Values or ranges that indicate being a member of the privileged group.
+
+          - string
+
+              Literal value
+
+          - array of number, >= 2 items, <= 2 items
+
+              Numeric range [a,b] from a to b inclusive.
+
     Returns
     -------
     result : callable
@@ -390,6 +463,8 @@ def disparate_impact(
         protected_attribute_names,
         unprivileged_groups,
         privileged_groups,
+        favorable_labels,
+        protected_attributes,
     )
 
 
