@@ -21,14 +21,14 @@ import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.lib.aif360
 import lale.lib.aif360.util
-from lale.datasets.data_schemas import pandas_to_ndarray
+from lale.datasets.data_schemas import NDArrayWithSchema
 from lale.lib.lale import ConcatFeatures, Project
-from lale.lib.sklearn import LogisticRegression, OneHotEncoder
+from lale.lib.sklearn import FunctionTransformer, LogisticRegression, OneHotEncoder
 
 
 class TestAIF360(unittest.TestCase):
     @classmethod
-    def _creditg_pandas(cls):
+    def _creditg_pd_cat(cls):
         (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
             "credit-g", "classification", astype="pandas", preprocess=False
         )
@@ -58,8 +58,10 @@ class TestAIF360(unittest.TestCase):
         return result
 
     @classmethod
-    def _creditg_numeric(cls):
+    def _creditg_pd_num(cls):
         (train_X, train_y), (test_X, test_y) = lale.lib.aif360.fetch_creditg_df()
+        assert isinstance(train_X, pd.DataFrame), type(train_X)
+        assert isinstance(train_y, pd.Series), type(train_y)
         fairness_info = {
             "favorable_label": 1,
             "unfavorable_label": 0,
@@ -77,13 +79,15 @@ class TestAIF360(unittest.TestCase):
         return result
 
     @classmethod
-    def _creditg_numpy(cls):
-        train_X = pandas_to_ndarray(cls.creditg_pandas["train_X"])
-        train_y = pandas_to_ndarray(cls.creditg_pandas["train_y"])
-        test_X = pandas_to_ndarray(cls.creditg_pandas["test_X"])
-        test_y = pandas_to_ndarray(cls.creditg_pandas["test_y"])
+    def _creditg_np_cat(cls):
+        train_X = cls.creditg_pd_cat["train_X"].to_numpy()
+        train_y = cls.creditg_pd_cat["train_y"].to_numpy()
+        test_X = cls.creditg_pd_cat["test_X"].to_numpy()
+        test_y = cls.creditg_pd_cat["test_y"].to_numpy()
         assert isinstance(train_X, np.ndarray), type(train_X)
+        assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
         assert isinstance(train_y, np.ndarray), type(train_y)
+        assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
         fairness_info = {
             "favorable_labels": ["good"],
             "protected_attributes": [
@@ -109,14 +113,14 @@ class TestAIF360(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.creditg_pandas = cls._creditg_pandas()
-        cls.creditg_numeric = cls._creditg_numeric()
-        cls.creditg_numpy = cls._creditg_numpy()
+        cls.creditg_pd_cat = cls._creditg_pd_cat()
+        cls.creditg_pd_num = cls._creditg_pd_num()
+        cls.creditg_np_cat = cls._creditg_np_cat()
 
-    def test_converter_pandas(self):
-        info = self.creditg_pandas["fairness_info"]
-        orig_X = self.creditg_pandas["train_X"]
-        orig_y = self.creditg_pandas["train_y"]
+    def test_converter_pd_cat(self):
+        info = self.creditg_pd_cat["fairness_info"]
+        orig_X = self.creditg_pd_cat["train_X"]
+        orig_y = self.creditg_pd_cat["train_y"]
         converter = lale.lib.aif360.util._CategoricalFairnessConverter(**info)
         conv_X, conv_y = converter(orig_X, orig_y)
         for i in orig_X.index:
@@ -129,35 +133,34 @@ class TestAIF360(unittest.TestCase):
             self.assertEqual(orig_row["age"] >= 26, conv_row["age"])
             self.assertEqual(orig_y[i] == "good", conv_y[i])
 
-    def test_converter_numpy(self):
-        info = self.creditg_numpy["fairness_info"]
-        orig_X = self.creditg_numpy["train_X"]
-        orig_y = self.creditg_numpy["train_y"]
+    def test_converter_np_cat(self):
+        info = self.creditg_np_cat["fairness_info"]
+        orig_X = self.creditg_np_cat["train_X"]
+        orig_y = self.creditg_np_cat["train_y"]
         converter = lale.lib.aif360.util._CategoricalFairnessConverter(**info)
         conv_X, conv_y = converter(orig_X, orig_y)
         for i in range(orig_X.shape[0]):
-            conv_row = conv_X.loc[i]
             self.assertEqual(
-                orig_X[i, 8].startswith("male"), conv_row["personal_status"],
+                orig_X[i, 8].startswith("male"), conv_X.at[i, "f8"],
             )
-            self.assertEqual(orig_X[i, 12] >= 26, conv_row["age"])
+            self.assertEqual(orig_X[i, 12] >= 26, conv_X.at[i, "f12"])
             self.assertEqual(orig_y[i] == "good", conv_y[i])
 
-    def test_disparate_impact_numeric(self):
-        info = self.creditg_numeric["fairness_info"]
+    def test_disparate_impact_pd_num(self):
+        info = self.creditg_pd_num["fairness_info"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**info)
         trainable = LogisticRegression(max_iter=1000)
-        train_X = self.creditg_numeric["train_X"]
-        train_y = self.creditg_numeric["train_y"]
+        train_X = self.creditg_pd_num["train_X"]
+        train_y = self.creditg_pd_num["train_y"]
         trained = trainable.fit(train_X, train_y)
-        test_X = self.creditg_numeric["test_X"]
-        test_y = self.creditg_numeric["test_y"]
+        test_X = self.creditg_pd_num["test_X"]
+        test_y = self.creditg_pd_num["test_y"]
         impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertLess(impact, 0.9)
-        print(f"test_disparate_impact_numeric impact {impact:.2f}")
+        print(f"test_disparate_impact_pd_num impact {impact:.2f}")
 
-    def test_disparate_impact_pandas(self):
-        info = self.creditg_pandas["fairness_info"]
+    def test_disparate_impact_pd_cat(self):
+        info = self.creditg_pd_cat["fairness_info"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**info)
         trainable = (
             (
@@ -170,11 +173,41 @@ class TestAIF360(unittest.TestCase):
             >> ConcatFeatures
             >> LogisticRegression(max_iter=1000)
         )
-        train_X = self.creditg_pandas["train_X"]
-        train_y = self.creditg_pandas["train_y"]
+        train_X = self.creditg_pd_cat["train_X"]
+        train_y = self.creditg_pd_cat["train_y"]
         trained = trainable.fit(train_X, train_y)
-        test_X = self.creditg_pandas["test_X"]
-        test_y = self.creditg_pandas["test_y"]
+        test_X = self.creditg_pd_cat["test_X"]
+        test_y = self.creditg_pd_cat["test_y"]
         impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertLess(impact, 0.9)
-        print(f"test_disparate_impact_pandas impact {impact:.2f}")
+        print(f"test_disparate_impact_pd_cat impact {impact:.2f}")
+
+    def test_disparate_impact_np_cat(self):
+        info = self.creditg_np_cat["fairness_info"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**info)
+        train_X = self.creditg_np_cat["train_X"]
+        train_y = self.creditg_np_cat["train_y"]
+        cat_columns, num_columns = [], []
+        for i in range(train_X.shape[1]):
+            try:
+                _ = train_X[:, i].astype(np.float64)
+                num_columns.append(i)
+            except ValueError:
+                cat_columns.append(i)
+        trainable = (
+            (
+                (Project(columns=cat_columns) >> OneHotEncoder(handle_unknown="ignore"))
+                & (
+                    Project(columns=num_columns)
+                    >> FunctionTransformer(func=lambda x: x.astype(np.float64))
+                )
+            )
+            >> ConcatFeatures
+            >> LogisticRegression(max_iter=1000)
+        )
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.creditg_np_cat["test_X"]
+        test_y = self.creditg_np_cat["test_y"]
+        impact = disparate_impact_scorer(trained, test_X, test_y)
+        self.assertLess(impact, 0.9)
+        print(f"test_disparate_impact_np_cat impact {impact:.2f}")
