@@ -158,6 +158,9 @@ class TestAIF360(unittest.TestCase):
         impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertLess(impact, 0.9)
         print(f"test_disparate_impact_pd_num impact {impact:.2f}")
+        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**info)
+        score = combined_scorer(trained, test_X, test_y)
+        self.assertEqual(score, -99)
 
     def test_disparate_impact_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
@@ -181,6 +184,9 @@ class TestAIF360(unittest.TestCase):
         impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertLess(impact, 0.9)
         print(f"test_disparate_impact_pd_cat impact {impact:.2f}")
+        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**info)
+        score = combined_scorer(trained, test_X, test_y)
+        self.assertEqual(score, -99)
 
     def test_disparate_impact_np_cat(self):
         info = self.creditg_np_cat["fairness_info"]
@@ -211,3 +217,6 @@ class TestAIF360(unittest.TestCase):
         impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertLess(impact, 0.9)
         print(f"test_disparate_impact_np_cat impact {impact:.2f}")
+        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**info)
+        score = combined_scorer(trained, test_X, test_y)
+        self.assertEqual(score, -99)

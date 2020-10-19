@@ -17,6 +17,7 @@ import aif360.datasets
 import aif360.metrics
 import numpy as np
 import pandas as pd
+import sklearn.metrics
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
@@ -403,6 +404,38 @@ class _BinaryLabelScorer:
         method = getattr(fairness_metrics, self.metric)
         result = method()
         return result
+
+
+class accuracy_and_disparate_impact:
+    def __init__(
+        self,
+        favorable_label=None,
+        unfavorable_label=None,
+        protected_attribute_names=None,
+        unprivileged_groups=None,
+        privileged_groups=None,
+        favorable_labels=None,
+        protected_attributes=None,
+    ):
+        self.accuracy_scorer = sklearn.metrics.make_scorer(
+            sklearn.metrics.accuracy_score
+        )
+        self.disparate_impact_scorer = disparate_impact(
+            favorable_label,
+            unfavorable_label,
+            protected_attribute_names,
+            unprivileged_groups,
+            privileged_groups,
+            favorable_labels,
+            protected_attributes,
+        )
+
+    def __call__(self, estimator, X, y):
+        disparate_impact = self.disparate_impact_scorer(estimator, X, y)
+        if disparate_impact < 0.9 or 1.1 < disparate_impact:
+            return -99
+        accuracy = self.accuracy_scorer(estimator, X, y)
+        return accuracy
 
 
 def disparate_impact(
