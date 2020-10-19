@@ -22,6 +22,7 @@ import lale.datasets.openml
 import lale.lib.aif360
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
+from lale.lib.aif360 import DisparateImpactRemover
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.sklearn import FunctionTransformer, LogisticRegression, OneHotEncoder
 
@@ -146,25 +147,30 @@ class TestAIF360(unittest.TestCase):
             self.assertEqual(orig_X[i, 12] >= 26, conv_X.at[i, "f12"])
             self.assertEqual(orig_y[i] == "good", conv_y[i])
 
-    def test_disparate_impact_pd_num(self):
-        info = self.creditg_pd_num["fairness_info"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**info)
+    def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
+        fi = fairness_info
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fi)
+        impact = disparate_impact_scorer(estimator, test_X, test_y)
+        self.assertLess(impact, 0.9)
+        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
+        score = combined_scorer(estimator, test_X, test_y)
+        self.assertEqual(score, -99)
+        parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
+        parity = parity_scorer(estimator, test_X, test_y)
+        self.assertLess(parity, -0.1)
+
+    def test_scorers_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
         trainable = LogisticRegression(max_iter=1000)
         train_X = self.creditg_pd_num["train_X"]
         train_y = self.creditg_pd_num["train_y"]
         trained = trainable.fit(train_X, train_y)
         test_X = self.creditg_pd_num["test_X"]
         test_y = self.creditg_pd_num["test_y"]
-        impact = disparate_impact_scorer(trained, test_X, test_y)
-        self.assertLess(impact, 0.9)
-        print(f"test_disparate_impact_pd_num impact {impact:.2f}")
-        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**info)
-        score = combined_scorer(trained, test_X, test_y)
-        self.assertEqual(score, -99)
+        self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
-    def test_disparate_impact_pd_cat(self):
-        info = self.creditg_pd_cat["fairness_info"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**info)
+    def test_scorers_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable = (
             (
                 (
@@ -181,16 +187,10 @@ class TestAIF360(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         test_X = self.creditg_pd_cat["test_X"]
         test_y = self.creditg_pd_cat["test_y"]
-        impact = disparate_impact_scorer(trained, test_X, test_y)
-        self.assertLess(impact, 0.9)
-        print(f"test_disparate_impact_pd_cat impact {impact:.2f}")
-        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**info)
-        score = combined_scorer(trained, test_X, test_y)
-        self.assertEqual(score, -99)
+        self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
-    def test_disparate_impact_np_cat(self):
-        info = self.creditg_np_cat["fairness_info"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**info)
+    def test_scorers_np_cat(self):
+        fairness_info = self.creditg_np_cat["fairness_info"]
         train_X = self.creditg_np_cat["train_X"]
         train_y = self.creditg_np_cat["train_y"]
         cat_columns, num_columns = [], []
@@ -214,9 +214,24 @@ class TestAIF360(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         test_X = self.creditg_np_cat["test_X"]
         test_y = self.creditg_np_cat["test_y"]
+        self._attempt_scorers(fairness_info, trained, test_X, test_y)
+
+    def test_disparate_impact_remover_pd_num(self):
+        fairness_info = {
+            "favorable_label": 1,
+            "unfavorable_label": 0,
+            "protected_attribute_names": ["sex"],
+            "unprivileged_groups": [{"sex": 0}],
+            "privileged_groups": [{"sex": 1}],
+        }
+        trainable = DisparateImpactRemover(
+            sensitive_attribute="sex"
+        ) >> LogisticRegression(max_iter=1000)
+        train_X = self.creditg_pd_num["train_X"]
+        train_y = self.creditg_pd_num["train_y"]
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.creditg_pd_num["test_X"]
+        test_y = self.creditg_pd_num["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact = disparate_impact_scorer(trained, test_X, test_y)
-        self.assertLess(impact, 0.9)
-        print(f"test_disparate_impact_np_cat impact {impact:.2f}")
-        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**info)
-        score = combined_scorer(trained, test_X, test_y)
-        self.assertEqual(score, -99)
+        self.assertTrue(0.9 < impact < 1.1, f"impact {impact}")

@@ -406,7 +406,76 @@ class _BinaryLabelScorer:
         return result
 
 
-class accuracy_and_disparate_impact:
+_SCORER_DOCSTRING = """
+
+There are two ways to construct this scorer, either with
+(favorable_label, unfavorable_label, protected_attribute_names,
+ unprivileged_groups, privileged_groups) or with
+(favorable_labels, protected_attributes).
+
+Parameters
+----------
+favorable_label : number
+
+  Label value which is considered favorable (i.e. "positive").
+
+unfavorable_label : number
+
+  Label value which is considered unfavorable (i.e. "negative").
+
+protected_attribute_names : array **of** items : string
+
+  Subset of feature names for which fairness is desired.
+
+unprivileged_groups : array
+
+  Representation for unprivileged group.
+
+  - items : dict
+
+      Map from feature names to group-indicating values.
+
+privileged_groups : array
+
+  Representation for privileged group.
+
+  - items : dict
+
+      Map from feature names to group-indicating values.
+
+favorable_labels : array of number
+
+  Label values which are considered favorable (i.e. "positive").
+
+protected_attributes : array of dict
+
+  Features for which fairness is desired.
+
+  - feature : string or integer
+
+      Column name or column index.
+
+  - privileged_groups : union type
+
+      Values or ranges that indicate being a member of the privileged group.
+
+      - string
+
+          Literal value
+
+      - array of number, >= 2 items, <= 2 items
+
+          Numeric range [a,b] from a to b inclusive.
+
+Returns
+-------
+result : callable
+
+  Scorer that takes three arguments (estimator, X, y) and returns score.
+"""
+
+
+class _AccuracyAndDisparateImpact:
     def __init__(
         self,
         favorable_label=None,
@@ -438,6 +507,35 @@ class accuracy_and_disparate_impact:
         return accuracy
 
 
+def accuracy_and_disparate_impact(
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
+):
+    """Create a scikit-learn compatible combined scorer for `accuracy`_ and `disparate impact`_ given the fairness info.
+
+.. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
+.. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    return _AccuracyAndDisparateImpact(
+        favorable_label,
+        unfavorable_label,
+        protected_attribute_names,
+        unprivileged_groups,
+        privileged_groups,
+        favorable_labels,
+        protected_attributes,
+    )
+
+
+accuracy_and_disparate_impact.__doc__ = (
+    str(accuracy_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
+)
+
+
 def disparate_impact(
     favorable_label=None,
     unfavorable_label=None,
@@ -447,74 +545,9 @@ def disparate_impact(
     favorable_labels=None,
     protected_attributes=None,
 ):
-    """
-    Make a scikit-learn compatible scorer given the fairness info.
+    """Create a scikit-learn compatible `disparate impact`_ scorer given the fairness info.
 
-    There are two ways to construct it, either with
-    (favorable_label, unfavorable_label, protected_attribute_names,
-     unprivileged_groups, privileged_groups) or with
-    (favorable_labels, protected_attributes).
-
-    Parameters
-    ----------
-    favorable_label : number
-
-      Label value which is considered favorable (i.e. "positive").
-
-    unfavorable_label : number
-
-      Label value which is considered unfavorable (i.e. "negative").
-
-    protected_attribute_names : array **of** items : string
-
-      Subset of feature names for which fairness is desired.
-
-    unprivileged_groups : array
-
-      Representation for unprivileged group.
-
-      - items : dict
-
-          Map from feature names to group-indicating values.
-
-    privileged_groups : array
-
-      Representation for privileged group.
-
-      - items : dict
-
-          Map from feature names to group-indicating values.
-
-    favorable_labels : array of number
-
-      Label values which are considered favorable (i.e. "positive").
-
-    protected_attributes : array of dict
-
-      Features for which fairness is desired.
-
-      - feature : string or integer
-
-          Column name or column index.
-
-      - privileged_groups : union type
-
-          Values or ranges that indicate being a member of the privileged group.
-
-          - string
-
-              Literal value
-
-          - array of number, >= 2 items, <= 2 items
-
-              Numeric range [a,b] from a to b inclusive.
-
-    Returns
-    -------
-    result : callable
-
-      Scorer that takes three arguments (estimator, X, y) and returns score.
-    """
+.. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
     return _BinaryLabelScorer(
         "disparate_impact",
         favorable_label,
@@ -527,52 +560,21 @@ def disparate_impact(
     )
 
 
+disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
+
+
 def statistical_parity_difference(
-    favorable_label,
-    unfavorable_label,
-    protected_attribute_names,
-    unprivileged_groups,
-    privileged_groups,
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
 ):
-    """
-    Make a scikit-learn compatible scorer given the fairness info.
+    """Create a scikit-learn compatible `statistical parity difference`_ scorer given the fairness info.
 
-    Parameters
-    ----------
-    favorable_label : number
-
-      Label value which is considered favorable (i.e. "positive").
-
-    unfavorable_label : number
-
-      Label value which is considered unfavorable (i.e. "negative").
-
-    protected_attribute_names : array **of** items : string
-
-      Subset of feature names for which fairness is desired.
-
-    unprivileged_groups : array
-
-      Representation for unprivileged group.
-
-      - items : dict
-
-          Map from feature names to group-indicating values.
-
-    privileged_groups : array
-
-      Representation for privileged group.
-
-      - items : dict
-
-          Map from feature names to group-indicating values.
-
-    Returns
-    -------
-    result : callable
-
-      Scorer that takes three arguments (estimator, X, y) and returns score.
-    """
+.. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference"""
     return _BinaryLabelScorer(
         "statistical_parity_difference",
         favorable_label,
@@ -580,7 +582,14 @@ def statistical_parity_difference(
         protected_attribute_names,
         unprivileged_groups,
         privileged_groups,
+        favorable_labels,
+        protected_attributes,
     )
+
+
+statistical_parity_difference.__doc__ = (
+    str(statistical_parity_difference.__doc__) + _SCORER_DOCSTRING
+)
 
 
 _postprocessing_base_hyperparams = {
