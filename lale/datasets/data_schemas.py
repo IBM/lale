@@ -345,35 +345,3 @@ def to_schema(obj):
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
     lale.type_checking.validate_is_schema(result)
     return result
-
-
-def ndarray_to_dataframe(array):
-    assert len(array.shape) == 2
-    schema = getattr(array, "json_schema", None)
-    if schema is None:
-        return pd.DataFrame(array)
-    column_schemas = schema.get("items", {}).get("items", None)
-    if isinstance(column_schemas, list):
-        column_names = [s.get("description", None) for s in column_schemas]
-    if column_schemas is None or None in column_names:
-        dataframe = pd.DataFrame(array)
-    else:
-        dataframe = pd.DataFrame(array, columns=column_names)
-    return add_schema(dataframe, schema)
-
-
-def ndarray_to_series(array):
-    assert len(array.shape) == 1
-    schema = getattr(array, "json_schema", None)
-    series = pd.Series(array)
-    if schema is None:
-        return series
-    return add_schema(series, schema)
-
-
-def pandas_to_ndarray(pandas_value):
-    schema = getattr(pandas_value, "json_schema", None)
-    array = pandas_value.to_numpy()
-    if schema is None:
-        return array
-    return add_schema(array, schema)

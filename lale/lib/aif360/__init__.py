@@ -47,6 +47,7 @@ from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
 from .reject_option_classification import RejectOptionClassification
 from .util import (
+    accuracy_and_disparate_impact,
     dataset_fairness_info,
     dataset_to_pandas,
     disparate_impact,

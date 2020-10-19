@@ -17,6 +17,7 @@ import aif360.datasets
 import aif360.metrics
 import numpy as np
 import pandas as pd
+import sklearn.metrics
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
@@ -272,6 +273,36 @@ def _dataframe_replace(dataframe, subst):
     return result
 
 
+def _ensure_str(str_or_int):
+    return f"f{str_or_int}" if isinstance(str_or_int, int) else str_or_int
+
+
+def _ndarray_to_series(data, name, index=None, dtype=None):
+    if isinstance(data, pd.Series):
+        return data
+    result = pd.Series(data=data, index=index, dtype=dtype, name=_ensure_str(name))
+    schema = getattr(data, "json_schema", None)
+    if schema is not None:
+        result = lale.datasets.data_schemas.add_schema(result, schema)
+    return result
+
+
+def _ndarray_to_dataframe(array):
+    assert len(array.shape) == 2
+    column_names = None
+    schema = getattr(array, "json_schema", None)
+    if schema is not None:
+        column_schemas = schema.get("items", {}).get("items", None)
+        if isinstance(column_schemas, list):
+            column_names = [s.get("description", None) for s in column_schemas]
+    if column_names is None or None in column_names:
+        column_names = [_ensure_str(i) for i in range(array.shape[1])]
+    result = pd.DataFrame(array, columns=column_names)
+    if schema is not None:
+        result = lale.datasets.data_schemas.add_schema(result, schema)
+    return result
+
+
 class _CategoricalFairnessConverter:
     def __init__(self, favorable_labels, protected_attributes, remainder="drop"):
         lale.type_checking.validate_schema(
@@ -288,9 +319,9 @@ class _CategoricalFairnessConverter:
 
     def __call__(self, orig_X, orig_y):
         if isinstance(orig_X, np.ndarray):
-            orig_X = lale.datasets.data_schemas.ndarray_to_dataframe(orig_X)
+            orig_X = _ndarray_to_dataframe(orig_X)
         if isinstance(orig_y, np.ndarray):
-            orig_y = lale.datasets.data_schemas.ndarray_to_series(orig_y)
+            orig_y = _ndarray_to_series(orig_y, orig_X.shape[1])
         assert isinstance(orig_X, pd.DataFrame), type(orig_X)
         assert isinstance(orig_y, pd.Series), type(orig_y)
         assert (
@@ -312,13 +343,6 @@ class _CategoricalFairnessConverter:
             result_X = _dataframe_replace(orig_X, protected)
         result_y = orig_y.apply(lambda v: _group_flag(v, self.favorable_labels))
         return result_X, result_y
-
-
-def _ensure_series(data, index, dtype, name):
-    if isinstance(data, pd.Series):
-        return data
-    result = pd.Series(data=data, index=index, dtype=dtype, name=name)
-    return result
 
 
 class _BinaryLabelScorer:
@@ -346,10 +370,11 @@ class _BinaryLabelScorer:
             assert favorable_label is None and unfavorable_label is None
             favorable_label, unfavorable_label = 1, 0
             assert protected_attribute_names is None
-            protected_attribute_names = [pa["feature"] for pa in protected_attributes]
+            pas = protected_attributes
+            protected_attribute_names = [_ensure_str(pa["feature"]) for pa in pas]
             assert unprivileged_groups is None and privileged_groups is None
-            unprivileged_groups = [{pa["feature"]: 0 for pa in protected_attributes}]
-            privileged_groups = [{pa["feature"]: 1 for pa in protected_attributes}]
+            unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
+            privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
             self.cats_to_numeric = _CategoricalFairnessConverter(**self.cat_info)
         self.fairness_info = {
             "favorable_label": favorable_label,
@@ -365,7 +390,9 @@ class _BinaryLabelScorer:
 
     def __call__(self, estimator, X, y):
         predicted = estimator.predict(X)
-        y_pred = _ensure_series(predicted, X.index, y.dtype, y.name)
+        index = X.index if isinstance(X, pd.DataFrame) else None
+        y_name = y.name if isinstance(y, pd.Series) else _ensure_str(X.shape[1])
+        y_pred = _ndarray_to_series(predicted, y_name, index, y.dtype)
         if self.cats_to_numeric is not None:
             X, y_pred = self.cats_to_numeric(X, y_pred)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
@@ -377,6 +404,38 @@ class _BinaryLabelScorer:
         method = getattr(fairness_metrics, self.metric)
         result = method()
         return result
+
+
+class accuracy_and_disparate_impact:
+    def __init__(
+        self,
+        favorable_label=None,
+        unfavorable_label=None,
+        protected_attribute_names=None,
+        unprivileged_groups=None,
+        privileged_groups=None,
+        favorable_labels=None,
+        protected_attributes=None,
+    ):
+        self.accuracy_scorer = sklearn.metrics.make_scorer(
+            sklearn.metrics.accuracy_score
+        )
+        self.disparate_impact_scorer = disparate_impact(
+            favorable_label,
+            unfavorable_label,
+            protected_attribute_names,
+            unprivileged_groups,
+            privileged_groups,
+            favorable_labels,
+            protected_attributes,
+        )
+
+    def __call__(self, estimator, X, y):
+        disparate_impact = self.disparate_impact_scorer(estimator, X, y)
+        if disparate_impact < 0.9 or 1.1 < disparate_impact:
+            return -99
+        accuracy = self.accuracy_scorer(estimator, X, y)
+        return accuracy
 
 
 def disparate_impact(
@@ -560,7 +619,7 @@ class _BasePostprocessingImpl:
         y_true = y
         self.estimator = self.estimator.fit(X, y_true)
         predicted = self.estimator.predict(X)
-        y_pred = _ensure_series(predicted, X.index, self.y_dtype, self.y_name)
+        y_pred = _ndarray_to_series(predicted, self.y_name, X.index, self.y_dtype)
         dataset_true = self.pandas_to_dataset(X, y_true)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
@@ -568,7 +627,7 @@ class _BasePostprocessingImpl:
 
     def predict(self, X):
         predicted = self.estimator.predict(X)
-        y_pred = _ensure_series(predicted, X.index, self.y_dtype, self.y_name)
+        y_pred = _ndarray_to_series(predicted, self.y_name, X.index, self.y_dtype)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         dataset_out = self.mitigator.predict(dataset_pred)
         _, y_out = dataset_to_pandas(dataset_out, return_only="y")
