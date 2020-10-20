@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
+
 import sklearn.linear_model
 
 import lale.docstrings
 import lale.operators
+from lale.schemas import AnyOf, Enum, Float, Null
 
 _input_fit_schema = {
     "type": "object",
@@ -133,7 +136,6 @@ _hyperparams_schema = {
                 "n_jobs",
             ],
             "relevantToOptimizer": [
-                "penalty",
                 "dual",
                 "tol",
                 "fit_intercept",
@@ -161,14 +163,8 @@ preprocess the data with a scaler from sklearn.preprocessing.""",
                     "default": "liblinear",
                 },
                 "penalty": {
-                    "description": """Norm used in the penalization.
-The 'newton-cg', 'sag' and 'lbfgs' solvers support only l2 penalties. 'elasticnet' is
-only supported by the 'saga' solver. If 'none' (not supported by the
-liblinear solver), no regularization is applied.""",
-                    "anyOf": [
-                        {"enum": ["l2"]},
-                        {"enum": ["l1"], "forOptimizer": False},
-                    ],
+                    "description": "Norm used in the penalization.",
+                    "enum": ["l1", "l2"],
                     "default": "l2",
                 },
                 "dual": {
@@ -311,7 +307,7 @@ not.""",
             },
         },
         {
-            "description": "The newton-cg, sag, and lbfgs solvers support only l2 penalties.",
+            "description": "The newton-cg, sag, and lbfgs solvers support only l2 or no penalties.",
             "anyOf": [
                 {
                     "type": "object",
@@ -319,7 +315,50 @@ not.""",
                         "solver": {"not": {"enum": ["newton-cg", "sag", "lbfgs"]}}
                     },
                 },
-                {"type": "object", "properties": {"penalty": {"enum": ["l2"]}}},
+                {"type": "object", "properties": {"penalty": {"enum": ["l2", "none"]}}},
+            ],
+        },
+        {
+            "description": "Penalty elasticnet is only supported by the saga solver.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"penalty": {"not": {"enum": ["elasticnet"]}}},
+                },
+                {"type": "object", "properties": {"solver": {"enum": ["saga"]}}},
+            ],
+        },
+        {
+            "description": "When penalty is elasticnet, l1_ratio must be between 0 and 1.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"penalty": {"not": {"enum": ["elasticnet"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "l1_ratio": {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
+                        }
+                    },
+                },
+            ],
+        },
+        {
+            "description": "Solver liblinear does not support penalty none.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"solver": {"not": {"enum": ["liblinear"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"penalty": {"enum": ["l1", "l2", "elasticnet"]}},
+                },
             ],
         },
         {
@@ -337,8 +376,7 @@ not.""",
             ],
         },
         {
-            "description": "The multi_class multinomial option is unavailable when the "
-            "solver is liblinear.",
+            "description": "The multi_class multinomial option is unavailable when the solver is liblinear.",
             "anyOf": [
                 {
                     "type": "object",
@@ -405,13 +443,23 @@ LogisticRegression = lale.operators.make_operator(
     LogisticRegressionImpl, _combined_schemas
 )
 
-if sklearn.__version__ >= "0.22":
+if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LogisticRegression.html
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.LogisticRegression.html
+    LogisticRegression = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        LogisticRegression.customize_schema(
+            penalty=Enum(
+                values=["l1", "l2", "elasticnet", "none"],
+                desc="Norm used in the penalization.",
+                default="l2",
+            ),
+        ),
+    )
+
+if sklearn.__version__ >= "0.22":
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.LogisticRegression.html
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.LogisticRegression.html
-    import typing
-
-    from lale.schemas import AnyOf, Enum, Float, Null
-
     LogisticRegression = typing.cast(
         lale.operators.PlannedIndividualOp,
         LogisticRegression.customize_schema(
