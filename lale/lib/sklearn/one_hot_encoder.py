@@ -109,7 +109,7 @@ _input_transform_schema = {
 _output_transform_schema = {
     "description": "Output data schema for predictions (projected data) using the OneHotEncoder model from scikit-learn. See the official documentation for details: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html\n",
     "type": "array",
-    "items": {"type": "array", "items": {"enum": [0.0, 1.0]}},
+    "items": {"type": "array", "items": {"type": "number"}},
 }
 
 _combined_schemas = {
