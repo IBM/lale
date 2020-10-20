@@ -186,30 +186,6 @@ outputs with unit component-wise variances.""",
                 },
             ],
         },
-        {
-            "description": "If svd_solver == 'arpack', the number of components must be strictly less than the minimum of n_features and n_samples.",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {"svd_solver": {"not": {"enum": ["arpack"]}}},
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "n_components": {
-                            "anyOf": [
-                                {"enum": ["mle"]},
-                                {
-                                    "type": "number",
-                                    "minimum": 0.0,
-                                    "laleMaximum": "X/maxItems",  # number of rows
-                                },
-                            ]
-                        },
-                    },
-                },
-            ],
-        },
     ],
 }
 

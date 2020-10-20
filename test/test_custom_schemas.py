@@ -385,7 +385,7 @@ class TestFreeze(unittest.TestCase):
         from lale.lib.sklearn import LogisticRegression
 
         liquid = LogisticRegression(C=0.1, solver="liblinear")
-        self.assertIn("penalty", liquid.free_hyperparams())
+        self.assertIn("dual", liquid.free_hyperparams())
         self.assertFalse(liquid.is_frozen_trainable())
         liquid_grid = get_grid_search_parameter_grids(liquid)
         self.assertTrue(len(liquid_grid) > 1, f"grid size {len(liquid_grid)}")
