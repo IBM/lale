@@ -463,11 +463,11 @@ protected_attributes : array of dict
       - string
 
           Literal value
-          
-      - number
-          
-          Numerical value
 
+      - number
+
+          Numerical value
+                    
       - array of number, >= 2 items, <= 2 items
 
           Numeric range [a,b] from a to b inclusive.
