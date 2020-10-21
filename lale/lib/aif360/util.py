@@ -120,6 +120,7 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
                     "items": {
                         "anyOf": [
                             {"description": "Literal value.", "type": "string"},
+                            {"description": "Numerical value.", "type": "number"},
                             {
                                 "description": "Numeric range [a,b] from a to b inclusive.",
                                 "type": "array",
