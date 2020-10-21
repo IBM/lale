@@ -113,10 +113,37 @@ class TestAIF360(unittest.TestCase):
         return result
 
     @classmethod
+    def _creditg_np_num(cls):
+        train_X = cls.creditg_pd_num["train_X"].to_numpy()
+        train_y = cls.creditg_pd_num["train_y"].to_numpy()
+        test_X = cls.creditg_pd_num["test_X"].to_numpy()
+        test_y = cls.creditg_pd_num["test_y"].to_numpy()
+        assert isinstance(train_X, np.ndarray), type(train_X)
+        assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
+        assert isinstance(train_y, np.ndarray), type(train_y)
+        assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
+        fairness_info = {
+            "favorable_labels": [1.0],
+            "protected_attributes": [
+                {"feature": 57, "privileged_groups": [1.0]},
+                {"feature": 55, "privileged_groups": [2.0]},
+            ],
+        }
+        result = {
+            "train_X": train_X,
+            "train_y": train_y,
+            "test_X": test_X,
+            "test_y": test_y,
+            "fairness_info": fairness_info,
+        }
+        return result
+
+    @classmethod
     def setUpClass(cls):
         cls.creditg_pd_cat = cls._creditg_pd_cat()
         cls.creditg_pd_num = cls._creditg_pd_num()
         cls.creditg_np_cat = cls._creditg_np_cat()
+        cls.creditg_np_num = cls._creditg_np_num()
 
     def test_converter_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
@@ -187,6 +214,16 @@ class TestAIF360(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         test_X = self.creditg_pd_cat["test_X"]
         test_y = self.creditg_pd_cat["test_y"]
+        self._attempt_scorers(fairness_info, trained, test_X, test_y)
+
+    def test_scorers_np_num(self):
+        fairness_info = self.creditg_np_num["fairness_info"]
+        trainable = LogisticRegression(max_iter=1000)
+        train_X = self.creditg_np_num["train_X"]
+        train_y = self.creditg_np_num["train_y"]
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.creditg_np_num["test_X"]
+        test_y = self.creditg_np_num["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
     def test_scorers_np_cat(self):

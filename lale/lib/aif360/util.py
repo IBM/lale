@@ -361,7 +361,7 @@ class _BinaryLabelScorer:
         assert hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric)
         self.metric = metric
         if favorable_labels is None:
-            self.cats_to_numeric = None
+            self.cats_to_binary = None
         else:
             self.cat_info = {
                 "favorable_labels": favorable_labels,
@@ -376,7 +376,7 @@ class _BinaryLabelScorer:
             assert unprivileged_groups is None and privileged_groups is None
             unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
             privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
-            self.cats_to_numeric = _CategoricalFairnessConverter(**self.cat_info)
+            self.cats_to_binary = _CategoricalFairnessConverter(**self.cat_info)
         self.fairness_info = {
             "favorable_label": favorable_label,
             "unfavorable_label": unfavorable_label,
@@ -394,8 +394,8 @@ class _BinaryLabelScorer:
         index = X.index if isinstance(X, pd.DataFrame) else None
         y_name = y.name if isinstance(y, pd.Series) else _ensure_str(X.shape[1])
         y_pred = _ndarray_to_series(predicted, y_name, index, y.dtype)
-        if self.cats_to_numeric is not None:
-            X, y_pred = self.cats_to_numeric(X, y_pred)
+        if self.cats_to_binary is not None:
+            X, y_pred = self.cats_to_binary(X, y_pred)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
             dataset_pred,
@@ -411,7 +411,7 @@ _SCORER_DOCSTRING = """
 
 There are two ways to construct this scorer, either with
 (favorable_label, unfavorable_label, protected_attribute_names,
- unprivileged_groups, privileged_groups) or with
+unprivileged_groups, privileged_groups) or with
 (favorable_labels, protected_attributes).
 
 Parameters
@@ -456,17 +456,19 @@ protected_attributes : array of dict
 
       Column name or column index.
 
-  - privileged_groups : union type
+  - privileged_groups : array
 
       Values or ranges that indicate being a member of the privileged group.
 
-      - string
+      - items: union type
 
-          Literal value
+        - string
 
-      - number
+            Literal value
 
-          Numerical value
+        - number
+
+            Numerical value
 
       - array of number, >= 2 items, <= 2 items
 
