@@ -668,7 +668,7 @@ class TestErrorMessages(unittest.TestCase):
         summary = cm.exception.message.split("\n")[0]
         self.assertEqual(
             summary,
-            "Invalid configuration for LogisticRegression(solver='sag', penalty='l1') due to constraint the newton-cg, sag, and lbfgs solvers support only l2 penalties.",
+            "Invalid configuration for LogisticRegression(solver='sag', penalty='l1') due to constraint the newton-cg, sag, and lbfgs solvers support only l2 or no penalties.",
         )
 
 

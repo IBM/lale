@@ -88,6 +88,7 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 2,
+                            "laleMaximum": "X/maxItems",  # number of rows
                             "forOptimizer": False,
                             "description": "Consider min_samples_split as the minimum number.",
                         },
@@ -110,6 +111,7 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 1,
+                            "laleMaximum": "X/maxItems",  # number of rows
                             "forOptimizer": False,
                             "description": "Consider min_samples_leaf as the minimum number.",
                         },
@@ -136,6 +138,7 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 2,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
                             "forOptimizer": False,
                             "description": "Consider max_features features at each split.",
                         },

@@ -25,21 +25,6 @@ import lale.operators
 
 
 class USEPretrainedEncoderImpl(object):
-    """
-    USEPretrainedEncoderImpl is a module that allows simple consumption and fine-tuning of the
-    DAN version of Universal Sentence Encoder: https://tfhub.dev/google/universal-sentence-encoder/2
-
-    Parameters
-    ----------
-    model_path: string, (default=None), path to save the model
-
-    batch_size: int, (default=32), batch size of fine-tuning the model
-
-    References
-    ----------
-    Daniel Cer, et al. Universal Sentence Encoder. arXiv:1803.11175, 2018
-    """
-
     def __init__(self, model_path=None, batch_size=32):
         self.resources_dir = os.path.join(os.path.dirname(__file__), "resources")
 
@@ -64,22 +49,6 @@ class USEPretrainedEncoderImpl(object):
         self.sess.run([tf.global_variables_initializer(), tf.tables_initializer()])
 
     def fit(self, X, y, model_dir=None):
-        """
-        method for fine-tuning the universal sentence encoder using text classification task;
-        fine-tune the current model and save the fine_tuned model for later application
-
-        Parameters
-        ----------
-        X : list of str, input corpus for fine-tune use
-
-        y : list of int, input label for fine-tune use
-
-        model_dir: str, (default = None), directory to save the fine_tuned model for later use
-
-        Returns
-        -------
-
-        """
         Y = np.array(y).reshape(-1)
         num_classes = len(np.unique(Y))
         Y = np.eye(num_classes)[Y]
@@ -136,16 +105,6 @@ class USEPretrainedEncoderImpl(object):
         return self
 
     def transform(self, X):
-        """
-        method for encoding strings into floating point arrays using universal sentence encoder
-        Parameters
-        ----------
-        X : list of strings, input corpus for fine-tune use
-
-        Returns
-        -------
-        transformed_x: 2d-array, shape [n_samples, 512], sentence embedding for downstream task
-        """
         sentence_embedding = self.embed(X)
         transformed_x = self.sess.run(sentence_embedding)
         return transformed_x
@@ -158,7 +117,7 @@ _input_schema_fit = {
     "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "Input Text",
+            "description": "Input corpus for fine-tuning.",
             "anyOf": [
                 {"type": "array", "items": {"type": "string"}},
                 {
@@ -173,8 +132,13 @@ _input_schema_fit = {
             ],
         },
         "y": {
-            "description": "Labels, required",
-            "anyOf": [{"type": "array", "items": {"type": "number"}}],
+            "description": "Input labels for fine-tuning",
+            "type": "array",
+            "items": {"type": "number"},
+        },
+        "model_dir": {
+            "description": "Directory to save the fine_tuned model for later use.",
+            "type": "string",
         },
     },
 }
@@ -235,9 +199,12 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Combined schema for expected data and hyperparameters for a transformer for"
-    " a text data transformer based on pre-trained USE model "
-    "(https://tfhub.dev/google/universal-sentence-encoder/2).",
+    "description": """USE (Universal Sentence Encoder) text embedding (https://tfhub.dev/google/universal-sentence-encoder/2).
+
+References
+----------
+Daniel Cer, et al. Universal Sentence Encoder. arXiv:1803.11175, 2018
+""",
     "type": "object",
     "tags": {
         "pre": ["text"],
