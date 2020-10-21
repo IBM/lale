@@ -60,8 +60,7 @@ _hyperparams_schema = {
                             "enum": ["mle"],
                         },
                         {
-                            "description": """Select the number of components such that the amount of variance that
-needs to be explained is greater than the specified percentage.""",
+                            "description": """Select the number of components such that the amount of variance that needs to be explained is greater than the specified percentage.""",
                             "type": "number",
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
@@ -72,6 +71,7 @@ needs to be explained is greater than the specified percentage.""",
                             "description": "Number of components to keep.",
                             "type": "integer",
                             "minimum": 1,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
                             "forOptimizer": False,
                         },
                     ],
@@ -127,6 +127,11 @@ outputs with unit component-wise variances.""",
                     "default": None,
                 },
             },
+        },
+        {
+            "description": "This class does not support sparse input. See TruncatedSVD for an alternative with sparse data.",
+            "type": "object",
+            "laleNot": "X/isSparse",
         },
         {
             "description": "Option n_components mle can only be set for svd_solver full or auto.",
