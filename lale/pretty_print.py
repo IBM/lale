@@ -447,6 +447,34 @@ def _collect_names(jsn: JSON_TYPE) -> Set[str]:
     return result
 
 
+def _combine_lonely_literals(printed_code):
+    lines = printed_code.split("\n")
+    regex = re.compile(r' +("[^"]*"|\d+\.?\d*|\[\]|np\.dtype\("[^"]+"\)),')
+    for i in range(len(lines)):
+        if lines[i] is not None:
+            match_i = regex.fullmatch(lines[i])
+            if match_i is not None:
+                j = i + 1
+                while j < len(lines) and lines[j] is not None:
+                    match_j = regex.fullmatch(lines[j])
+                    if match_j is None:
+                        break
+                    candidate = lines[i] + " " + match_j.group(1) + ","
+                    if len(candidate) > 80:
+                        break
+                    lines[i] = candidate
+                    lines[j] = None
+                    j += 1
+    result = "\n".join([s for s in lines if s is not None])
+    return result
+
+
+def _format_code(printed_code):
+    formatted = black.format_str(printed_code, mode=_black78).rstrip()
+    combined = _combine_lonely_literals(formatted)
+    return combined
+
+
 def _operator_jsn_to_string(
     jsn: JSON_TYPE, show_imports: bool, combinators: bool, astype=str
 ) -> str:
@@ -470,13 +498,13 @@ def _operator_jsn_to_string(
         result += "\n".join(gen.assigns)
     else:
         result = "\n".join(gen.assigns)
-    formatted = black.format_str(result, mode=_black78).rstrip()
+    formatted = _format_code(result)
     return formatted
 
 
 def json_to_string(schema: JSON_TYPE) -> str:
     s1 = json.dumps(schema)
-    s2 = black.format_str(s1, mode=_black78).rstrip()
+    s2 = _format_code(s1)
     return s2
 
 
