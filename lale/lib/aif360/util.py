@@ -456,19 +456,17 @@ protected_attributes : array of dict
 
       Column name or column index.
 
-  - privileged_groups : array
+  - privileged_groups : array of union
 
       Values or ranges that indicate being a member of the privileged group.
 
-      - items: union type
+      - string
 
-        - string
+          Literal value
 
-            Literal value
+      - number
 
-        - number
-
-            Numerical value
+          Numerical value
 
       - array of number, >= 2 items, <= 2 items
 
