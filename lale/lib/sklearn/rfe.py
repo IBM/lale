@@ -16,12 +16,13 @@ from sklearn.feature_selection import RFE as SKLModel
 
 import lale.docstrings
 import lale.operators
+from lale.sklearn_compat import make_sklearn_compat
 
 
 class RFEImpl:
     def __init__(self, estimator, n_features_to_select=None, step=1, verbose=0):
         self._hyperparams = {
-            "estimator": estimator,
+            "estimator": make_sklearn_compat(estimator),
             "n_features_to_select": n_features_to_select,
             "step": step,
             "verbose": verbose,
