@@ -469,9 +469,7 @@ tam = TAM(
     name="isoforestanomaly",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 pipeline = make_pipeline(tam, LR())"""
@@ -507,9 +505,7 @@ tam = TAM(
     name="pca",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
@@ -563,9 +559,7 @@ tam = TAM(
     name="featureagglomeration",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 logistic_regression = LogisticRegression(
@@ -613,9 +607,7 @@ tam = TAM(
     name="pca",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 logistic_regression = LogisticRegression(
@@ -648,8 +640,20 @@ pipeline = tam >> logistic_regression"""
             name="round",
             datatypes=["numeric"],
             feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical],
-            col_names=["a", "b", "c"],
-            col_dtypes=[np.dtype("float32"), np.dtype("float32"), np.dtype("float32")],
+            col_names=[
+                "a____________",
+                "b____________",
+                "c____________",
+                "d____________",
+                "e____________",
+            ],
+            col_dtypes=[
+                np.dtype("float32"),
+                np.dtype("float32"),
+                np.dtype("float32"),
+                np.dtype("float32"),
+                np.dtype("float32"),
+            ],
         )
         pipeline = ta1 >> LR()
         expected = """from autoai_libs.cognito.transforms.transform_utils import TA1
@@ -664,11 +668,13 @@ ta1 = TA1(
     name="round",
     datatypes=["numeric"],
     feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical],
-    col_names=["a", "b", "c"],
+    col_names=[
+        "a____________", "b____________", "c____________", "d____________",
+        "e____________",
+    ],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"),
     ],
 )
 pipeline = ta1 >> LR()"""
