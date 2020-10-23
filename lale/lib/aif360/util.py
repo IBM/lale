@@ -505,11 +505,24 @@ class _AccuracyAndDisparateImpact:
         )
 
     def __call__(self, estimator, X, y):
-        disparate_impact = self.disparate_impact_scorer(estimator, X, y)
-        if disparate_impact < 0.9 or 1.1 < disparate_impact:
-            return -99
+        disp_impact = self.disparate_impact_scorer(estimator, X, y)
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return np.NAN
         accuracy = self.accuracy_scorer(estimator, X, y)
-        return accuracy
+        assert 0.0 <= accuracy <= 1.0 and 0.0 <= disp_impact, (accuracy, disp_impact)
+        if disp_impact <= 1.0:
+            symmetric_impact = disp_impact
+        else:
+            symmetric_impact = 1.0 / disp_impact
+        disp_impact_treshold = 0.9  # impact above threshold is considered fair
+        if symmetric_impact < disp_impact_treshold:
+            scaling_factor = symmetric_impact / disp_impact_treshold
+        else:
+            scaling_factor = 1.0
+        scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
+        result = accuracy * scaling_factor ** scaling_hardness
+        assert 0.0 <= result <= accuracy <= 1.0, (result, accuracy)
+        return result
 
 
 def accuracy_and_disparate_impact(

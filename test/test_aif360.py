@@ -16,6 +16,7 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import sklearn.metrics
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
@@ -180,8 +181,10 @@ class TestAIF360(unittest.TestCase):
         impact = disparate_impact_scorer(estimator, test_X, test_y)
         self.assertLess(impact, 0.9)
         combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
-        score = combined_scorer(estimator, test_X, test_y)
-        self.assertEqual(score, -99)
+        combined = combined_scorer(estimator, test_X, test_y)
+        accuracy_scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
+        accuracy = accuracy_scorer(estimator, test_X, test_y)
+        self.assertLess(combined, accuracy)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, -0.1)
