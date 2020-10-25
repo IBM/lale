@@ -198,7 +198,7 @@ _combined_schemas = {
 .. _ColumnTransformer: https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.column_transformer.html",
-    "import_from": "sklearn.ensemble",
+    "import_from": "sklearn.compose",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

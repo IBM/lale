@@ -20,6 +20,8 @@ import graphviz
 import lale.json_operator
 import lale.pretty_print
 
+_LALE_SKL_PIPELINE = "lale.lib.sklearn.pipeline.PipelineImpl"
+
 
 def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
     """For each cluster (Pipeline, OperatorChoice, or higher-order IndividualOp), get two representatives (first-order IndividualOps).
@@ -49,18 +51,23 @@ def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:
 
     def populate(uid: str, jsn, depth: int, clusters: List[str]) -> int:
         kind: str = lale.json_operator.json_op_kind(jsn)
-        if kind == "Pipeline":
+        if kind == "Pipeline" or jsn["class"] == _LALE_SKL_PIPELINE:
             step2idx: Dict[str, int] = {}
             for step_idx, step_uid in enumerate(jsn["steps"].keys()):
                 step2idx[step_uid] = step_idx
-            for tail, head in jsn["edges"]:
+            if kind == "Pipeline":
+                edges = jsn["edges"]
+            else:
+                names = list(jsn["steps"].keys())
+                edges = [[names[i], names[i + 1]] for i in range(len(names) - 1)]
+            for tail, head in edges:
                 assert (
                     step2idx[tail] < step2idx[head]
                 ), f"steps {tail} and {head} are not in topological order"
             node2preds: Dict[str, List[str]] = {
                 step: [] for step in jsn["steps"].keys()
             }
-            for tail, head in jsn["edges"]:
+            for tail, head in edges:
                 node2preds[head].append(tail)
             more_clusters = [uid, *clusters]
             d_max = depth
@@ -141,9 +148,9 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
         nodes = jsn["steps"]
         edges = jsn["edges"]
     else:
-        edges = []
         if is_root:
             nodes = {"(root)": jsn}
+            edges = []
         elif kind == "OperatorChoice":
             rhs = " | ".join(jsn["steps"].keys())
             dot.attr(
@@ -154,11 +161,12 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
                 tooltip=f"{uid} = {rhs}",
             )
             nodes = jsn["steps"]
+            edges = []
         else:
             assert kind == "IndividualOp" and "steps" in jsn
             dot.attr(
                 "graph",
-                label=jsn["label"],
+                label=jsn.get("viz_label", jsn["label"]),
                 style="filled",
                 fillcolor=_STATE2COLOR[jsn["state"]],
                 tooltip=_indiv_op_tooltip(uid, jsn),
@@ -166,6 +174,11 @@ def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
             if "documentation_url" in jsn:
                 dot.attr("graph", URL=jsn["documentation_url"])
             nodes = jsn["steps"]
+            if jsn["class"] == _LALE_SKL_PIPELINE:
+                names = list(nodes.keys())
+                edges = [[names[i], names[i + 1]] for i in range(len(names) - 1)]
+            else:
+                edges = []
     for step_uid, step_jsn in nodes.items():
         node_kind = lale.json_operator.json_op_kind(step_jsn)
         if node_kind in ["Pipeline", "OperatorChoice"] or "steps" in step_jsn:
