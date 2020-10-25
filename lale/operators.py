@@ -3180,6 +3180,10 @@ class _PipelineFactory:
         pass
 
     def __call__(self, steps: List[Any]):
+        warnings.warn(
+            "lale.operators.Pipeline is deprecated, use sklearn.pipeline.Pipeline or lale.lib.sklearn.Pipeline instead",
+            DeprecationWarning,
+        )
         for i in range(len(steps)):
             op = steps[i]
             if isinstance(op, tuple):
