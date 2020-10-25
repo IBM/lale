@@ -767,6 +767,20 @@ aggregate = Aggregate(columns={"talk_time|mean": mean(it.talk_time)})
 pipeline = (scan_0 & scan_1) >> join >> aggregate"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_sklearn_pipeline(self):
+        from lale.lib.sklearn import PCA, LogisticRegression, Pipeline
+
+        pipeline = Pipeline(steps=[("pca", PCA), ("lr", LogisticRegression(C=0.1))])
+        expected = """from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+import lale
+
+lale.wrap_imported_operators()
+logistic_regression = LogisticRegression(C=0.1)
+pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):

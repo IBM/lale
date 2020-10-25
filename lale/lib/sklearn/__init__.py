@@ -66,6 +66,7 @@ Transformers:
 * lale.lib.sklearn. `OneHotEncoder`_
 * lale.lib.sklearn. `OrdinalEncoder`_
 * lale.lib.sklearn. `PCA`_
+* lale.lib.sklearn. `Pipeline`_
 * lale.lib.sklearn. `PolynomialFeatures`_
 * lale.lib.sklearn. `QuadraticDiscriminantAnalysis`_
 * lale.lib.sklearn. `QuantileTransformer`_
@@ -105,6 +106,7 @@ Transformers:
 .. _`OrdinalEncoder`: lale.lib.sklearn.ordinal_encoder.html
 .. _`PassiveAggressiveClassifier`: lale.lib.sklearn.passive_aggressive_classifier.html
 .. _`PCA`: lale.lib.sklearn.pca.html
+.. _`Pipeline`: lale.lib.sklearn.pipeline.html
 .. _`PolynomialFeatures`: lale.lib.sklearn.polynomial_features.html
 .. _`QuadraticDiscriminantAnalysis`: lale.lib.sklearn.quadratic_discriminant_analysis.html
 .. _`QuantileTransformer`: lale.lib.sklearn.quantile_transformer.html
@@ -154,6 +156,7 @@ from .one_hot_encoder import OneHotEncoder
 from .ordinal_encoder import OrdinalEncoder
 from .passive_aggressive_classifier import PassiveAggressiveClassifier
 from .pca import PCA
+from .pipeline import Pipeline
 from .polynomial_features import PolynomialFeatures
 from .quadratic_discriminant_analysis import QuadraticDiscriminantAnalysis
 from .quantile_transformer import QuantileTransformer
