@@ -47,7 +47,10 @@ class PipelineImpl:
         self._final_estimator = self._pipeline.steps()[-1]
 
     def fit(self, X, y=None):
-        self._pipeline = self._pipeline.fit(X, y)
+        if y is None:
+            self._pipeline = self._pipeline.fit(X)
+        else:
+            self._pipeline = self._pipeline.fit(X, y)
         self._final_estimator = self._pipeline.steps()[-1]
         return self
 
@@ -62,8 +65,11 @@ class PipelineImpl:
         return result
 
     @if_delegate_has_method(delegate="_final_estimator")
-    def transform(self, X):
-        result = self._pipeline.transform(X)
+    def transform(self, X, y=None):
+        if y is None:
+            result = self._pipeline.transform(X)
+        else:
+            result = self._pipeline.transform(X, y)
         return result
 
     def viz_label(self) -> str:
@@ -127,7 +133,7 @@ _hyperparams_schema = {
 
 _input_fit_schema = {
     "type": "object",
-    "required": ["X"],
+    "required": ["X", "y"],
     "additionalProperties": False,
     "properties": {
         "X": {"description": "Features.", "laleType": "Any"},
