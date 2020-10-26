@@ -11,6 +11,8 @@ from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.tree import DecisionTreeClassifier as Tree
 
 import lale
+from lale.helpers import println_pos
+from lale.lib.autoai_libs import wrap_pipeline_segments
 
 assert sklearn.__version__ == "0.20.3", "This test is for scikit-learn 0.20.3."
 
@@ -41,8 +43,8 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             TestAutoAIOutputConsumption.model = joblib.load(
                 TestAutoAIOutputConsumption.pickled_model_path
             )
-            print(type(TestAutoAIOutputConsumption.model))
-            print(TestAutoAIOutputConsumption.model)
+            println_pos(f"type(model) {type(TestAutoAIOutputConsumption.model)}")
+            println_pos(f"model {str(TestAutoAIOutputConsumption.model)}")
         except Exception as e:
             assert False, f"Exception was thrown during model pickle: {e}"
 
@@ -59,9 +61,13 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
     def test_03_print_pipeline(self):
         lale_pipeline = TestAutoAIOutputConsumption.model
-        TestAutoAIOutputConsumption.pipeline_content = lale_pipeline.pretty_print()
+        wrapped_pipeline = wrap_pipeline_segments(lale_pipeline)
+        TestAutoAIOutputConsumption.pipeline_content = wrapped_pipeline.pretty_print()
         assert type(TestAutoAIOutputConsumption.pipeline_content) == str
         assert len(TestAutoAIOutputConsumption.pipeline_content) > 0
+        println_pos(
+            f'pretty-printed """{TestAutoAIOutputConsumption.pipeline_content}"""'
+        )
         assert (
             "lale.wrap_imported_operators()"
             in TestAutoAIOutputConsumption.pipeline_content
@@ -92,7 +98,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             try:
                 os.remove("pp_pipeline.py")
             except OSError:
-                print("Couldn't remove pp_pipeline.py file")
+                println_pos("Couldn't remove pp_pipeline.py file")
 
     def test_05_train_pretty_print_pipeline(self):
         train_X = TestAutoAIOutputConsumption.training_df.drop(["Risk"], axis=1).values
@@ -134,10 +140,10 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
         wrap_imported_operators()
         try:
-            print(
-                f"prefix_model is of type: {type(TestAutoAIOutputConsumption.prefix_model)}"
+            println_pos(
+                f"type(prefix_model) {type(TestAutoAIOutputConsumption.prefix_model)}"
             )
-            print(f"LR is of type {type(LR)}")
+            println_pos(f"type(LR) {type(LR)}")
             # This is for classifiers, regressors needs to have different operators & different scoring metrics (e.g 'r2')
             new_model = TestAutoAIOutputConsumption.prefix_model >> (LR | Tree | KNN)
             train_X = TestAutoAIOutputConsumption.training_df.drop(

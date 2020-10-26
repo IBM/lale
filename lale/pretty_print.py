@@ -449,7 +449,9 @@ def _collect_names(jsn: JSON_TYPE) -> Set[str]:
 
 def _combine_lonely_literals(printed_code):
     lines = printed_code.split("\n")
-    regex = re.compile(r' +("[^"]*"|\d+\.?\d*|\[\]|np\.dtype\("[^"]+"\)),')
+    regex = re.compile(
+        r' +("[^"]*"|\d+\.?\d*|\[\]|float\("nan"\)|np\.dtype\("[^"]+"\)),'
+    )
     for i in range(len(lines)):
         if lines[i] is not None:
             match_i = regex.fullmatch(lines[i])
@@ -460,7 +462,7 @@ def _combine_lonely_literals(printed_code):
                     if match_j is None:
                         break
                     candidate = lines[i] + " " + match_j.group(1) + ","
-                    if len(candidate) > 80:
+                    if len(candidate) > 78:
                         break
                     lines[i] = candidate
                     lines[j] = None
