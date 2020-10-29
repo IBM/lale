@@ -14,14 +14,13 @@
 
 import unittest
 import warnings
-from typing import List
+from typing import Sequence
 
 import lale.lib.lale
 import lale.search.PGO as PGO
 from lale.lib.sklearn import PCA, LogisticRegression
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.search.op2hp import hyperopt_search_space
-from lale.search.search_space import SearchSpace
 
 example_pgo_fp = "test/lale-pgo-example.json"
 
@@ -35,7 +34,7 @@ class TestPGOLoad(unittest.TestCase):
         pgo = PGO.load_pgo_file(example_pgo_fp)
         lr_c = pgo["LogisticRegression"]["C"]
         dist = PGO.FrequencyDistribution.asIntegerValues(lr_c.items())
-        samples: List[str] = dist.samples(10)
+        samples: Sequence[int] = dist.samples(10)
         _ = samples
 
 
@@ -87,8 +86,8 @@ class TestPGOHyperopt(unittest.TestCase):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
         lr = LogisticRegression()
-        parameters: SearchSpace = hyperopt_search_space(lr, pgo=pgo)
-        _ = parameters
+        hp_search_space = hyperopt_search_space(lr, pgo=pgo)
+        _ = hp_search_space
 
     def test_lr_run(self):
         pgo = PGO.load_pgo_file(example_pgo_fp)
@@ -106,7 +105,9 @@ class TestPGOHyperopt(unittest.TestCase):
         pgo = PGO.load_pgo_file(example_pgo_fp)
 
         trainable = PCA() >> LogisticRegression()
-        parameters = get_grid_search_parameter_grids(trainable, num_samples=2, pgo=pgo)
-        _ = parameters
+        parameter_grids = get_grid_search_parameter_grids(
+            trainable, num_samples=2, pgo=pgo
+        )
+        _ = parameter_grids
 
         # print(parameters)
