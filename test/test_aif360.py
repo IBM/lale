@@ -16,7 +16,9 @@ import unittest
 
 import numpy as np
 import pandas as pd
+import sklearn.datasets
 import sklearn.metrics
+import sklearn.model_selection
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
@@ -25,7 +27,12 @@ import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
 from lale.lib.aif360 import DisparateImpactRemover
 from lale.lib.lale import ConcatFeatures, Project
-from lale.lib.sklearn import FunctionTransformer, LogisticRegression, OneHotEncoder
+from lale.lib.sklearn import (
+    FunctionTransformer,
+    LinearRegression,
+    LogisticRegression,
+    OneHotEncoder,
+)
 
 
 class TestAIF360(unittest.TestCase):
@@ -140,11 +147,41 @@ class TestAIF360(unittest.TestCase):
         return result
 
     @classmethod
+    def _boston(cls):
+        orig_X, orig_y = sklearn.datasets.load_boston(return_X_y=True)
+        train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
+            orig_X, orig_y, test_size=0.33, random_state=42
+        )
+        assert isinstance(train_X, np.ndarray), type(train_X)
+        assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
+        assert isinstance(train_y, np.ndarray), type(train_y)
+        assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
+        black_median = np.median(train_X[:, 11])
+        label_median = np.median(train_y)
+        print(f"black_median {black_median}, label_median {label_median}")
+        fairness_info = {
+            "favorable_labels": [[-10000.0, label_median]],
+            "protected_attributes": [
+                # 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
+                {"feature": 11, "privileged_groups": [[0.0, black_median]]},
+            ],
+        }
+        result = {
+            "train_X": train_X,
+            "train_y": train_y,
+            "test_X": test_X,
+            "test_y": test_y,
+            "fairness_info": fairness_info,
+        }
+        return result
+
+    @classmethod
     def setUpClass(cls):
         cls.creditg_pd_cat = cls._creditg_pd_cat()
         cls.creditg_pd_num = cls._creditg_pd_num()
         cls.creditg_np_cat = cls._creditg_np_cat()
         cls.creditg_np_num = cls._creditg_np_num()
+        cls.boston = cls._boston()
 
     def test_converter_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
@@ -180,11 +217,14 @@ class TestAIF360(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fi)
         impact = disparate_impact_scorer(estimator, test_X, test_y)
         self.assertLess(impact, 0.9)
-        combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
-        combined = combined_scorer(estimator, test_X, test_y)
-        accuracy_scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        accuracy = accuracy_scorer(estimator, test_X, test_y)
-        self.assertLess(combined, accuracy)
+        if estimator.is_classifier():
+            combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
+            combined = combined_scorer(estimator, test_X, test_y)
+            accuracy_scorer = sklearn.metrics.make_scorer(
+                sklearn.metrics.accuracy_score
+            )
+            accuracy = accuracy_scorer(estimator, test_X, test_y)
+            self.assertLess(combined, accuracy)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, -0.1)
@@ -254,6 +294,16 @@ class TestAIF360(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         test_X = self.creditg_np_cat["test_X"]
         test_y = self.creditg_np_cat["test_y"]
+        self._attempt_scorers(fairness_info, trained, test_X, test_y)
+
+    def test_scorers_regression(self):
+        fairness_info = self.boston["fairness_info"]
+        trainable = LinearRegression()
+        train_X = self.boston["train_X"]
+        train_y = self.boston["train_y"]
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.boston["test_X"]
+        test_y = self.boston["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
     def test_disparate_impact_remover_pd_num(self):
