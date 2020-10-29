@@ -401,7 +401,7 @@ def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
             return None
 
 
-def _hps_from_json_rec(jsn: JSON_TYPE, steps: JSON_TYPE) -> Any:
+def _hps_from_json_rec(jsn: Any, steps: JSON_TYPE) -> Any:
     if isinstance(jsn, dict):
         if "$ref" in jsn:
             step_uid = jsn["$ref"].split("/")[-1]
