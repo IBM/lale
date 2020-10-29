@@ -100,7 +100,19 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
         "description": 'Label values which are considered favorable (i.e. "positive").',
         "type": "array",
         "minItems": 1,
-        "items": {"anyOf": [{"type": "string"}, {"type": "number"}]},
+        "items": {
+            "anyOf": [
+                {"description": "Literal value.", "type": "string"},
+                {"description": "Numerical value.", "type": "number"},
+                {
+                    "description": "Numeric range [a,b] from a to b inclusive.",
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {"type": "number"},
+                },
+            ]
+        },
     },
     "protected_attributes": {
         "description": "Features for which fairness is desired.",
@@ -444,9 +456,21 @@ privileged_groups : array
 
       Map from feature names to group-indicating values.
 
-favorable_labels : array of number
+favorable_labels : array of union
 
   Label values which are considered favorable (i.e. "positive").
+
+  - string
+
+      Literal value
+
+  - number
+
+      Numerical value
+
+  - array of number, >= 2 items, <= 2 items
+
+      Numeric range [a,b] from a to b inclusive.
 
 protected_attributes : array of dict
 
