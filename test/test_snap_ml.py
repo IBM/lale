@@ -27,7 +27,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_without_lale(self):
-        import pai4sk
+        import pai4sk  # type: ignore
 
         clf = pai4sk.RandomForestClassifier()
         self.assertIsInstance(clf, pai4sk.RandomForestClassifier)
@@ -54,6 +54,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
 
     def test_sklearn_compat(self):
         import lale.lib.pai4sk
+        import lale.sklearn_compat
 
         trainable = lale.lib.pai4sk.RandomForestClassifier()
         compat = lale.sklearn_compat.make_sklearn_compat(trainable)
