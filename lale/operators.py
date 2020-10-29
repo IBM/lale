@@ -121,6 +121,7 @@ from typing import (
     TypeVar,
     Union,
     cast,
+    overload,
 )
 
 import jsonschema
@@ -2540,8 +2541,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             raise ValueError("Must call `fit` before `decision_function`.")
 
     def freeze_trainable(self) -> "TrainablePipeline":
-        frozen_steps = []
-        frozen_map = {}
+        frozen_steps: List[TrainableOperator] = []
+        frozen_map: Dict[Operator, Operator] = {}
         for liquid in self._steps:
             frozen = liquid.freeze_trainable()
             frozen_map[liquid] = frozen
@@ -3122,6 +3123,33 @@ class _PipelineFactory:
 Pipeline = _PipelineFactory()
 
 
+@overload
+def make_pipeline_graph(
+    steps: List[TrainedOperator],
+    edges: List[Tuple[Operator, Operator]],
+    ordered: bool = False,
+) -> TrainedPipeline:
+    ...
+
+
+@overload
+def make_pipeline_graph(
+    steps: List[TrainableOperator],
+    edges: List[Tuple[Operator, Operator]],
+    ordered: bool = False,
+) -> TrainablePipeline:
+    ...
+
+
+@overload
+def make_pipeline_graph(
+    steps: List[Operator],
+    edges: List[Tuple[Operator, Operator]],
+    ordered: bool = False,
+) -> PlannedPipeline:
+    ...
+
+
 def make_pipeline_graph(steps, edges, ordered=False) -> PlannedPipeline:
     """
     Based on the state of the steps, it is important to decide an appropriate type for
@@ -3149,16 +3177,33 @@ def make_pipeline_graph(steps, edges, ordered=False) -> PlannedPipeline:
         return PlannedPipeline(steps, edges, ordered=ordered)
 
 
+@overload
+def make_pipeline(*orig_steps: TrainedOperator) -> TrainedPipeline:
+    ...
+
+
+@overload
+def make_pipeline(*orig_steps: TrainableOperator) -> TrainablePipeline:
+    ...
+
+
+@overload
 def make_pipeline(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
-    steps, edges = [], []
-    prev_op = None
+    ...
+
+
+def make_pipeline(*orig_steps):
+
+    steps: List[Operator] = []
+    edges: List[Tuple[Operator, Operator]] = []
+    prev_op: Optional[Operator] = None
     for curr_op in orig_steps:
         if isinstance(prev_op, BasePipeline):
-            prev_leaves: Any = prev_op._find_sink_nodes()
+            prev_leaves: List[Operator] = prev_op._find_sink_nodes()
         else:
             prev_leaves = [] if prev_op is None else [prev_op]
         if isinstance(curr_op, BasePipeline):
-            curr_roots = curr_op._find_source_nodes()
+            curr_roots: List[Operator] = curr_op._find_source_nodes()
             steps.extend(curr_op.steps())
             edges.extend(curr_op.edges())
         else:
