@@ -419,7 +419,7 @@ class PlannedOperator(Operator):
 
     def auto_configure(
         self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
-    ) -> "TrainableOperator":
+    ) -> "TrainedOperator":
         """
         Perform combined algorithm selection and hyperparameter tuning on this planned operator.
 
