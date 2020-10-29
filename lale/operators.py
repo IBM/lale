@@ -902,6 +902,7 @@ class IndividualOp(Operator):
                                 return s
                     return None
 
+                s = None
                 for typ in ["number", "integer", "string"]:
                     s = by_type(typ)
                     if s:
@@ -2606,7 +2607,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             trainable = operator
             if len(inputs) == 1:
                 inputs = inputs[0]
-            trained: TrainedOperator
+            trained: Optional[TrainedOperator] = None
             if hasattr(trainable._impl, "partial_fit"):
                 try:
                     num_epochs = trainable._impl_instance().num_epochs
@@ -2620,6 +2621,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         num_epochs = 1
                     else:
                         num_epochs = num_epochs_batching
+                assert num_epochs >= 0
             else:
                 raise AttributeError(
                     "All operators to be trained with batching need to implement partial_fit. {} doesn't.".format(
@@ -2646,6 +2648,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                             trained = trainable.partial_fit(batch_X, batch_y)
                     else:
                         trained = trainable.partial_fit(batch_X)
+            assert trained is not None
             trained = TrainedIndividualOp(
                 trained.name(), trained._impl, trained._schemas
             )
