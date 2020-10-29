@@ -393,7 +393,10 @@ class SearchSpaceOperatorVisitor(Visitor):
                             max_items = min(max_items, prefix_len)
                     else:
                         additional = self.schemaToSearchSpaceHelper_(
-                            longName, path + "-", sub_schema, relevantFields
+                            longName,
+                            path + "-",
+                            additional_items_schema,
+                            relevantFields,
                         )
                         # if items_schema is None:
                         #     raise ValueError(f"an array type was found without a provided schema for the items in the schema {schema}.  Please provide a schema for the items (consider using itemsForOptimizer)")
