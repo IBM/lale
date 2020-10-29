@@ -117,6 +117,7 @@ from typing import (
     Iterable,
     List,
     Optional,
+    Text,
     Tuple,
     TypeVar,
     Union,
@@ -1223,6 +1224,8 @@ class IndividualOp(Operator):
                 schema = self.input_schema_predict_proba()
             elif method == "decision_function":
                 schema = self.input_schema_decision_function()
+            else:
+                raise ValueError(f"Unexpected method argument: {method}")
             if "properties" in schema and arg_name in schema["properties"]:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
@@ -1250,6 +1253,9 @@ class IndividualOp(Operator):
             schema = self.output_schema_predict_proba()
         elif method == "decision_function":
             schema = self.output_schema_decision_function()
+        else:
+            raise ValueError(f"Unexpected method argument: {method}")
+
         result = lale.datasets.data_schemas.add_schema(result)
         try:
             lale.type_checking.validate_schema_or_subschema(result, schema)
@@ -2618,7 +2624,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         outputs: Dict[Operator, Any] = {}
         edges: List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
         trained_map: Dict[TrainableOpType, TrainedOperator] = {}
-
+        serialization_out_dir: Text = ""
         if serialize:
             serialization_out_dir = os.path.join(
                 os.path.dirname(__file__), "temp_serialized"
@@ -2935,7 +2941,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             [description]
         """
         outputs = {}
-
+        serialization_out_dir: Text = ""
         if serialize:
             serialization_out_dir = os.path.join(
                 os.path.dirname(__file__), "temp_serialized"
