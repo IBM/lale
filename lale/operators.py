@@ -1483,7 +1483,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         logger.info("%s exit  fit %s", time.asctime(), self.name())
         return result
 
-    def partial_fit(self, X, y=None, **fit_params) -> TrainedOperator:
+    def partial_fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
         if not hasattr(self._impl, "partial_fit"):
             raise AttributeError(f"{self.name()} has no partial_fit implemented.")
         X = self._validate_input_schema("X", X, "partial_fit")
@@ -2634,7 +2634,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             trainable = operator
             if len(inputs) == 1:
                 inputs = inputs[0]
-            trained: Optional[TrainedOperator] = None
+            trained: Optional[TrainedIndividualOp] = None
             if hasattr(trainable._impl, "partial_fit"):
                 try:
                     num_epochs = trainable._impl_instance().num_epochs
