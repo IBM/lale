@@ -31,13 +31,13 @@ class TfidfVectorizerImpl:
 
     def fit(self, X, y=None):
         if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
-            X = X.squeeze()
+            X = X.squeeze().astype("U")
         self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
         if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
-            X = X.squeeze()
+            X = X.squeeze().astype("U")
         return self._wrapped_model.transform(X)
 
 
