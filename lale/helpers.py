@@ -21,7 +21,7 @@ import re
 import sys
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
 
 import h5py
 import numpy as np
@@ -258,7 +258,7 @@ def cross_val_score_track_trials(
     result = (
         np.array(cv_results).mean(),
         np.array(log_loss_results).mean(),
-        np.array(execution_time).mean(),
+        np.array(time_results).mean(),
     )
     return result
 
@@ -312,12 +312,18 @@ def create_individual_op_using_reflection(class_name, operator_name, param_dict)
     return instance
 
 
+if TYPE_CHECKING:
+    import lale.operators
+
+
 def to_graphviz(
     lale_operator: "lale.operators.Operator",
     ipython_display: bool = True,
     call_depth: int = 1,
     **dot_graph_attr,
 ):
+    import lale.json_operator
+    import lale.operators
     import lale.visualize
 
     if not isinstance(lale_operator, lale.operators.Operator):
