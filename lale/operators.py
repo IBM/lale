@@ -2280,7 +2280,7 @@ class BasePipeline(Operator, Generic[OpType]):
             for element in dir(node):  # Looking at only 1 level for now.
                 try:
                     value = getattr(node, element)
-                    if isinstance(value, Operator) and hasattr(
+                    if isinstance(value, IndividualOp) and hasattr(
                         value._impl_instance(), "_wrapped_model"
                     ):
                         # node is a higher order operator
