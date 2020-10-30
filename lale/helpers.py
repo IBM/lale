@@ -54,10 +54,14 @@ def assignee_name(level=1) -> Optional[str]:
     file_name, line_number, function_name, text = tb[-(level + 2)]
     tree = ast.parse(text, file_name)
     assert isinstance(tree, ast.Module)
-    if len(tree.body) == 1 and isinstance(tree.body[0], ast.Assign):
-        lhs = tree.body[0].targets
-        if len(lhs) == 1 and isinstance(lhs[0], ast.Name):
-            return lhs[0].id
+    if len(tree.body) == 1:
+        stmt = tree.body[0]
+        if isinstance(stmt, ast.Assign):
+            lhs = stmt.targets
+            if len(lhs) == 1:
+                res = lhs[0]
+                if isinstance(res, ast.Name):
+                    return res.id
     return None
 
 
