@@ -282,7 +282,7 @@ _combined_schemas = {
     },
 }
 
-ExtraTreesClassifier: lale.operators.IndividualOp
+ExtraTreesClassifier: lale.operators.PlannedIndividualOp
 ExtraTreesClassifier = lale.operators.make_operator(
     ExtraTreesClassifierImpl, _combined_schemas
 )

@@ -157,7 +157,7 @@ _combined_schemas = {
     },
 }
 
-FunctionTransformer: lale.operators.IndividualOp
+FunctionTransformer: lale.operators.PlannedIndividualOp
 FunctionTransformer = lale.operators.make_operator(
     FunctionTransformerImpl, _combined_schemas
 )

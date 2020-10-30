@@ -289,7 +289,7 @@ _combined_schemas = {
 }
 
 
-DecisionTreeRegressor: lale.operators.IndividualOp
+DecisionTreeRegressor: lale.operators.PlannedIndividualOp
 DecisionTreeRegressor = lale.operators.make_operator(
     DecisionTreeRegressorImpl, _combined_schemas
 )

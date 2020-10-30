@@ -253,7 +253,7 @@ _combined_schemas = {
     },
 }
 
-ExtraTreesRegressor: lale.operators.IndividualOp
+ExtraTreesRegressor: lale.operators.PlannedIndividualOp
 ExtraTreesRegressor = lale.operators.make_operator(
     ExtraTreesRegressorImpl, _combined_schemas
 )

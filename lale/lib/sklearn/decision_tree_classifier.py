@@ -326,7 +326,7 @@ class DecisionTreeClassifierImpl:
         return self._wrapped_model.predict_proba(X)
 
 
-DecisionTreeClassifier: lale.operators.IndividualOp
+DecisionTreeClassifier: lale.operators.PlannedIndividualOp
 DecisionTreeClassifier = lale.operators.make_operator(
     DecisionTreeClassifierImpl, _combined_schemas
 )

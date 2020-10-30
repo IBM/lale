@@ -344,7 +344,7 @@ _combined_schemas = {
     },
 }
 
-RandomForestClassifier: lale.operators.IndividualOp
+RandomForestClassifier: lale.operators.PlannedIndividualOp
 RandomForestClassifier = lale.operators.make_operator(
     RandomForestClassifierImpl, _combined_schemas
 )
