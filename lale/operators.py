@@ -2773,7 +2773,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         # can it be just the output of predict of the last step?
         # If this implementation changes, check to make sure that the implementation of
         # self.is_transformer is kept in sync with the new assumptions.
-        return self._predict(X, y)
+        return self._predict_based_on_type("transform", "transform", X, y)
 
     def _predict_based_on_type(self, impl_method_name, operator_method_name, X, y=None):
         outputs = {}
