@@ -351,7 +351,7 @@ _combined_schemas = {
     },
 }
 
-GradientBoostingClassifier: lale.operators.IndividualOp
+GradientBoostingClassifier: lale.operators.PlannedIndividualOp
 GradientBoostingClassifier = lale.operators.make_operator(
     GradientBoostingClassifierImpl, _combined_schemas
 )

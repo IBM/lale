@@ -297,7 +297,7 @@ _combined_schemas = {
     },
 }
 
-GradientBoostingRegressor: lale.operators.IndividualOp
+GradientBoostingRegressor: lale.operators.PlannedIndividualOp
 GradientBoostingRegressor = lale.operators.make_operator(
     GradientBoostingRegressorImpl, _combined_schemas
 )

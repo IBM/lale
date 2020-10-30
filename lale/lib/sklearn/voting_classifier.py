@@ -242,7 +242,7 @@ _combined_schemas = {
     },
 }
 
-VotingClassifier: lale.operators.IndividualOp
+VotingClassifier: lale.operators.PlannedIndividualOp
 VotingClassifier = lale.operators.make_operator(VotingClassifierImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.21":

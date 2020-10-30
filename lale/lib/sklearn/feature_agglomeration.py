@@ -177,7 +177,7 @@ _combined_schemas = {
     },
 }
 
-FeatureAgglomeration: lale.operators.IndividualOp
+FeatureAgglomeration: lale.operators.PlannedIndividualOp
 FeatureAgglomeration = lale.operators.make_operator(
     FeatureAgglomerationImpl, _combined_schemas
 )

@@ -491,7 +491,7 @@ _combined_schemas = {
     },
 }
 
-XGBRegressor: lale.operators.IndividualOp
+XGBRegressor: lale.operators.PlannedIndividualOp
 XGBRegressor = lale.operators.make_operator(XGBRegressorImpl, _combined_schemas)
 
 if xgboost.__version__ >= "0.90":

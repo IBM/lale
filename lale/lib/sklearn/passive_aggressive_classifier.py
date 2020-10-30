@@ -282,7 +282,7 @@ _combined_schemas = {
     },
 }
 
-PassiveAggressiveClassifier: lale.operators.IndividualOp
+PassiveAggressiveClassifier: lale.operators.PlannedIndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(
     PassiveAggressiveClassifierImpl, _combined_schemas
 )

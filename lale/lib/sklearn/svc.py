@@ -327,7 +327,7 @@ _combined_schemas = {
     },
 }
 
-SVC: lale.operators.IndividualOp
+SVC: lale.operators.PlannedIndividualOp
 SVC = lale.operators.make_operator(SVCImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":

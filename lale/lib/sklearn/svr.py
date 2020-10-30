@@ -214,7 +214,7 @@ _combined_schemas = {
     },
 }
 
-SVR: lale.operators.IndividualOp
+SVR: lale.operators.PlannedIndividualOp
 SVR = lale.operators.make_operator(SVRImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":

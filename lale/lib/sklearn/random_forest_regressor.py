@@ -302,7 +302,7 @@ _combined_schemas = {
     },
 }
 
-RandomForestRegressor: lale.operators.IndividualOp
+RandomForestRegressor: lale.operators.PlannedIndividualOp
 RandomForestRegressor = lale.operators.make_operator(
     RandomForestRegressorImpl, _combined_schemas
 )

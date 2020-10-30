@@ -113,7 +113,7 @@ _combined_schemas = {
     },
 }
 
-PolynomialFeatures: lale.operators.IndividualOp
+PolynomialFeatures: lale.operators.PlannedIndividualOp
 PolynomialFeatures = lale.operators.make_operator(
     PolynomialFeaturesImpl, _combined_schemas
 )
