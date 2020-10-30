@@ -421,12 +421,12 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
 
     from lale.operators import (
         BasePipeline,
-        IndividualOp,
         OperatorChoice,
+        PlannedIndividualOp,
         TrainablePipeline,
     )
 
-    if isinstance(lale_object, IndividualOp):
+    if isinstance(lale_object, PlannedIndividualOp):
         new_hyperparams: Dict[str, Any] = dict_without(hyperparams, "name")
         if lale_object._hyperparams is not None:
             obj_hyperparams = dict(lale_object._hyperparams)
