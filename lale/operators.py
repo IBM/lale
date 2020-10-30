@@ -1198,20 +1198,6 @@ class IndividualOp(Operator):
             )
             raise jsonschema.ValidationError(msg)
 
-    def _validate_hyperparam_data_constraints(self, X, y=None):
-        hp_schema = self.hyperparam_schema()
-        if not hasattr(self, "__has_data_constraints"):
-            has_dc = lale.type_checking.has_data_constraints(hp_schema)
-            self.__has_data_constraints = has_dc
-        if self.__has_data_constraints:
-            hp_explicit = self._hyperparams
-            hp_all = self._get_params_all()
-            data_schema = lale.helpers.fold_schema(X, y)
-            hp_schema_2 = lale.type_checking.replace_data_constraints(
-                hp_schema, data_schema
-            )
-            self._validate_hyperparams(hp_explicit, hp_all, hp_schema_2)
-
     def validate_schema(self, X, y=None):
         if hasattr(self._impl, "fit"):
             X = self._validate_input_schema("X", X, "fit")
@@ -1462,6 +1448,20 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         result = {**self._hyperparams, "steps": trained_steps}
         return result
 
+    def _validate_hyperparam_data_constraints(self, X, y=None):
+        hp_schema = self.hyperparam_schema()
+        if not hasattr(self, "__has_data_constraints"):
+            has_dc = lale.type_checking.has_data_constraints(hp_schema)
+            self.__has_data_constraints = has_dc
+        if self.__has_data_constraints:
+            hp_explicit = self._hyperparams
+            hp_all = self._get_params_all()
+            data_schema = lale.helpers.fold_schema(X, y)
+            hp_schema_2 = lale.type_checking.replace_data_constraints(
+                hp_schema, data_schema
+            )
+            self._validate_hyperparams(hp_explicit, hp_all, hp_schema_2)
+
     def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
         logger.info("%s enter fit %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "fit")
@@ -1688,7 +1688,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         result = {**self._hyperparam_positionals, **actuals_minus_defaults}
         return result
 
-    def _get_params_all(self):
+    def _get_params_all(self) -> Dict[str, Any]:
         output = {}
         if self._hyperparams is not None:
             output.update(self._hyperparams)
