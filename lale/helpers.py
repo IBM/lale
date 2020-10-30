@@ -481,10 +481,11 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         choices = lale_object.steps()
 
         if len(choices) == 1:
-            step_index = "0"
+            step_index = 0
         else:
-            step_index, hyperparams = list(hyperparams.items())[0]
-        step_object = choices[int(step_index)]
+            step_index_str, hyperparams = list(hyperparams.items())[0]
+            step_index = int(step_index_str)
+        step_object = choices[step_index]
         return create_instance_from_hyperopt_search_space(step_object, hyperparams)
 
 
