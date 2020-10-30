@@ -158,7 +158,6 @@ class TestAIF360(unittest.TestCase):
         assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
         black_median = np.median(train_X[:, 11])
         label_median = np.median(train_y)
-        print(f"black_median {black_median}, label_median {label_median}")
         fairness_info = {
             "favorable_labels": [[-10000.0, label_median]],
             "protected_attributes": [
@@ -225,6 +224,12 @@ class TestAIF360(unittest.TestCase):
             )
             accuracy = accuracy_scorer(estimator, test_X, test_y)
             self.assertLess(combined, accuracy)
+        else:
+            combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
+            combined = combined_scorer(estimator, test_X, test_y)
+            r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+            r2 = r2_scorer(estimator, test_X, test_y)
+            self.assertLess(combined, r2)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, -0.1)
