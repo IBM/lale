@@ -469,6 +469,36 @@ PlannedOperator.__doc__ = (
 class TrainableOperator(PlannedOperator):
     """Abstract class for Lale operators in the trainable lifecycle state."""
 
+    @overload
+    def __and__(self, other: "TrainedOperator") -> "TrainablePipeline":
+        ...
+
+    @overload
+    def __and__(self, other: "TrainableOperator") -> "TrainablePipeline":
+        ...
+
+    @overload
+    def __and__(self, other: "Operator") -> "PlannedPipeline":
+        ...
+
+    def __and__(self, other):
+        return make_union_no_concat(self, other)
+
+    @overload
+    def __rshift__(self, other: "TrainedOperator") -> "TrainablePipeline":
+        ...
+
+    @overload
+    def __rshift__(self, other: "TrainableOperator") -> "TrainablePipeline":
+        ...
+
+    @overload
+    def __rshift__(self, other: "Operator") -> "PlannedPipeline":
+        ...
+
+    def __rshift__(self, other):
+        return make_pipeline(self, other)
+
     @abstractmethod
     def fit(self, X, y=None, **fit_params) -> "TrainedOperator":
         """Train the learnable coefficients of this operator, if any.
@@ -520,6 +550,36 @@ TrainableOperator.__doc__ = (
 
 class TrainedOperator(TrainableOperator):
     """Abstract class for Lale operators in the trained lifecycle state."""
+
+    @overload
+    def __and__(self, other: "TrainedOperator") -> "TrainedPipeline":
+        ...
+
+    @overload
+    def __and__(self, other: "TrainableOperator") -> "TrainablePipeline":
+        ...
+
+    @overload
+    def __and__(self, other: "Operator") -> "PlannedPipeline":
+        ...
+
+    def __and__(self, other):
+        return make_union_no_concat(self, other)
+
+    @overload
+    def __rshift__(self, other: "TrainedOperator") -> "TrainedPipeline":
+        ...
+
+    @overload
+    def __rshift__(self, other: "TrainableOperator") -> "TrainablePipeline":
+        ...
+
+    @overload
+    def __rshift__(self, other: "Operator") -> "PlannedPipeline":
+        ...
+
+    def __rshift__(self, other):
+        return make_pipeline(self, other)
 
     @abstractmethod
     def transform(self, X, y=None):
