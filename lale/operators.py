@@ -2758,7 +2758,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         super(TrainedPipeline, self).__init__(steps, edges, ordered=ordered)
 
     def _predict(self, X, y=None):
-        return self._predict_based_on_type("predict", "_predict", X)
+        return self._predict_based_on_type("predict", "_predict", X, y)
 
     def predict(self, X):
         result = self._predict(X)
