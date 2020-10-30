@@ -546,6 +546,7 @@ class _AccuracyAndDisparateImpact:
         scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
         result = accuracy * scaling_factor ** scaling_hardness
         assert 0.0 <= result <= accuracy <= 1.0, (result, accuracy)
+        assert symmetric_impact >= 0.9 or result < accuracy
         return result
 
 
@@ -603,6 +604,81 @@ def disparate_impact(
 
 
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
+
+
+class _R2AndDisparateImpact:
+    def __init__(
+        self,
+        favorable_label=None,
+        unfavorable_label=None,
+        protected_attribute_names=None,
+        unprivileged_groups=None,
+        privileged_groups=None,
+        favorable_labels=None,
+        protected_attributes=None,
+    ):
+        self.r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+        self.disparate_impact_scorer = disparate_impact(
+            favorable_label,
+            unfavorable_label,
+            protected_attribute_names,
+            unprivileged_groups,
+            privileged_groups,
+            favorable_labels,
+            protected_attributes,
+        )
+
+    def __call__(self, estimator, X, y):
+        disp_impact = self.disparate_impact_scorer(estimator, X, y)
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return np.NAN
+        r2 = self.r2_scorer(estimator, X, y)
+        assert r2 <= 1.0 and 0.0 <= disp_impact, (r2, disp_impact)
+        if disp_impact <= 1.0:
+            symmetric_impact = disp_impact
+        else:
+            symmetric_impact = 1.0 / disp_impact
+        disp_impact_treshold = 0.9  # impact above threshold is considered fair
+        if symmetric_impact < disp_impact_treshold:
+            scaling_factor = symmetric_impact / disp_impact_treshold
+        else:
+            scaling_factor = 1.0
+        scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
+        positive_r2 = 1.0 - r2
+        scaled_r2 = positive_r2 / scaling_factor ** scaling_hardness
+        result = 1.0 - scaled_r2
+        assert result <= r2 <= 1.0, (result, r2)
+        assert symmetric_impact >= 0.9 or result < r2
+        return result
+
+
+def r2_and_disparate_impact(
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
+):
+    """Create a scikit-learn compatible combined scorer for `R^2`_ and `disparate impact`_ given the fairness info.
+
+.. _`R^2`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
+.. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    return _R2AndDisparateImpact(
+        favorable_label,
+        unfavorable_label,
+        protected_attribute_names,
+        unprivileged_groups,
+        privileged_groups,
+        favorable_labels,
+        protected_attributes,
+    )
+
+
+r2_and_disparate_impact.__doc__ = (
+    str(accuracy_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
+)
 
 
 def statistical_parity_difference(
