@@ -2805,11 +2805,17 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             if hasattr(operator._impl, "set_meta_data"):
                 operator._impl_instance().set_meta_data(meta_data_inputs)
             meta_output = {}
-            if operator in sink_nodes and hasattr(
-                operator._impl, impl_method_name
-            ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
-                method_to_call_on_operator = getattr(operator, operator_method_name)
-                output = method_to_call_on_operator(X=inputs)
+            if operator in sink_nodes:
+                if hasattr(
+                    operator._impl, impl_method_name
+                ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
+                    method_to_call_on_operator = getattr(operator, operator_method_name)
+                    output = method_to_call_on_operator(X=inputs)
+                else:
+                    raise AttributeError(
+                        "The sink node of the pipeline does not support",
+                        operator_method_name,
+                    )
             elif operator.is_transformer():
                 output = operator.transform(X=inputs, y=y)
                 if hasattr(operator._impl, "get_transform_meta_output"):
