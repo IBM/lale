@@ -613,6 +613,7 @@ def create_data_loader(X, y=None, batch_size=1):
         X = X.to_numpy()
         if isinstance(y, pd.Series):
             y = y.to_numpy()
+        dataset = NumpyTorchDataset(X, y)
     elif isinstance(X, scipy.sparse.csr.csr_matrix):
         # unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
         X = X.toarray()
@@ -670,13 +671,17 @@ def write_batch_output_to_file(
         transform_ratio = int(len(batch_out_X) / len(batch_X))
         if len(batch_out_X.shape) == 1:
             h5_data_shape = (transform_ratio * total_len,)
-        if len(batch_out_X.shape) == 2:
+        elif len(batch_out_X.shape) == 2:
             h5_data_shape = (transform_ratio * total_len, batch_out_X.shape[1])
         elif len(batch_out_X.shape) == 3:
             h5_data_shape = (
                 transform_ratio * total_len,
                 batch_out_X.shape[1],
                 batch_out_X.shape[2],
+            )
+        else:
+            raise ValueError(
+                "batch_out_X is expected to be a 1-d, 2-d or 3-d array. Any other data types are not handled."
             )
         dataset = file_obj.create_dataset(
             name="X", shape=h5_data_shape, chunks=True, compression="gzip"
@@ -688,6 +693,10 @@ def write_batch_output_to_file(
                 h5_labels_shape = (transform_ratio * total_len,)
             elif len(batch_out_y.shape) == 2:
                 h5_labels_shape = (transform_ratio * total_len, batch_out_y.shape[1])
+            else:
+                raise ValueError(
+                    "batch_out_y is expected to be a 1-d or 2-d array. Any other data types are not handled."
+                )
             dataset = file_obj.create_dataset(
                 name="y", shape=h5_labels_shape, chunks=True, compression="gzip"
             )
