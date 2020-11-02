@@ -2741,8 +2741,12 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
     def is_transformer(self) -> bool:
         """ Checks if the operator is a transformer
         """
-        # Currently, all TrainedPipelines implement transform
-        return True
+        sink_nodes = self._find_sink_nodes()
+        all_transformers = [
+            True if hasattr(operator._impl, "transform") else False
+            for operator in sink_nodes
+        ]
+        return all(all_transformers)
 
 
 TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp)
