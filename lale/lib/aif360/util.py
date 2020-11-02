@@ -661,9 +661,9 @@ def r2_and_disparate_impact(
     favorable_labels=None,
     protected_attributes=None,
 ):
-    """Create a scikit-learn compatible combined scorer for `R^2`_ and `disparate impact`_ given the fairness info.
+    """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info.
 
-.. _`R^2`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
+.. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
 .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
     return _R2AndDisparateImpact(
         favorable_label,
