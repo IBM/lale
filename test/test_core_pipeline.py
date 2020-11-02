@@ -63,6 +63,9 @@ class TestCreation(unittest.TestCase):
         )
         self.assertIsInstance(pipeline, lale.operators.TrainableIndividualOp)
         trained = pipeline.fit(self.X_train, self.y_train)
+        pca_trained, lr_trained = [op for _, op in trained.hyperparams()["steps"]]
+        self.assertIsInstance(pca_trained, lale.operators.TrainedIndividualOp)
+        self.assertIsInstance(lr_trained, lale.operators.TrainedIndividualOp)
         predictions = trained.predict(self.X_test)
         accuracy_score(self.y_test, predictions)
 
