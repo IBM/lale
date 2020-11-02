@@ -28,6 +28,7 @@ from lale.lib.autogen import SGDClassifier
 from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import (
     PCA,
+    GaussianNB,
     KNeighborsClassifier,
     LinearRegression,
     LinearSVC,
@@ -625,10 +626,10 @@ class TestComposition(unittest.TestCase):
     def test_two_estimators_predict_proba1(self):
         pipeline = (
             StandardScaler()
-            >> (PCA() & Nystroem() & PassiveAggressiveClassifier())
+            >> (PCA() & Nystroem() & GaussianNB())
             >> ConcatFeatures()
             >> NoOp()
-            >> PassiveAggressiveClassifier()
+            >> GaussianNB()
         )
         pipeline.fit(self.X_train, self.y_train)
         pipeline.predict_proba(self.X_test)
@@ -671,7 +672,7 @@ class TestComposition(unittest.TestCase):
         X, y = iris.data, iris.target
 
         trained = trainable.fit(X, y)
-        _ = trained.transform(X, y)
+        _ = trained.predict(X)
 
     def test_remove_last1(self):
         pipeline = (
