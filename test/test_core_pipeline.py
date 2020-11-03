@@ -57,6 +57,30 @@ class TestCreation(unittest.TestCase):
         predictions = trained.predict(self.X_test)
         accuracy_score(self.y_test, predictions)
 
+    def test_pipeline_create_trainable(self):
+        pipeline = lale.lib.sklearn.Pipeline(
+            steps=[("pca1", PCA()), ("lr1", LogisticRegression())]
+        )
+        self.assertIsInstance(pipeline, lale.operators.TrainableIndividualOp)
+        trained = pipeline.fit(self.X_train, self.y_train)
+        pca_trained, lr_trained = [op for _, op in trained.hyperparams()["steps"]]
+        self.assertIsInstance(pca_trained, lale.operators.TrainedIndividualOp)
+        self.assertIsInstance(lr_trained, lale.operators.TrainedIndividualOp)
+        predictions = trained.predict(self.X_test)
+        accuracy_score(self.y_test, predictions)
+
+    def test_pipeline_create_trained(self):
+        orig_trainable = PCA() >> LogisticRegression()
+        orig_trained = orig_trainable.fit(self.X_train, self.y_train)
+        self.assertIsInstance(orig_trained, lale.operators.TrainedPipeline)
+        pca_trained, lr_trained = orig_trained.steps()
+        pre_trained = lale.lib.sklearn.Pipeline(
+            steps=[("pca1", pca_trained), ("lr1", lr_trained)]
+        )
+        self.assertIsInstance(pre_trained, lale.operators.TrainedIndividualOp)
+        predictions = pre_trained.predict(self.X_test)
+        accuracy_score(self.y_test, predictions)
+
     def test_pipeline_clone(self):
         from sklearn.base import clone
 

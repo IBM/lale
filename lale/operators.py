@@ -141,6 +141,8 @@ from lale.util.VisitorMeta import AbstractVisitorMeta
 
 logger = logging.getLogger(__name__)
 
+_LALE_SKL_PIPELINE = "lale.lib.sklearn.pipeline.PipelineImpl"
+
 _combinators_docstrings = """
     Methods
     -------
@@ -1321,6 +1323,12 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         super(PlannedIndividualOp, self).__init__(_name, _impl, _schemas)
         self._hyperparams = None
 
+    def _should_configure_trained(self, impl):
+        # TODO: may also want to do this for other higher-order operators
+        if self.class_name() != _LALE_SKL_PIPELINE:
+            return False
+        return isinstance(impl._pipeline, TrainedPipeline)
+
     def _configure(self, *args, **kwargs) -> "TrainableIndividualOp":
         class_ = self._impl_class()
         hyperparams = {}
@@ -1353,9 +1361,14 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         else:
             impl = class_(**params_all)
 
-        result = TrainableIndividualOp(
-            _name=self.name(), _impl=impl, _schemas=self._schemas
-        )
+        if self._should_configure_trained(impl):
+            result: TrainableIndividualOp = TrainedIndividualOp(
+                _name=self.name(), _impl=impl, _schemas=self._schemas
+            )
+        else:
+            result = TrainableIndividualOp(
+                _name=self.name(), _impl=impl, _schemas=self._schemas
+            )
         result._hyperparams = hyperparams
         return result
 
@@ -1437,6 +1450,16 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 result = impl_class(**params_all)
         return result
 
+    def _trained_hyperparams(self, trained_impl):
+        # TODO: may also want to do this for other higher-order operators
+        if self.class_name() != _LALE_SKL_PIPELINE:
+            return self._hyperparams
+        names_list = [name for name, op in self._hyperparams["steps"]]
+        steps_list = trained_impl._pipeline.steps()
+        trained_steps = list(zip(names_list, steps_list))
+        result = {**self._hyperparams, "steps": trained_steps}
+        return result
+
     def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
         logger.info("%s enter fit %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "fit")
@@ -1453,7 +1476,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if trained_impl is None:
             trained_impl = trainable_impl
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
-        result._hyperparams = self._hyperparams
+        result._hyperparams = self._trained_hyperparams(trained_impl)
         self._trained = result
         logger.info("%s exit  fit %s", time.asctime(), self.name())
         return result
