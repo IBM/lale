@@ -677,7 +677,7 @@ def r2_and_disparate_impact(
 
 
 r2_and_disparate_impact.__doc__ = (
-    str(accuracy_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
+    str(r2_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
 )
 
 

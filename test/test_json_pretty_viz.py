@@ -781,6 +781,19 @@ logistic_regression = LogisticRegression(C=0.1)
 pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_sklearn_pipeline_2(self):
+        from lale.lib.sklearn import PCA, LogisticRegression, Pipeline
+
+        pipeline = Pipeline(steps=[("pca", PCA), ("lr", LogisticRegression(C=0.1))])
+        expected = """from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+
+logistic_regression = LogisticRegression(C=0.1)
+pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
+        printed = lale.pretty_print.to_string(pipeline, astype="sklearn")
+        self._roundtrip(expected, printed)
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):
