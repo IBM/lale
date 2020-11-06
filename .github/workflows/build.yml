@@ -1,5 +1,5 @@
 ---
-name: Lale
+name: Tests
 
 on: [push, pull_request]
 
