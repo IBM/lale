@@ -1,6 +1,6 @@
 # Lale
 
-[![example branch parameter](https://github.com/IBM/lale/workflows/Lale/badge.svg?branch=master)](https://github.com/IBM/lale/actions?query=workflow%3ALale+branch%3Amaster)
+[![example branch parameter](https://github.com/IBM/lale/workflows/Tests/badge.svg?branch=master)](https://github.com/IBM/lale/actions?query=workflow%3ATests+branch%3Amaster)
 [![Documentation Status](https://readthedocs.org/projects/lale/badge/?version=latest)](https://lale.readthedocs.io/en/latest/?badge=latest)
 [![codecov](https://codecov.io/gh/IBM/lale/branch/master/graph/badge.svg)](https://codecov.io/gh/IBM/lale)
 [![PyPI version shields.io](https://img.shields.io/pypi/v/lale?color=success)](https://pypi.python.org/pypi/lale/)
