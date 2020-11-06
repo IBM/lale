@@ -1,0 +1,14 @@
+---
+extends: default
+
+rules:
+  # for now, let allow really long lines
+  line-length:
+    max: 150
+    level: warning
+  indentation:
+    spaces: 2
+    indent-sequences: consistent
+  truthy:
+    # GitHub Actions worflows and travis both use the 'on' value
+    allowed-values: ['true', 'false', 'on']
