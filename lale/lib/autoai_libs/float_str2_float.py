@@ -65,6 +65,7 @@ _hyperparams_schema = {
                             "int_num",
                             "boolean",
                             "Unknown",
+                            "missing",
                         ]
                     },
                     "default": None,
