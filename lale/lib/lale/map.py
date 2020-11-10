@@ -11,6 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import importlib
+
+import pandas as pd
 
 import lale.docstrings
 import lale.operators
@@ -18,10 +21,26 @@ import lale.operators
 
 class MapImpl:
     def __init__(self, columns, remainder="passthrough"):
-        self._hyperparams = {"columns": columns, "remainder": remainder}
+        self.columns = columns
+        self.remainder = remainder
 
     def transform(self, X):
-        raise NotImplementedError()
+        assert isinstance(X, pd.DataFrame)
+        if self.remainder == "passthrough":
+            out_df = X
+        elif self.remainder == "drop":
+            out_df = pd.DataFrame()
+        else:
+            raise ValueError("remainder has to be either `passthrough` or `drop`.")
+        if isinstance(self.columns, list):
+            for column in self.columns:
+                function_name = column._expr.func.id
+                functions_module = importlib.import_module("lale.lib.lale.functions")
+                map_func_to_be_called = getattr(functions_module, function_name)
+                column_name, new_column = map_func_to_be_called(X, column)
+                # Since this is a list, we have to use the column_name from the function output
+                out_df[column_name] = new_column
+        return out_df
 
 
 _hyperparams_schema = {
