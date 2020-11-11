@@ -110,6 +110,8 @@ jobs:
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
     - name: Run test
       run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
+    - name: Upload coverage metrics to CodeCov
+      uses: codecov/codecov-action@v1
 
   test_snapml:
     name: Test Snap ML
@@ -159,7 +161,9 @@ jobs:
       run: |
           conda install pytest
           py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
-
+          bash <(curl -s https://codecov.io/bash)
+    - name: Upload coverage metrics to CodeCov
+      uses: codecov/codecov-action@v1
   test_notebooks:
     name: Test Notebooks
     needs: [static]
@@ -200,6 +204,8 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Run test
       run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
+    - name: Upload coverage metrics to CodeCov
+      uses: codecov/codecov-action@v1
 
   deploy:
     name: Deploy to TestPyPI
