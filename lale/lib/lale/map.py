@@ -32,14 +32,23 @@ class MapImpl:
             out_df = pd.DataFrame()
         else:
             raise ValueError("remainder has to be either `passthrough` or `drop`.")
+
+        def get_map_function_output(column):
+            functions_module = importlib.import_module("lale.lib.lale.functions")
+            function_name = column._expr.func.id
+            map_func_to_be_called = getattr(functions_module, function_name)
+            return map_func_to_be_called(X, column)
+
         if isinstance(self.columns, list):
             for column in self.columns:
-                function_name = column._expr.func.id
-                functions_module = importlib.import_module("lale.lib.lale.functions")
-                map_func_to_be_called = getattr(functions_module, function_name)
-                column_name, new_column = map_func_to_be_called(X, column)
+                column_name, new_column = get_map_function_output(column)
                 # Since this is a list, we have to use the column_name from the function output
                 out_df[column_name] = new_column
+        elif isinstance(self.columns, dict):
+            for new_column_name, column in self.columns.items():
+                column_name, new_column = get_map_function_output(column)
+                out_df[new_column_name] = new_column
+
         return out_df
 
 

@@ -266,7 +266,7 @@ class TestMap(unittest.TestCase):
         state_map = {"NY": "New York", "CA": "California"}
         _ = Map(columns=[replace(it.gender, gender_map), replace(it.state, state_map)])
 
-    def test_transform_1(self):
+    def test_transform_replace_list_and_remainder(self):
         from lale.expressions import it, replace
         from lale.lib.lale import Map
 
@@ -288,7 +288,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["gender"][0], "Male")
         self.assertEqual(transformed_df["state"][0], "New York")
 
-    def test_transform_2(self):
+    def test_transform_replace_list(self):
         from lale.expressions import it, replace
         from lale.lib.lale import Map
 
@@ -309,7 +309,31 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["gender"][0], "Male")
         self.assertEqual(transformed_df["state"][0], "New York")
 
-    def test_transform_3(self):
+    def test_transform_replace_map(self):
+        from lale.expressions import it, replace
+        from lale.lib.lale import Map
+
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        gender_map = {"m": "Male", "f": "Female"}
+        state_map = {"NY": "New York", "CA": "California"}
+        trainable = Map(
+            columns={
+                "new_gender": replace(it.gender, gender_map),
+                "new_state": replace(it.state, state_map),
+            }
+        )
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (5, 5))
+        self.assertEqual(transformed_df["new_gender"][0], "Male")
+        self.assertEqual(transformed_df["new_state"][0], "New York")
+
+    def test_transform_dom_list(self):
         from lale.expressions import day_of_month, it
         from lale.lib.lale import Map
 
@@ -321,7 +345,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 27)
         self.assertEqual(transformed_df["date_column"][2], 26)
 
-    def test_transform_4(self):
+    def test_transform_dom_fmt_list(self):
         from lale.expressions import day_of_month, it
         from lale.lib.lale import Map
 
@@ -333,7 +357,20 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 27)
         self.assertEqual(transformed_df["date_column"][2], 26)
 
-    def test_transform_5(self):
+    def test_transform_dom_fmt_map(self):
+        from lale.expressions import day_of_month, it
+        from lale.lib.lale import Map
+
+        df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-27", "2016-07-26"]})
+        trainable = Map(columns={"dom": day_of_month(it.date_column, "%Y-%m-%d")})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (3, 2))
+        self.assertEqual(transformed_df["dom"][0], 28)
+        self.assertEqual(transformed_df["dom"][1], 27)
+        self.assertEqual(transformed_df["dom"][2], 26)
+
+    def test_transform_dow_list(self):
         from lale.expressions import day_of_week, it
         from lale.lib.lale import Map
 
@@ -345,7 +382,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 1)
         self.assertEqual(transformed_df["date_column"][2], 3)
 
-    def test_transform_6(self):
+    def test_transform_dow_fmt_list(self):
         from lale.expressions import day_of_week, it
         from lale.lib.lale import Map
 
@@ -357,7 +394,20 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 1)
         self.assertEqual(transformed_df["date_column"][2], 3)
 
-    def test_transform_7(self):
+    def test_transform_dow_fmt_map(self):
+        from lale.expressions import day_of_week, it
+        from lale.lib.lale import Map
+
+        df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-28", "2016-07-28"]})
+        trainable = Map(columns={"dow": day_of_week(it.date_column, "%Y-%m-%d")})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (3, 2))
+        self.assertEqual(transformed_df["dow"][0], 5)
+        self.assertEqual(transformed_df["dow"][1], 1)
+        self.assertEqual(transformed_df["dow"][2], 3)
+
+    def test_transform_doy_list(self):
         from lale.expressions import day_of_year, it
         from lale.lib.lale import Map
 
@@ -369,7 +419,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 180)
         self.assertEqual(transformed_df["date_column"][2], 210)
 
-    def test_transform_8(self):
+    def test_transform_doy_fmt_list(self):
         from lale.expressions import day_of_year, it
         from lale.lib.lale import Map
 
@@ -381,7 +431,20 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 180)
         self.assertEqual(transformed_df["date_column"][2], 210)
 
-    def test_transform_9(self):
+    def test_transform_doy_fmt_map(self):
+        from lale.expressions import day_of_year, it
+        from lale.lib.lale import Map
+
+        df = pd.DataFrame({"date_column": ["2016-01-01", "2016-06-28", "2016-07-28"]})
+        trainable = Map(columns={"doy": day_of_year(it.date_column, "%Y-%m-%d")})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (3, 2))
+        self.assertEqual(transformed_df["doy"][0], 1)
+        self.assertEqual(transformed_df["doy"][1], 180)
+        self.assertEqual(transformed_df["doy"][2], 210)
+
+    def test_transform_hour_list(self):
         from lale.expressions import hour, it
         from lale.lib.lale import Map
 
@@ -401,7 +464,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 12)
         self.assertEqual(transformed_df["date_column"][2], 1)
 
-    def test_transform_10(self):
+    def test_transform_hour_fmt_list(self):
         from lale.expressions import hour, it
         from lale.lib.lale import Map
 
@@ -421,7 +484,28 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 12)
         self.assertEqual(transformed_df["date_column"][2], 1)
 
-    def test_transform_11(self):
+    def test_transform_hour_fmt_map(self):
+        from lale.expressions import hour, it
+        from lale.lib.lale import Map
+
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        trainable = Map(columns={"hour": hour(it.date_column, "%Y-%m-%d %H:%M:%S")})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (3, 2))
+        self.assertEqual(transformed_df["hour"][0], 15)
+        self.assertEqual(transformed_df["hour"][1], 12)
+        self.assertEqual(transformed_df["hour"][2], 1)
+
+    def test_transform_minute_list(self):
         from lale.expressions import it, minute
         from lale.lib.lale import Map
 
@@ -441,7 +525,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 18)
         self.assertEqual(transformed_df["date_column"][2], 1)
 
-    def test_transform_12(self):
+    def test_transform_minute_fmt_list(self):
         from lale.expressions import it, minute
         from lale.lib.lale import Map
 
@@ -461,7 +545,28 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 18)
         self.assertEqual(transformed_df["date_column"][2], 1)
 
-    def test_transform_13(self):
+    def test_transform_minute_fmt_map(self):
+        from lale.expressions import it, minute
+        from lale.lib.lale import Map
+
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        trainable = Map(columns={"minute": minute(it.date_column, "%Y-%m-%d %H:%M:%S")})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (3, 2))
+        self.assertEqual(transformed_df["minute"][0], 16)
+        self.assertEqual(transformed_df["minute"][1], 18)
+        self.assertEqual(transformed_df["minute"][2], 1)
+
+    def test_transform_month_list(self):
         from lale.expressions import it, month
         from lale.lib.lale import Map
 
@@ -481,7 +586,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 6)
         self.assertEqual(transformed_df["date_column"][2], 7)
 
-    def test_transform_14(self):
+    def test_transform_month_fmt_list(self):
         from lale.expressions import it, month
         from lale.lib.lale import Map
 
@@ -501,7 +606,28 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["date_column"][1], 6)
         self.assertEqual(transformed_df["date_column"][2], 7)
 
-    def test_transform_15(self):
+    def test_transform_month_fmt_map(self):
+        from lale.expressions import it, month
+        from lale.lib.lale import Map
+
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        trainable = Map(columns={"month": month(it.date_column, "%Y-%m-%d %H:%M:%S")})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (3, 2))
+        self.assertEqual(transformed_df["month"][0], 1)
+        self.assertEqual(transformed_df["month"][1], 6)
+        self.assertEqual(transformed_df["month"][2], 7)
+
+    def test_transform_string_indexer_list(self):
         from lale.expressions import it, string_indexer
         from lale.lib.lale import Map
 
@@ -512,6 +638,19 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["cat_column"][0], 2)
         self.assertEqual(transformed_df["cat_column"][1], 1)
         self.assertEqual(transformed_df["cat_column"][2], 1)
+
+    def test_transform_string_indexer_map(self):
+        from lale.expressions import it, string_indexer
+        from lale.lib.lale import Map
+
+        df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
+        trainable = Map(columns={"string_indexed": string_indexer(it.cat_column)})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (3, 2))
+        self.assertEqual(transformed_df["string_indexed"][0], 2)
+        self.assertEqual(transformed_df["string_indexed"][1], 1)
+        self.assertEqual(transformed_df["string_indexed"][2], 1)
 
     def test_not_expression(self):
         from lale.lib.lale import Map
