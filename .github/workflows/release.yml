@@ -1,7 +1,9 @@
 ---
 name: Deploy Release
 
-on: [release]
+on:
+  release:
+    types: [released]
 
 jobs:
   deploy:
