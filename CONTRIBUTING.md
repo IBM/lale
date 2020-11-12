@@ -30,3 +30,21 @@ Italics in the visualization indicate parts you have to substitute:
 We have a pre-commit hook setup to help ensure that your code is properly formatted
 and passes various static checks.  We highly recommend that you enable it, or at least run the check
 before submitting a PR.  To do so, install the `pre-commit` python package (this is done automatically if you `pip install lale[dev]`).  Run `pre-commit install` in your `lale` repository to enable pre-commit checking, or `pre-commit run --all-files` to just run the checks once.
+
+# Making a Lale Release
+
+Making a release is currently a two step process:
+1. Increment the version string.
+  * The version string is stored in `lale/__init__`
+    * (as an example, [here is a prior version](https://github.com/IBM/lale/blob/ b576449a3096847bab4962ab733d3c185a9afefc/lale/__init__.py#L17)).
+  * As described above, submit a PR with the change.
+  * Once the tests have passed, rebase the PR onto master.
+2. Create a Github Release
+  * Go to [the Releases page](https://github.com/IBM/lale/releases)
+  * Click [`Draft a New Release`](https://github.com/IBM/lale/releases/new).
+  * For the Tag version, use `vVERSION`. For example, if you put `"0.4.8"` as the version in the code, then
+    the tag would be `v0.4.8`
+  * Add a title for the release
+  * Add a description of key changes in this release
+  * Click `Publish Release`
+  * You are done!  The release will be automatically deployed to PyPi.
