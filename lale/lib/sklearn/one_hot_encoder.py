@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pandas as pd
+import scipy.sparse.csr
 import sklearn.preprocessing
 
 import lale.docstrings
@@ -146,7 +147,9 @@ class OneHotEncoderImpl:
         result = self._wrapped_model.transform(X)
         if isinstance(X, pd.DataFrame):
             columns = self._wrapped_model.get_feature_names(X.columns)
-            result = pd.DataFrame(data=result.toarray(), index=X.index, columns=columns)
+            if isinstance(result, scipy.sparse.csr.csr_matrix):
+                result = result.toarray()
+            result = pd.DataFrame(data=result, index=X.index, columns=columns)
         return result
 
     def transform_schema(self, s_X):
