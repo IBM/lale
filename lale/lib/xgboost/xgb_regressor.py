@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from sklearn.base import BaseEstimator
 
 import lale.docstrings
@@ -23,6 +24,22 @@ try:
     xgboost_installed = True
 except ImportError:
     xgboost_installed = False
+
+
+def _rename_one_feature(name):
+    mapping = {"[": "&#91;", "]": "&#93;", "<": "&lt;"}
+    for old, new in mapping.items():
+        name = name.replace(old, new)
+    return name
+
+
+def _rename_all_features(X):
+    if not isinstance(X, pd.DataFrame):
+        return X
+    mapped = [_rename_one_feature(f) for f in X.columns]
+    if list(X.columns) == mapped:
+        return X
+    return pd.DataFrame(data=X, columns=mapped)
 
 
 class XGBRegressorImpl(BaseEstimator):
@@ -113,11 +130,14 @@ or with
             self.importance_type,
         )
         result._wrapped_model = xgboost.XGBRegressor(**self.get_params())
-        result._wrapped_model.fit(X, y, **fit_params)
+        renamed_X = _rename_all_features(X)
+        result._wrapped_model.fit(renamed_X, y, **fit_params)
         return result
 
     def predict(self, X):
-        return self._wrapped_model.predict(X)
+        renamed_X = _rename_all_features(X)
+        result = self._wrapped_model.predict(renamed_X)
+        return result
 
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
