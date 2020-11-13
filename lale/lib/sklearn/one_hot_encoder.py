@@ -143,7 +143,11 @@ class OneHotEncoderImpl:
         return self
 
     def transform(self, X):
-        return self._wrapped_model.transform(X)
+        result = self._wrapped_model.transform(X)
+        if isinstance(X, pd.DataFrame):
+            columns = self._wrapped_model.get_feature_names(X.columns)
+            result = pd.DataFrame(data=result.toarray(), index=X.index, columns=columns)
+        return result
 
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""
@@ -166,6 +170,8 @@ class OneHotEncoderImpl:
             **s_X,
             "items": {
                 **(s_X.get("items", {})),
+                "minItems": len(out_names),
+                "maxItems": len(out_names),
                 "items": [{"description": n, "type": "number"} for n in out_names],
             },
         }
