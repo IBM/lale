@@ -330,3 +330,20 @@ class TestAIF360(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertTrue(0.9 < impact < 1.1, f"impact {impact}")
+
+    def test_disparate_impact_remover_np_num(self):
+        fairness_info = {
+            "favorable_labels": [1.0],
+            "protected_attributes": [{"feature": 57, "privileged_groups": [1.0]},],
+        }
+        trainable = DisparateImpactRemover(
+            sensitive_attribute=57
+        ) >> LogisticRegression(max_iter=1000)
+        train_X = self.creditg_np_num["train_X"]
+        train_y = self.creditg_np_num["train_y"]
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.creditg_np_num["test_X"]
+        test_y = self.creditg_np_num["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        impact = disparate_impact_scorer(trained, test_X, test_y)
+        self.assertTrue(0.9 < impact < 1.1, f"impact {impact}")
