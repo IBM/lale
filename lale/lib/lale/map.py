@@ -48,7 +48,7 @@ class MapImpl:
             for new_column_name, column in self.columns.items():
                 column_name, new_column = get_map_function_output(column)
                 out_df[new_column_name] = new_column
-
+                del out_df[column_name]
         return out_df
 
 
