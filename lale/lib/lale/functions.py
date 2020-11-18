@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import datetime
+from typing import Any
 
 import numpy as np
 import pandas as pd
+
+from lale.expressions import Expr
 
 
 class categorical:
@@ -98,3 +102,82 @@ class date_time:
         else:
             raise TypeError(f"unexpected type {type(X)}")
         return result
+
+
+def replace(df: pd.DataFrame, replace_expr: Expr):
+    re: Any = replace_expr._expr
+    column_name = re.args[0].attr
+    mapping_dict = ast.literal_eval(re.args[1].value)
+    return column_name, df[column_name].replace(mapping_dict)
+
+
+def day_of_month(df: pd.DataFrame, dom_expr: Expr):
+    fmt = None
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    if len(de.args) > 1:
+        fmt = ast.literal_eval(de.args[1])
+    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
+    return column_name, df[column_name].dt.day
+
+
+def day_of_week(df: pd.DataFrame, dom_expr: Expr):
+    fmt = None
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    if len(de.args) > 1:
+        fmt = ast.literal_eval(de.args[1])
+    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
+    return column_name, df[column_name].dt.weekday
+
+
+def day_of_year(df: pd.DataFrame, dom_expr: Expr):
+    fmt = None
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    if len(de.args) > 1:
+        fmt = ast.literal_eval(de.args[1])
+    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
+    return column_name, df[column_name].dt.dayofyear
+
+
+def hour(df: pd.DataFrame, dom_expr: Expr):
+    fmt = None
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    if len(de.args) > 1:
+        fmt = ast.literal_eval(de.args[1])
+    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
+    return column_name, df[column_name].dt.hour
+
+
+def minute(df: pd.DataFrame, dom_expr: Expr):
+    fmt = None
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    if len(de.args) > 1:
+        fmt = ast.literal_eval(de.args[1])
+    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
+    return column_name, df[column_name].dt.minute
+
+
+def month(df: pd.DataFrame, dom_expr: Expr):
+    fmt = None
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    if len(de.args) > 1:
+        fmt = ast.literal_eval(de.args[1])
+    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
+    return column_name, df[column_name].dt.month
+
+
+def string_indexer(df: pd.DataFrame, dom_expr: Expr):
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    sorted_indices = df[column_name].value_counts().index
+    return (
+        column_name,
+        df[column_name].map(
+            dict(zip(sorted_indices, range(1, len(sorted_indices) + 1)))
+        ),
+    )

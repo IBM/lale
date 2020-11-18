@@ -210,7 +210,7 @@ def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
     old2new_str = pprint.pformat(old2new)
     module_ast = ast.parse(old2new_str)
     old2new_ast = typing.cast(ast.Expr, module_ast.body[0])
-    return _make_call_expr("replace", old2new_ast)
+    return _make_call_expr("replace", subject, old2new_ast)
 
 
 def sum(group: Expr) -> Expr:
