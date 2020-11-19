@@ -311,6 +311,32 @@ class TestAIF360(unittest.TestCase):
         test_y = self.boston["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
+    def test_scorers_warn(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
+        }
+        trainable = (
+            (
+                (
+                    Project(columns={"type": "string"})
+                    >> OneHotEncoder(handle_unknown="ignore")
+                )
+                & Project(columns={"type": "number"})
+            )
+            >> ConcatFeatures
+            >> LogisticRegression(max_iter=1000)
+        )
+        train_X = self.creditg_pd_cat["train_X"]
+        train_y = self.creditg_pd_cat["train_y"]
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.creditg_pd_cat["test_X"]
+        test_y = self.creditg_pd_cat["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        with self.assertWarnsRegex(UserWarning, "disparate_impact is ill-defined"):
+            impact = disparate_impact_scorer(trained, test_X, test_y)
+        self.assertTrue(np.isnan(impact))
+
     def test_disparate_impact_remover_pd_num(self):
         fairness_info = {
             "favorable_label": 1,

@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+
 import aif360.algorithms.postprocessing
 import aif360.datasets
 import aif360.metrics
@@ -416,6 +418,10 @@ class _BinaryLabelScorer:
         )
         method = getattr(fairness_metrics, self.metric)
         result = method()
+        if np.isnan(result) or not np.isfinite(result):
+            warnings.warn(
+                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration for empty groups."
+            )
         return result
 
 
