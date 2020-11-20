@@ -536,11 +536,13 @@ class _AccuracyAndDisparateImpact:
 
     def __call__(self, estimator, X, y):
         disp_impact = self.disparate_impact_scorer(estimator, X, y)
-        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
-            return np.NAN
         accuracy = self.accuracy_scorer(estimator, X, y)
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return accuracy
         assert 0.0 <= accuracy <= 1.0 and 0.0 <= disp_impact, (accuracy, disp_impact)
-        if disp_impact <= 1.0:
+        if disp_impact == 0.0:
+            return 0.0
+        elif disp_impact <= 1.0:
             symmetric_impact = disp_impact
         else:
             symmetric_impact = 1.0 / disp_impact
@@ -636,11 +638,13 @@ class _R2AndDisparateImpact:
 
     def __call__(self, estimator, X, y):
         disp_impact = self.disparate_impact_scorer(estimator, X, y)
-        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
-            return np.NAN
         r2 = self.r2_scorer(estimator, X, y)
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return r2
         assert r2 <= 1.0 and 0.0 <= disp_impact, (r2, disp_impact)
-        if disp_impact <= 1.0:
+        if disp_impact == 0.0:
+            return 0.0
+        elif disp_impact <= 1.0:
             symmetric_impact = disp_impact
         else:
             symmetric_impact = 1.0 / disp_impact
