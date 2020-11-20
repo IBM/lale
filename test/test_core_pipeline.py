@@ -814,3 +814,27 @@ class TestAutoPipeline(unittest.TestCase):
         )
         with_missing_X = lale.helpers.add_missing_values(subsample_X)
         self._fit_predict("classification", with_missing_X, subsample_y)
+
+
+class TestOperatorChoice(unittest.TestCase):
+    def test_make_choice_with_instance(self):
+        from sklearn.datasets import load_iris
+
+        from lale.operators import make_choice
+
+        iris = load_iris()
+        X, y = iris.data, iris.target
+        tfm = PCA() | Nystroem() | NoOp()
+        with self.assertRaises(AttributeError):
+            _ = tfm.fit(X, y)
+        _ = (OneHotEncoder | NoOp) >> tfm >> (LogisticRegression | KNeighborsClassifier)
+        _ = (
+            (OneHotEncoder | NoOp)
+            >> (PCA | Nystroem)
+            >> (LogisticRegression | KNeighborsClassifier)
+        )
+        _ = (
+            make_choice(OneHotEncoder, NoOp)
+            >> make_choice(PCA, Nystroem)
+            >> make_choice(LogisticRegression, KNeighborsClassifier)
+        )
