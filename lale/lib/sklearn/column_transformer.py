@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
+
 import sklearn.compose
 
 import lale.docstrings
 import lale.operators
+from lale.schemas import Bool
 
 
 class ColumnTransformerImpl:
@@ -192,10 +195,10 @@ _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """ColumnTransformer_ from scikit-learn applies transformers to columns of an array or pandas DataFrame.
 
-.. _ColumnTransformer: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html#sklearn-compose-columntransformer
+.. _ColumnTransformer: https://scikit-learn.org/stable/modules/generated/sklearn.compose.ColumnTransformer.html
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.column_transformer.html",
-    "import_from": "sklearn.ensemble",
+    "import_from": "sklearn.compose",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {
@@ -206,8 +209,22 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ColumnTransformerImpl, _combined_schemas)
 
 ColumnTransformer = lale.operators.make_operator(
     ColumnTransformerImpl, _combined_schemas
 )
+
+if sklearn.__version__ >= "0.21":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.compose.ColumnTransformer.html
+    ColumnTransformer = typing.cast(
+        lale.operators.PlannedIndividualOp,
+        ColumnTransformer.customize_schema(
+            verbose=Bool(
+                desc="If True, the time elapsed while fitting each transformer will be printed as it is completed.",
+                default=False,
+            ),
+        ),
+    )
+
+lale.docstrings.set_docstrings(ColumnTransformerImpl, ColumnTransformer._schemas)

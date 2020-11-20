@@ -46,7 +46,7 @@ _hyperparams_schema = {
                     "minimumForOptimizer": 2,
                     "maximumForOptimizer": 8,
                     "default": 2,
-                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "laleMaximum": "X/maxItems",  # number of rows
                     "description": "The number of clusters to find.",
                 },
                 "affinity": {
@@ -64,13 +64,20 @@ _hyperparams_schema = {
                         {"forOptimizer": False, "laleType": "callable"},
                     ],
                     "default": "euclidean",
-                    "description": 'Metric used to compute the linkage. Can be "euclidean", "l1", "l2",',
+                    "description": "Metric used to compute the linkage.",
                 },
                 "memory": {
                     "anyOf": [
-                        {"type": "string"},
-                        {"forOptimizer": False, "type": "object"},
-                        {"enum": [None]},  # object with the joblib.Memory interface
+                        {
+                            "description": "Path to the caching directory.",
+                            "type": "string",
+                        },
+                        {
+                            "description": "Object with the joblib.Memory interface",
+                            "type": "object",
+                            "forOptimizer": False,
+                        },
+                        {"description": "No caching.", "enum": [None]},
                     ],
                     "default": None,
                     "description": "Used to cache the output of the computation of the tree.",
@@ -94,15 +101,15 @@ _hyperparams_schema = {
                 "compute_full_tree": {
                     "anyOf": [{"type": "boolean"}, {"enum": ["auto"]}],
                     "default": "auto",
-                    "description": "Stop early the construction of the tree at n_clusters. This is",
+                    "description": "Stop early the construction of the tree at n_clusters.",
                 },
                 "linkage": {
                     "enum": ["ward", "complete", "average", "single"],
                     "default": "ward",
-                    "description": "Which linkage criterion to use. The linkage criterion determines which",
+                    "description": "Which linkage criterion to use. The linkage criterion determines which distance to use between sets of features.",
                 },
                 "pooling_func": {
-                    "description": "This combines the values of agglomerated features into a single",
+                    "description": "This combines the values of agglomerated features into a single value, and should accept an array of shape [M, N] and the keyword argument axis=1, and reduce it to an array of size [M].",
                     "laleType": "callable",
                     "default": np.mean,
                 },
@@ -188,9 +195,7 @@ if sklearn.__version__ >= "0.21":
         ),
         n_clusters=AnyOf(
             types=[
-                Int(
-                    minForOptimizer=2, maxForOptimizer=8, laleMaximum="X/items/maxItems"
-                ),
+                Int(minForOptimizer=2, maxForOptimizer=8, laleMaximum="X/maxItems"),
                 Null(forOptimizer=False),
             ],
             default=2,

@@ -28,6 +28,7 @@ from lale.lib.autogen import SGDClassifier
 from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import (
     PCA,
+    GaussianNB,
     KNeighborsClassifier,
     LinearRegression,
     LinearSVC,
@@ -54,6 +55,30 @@ class TestCreation(unittest.TestCase):
         pipeline = Pipeline(([("pca1", PCA()), ("lr1", LogisticRegression())]))
         trained = pipeline.fit(self.X_train, self.y_train)
         predictions = trained.predict(self.X_test)
+        accuracy_score(self.y_test, predictions)
+
+    def test_pipeline_create_trainable(self):
+        pipeline = lale.lib.sklearn.Pipeline(
+            steps=[("pca1", PCA()), ("lr1", LogisticRegression())]
+        )
+        self.assertIsInstance(pipeline, lale.operators.TrainableIndividualOp)
+        trained = pipeline.fit(self.X_train, self.y_train)
+        pca_trained, lr_trained = [op for _, op in trained.hyperparams()["steps"]]
+        self.assertIsInstance(pca_trained, lale.operators.TrainedIndividualOp)
+        self.assertIsInstance(lr_trained, lale.operators.TrainedIndividualOp)
+        predictions = trained.predict(self.X_test)
+        accuracy_score(self.y_test, predictions)
+
+    def test_pipeline_create_trained(self):
+        orig_trainable = PCA() >> LogisticRegression()
+        orig_trained = orig_trainable.fit(self.X_train, self.y_train)
+        self.assertIsInstance(orig_trained, lale.operators.TrainedPipeline)
+        pca_trained, lr_trained = orig_trained.steps()
+        pre_trained = lale.lib.sklearn.Pipeline(
+            steps=[("pca1", pca_trained), ("lr1", lr_trained)]
+        )
+        self.assertIsInstance(pre_trained, lale.operators.TrainedIndividualOp)
+        predictions = pre_trained.predict(self.X_test)
         accuracy_score(self.y_test, predictions)
 
     def test_pipeline_clone(self):
@@ -604,10 +629,10 @@ class TestComposition(unittest.TestCase):
     def test_two_estimators_predict_proba1(self):
         pipeline = (
             StandardScaler()
-            >> (PCA() & Nystroem() & PassiveAggressiveClassifier())
+            >> (PCA() & Nystroem() & GaussianNB())
             >> ConcatFeatures()
             >> NoOp()
-            >> PassiveAggressiveClassifier()
+            >> GaussianNB()
         )
         pipeline.fit(self.X_train, self.y_train)
         pipeline.predict_proba(self.X_test)
@@ -650,7 +675,7 @@ class TestComposition(unittest.TestCase):
         X, y = iris.data, iris.target
 
         trained = trainable.fit(X, y)
-        _ = trained.transform(X, y)
+        _ = trained.predict(X)
 
     def test_remove_last1(self):
         pipeline = (

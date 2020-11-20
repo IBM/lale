@@ -14,6 +14,8 @@
 
 from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar, Union
 
+import sklearn.base
+
 import lale.operators as Ops
 from lale.pretty_print import hyperparams_to_string
 from lale.search.PGO import remove_defaults_dict
@@ -57,7 +59,10 @@ def make_sklearn_compat(op: Ops.Operator) -> "SKlearnCompatWrapper":
        SKlearnCompatWrapper.to_lale() can be called to recover the
        wrapped lale operator for future use
     """
-    return SKlearnCompatWrapper.make_wrapper(op)
+    if isinstance(op, SKlearnCompatWrapper):
+        return op
+    else:
+        return SKlearnCompatWrapper.make_wrapper(Ops.wrap_operator(op))
 
 
 def sklearn_compat_clone(impl: Any) -> Any:
@@ -485,8 +490,12 @@ class SKlearnCompatWrapper(object):
             # since sklearn assumes that fit mutates the operator
             if hasattr(op, "_trained"):
                 op = op._trained
-            if hasattr(op, "_impl") and hasattr(op._impl_instance(), "_wrapped_model"):
-                model = op._impl_instance()._wrapped_model
+            if hasattr(op, "_impl"):
+                impl = op._impl_instance()
+                if hasattr(impl, "_wrapped_model"):
+                    model = impl._wrapped_model
+                elif isinstance(impl, sklearn.base.BaseEstimator):
+                    model = impl
         return "passthrough" if model is None else model
 
     @property
@@ -500,6 +509,18 @@ class SKlearnCompatWrapper(object):
     @property
     def _estimator_type(self):
         return self._final_estimator._estimator_type
+
+    @property
+    def _get_tags(self):
+        return self._final_estimator._get_tags
+
+    @property
+    def coef_(self):
+        return self._final_estimator.coef_
+
+    @property
+    def feature_importances_(self):
+        return self._final_estimator.feature_importances_
 
     def get_param_ranges(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """Returns two dictionaries, ranges and cat_idx, for hyperparameters.

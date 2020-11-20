@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+
 import aif360.algorithms.postprocessing
 import aif360.datasets
 import aif360.metrics
@@ -100,7 +102,19 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
         "description": 'Label values which are considered favorable (i.e. "positive").',
         "type": "array",
         "minItems": 1,
-        "items": {"anyOf": [{"type": "string"}, {"type": "number"}]},
+        "items": {
+            "anyOf": [
+                {"description": "Literal value.", "type": "string"},
+                {"description": "Numerical value.", "type": "number"},
+                {
+                    "description": "Numeric range [a,b] from a to b inclusive.",
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {"type": "number"},
+                },
+            ]
+        },
     },
     "protected_attributes": {
         "description": "Features for which fairness is desired.",
@@ -361,7 +375,7 @@ class _BinaryLabelScorer:
         assert hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric)
         self.metric = metric
         if favorable_labels is None:
-            self.cats_to_numeric = None
+            self.cats_to_binary = None
         else:
             self.cat_info = {
                 "favorable_labels": favorable_labels,
@@ -376,7 +390,7 @@ class _BinaryLabelScorer:
             assert unprivileged_groups is None and privileged_groups is None
             unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
             privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
-            self.cats_to_numeric = _CategoricalFairnessConverter(**self.cat_info)
+            self.cats_to_binary = _CategoricalFairnessConverter(**self.cat_info)
         self.fairness_info = {
             "favorable_label": favorable_label,
             "unfavorable_label": unfavorable_label,
@@ -394,8 +408,8 @@ class _BinaryLabelScorer:
         index = X.index if isinstance(X, pd.DataFrame) else None
         y_name = y.name if isinstance(y, pd.Series) else _ensure_str(X.shape[1])
         y_pred = _ndarray_to_series(predicted, y_name, index, y.dtype)
-        if self.cats_to_numeric is not None:
-            X, y_pred = self.cats_to_numeric(X, y_pred)
+        if self.cats_to_binary is not None:
+            X, y_pred = self.cats_to_binary(X, y_pred)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
             dataset_pred,
@@ -404,6 +418,10 @@ class _BinaryLabelScorer:
         )
         method = getattr(fairness_metrics, self.metric)
         result = method()
+        if np.isnan(result) or not np.isfinite(result):
+            warnings.warn(
+                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration for empty groups."
+            )
         return result
 
 
@@ -411,7 +429,7 @@ _SCORER_DOCSTRING = """
 
 There are two ways to construct this scorer, either with
 (favorable_label, unfavorable_label, protected_attribute_names,
- unprivileged_groups, privileged_groups) or with
+unprivileged_groups, privileged_groups) or with
 (favorable_labels, protected_attributes).
 
 Parameters
@@ -444,9 +462,21 @@ privileged_groups : array
 
       Map from feature names to group-indicating values.
 
-favorable_labels : array of number
+favorable_labels : array of union
 
   Label values which are considered favorable (i.e. "positive").
+
+  - string
+
+      Literal value
+
+  - number
+
+      Numerical value
+
+  - array of number, >= 2 items, <= 2 items
+
+      Numeric range [a,b] from a to b inclusive.
 
 protected_attributes : array of dict
 
@@ -456,7 +486,7 @@ protected_attributes : array of dict
 
       Column name or column index.
 
-  - privileged_groups : union type
+  - privileged_groups : array of union
 
       Values or ranges that indicate being a member of the privileged group.
 
@@ -505,11 +535,25 @@ class _AccuracyAndDisparateImpact:
         )
 
     def __call__(self, estimator, X, y):
-        disparate_impact = self.disparate_impact_scorer(estimator, X, y)
-        if disparate_impact < 0.9 or 1.1 < disparate_impact:
-            return -99
+        disp_impact = self.disparate_impact_scorer(estimator, X, y)
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return np.NAN
         accuracy = self.accuracy_scorer(estimator, X, y)
-        return accuracy
+        assert 0.0 <= accuracy <= 1.0 and 0.0 <= disp_impact, (accuracy, disp_impact)
+        if disp_impact <= 1.0:
+            symmetric_impact = disp_impact
+        else:
+            symmetric_impact = 1.0 / disp_impact
+        disp_impact_treshold = 0.9  # impact above threshold is considered fair
+        if symmetric_impact < disp_impact_treshold:
+            scaling_factor = symmetric_impact / disp_impact_treshold
+        else:
+            scaling_factor = 1.0
+        scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
+        result = accuracy * scaling_factor ** scaling_hardness
+        assert 0.0 <= result <= accuracy <= 1.0, (result, accuracy)
+        assert symmetric_impact >= 0.9 or result < accuracy
+        return result
 
 
 def accuracy_and_disparate_impact(
@@ -566,6 +610,81 @@ def disparate_impact(
 
 
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
+
+
+class _R2AndDisparateImpact:
+    def __init__(
+        self,
+        favorable_label=None,
+        unfavorable_label=None,
+        protected_attribute_names=None,
+        unprivileged_groups=None,
+        privileged_groups=None,
+        favorable_labels=None,
+        protected_attributes=None,
+    ):
+        self.r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+        self.disparate_impact_scorer = disparate_impact(
+            favorable_label,
+            unfavorable_label,
+            protected_attribute_names,
+            unprivileged_groups,
+            privileged_groups,
+            favorable_labels,
+            protected_attributes,
+        )
+
+    def __call__(self, estimator, X, y):
+        disp_impact = self.disparate_impact_scorer(estimator, X, y)
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return np.NAN
+        r2 = self.r2_scorer(estimator, X, y)
+        assert r2 <= 1.0 and 0.0 <= disp_impact, (r2, disp_impact)
+        if disp_impact <= 1.0:
+            symmetric_impact = disp_impact
+        else:
+            symmetric_impact = 1.0 / disp_impact
+        disp_impact_treshold = 0.9  # impact above threshold is considered fair
+        if symmetric_impact < disp_impact_treshold:
+            scaling_factor = symmetric_impact / disp_impact_treshold
+        else:
+            scaling_factor = 1.0
+        scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
+        positive_r2 = 1.0 - r2
+        scaled_r2 = positive_r2 / scaling_factor ** scaling_hardness
+        result = 1.0 - scaled_r2
+        assert result <= r2 <= 1.0, (result, r2)
+        assert symmetric_impact >= 0.9 or result < r2
+        return result
+
+
+def r2_and_disparate_impact(
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
+):
+    """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info.
+
+.. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
+.. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    return _R2AndDisparateImpact(
+        favorable_label,
+        unfavorable_label,
+        protected_attribute_names,
+        unprivileged_groups,
+        privileged_groups,
+        favorable_labels,
+        protected_attributes,
+    )
+
+
+r2_and_disparate_impact.__doc__ = (
+    str(r2_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
+)
 
 
 def statistical_parity_difference(

@@ -394,7 +394,7 @@ class TestHyperopt(unittest.TestCase):
         opt_time = end - start
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
-            rel_diff < 0.5
+            rel_diff < 0.7
         ), "Max time: {}, Actual time: {}, relative diff: {}".format(
             max_opt_time, opt_time, rel_diff
         )

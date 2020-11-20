@@ -469,9 +469,7 @@ tam = TAM(
     name="isoforestanomaly",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 pipeline = make_pipeline(tam, LR())"""
@@ -507,9 +505,7 @@ tam = TAM(
     name="pca",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
@@ -563,9 +559,7 @@ tam = TAM(
     name="featureagglomeration",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 logistic_regression = LogisticRegression(
@@ -613,9 +607,7 @@ tam = TAM(
     name="pca",
     col_names=["a", "b", "c"],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
 logistic_regression = LogisticRegression(
@@ -648,8 +640,20 @@ pipeline = tam >> logistic_regression"""
             name="round",
             datatypes=["numeric"],
             feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical],
-            col_names=["a", "b", "c"],
-            col_dtypes=[np.dtype("float32"), np.dtype("float32"), np.dtype("float32")],
+            col_names=[
+                "a____________",
+                "b____________",
+                "c____________",
+                "d____________",
+                "e____________",
+            ],
+            col_dtypes=[
+                np.dtype("float32"),
+                np.dtype("float32"),
+                np.dtype("float32"),
+                np.dtype("float32"),
+                np.dtype("float32"),
+            ],
         )
         pipeline = ta1 >> LR()
         expected = """from autoai_libs.cognito.transforms.transform_utils import TA1
@@ -664,11 +668,13 @@ ta1 = TA1(
     name="round",
     datatypes=["numeric"],
     feat_constraints=[autoai_libs.utils.fc_methods.is_not_categorical],
-    col_names=["a", "b", "c"],
+    col_names=[
+        "a____________", "b____________", "c____________", "d____________",
+        "e____________",
+    ],
     col_dtypes=[
-        np.dtype("float32"),
-        np.dtype("float32"),
-        np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
+        np.dtype("float32"), np.dtype("float32"),
     ],
 )
 pipeline = ta1 >> LR()"""
@@ -760,6 +766,33 @@ join = Join(pred=(it["table1.csv"].k1 == it["table2.csv"].k2))
 aggregate = Aggregate(columns={"talk_time|mean": mean(it.talk_time)})
 pipeline = (scan_0 & scan_1) >> join >> aggregate"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_sklearn_pipeline(self):
+        from lale.lib.sklearn import PCA, LogisticRegression, Pipeline
+
+        pipeline = Pipeline(steps=[("pca", PCA), ("lr", LogisticRegression(C=0.1))])
+        expected = """from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+import lale
+
+lale.wrap_imported_operators()
+logistic_regression = LogisticRegression(C=0.1)
+pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_sklearn_pipeline_2(self):
+        from lale.lib.sklearn import PCA, LogisticRegression, Pipeline
+
+        pipeline = Pipeline(steps=[("pca", PCA), ("lr", LogisticRegression(C=0.1))])
+        expected = """from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LogisticRegression
+
+logistic_regression = LogisticRegression(C=0.1)
+pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
+        printed = lale.pretty_print.to_string(pipeline, astype="sklearn")
+        self._roundtrip(expected, printed)
 
 
 class TestToAndFromJSON(unittest.TestCase):

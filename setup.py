@@ -32,7 +32,7 @@ try:
 except ImportError:
     pass
 
-with open("README.md", "r") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 on_rtd = os.environ.get("READTHEDOCS") == "True"
@@ -43,7 +43,7 @@ else:
         "numpy",
         "black",
         "graphviz",
-        "hyperopt==0.2.3",
+        "hyperopt",
         "jsonschema",
         "jsonsubschema",
         "scikit-learn>=0.20.3",

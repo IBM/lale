@@ -141,6 +141,8 @@ from lale.util.VisitorMeta import AbstractVisitorMeta
 
 logger = logging.getLogger(__name__)
 
+_LALE_SKL_PIPELINE = "lale.lib.sklearn.pipeline.PipelineImpl"
+
 _combinators_docstrings = """
     Methods
     -------
@@ -1321,6 +1323,12 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         super(PlannedIndividualOp, self).__init__(_name, _impl, _schemas)
         self._hyperparams = None
 
+    def _should_configure_trained(self, impl):
+        # TODO: may also want to do this for other higher-order operators
+        if self.class_name() != _LALE_SKL_PIPELINE:
+            return False
+        return isinstance(impl._pipeline, TrainedPipeline)
+
     def _configure(self, *args, **kwargs) -> "TrainableIndividualOp":
         class_ = self._impl_class()
         hyperparams = {}
@@ -1353,9 +1361,14 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         else:
             impl = class_(**params_all)
 
-        result = TrainableIndividualOp(
-            _name=self.name(), _impl=impl, _schemas=self._schemas
-        )
+        if self._should_configure_trained(impl):
+            result: TrainableIndividualOp = TrainedIndividualOp(
+                _name=self.name(), _impl=impl, _schemas=self._schemas
+            )
+        else:
+            result = TrainableIndividualOp(
+                _name=self.name(), _impl=impl, _schemas=self._schemas
+            )
         result._hyperparams = hyperparams
         return result
 
@@ -1437,6 +1450,16 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 result = impl_class(**params_all)
         return result
 
+    def _trained_hyperparams(self, trained_impl):
+        # TODO: may also want to do this for other higher-order operators
+        if self.class_name() != _LALE_SKL_PIPELINE:
+            return self._hyperparams
+        names_list = [name for name, op in self._hyperparams["steps"]]
+        steps_list = trained_impl._pipeline.steps()
+        trained_steps = list(zip(names_list, steps_list))
+        result = {**self._hyperparams, "steps": trained_steps}
+        return result
+
     def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
         logger.info("%s enter fit %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "fit")
@@ -1453,7 +1476,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if trained_impl is None:
             trained_impl = trainable_impl
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
-        result._hyperparams = self._hyperparams
+        result._hyperparams = self._trained_hyperparams(trained_impl)
         self._trained = result
         logger.info("%s exit  fit %s", time.asctime(), self.name())
         return result
@@ -1884,6 +1907,13 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
 
 _all_available_operators: List[PlannedOperator] = []
+
+
+def wrap_operator(impl) -> Operator:
+    if isinstance(impl, Operator):
+        return impl
+    else:
+        return make_operator(impl)
 
 
 def make_operator(impl, schemas=None, name=None) -> PlannedIndividualOp:
@@ -2734,8 +2764,12 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
     def is_transformer(self) -> bool:
         """ Checks if the operator is a transformer
         """
-        # Currently, all TrainedPipelines implement transform
-        return True
+        sink_nodes = self._find_sink_nodes()
+        all_transformers = [
+            True if hasattr(operator._impl, "transform") else False
+            for operator in sink_nodes
+        ]
+        return all(all_transformers)
 
 
 TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp)
@@ -2751,6 +2785,24 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         super(TrainedPipeline, self).__init__(steps, edges, ordered=ordered)
 
     def _predict(self, X, y=None):
+        return self._predict_based_on_type("predict", "_predict", X, y)
+
+    def predict(self, X):
+        result = self._predict(X)
+        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
+            return lale.datasets.data_schemas.strip_schema(
+                result
+            )  # otherwise scorers return zero-dim array
+        return result
+
+    def transform(self, X, y=None):
+        # TODO: What does a transform on a pipeline mean, if the last step is not a transformer
+        # can it be just the output of predict of the last step?
+        # If this implementation changes, check to make sure that the implementation of
+        # self.is_transformer is kept in sync with the new assumptions.
+        return self._predict_based_on_type("transform", "transform", X, y)
+
+    def _predict_based_on_type(self, impl_method_name, operator_method_name, X, y=None):
         outputs = {}
         meta_outputs = {}
         sink_nodes = self._find_sink_nodes()
@@ -2780,10 +2832,17 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             if hasattr(operator._impl, "set_meta_data"):
                 operator._impl_instance().set_meta_data(meta_data_inputs)
             meta_output = {}
-            if operator in sink_nodes and hasattr(
-                operator._impl, "predict"
-            ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
-                output = operator._predict(X=inputs)
+            if operator in sink_nodes:
+                if hasattr(
+                    operator._impl, impl_method_name
+                ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
+                    method_to_call_on_operator = getattr(operator, operator_method_name)
+                    output = method_to_call_on_operator(X=inputs)
+                else:
+                    raise AttributeError(
+                        "The sink node of the pipeline does not support",
+                        operator_method_name,
+                    )
             elif operator.is_transformer():
                 output = operator.transform(X=inputs, y=y)
                 if hasattr(operator._impl, "get_transform_meta_output"):
@@ -2814,21 +2873,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         result = outputs[self._steps[-1]]
         return result
 
-    def predict(self, X):
-        result = self._predict(X)
-        if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
-            return lale.datasets.data_schemas.strip_schema(
-                result
-            )  # otherwise scorers return zero-dim array
-        return result
-
-    def transform(self, X, y=None):
-        # TODO: What does a transform on a pipeline mean, if the last step is not a transformer
-        # can it be just the output of predict of the last step?
-        # If this implementation changes, check to make sure that the implementation of
-        # self.is_transformer is kept in sync with the new assumptions.
-        return self._predict(X, y)
-
     def predict_proba(self, X):
         """Probability estimates for all classes.
 
@@ -2842,45 +2886,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         result :
             Probabilities; see output_predict_proba schema of the operator.
         """
-        outputs = {}
-        sink_nodes = self._find_sink_nodes()
-        for operator in self._steps:
-            preds = self._preds[operator]
-            if len(preds) == 0:
-                inputs = [X]
-            else:
-                inputs = [
-                    outputs[pred][0]
-                    if isinstance(outputs[pred], tuple)
-                    else outputs[pred]
-                    for pred in preds
-                ]
-            if len(inputs) == 1:
-                inputs = inputs[0]
-            if operator in sink_nodes and hasattr(
-                operator._impl, "predict_proba"
-            ):  # Since this is pipeline's predict_proba, we should invoke predict from sink nodes
-                output = operator.predict_proba(X=inputs)
-            elif operator.is_transformer():
-                output = operator.transform(X=inputs)
-                if hasattr(operator._impl, "get_transform_meta_output"):
-                    meta_output = operator._impl_instance().get_transform_meta_output()
-            elif hasattr(
-                operator._impl, "predict_proba"
-            ):  # For estimator as a transformer, use predict_proba if available
-                output = operator.predict_proba(X=inputs)
-            elif hasattr(
-                operator._impl, "decision_function"
-            ):  # For estimator as a transformer, use decision_function if available
-                output = operator.decision_function(X=inputs)
-            else:
-                output = operator._predict(X=inputs)
-                if hasattr(operator._impl, "get_predict_meta_output"):
-                    meta_output = (  # noqa
-                        operator._impl_instance().get_predict_meta_output()
-                    )
-            outputs[operator] = output
-        return outputs[self._steps[-1]]
+        return self._predict_based_on_type("predict_proba", "predict_proba", X)
 
     def decision_function(self, X):
         """Confidence scores for all classes.
@@ -2895,42 +2901,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         result :
             Confidences; see output_decision_function schema of the operator.
         """
-        outputs = {}
-        sink_nodes = self._find_sink_nodes()
-        for operator in self._steps:
-            preds = self._preds[operator]
-            if len(preds) == 0:
-                inputs = [X]
-            else:
-                inputs = [
-                    outputs[pred][0]
-                    if isinstance(outputs[pred], tuple)
-                    else outputs[pred]
-                    for pred in preds
-                ]
-            if len(inputs) == 1:
-                inputs = inputs[0]
-            if operator.is_transformer():
-                output = operator.transform(X=inputs)
-            else:
-                if operator in sink_nodes:
-                    if hasattr(operator._impl, "decision_function"):
-                        output = operator.decision_function(X=inputs)
-                    else:
-                        raise AttributeError(
-                            "The sink node of the pipeline {} does not support a decision_function method.".format(
-                                operator.name()
-                            )
-                        )
-                else:  # this behavior may be different later if we add user input.
-                    if hasattr(operator._impl, "predict_proba"):
-                        output = operator.predict_proba(X=inputs)
-                    elif hasattr(operator._impl, "decision_function"):
-                        output = operator.decision_function(X=inputs)
-                    else:
-                        output = operator._predict(X=inputs)
-            outputs[operator] = output
-        return outputs[self._steps[-1]]
+        return self._predict_based_on_type("decision_function", "decision_function", X)
 
     def transform_with_batches(self, X, y=None, serialize=True):
         """[summary]
@@ -3173,6 +3144,10 @@ class _PipelineFactory:
         pass
 
     def __call__(self, steps: List[Any]):
+        warnings.warn(
+            "lale.operators.Pipeline is deprecated, use sklearn.pipeline.Pipeline or lale.lib.sklearn.Pipeline instead",
+            DeprecationWarning,
+        )
         for i in range(len(steps)):
             op = steps[i]
             if isinstance(op, tuple):

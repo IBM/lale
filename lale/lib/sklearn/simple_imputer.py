@@ -14,6 +14,7 @@
 
 
 import numpy as np
+import pandas as pd
 import sklearn.impute
 
 import lale.docstrings
@@ -43,7 +44,10 @@ class SimpleImputerImpl:
         return self
 
     def transform(self, X):
-        return self._wrapped_model.transform(X)
+        result = self._wrapped_model.transform(X)
+        if isinstance(X, pd.DataFrame):
+            result = pd.DataFrame(data=result, index=X.index, columns=X.columns)
+        return result
 
     def transform_schema(self, s_X):
         return s_X

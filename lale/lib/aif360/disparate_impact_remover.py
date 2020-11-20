@@ -14,6 +14,7 @@
 
 import aif360.algorithms.preprocessing
 import aif360.datasets
+import numpy as np
 import pandas as pd
 
 import lale.operators
@@ -32,16 +33,28 @@ class DisparateImpactRemoverImpl:
         dimpr = aif360.algorithms.preprocessing.DisparateImpactRemover(
             repair_level=repair_level, sensitive_attribute=sensitive_attribute
         )
-        features = X.to_numpy().tolist()
-        index = X.columns.to_list().index(sensitive_attribute)
+        if isinstance(X, pd.DataFrame):
+            features = X.to_numpy().tolist()
+        else:
+            features = X.tolist()
+        if isinstance(sensitive_attribute, str):
+            index = X.columns.to_list().index(sensitive_attribute)
+        else:
+            index = sensitive_attribute
         # since DisparateImpactRemover does not have separate fit and transform
         self._repairer = dimpr.Repairer(features, index, repair_level, False)
         return self
 
     def transform(self, X):
-        features = X.to_numpy().tolist()
+        if isinstance(X, pd.DataFrame):
+            features = X.to_numpy().tolist()
+        else:
+            features = X.tolist()
         repaired = self._repairer.repair(features)
-        result = pd.DataFrame(repaired, columns=X.columns)
+        if isinstance(X, pd.DataFrame):
+            result = pd.DataFrame(repaired, columns=X.columns)
+        else:
+            result = np.array(repaired)
         return result
 
 
@@ -97,8 +110,8 @@ _hyperparams_schema = {
                     "default": 1,
                 },
                 "sensitive_attribute": {
-                    "description": "Column name of protected attribute.",
-                    "type": "string",
+                    "description": "Column name or index of protected attribute.",
+                    "anyOf": [{"type": "string"}, {"type": "integer"}],
                 },
             },
         }

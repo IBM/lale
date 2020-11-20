@@ -31,14 +31,18 @@ Operators:
 
 Functions:
 ==========
+* `accuracy_and_disparate_impact`_
 * `dataset_fairness_info`_
 * `dataset_to_pandas`_
 * `disparate_impact`_
+* `r2_and_disparate_impact`_
 * `statistical_parity_difference`_
 
+.. _`accuracy_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.accuracy_and_disparate_impact
 .. _`dataset_fairness_info`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_fairness_info
 .. _`dataset_to_pandas`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_to_pandas
 .. _`disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+.. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 """
 
@@ -53,5 +57,6 @@ from .util import (
     disparate_impact,
     fetch_adult_df,
     fetch_creditg_df,
+    r2_and_disparate_impact,
     statistical_parity_difference,
 )

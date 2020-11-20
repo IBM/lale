@@ -101,14 +101,42 @@ _hyperparams_schema = {
                     "description": "The number of base estimators in the ensemble.",
                 },
                 "max_samples": {
-                    "anyOf": [{"type": "integer"}, {"type": "number"}],
-                    "default": 1.0,
                     "description": "The number of samples to draw from X to train each base estimator.",
+                    "anyOf": [
+                        {
+                            "description": "Draw max_samples samples.",
+                            "type": "integer",
+                            "minimum": 2,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                        },
+                        {
+                            "description": "Draw max_samples * X.shape[0] samples.",
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
+                        },
+                    ],
+                    "default": 1.0,
                 },
                 "max_features": {
-                    "anyOf": [{"type": "integer"}, {"type": "number"}],
-                    "default": 1.0,
                     "description": "The number of features to draw from X to train each base estimator.",
+                    "anyOf": [
+                        {
+                            "description": "Draw max_features features.",
+                            "type": "integer",
+                            "minimum": 2,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
+                        },
+                        {
+                            "description": "Draw max_samples * X.shape[1] features.",
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
+                        },
+                    ],
+                    "default": 1.0,
                 },
                 "bootstrap": {
                     "type": "boolean",
@@ -131,9 +159,20 @@ _hyperparams_schema = {
                     "description": "When set to True, reuse the solution of the previous call to fit",
                 },
                 "n_jobs": {
-                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
-                    "default": None,
                     "description": "The number of jobs to run in parallel for both `fit` and `predict`.",
+                    "anyOf": [
+                        {
+                            "description": "1 unless in joblib.parallel_backend context.",
+                            "enum": [None],
+                        },
+                        {"description": "Use all processors.", "enum": [-1]},
+                        {
+                            "description": "Number of CPU cores.",
+                            "type": "integer",
+                            "minimum": 1,
+                        },
+                    ],
+                    "default": None,
                 },
                 "random_state": {
                     "anyOf": [
