@@ -16,6 +16,7 @@ import unittest
 import jsonschema
 import pandas as pd
 
+from lale import wrap_imported_operators
 from lale.expressions import (
     count,
     day_of_month,
@@ -28,7 +29,6 @@ from lale.expressions import (
     replace,
     string_indexer,
 )
-from lale.lale import wrap_imported_operators
 from lale.lib.lale import (
     Aggregate,
     ConcatFeatures,
