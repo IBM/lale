@@ -25,6 +25,8 @@ import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.type_checking
 
+import sys
+
 
 def dataset_to_pandas(dataset, return_only="Xy"):
     """
@@ -541,7 +543,7 @@ class _AccuracyAndDisparateImpact:
             return accuracy
         assert 0.0 <= accuracy <= 1.0 and 0.0 <= disp_impact, (accuracy, disp_impact)
         if disp_impact == 0.0:
-            return 0.0
+            return -sys.float_info.max
         elif disp_impact <= 1.0:
             symmetric_impact = disp_impact
         else:
@@ -643,7 +645,7 @@ class _R2AndDisparateImpact:
             return r2
         assert r2 <= 1.0 and 0.0 <= disp_impact, (r2, disp_impact)
         if disp_impact == 0.0:
-            return 0.0
+            return -sys.float_info.max
         elif disp_impact <= 1.0:
             symmetric_impact = disp_impact
         else:
