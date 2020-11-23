@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import warnings
 
 import aif360.algorithms.postprocessing
@@ -24,8 +25,6 @@ import sklearn.metrics
 import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.type_checking
-
-import sys
 
 
 def dataset_to_pandas(dataset, return_only="Xy"):
