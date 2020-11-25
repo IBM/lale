@@ -423,19 +423,18 @@ class _BinaryLabelScorer:
         method = getattr(fairness_metrics, self.metric)
         result = method()
         if np.isnan(result) or not np.isfinite(result):
+            if 0 == fairness_metrics.num_positives(privileged=True):
+                logger.warning("there are 0 positives in the privileged group")
+            if 0 == fairness_metrics.num_positives(privileged=False):
+                logger.warning("there are 0 positives in the unprivileged group")
+            if 0 == fairness_metrics.num_instances(privileged=True):
+                logger.warning("there are 0 instances in the privileged group")
+            if 0 == fairness_metrics.num_instances(privileged=False):
+                logger.warning("there are 0 instances in the unprivileged group")
             if self.metric == "disparate_impact":
-                pos_priv = fairness_metrics.num_positives(privileged=True)
-                all_priv = fairness_metrics.num_instances(privileged=True)
-                pos_unpriv = fairness_metrics.num_positives(privileged=False)
-                all_unpriv = fairness_metrics.num_instances(privileged=False)
-                if all_priv == 0 or all_unpriv == 0:
-                    result = 1.0
-                elif pos_priv == 0 and pos_unpriv == 0:
-                    result = 1.0
-                else:
-                    result = 0.0
+                result = 0.0
             logger.warning(
-                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration for empty groups."
+                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration."
             )
         return result
 

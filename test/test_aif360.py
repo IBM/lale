@@ -335,10 +335,8 @@ class TestAIF360(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         with self.assertLogs(lale.lib.aif360.util.logger) as log_context_manager:
             impact = disparate_impact_scorer(trained, test_X, test_y)
-        self.assertRegex(
-            log_context_manager.output[0], "disparate_impact is ill-defined"
-        )
-        self.assertEqual(impact, 1.0)
+        self.assertRegex(log_context_manager.output[-1], "is ill-defined")
+        self.assertEqual(impact, 0.0)
 
     def test_disparate_impact_remover_pd_num(self):
         fairness_info = {
