@@ -1446,11 +1446,9 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 result = copy.deepcopy(impl_instance)
             except Exception:
                 raise ValueError(
-                    "Operator of type ", type(impl_instance), " can not be cloned."
+                    """Operator of type ", type(impl_instance), " could not be cloned using
+                     copy.deepcopy. The built-in method __deepcopy__ can be overriden to handle the failure."""
                 )
-                # impl_class = self._impl_class()
-                # params_all = self._get_params_all()
-                # result = impl_class(**params_all)
         return result
 
     def _trained_hyperparams(self, trained_impl):
