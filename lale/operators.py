@@ -1438,14 +1438,17 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
                 result = impl_class(**params_all)
         return result
 
-    def _trained_hyperparams(self, trained_impl):
+    def _trained_hyperparams(self, trained_impl) -> Optional[Dict[str, Any]]:
+        hp = self._hyperparams
+        if hp is None:
+            return None
         # TODO: may also want to do this for other higher-order operators
         if self.class_name() != _LALE_SKL_PIPELINE:
-            return self._hyperparams
-        names_list = [name for name, op in self._hyperparams["steps"]]
+            return hp
+        names_list = [name for name, op in hp["steps"]]
         steps_list = trained_impl._pipeline.steps()
         trained_steps = list(zip(names_list, steps_list))
-        result = {**self._hyperparams, "steps": trained_steps}
+        result = {**hp, "steps": trained_steps}
         return result
 
     def _validate_hyperparam_data_constraints(self, X, y=None):
