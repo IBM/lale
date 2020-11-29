@@ -166,6 +166,9 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
                 op = find_op(mod_name_long, unqualified)
                 if op is not None:
                     mod = mod_name_long
+                else:
+                    assert False, (op_label, op_name, class_name)
+
     assert op is not None, (op_label, op_name, class_name)
     if isinstance(op, lale.operators.IndividualOp):
         if "import_from" in op._schemas:
