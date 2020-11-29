@@ -1158,79 +1158,9 @@ class IndividualOp(Operator):
         tags: Optional[Dict] = None,
         **kwargs: Optional[Schema],
     ) -> "IndividualOp":
-        """Return a new operator with a customized schema
-
-        Parameters
-        ----------
-        schemas : Schema
-            A dictionary of json schemas for the operator. Override the entire schema and ignore other arguments
-        input : Schema
-            (or `input_*`) override the input schema for method `*`.
-            `input_*` must be an existing method (already defined in the schema for lale operators, existing method for external operators)
-        output : Schema
-            (or `output_*`) override the output schema for method `*`.
-            `output_*` must be an existing method (already defined in the schema for lale operators, existing method for external operators)
-        constraint : Schema
-            Add a constraint in JSON schema format.
-        relevantToOptimizer : String list
-            update the set parameters that will be optimized.
-        param : Schema
-            Override the schema of the hyperparameter.
-            `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
-        tags : Dict
-            Override the tags of the operator.
-
-        Returns
-        -------
-        IndividualOp
-            Copy of the operator with a customized schema
-        """
-        op = copy.deepcopy(self)
-        methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
-
-        if schemas is not None:
-            schemas.schema["$schema"] = "http://json-schema.org/draft-04/schema#"
-            lale.type_checking.validate_is_schema(schemas.schema)
-            op._schemas = schemas.schema
-        else:
-            if relevantToOptimizer is not None:
-                assert isinstance(relevantToOptimizer, list)
-                op._schemas["properties"]["hyperparams"]["allOf"][0][
-                    "relevantToOptimizer"
-                ] = relevantToOptimizer
-            if constraint is not None:
-                op._schemas["properties"]["hyperparams"]["allOf"].append(
-                    constraint.schema
-                )
-            if tags is not None:
-                assert isinstance(tags, dict)
-                op._schemas["tags"] = tags
-
-            for arg in kwargs:
-                value = kwargs[arg]
-                if arg in [p + n for p in ["input_", "output_"] for n in methods]:
-                    # multiple input types (e.g., fit, predict)
-                    assert value is not None
-                    lale.type_checking.validate_method(op, arg)
-                    lale.type_checking.validate_is_schema(value.schema)
-                    op._schemas["properties"][arg] = value.schema
-                elif value is None:
-                    scm = op._schemas["properties"]["hyperparams"]["allOf"][0]
-                    scm["required"] = [k for k in scm["required"] if k != arg]
-                    scm["relevantToOptimizer"] = [
-                        k for k in scm["relevantToOptimizer"] if k != arg
-                    ]
-                    scm["properties"] = {
-                        k: scm["properties"][k] for k in scm["properties"] if k != arg
-                    }
-                else:
-                    op._schemas["properties"]["hyperparams"]["allOf"][0]["properties"][
-                        arg
-                    ] = value.schema
-        # since the schema has changed, we need to invalidate any
-        # cached enum attributes
-        self._invalidate_enum_attributes()
-        return op
+        return customize_schema(
+            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+        )
 
     def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema):
         try:
@@ -1481,6 +1411,18 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
     def is_frozen_trainable(self) -> bool:
         free = self.free_hyperparams()
         return len(free) == 0
+
+    def customize_schema(
+        self,
+        schemas: Optional[Schema] = None,
+        relevantToOptimizer: Optional[List[str]] = None,
+        constraint: Optional[Schema] = None,
+        tags: Optional[Dict] = None,
+        **kwargs: Optional[Schema],
+    ) -> "PlannedIndividualOp":
+        return customize_schema(
+            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+        )
 
 
 def _mutation_warning(method_name: str) -> str:
@@ -1792,6 +1734,18 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             cp._hyperparams = self._hyperparams
         return cp
 
+    def customize_schema(
+        self,
+        schemas: Optional[Schema] = None,
+        relevantToOptimizer: Optional[List[str]] = None,
+        constraint: Optional[Schema] = None,
+        tags: Optional[Dict] = None,
+        **kwargs: Optional[Schema],
+    ) -> "TrainableIndividualOp":
+        return customize_schema(
+            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+        )
+
 
 class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
     _frozen_trained: bool
@@ -1957,6 +1911,18 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         if isinstance(cp, PlannedIndividualOp):
             cp._hyperparams = self._hyperparams
         return cp
+
+    def customize_schema(
+        self,
+        schemas: Optional[Schema] = None,
+        relevantToOptimizer: Optional[List[str]] = None,
+        constraint: Optional[Schema] = None,
+        tags: Optional[Dict] = None,
+        **kwargs: Optional[Schema],
+    ) -> "TrainedIndividualOp":
+        return customize_schema(
+            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+        )
 
 
 _all_available_operators: List[PlannedOperator] = []
@@ -3317,3 +3283,87 @@ def _fixup_hyperparams_dict(d):
     d1 = remove_defaults_dict(d)
     d2 = {k: lale.helpers.val_wrapper.unwrap(v) for k, v in d1.items()}
     return d2
+
+
+CustomizeOpType = TypeVar("CustomizeOpType", bound=IndividualOp)
+
+
+def customize_schema(
+    op: CustomizeOpType,
+    schemas: Optional[Schema] = None,
+    relevantToOptimizer: Optional[List[str]] = None,
+    constraint: Optional[Schema] = None,
+    tags: Optional[Dict] = None,
+    **kwargs: Optional[Schema],
+) -> CustomizeOpType:
+    """Return a new operator with a customized schema
+
+    Parameters
+    ----------
+    schemas : Schema
+        A dictionary of json schemas for the operator. Override the entire schema and ignore other arguments
+    input : Schema
+        (or `input_*`) override the input schema for method `*`.
+        `input_*` must be an existing method (already defined in the schema for lale operators, existing method for external operators)
+    output : Schema
+        (or `output_*`) override the output schema for method `*`.
+        `output_*` must be an existing method (already defined in the schema for lale operators, existing method for external operators)
+    constraint : Schema
+        Add a constraint in JSON schema format.
+    relevantToOptimizer : String list
+        update the set parameters that will be optimized.
+    param : Schema
+        Override the schema of the hyperparameter.
+        `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
+    tags : Dict
+        Override the tags of the operator.
+
+    Returns
+    -------
+    IndividualOp
+        Copy of the operator with a customized schema
+    """
+    op = copy.deepcopy(op)
+    methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
+
+    if schemas is not None:
+        schemas.schema["$schema"] = "http://json-schema.org/draft-04/schema#"
+        lale.type_checking.validate_is_schema(schemas.schema)
+        op._schemas = schemas.schema
+    else:
+        if relevantToOptimizer is not None:
+            assert isinstance(relevantToOptimizer, list)
+            op._schemas["properties"]["hyperparams"]["allOf"][0][
+                "relevantToOptimizer"
+            ] = relevantToOptimizer
+        if constraint is not None:
+            op._schemas["properties"]["hyperparams"]["allOf"].append(constraint.schema)
+        if tags is not None:
+            assert isinstance(tags, dict)
+            op._schemas["tags"] = tags
+
+        for arg in kwargs:
+            value = kwargs[arg]
+            if arg in [p + n for p in ["input_", "output_"] for n in methods]:
+                # multiple input types (e.g., fit, predict)
+                assert value is not None
+                lale.type_checking.validate_method(op, arg)
+                lale.type_checking.validate_is_schema(value.schema)
+                op._schemas["properties"][arg] = value.schema
+            elif value is None:
+                scm = op._schemas["properties"]["hyperparams"]["allOf"][0]
+                scm["required"] = [k for k in scm["required"] if k != arg]
+                scm["relevantToOptimizer"] = [
+                    k for k in scm["relevantToOptimizer"] if k != arg
+                ]
+                scm["properties"] = {
+                    k: scm["properties"][k] for k in scm["properties"] if k != arg
+                }
+            else:
+                op._schemas["properties"]["hyperparams"]["allOf"][0]["properties"][
+                    arg
+                ] = value.schema
+    # since the schema has changed, we need to invalidate any
+    # cached enum attributes
+    op._invalidate_enum_attributes()
+    return op
