@@ -1938,12 +1938,17 @@ def wrap_operator(impl) -> Operator:
         return make_operator(impl)
 
 
-def make_operator(impl, schemas=None, name=None) -> PlannedIndividualOp:
+def make_operator(
+    impl, schemas=None, name: Optional[str] = None
+) -> PlannedIndividualOp:
     if name is None:
         name = lale.helpers.assignee_name()
         if name is None:
             if inspect.isclass(impl) and impl.__name__.endswith("Impl"):
-                name = impl.__name__[: -len("Impl")]
+                n: str = impl.__name__[: -len("Impl")]
+                name = n
+            else:
+                name = "Unknown"
     if inspect.isclass(impl):
         if hasattr(impl, "fit"):
             operatorObj = PlannedIndividualOp(name, impl, schemas)
