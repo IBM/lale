@@ -103,9 +103,8 @@ def hyperparams_to_string(
                 gen.imports.append("from lale.expressions import it")
                 for node in ast.walk(value._expr):
                     if isinstance(node, ast.Call):
-                        gen.imports.append(
-                            "from lale.expressions import " + node.func.id
-                        )
+                        f: Any = node.func
+                        gen.imports.append("from lale.expressions import " + f.id)
             return str(value)
         elif hasattr(value, "__module__") and hasattr(value, "__name__"):
             modules = {"numpy": "np", "pandas": "pd"}
