@@ -15,6 +15,7 @@
 import logging
 import typing
 
+import sklearn
 import sklearn.pipeline
 from sklearn.pipeline import if_delegate_has_method
 

@@ -14,6 +14,7 @@
 
 import typing
 
+import sklearn
 import sklearn.compose
 
 import lale.docstrings

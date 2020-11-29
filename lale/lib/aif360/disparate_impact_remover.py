@@ -17,6 +17,7 @@ import aif360.datasets
 import numpy as np
 import pandas as pd
 
+import lale.docstrings
 import lale.operators
 
 

@@ -22,6 +22,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.model_selection._split import check_cv
 
 import lale.docstrings
+import lale.helpers
 import lale.operators
 import lale.sklearn_compat
 from lale.helpers import cross_val_score_track_trials

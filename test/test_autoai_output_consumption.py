@@ -1,6 +1,6 @@
 import os
 import unittest
-import urllib
+import urllib.request
 from typing import Optional
 
 import pandas as pd
@@ -11,6 +11,7 @@ from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.tree import DecisionTreeClassifier as Tree
 
 import lale
+import lale.operators
 from lale.helpers import println_pos
 from lale.lib.autoai_libs import wrap_pipeline_segments
 
