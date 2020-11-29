@@ -19,6 +19,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import torch.utils
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 from torchvision.models import resnet50

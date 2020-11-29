@@ -17,6 +17,7 @@ import unittest
 import jsonschema
 
 import lale.lib.lale
+import lale.lib.sklearn
 import lale.type_checking
 from lale.lib.lale import ConcatFeatures
 from lale.lib.sklearn import (
@@ -166,6 +167,7 @@ class TestMissingIndicator(unittest.TestCase):
 class TestRFE(unittest.TestCase):
     def test_init_fit_predict(self):
         import sklearn.datasets
+        import sklearn.svm
 
         svm = lale.lib.sklearn.SVR(kernel="linear")
         rfe = RFE(estimator=svm, n_features_to_select=2)
@@ -178,6 +180,7 @@ class TestRFE(unittest.TestCase):
 
     def test_init_fit_predict_sklearn(self):
         import sklearn.datasets
+        import sklearn.svm
 
         svm = sklearn.svm.SVR(kernel="linear")
         rfe = RFE(estimator=svm, n_features_to_select=2)
@@ -194,6 +197,7 @@ class TestRFE(unittest.TestCase):
 
     def test_attrib_sklearn(self):
         import sklearn.datasets
+        import sklearn.svm
 
         from lale.lib.sklearn import RFE, LogisticRegression
 
@@ -316,6 +320,7 @@ class TestConcatFeatures(unittest.TestCase):
 
         warnings.filterwarnings("ignore")
         import sklearn.datasets
+        import sklearn.utils
 
         from lale.helpers import cross_val_score
         from lale.lib.sklearn import PCA

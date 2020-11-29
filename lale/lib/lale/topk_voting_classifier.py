@@ -18,6 +18,7 @@ from typing import Any, Dict
 
 from hyperopt import STATUS_OK
 
+import lale.docstrings
 import lale.operators
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import VotingClassifier

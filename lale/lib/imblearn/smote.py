@@ -14,6 +14,7 @@
 
 from imblearn.over_sampling import SMOTE as OrigModel
 
+import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
     BaseResamplerImpl,
