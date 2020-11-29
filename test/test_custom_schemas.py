@@ -14,6 +14,7 @@
 
 import unittest
 from test.mock_module import UnknownOp
+from typing import Any
 
 from lightgbm import LGBMClassifier as baz
 from sklearn.decomposition import PCA as foo
@@ -356,8 +357,9 @@ class TestWrapUnknownOps(unittest.TestCase):
             self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
             lale.wrap_imported_operators()
             self.assertTrue(isinstance(UnknownOp, PlannedIndividualOp))
-            self.assertEqual(UnknownOp.hyperparam_schema(), self.expected_schema)
-            instance = UnknownOp(n_neighbors=3)
+            uop: Any = UnknownOp
+            self.assertEqual(uop.hyperparam_schema(), self.expected_schema)
+            instance = uop(n_neighbors=3)
             self.assertEqual(instance.hyperparams(), {"n_neighbors": 3})
         finally:
             for sym, obj in old_globals.items():
@@ -374,6 +376,9 @@ class TestWrapUnknownOps(unittest.TestCase):
         self.assertFalse(isinstance(instance, TrainableIndividualOp))
         wrapped = make_operator(instance)
         self.assertTrue(isinstance(wrapped, TrainableIndividualOp))
+        assert isinstance(
+            wrapped, TrainableIndividualOp
+        )  # help type checkers that don't know about assertTrue
         self.assertEqual(wrapped.hyperparams(), {"n_neighbors": 3})
         cloned = clone(make_sklearn_compat(wrapped)).to_lale()
         self.assertTrue(isinstance(cloned, TrainableIndividualOp))

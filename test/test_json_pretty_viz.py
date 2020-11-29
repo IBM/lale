@@ -14,6 +14,7 @@
 
 import unittest
 
+import lale.operators
 import lale.pretty_print
 
 
@@ -572,10 +573,12 @@ pipeline = tam >> logistic_regression"""
         import autoai_libs.cognito.transforms.transform_utils
         import numpy as np
         import sklearn.cluster.hierarchical
+        import sklearn.decomposition
         import sklearn.linear_model
         import sklearn.pipeline
 
         import lale.helpers
+        import lale.operators
 
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
             autoai_libs.cognito.transforms.transform_utils.TAM(
@@ -595,6 +598,8 @@ pipeline = tam >> logistic_regression"""
         pipeline = lale.helpers.import_from_sklearn_pipeline(
             sklearn_pipeline, fitted=False
         )
+        assert isinstance(pipeline, lale.operators.TrainableOperator)
+
         expected = """from autoai_libs.cognito.transforms.transform_utils import TAM
 from sklearn.decomposition import PCA
 import numpy as np
