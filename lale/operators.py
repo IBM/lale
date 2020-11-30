@@ -373,7 +373,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         pass
 
     @abstractmethod
-    def _lale_clone(self, cloner: Callable[[Any], Any]):
+    def _lale_clone(self, cloner: Callable[[Any], Any]) -> Any:
         """ Method for cloning a lale operator, currently intended for internal use
         """
         pass

@@ -211,7 +211,9 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
             if len(graph["succs"][src]) == 1:
                 dst = graph["succs"][src][0]
                 if len(graph["preds"][dst]) == 1:
-                    old = {uid: graph["steps"][uid] for uid in [src, dst]}
+                    old: Dict[str, JSON_TYPE] = {
+                        uid: graph["steps"][uid] for uid in [src, dst]
+                    }
                     new_uid = None
                     new_steps: Dict[str, JSON_TYPE] = {}
                     for step_uid, step_jsn in old.items():
@@ -238,7 +240,9 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
                 if len(preds0) == len(preds1) and set(preds0) == set(preds1):
                     succs0, succs1 = graph["succs"][s0], graph["succs"][s1]
                     if len(succs0) == len(succs1) and set(succs0) == set(succs1):
-                        old = {uid: graph["steps"][uid] for uid in [s0, s1]}
+                        old: Dict[str, JSON_TYPE] = {
+                            uid: graph["steps"][uid] for uid in [s0, s1]
+                        }
                         new_uid = None
                         new_steps: Dict[str, JSON_TYPE] = {}
                         for step_uid, step_jsn in old.items():
@@ -250,7 +254,9 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
                                 new_steps[step_uid] = step_jsn
                         if new_uid is None:
                             new_uid = gen.gensym("union")
-                        new = {new_uid: {"kind": "Par", "steps": new_steps}}
+                        new: Dict[str, JSON_TYPE] = {
+                            new_uid: {"kind": "Par", "steps": new_steps}
+                        }
                         return old, new
         return None
 
@@ -441,11 +447,13 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
 def _collect_names(jsn: JSON_TYPE) -> Set[str]:
     result: Set[str] = set()
     if "steps" in jsn:
-        for step_uid, step_jsn in jsn["steps"].items():
+        steps: Dict[str, JSON_TYPE] = jsn["steps"]
+        for step_uid, step_jsn in steps.items():
             result |= {step_uid}
             result |= _collect_names(step_jsn)
     if "label" in jsn:
-        result |= {jsn["label"]}
+        lbl: str = jsn["label"]
+        result |= {lbl}
     return result
 
 
