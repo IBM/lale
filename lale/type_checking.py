@@ -33,7 +33,7 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 import functools
 import inspect
 import os
-from typing import Any, Dict, List
+from typing import TYPE_CHECKING, Any, Dict, List, Tuple, overload
 
 import jsonschema
 import jsonschema.exceptions
@@ -41,6 +41,9 @@ import jsonschema.validators
 import jsonsubschema
 
 import lale.helpers
+
+if TYPE_CHECKING:
+    import lale.operators
 
 JSON_TYPE = Dict[str, Any]
 
@@ -298,7 +301,7 @@ def join_schemas(*schemas: JSON_TYPE) -> JSON_TYPE:
         The joined schema.
     """
 
-    def join_two_schemas(s_a, s_b):
+    def join_two_schemas(s_a: JSON_TYPE, s_b: JSON_TYPE) -> JSON_TYPE:
         if s_a is None:
             return s_b
         s_a = lale.helpers.dict_without(s_a, "description")
@@ -307,7 +310,8 @@ def join_schemas(*schemas: JSON_TYPE) -> JSON_TYPE:
             return s_b
         if is_subschema(s_b, s_a):
             return s_a
-        return jsonsubschema.joinSchemas(s_a, s_b)
+        # we should improve the typing of the jsonsubschema API so that this ignore can be removed
+        return jsonsubschema.joinSchemas(s_a, s_b)  # type: ignore
 
     if len(schemas) == 0:
         return {"not": {}}
@@ -410,7 +414,9 @@ def get_default_schema(impl):
     else:
         hyperparams_schema = {"type": "object", "properties": {}}
     hyperparams_schema["relevantToOptimizer"] = []
-    method_schemas = {"hyperparams": {"allOf": [hyperparams_schema]}}
+    method_schemas: Dict[str, JSON_TYPE] = {
+        "hyperparams": {"allOf": [hyperparams_schema]}
+    }
     if hasattr(impl, "fit"):
         method_schemas["input_fit"] = _get_args_schema(impl.fit)
     for method_name in ["predict", "predict_proba", "transform"]:
@@ -438,7 +444,7 @@ _data_info_keys = {"laleMaximum": "maximum", "laleNot": "not"}
 
 
 def has_data_constraints(hyperparam_schema: JSON_TYPE) -> bool:
-    def recursive_check(subject: JSON_TYPE) -> bool:
+    def recursive_check(subject: Any) -> bool:
         if isinstance(subject, (list, tuple)):
             for v in subject:
                 if recursive_check(v):
@@ -456,7 +462,23 @@ def has_data_constraints(hyperparam_schema: JSON_TYPE) -> bool:
 def replace_data_constraints(
     hyperparam_schema: JSON_TYPE, data_schema: JSON_TYPE
 ) -> JSON_TYPE:
+    @overload
     def recursive_replace(subject: JSON_TYPE) -> JSON_TYPE:
+        ...
+
+    @overload
+    def recursive_replace(subject: List) -> List:
+        ...
+
+    @overload
+    def recursive_replace(subject: Tuple) -> Tuple:
+        ...
+
+    @overload
+    def recursive_replace(subject: Any) -> Any:
+        ...
+
+    def recursive_replace(subject):
         any_changes = False
         if isinstance(subject, (list, tuple)):
             result = []
@@ -481,6 +503,8 @@ def replace_data_constraints(
                     new_k = k
                 result[new_k] = new_v
                 any_changes = any_changes or k != new_k or v is not new_v
+        else:
+            return subject
         return result if any_changes else subject
 
     result = recursive_replace(hyperparam_schema)
