@@ -21,7 +21,7 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import h5py
 import numpy as np
@@ -105,8 +105,9 @@ def json_lookup(ptr, jsn, default=None):
     return sub_jsn
 
 
-def ndarray_to_json(arr, subsample_array: bool = True) -> Union[list, dict]:
+def ndarray_to_json(arr: np.ndarray, subsample_array: bool = True) -> Union[list, dict]:
     # sample 10 rows and no limit on columns
+    num_subsamples: List[int]
     if subsample_array:
         num_subsamples = [10, np.iinfo(np.int).max, np.iinfo(np.int).max]
     else:
@@ -116,7 +117,7 @@ def ndarray_to_json(arr, subsample_array: bool = True) -> Union[list, dict]:
             np.iinfo(np.int).max,
         ]
 
-    def subarray_to_json(indices):
+    def subarray_to_json(indices: Tuple[int, ...]) -> Any:
         if len(indices) == len(arr.shape):
             if (
                 isinstance(arr[indices], bool)
