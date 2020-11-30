@@ -49,7 +49,9 @@ from lale.util.Visitor import Visitor, accept
 
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
-def make_sklearn_compat(op: Ops.Operator) -> "SKlearnCompatWrapper":
+def make_sklearn_compat(
+    op: Union[Ops.Operator, "SKlearnCompatWrapper", Any]
+) -> "SKlearnCompatWrapper":
     """Top level function for providing compatibiltiy with sklearn operations
        This returns a wrapper around the provided sklearn operator graph which can be passed
        to sklearn methods such as clone and GridSearchCV
@@ -228,9 +230,10 @@ def set_structured_params(k, params: Dict[str, Any], hyper_parent):
                 if not isinstance(hyper, dict):
                     assert is_numeric_structure(structure_type)
                     actual_key = int(elem_key)
+                    hyper[actual_key] = elem_value
                 else:
                     actual_key = elem_key
-                hyper[actual_key] = elem_value
+                    hyper[actual_key] = elem_value
 
         for elem_key, elem_params in sub_params.items():
             if not isinstance(hyper, dict):
@@ -283,7 +286,7 @@ def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperato
         main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
         assert not main_params, f"Unexpected non-nested arguments {main_params}"
         found_names: Dict[str, int] = {}
-        step_map: Dict[Ops.Operator, Ops.TrainableOperator] = {}
+        step_map: Dict[Ops.Operator, Ops.Operator] = {}
         for s in steps:
             name = s.name()
             name_index = 0
@@ -450,16 +453,14 @@ class SKlearnCompatWrapper(object):
         if "__lale_wrapper_base" in impl_params:
             self.set_params_internal(**impl_params)
         else:
-            prev = self
-            cur = self._base
-            assert prev != cur
+            cur: Union[WithoutGetParams, Ops.Operator] = self._base
+            assert self != cur
             assert cur is not None
+            prev: WithoutGetParams = cur  # Note that this assignment is spurious, since the loop will always run at least once
             while isinstance(cur, WithoutGetParams):
                 assert cur != cur._base
                 prev = cur
                 cur = cur._base
-            if not isinstance(cur, Ops.Operator):
-                assert False
             assert isinstance(cur, Ops.Operator)
             fixed_params = self.fixup_params_internal(**impl_params)
             new_s = set_operator_params(cur, **fixed_params)
@@ -481,7 +482,7 @@ class SKlearnCompatWrapper(object):
         return op
 
     @property
-    def _final_estimator(self):
+    def _final_estimator(self) -> Any:
         op: Optional[Ops.IndividualOp] = self._final_individual_op()
         model = None
         if op is not None:
@@ -489,7 +490,9 @@ class SKlearnCompatWrapper(object):
             # even if the code uses the original operrator
             # since sklearn assumes that fit mutates the operator
             if hasattr(op, "_trained"):
-                op = op._trained
+                tr_op: Any = op._trained
+                assert isinstance(tr_op, Ops.TrainedIndividualOp)
+                op = tr_op
             if hasattr(op, "_impl"):
                 impl = op._impl_instance()
                 if hasattr(impl, "_wrapped_model"):
