@@ -19,6 +19,7 @@ import pandas as pd
 import scipy.sparse
 
 import lale.type_checking
+from lale.type_checking import JSON_TYPE
 
 try:
     import torch
@@ -32,7 +33,7 @@ except ImportError:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
 class NDArrayWithSchema(np.ndarray):
     def __new__(
-        subtype,
+        cls,
         shape,
         dtype=float,
         buffer=None,
@@ -41,8 +42,8 @@ class NDArrayWithSchema(np.ndarray):
         order=None,
         json_schema=None,
     ):
-        result = super(NDArrayWithSchema, subtype).__new__(
-            subtype, shape, dtype, buffer, offset, strides, order
+        result = super(NDArrayWithSchema, cls).__new__(
+            cls, shape, dtype, buffer, offset, strides, order
         )
         result.json_schema = json_schema
         return result
@@ -73,12 +74,14 @@ class SeriesWithSchema(pd.Series):
         return SeriesWithSchema
 
 
-def is_list_tensor(obj):
-    def list_tensor_shape(ls):
+def is_list_tensor(obj) -> bool:
+    from typing import Any, Optional, Tuple, Union
+
+    def list_tensor_shape(ls) -> Optional[Tuple[Union[str, int]]]:
         if isinstance(ls, int) or isinstance(ls, float) or isinstance(ls, str):
             return (str(type(ls)),)
         if isinstance(ls, list):
-            sub_shape = "Any"
+            sub_shape: Any = "Any"
             for item in ls:
                 item_result = list_tensor_shape(item)
                 if item_result is None:
@@ -147,8 +150,8 @@ def strip_schema(obj):
     return result
 
 
-def dtype_to_schema(typ):
-    result = None
+def dtype_to_schema(typ) -> JSON_TYPE:
+    result: JSON_TYPE
     if typ is bool or np.issubdtype(typ, np.bool_):
         result = {"type": "boolean"}
     elif np.issubdtype(typ, np.unsignedinteger):
@@ -175,7 +178,7 @@ def dtype_to_schema(typ):
     return result
 
 
-def shape_and_dtype_to_schema(shape, dtype):
+def shape_and_dtype_to_schema(shape, dtype) -> JSON_TYPE:
     result = dtype_to_schema(dtype)
     for dim in reversed(shape):
         result = {"type": "array", "minItems": dim, "maxItems": dim, "items": result}
@@ -183,7 +186,7 @@ def shape_and_dtype_to_schema(shape, dtype):
     return result
 
 
-def ndarray_to_schema(array):
+def ndarray_to_schema(array) -> JSON_TYPE:
     assert isinstance(array, np.ndarray)
     if (
         isinstance(array, NDArrayWithSchema)
@@ -194,14 +197,14 @@ def ndarray_to_schema(array):
     return shape_and_dtype_to_schema(array.shape, array.dtype)
 
 
-def csr_matrix_to_schema(matrix):
+def csr_matrix_to_schema(matrix) -> JSON_TYPE:
     assert isinstance(matrix, scipy.sparse.csr_matrix)
     result = shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
     result["isSparse"] = {}  # true schema
     return result
 
 
-def dataframe_to_schema(df):
+def dataframe_to_schema(df) -> JSON_TYPE:
     assert isinstance(df, pd.DataFrame)
     if (
         isinstance(df, DataFrameWithSchema)
@@ -230,7 +233,7 @@ def dataframe_to_schema(df):
     return result
 
 
-def series_to_schema(series):
+def series_to_schema(series) -> JSON_TYPE:
     assert isinstance(series, pd.Series)
     if (
         isinstance(series, SeriesWithSchema)
@@ -249,12 +252,13 @@ def series_to_schema(series):
     return result
 
 
-def torch_tensor_to_schema(tensor):
+def torch_tensor_to_schema(tensor) -> JSON_TYPE:
     assert torch_installed, """Your Python environment does not have torch installed. You can install it with
     pip install torch
 or with
     pip install 'lale[full]'"""
     assert isinstance(tensor, torch.Tensor)
+    result: JSON_TYPE
     # https://pytorch.org/docs/stable/tensor_attributes.html#torch-dtype
     if tensor.dtype == torch.bool:
         result = {"type": "boolean"}
@@ -269,7 +273,7 @@ or with
     return result
 
 
-def is_liac_arff(obj):
+def is_liac_arff(obj) -> bool:
     expected_types = {
         "description": str,
         "relation": str,
@@ -284,7 +288,7 @@ def is_liac_arff(obj):
     return True
 
 
-def liac_arff_to_schema(larff):
+def liac_arff_to_schema(larff) -> JSON_TYPE:
     assert is_liac_arff(
         larff
     ), """Your Python environment might contain an 'arff' package different from 'liac-arff'. You can install it with
@@ -293,7 +297,7 @@ or with
     pip install 'lale[full]'"""
     n_rows, n_columns = len(larff["data"]), len(larff["attributes"])
 
-    def larff_type_to_schema(larff_type):
+    def larff_type_to_schema(larff_type) -> JSON_TYPE:
         if isinstance(larff_type, str):
             a2j = {
                 "numeric": "number",
@@ -324,7 +328,7 @@ or with
     return result
 
 
-def to_schema(obj):
+def to_schema(obj) -> JSON_TYPE:
     if obj is None:
         result = {"enum": [None]}
     elif isinstance(obj, np.ndarray):
