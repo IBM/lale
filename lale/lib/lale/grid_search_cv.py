@@ -14,6 +14,8 @@
 
 from typing import Any, Dict
 
+import lale.docstrings
+import lale.helpers
 import lale.lib.sklearn
 import lale.operators
 import lale.search.lale_grid_search_cv
