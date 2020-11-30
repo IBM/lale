@@ -475,7 +475,7 @@ class SKlearnCompatWrapper(object):
     def _final_individual_op(self) -> Optional[Ops.IndividualOp]:
         op: Optional[Ops.Operator] = self.to_lale()
         while op is not None and isinstance(op, Ops.BasePipeline):
-            op = op._get_last()
+            op = op.get_last()
         if op is not None and not isinstance(op, Ops.IndividualOp):
             op = None
         return op

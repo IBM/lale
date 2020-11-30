@@ -2242,7 +2242,7 @@ class BasePipeline(Operator, Generic[OpType]):
             del self._preds[old_clf]
             return self
 
-    def _get_last(self) -> Optional[OpType]:
+    def get_last(self) -> Optional[OpType]:
         sink_nodes = self._find_sink_nodes()
         if len(sink_nodes) > 1:
             return None

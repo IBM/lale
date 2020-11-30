@@ -200,6 +200,9 @@ class AutoPipelineImpl:
             StandardScaler,
         )
 
+        remaining_time = self.max_opt_time - (time.time() - self._start_fit)
+        if remaining_time <= 0:
+            return
         prep = auto_prep(X)
         scale = MinMaxScaler | StandardScaler | RobustScaler | NoOp
         reduce_dims = PCA | SelectKBest | NoOp
@@ -218,12 +221,15 @@ class AutoPipelineImpl:
             max_evals=self.max_evals - self._summary.shape[0],
             scoring=self.scoring,
             best_score=self.best_score,
-            max_opt_time=self.max_opt_time - (time.time() - self._start_fit),
+            max_opt_time=remaining_time,
             max_eval_time=self.max_eval_time,
             verbose=self.verbose,
             show_progressbar=False,
         )
         trained = trainable.fit(X, y)
+        summary = trained.summary()
+        if list(summary.status) == ["new"]:
+            return  # only one trial and that one timed out
         best_trial = trained._impl._trials.best_trial
         if "loss" in best_trial["result"]:
             if (
@@ -231,7 +237,6 @@ class AutoPipelineImpl:
                 < self._summary.at[self._name_of_best, "loss"]
             ):
                 self._name_of_best = f'p{best_trial["tid"]}'
-        summary = trained.summary()
         self._summary = pd.concat([self._summary, summary])
         for name in summary.index:
             assert name not in self._pipelines
