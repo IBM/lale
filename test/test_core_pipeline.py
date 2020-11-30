@@ -59,6 +59,7 @@ class TestCreation(unittest.TestCase):
 
     def test_pipeline_create_trainable(self):
         import lale.lib.sklearn
+        import lale.operators
 
         pipeline = lale.lib.sklearn.Pipeline(
             steps=[("pca1", PCA()), ("lr1", LogisticRegression())]
@@ -73,6 +74,7 @@ class TestCreation(unittest.TestCase):
 
     def test_pipeline_create_trained(self):
         import lale.lib.sklearn
+        import lale.operators
 
         orig_trainable = PCA() >> LogisticRegression()
         orig_trained = orig_trainable.fit(self.X_train, self.y_train)
