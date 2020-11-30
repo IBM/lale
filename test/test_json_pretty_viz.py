@@ -523,6 +523,7 @@ pipeline = make_pipeline(tam, lgbm_classifier)"""
         import sklearn.pipeline
 
         import lale.helpers
+        import lale.pretty_print
 
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
             autoai_libs.cognito.transforms.transform_utils.TAM(
@@ -579,6 +580,7 @@ pipeline = tam >> logistic_regression"""
 
         import lale.helpers
         import lale.operators
+        import lale.pretty_print
 
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
             autoai_libs.cognito.transforms.transform_utils.TAM(
@@ -724,6 +726,7 @@ pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
         )
 
         import lale.operators
+        import lale.pretty_print
 
         numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3, 5])
         compress_strings = CompressStrings(
