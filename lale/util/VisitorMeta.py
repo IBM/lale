@@ -20,7 +20,7 @@ import sys
 from abc import ABCMeta
 
 
-class VisitorMeta(object):
+class VisitorMeta(type):
     """ This meta class adds a private _accept method that calls visitCLASSNAME on the visitor.
         It does not currently support inheritance: you need to define the visitC method for subclasses
         explicitly.
