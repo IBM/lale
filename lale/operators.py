@@ -674,13 +674,23 @@ class _DictionaryObjectForEnum:
     def __contains__(self, key: str) -> bool:
         return key in self._d
 
-    def __getattr__(self, key: str) -> enumeration.Enum:
+    # This method in fact always return an enumeration
+    # however, the values of the enumeration are not known, which causes
+    # the type checker to complain about a common (and desired) idiom
+    # such as, e.g. LogisticRegression.enum.solver.saga
+    # so we weaken the type to Any for pragmatic reasons
+    def __getattr__(self, key: str) -> Any:  # enumeration.Enum:
         if key in self._d:
             return self._d[key]
         else:
             raise AttributeError("No enumeration found for hyper-parameter: " + key)
 
-    def __getitem__(self, key: str) -> enumeration.Enum:
+    # This method in fact always return an enumeration
+    # however, the values of the enumeration are not known, which causes
+    # the type checker to complain about a common (and desired) idiom
+    # such as, e.g. LogisticRegression.enum.solver.saga
+    # so we weaken the type to Any for pragmatic reasons
+    def __getitem__(self, key: str) -> Any:  # enumeration.Enum:
         if key in self._d:
             return self._d[key]
         else:
@@ -764,7 +774,7 @@ class IndividualOp(Operator):
             except AttributeError:
                 pass
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Any:
         if name in _schema_derived_attributes or name in ["__setstate__", "_schemas"]:
             raise AttributeError
 
