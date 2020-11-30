@@ -182,12 +182,13 @@ class TestAIF360(unittest.TestCase):
         cls.creditg_np_num = cls._creditg_np_num()
         cls.boston = cls._boston()
 
-    def test_converter_pd_cat(self):
+    def test_encoder_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
         orig_X = self.creditg_pd_cat["train_X"]
-        orig_y = self.creditg_pd_cat["train_y"]
-        converter = lale.lib.aif360.util._CategoricalFairnessConverter(**info)
-        conv_X, conv_y = converter(orig_X, orig_y)
+        encoder = lale.lib.aif360.ProtectedAttributesEncoder(
+            protected_attributes=info["protected_attributes"]
+        )
+        conv_X = encoder.transform(orig_X)
         for i in orig_X.index:
             orig_row = orig_X.loc[i]
             conv_row = conv_X.loc[i]
@@ -196,20 +197,19 @@ class TestAIF360(unittest.TestCase):
                 conv_row["personal_status"],
             )
             self.assertEqual(orig_row["age"] >= 26, conv_row["age"])
-            self.assertEqual(orig_y[i] == "good", conv_y[i])
 
-    def test_converter_np_cat(self):
+    def test_encoder_np_cat(self):
         info = self.creditg_np_cat["fairness_info"]
         orig_X = self.creditg_np_cat["train_X"]
-        orig_y = self.creditg_np_cat["train_y"]
-        converter = lale.lib.aif360.util._CategoricalFairnessConverter(**info)
-        conv_X, conv_y = converter(orig_X, orig_y)
+        encoder = lale.lib.aif360.ProtectedAttributesEncoder(
+            protected_attributes=info["protected_attributes"]
+        )
+        conv_X = encoder.transform(orig_X)
         for i in range(orig_X.shape[0]):
             self.assertEqual(
                 orig_X[i, 8].startswith("male"), conv_X.at[i, "f8"],
             )
             self.assertEqual(orig_X[i, 12] >= 26, conv_X.at[i, "f12"])
-            self.assertEqual(orig_y[i] == "good", conv_y[i])
 
     def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info

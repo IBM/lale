@@ -27,7 +27,7 @@ import lale.datasets.openml
 import lale.type_checking
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.WARNING)
 
 
 def dataset_to_pandas(dataset, return_only="Xy"):
@@ -322,48 +322,6 @@ def _ndarray_to_dataframe(array):
     return result
 
 
-class _CategoricalFairnessConverter:
-    def __init__(self, favorable_labels, protected_attributes, remainder="drop"):
-        lale.type_checking.validate_schema(
-            favorable_labels, _categorical_fairness_properties["favorable_labels"]
-        )
-        assert remainder in ["drop", "passthrough"]
-        self.remainder = remainder
-        self.favorable_labels = favorable_labels
-        lale.type_checking.validate_schema(
-            protected_attributes,
-            _categorical_fairness_properties["protected_attributes"],
-        )
-        self.protected_attributes = protected_attributes
-
-    def __call__(self, orig_X, orig_y):
-        if isinstance(orig_X, np.ndarray):
-            orig_X = _ndarray_to_dataframe(orig_X)
-        if isinstance(orig_y, np.ndarray):
-            orig_y = _ndarray_to_series(orig_y, orig_X.shape[1])
-        assert isinstance(orig_X, pd.DataFrame), type(orig_X)
-        assert isinstance(orig_y, pd.Series), type(orig_y)
-        assert (
-            orig_X.shape[0] == orig_y.shape[0]
-        ), f"orig_X.shape {orig_X.shape}, orig_y.shape {orig_y.shape}"
-        protected = {}
-        for prot_attr in self.protected_attributes:
-            feature = prot_attr["feature"]
-            groups = prot_attr["privileged_groups"]
-            if isinstance(feature, str):
-                column = orig_X[feature]
-            else:
-                column = orig_X.iloc[:, feature]
-            series = column.apply(lambda v: _group_flag(v, groups))
-            protected[feature] = series
-        if self.remainder == "drop":
-            result_X = pd.concat([protected[f] for f in protected], axis=1)
-        else:
-            result_X = _dataframe_replace(orig_X, protected)
-        result_y = orig_y.apply(lambda v: _group_flag(v, self.favorable_labels))
-        return result_X, result_y
-
-
 class _BinaryLabelScorer:
     def __init__(
         self,
@@ -379,13 +337,9 @@ class _BinaryLabelScorer:
         assert hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric)
         self.metric = metric
         if favorable_labels is None:
-            self.cats_to_binary = None
+            self.prot_attr_enc = None
         else:
-            self.cat_info = {
-                "favorable_labels": favorable_labels,
-                "protected_attributes": protected_attributes,
-            }
-            lale.type_checking.validate_schema(self.cat_info, _dataset_fairness_schema)
+            self.favorable_labels = favorable_labels
             assert favorable_label is None and unfavorable_label is None
             favorable_label, unfavorable_label = 1, 0
             assert protected_attribute_names is None
@@ -394,7 +348,10 @@ class _BinaryLabelScorer:
             assert unprivileged_groups is None and privileged_groups is None
             unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
             privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
-            self.cats_to_binary = _CategoricalFairnessConverter(**self.cat_info)
+
+            from lale.lib.aif360 import ProtectedAttributesEncoder as ProtAttrEnc
+
+            self.prot_attr_enc = ProtAttrEnc(protected_attributes=protected_attributes)
         self.fairness_info = {
             "favorable_label": favorable_label,
             "unfavorable_label": unfavorable_label,
@@ -412,8 +369,11 @@ class _BinaryLabelScorer:
         index = X.index if isinstance(X, pd.DataFrame) else None
         y_name = y.name if isinstance(y, pd.Series) else _ensure_str(X.shape[1])
         y_pred = _ndarray_to_series(predicted, y_name, index, y.dtype)
-        if self.cats_to_binary is not None:
-            X, y_pred = self.cats_to_binary(X, y_pred)
+        if getattr(self, "favorable_labels", None) is not None:
+            if isinstance(y_pred, np.ndarray):
+                y_pred = _ndarray_to_series(y_pred, X.shape[1])
+            y_pred = y_pred.apply(lambda v: _group_flag(v, self.favorable_labels))
+            X = self.prot_attr_enc.transform(X)
         dataset_pred = self.pandas_to_dataset(X, y_pred)
         fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
             dataset_pred,

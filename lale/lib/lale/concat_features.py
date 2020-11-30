@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
+import logging
 
 import numpy as np
 import pandas as pd
@@ -23,6 +23,10 @@ import lale.operators
 import lale.pretty_print
 import lale.type_checking
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+
+
 try:
     import torch
 
@@ -31,35 +35,44 @@ except ImportError:
     torch_installed = False
 
 
+def _is_pandas(d):
+    return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series)
+
+
 class ConcatFeaturesImpl:
     def __init__(self):
         pass
 
     def transform(self, X):
-        def is_pandas(d):
-            return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series)
-
-        if functools.reduce(lambda accum, d: accum and is_pandas(d), X, True):
-            result = pd.concat(X, axis=1)
-            return result
-
-        np_datasets = []
-        # Preprocess the datasets to convert them to 2-d numpy arrays
-        for dataset in X:
-            if is_pandas(dataset):
-                np_dataset = dataset.values
-            elif isinstance(dataset, scipy.sparse.csr_matrix):
-                np_dataset = dataset.toarray()
-            elif torch_installed and isinstance(dataset, torch.Tensor):
-                np_dataset = dataset.detach().cpu().numpy()
+        if all([_is_pandas(d) for d in X]):
+            name2series = {}
+            for dataset in X:
+                for name in dataset.columns:
+                    name2series[name] = name2series.get(name, []) + [dataset[name]]
+            duplicates = [name for name, ls in name2series.items() if len(ls) > 1]
+            if len(duplicates) == 0:
+                result = pd.concat(X, axis=1)
             else:
-                np_dataset = dataset
-            if hasattr(np_dataset, "shape"):
-                if len(np_dataset.shape) == 1:  # To handle numpy column vectors
-                    np_dataset = np.reshape(np_dataset, (np_dataset.shape[0], 1))
-            np_datasets.append(np_dataset)
-
-        result = np.concatenate(np_datasets, axis=1)
+                logger.info(f"ConcatFeatures duplicate column names {duplicates}")
+                deduplicated = [ls[-1] for _, ls in name2series.items()]
+                result = pd.concat(deduplicated, axis=1)
+        else:
+            np_datasets = []
+            # Preprocess the datasets to convert them to 2-d numpy arrays
+            for dataset in X:
+                if _is_pandas(dataset):
+                    np_dataset = dataset.values
+                elif isinstance(dataset, scipy.sparse.csr_matrix):
+                    np_dataset = dataset.toarray()
+                elif torch_installed and isinstance(dataset, torch.Tensor):
+                    np_dataset = dataset.detach().cpu().numpy()
+                else:
+                    np_dataset = dataset
+                if hasattr(np_dataset, "shape"):
+                    if len(np_dataset.shape) == 1:  # To handle numpy column vectors
+                        np_dataset = np.reshape(np_dataset, (np_dataset.shape[0], 1))
+                np_datasets.append(np_dataset)
+            result = np.concatenate(np_datasets, axis=1)
         return result
 
     def transform_schema(self, s_X):

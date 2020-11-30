@@ -22,11 +22,13 @@ Operators:
 * `CalibratedEqOddsPostprocessing`_
 * `DisparateImpactRemover`_
 * `EqOddsPostprocessing`_
+* `ProtectedAttributesEncoder`_
 * `RejectOptionClassification`_
 
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html
+.. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html
 .. _`RejectOptionClassification`: lale.lib.aif360.reject_option_classification.html
 
 Functions:
@@ -49,6 +51,7 @@ Functions:
 from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
+from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .reject_option_classification import RejectOptionClassification
 from .util import (
     accuracy_and_disparate_impact,
