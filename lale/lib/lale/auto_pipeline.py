@@ -14,6 +14,7 @@
 
 import time
 import warnings
+from typing import Optional
 
 import hyperopt
 import pandas as pd
@@ -94,6 +95,8 @@ def auto_gbt(prediction_type):
 
 
 class AutoPipelineImpl:
+    _summary: Optional[pd.DataFrame]
+
     def __init__(
         self,
         prediction_type="classification",
@@ -114,6 +117,7 @@ class AutoPipelineImpl:
         self.scoring = scoring
         self._scorer = sklearn.metrics.get_scorer(scoring)
         self.best_score = best_score
+        self._summary = None
 
     def _try_and_add(self, name, trainable, X, y):
         assert name not in self._pipelines
@@ -133,9 +137,8 @@ class AutoPipelineImpl:
                 trainable, X, y, self.scoring, cv
             )
         loss = self.best_score - cv_score
-        if (
-            self._name_of_best is None
-            or loss < self._summary.at[self._name_of_best, "loss"]
+        if self._name_of_best is None or (
+            self._summary is None or loss < self._summary.at[self._name_of_best, "loss"]
         ):
             self._name_of_best = name
         record = {
@@ -216,9 +219,10 @@ class AutoPipelineImpl:
         model_trees = reduce_dims >> estim_trees
         model_notree = scale >> reduce_dims >> estim_notree
         planned = prep >> (model_trees | model_notree)
+        prior_evals = self._summary.shape[0] if self._summary is not None else 0
         trainable = Hyperopt(
             estimator=planned,
-            max_evals=self.max_evals - self._summary.shape[0],
+            max_evals=self.max_evals - prior_evals,
             scoring=self.scoring,
             best_score=self.best_score,
             max_opt_time=remaining_time,
@@ -227,17 +231,24 @@ class AutoPipelineImpl:
             show_progressbar=False,
         )
         trained = trainable.fit(X, y)
-        summary = trained.summary()
+        # The static types are not currently smart enough to verify
+        # that the conditionally defined summary method is actually present
+        # But it must be, since the hyperopt impl type provides it
+        summary: pd.DataFrame = trained.summary()  # type: ignore
         if list(summary.status) == ["new"]:
             return  # only one trial and that one timed out
         best_trial = trained._impl._trials.best_trial
         if "loss" in best_trial["result"]:
             if (
-                best_trial["result"]["loss"]
+                self._summary is None
+                or best_trial["result"]["loss"]
                 < self._summary.at[self._name_of_best, "loss"]
             ):
                 self._name_of_best = f'p{best_trial["tid"]}'
-        self._summary = pd.concat([self._summary, summary])
+        if self._summary is None:
+            self._summary = summary
+        else:
+            self._summary = pd.concat([self._summary, summary])
         for name in summary.index:
             assert name not in self._pipelines
             if summary.at[name, "status"] == hyperopt.STATUS_OK:
@@ -264,7 +275,8 @@ class AutoPipelineImpl:
 Returns
 -------
 result : DataFrame"""
-        self._summary.sort_values(by="loss", inplace=True)
+        if self._summary is not None:
+            self._summary.sort_values(by="loss", inplace=True)
         return self._summary
 
     def get_pipeline(self, pipeline_name=None, astype="lale"):
