@@ -49,7 +49,7 @@ class BothImpl:
         return self.getPipeline().predict(X)
 
     def predict_proba(self, X):
-        return self.getPipeline().predict_proba(self, X)
+        return self.getPipeline().predict_proba(X)
 
     def fit(self, X, y=None):
         return self.getPipeline().fit(X, y=y)
