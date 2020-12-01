@@ -162,8 +162,8 @@ class OneHotEncoderImpl:
             col_schemas = s_X["items"]["items"]
             if isinstance(col_schemas, list):
                 desc = [s.get("description", "") for s in col_schemas]
-            if "" not in desc and len(desc) == len(set(desc)):
-                in_names = desc
+                if "" not in desc and len(desc) == len(set(desc)):
+                    in_names = desc
         if in_names is None and hasattr(self, "_X_columns"):
             in_names = self._X_columns
         if in_names is None:
