@@ -599,11 +599,11 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def _predict(self, X):
+    def _predict(self, X) -> Any:
         pass
 
     @abstractmethod
-    def predict(self, X):
+    def predict(self, X) -> Any:
         """Make predictions.
 
         Parameters
@@ -1222,7 +1222,7 @@ class IndividualOp(Operator):
                     y = self._validate_input_schema("y", y, "fit")
                 self._validate_input_schema("y", y, method)
 
-    def _validate_input_schema(self, arg_name, arg, method):
+    def _validate_input_schema(self, arg_name: str, arg, method: str):
         if not lale.helpers.is_empty_dict(arg):
             if method == "fit" or method == "partial_fit":
                 schema = self.input_schema_fit()
@@ -1239,13 +1239,13 @@ class IndividualOp(Operator):
             if "properties" in schema and arg_name in schema["properties"]:
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
-                    sup = schema["properties"][arg_name]
+                    sup: JSON_TYPE = schema["properties"][arg_name]
                     lale.type_checking.validate_schema_or_subschema(arg, sup)
                 except lale.type_checking.SubschemaError as e:
-                    sub = lale.pretty_print.json_to_string(e.sub)
-                    sup = lale.pretty_print.json_to_string(e.sup)
+                    sub_str: str = lale.pretty_print.json_to_string(e.sub)
+                    sup_str: str = lale.pretty_print.json_to_string(e.sup)
                     raise ValueError(
-                        f"{self.name()}.{method}() invalid {arg_name}, the schema of the actual data is not a subschema of the expected schema of the argument.\nactual_schema = {sub}\nexpected_schema = {sup}"
+                        f"{self.name()}.{method}() invalid {arg_name}, the schema of the actual data is not a subschema of the expected schema of the argument.\nactual_schema = {sub_str}\nexpected_schema = {sup_str}"
                     )
                 except Exception as e:
                     exception_type = f"{type(e).__module__}.{type(e).__name__}"
@@ -1583,7 +1583,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError("Must call `fit` before `transform`.")
 
     @if_delegate_has_method(delegate="_impl")
-    def predict(self, X):
+    def predict(self, X) -> Any:
         """
         .. deprecated:: 0.0.0
            The `predict` method is deprecated on a trainable
@@ -1825,7 +1825,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def predict(self, X):
+    def predict(self, X) -> Any:
         """Make predictions.
 
         Parameters
@@ -2548,7 +2548,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `transform`.")
 
-    def predict(self, X):
+    def predict(self, X) -> Any:
         """
         .. deprecated:: 0.0.0
            The `predict` method is deprecated on a trainable
@@ -2820,7 +2820,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
     def _predict(self, X, y=None):
         return self._predict_based_on_type("predict", "_predict", X, y)
 
-    def predict(self, X):
+    def predict(self, X) -> Any:
         result = self._predict(X)
         if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
             return lale.datasets.data_schemas.strip_schema(
