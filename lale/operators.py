@@ -1321,6 +1321,16 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             return False
         return isinstance(impl._pipeline, TrainedPipeline)
 
+    # give it a more precise type: if the input is an individual op, the output is as well
+    def auto_configure(
+        self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
+    ) -> "TrainedIndividualOp":
+        trained = super().auto_configure(
+            X, y=y, optimizer=optimizer, cv=cv, scoring=scoring, **kwargs
+        )
+        assert isinstance(trained, TrainedIndividualOp)
+        return trained
+
     def _configure(self, *args, **kwargs) -> "TrainableIndividualOp":
         class_ = self._impl_class()
         hyperparams = {}
@@ -2424,6 +2434,16 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
         ordered: bool = False,
     ) -> None:
         super(PlannedPipeline, self).__init__(steps, edges, ordered=ordered)
+
+    # give it a more precise type: if the input is a pipelein, the output is as well
+    def auto_configure(
+        self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
+    ) -> "TrainedPipeline":
+        trained = super().auto_configure(
+            X, y=y, optimizer=optimizer, cv=cv, scoring=scoring, **kwargs
+        )
+        assert isinstance(trained, TrainedPipeline)
+        return trained
 
     def is_frozen_trainable(self) -> bool:
         return all([step.is_frozen_trainable() for step in self.steps()])
