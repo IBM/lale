@@ -18,7 +18,7 @@ from typing import (
     Any,
     Dict,
     Generic,
-    Iterator,
+    Iterable,
     List,
     Optional,
     Set,
@@ -73,7 +73,7 @@ class set_with_str_for_keys(Generic[VV]):
 
     _elems: Dict[str, VV]
 
-    def __init__(self, elems: Union[Dict[str, VV], Iterator[VV]]):
+    def __init__(self, elems: Union[Dict[str, VV], Iterable[VV]]):
         if isinstance(elems, dict):
             self._elems = elems
         else:
@@ -124,7 +124,7 @@ def toAllOfList(schema: JsonSchema) -> List[JsonSchema]:
         return [schema]
 
 
-def liftAllOf(schemas: List[JsonSchema]) -> Iterator[JsonSchema]:
+def liftAllOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
     """ Given a list of schemas, if any of them are
         allOf schemas, lift them out to the top level
     """
@@ -134,7 +134,7 @@ def liftAllOf(schemas: List[JsonSchema]) -> Iterator[JsonSchema]:
             yield s
 
 
-def liftAnyOf(schemas: List[JsonSchema]) -> Iterator[JsonSchema]:
+def liftAnyOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
     """ Given a list of schemas, if any of them are
         anyOf schemas, lift them out to the top level
     """
@@ -173,7 +173,7 @@ def enumValues(
 extra_field_names: List[str] = ["default", "description"]
 
 
-def hasAllOperatorSchemas(schemas: List[JsonSchema]):
+def hasAllOperatorSchemas(schemas: List[JsonSchema]) -> bool:
     if not schemas:
         return False
     for s in schemas:
@@ -190,7 +190,7 @@ def hasAllOperatorSchemas(schemas: List[JsonSchema]):
     return True
 
 
-def hasAnyOperatorSchemas(schemas: List[JsonSchema]):
+def hasAnyOperatorSchemas(schemas: List[JsonSchema]) -> bool:
     for s in schemas:
         if "anyOf" in s:
             if hasAnyOperatorSchemas(s["anyOf"]):
@@ -551,7 +551,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
             for k in s_required:
                 if k not in s_props:
                     logger.info(
-                        f"simplifyAll: {s_typed} is not a mergable list of schemas because {o} requires key '{k}', which is not in earlier schemas, and an earlier schema excluded additional properties"
+                        f"simplifyAll: {s_typed} is not a mergable list of schemas because one of the schemas requires key '{k}', which is not in the other schemas, and a different schema excluded additional properties"
                     )
                     return impossible()
 
@@ -720,7 +720,7 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
     # TODO: more!
     assert not s_all
     ret_all = []
-    ret_main = s_extra if s_extra else {}
+    ret_main: JsonSchema = s_extra if s_extra else {}
 
     if s_type_for_optimizer is not None:
         ret_main["laleType"] = s_type_for_optimizer
@@ -984,8 +984,8 @@ def findRelevantFields(schema: JsonSchema) -> Optional[Set[str]]:
 def narrowToGivenRelevantFields(
     schema: JsonSchema, relevantFields: Set[str]
 ) -> JsonSchema:
-    if schema is False:
-        return False
+    if is_true_schema(schema) or is_false_schema(schema):
+        return schema
     if "anyOf" in schema:
         return {
             "anyOf": [
