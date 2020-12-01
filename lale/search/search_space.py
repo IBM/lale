@@ -179,10 +179,12 @@ class SearchSpaceNumber(SearchSpacePrimitive):
                     inclusive_max=self.getInclusiveMax(),
                 )
 
-    def getInclusiveMax(self):
+    def getInclusiveMax(self) -> Optional[float]:
         """ Return the maximum as an inclusive maximum (exclusive maxima are adjusted accordingly)
         """
         max = self.maximum
+        if max is None:
+            return None
         if self.exclusiveMaximum:
             if self.discrete:
                 max = max - 1
@@ -190,10 +192,12 @@ class SearchSpaceNumber(SearchSpacePrimitive):
                 max = numpy.nextafter(max, float("-inf"))
         return max
 
-    def getInclusiveMin(self):
+    def getInclusiveMin(self) -> Optional[float]:
         """ Return the maximum as an inclusive minimum (exclusive minima are adjusted accordingly)
         """
         min = self.minimum
+        if min is None:
+            return None
         if self.exclusiveMinimum:
             if self.discrete:
                 min = min + 1
