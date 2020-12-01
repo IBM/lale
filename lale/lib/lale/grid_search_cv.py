@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 import lale.docstrings
 import lale.helpers
@@ -27,6 +27,8 @@ from .observing import Observing, ObservingImpl
 
 
 class GridSearchCVImpl:
+    _best_estimator: Optional[lale.operators.TrainedOperator] = None
+
     def __init__(
         self,
         estimator=None,
@@ -88,6 +90,7 @@ class GridSearchCVImpl:
             hp_grid = [
                 lale.search.lale_grid_search_cv.get_defaults_as_param_grid(observed_op)
             ]
+        be: lale.operators.TrainableOperator
         if hp_grid:
             if obs is not None:
                 observed_op._impl.startObserving(
@@ -115,22 +118,26 @@ class GridSearchCVImpl:
                 raise
 
             if obs is not None:
-                assert isinstance(be._impl, ObservingImpl)
-                be_base = be._impl.getOp()
-                observed_op._impl.endObserving("optimize", best=be_base)
-            self._best_estimator = be
+                impl = getattr(be, "_impl")
+                if impl is not None:
+                    assert isinstance(impl, ObservingImpl)
+                    be = impl.getOp()
+                    observed_op._impl.endObserving("optimize", best=be)
         else:
             assert isinstance(op, lale.operators.TrainableOperator)
-            self._best_estimator = op
+            be = op
+
+        self._best_estimator = be.fit(X, y)
         return self
 
     def predict(self, X):
+        assert self._best_estimator is not None
         return self._best_estimator.predict(X)
 
     def get_pipeline(self, pipeline_name=None, astype="lale"):
         if pipeline_name is not None:
             raise NotImplementedError("Cannot get pipeline by name yet.")
-        result = getattr(self, "_best_estimator", None)
+        result = self._best_estimator
         if result is None or astype == "lale":
             return result
         assert astype == "sklearn", astype
