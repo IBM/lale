@@ -398,20 +398,17 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         pass
 
-    @abstractmethod
-    def freeze_trainable(self) -> "Operator":
-        """Return a copy of the trainable parts of this operator that is the same except
-        that all hyperparameters are bound and none are free to be tuned.
-        If there is an operator choice, it is kept as is.
-        """
-        pass
-
-    @abstractmethod
     def is_frozen_trainable(self) -> bool:
         """Return true if all hyperparameters are bound, in other words,
         search spaces contain no free hyperparameters to be tuned.
         """
-        pass
+        return False
+
+    def is_frozen_trained(self) -> bool:
+        """Return true if all learnable coefficients are bound, in other
+           words, there are no free parameters to be learned by fit.
+        """
+        return False
 
 
 Operator.__doc__ = cast(str, Operator.__doc__) + "\n" + _combinators_docstrings
@@ -501,6 +498,14 @@ class TrainableOperator(PlannedOperator):
         pass
 
     @abstractmethod
+    def freeze_trainable(self) -> "TrainableOperator":
+        """Return a copy of the trainable parts of this operator that is the same except
+        that all hyperparameters are bound and none are free to be tuned.
+        If there is an operator choice, it is kept as is.
+        """
+        pass
+
+    @abstractmethod
     def is_transformer(self) -> bool:
         """ Checks if the operator is a transformer
         """
@@ -580,13 +585,6 @@ class TrainedOperator(TrainableOperator):
         -------
         result :
             Confidences; see output_decision_function schema of the operator.
-        """
-        pass
-
-    @abstractmethod
-    def is_frozen_trained(self) -> bool:
-        """Return true if all learnable coefficients are bound, in other
-           words, there are no free parameters to be learned by fit.
         """
         pass
 
@@ -1514,9 +1512,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `freeze_trained`.")
 
-    def is_frozen_trained(self) -> bool:
-        return False
-
     @if_delegate_has_method(delegate="_impl")
     def get_pipeline(
         self, pipeline_name=None, astype="lale"
@@ -1623,10 +1618,6 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         else:
             bound = []
         return set(to_bind) - set(bound)
-
-    def is_frozen_trainable(self) -> bool:
-        free = self.free_hyperparams()
-        return len(free) == 0
 
     def _freeze_trainable_bindings(self):
         old_bindings = self._hyperparams if self._hyperparams else {}
@@ -2382,23 +2373,11 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
     ) -> None:
         super(PlannedPipeline, self).__init__(steps, edges, ordered=ordered)
 
-    def freeze_trainable(self) -> "PlannedPipeline":
-        frozen_steps = []
-        frozen_map = {}
-        for liquid in self._steps:
-            frozen = liquid.freeze_trainable()
-            frozen_map[liquid] = frozen
-            frozen_steps.append(frozen)
-        frozen_edges = [(frozen_map[x], frozen_map[y]) for x, y in self.edges()]
-        result = make_pipeline_graph(frozen_steps, frozen_edges, ordered=True)
-        assert result.is_frozen_trainable()
-        return result
-
     def is_frozen_trainable(self) -> bool:
-        for step in self.steps():
-            if not step.is_frozen_trainable():
-                return False
-        return True
+        return all([step.is_frozen_trainable() for step in self.steps()])
+
+    def is_frozen_trained(self) -> bool:
+        return all([step.is_frozen_trained() for step in self.steps()])
 
 
 TrainableOpType = TypeVar("TrainableOpType", bound=TrainableIndividualOp)
@@ -3024,12 +3003,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         result = super(TrainedPipeline, self).freeze_trainable()
         return cast(TrainedPipeline, result)
 
-    def is_frozen_trained(self) -> bool:
-        for step in self.steps():
-            if not step.is_frozen_trained():
-                return False
-        return True
-
     def freeze_trained(self) -> "TrainedPipeline":
         frozen_steps = []
         frozen_map = {}
@@ -3115,22 +3088,8 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
 
-    def freeze_trainable(self) -> "OperatorChoice":
-        frozen_steps = []
-        frozen_map = {}
-        for liquid in self._steps:
-            frozen = liquid.freeze_trainable()
-            frozen_map[liquid] = frozen
-            frozen_steps.append(frozen)
-        result: "OperatorChoice" = OperatorChoice(frozen_steps, self._name)
-        assert result.is_frozen_trainable()
-        return result
-
     def is_frozen_trainable(self) -> bool:
-        for step in self.steps():
-            if not step.is_frozen_trainable():
-                return False
-        return True
+        return all([step.is_frozen_trainable() for step in self.steps()])
 
     def is_classifier(self) -> bool:
         for op in self.steps():

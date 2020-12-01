@@ -40,12 +40,6 @@ class NonTerminal(Operator):
     def input_schema_fit(self):
         raise NotImplementedError()  # TODO
 
-    def freeze_trainable(self) -> "Operator":
-        raise NotImplementedError()  # TODO
-
-    def is_frozen_trainable(self) -> bool:
-        raise NotImplementedError()  # TODO
-
     def is_classifier(self) -> bool:
         return False  # TODO
 
@@ -86,12 +80,6 @@ class Grammar(Operator):
         raise NotImplementedError()  # TODO
 
     def input_schema_fit(self):
-        raise NotImplementedError()  # TODO
-
-    def freeze_trainable(self) -> "Operator":
-        raise NotImplementedError()  # TODO
-
-    def is_frozen_trainable(self) -> bool:
         raise NotImplementedError()  # TODO
 
     def is_classifier(self) -> bool:
