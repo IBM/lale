@@ -181,7 +181,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     def visitPlannedIndividualOp(self, op: PlannedIndividualOp) -> SearchSpace:
         schema = op._hyperparam_schema_with_hyperparams(self.data_schema)
         module = op._impl.__module__
-        if module is None or module == str.__class__.__module__:
+        if module is None or module == str.__class__.__module__:  # type: ignore
             long_name = op.name()
         else:
             long_name = module + "." + op.name()
@@ -449,7 +449,7 @@ class SearchSpaceOperatorVisitor(Visitor):
                     )
                     return None
 
-                sub_schemas = [
+                sub_schemas: List[SearchSpace] = [
                     accept(op, self)
                     if isinstance(op, Operator)
                     else SearchSpaceConstant(op)

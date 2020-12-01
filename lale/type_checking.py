@@ -33,7 +33,7 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 import functools
 import inspect
 import os
-from typing import TYPE_CHECKING, Any, Dict, List, Tuple, overload
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
 import jsonschema.exceptions
@@ -245,12 +245,14 @@ class SubschemaError(Exception):
         return summary + details
 
 
-def _validate_subschema(sub, sup, sub_name="sub", sup_name="super"):
+def _validate_subschema(
+    sub: JSON_TYPE, sup: JSON_TYPE, sub_name="sub", sup_name="super"
+):
     if not is_subschema(sub, sup):
         raise SubschemaError(sub, sup, sub_name, sup_name)
 
 
-def validate_schema_or_subschema(lhs, super_schema):
+def validate_schema_or_subschema(lhs: Any, super_schema: JSON_TYPE):
     """Validate that lhs is an instance of or a subschema of super_schema.
 
     Parameters
@@ -272,6 +274,7 @@ def validate_schema_or_subschema(lhs, super_schema):
     disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
     if disable_schema is not None and disable_schema.lower() == "true":
         return True  # If schema validation is disabled, always return as valid
+    sub_schema: Optional[JSON_TYPE]
     if is_schema(lhs):
         sub_schema = lhs
     else:

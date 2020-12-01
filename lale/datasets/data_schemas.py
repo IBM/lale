@@ -43,7 +43,7 @@ class NDArrayWithSchema(np.ndarray):
         json_schema=None,
     ):
         result = super(NDArrayWithSchema, cls).__new__(
-            cls, shape, dtype, buffer, offset, strides, order
+            cls, shape, dtype, buffer, offset, strides, order  # type: ignore
         )
         result.json_schema = json_schema
         return result
