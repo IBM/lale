@@ -46,17 +46,18 @@ _default_value = DefaultValue.token
 Def = TypeVar("Def")
 Defaultable = Union[DefaultValue, Def]
 
-
-def remove_defaults(it):
-    return filter((lambda x: x[1] is not _default_value), it)
-
-
 XDK = TypeVar("XDK")
 XDV = TypeVar("XDV")
 
 
-def remove_defaults_dict(d: Dict[XDK, Defaultable[XDV]]) -> Dict[XDK, XDV]:
-    return dict(remove_defaults(d.items()))
+def remove_defaults_dict(d: Dict[XDK, Union[DefaultValue, XDV]]) -> Dict[XDK, XDV]:
+    ret: Dict[XDK, XDV] = {}
+    for k, v in d.items():
+        if v is not _default_value:
+            assert not isinstance(v, DefaultValue)
+            # not sure why pyright can't figure this out
+            ret[k] = v  # type: ignore
+    return ret
 
 
 # utilites to load a pgo from json-ish
