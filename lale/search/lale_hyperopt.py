@@ -347,7 +347,7 @@ class SearchSpaceHPStrVisitor(Visitor):
             dist = space.distribution
 
         if space.maximum is None:
-            SearchSpaceError(
+            raise SearchSpaceError(
                 path, f"maximum not specified for a number with distribution {dist}"
             )
         max = space.getInclusiveMax()
