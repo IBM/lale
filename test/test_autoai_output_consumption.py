@@ -28,7 +28,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
     model = None
     prefix_model = None
     refined_model = None
-    pipeline_content = None
+    pipeline_content: Optional[str] = None
     pp_pipeline: Optional[lale.operators.TrainablePipeline] = None
 
     @classmethod
@@ -64,7 +64,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
         lale_pipeline = TestAutoAIOutputConsumption.model
         wrapped_pipeline = wrap_pipeline_segments(lale_pipeline)
         TestAutoAIOutputConsumption.pipeline_content = wrapped_pipeline.pretty_print()
-        assert type(TestAutoAIOutputConsumption.pipeline_content) == str
+        assert type(TestAutoAIOutputConsumption.pipeline_content) is str
         assert len(TestAutoAIOutputConsumption.pipeline_content) > 0
         println_pos(
             f'pretty-printed """{TestAutoAIOutputConsumption.pipeline_content}"""'
@@ -77,6 +77,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
     def test_04_execute_pipeline(self):
         try:
             with open("pp_pipeline.py", "w") as pipeline_f:
+                assert TestAutoAIOutputConsumption.pipeline_content is not None
                 pipeline_f.write(TestAutoAIOutputConsumption.pipeline_content)
 
             import importlib.util
@@ -87,8 +88,10 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
                 "pp_pipeline", "pp_pipeline.py"
             )
             pipeline_module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(pipeline_module)
-            TestAutoAIOutputConsumption.pp_pipeline = pipeline_module.pipeline
+            assert spec.loader is not None
+            # the type stubs for _Loader are currently incomplete
+            spec.loader.exec_module(pipeline_module)  # type: ignore
+            TestAutoAIOutputConsumption.pp_pipeline = pipeline_module.pipeline  # type: ignore
             assert isinstance(
                 TestAutoAIOutputConsumption.pp_pipeline,
                 lale.operators.TrainablePipeline,
