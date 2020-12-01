@@ -315,9 +315,9 @@ class TestCustomSchema(unittest.TestCase):
             from lale.lib.xgboost import XGBClassifier
 
             lale.wrap_imported_operators()
-            self.assertEqual(foo._schemas, PCA._schemas)
-            self.assertEqual(bar._schemas, XGBClassifier._schemas)
-            self.assertEqual(baz._schemas, LGBMClassifier._schemas)
+            self.assertEqual(foo._schemas, PCA._schemas)  # type: ignore
+            self.assertEqual(bar._schemas, XGBClassifier._schemas)  # type: ignore
+            self.assertEqual(baz._schemas, LGBMClassifier._schemas)  # type: ignore
             self.assertEqual(foobar._schemas, Lars._schemas)
         finally:
             for sym, obj in old_globals.items():
