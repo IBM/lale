@@ -1964,11 +1964,20 @@ def wrap_operator(impl) -> Operator:
         return make_operator(impl)
 
 
+# variant of make_operator for impls that are already trained (don't have a fit method)
+def make_pretrained_operator(
+    impl, schemas=None, name: Optional[str] = None
+) -> TrainedIndividualOp:
+    x = make_operator(impl, schemas, name)
+    assert isinstance(x, TrainedIndividualOp)
+    return x
+
+
 def make_operator(
     impl, schemas=None, name: Optional[str] = None
 ) -> PlannedIndividualOp:
     if name is None:
-        name = lale.helpers.assignee_name()
+        name = lale.helpers.assignee_name(level=2)
         if name is None:
             if inspect.isclass(impl) and impl.__name__.endswith("Impl"):
                 n: str = impl.__name__[: -len("Impl")]
