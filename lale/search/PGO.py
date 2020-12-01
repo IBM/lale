@@ -90,8 +90,8 @@ class FrequencyDistribution(Generic[T]):
     def asIntegerValues(
         cls,
         freqs: Iterable[Tuple[Any, int]],
-        inclusive_min: Optional[int] = None,
-        inclusive_max: Optional[int] = None,
+        inclusive_min: Optional[float] = None,
+        inclusive_max: Optional[float] = None,
     ) -> "FrequencyDistribution[int]":
         freqs = freqsAsIntegerValues(
             freqs, inclusive_min=inclusive_min, inclusive_max=inclusive_max
@@ -102,8 +102,8 @@ class FrequencyDistribution(Generic[T]):
     def asFloatValues(
         cls,
         freqs: Iterable[Tuple[Any, int]],
-        inclusive_min: Optional[int] = None,
-        inclusive_max: Optional[int] = None,
+        inclusive_min: Optional[float] = None,
+        inclusive_max: Optional[float] = None,
     ) -> "FrequencyDistribution[float]":
         freqs = freqsAsFloatValues(
             freqs, inclusive_min=inclusive_min, inclusive_max=inclusive_max
@@ -196,8 +196,8 @@ DEFAULT_STR = "default"
 
 def freqsAsIntegerValues(
     freqs: Iterable[Tuple[Any, int]],
-    inclusive_min: Optional[int] = None,
-    inclusive_max: Optional[int] = None,
+    inclusive_min: Optional[float] = None,
+    inclusive_max: Optional[float] = None,
 ) -> Iterator[Tuple[Defaultable[int], int]]:
     """ maps the str values to integers, and skips anything that does not look like an integer"""
     for v, f in freqs:
