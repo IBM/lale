@@ -205,22 +205,22 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     _name: str
 
-    def __and__(self, other: "Operator") -> "PlannedPipeline":
+    def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         return make_union_no_concat(self, other)
 
-    def __rand__(self, other: "Operator") -> "PlannedPipeline":
+    def __rand__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         return make_union_no_concat(other, self)
 
-    def __rshift__(self, other: "Operator") -> "PlannedPipeline":
+    def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         return make_pipeline(self, other)
 
-    def __rrshift__(self, other: "Operator") -> "PlannedPipeline":
+    def __rrshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         return make_pipeline(other, self)
 
-    def __or__(self, other: "Operator") -> "OperatorChoice":
+    def __or__(self, other: Union[Any, "Operator"]) -> "OperatorChoice":
         return make_choice(self, other)
 
-    def __ror__(self, other: "Operator") -> "OperatorChoice":
+    def __ror__(self, other: Union[Any, "Operator"]) -> "OperatorChoice":
         return make_choice(other, self)
 
     def name(self) -> str:
@@ -479,7 +479,7 @@ class TrainableOperator(PlannedOperator):
         ...
 
     @overload
-    def __and__(self, other: "Operator") -> "PlannedPipeline":
+    def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
     def __and__(self, other):
@@ -494,7 +494,7 @@ class TrainableOperator(PlannedOperator):
         ...
 
     @overload
-    def __rshift__(self, other: "Operator") -> "PlannedPipeline":
+    def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
     def __rshift__(self, other):
@@ -561,7 +561,7 @@ class TrainedOperator(TrainableOperator):
         ...
 
     @overload
-    def __and__(self, other: "Operator") -> "PlannedPipeline":
+    def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
     def __and__(self, other):
@@ -576,7 +576,7 @@ class TrainedOperator(TrainableOperator):
         ...
 
     @overload
-    def __rshift__(self, other: "Operator") -> "PlannedPipeline":
+    def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
     def __rshift__(self, other):
@@ -3295,7 +3295,22 @@ def make_pipeline(*orig_steps):
     return make_pipeline_graph(steps, edges, ordered=True)
 
 
+@overload
+def make_union_no_concat(*orig_steps: TrainedOperator) -> TrainedPipeline:
+    ...
+
+
+@overload
+def make_union_no_concat(*orig_steps: TrainableOperator) -> TrainablePipeline:
+    ...
+
+
+@overload
 def make_union_no_concat(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
+    ...
+
+
+def make_union_no_concat(*orig_steps):
     steps, edges = [], []
     for curr_op in orig_steps:
         if isinstance(curr_op, BasePipeline):
@@ -3308,7 +3323,22 @@ def make_union_no_concat(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
     return make_pipeline_graph(steps, edges, ordered=True)
 
 
+@overload
+def make_union(*orig_steps: TrainedOperator) -> TrainedPipeline:
+    ...
+
+
+@overload
+def make_union(*orig_steps: TrainableOperator) -> TrainablePipeline:
+    ...
+
+
+@overload
 def make_union(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
+    ...
+
+
+def make_union(*orig_steps):
     from lale.lib.lale import ConcatFeatures
 
     return make_union_no_concat(*orig_steps) >> ConcatFeatures()
