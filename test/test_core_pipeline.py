@@ -839,7 +839,8 @@ class TestOperatorChoice(unittest.TestCase):
         X, y = iris.data, iris.target
         tfm = PCA() | Nystroem() | NoOp()
         with self.assertRaises(AttributeError):
-            _ = tfm.fit(X, y)
+            # we are trying to trigger a runtime error here, so we ignore the static warning
+            _ = tfm.fit(X, y)  # type: ignore
         _ = (OneHotEncoder | NoOp) >> tfm >> (LogisticRegression | KNeighborsClassifier)
         _ = (
             (OneHotEncoder | NoOp)
