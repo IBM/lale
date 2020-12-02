@@ -2035,7 +2035,7 @@ def get_available_transformers(tags: AbstractSet[str] = None) -> List[PlannedOpe
     return get_available_operators("transformer", tags)
 
 
-OpType = TypeVar("OpType", bound=Operator)
+OpType = TypeVar("OpType", bound=Operator, covariant=True)
 
 
 class BasePipeline(Operator, Generic[OpType]):
@@ -2203,7 +2203,10 @@ class BasePipeline(Operator, Generic[OpType]):
         states: Dict[OpType, state] = {op: state.TODO for op in self._steps}
         result: List[OpType] = []
 
-        def dfs(operator: OpType) -> None:
+        # Since OpType is covariant, this is disallowed by mypy for safety
+        # in this case it is safe, since while the value of result will be written
+        # into _steps, all the values in result came from _steps originally
+        def dfs(operator: OpType) -> None:  # type: ignore
             if states[operator] is state.DONE:
                 return
             if states[operator] is state.DOING:
@@ -2442,7 +2445,7 @@ class BasePipeline(Operator, Generic[OpType]):
         return True
 
 
-PlannedOpType = TypeVar("PlannedOpType", bound=PlannedOperator)
+PlannedOpType = TypeVar("PlannedOpType", bound=PlannedOperator, covariant=True)
 
 
 class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
@@ -2476,7 +2479,9 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
         return all([step.is_frozen_trained() for step in self.steps()])
 
 
-TrainableOpType = TypeVar("TrainableOpType", bound=TrainableIndividualOp)
+TrainableOpType = TypeVar(
+    "TrainableOpType", bound=TrainableIndividualOp, covariant=True
+)
 
 
 class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
@@ -2857,7 +2862,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return all(all_transformers)
 
 
-TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp)
+TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)
 
 
 class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
@@ -3136,7 +3141,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         return TrainedPipeline(op._steps, op._preds, True)
 
 
-OperatorChoiceType = TypeVar("OperatorChoiceType", bound=Operator)
+OperatorChoiceType = TypeVar("OperatorChoiceType", bound=Operator, covariant=True)
 
 
 class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
