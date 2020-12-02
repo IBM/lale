@@ -2730,7 +2730,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         operator.name()
                     )
                 )
-            inputs_for_transform = inputs
+            inputs_for_transform: Any = inputs
             for epoch in range(num_epochs):
                 for _, batch_data in enumerate(
                     inputs
@@ -2812,7 +2812,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     else:
                         output = lale.helpers.append_batch(output, batch_output)
             if serialize:
-                output.close()
+                output.close()  # type: ignore
+
                 output = lale.helpers.create_data_loader(
                     os.path.join(
                         serialization_out_dir,
@@ -3017,6 +3018,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
 
         sink_nodes = self._find_sink_nodes()
         operator_idx = 0
+        inputs: Any
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
@@ -3083,7 +3085,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     else:
                         output = lale.helpers.append_batch(output, batch_output)
             if serialize:
-                output.close()
+                output.close()  # type: ignore
                 output = lale.helpers.create_data_loader(
                     os.path.join(
                         serialization_out_dir,
