@@ -2286,7 +2286,7 @@ class BasePipeline(Operator, Generic[OpType]):
             return False
         return self.steps()[-1].is_supervised()
 
-    def remove_last(self, inplace=False):
+    def remove_last(self, inplace: bool = False) -> "BasePipeline[OpType]":
         sink_nodes = self._find_sink_nodes()
         if len(sink_nodes) > 1:
             raise ValueError(
@@ -2454,6 +2454,11 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
         assert isinstance(trained, TrainedPipeline)
         return trained
 
+    def remove_last(self, inplace: bool = False) -> "PlannedPipeline[PlannedOpType]":
+        pipe = super().remove_last(inplace=inplace)
+        assert isinstance(pipe, PlannedPipeline)
+        return pipe
+
     def is_frozen_trainable(self) -> bool:
         return all([step.is_frozen_trainable() for step in self.steps()])
 
@@ -2472,6 +2477,13 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         ordered: bool = False,
     ) -> None:
         super(TrainablePipeline, self).__init__(steps, edges, ordered=ordered)
+
+    def remove_last(
+        self, inplace: bool = False
+    ) -> "TrainablePipeline[TrainableOpType]":
+        pipe = super().remove_last(inplace=inplace)
+        assert isinstance(pipe, TrainablePipeline)
+        return pipe
 
     def fit(self, X, y=None, **fit_params) -> "TrainedPipeline":
         X = lale.datasets.data_schemas.add_schema(X)
@@ -2845,6 +2857,11 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         ordered: bool = False,
     ) -> None:
         super(TrainedPipeline, self).__init__(steps, edges, ordered=ordered)
+
+    def remove_last(self, inplace: bool = False) -> "TrainedPipeline[TrainedOpType]":
+        pipe = super().remove_last(inplace)
+        assert isinstance(pipe, TrainedPipeline)
+        return pipe
 
     def _predict(self, X, y=None):
         return self._predict_based_on_type("predict", "_predict", X, y)
