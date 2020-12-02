@@ -1917,10 +1917,20 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         assert result.is_frozen_trained()
         return result
 
-    @if_delegate_has_method(delegate="_impl")
+    @overload
     def get_pipeline(
-        self, pipeline_name=None, astype="lale"
+        self, pipeline_name: None = None, astype: str = "lale"
+    ) -> Optional[TrainedOperator]:
+        ...
+
+    @overload
+    def get_pipeline(
+        self, pipeline_name: str, astype: str = "lale"
     ) -> Optional[TrainableOperator]:
+        ...
+
+    @if_delegate_has_method(delegate="_impl")
+    def get_pipeline(self, pipeline_name=None, astype="lale"):
         result = self._impl_instance().get_pipeline(pipeline_name, astype)
         return result
 
