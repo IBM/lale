@@ -234,7 +234,7 @@ def test_ordinal_encoder():
 
 @pytest.mark.xfail(reason="Output boolean array (pipeline?)")
 def test_missing_indicator():
-    from autogen import MissingIndicator as Op
+    from lale.lib.autogen import MissingIndicator as Op
 
     def data_loader():
         X = [[choice([-1, 1, 2, 3]), choice([-1, 1, 2, 3])] for _ in range(100)]
