@@ -14,6 +14,7 @@
 import importlib
 
 import pandas as pd
+from pyspark.sql.dataframe import DataFrame as spark_df
 
 import lale.docstrings
 import lale.operators
@@ -25,30 +26,32 @@ class MapImpl:
         self.remainder = remainder
 
     def transform(self, X):
-        assert isinstance(X, pd.DataFrame)
-        if self.remainder == "passthrough":
-            out_df = X
-        elif self.remainder == "drop":
-            out_df = pd.DataFrame()
-        else:
-            raise ValueError("remainder has to be either `passthrough` or `drop`.")
+        columns_to_keep = []
 
-        def get_map_function_output(column):
+        def get_map_function_output(column, new_column_name):
             functions_module = importlib.import_module("lale.lib.lale.functions")
             function_name = column._expr.func.id
             map_func_to_be_called = getattr(functions_module, function_name)
-            return map_func_to_be_called(X, column)
+            return map_func_to_be_called(X, column, new_column_name)
 
         if isinstance(self.columns, list):
             for column in self.columns:
-                column_name, new_column = get_map_function_output(column)
-                # Since this is a list, we have to use the column_name from the function output
-                out_df[column_name] = new_column
+                new_column_name, X = get_map_function_output(column, None)
+                columns_to_keep.append(new_column_name)
         elif isinstance(self.columns, dict):
             for new_column_name, column in self.columns.items():
-                column_name, new_column = get_map_function_output(column)
-                out_df[new_column_name] = new_column
-                del out_df[column_name]
+                new_column_name, X = get_map_function_output(column, new_column_name)
+                columns_to_keep.append(new_column_name)
+        else:
+            raise ValueError("columns must be either a list or a dictionary.")
+
+        out_df = X  # Do nothing as X already has the right columns
+        if self.remainder == "drop":
+            if isinstance(X, pd.DataFrame):
+                out_df = X[columns_to_keep]
+            elif isinstance(X, spark_df):
+                out_df = X.select(columns_to_keep)
+
         return out_df
 
 
@@ -96,24 +99,34 @@ _input_transform_schema = {
     "properties": {
         "X": {
             "description": "The outer array is over rows.",
-            "type": "array",
-            "items": {
-                "description": "The inner array is over columns.",
-                "type": "array",
-                "items": {"laleType": "Any"},
-            },
+            "anyOf": [
+                {"laleType": "Any"},
+                {
+                    "type": "array",
+                    "items": {
+                        "description": "The inner array is over columns.",
+                        "type": "array",
+                        "items": {"laleType": "Any"},
+                    },
+                },
+            ],
         }
     },
 }
 
 _output_transform_schema = {
     "description": "The outer array is over rows.",
-    "type": "array",
-    "items": {
-        "description": "The inner array is over columns.",
-        "type": "array",
-        "items": {"laleType": "Any"},
-    },
+    "anyOf": [
+        {
+            "type": "array",
+            "items": {
+                "description": "The inner array is over columns.",
+                "type": "array",
+                "items": {"laleType": "Any"},
+            },
+        },
+        {"laleType": "Any"},
+    ],
 }
 
 _combined_schemas = {
