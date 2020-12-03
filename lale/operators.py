@@ -3147,14 +3147,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         assert result.is_frozen_trained()
         return result
 
-    def _lale_clone(self, cloner: Callable[[Any], Any]):
-        """ This is really used for sklearn clone compatibility.
-            Which mandates that clone returns something that has not been fit.
-            So we enforce that here as well.
-        """
-        op = super()._lale_clone(cloner)
-        return TrainedPipeline(op._steps, op._preds, True)
-
 
 OperatorChoiceType = TypeVar("OperatorChoiceType", bound=Operator, covariant=True)
 
