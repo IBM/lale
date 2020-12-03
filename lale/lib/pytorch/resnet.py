@@ -17,6 +17,7 @@ import sys
 
 import numpy as np
 import torch
+import torch.cuda
 import torch.nn as nn
 import torch.optim as optim
 import torch.utils.data
