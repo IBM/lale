@@ -97,7 +97,7 @@ def hyperparams_to_string(
         elif isinstance(value, np.ufunc):
             if gen is not None:
                 gen.imports.append("import numpy as np")
-            return f"np.{value.__name__}"
+            return f"np.{value.__name__}"  # type: ignore
         elif isinstance(value, lale.expressions.Expr):
             if gen is not None:
                 gen.imports.append("from lale.expressions import it")
@@ -114,7 +114,7 @@ def hyperparams_to_string(
                     gen.imports.append(f"import {module}")
                 else:
                     gen.imports.append(f"import {value.__module__} as {module}")
-            return f"{module}.{value.__name__}"
+            return f"{module}.{value.__name__}"  # type: ignore
         elif hasattr(value, "get_params"):
             module = value.__module__
             if module.startswith("sklearn."):
