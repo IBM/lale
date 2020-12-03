@@ -110,6 +110,7 @@ result : Trained operator if best, trainable operator otherwise.
         if result is None or astype == "lale":
             return result
         assert astype == "sklearn", astype
+        assert isinstance(result, lale.operators.BasePipeline)
         return result.export_to_sklearn_pipeline()
 
 
