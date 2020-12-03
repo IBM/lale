@@ -2084,23 +2084,32 @@ class BasePipeline(Operator, Generic[OpType]):
                         "This is not allowed.".format(step.name())
                     )
                 if isinstance(step, BasePipeline):
+                    # PIPELINE_TYPE_INVARIANT_NOTE
+                    # we use tstep (typed step) here to help pyright
+                    # with some added information we have:
+                    # Since the step is an OpType, if it is a pipeline,
+                    # then its steps must all be at least OpType as well
+                    # this invariant is not expressible in the type system due to
+                    # the open world assumption, but is intended to hold
+                    tstep: BasePipeline[OpType] = step
+
                     # Flatten out the steps and edges
-                    self._steps.extend(step.steps())
+                    self._steps.extend(tstep.steps())
                     # from step's edges, find out all the source and sink nodes
                     source_nodes = [
                         dst
-                        for dst in step.steps()
+                        for dst in tstep.steps()
                         if (step._preds[dst] is None or step._preds[dst] == [])
                     ]
-                    sink_nodes = step._find_sink_nodes()
+                    sink_nodes = tstep._find_sink_nodes()
                     # Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
-                    new_edges = step.edges()
+                    new_edges = tstep.edges()
                     # list comprehension at the cost of iterating edges thrice
                     new_edges.extend(
                         [
                             (node, edge[1])
                             for edge in edges
-                            if edge[0] == step
+                            if edge[0] == tstep
                             for node in sink_nodes
                         ]
                     )
@@ -2108,7 +2117,7 @@ class BasePipeline(Operator, Generic[OpType]):
                         [
                             (edge[0], node)
                             for edge in edges
-                            if edge[1] == step
+                            if edge[1] == tstep
                             for node in source_nodes
                         ]
                     )
@@ -2116,7 +2125,7 @@ class BasePipeline(Operator, Generic[OpType]):
                         [
                             edge
                             for edge in edges
-                            if (edge[1] != step and edge[0] != step)
+                            if (edge[1] != tstep and edge[0] != tstep)
                         ]
                     )
                     edges = new_edges
@@ -2143,17 +2152,22 @@ class BasePipeline(Operator, Generic[OpType]):
 
         for curr_op in self._steps:
             if isinstance(prev_op, BasePipeline):
-                prev_leaves = prev_op._find_sink_nodes()
+                # using tprev_op as per PIPELINE_TYPE_INVARIANT_NOTE above
+                tprev_op: BasePipeline[OpType] = prev_op
+                prev_leaves = tprev_op._find_sink_nodes()
             else:
                 prev_leaves = [] if prev_op is None else [prev_op]
+            prev_op = curr_op
+
             if isinstance(curr_op, BasePipeline):
-                curr_roots = curr_op._find_source_nodes()
-                self._steps.extend(curr_op.steps())
-                edges.extend(curr_op.edges())
+                # using tcurr_op as per PIPELINE_TYPE_INVARIANT_NOTE above
+                tcurr_op: BasePipeline[OpType] = curr_op
+                curr_roots = tcurr_op._find_source_nodes()
+                self._steps.extend(tcurr_op.steps())
+                edges.extend(tcurr_op.edges())
             else:
                 curr_roots = [curr_op]
             edges.extend([(src, tgt) for src in prev_leaves for tgt in curr_roots])
-            prev_op = curr_op
 
         seen_steps: List[OpType] = []
         for step in self._steps:
@@ -2457,7 +2471,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
     ) -> None:
         super(PlannedPipeline, self).__init__(steps, edges, ordered=ordered)
 
-    # give it a more precise type: if the input is a pipelein, the output is as well
+    # give it a more precise type: if the input is a pipeline, the output is as well
     def auto_configure(
         self, X, y=None, optimizer=None, cv=None, scoring=None, **kwargs
     ) -> "TrainedPipeline":
@@ -2500,15 +2514,15 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         assert isinstance(pipe, TrainablePipeline)
         return pipe
 
-    def fit(self, X, y=None, **fit_params) -> "TrainedPipeline":
+    def fit(self, X, y=None, **fit_params) -> "TrainedPipeline[TrainedIndividualOp]":
         X = lale.datasets.data_schemas.add_schema(X)
         y = lale.datasets.data_schemas.add_schema(y)
         self.validate_schema(X, y)
-        trained_steps: List[TrainedOperator] = []
+        trained_steps: List[TrainedIndividualOp] = []
         outputs: Dict[Operator, Any] = {}
         meta_outputs: Dict[Operator, Any] = {}
         edges: List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
-        trained_map: Dict[TrainableOpType, TrainedOperator] = {}
+        trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
 
         sink_nodes = self._find_sink_nodes()
         for operator in self._steps:
@@ -2583,9 +2597,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
 
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
-        trained_steps2: Any = trained_steps
-        result: TrainedPipeline = TrainedPipeline(
-            trained_steps2, trained_edges, ordered=True
+        result: TrainedPipeline[TrainedIndividualOp] = TrainedPipeline(
+            trained_steps, trained_edges, ordered=True
         )
         self._trained = result
         return result
@@ -2671,7 +2684,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             pass  # TODO
         return out
 
-    def fit_with_batches(self, X, y=None, serialize=True, num_epochs_batching=None):
+    def fit_with_batches(
+        self, X, y=None, serialize=True, num_epochs_batching=None
+    ) -> "TrainedPipeline[TrainedIndividualOp]":
         """[summary]
 
         Parameters
@@ -2686,10 +2701,10 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         [type]
             [description]
         """
-        trained_steps: List[TrainedOperator] = []
+        trained_steps: List[TrainedIndividualOp] = []
         outputs: Dict[Operator, Any] = {}
         edges: List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
-        trained_map: Dict[TrainableOpType, TrainedOperator] = {}
+        trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
         serialization_out_dir: Text = ""
         if serialize:
             serialization_out_dir = os.path.join(
@@ -2845,7 +2860,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
 
         trained_steps2: Any = trained_steps
-        result: TrainedPipeline = TrainedPipeline(
+        result: TrainedPipeline[TrainedIndividualOp] = TrainedPipeline(
             trained_steps2, trained_edges, ordered=True
         )
         self._trained = result
