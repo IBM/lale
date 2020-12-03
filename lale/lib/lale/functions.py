@@ -132,17 +132,22 @@ def replace(
     return new_column_name, df
 
 
-def day_of_month(df: pd.DataFrame, dom_expr: Expr):
+def day_of_month(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
-    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
-    return column_name, df[column_name].dt.day
+    if isinstance(df, pd.DataFrame):
+        new_column = pd.to_datetime(df[column_name], format=fmt)
+        df[new_column_name] = new_column.dt.day
+        if new_column_name != column_name:
+            del df[column_name]
+
+    return new_column_name, df
 
 
-def day_of_week(df: pd.DataFrame, dom_expr: Expr):
+def day_of_week(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
@@ -152,7 +157,7 @@ def day_of_week(df: pd.DataFrame, dom_expr: Expr):
     return column_name, df[column_name].dt.weekday
 
 
-def day_of_year(df: pd.DataFrame, dom_expr: Expr):
+def day_of_year(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
@@ -162,7 +167,7 @@ def day_of_year(df: pd.DataFrame, dom_expr: Expr):
     return column_name, df[column_name].dt.dayofyear
 
 
-def hour(df: pd.DataFrame, dom_expr: Expr):
+def hour(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
@@ -172,7 +177,7 @@ def hour(df: pd.DataFrame, dom_expr: Expr):
     return column_name, df[column_name].dt.hour
 
 
-def minute(df: pd.DataFrame, dom_expr: Expr):
+def minute(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
@@ -182,7 +187,7 @@ def minute(df: pd.DataFrame, dom_expr: Expr):
     return column_name, df[column_name].dt.minute
 
 
-def month(df: pd.DataFrame, dom_expr: Expr):
+def month(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
@@ -192,7 +197,7 @@ def month(df: pd.DataFrame, dom_expr: Expr):
     return column_name, df[column_name].dt.month
 
 
-def string_indexer(df: pd.DataFrame, dom_expr: Expr):
+def string_indexer(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
     sorted_indices = df[column_name].value_counts().index
