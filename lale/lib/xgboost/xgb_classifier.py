@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
+
 import pandas as pd
 from sklearn.base import BaseEstimator
 
@@ -19,11 +21,13 @@ import lale.docstrings
 import lale.operators
 
 try:
-    import xgboost
+    import xgboost  # type: ignore
 
     xgboost_installed = True
 except ImportError:
     xgboost_installed = False
+    if TYPE_CHECKING:
+        import xgboost  # type: ignore
 
 
 def _rename_one_feature(name):

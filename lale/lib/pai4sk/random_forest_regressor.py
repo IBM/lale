@@ -12,12 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
+
 try:
-    import pai4sk
+    import pai4sk  # type: ignore
 
     pai4sk_installed = True
 except ImportError:
     pai4sk_installed = False
+    if TYPE_CHECKING:
+        import pai4sk  # type: ignore
+
+
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
