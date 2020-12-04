@@ -136,6 +136,9 @@ def day_of_month(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
     if isinstance(df, pd.DataFrame):
@@ -151,59 +154,98 @@ def day_of_week(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
-    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
-    return column_name, df[column_name].dt.weekday
+    if isinstance(df, pd.DataFrame):
+        new_column = pd.to_datetime(df[column_name], format=fmt)
+        df[new_column_name] = new_column.dt.weekday
+        if new_column_name != column_name:
+            del df[column_name]
+    return new_column_name, df
 
 
 def day_of_year(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
-    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
-    return column_name, df[column_name].dt.dayofyear
+    if isinstance(df, pd.DataFrame):
+        new_column = pd.to_datetime(df[column_name], format=fmt)
+        df[new_column_name] = new_column.dt.dayofyear
+        if new_column_name != column_name:
+            del df[column_name]
+    return new_column_name, df
 
 
 def hour(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
-    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
-    return column_name, df[column_name].dt.hour
+    if isinstance(df, pd.DataFrame):
+        new_column = pd.to_datetime(df[column_name], format=fmt)
+        df[new_column_name] = new_column.dt.hour
+        if new_column_name != column_name:
+            del df[column_name]
+    return new_column_name, df
 
 
 def minute(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
-    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
-    return column_name, df[column_name].dt.minute
+    if isinstance(df, pd.DataFrame):
+        new_column = pd.to_datetime(df[column_name], format=fmt)
+        df[new_column_name] = new_column.dt.minute
+        if new_column_name != column_name:
+            del df[column_name]
+    return new_column_name, df
 
 
 def month(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
-    df[column_name] = pd.to_datetime(df[column_name], format=fmt)
-    return column_name, df[column_name].dt.month
+    if isinstance(df, pd.DataFrame):
+        new_column = pd.to_datetime(df[column_name], format=fmt)
+        df[new_column_name] = new_column.dt.month
+        if new_column_name != column_name:
+            del df[column_name]
+    return new_column_name, df
 
 
 def string_indexer(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+
     sorted_indices = df[column_name].value_counts().index
-    return (
-        column_name,
-        df[column_name].map(
+    if isinstance(df, pd.DataFrame):
+        df[new_column_name] = df[column_name].map(
             dict(zip(sorted_indices, range(1, len(sorted_indices) + 1)))
-        ),
-    )
+        )
+        if new_column_name != column_name:
+            del df[column_name]
+    return new_column_name, df

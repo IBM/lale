@@ -96,7 +96,7 @@ class TestMap(unittest.TestCase):
         }
         df = pd.DataFrame(data=d)
         conf = SparkConf().setMaster("local[2]")
-        sc = SparkContext(conf=conf)
+        sc = SparkContext.getOrCreate(conf=conf)
         sqlCtx = SQLContext(sc)
         sdf = sqlCtx.createDataFrame(df)
         gender_map = {"m": "Male", "f": "Female"}
@@ -139,7 +139,7 @@ class TestMap(unittest.TestCase):
         }
         df = pd.DataFrame(data=d)
         conf = SparkConf().setMaster("local[2]")
-        sc = SparkContext(conf=conf)
+        sc = SparkContext.getOrCreate(conf=conf)
         sqlCtx = SQLContext(sc)
         sdf = sqlCtx.createDataFrame(df)
         gender_map = {"m": "Male", "f": "Female"}
