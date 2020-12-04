@@ -15,6 +15,8 @@ import unittest
 
 import jsonschema
 import pandas as pd
+from pyspark import SparkConf, SparkContext
+from pyspark.sql import SQLContext
 
 from lale import wrap_imported_operators
 from lale.expressions import (
@@ -86,6 +88,28 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["gender"][0], "Male")
         self.assertEqual(transformed_df["state"][0], "New York")
 
+    def test_transform_spark_replace_list(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        conf = SparkConf().setMaster("local[2]")
+        sc = SparkContext.getOrCreate(conf=conf)
+        sqlCtx = SQLContext(sc)
+        sdf = sqlCtx.createDataFrame(df)
+        gender_map = {"m": "Male", "f": "Female"}
+        state_map = {"NY": "New York", "CA": "California"}
+        trainable = Map(
+            columns=[replace(it.gender, gender_map), replace(it.state, state_map)]
+        )
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 3))
+        self.assertEqual(transformed_df.head()[0], "Male")
+        self.assertEqual(transformed_df.head()[1], "New York")
+
     def test_transform_replace_map(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
@@ -106,6 +130,31 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df.shape, (5, 3))
         self.assertEqual(transformed_df["new_gender"][0], "Male")
         self.assertEqual(transformed_df["new_state"][0], "New York")
+
+    def test_transform_spark_replace_map(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        conf = SparkConf().setMaster("local[2]")
+        sc = SparkContext.getOrCreate(conf=conf)
+        sqlCtx = SQLContext(sc)
+        sdf = sqlCtx.createDataFrame(df)
+        gender_map = {"m": "Male", "f": "Female"}
+        state_map = {"NY": "New York", "CA": "California"}
+        trainable = Map(
+            columns={
+                "new_gender": replace(it.gender, gender_map),
+                "new_state": replace(it.state, state_map),
+            }
+        )
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 3))
+        self.assertEqual(transformed_df.head()[1], "Male")
+        self.assertEqual(transformed_df.head()[2], "New York")
 
     def test_transform_dom_list(self):
         df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-27", "2016-07-26"]})
