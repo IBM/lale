@@ -14,7 +14,13 @@
 import importlib
 
 import pandas as pd
-from pyspark.sql.dataframe import DataFrame as spark_df
+
+try:
+    from pyspark.sql.dataframe import DataFrame as spark_df
+
+    spark_installed = True
+except ImportError:
+    spark_installed = False
 
 import lale.docstrings
 import lale.operators
@@ -49,9 +55,12 @@ class MapImpl:
         if self.remainder == "drop":
             if isinstance(X, pd.DataFrame):
                 out_df = X[columns_to_keep]
-            elif isinstance(X, spark_df):
+            elif spark_installed and isinstance(X, spark_df):
                 out_df = X.select(columns_to_keep)
-
+            else:
+                raise ValueError(
+                    "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
+                )
         return out_df
 
 

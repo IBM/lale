@@ -91,7 +91,6 @@ setup(
             "torch>=1.0",
             "BlackBoxAuditing",
             "imbalanced-learn",
-            "pyspark",
         ],
         "dev": ["pre-commit"],
         "test": [
@@ -105,6 +104,7 @@ setup(
             "sphinxcontrib.apidoc",
             "pytest-cov",
             "codecov",
+            "pyspark",
         ],
     },
 )
