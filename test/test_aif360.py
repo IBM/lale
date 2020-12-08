@@ -404,7 +404,7 @@ class TestAIF360(unittest.TestCase):
         impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
         self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(impact_remi > 0.95, f"impact_remi {impact_remi}")
+        self.assertTrue(impact_remi > 0.92, f"impact_remi {impact_remi}")
 
     def test_reweighing_pd_num(self):
         fairness_info = {
@@ -423,4 +423,4 @@ class TestAIF360(unittest.TestCase):
         impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
         self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(impact_remi > 0.95, f"impact_remi {impact_remi}")
+        self.assertTrue(impact_remi > 0.92, f"impact_remi {impact_remi}")
