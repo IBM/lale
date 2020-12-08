@@ -15,12 +15,19 @@
 import ast
 import datetime
 from itertools import chain
-from typing import Any, Union
+from typing import Any
 
 import numpy as np
 import pandas as pd
-from pyspark.sql.dataframe import DataFrame as spark_df
-from pyspark.sql.functions import create_map, lit
+
+try:
+    from pyspark.sql.dataframe import DataFrame as spark_df
+    from pyspark.sql.functions import create_map, lit
+
+    spark_installed = True
+except ImportError:
+    spark_installed = False
+
 
 from lale.expressions import Expr
 
@@ -107,9 +114,7 @@ class date_time:
         return result
 
 
-def replace(
-    df: Union[pd.DataFrame, spark_df], replace_expr: Expr, new_column_name: str
-):
+def replace(df: Any, replace_expr: Expr, new_column_name: str):
     re: Any = replace_expr._expr
     column_name = re.args[0].attr
     if new_column_name is None:
@@ -120,7 +125,7 @@ def replace(
         df[new_column_name] = new_column
         if new_column_name != column_name:
             del df[column_name]
-    elif isinstance(df, spark_df):
+    elif spark_installed and isinstance(df, spark_df):
         mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])
         df = df.withColumn(new_column_name, mapping_expr[df[column_name]])
         if new_column_name != column_name:
@@ -132,7 +137,7 @@ def replace(
     return new_column_name, df
 
 
-def day_of_month(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
+def day_of_month(df: Any, dom_expr: Expr, new_column_name: str):
     fmt = None
     de: Any = dom_expr._expr
     column_name = de.args[0].attr
