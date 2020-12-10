@@ -19,6 +19,7 @@ import lale.docstrings
 import lale.operators
 
 from .protected_attributes_encoder import ProtectedAttributesEncoder
+from .redacting import Redacting
 from .util import (
     _categorical_fairness_properties,
     _group_flag,
@@ -58,21 +59,31 @@ class ReweighingImpl:
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)
         sample_weight = reweighted_data.instance_weights
+        redacting_trainable = Redacting(
+            protected_attribute_names=[
+                pa["feature"] for pa in self.protected_attributes
+            ]
+        )
+        self.redacting = redacting_trainable.fit(X)
+        redacted_X = self.redacting.transform(X)
         if isinstance(self.estimator, lale.operators.TrainablePipeline):
             trainable_prefix = self.estimator.remove_last()
             trainable_suffix = self.estimator.get_last()
             trained_prefix = trainable_prefix.fit(X, y)
-            transformed_X = trained_prefix.transform(X)
+            transformed_X = trained_prefix.transform(redacted_X)
             trained_suffix = trainable_suffix.fit(
                 transformed_X, y, sample_weight=sample_weight
             )
             self.estimator = trained_prefix >> trained_suffix
         else:
-            self.estimator = self.estimator.fit(X, y, sample_weight=sample_weight)
+            self.estimator = self.estimator.fit(
+                redacted_X, y, sample_weight=sample_weight
+            )
         return self
 
     def predict(self, X):
-        result = self.estimator.predict(X)
+        redacted_X = self.redacting.transform(X)
+        result = self.estimator.predict(redacted_X)
         return result
 
 
