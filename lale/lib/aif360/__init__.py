@@ -24,6 +24,7 @@ Operators:
 * `EqOddsPostprocessing`_
 * `ProtectedAttributesEncoder`_
 * `RejectOptionClassification`_
+* `Redacting`_
 * `Reweighing`_
 
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html
@@ -31,6 +32,7 @@ Operators:
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html
 .. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html
 .. _`RejectOptionClassification`: lale.lib.aif360.reject_option_classification.html
+.. _`Redacting`: lale.lib.aif360.redacting.html
 .. _`Reweighing`: lale.lib.aif360.reweighing.html
 
 Functions:
@@ -54,6 +56,7 @@ from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
 from .protected_attributes_encoder import ProtectedAttributesEncoder
+from .redacting import Redacting
 from .reject_option_classification import RejectOptionClassification
 from .reweighing import Reweighing
 from .util import (
