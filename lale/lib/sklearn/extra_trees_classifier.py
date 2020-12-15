@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.ensemble
 
 import lale.docstrings
@@ -282,7 +283,7 @@ _combined_schemas = {
     },
 }
 
-ExtraTreesClassifier: lale.operators.IndividualOp
+ExtraTreesClassifier: lale.operators.PlannedIndividualOp
 ExtraTreesClassifier = lale.operators.make_operator(
     ExtraTreesClassifierImpl, _combined_schemas
 )

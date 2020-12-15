@@ -17,8 +17,10 @@ import sys
 
 import numpy as np
 import torch
+import torch.cuda
 import torch.nn as nn
 import torch.optim as optim
+import torch.utils.data
 import torchvision.transforms as transforms
 from torch.autograd import Variable
 from torchvision.models import resnet50
@@ -28,14 +30,20 @@ import lale.operators
 
 
 class ResNet50Impl:
+
+    num_epochs: int
+    batch_size: int
+    learning_rate_init: float
+    learning_rate: str
+
     def __init__(
         self,
         num_classes=10,
         model=None,
-        num_epochs=2,
-        batch_size=128,
-        learning_rate_init=0.1,
-        learning_rate="constant",
+        num_epochs: int = 2,
+        batch_size: int = 128,
+        learning_rate_init: float = 0.1,
+        learning_rate: str = "constant",
     ):
         self.num_classes = num_classes
         if model is None:
@@ -49,7 +57,7 @@ class ResNet50Impl:
         self.learning_rate_init = learning_rate_init
         self.learning_rate = learning_rate
 
-    def calculate_learning_rate(self, epoch):
+    def calculate_learning_rate(self, epoch: int) -> float:
         if self.learning_rate == "constant":
             return self.learning_rate_init
         elif self.learning_rate == "decay":
@@ -62,6 +70,8 @@ class ResNet50Impl:
                 optim_factor = 1
 
             return self.learning_rate_init * math.pow(0.2, optim_factor)
+        else:
+            raise ValueError(f"Unknown learning rate type {self.learning_rate}")
 
     def fit(self, X, y=None):
         trainloader = torch.utils.data.DataLoader(
@@ -91,8 +101,9 @@ class ResNet50Impl:
                 loss = criterion(outputs, targets)  # Loss
                 loss.backward()  # Backward Propagation
                 optimizer.step()  # Optimizer update
-
-                train_loss += loss.data.item()
+                new_loss = loss.data.item()
+                assert isinstance(new_loss, float)
+                train_loss += new_loss
                 _, predicted = torch.max(outputs.data, 1)
                 total += targets.size(0)
                 correct += predicted.eq(targets.data).cpu().sum()
@@ -115,6 +126,7 @@ class ResNet50Impl:
             self.model,
             self.num_epochs,
             self.batch_size,
+            self.learning_rate_init,
             self.learning_rate,
         )
 
@@ -132,8 +144,12 @@ class ResNet50Impl:
                 inputs = data[
                     0
                 ]  # For standard datasets from torchvision, data is a list with X and y
+            else:
+                raise ValueError(
+                    "Only tuple or list values are currently supported for inputs"
+                )
             inputs = inputs.to(self.device)
-            inputs = Variable(inputs, volatile=True)
+            inputs = Variable(inputs, volatile=True)  # type: ignore
             outputs = net(inputs)
 
             _, predicted = torch.max(outputs.data, 1)

@@ -21,7 +21,7 @@ import re
 import sys
 import time
 import traceback
-from typing import Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import h5py
 import numpy as np
@@ -54,10 +54,14 @@ def assignee_name(level=1) -> Optional[str]:
     file_name, line_number, function_name, text = tb[-(level + 2)]
     tree = ast.parse(text, file_name)
     assert isinstance(tree, ast.Module)
-    if len(tree.body) == 1 and isinstance(tree.body[0], ast.Assign):
-        lhs = tree.body[0].targets
-        if len(lhs) == 1 and isinstance(lhs[0], ast.Name):
-            return lhs[0].id
+    if len(tree.body) == 1:
+        stmt = tree.body[0]
+        if isinstance(stmt, ast.Assign):
+            lhs = stmt.targets
+            if len(lhs) == 1:
+                res = lhs[0]
+                if isinstance(res, ast.Name):
+                    return res.id
     return None
 
 
@@ -101,8 +105,9 @@ def json_lookup(ptr, jsn, default=None):
     return sub_jsn
 
 
-def ndarray_to_json(arr, subsample_array: bool = True) -> Union[list, dict]:
+def ndarray_to_json(arr: np.ndarray, subsample_array: bool = True) -> Union[list, dict]:
     # sample 10 rows and no limit on columns
+    num_subsamples: List[int]
     if subsample_array:
         num_subsamples = [10, np.iinfo(np.int).max, np.iinfo(np.int).max]
     else:
@@ -112,7 +117,7 @@ def ndarray_to_json(arr, subsample_array: bool = True) -> Union[list, dict]:
             np.iinfo(np.int).max,
         ]
 
-    def subarray_to_json(indices):
+    def subarray_to_json(indices: Tuple[int, ...]) -> Any:
         if len(indices) == len(arr.shape):
             if (
                 isinstance(arr[indices], bool)
@@ -254,7 +259,7 @@ def cross_val_score_track_trials(
     result = (
         np.array(cv_results).mean(),
         np.array(log_loss_results).mean(),
-        np.array(execution_time).mean(),
+        np.array(time_results).mean(),
     )
     return result
 
@@ -308,12 +313,18 @@ def create_individual_op_using_reflection(class_name, operator_name, param_dict)
     return instance
 
 
+if TYPE_CHECKING:
+    import lale.operators
+
+
 def to_graphviz(
     lale_operator: "lale.operators.Operator",
     ipython_display: bool = True,
     call_depth: int = 1,
     **dot_graph_attr,
 ):
+    import lale.json_operator
+    import lale.operators
     import lale.visualize
 
     if not isinstance(lale_operator, lale.operators.Operator):
@@ -411,12 +422,12 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
 
     from lale.operators import (
         BasePipeline,
-        IndividualOp,
         OperatorChoice,
+        PlannedIndividualOp,
         TrainablePipeline,
     )
 
-    if isinstance(lale_object, IndividualOp):
+    if isinstance(lale_object, PlannedIndividualOp):
         new_hyperparams: Dict[str, Any] = dict_without(hyperparams, "name")
         if lale_object._hyperparams is not None:
             obj_hyperparams = dict(lale_object._hyperparams)
@@ -471,10 +482,11 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         choices = lale_object.steps()
 
         if len(choices) == 1:
-            step_index = "0"
+            step_index = 0
         else:
-            step_index, hyperparams = list(hyperparams.items())[0]
-        step_object = choices[int(step_index)]
+            step_index_str, hyperparams = list(hyperparams.items())[0]
+            step_index = int(step_index_str)
+        step_object = choices[step_index]
         return create_instance_from_hyperopt_search_space(step_object, hyperparams)
 
 

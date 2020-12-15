@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.neural_network
 
 import lale.docstrings
@@ -372,7 +373,7 @@ _combined_schemas = {
     },
 }
 
-MLPClassifier: lale.operators.IndividualOp
+MLPClassifier: lale.operators.PlannedIndividualOp
 MLPClassifier = lale.operators.make_operator(MLPClassifierImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":

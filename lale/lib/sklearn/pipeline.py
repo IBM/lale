@@ -15,6 +15,7 @@
 import logging
 import typing
 
+import sklearn
 import sklearn.pipeline
 from sklearn.pipeline import if_delegate_has_method
 
@@ -44,14 +45,14 @@ class PipelineImpl:
             else:
                 new_steps.append(op)
         self._pipeline = lale.operators.make_pipeline(*new_steps)
-        self._final_estimator = self._pipeline.steps()[-1]
+        self._final_estimator = self._pipeline.get_last()
 
     def fit(self, X, y=None):
         if y is None:
             self._pipeline = self._pipeline.fit(X)
         else:
             self._pipeline = self._pipeline.fit(X, y)
-        self._final_estimator = self._pipeline.steps()[-1]
+        self._final_estimator = self._pipeline.get_last()
         return self
 
     @if_delegate_has_method(delegate="_final_estimator")

@@ -16,6 +16,7 @@ import unittest
 
 import jsonschema
 import numpy as np
+import sklearn
 import sklearn.datasets
 import sklearn.metrics
 import sklearn.model_selection

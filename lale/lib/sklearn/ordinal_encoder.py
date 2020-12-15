@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import pandas as pd
 import sklearn.preprocessing
 
 import lale.docstrings
@@ -44,7 +45,10 @@ class OrdinalEncoderImpl:
 
     def transform(self, X):
         try:
-            return self._wrapped_model.transform(X)
+            result = self._wrapped_model.transform(X)
+            if isinstance(X, pd.DataFrame):
+                result = pd.DataFrame(data=result, index=X.index, columns=X.columns)
+            return result
         except ValueError as e:
             if self.handle_unknown == "ignore":
                 (transformed_X, X_mask) = self._wrapped_model._transform(

@@ -25,12 +25,12 @@ NumpyPermuteArray but before the final estimator is feature
 engineering."""
     if len(orig_pipeline.steps()) <= 2:
         return orig_pipeline
-    estimator = orig_pipeline._get_last()
+    estimator = orig_pipeline.get_last()
     prep = orig_pipeline.remove_last()
     cognito = None
     PREP_END = "lale.lib.autoai_libs.numpy_permute_array.NumpyPermuteArrayImpl"
     while True:
-        last = prep._get_last()
+        last = prep.get_last()
         if last is None or not last.class_name().startswith("lale.lib.autoai_libs."):
             return orig_pipeline
         if last.class_name() == PREP_END:

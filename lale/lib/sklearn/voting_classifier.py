@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.ensemble
 
 import lale.docstrings
@@ -242,7 +243,7 @@ _combined_schemas = {
     },
 }
 
-VotingClassifier: lale.operators.IndividualOp
+VotingClassifier: lale.operators.PlannedIndividualOp
 VotingClassifier = lale.operators.make_operator(VotingClassifierImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.21":

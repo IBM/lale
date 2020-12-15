@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import numpy as np
+import sklearn
 import sklearn.cluster
 
 import lale.docstrings
@@ -177,7 +178,7 @@ _combined_schemas = {
     },
 }
 
-FeatureAgglomeration: lale.operators.IndividualOp
+FeatureAgglomeration: lale.operators.PlannedIndividualOp
 FeatureAgglomeration = lale.operators.make_operator(
     FeatureAgglomerationImpl, _combined_schemas
 )

@@ -175,9 +175,9 @@ def accumulateDiscoveredEnumsToPythonEnums(
     if de.enums is not None:
         ppath, _ = withEnumValue("_".join(path))
         epath = ".".join(path)
-        acc[ppath] = enum.Enum(
-            epath, (withEnumValue(x) for x in de.enums if x is not None)
-        )
+        vals = (withEnumValue(x) for x in de.enums if x is not None)
+        # pyright does not currently understand this form
+        acc[ppath] = enum.Enum(epath, vals)  # type: ignore
     if de.children is not None:
         for k in de.children:
             accumulateDiscoveredEnumsToPythonEnums(de.children[k], [k] + path, acc)

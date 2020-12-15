@@ -13,8 +13,8 @@
 # limitations under the License.
 
 import os
-import urllib
-from typing import Dict
+import urllib.request
+from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
@@ -600,6 +600,7 @@ def fetch(
 
     schema_orig = liac_arff_to_schema(dataDictionary)
     target_col = experiments_dict[dataset_name]["target"]
+    y: Optional[Any] = None
     if preprocess:
         arffData = pd.DataFrame(dataDictionary["data"])
         # arffData = arffData.fillna(0)
@@ -615,7 +616,8 @@ def fetch(
                 target_indx = i
                 # remove it from attributes so that the next loop indices are adjusted accordingly.
                 del attributes[i]
-                y = arffData.iloc[:, target_indx]
+                # the type stubs for pandas are not currently complete enough to type this correctly
+                y = arffData.iloc[:, target_indx]  # type: ignore
                 arffData = arffData.drop(i, axis=1)
 
         for i, item in enumerate(attributes):
@@ -638,7 +640,7 @@ def fetch(
         X = arffData.iloc[:, X_columns]
 
         # Check whether there is any error
-        num_classes_from_last_row = len(list(set(y)))
+        num_classes_from_last_row = len(list(set(y))) if y is not None else 0
 
         if verbose:
             print("num_classes_from_last_row", num_classes_from_last_row)
@@ -691,7 +693,8 @@ def fetch(
         col_names = [attr[0].lower() for attr in dataDictionary["attributes"]]
         df_all = pd.DataFrame(dataDictionary["data"], columns=col_names)
         y = df_all[target_col]
-        y = y.squeeze()
+        # the type stubs for pandas are not currently complete enough to type this correctly
+        y = y.squeeze()  # type: ignore
         cols_X = [col for col in col_names if col != target_col]
         X = df_all[cols_X]
 

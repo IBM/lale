@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.linear_model
 
 import lale.docstrings
@@ -282,7 +283,7 @@ _combined_schemas = {
     },
 }
 
-PassiveAggressiveClassifier: lale.operators.IndividualOp
+PassiveAggressiveClassifier: lale.operators.PlannedIndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(
     PassiveAggressiveClassifierImpl, _combined_schemas
 )

@@ -17,6 +17,7 @@ import logging
 import numpy as np
 import pandas as pd
 import torch
+import torch.cuda
 from pytorch_pretrained_bert import BertModel, BertTokenizer
 
 import lale.docstrings

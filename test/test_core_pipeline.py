@@ -58,6 +58,9 @@ class TestCreation(unittest.TestCase):
         accuracy_score(self.y_test, predictions)
 
     def test_pipeline_create_trainable(self):
+        import lale.lib.sklearn
+        import lale.operators
+
         pipeline = lale.lib.sklearn.Pipeline(
             steps=[("pca1", PCA()), ("lr1", LogisticRegression())]
         )
@@ -70,6 +73,9 @@ class TestCreation(unittest.TestCase):
         accuracy_score(self.y_test, predictions)
 
     def test_pipeline_create_trained(self):
+        import lale.lib.sklearn
+        import lale.operators
+
         orig_trainable = PCA() >> LogisticRegression()
         orig_trained = orig_trainable.fit(self.X_train, self.y_train)
         self.assertIsInstance(orig_trained, lale.operators.TrainedPipeline)
@@ -735,6 +741,9 @@ class TestComposition(unittest.TestCase):
 
 class TestAutoPipeline(unittest.TestCase):
     def _fit_predict(self, prediction_type, all_X, all_y, verbose=True):
+        import sklearn.metrics
+        import sklearn.model_selection
+
         if verbose:
             file_name, line, fn_name, text = traceback.extract_stack()[-2]
             print(f"--- TestAutoPipeline.{fn_name}() ---")
@@ -777,6 +786,8 @@ class TestAutoPipeline(unittest.TestCase):
         self._fit_predict("regression", all_X, all_y)
 
     def test_openml_creditg(self):
+        import sklearn.model_selection
+
         # classification, categoricals+numbers incl. string, no missing values
         (orig_train_X, orig_train_y), _ = lale.datasets.openml.fetch(
             "credit-g", "classification", preprocess=False
@@ -805,6 +816,8 @@ class TestAutoPipeline(unittest.TestCase):
         self._fit_predict("regression", with_missing_X, all_y)
 
     def test_missing_creditg(self):
+        import sklearn.model_selection
+
         # classification, categoricals+numbers incl. string, synth. missing
         (orig_train_X, orig_train_y), _ = lale.datasets.openml.fetch(
             "credit-g", "classification", preprocess=False
@@ -826,7 +839,8 @@ class TestOperatorChoice(unittest.TestCase):
         X, y = iris.data, iris.target
         tfm = PCA() | Nystroem() | NoOp()
         with self.assertRaises(AttributeError):
-            _ = tfm.fit(X, y)
+            # we are trying to trigger a runtime error here, so we ignore the static warning
+            _ = tfm.fit(X, y)  # type: ignore
         _ = (OneHotEncoder | NoOp) >> tfm >> (LogisticRegression | KNeighborsClassifier)
         _ = (
             (OneHotEncoder | NoOp)

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.ensemble
 
 import lale.docstrings
@@ -344,7 +345,7 @@ _combined_schemas = {
     },
 }
 
-RandomForestClassifier: lale.operators.IndividualOp
+RandomForestClassifier: lale.operators.PlannedIndividualOp
 RandomForestClassifier = lale.operators.make_operator(
     RandomForestClassifierImpl, _combined_schemas
 )

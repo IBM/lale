@@ -24,7 +24,7 @@ try:
 except NameError:
     __LALE_SETUP__ = False
 
-if __LALE_SETUP__:
+if __LALE_SETUP__:  # type: ignore
     sys.stderr.write("Partial import of lale during the build process.\n")
     # We are not importing the rest of lale during the build
     # process.

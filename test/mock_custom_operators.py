@@ -107,6 +107,8 @@ IncreaseRows = lale.operators.make_operator(IncreaseRowsImpl, _combined_schemas)
 
 
 class MyLRImpl:
+    _wrapped_model: sklearn.linear_model.LogisticRegression
+
     def __init__(self, penalty="l2", solver="liblinear", C=1.0):
         self.penalty = penalty
         self.solver = solver
@@ -121,6 +123,7 @@ class MyLRImpl:
         return result
 
     def predict(self, X):
+        assert hasattr(self, "_wrapped_model")
         return self._wrapped_model.predict(X)
 
 

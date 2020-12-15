@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.preprocessing
 
 import lale.docstrings
@@ -113,7 +114,7 @@ _combined_schemas = {
     },
 }
 
-PolynomialFeatures: lale.operators.IndividualOp
+PolynomialFeatures: lale.operators.PlannedIndividualOp
 PolynomialFeatures = lale.operators.make_operator(
     PolynomialFeaturesImpl, _combined_schemas
 )

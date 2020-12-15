@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.ensemble
 
 import lale.docstrings
@@ -302,7 +303,7 @@ _combined_schemas = {
     },
 }
 
-RandomForestRegressor: lale.operators.IndividualOp
+RandomForestRegressor: lale.operators.PlannedIndividualOp
 RandomForestRegressor = lale.operators.make_operator(
     RandomForestRegressorImpl, _combined_schemas
 )

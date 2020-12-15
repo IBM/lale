@@ -39,3 +39,12 @@ repos:
     rev: 'v0.782'
     hooks:
       - id: mypy
+  - repo: local
+    hooks:
+      - id: pyright
+        name: pyright
+        entry: pyright
+        language: node
+        pass_filenames: false
+        types: [python]
+        additional_dependencies: ['pyright@1.1.91']

@@ -14,6 +14,7 @@
 
 import typing
 
+import sklearn
 import sklearn.linear_model
 
 import lale.docstrings
@@ -214,7 +215,6 @@ To lessen the effect of regularization on synthetic feature weight
                     "type": "number",
                     "distribution": "uniform",
                     "minimum": 0.0,
-                    "exclusiveMinimum": True,
                     "maximum": 1.0,
                     "default": 1.0,
                 },

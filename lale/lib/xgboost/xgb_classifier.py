@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
+
 import pandas as pd
 from sklearn.base import BaseEstimator
 
@@ -19,11 +21,13 @@ import lale.docstrings
 import lale.operators
 
 try:
-    import xgboost
+    import xgboost  # type: ignore
 
     xgboost_installed = True
 except ImportError:
     xgboost_installed = False
+    if TYPE_CHECKING:
+        import xgboost  # type: ignore
 
 
 def _rename_one_feature(name):
@@ -185,11 +189,11 @@ _hyperparams_schema = {
                 "max_depth": {
                     "description": "Maximum tree depth for base learners.",
                     "type": "integer",
-                    "default": 10,
+                    "default": 4,
                     "minimum": 0,
                     "distribution": "uniform",
-                    "minimumForOptimizer": 2,
-                    "maximumForOptimizer": 20,
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 7,
                 },
                 "learning_rate": {
                     "description": "Boosting learning rate (xgb’s “eta”)",
@@ -202,9 +206,9 @@ _hyperparams_schema = {
                 "n_estimators": {
                     "description": "Number of trees to fit.",
                     "type": "integer",
-                    "default": 1000,
-                    "minimumForOptimizer": 500,
-                    "maximumForOptimizer": 1500,
+                    "default": 200,
+                    "minimumForOptimizer": 50,
+                    "maximumForOptimizer": 1000,
                 },
                 "verbosity": {
                     "description": "The degree of verbosity.",

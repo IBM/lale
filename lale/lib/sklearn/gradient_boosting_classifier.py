@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.ensemble
 
 import lale.docstrings
@@ -351,7 +352,7 @@ _combined_schemas = {
     },
 }
 
-GradientBoostingClassifier: lale.operators.IndividualOp
+GradientBoostingClassifier: lale.operators.PlannedIndividualOp
 GradientBoostingClassifier = lale.operators.make_operator(
     GradientBoostingClassifierImpl, _combined_schemas
 )

@@ -277,6 +277,8 @@ class _GenSym:
                 for s in op.steps():
                     populate_label2count(s)
                 label = "choice"
+            else:
+                raise ValueError(f"Unexpected argument of type: {type(op)}")
             label2count[label] = label2count.get(label, 0) + 1
 
         populate_label2count(op)
@@ -371,6 +373,8 @@ def _op_to_json_rec(
         for step in op.steps():
             child_uid, child_jsn = _op_to_json_rec(step, cls2label, gensym)
             jsn["steps"][child_uid] = child_jsn
+    else:
+        raise ValueError(f"Unexpected argument of type: {type(op)}")
     return uid, jsn
 
 
@@ -401,7 +405,7 @@ def _get_lib_schema(impl) -> Optional[JSON_TYPE]:
             return None
 
 
-def _hps_from_json_rec(jsn: JSON_TYPE, steps: JSON_TYPE) -> Any:
+def _hps_from_json_rec(jsn: Any, steps: JSON_TYPE) -> Any:
     if isinstance(jsn, dict):
         if "$ref" in jsn:
             step_uid = jsn["$ref"].split("/")[-1]

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.ensemble
 
 import lale.docstrings
@@ -253,7 +254,7 @@ _combined_schemas = {
     },
 }
 
-ExtraTreesRegressor: lale.operators.IndividualOp
+ExtraTreesRegressor: lale.operators.PlannedIndividualOp
 ExtraTreesRegressor = lale.operators.make_operator(
     ExtraTreesRegressorImpl, _combined_schemas
 )

@@ -127,6 +127,8 @@ class SearchSpaceHPExprVisitor(Visitor):
                 path, f"maximum not specified for a number with distribution {dist}"
             )
         max = space.getInclusiveMax()
+        # if the maximum is not None, the inclusive maximum should not be none
+        assert max is not None
 
         # These distributions need only a maximum
         if dist == "integer":
@@ -142,6 +144,8 @@ class SearchSpaceHPExprVisitor(Visitor):
                 path, f"minimum not specified for a number with distribution {dist}"
             )
         min = space.getInclusiveMin()
+        # if the minimum is not None, the inclusive minimum should not be none
+        assert min is not None
 
         if dist == "uniform":
             if space.discrete:
@@ -347,10 +351,13 @@ class SearchSpaceHPStrVisitor(Visitor):
             dist = space.distribution
 
         if space.maximum is None:
-            SearchSpaceError(
+            raise SearchSpaceError(
                 path, f"maximum not specified for a number with distribution {dist}"
             )
+
         max = space.getInclusiveMax()
+        # if the maximum is not None, the inclusive maximum should not be none
+        assert max is not None
 
         # These distributions need only a maximum
         if dist == "integer":
@@ -367,6 +374,8 @@ class SearchSpaceHPStrVisitor(Visitor):
                 path, f"minimum not specified for a number with distribution {dist}"
             )
         min = space.getInclusiveMin()
+        # if the minimum is not None, the inclusive minimum should not be none
+        assert min is not None
 
         if dist == "uniform":
             if space.discrete:

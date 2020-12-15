@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.tree
 
 import lale.docstrings
@@ -326,7 +327,7 @@ class DecisionTreeClassifierImpl:
         return self._wrapped_model.predict_proba(X)
 
 
-DecisionTreeClassifier: lale.operators.IndividualOp
+DecisionTreeClassifier: lale.operators.PlannedIndividualOp
 DecisionTreeClassifier = lale.operators.make_operator(
     DecisionTreeClassifierImpl, _combined_schemas
 )

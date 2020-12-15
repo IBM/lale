@@ -1,5 +1,5 @@
 import random
-from typing import Optional
+from typing import List, Optional, cast
 
 from lale.lib.lale import NoOp
 from lale.operators import (
@@ -38,12 +38,6 @@ class NonTerminal(Operator):
         raise NotImplementedError()  # TODO
 
     def input_schema_fit(self):
-        raise NotImplementedError()  # TODO
-
-    def freeze_trainable(self) -> "Operator":
-        raise NotImplementedError()  # TODO
-
-    def is_frozen_trainable(self) -> bool:
         raise NotImplementedError()  # TODO
 
     def is_classifier(self) -> bool:
@@ -88,12 +82,6 @@ class Grammar(Operator):
     def input_schema_fit(self):
         raise NotImplementedError()  # TODO
 
-    def freeze_trainable(self) -> "Operator":
-        raise NotImplementedError()  # TODO
-
-    def is_frozen_trainable(self) -> bool:
-        raise NotImplementedError()  # TODO
-
     def is_classifier(self) -> bool:
         raise NotImplementedError()  # TODO
 
@@ -113,12 +101,16 @@ class Grammar(Operator):
         """
         if isinstance(op, BasePipeline):
             steps = op.steps()
-            new_steps = [self._unfold(sop, n) for sop in op.steps()]
-            step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
-            new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
-            if None not in new_steps:
+            new_maybe_steps: List[Optional[Operator]] = [
+                self._unfold(sop, n) for sop in op.steps()
+            ]
+            if None not in new_maybe_steps:
+                new_steps: List[Operator] = cast(List[Operator], new_maybe_steps)
+                step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
+                new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
                 return make_pipeline_graph(new_steps, new_edges, True)
-            return None
+            else:
+                return None
         if isinstance(op, OperatorChoice):
             steps = [s for s in (self._unfold(sop, n) for sop in op.steps()) if s]
             return make_choice(*steps) if steps else None
@@ -164,12 +156,16 @@ class Grammar(Operator):
         """
         if isinstance(op, BasePipeline):
             steps = op.steps()
-            new_steps = [self._sample(sop, n) for sop in op.steps()]
-            step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
-            new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
-            if None not in new_steps:
+            new_maybe_steps: List[Optional[Operator]] = [
+                self._sample(sop, n) for sop in op.steps()
+            ]
+            if None not in new_maybe_steps:
+                new_steps: List[Operator] = cast(List[Operator], new_maybe_steps)
+                step_map = {steps[i]: new_steps[i] for i in range(len(steps))}
+                new_edges = [(step_map[s], step_map[d]) for s, d in op.edges()]
                 return make_pipeline_graph(new_steps, new_edges, True)
-            return None
+            else:
+                return None
         if isinstance(op, OperatorChoice):
             return self._sample(random.choice(op.steps()), n)
         if isinstance(op, NonTerminal):

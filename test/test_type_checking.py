@@ -770,6 +770,7 @@ class TestSchemaValidation(unittest.TestCase):
 
 class TestWithScorer(unittest.TestCase):
     def test_bare_array(self):
+        import sklearn.datasets
         import sklearn.metrics
         from numpy import ndarray
 

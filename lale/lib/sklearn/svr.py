@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.svm
 
 import lale.docstrings
@@ -214,7 +215,7 @@ _combined_schemas = {
     },
 }
 
-SVR: lale.operators.IndividualOp
+SVR: lale.operators.PlannedIndividualOp
 SVR = lale.operators.make_operator(SVRImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":

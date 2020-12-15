@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import functools
+import logging
+from typing import Optional
 
 import numpy as np
 import pandas as pd
@@ -22,6 +23,11 @@ import lale.docstrings
 import lale.operators
 import lale.pretty_print
 import lale.type_checking
+from lale.json_operator import JSON_TYPE
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
+
 
 try:
     import torch
@@ -31,35 +37,44 @@ except ImportError:
     torch_installed = False
 
 
+def _is_pandas(d):
+    return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series)
+
+
 class ConcatFeaturesImpl:
     def __init__(self):
         pass
 
     def transform(self, X):
-        def is_pandas(d):
-            return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series)
-
-        if functools.reduce(lambda accum, d: accum and is_pandas(d), X, True):
-            result = pd.concat(X, axis=1)
-            return result
-
-        np_datasets = []
-        # Preprocess the datasets to convert them to 2-d numpy arrays
-        for dataset in X:
-            if is_pandas(dataset):
-                np_dataset = dataset.values
-            elif isinstance(dataset, scipy.sparse.csr_matrix):
-                np_dataset = dataset.toarray()
-            elif torch_installed and isinstance(dataset, torch.Tensor):
-                np_dataset = dataset.detach().cpu().numpy()
+        if all([_is_pandas(d) for d in X]):
+            name2series = {}
+            for dataset in X:
+                for name in dataset.columns:
+                    name2series[name] = name2series.get(name, []) + [dataset[name]]
+            duplicates = [name for name, ls in name2series.items() if len(ls) > 1]
+            if len(duplicates) == 0:
+                result = pd.concat(X, axis=1)
             else:
-                np_dataset = dataset
-            if hasattr(np_dataset, "shape"):
-                if len(np_dataset.shape) == 1:  # To handle numpy column vectors
-                    np_dataset = np.reshape(np_dataset, (np_dataset.shape[0], 1))
-            np_datasets.append(np_dataset)
-
-        result = np.concatenate(np_datasets, axis=1)
+                logger.info(f"ConcatFeatures duplicate column names {duplicates}")
+                deduplicated = [ls[-1] for _, ls in name2series.items()]
+                result = pd.concat(deduplicated, axis=1)
+        else:
+            np_datasets = []
+            # Preprocess the datasets to convert them to 2-d numpy arrays
+            for dataset in X:
+                if _is_pandas(dataset):
+                    np_dataset = dataset.values
+                elif isinstance(dataset, scipy.sparse.csr_matrix):
+                    np_dataset = dataset.toarray()
+                elif torch_installed and isinstance(dataset, torch.Tensor):
+                    np_dataset = dataset.detach().cpu().numpy()
+                else:
+                    np_dataset = dataset
+                if hasattr(np_dataset, "shape"):
+                    if len(np_dataset.shape) == 1:  # To handle numpy column vectors
+                        np_dataset = np.reshape(np_dataset, (np_dataset.shape[0], 1))
+                np_datasets.append(np_dataset)
+            result = np.concatenate(np_datasets, axis=1)
         return result
 
     def transform_schema(self, s_X):
@@ -74,6 +89,7 @@ class ConcatFeaturesImpl:
                 max_ab = max_a + max_b
             return min_ab, max_ab
 
+        elem_schema: Optional[JSON_TYPE] = None
         for s_dataset in s_X["items"]:
             if s_dataset.get("laleType", None) == "Any":
                 return {"laleType": "Any"}
@@ -89,16 +105,27 @@ class ConcatFeaturesImpl:
                 if isinstance(s_cols, dict):
                     min_c = s_rows["minItems"] if "minItems" in s_rows else 1
                     max_c = s_rows["maxItems"] if "maxItems" in s_rows else "unbounded"
-                    elem_schema = lale.type_checking.join_schemas(elem_schema, s_cols)
+                    if elem_schema is None:
+                        elem_schema = s_cols
+                    else:
+                        elem_schema = lale.type_checking.join_schemas(
+                            elem_schema, s_cols
+                        )
                 else:
                     min_c, max_c = len(s_cols), len(s_cols)
                     for s_col in s_cols:
-                        elem_schema = lale.type_checking.join_schemas(
-                            elem_schema, s_col
-                        )
+                        if elem_schema is None:
+                            elem_schema = s_col
+                        else:
+                            elem_schema = lale.type_checking.join_schemas(
+                                elem_schema, s_col
+                            )
                 min_cols, max_cols = add_ranges(min_cols, max_cols, min_c, max_c)
             else:
-                elem_schema = lale.type_checking.join_schemas(elem_schema, s_rows)
+                if elem_schema is None:
+                    elem_schema = s_rows
+                else:
+                    elem_schema = lale.type_checking.join_schemas(elem_schema, s_rows)
                 min_cols, max_cols = add_ranges(min_cols, max_cols, 1, 1)
         s_result = {
             "$schema": "http://json-schema.org/draft-04/schema#",
@@ -189,4 +216,6 @@ NDArrayWithSchema([[11, 12, 13, 14, 15],
 
 lale.docstrings.set_docstrings(ConcatFeaturesImpl, _combined_schemas)
 
-ConcatFeatures = lale.operators.make_operator(ConcatFeaturesImpl, _combined_schemas)
+ConcatFeatures = lale.operators.make_pretrained_operator(
+    ConcatFeaturesImpl, _combined_schemas
+)

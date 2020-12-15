@@ -104,6 +104,7 @@ setup(
             "sphinxcontrib.apidoc",
             "pytest-cov",
             "codecov",
+            "pyspark",
         ],
     },
 )

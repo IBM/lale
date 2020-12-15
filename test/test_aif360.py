@@ -25,7 +25,7 @@ import lale.datasets.openml
 import lale.lib.aif360
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
-from lale.lib.aif360 import DisparateImpactRemover
+from lale.lib.aif360 import DisparateImpactRemover, Redacting, Reweighing
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.sklearn import (
     FunctionTransformer,
@@ -182,12 +182,13 @@ class TestAIF360(unittest.TestCase):
         cls.creditg_np_num = cls._creditg_np_num()
         cls.boston = cls._boston()
 
-    def test_converter_pd_cat(self):
+    def test_encoder_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
         orig_X = self.creditg_pd_cat["train_X"]
-        orig_y = self.creditg_pd_cat["train_y"]
-        converter = lale.lib.aif360.util._CategoricalFairnessConverter(**info)
-        conv_X, conv_y = converter(orig_X, orig_y)
+        encoder = lale.lib.aif360.ProtectedAttributesEncoder(
+            protected_attributes=info["protected_attributes"]
+        )
+        conv_X = encoder.transform(orig_X)
         for i in orig_X.index:
             orig_row = orig_X.loc[i]
             conv_row = conv_X.loc[i]
@@ -196,20 +197,19 @@ class TestAIF360(unittest.TestCase):
                 conv_row["personal_status"],
             )
             self.assertEqual(orig_row["age"] >= 26, conv_row["age"])
-            self.assertEqual(orig_y[i] == "good", conv_y[i])
 
-    def test_converter_np_cat(self):
+    def test_encoder_np_cat(self):
         info = self.creditg_np_cat["fairness_info"]
         orig_X = self.creditg_np_cat["train_X"]
-        orig_y = self.creditg_np_cat["train_y"]
-        converter = lale.lib.aif360.util._CategoricalFairnessConverter(**info)
-        conv_X, conv_y = converter(orig_X, orig_y)
+        encoder = lale.lib.aif360.ProtectedAttributesEncoder(
+            protected_attributes=info["protected_attributes"]
+        )
+        conv_X = encoder.transform(orig_X)
         for i in range(orig_X.shape[0]):
             self.assertEqual(
                 orig_X[i, 8].startswith("male"), conv_X.at[i, "f8"],
             )
             self.assertEqual(orig_X[i, 12] >= 26, conv_X.at[i, "f12"])
-            self.assertEqual(orig_y[i] == "good", conv_y[i])
 
     def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info
@@ -363,14 +363,91 @@ class TestAIF360(unittest.TestCase):
             "favorable_labels": [1.0],
             "protected_attributes": [{"feature": 57, "privileged_groups": [1.0]},],
         }
-        trainable = DisparateImpactRemover(
-            sensitive_attribute=57
-        ) >> LogisticRegression(max_iter=1000)
+        trainable_orig = LogisticRegression(max_iter=1000)
+        trainable_remi = (
+            DisparateImpactRemover(sensitive_attribute=57) >> trainable_orig
+        )
         train_X = self.creditg_np_num["train_X"]
         train_y = self.creditg_np_num["train_y"]
-        trained = trainable.fit(train_X, train_y)
+        trained_orig = trainable_orig.fit(train_X, train_y)
+        trained_remi = trainable_remi.fit(train_X, train_y)
         test_X = self.creditg_np_num["test_X"]
         test_y = self.creditg_np_num["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        impact = disparate_impact_scorer(trained, test_X, test_y)
-        self.assertTrue(0.9 < impact < 1.1, f"impact {impact}")
+        impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
+        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
+        self.assertTrue(impact_remi < 0.95, f"impact_remi {impact_remi}")
+        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+
+    def test_redacting_pd_num(self):
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
+        }
+        trainable_orig = LogisticRegression(max_iter=1000)
+        trainable_remi = Redacting(protected_attribute_names=["age"]) >> trainable_orig
+        train_X = self.creditg_pd_num["train_X"]
+        train_y = self.creditg_pd_num["train_y"]
+        trained_orig = trainable_orig.fit(train_X, train_y)
+        trained_remi = trainable_remi.fit(train_X, train_y)
+        test_X = self.creditg_pd_num["test_X"]
+        test_y = self.creditg_pd_num["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
+        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
+        self.assertTrue(impact_remi < 0.95, f"impact_remi {impact_remi}")
+        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+
+    def test_reweighing_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        trainable_orig = (
+            (
+                (
+                    Project(columns={"type": "string"})
+                    >> OneHotEncoder(handle_unknown="ignore")
+                )
+                & Project(columns={"type": "number"})
+            )
+            >> ConcatFeatures
+            >> LogisticRegression(max_iter=1000)
+        )
+        trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
+        train_X = self.creditg_pd_cat["train_X"]
+        train_y = self.creditg_pd_cat["train_y"]
+        trained_orig = trainable_orig.fit(train_X, train_y)
+        trained_remi = trainable_remi.fit(train_X, train_y)
+        test_X = self.creditg_pd_cat["test_X"]
+        test_y = self.creditg_pd_cat["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
+        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
+        self.assertTrue(impact_remi > 0.92, f"impact_remi {impact_remi}")
+        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+
+    def test_reweighing_pd_num(self):
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
+        }
+        trainable_orig = LogisticRegression(max_iter=1000)
+        trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
+        train_X = self.creditg_pd_num["train_X"]
+        train_y = self.creditg_pd_num["train_y"]
+        trained_orig = trainable_orig.fit(train_X, train_y)
+        trained_remi = trainable_remi.fit(train_X, train_y)
+        test_X = self.creditg_pd_num["test_X"]
+        test_y = self.creditg_pd_num["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
+        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
+        self.assertTrue(impact_remi > 0.92, f"impact_remi {impact_remi}")
+        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
