@@ -126,7 +126,7 @@ class TestExtraTreesClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_n_estimators(self):
-        default = ExtraTreesClassifier.hyperparam_defaults()["n_estimators"]
+        default = ExtraTreesClassifier.get_defaults()["n_estimators"]
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
@@ -165,7 +165,7 @@ class TestExtraTreesRegressor(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_n_estimators(self):
-        default = ExtraTreesRegressor.hyperparam_defaults()["n_estimators"]
+        default = ExtraTreesRegressor.get_defaults()["n_estimators"]
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
@@ -255,7 +255,7 @@ class TestFunctionTransformer(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_validate(self):
-        default = FunctionTransformer.hyperparam_defaults()["validate"]
+        default = FunctionTransformer.get_defaults()["validate"]
         self.assertEqual(default, True)
 
     def test_with_hyperopt(self):
@@ -373,11 +373,11 @@ class TestLogisticRegression(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_multi_class(self):
-        default = LogisticRegression.hyperparam_defaults()["multi_class"]
+        default = LogisticRegression.get_defaults()["multi_class"]
         self.assertEqual(default, "ovr")
 
     def test_solver(self):
-        default = LogisticRegression.hyperparam_defaults()["solver"]
+        default = LogisticRegression.get_defaults()["solver"]
         self.assertEqual(default, "liblinear")
 
     def test_l1_ratio(self):
@@ -468,7 +468,7 @@ class TestRandomForestClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_n_estimators(self):
-        default = RandomForestClassifier.hyperparam_defaults()["n_estimators"]
+        default = RandomForestClassifier.get_defaults()["n_estimators"]
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
@@ -507,7 +507,7 @@ class TestRandomForestRegressor(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_n_estimators(self):
-        default = RandomForestRegressor.hyperparam_defaults()["n_estimators"]
+        default = RandomForestRegressor.get_defaults()["n_estimators"]
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
@@ -579,7 +579,7 @@ class TestSVC(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_gamma(self):
-        default = SVC.hyperparam_defaults()["gamma"]
+        default = SVC.get_defaults()["gamma"]
         self.assertEqual(default, "auto_deprecated")
 
     def test_break_ties(self):

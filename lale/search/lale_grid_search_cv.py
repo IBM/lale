@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
 
 def get_defaults_as_param_grid(op: "Ops.IndividualOp"):
-    defaults = op.hyperparam_defaults()
+    defaults = op.get_defaults()
     return {k: [v] for k, v in defaults.items()}
 
 
