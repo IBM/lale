@@ -470,7 +470,7 @@ class SKlearnCompatWrapper(object):
                 prev._base = new_s
         return self
 
-    def hyperparam_defaults(self) -> Dict[str, Any]:
+    def get_defaults(self) -> Dict[str, Any]:
         return DefaultsVisitor.run(self.to_lale())
 
     def _final_individual_op(self) -> Optional[Ops.IndividualOp]:
@@ -576,7 +576,7 @@ class DefaultsVisitor(Visitor):
         super(DefaultsVisitor, self).__init__()
 
     def visitIndividualOp(self, op: Ops.IndividualOp) -> Dict[str, Any]:
-        return op.hyperparam_defaults()
+        return op.get_defaults()
 
     visitPlannedIndividualOp = visitIndividualOp
     visitTrainableIndividualOp = visitIndividualOp

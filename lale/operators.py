@@ -925,7 +925,7 @@ class IndividualOp(Operator):
             params = next(iter(hp_schema.get("allOf", [])))
             return params.get("properties", {}).get(name)
 
-    def hyperparam_defaults(self):
+    def get_defaults(self):
         """Returns the default values of hyperparameters for the operator.
 
         Returns
@@ -1039,7 +1039,7 @@ class IndividualOp(Operator):
 
         autoai_ranges = {hp: get_range(hp, s) for hp, s in defaulted.items()}
         if "min_samples_split" in autoai_ranges and "min_samples_leaf" in autoai_ranges:
-            if self._impl.__name__ not in (
+            if self._name not in (
                 "GradientBoostingRegressorImpl",
                 "GradientBoostingClassifierImpl",
                 "ExtraTreesClassifierImpl",
@@ -1189,7 +1189,7 @@ class IndividualOp(Operator):
                 assert e.message.startswith(pref) and e.message.endswith(suff)
                 reason = "argument " + e.message[len(pref) : -len(suff)]
                 schema_path = "arguments and their defaults"
-                schema = self.hyperparam_defaults()
+                schema = self.get_defaults()
             elif e.schema_path[0] == "allOf" and int(e.schema_path[1]) != 0:
                 assert e.schema_path[2] == "anyOf"
                 descr = e.schema["description"]
@@ -1655,7 +1655,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def _freeze_trainable_bindings(self):
         old_bindings = self._hyperparams if self._hyperparams else {}
         free = self.free_hyperparams()
-        defaults = self.hyperparam_defaults()
+        defaults = self.get_defaults()
         new_bindings = {name: defaults[name] for name in free}
         bindings = {**old_bindings, **new_bindings}
         return bindings
@@ -1698,7 +1698,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if self._hyperparams is None:
             return None
         actuals = self._hyperparams
-        defaults = self.hyperparam_defaults()
+        defaults = self.get_defaults()
         actuals_minus_defaults = {
             k: actuals[k]
             for k in actuals
@@ -1721,7 +1721,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         output = {}
         if self._hyperparams is not None:
             output.update(self._hyperparams)
-        defaults = self.hyperparam_defaults()
+        defaults = self.get_defaults()
         for k in defaults.keys():
             if k not in output:
                 output[k] = defaults[k]
