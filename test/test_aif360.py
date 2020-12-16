@@ -375,9 +375,9 @@ class TestAIF360(unittest.TestCase):
         test_y = self.creditg_np_num["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(impact_remi < 0.95, f"impact_remi {impact_remi}")
+        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
         print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
 
     def test_redacting_pd_num(self):
@@ -395,9 +395,9 @@ class TestAIF360(unittest.TestCase):
         test_y = self.creditg_pd_num["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(impact_remi < 0.95, f"impact_remi {impact_remi}")
+        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
         print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
 
     def test_reweighing_pd_cat(self):
@@ -427,9 +427,9 @@ class TestAIF360(unittest.TestCase):
         test_y = self.creditg_pd_cat["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(impact_remi > 0.92, f"impact_remi {impact_remi}")
+        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
         print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
 
     def test_reweighing_pd_num(self):
@@ -447,7 +447,7 @@ class TestAIF360(unittest.TestCase):
         test_y = self.creditg_pd_num["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(impact_orig < 0.95, f"impact_orig {impact_orig}")
+        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(impact_remi > 0.92, f"impact_remi {impact_remi}")
+        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
         print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
