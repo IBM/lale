@@ -52,8 +52,11 @@ def make_nested_hyperopt_space(sub_space):
 def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
     file_name, line_number, function_name, text = tb[-(level + 2)]
-    tree = ast.parse(text, file_name)
-    assert isinstance(tree, ast.Module)
+    try:
+        tree = ast.parse(text, file_name)
+    except SyntaxError:
+        return None
+    assert tree is not None and isinstance(tree, ast.Module)
     if len(tree.body) == 1:
         stmt = tree.body[0]
         if isinstance(stmt, ast.Assign):
