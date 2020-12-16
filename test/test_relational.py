@@ -94,31 +94,6 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["gender"][0], "Male")
         self.assertEqual(transformed_df["state"][0], "New York")
 
-    def test_transform_spark_replace_list(self):
-        if spark_installed:
-            d = {
-                "gender": ["m", "f", "m", "m", "f"],
-                "state": ["NY", "NY", "CA", "NY", "CA"],
-                "status": [0, 1, 1, 0, 1],
-            }
-            df = pd.DataFrame(data=d)
-            conf = SparkConf().setMaster("local[2]")
-            sc = SparkContext.getOrCreate(conf=conf)
-            sqlCtx = SQLContext(sc)
-            sdf = sqlCtx.createDataFrame(df)
-            gender_map = {"m": "Male", "f": "Female"}
-            state_map = {"NY": "New York", "CA": "California"}
-            trainable = Map(
-                columns=[replace(it.gender, gender_map), replace(it.state, state_map)]
-            )
-            trained = trainable.fit(sdf)
-            transformed_df = trained.transform(sdf)
-            self.assertEqual(
-                (transformed_df.count(), len(transformed_df.columns)), (5, 3)
-            )
-            self.assertEqual(transformed_df.head()[0], "Male")
-            self.assertEqual(transformed_df.head()[1], "New York")
-
     def test_transform_replace_map(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
@@ -139,34 +114,6 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df.shape, (5, 3))
         self.assertEqual(transformed_df["new_gender"][0], "Male")
         self.assertEqual(transformed_df["new_state"][0], "New York")
-
-    def test_transform_spark_replace_map(self):
-        if spark_installed:
-            d = {
-                "gender": ["m", "f", "m", "m", "f"],
-                "state": ["NY", "NY", "CA", "NY", "CA"],
-                "status": [0, 1, 1, 0, 1],
-            }
-            df = pd.DataFrame(data=d)
-            conf = SparkConf().setMaster("local[2]")
-            sc = SparkContext.getOrCreate(conf=conf)
-            sqlCtx = SQLContext(sc)
-            sdf = sqlCtx.createDataFrame(df)
-            gender_map = {"m": "Male", "f": "Female"}
-            state_map = {"NY": "New York", "CA": "California"}
-            trainable = Map(
-                columns={
-                    "new_gender": replace(it.gender, gender_map),
-                    "new_state": replace(it.state, state_map),
-                }
-            )
-            trained = trainable.fit(sdf)
-            transformed_df = trained.transform(sdf)
-            self.assertEqual(
-                (transformed_df.count(), len(transformed_df.columns)), (5, 3)
-            )
-            self.assertEqual(transformed_df.head()[1], "Male")
-            self.assertEqual(transformed_df.head()[2], "New York")
 
     def test_transform_dom_list(self):
         df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-27", "2016-07-26"]})
@@ -314,7 +261,7 @@ class TestMap(unittest.TestCase):
                 ]
             }
         )
-        trainable = Map(columns=[minute(it.date_column, "%Y-%m-%d %H:%M:%S")])
+        trainable = Map(columns=[minute(it.date_column)])
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df["date_column"][0], 16)
@@ -366,7 +313,7 @@ class TestMap(unittest.TestCase):
                 ]
             }
         )
-        trainable = Map(columns=[month(it.date_column, "%Y-%m-%d %H:%M:%S")])
+        trainable = Map(columns=[month(it.date_column)])
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df["date_column"][0], 1)
@@ -413,9 +360,9 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns=[string_indexer(it.cat_column)])
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df["cat_column"][0], 2)
-        self.assertEqual(transformed_df["cat_column"][1], 1)
-        self.assertEqual(transformed_df["cat_column"][2], 1)
+        self.assertEqual(transformed_df["cat_column"][0], 1)
+        self.assertEqual(transformed_df["cat_column"][1], 0)
+        self.assertEqual(transformed_df["cat_column"][2], 0)
 
     def test_transform_string_indexer_map(self):
         df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
@@ -423,9 +370,9 @@ class TestMap(unittest.TestCase):
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df.shape, (3, 1))
-        self.assertEqual(transformed_df["string_indexed"][0], 2)
-        self.assertEqual(transformed_df["string_indexed"][1], 1)
-        self.assertEqual(transformed_df["string_indexed"][2], 1)
+        self.assertEqual(transformed_df["string_indexed"][0], 1)
+        self.assertEqual(transformed_df["string_indexed"][1], 0)
+        self.assertEqual(transformed_df["string_indexed"][2], 0)
 
     def test_not_expression(self):
         with self.assertRaises(jsonschema.ValidationError):
@@ -689,3 +636,356 @@ class TestRelationalOperator(unittest.TestCase):
         pipeline = relational >> LogisticRegression()
         trained_pipeline = pipeline.fit(self.X_train, self.y_train)
         _ = trained_pipeline.predict(self.X_test)
+
+
+class TestMapSpark(unittest.TestCase):
+    def setUp(self):
+        if spark_installed:
+            conf = SparkConf().setMaster("local[2]")
+            sc = SparkContext.getOrCreate(conf=conf)
+            self.sqlCtx = SQLContext(sc)
+
+    def test_transform_spark_replace_list(self):
+        if spark_installed:
+            d = {
+                "gender": ["m", "f", "m", "m", "f"],
+                "state": ["NY", "NY", "CA", "NY", "CA"],
+                "status": [0, 1, 1, 0, 1],
+            }
+            df = pd.DataFrame(data=d)
+            sdf = self.sqlCtx.createDataFrame(df)
+            gender_map = {"m": "Male", "f": "Female"}
+            state_map = {"NY": "New York", "CA": "California"}
+            trainable = Map(
+                columns=[replace(it.gender, gender_map), replace(it.state, state_map)]
+            )
+            trained = trainable.fit(sdf)
+            transformed_df = trained.transform(sdf)
+            self.assertEqual(
+                (transformed_df.count(), len(transformed_df.columns)), (5, 3)
+            )
+            self.assertEqual(transformed_df.head()[0], "Male")
+            self.assertEqual(transformed_df.head()[1], "New York")
+
+    def test_transform_spark_replace_map(self):
+        if spark_installed:
+            d = {
+                "gender": ["m", "f", "m", "m", "f"],
+                "state": ["NY", "NY", "CA", "NY", "CA"],
+                "status": [0, 1, 1, 0, 1],
+            }
+            df = pd.DataFrame(data=d)
+            sdf = self.sqlCtx.createDataFrame(df)
+            gender_map = {"m": "Male", "f": "Female"}
+            state_map = {"NY": "New York", "CA": "California"}
+            trainable = Map(
+                columns={
+                    "new_gender": replace(it.gender, gender_map),
+                    "new_state": replace(it.state, state_map),
+                }
+            )
+            trained = trainable.fit(sdf)
+            transformed_df = trained.transform(sdf)
+            self.assertEqual(
+                (transformed_df.count(), len(transformed_df.columns)), (5, 3)
+            )
+            self.assertEqual(transformed_df.head()[1], "Male")
+            self.assertEqual(transformed_df.head()[2], "New York")
+
+    def test_transform_dom_list(self):
+        df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-27", "2016-07-26"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[day_of_month(it.date_column)])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 28)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 27)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 26)
+
+    def test_transform_dom_fmt_list(self):
+        df = pd.DataFrame({"date_column": ["28/05/2016", "27/06/2016", "26/07/2016"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[day_of_month(it.date_column, "d/M/y")])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 28)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 27)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 26)
+
+    def test_transform_dom_fmt_map(self):
+        df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-27", "2016-07-26"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns={"dom": day_of_month(it.date_column, "y-M-d")})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
+        self.assertEqual(transformed_df.collect()[0]["dom"], 28)
+        self.assertEqual(transformed_df.collect()[1]["dom"], 27)
+        self.assertEqual(transformed_df.collect()[2]["dom"], 26)
+
+    def test_transform_dow_list(self):
+        df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-28", "2016-07-28"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[day_of_week(it.date_column)])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        # Note that spark dayofweek outputs are different from pandas
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 7)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 3)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 5)
+
+    def test_transform_dow_fmt_list(self):
+        df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-28", "2016-07-28"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[day_of_week(it.date_column, "y-M-d")])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 7)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 3)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 5)
+
+    def test_transform_dow_fmt_map(self):
+        df = pd.DataFrame({"date_column": ["2016-05-28", "2016-06-28", "2016-07-28"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns={"dow": day_of_week(it.date_column, "y-M-d")})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
+        self.assertEqual(transformed_df.collect()[0]["dow"], 7)
+        self.assertEqual(transformed_df.collect()[1]["dow"], 3)
+        self.assertEqual(transformed_df.collect()[2]["dow"], 5)
+
+    def test_transform_doy_list(self):
+        df = pd.DataFrame({"date_column": ["2016-01-01", "2016-06-28", "2016-07-28"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[day_of_year(it.date_column)])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 1)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 180)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 210)
+
+    def test_transform_doy_fmt_list(self):
+        df = pd.DataFrame({"date_column": ["2016-01-01", "2016-06-28", "2016-07-28"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[day_of_year(it.date_column, "y-M-d")])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 1)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 180)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 210)
+
+    def test_transform_doy_fmt_map(self):
+        df = pd.DataFrame({"date_column": ["2016-01-01", "2016-06-28", "2016-07-28"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns={"doy": day_of_year(it.date_column, "y-M-d")})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
+        self.assertEqual(transformed_df.collect()[0]["doy"], 1)
+        self.assertEqual(transformed_df.collect()[1]["doy"], 180)
+        self.assertEqual(transformed_df.collect()[2]["doy"], 210)
+
+    def test_transform_hour_list(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[hour(it.date_column)])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 15)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 12)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 1)
+
+    def test_transform_hour_fmt_list(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[hour(it.date_column, "y-M-d HH:mm:ss")])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 15)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 12)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 1)
+
+    def test_transform_hour_fmt_map(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns={"hour": hour(it.date_column, "y-M-d HH:mm:ss")})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
+        self.assertEqual(transformed_df.collect()[0]["hour"], 15)
+        self.assertEqual(transformed_df.collect()[1]["hour"], 12)
+        self.assertEqual(transformed_df.collect()[2]["hour"], 1)
+
+    def test_transform_minute_list(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[minute(it.date_column)])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 16)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 18)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 1)
+
+    def test_transform_minute_fmt_list(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns=[minute(it.date_column, "y-M-d HH:mm:ss")])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 16)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 18)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 1)
+
+    def test_transform_minute_fmt_map(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns={"minute": minute(it.date_column, "y-M-d HH:mm:ss")})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
+        self.assertEqual(transformed_df.collect()[0]["minute"], 16)
+        self.assertEqual(transformed_df.collect()[1]["minute"], 18)
+        self.assertEqual(transformed_df.collect()[2]["minute"], 1)
+
+    def test_transform_month_list(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[month(it.date_column)])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 1)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 6)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 7)
+
+    def test_transform_month_fmt_list(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns=[month(it.date_column, "y-M-d HH:mm:ss")])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["date_column"], 1)
+        self.assertEqual(transformed_df.collect()[1]["date_column"], 6)
+        self.assertEqual(transformed_df.collect()[2]["date_column"], 7)
+
+    def test_transform_month_fmt_map(self):
+        df = pd.DataFrame(
+            {
+                "date_column": [
+                    "2016-01-01 15:16:45",
+                    "2016-06-28 12:18:51",
+                    "2016-07-28 01:01:01",
+                ]
+            }
+        )
+        sdf = self.sqlCtx.createDataFrame(df)
+
+        trainable = Map(columns={"month": month(it.date_column, "y-M-d HH:mm:ss")})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
+        self.assertEqual(transformed_df.collect()[0]["month"], 1)
+        self.assertEqual(transformed_df.collect()[1]["month"], 6)
+        self.assertEqual(transformed_df.collect()[2]["month"], 7)
+
+    def test_transform_string_indexer_list(self):
+        df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns=[string_indexer(it.cat_column)])
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.collect()[0]["cat_column"], 1)
+        self.assertEqual(transformed_df.collect()[1]["cat_column"], 0)
+        self.assertEqual(transformed_df.collect()[2]["cat_column"], 0)
+
+    def test_transform_string_indexer_map(self):
+        df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns={"string_indexed": string_indexer(it.cat_column)})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
+        self.assertEqual(transformed_df.collect()[0]["string_indexed"], 1)
+        self.assertEqual(transformed_df.collect()[1]["string_indexed"], 0)
+        self.assertEqual(transformed_df.collect()[2]["string_indexed"], 0)
