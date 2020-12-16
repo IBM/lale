@@ -21,8 +21,21 @@ import numpy as np
 import pandas as pd
 
 try:
+    from pyspark.ml.feature import StringIndexer
     from pyspark.sql.dataframe import DataFrame as spark_df
-    from pyspark.sql.functions import create_map, lit
+
+    # noqa in the imports here because those get used dynamically and flake fails.
+    from pyspark.sql.functions import (  # noqa
+        create_map,
+        dayofmonth,
+        dayofweek,
+        dayofyear,
+    )
+    from pyspark.sql.functions import hour as spark_hour  # noqa
+    from pyspark.sql.functions import lit
+    from pyspark.sql.functions import minute as spark_minute  # noqa
+    from pyspark.sql.functions import month as spark_month  # noqa
+    from pyspark.sql.functions import to_timestamp
 
     spark_installed = True
 except ImportError:
@@ -137,107 +150,56 @@ def replace(df: Any, replace_expr: Expr, new_column_name: str):
     return new_column_name, df
 
 
+def time_functions(
+    df: Any, dom_expr: Expr, new_column_name: str, pandas_func: str, spark_func: str
+):
+    fmt = None
+    de: Any = dom_expr._expr
+    column_name = de.args[0].attr
+    if new_column_name is None:
+        new_column_name = column_name
+    if len(de.args) > 1:
+        fmt = ast.literal_eval(de.args[1])
+    if isinstance(df, pd.DataFrame):
+        new_column = pd.to_datetime(df[column_name], format=fmt)
+        df[new_column_name] = getattr(getattr(new_column, "dt"), pandas_func)
+        if new_column_name != column_name:
+            del df[column_name]
+    elif spark_installed and isinstance(df, spark_df):
+        df = df.withColumn(column_name, to_timestamp(df[column_name], fmt))
+        df = df.select(eval(spark_func + "(df[column_name])").alias(new_column_name))
+        if new_column_name != column_name:
+            df = df.drop(column_name)
+    else:
+        raise ValueError(
+            "function day_of_month supports only Pandas dataframes or spark dataframes."
+        )
+
+    return new_column_name, df
+
+
 def day_of_month(df: Any, dom_expr: Expr, new_column_name: str):
-    fmt = None
-    de: Any = dom_expr._expr
-    column_name = de.args[0].attr
-    if new_column_name is None:
-        new_column_name = column_name
-
-    if len(de.args) > 1:
-        fmt = ast.literal_eval(de.args[1])
-    if isinstance(df, pd.DataFrame):
-        new_column = pd.to_datetime(df[column_name], format=fmt)
-        df[new_column_name] = new_column.dt.day
-        if new_column_name != column_name:
-            del df[column_name]
-
-    return new_column_name, df
+    return time_functions(df, dom_expr, new_column_name, "day", "dayofmonth")
 
 
-def day_of_week(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
-    fmt = None
-    de: Any = dom_expr._expr
-    column_name = de.args[0].attr
-    if new_column_name is None:
-        new_column_name = column_name
-
-    if len(de.args) > 1:
-        fmt = ast.literal_eval(de.args[1])
-    if isinstance(df, pd.DataFrame):
-        new_column = pd.to_datetime(df[column_name], format=fmt)
-        df[new_column_name] = new_column.dt.weekday
-        if new_column_name != column_name:
-            del df[column_name]
-    return new_column_name, df
+def day_of_week(df: Any, dom_expr: Expr, new_column_name: str):
+    return time_functions(df, dom_expr, new_column_name, "weekday", "dayofweek")
 
 
-def day_of_year(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
-    fmt = None
-    de: Any = dom_expr._expr
-    column_name = de.args[0].attr
-    if new_column_name is None:
-        new_column_name = column_name
-
-    if len(de.args) > 1:
-        fmt = ast.literal_eval(de.args[1])
-    if isinstance(df, pd.DataFrame):
-        new_column = pd.to_datetime(df[column_name], format=fmt)
-        df[new_column_name] = new_column.dt.dayofyear
-        if new_column_name != column_name:
-            del df[column_name]
-    return new_column_name, df
+def day_of_year(df: Any, dom_expr: Expr, new_column_name: str):
+    return time_functions(df, dom_expr, new_column_name, "dayofyear", "dayofyear")
 
 
-def hour(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
-    fmt = None
-    de: Any = dom_expr._expr
-    column_name = de.args[0].attr
-    if new_column_name is None:
-        new_column_name = column_name
-
-    if len(de.args) > 1:
-        fmt = ast.literal_eval(de.args[1])
-    if isinstance(df, pd.DataFrame):
-        new_column = pd.to_datetime(df[column_name], format=fmt)
-        df[new_column_name] = new_column.dt.hour
-        if new_column_name != column_name:
-            del df[column_name]
-    return new_column_name, df
+def hour(df: Any, dom_expr: Expr, new_column_name: str):
+    return time_functions(df, dom_expr, new_column_name, "hour", "spark_hour")
 
 
-def minute(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
-    fmt = None
-    de: Any = dom_expr._expr
-    column_name = de.args[0].attr
-    if new_column_name is None:
-        new_column_name = column_name
-
-    if len(de.args) > 1:
-        fmt = ast.literal_eval(de.args[1])
-    if isinstance(df, pd.DataFrame):
-        new_column = pd.to_datetime(df[column_name], format=fmt)
-        df[new_column_name] = new_column.dt.minute
-        if new_column_name != column_name:
-            del df[column_name]
-    return new_column_name, df
+def minute(df: Any, dom_expr: Expr, new_column_name: str):
+    return time_functions(df, dom_expr, new_column_name, "minute", "spark_minute")
 
 
-def month(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
-    fmt = None
-    de: Any = dom_expr._expr
-    column_name = de.args[0].attr
-    if new_column_name is None:
-        new_column_name = column_name
-
-    if len(de.args) > 1:
-        fmt = ast.literal_eval(de.args[1])
-    if isinstance(df, pd.DataFrame):
-        new_column = pd.to_datetime(df[column_name], format=fmt)
-        df[new_column_name] = new_column.dt.month
-        if new_column_name != column_name:
-            del df[column_name]
-    return new_column_name, df
+def month(df: Any, dom_expr: Expr, new_column_name: str):
+    return time_functions(df, dom_expr, new_column_name, "month", "spark_month")
 
 
 def string_indexer(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
@@ -246,11 +208,23 @@ def string_indexer(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     if new_column_name is None:
         new_column_name = column_name
 
-    sorted_indices = df[column_name].value_counts().index
     if isinstance(df, pd.DataFrame):
+        sorted_indices = df[column_name].value_counts().index
         df[new_column_name] = df[column_name].map(
-            dict(zip(sorted_indices, range(1, len(sorted_indices) + 1)))
+            dict(zip(sorted_indices, range(0, len(sorted_indices))))
         )
         if new_column_name != column_name:
             del df[column_name]
+    elif spark_installed and isinstance(df, spark_df):
+        df = df.withColumnRenamed(
+            column_name, "newColName"
+        )  # renaming because inputCol and outputCol can't be the same.
+        indexer = StringIndexer(inputCol="newColName", outputCol=new_column_name)
+        df = indexer.fit(df).transform(df)
+        df = df.drop("newColName")
+    else:
+        raise ValueError(
+            "function day_of_month supports only Pandas dataframes or spark dataframes."
+        )
+
     return new_column_name, df
