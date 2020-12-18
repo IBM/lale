@@ -19,6 +19,7 @@ Scikit-learn compatible wrappers for a subset of the operators from AIF360_ alon
 
 Operators:
 ==========
+* `AdversarialDebiasing`_
 * `CalibratedEqOddsPostprocessing`_
 * `DisparateImpactRemover`_
 * `EqOddsPostprocessing`_
@@ -28,6 +29,7 @@ Operators:
 * `Redacting`_
 * `Reweighing`_
 
+.. _`AdversarialDebiasing`: lale.lib.aif360.adversarial_debiasing.html
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html
@@ -54,6 +56,7 @@ Functions:
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 """
 
+from .adversarial_debiasing import AdversarialDebiasing
 from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
