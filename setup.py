@@ -91,6 +91,7 @@ setup(
             "torch>=1.0",
             "BlackBoxAuditing",
             "imbalanced-learn",
+            "cvxpy>=1.0",
         ],
         "dev": ["pre-commit"],
         "test": [

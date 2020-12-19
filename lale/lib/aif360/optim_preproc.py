@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import aif360.algorithms.preprocessing
+import aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools
 import aif360.datasets
 import numpy as np
 import pandas as pd
@@ -30,27 +31,25 @@ from .util import (
 )
 
 
-class LFRImpl:
+class OptimPreprocImpl:
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
-        k=5,
-        Ax=0.01,
-        Az=1.0,
-        Ay=50.0,
-        print_interval=250,
+        optimizer,
+        optim_options,
         verbose=0,
         seed=None,
     ):
+        if optimizer is None:
+            optimizer = (
+                aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools.OptTools
+            )
         self._hyperparams = {
             "favorable_labels": favorable_labels,
             "protected_attributes": protected_attributes,
-            "k": k,
-            "Ax": Ax,
-            "Az": Az,
-            "Ay": Ay,
-            "print_interval": print_interval,
+            "optimizer": optimizer,
+            "optim_options": optim_options,
             "verbose": verbose,
             "seed": seed,
         }
@@ -84,14 +83,11 @@ class LFRImpl:
 
     def fit(self, X, y):
         self._class_attr = y.name
-        self._wrapped_model = aif360.algorithms.preprocessing.LFR(
+        self._wrapped_model = aif360.algorithms.preprocessing.OptimPreproc(
+            optimizer=self._hyperparams["optimizer"],
+            optim_options=self._hyperparams["optim_options"],
             unprivileged_groups=self._unprivileged_groups,
             privileged_groups=self._privileged_groups,
-            k=self._hyperparams["k"],
-            Ax=self._hyperparams["Ax"],
-            Az=self._hyperparams["Az"],
-            Ay=self._hyperparams["Ay"],
-            print_interval=self._hyperparams["print_interval"],
             verbose=self._hyperparams["verbose"],
             seed=self._hyperparams["seed"],
         )
@@ -114,7 +110,10 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
@@ -135,7 +134,10 @@ _input_transform_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         }
     },
 }
@@ -155,57 +157,35 @@ _hyperparams_schema = {
             "required": [
                 "favorable_labels",
                 "protected_attributes",
-                "k",
-                "Ax",
-                "Az",
-                "Ay",
-                "print_interval",
+                "optimizer",
+                "optim_options",
                 "verbose",
                 "seed",
             ],
-            "relevantToOptimizer": ["k", "Ax", "Az", "Ay"],
+            "relevantToOptimizer": [],
             "properties": {
                 "favorable_labels": _categorical_fairness_properties[
                     "favorable_labels"
                 ],
-                "protected_attributes": {
-                    **_categorical_fairness_properties["protected_attributes"],
-                    "minItems": 1,
-                    "maxItems": 1,
+                "protected_attributes": _categorical_fairness_properties[
+                    "protected_attributes"
+                ],
+                "optimizer": {
+                    "description": "Optimizer class.",
+                    "anyOf": [
+                        {"description": "User-provided.", "laleType": "Any",},
+                        {
+                            "description": "Use `aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools.OptTools`.",
+                            "enum": [None],
+                        },
+                    ],
+                    "default": None,
                 },
-                "k": {
-                    "description": "Number of prototypes.",
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 5,
-                    "maximumForOptimizer": 20,
-                },
-                "Ax": {
-                    "description": "Input recontruction quality term weight.",
-                    "type": "number",
-                    "minimum": 0.0,
-                    "default": 0.01,
-                    "maximumForOptimizer": 100.0,
-                },
-                "Az": {
-                    "description": "Fairness constraint term weight.",
-                    "type": "number",
-                    "minimum": 0.0,
-                    "default": 1.0,
-                    "maximumForOptimizer": 100.0,
-                },
-                "Ay": {
-                    "description": "Output prediction error.",
-                    "type": "number",
-                    "minimum": 0.0,
-                    "default": 50.0,
-                    "maximumForOptimizer": 100.0,
-                },
-                "print_interval": {
-                    "description": "Print optimization objective value every print_interval iterations.",
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 250,
+                "optim_options": {
+                    "description": "Options for optimization to estimate the transformation.",
+                    "type": "object",
+                    "patternProperties": {"^[A-Za-z_][A-Za-z_0-9]*$": {}},
+                    "default": {},
                 },
                 "verbose": {
                     "description": "If zero, then no output.",
@@ -223,9 +203,9 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`LFR`_ (learning fair representations) preprocessor for fairness mitigation.
+    "description": """`Optimized Preprocessing`_ for fairness mitigation.
 
-.. _`LFR`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.LFR.html
+.. _`Optimized Preprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.OptimPreproc.html
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.disparate_impact_remover.html",
     "import_from": "aif360.algorithms.preprocessing",
@@ -239,6 +219,6 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LFRImpl, _combined_schemas)
+lale.docstrings.set_docstrings(OptimPreprocImpl, _combined_schemas)
 
-LFR = lale.operators.make_operator(LFRImpl, _combined_schemas)
+OptimPreproc = lale.operators.make_operator(OptimPreprocImpl, _combined_schemas)

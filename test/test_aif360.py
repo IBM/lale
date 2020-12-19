@@ -29,6 +29,7 @@ from lale.lib.aif360 import (
     LFR,
     AdversarialDebiasing,
     DisparateImpactRemover,
+    OptimPreproc,
     PrejudiceRemover,
     Redacting,
     Reweighing,
@@ -418,6 +419,26 @@ class TestAIF360(unittest.TestCase):
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
         self.assertTrue(0.9 < impact_remi < 1.1, f"impact_remi {impact_remi}")
         print(f"impact_remi {impact_remi}")
+
+    def test_optim_preproc_pd_cat(self):
+        # TODO: set the optimizer options as shown in the example https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {
+                    "feature": "personal_status",
+                    "privileged_groups": [
+                        "male div/sep",
+                        "male mar/wid",
+                        "male single",
+                    ],
+                },
+            ],
+        }
+        _ = OptimPreproc(**fairness_info, optim_options={}) >> LogisticRegression(
+            max_iter=1000
+        )
+        # TODO: this test does not yet call fit or predict
 
     def test_prejudice_remover_pd_num(self):
         fairness_info = {

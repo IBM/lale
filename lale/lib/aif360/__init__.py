@@ -21,6 +21,7 @@ Preprocessing Operators:
 ========================
 * `DisparateImpactRemover`_
 * `LFR`_
+* `OptimPreproc`_
 * `Reweighing`_
 
 Inprocessing Operators:
@@ -56,6 +57,7 @@ Other Functions:
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html
 .. _`LFR`: lale.lib.aif360.lfr.html
+.. _`OptimPreproc`: lale.lib.aif360.optim_preproc.html
 .. _`PrejudiceRemover`: lale.lib.aif360.prejudice_remover.html
 .. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html
 .. _`Redacting`: lale.lib.aif360.redacting.html
@@ -74,6 +76,7 @@ from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
 from .lfr import LFR
+from .optim_preproc import OptimPreproc
 from .prejudice_remover import PrejudiceRemover
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
