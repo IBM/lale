@@ -17,37 +17,50 @@ Scikit-learn compatible wrappers for a subset of the operators from AIF360_ alon
 
 .. _AIF360: https://github.com/IBM/AIF360
 
-Operators:
-==========
-* `AdversarialDebiasing`_
-* `CalibratedEqOddsPostprocessing`_
+Preprocessing Operators:
+========================
 * `DisparateImpactRemover`_
-* `EqOddsPostprocessing`_
-* `PrejudiceRemover`_
-* `ProtectedAttributesEncoder`_
-* `RejectOptionClassification`_
-* `Redacting`_
+* `LFR`_
 * `Reweighing`_
+
+Inprocessing Operators:
+=======================
+* `AdversarialDebiasing`_
+* `PrejudiceRemover`_
+
+Postprocessing Operators:
+=========================
+* `CalibratedEqOddsPostprocessing`_
+* `EqOddsPostprocessing`_
+* `RejectOptionClassification`_
+
+Metrics:
+========
+* `accuracy_and_disparate_impact`_
+* `disparate_impact`_
+* `r2_and_disparate_impact`_
+* `statistical_parity_difference`_
+
+Other Operators:
+================
+* `ProtectedAttributesEncoder`_
+* `Redacting`_
+
+Other Functions:
+================
+* `dataset_fairness_info`_
+* `dataset_to_pandas`_
 
 .. _`AdversarialDebiasing`: lale.lib.aif360.adversarial_debiasing.html
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html
+.. _`LFR`: lale.lib.aif360.lfr.html
 .. _`PrejudiceRemover`: lale.lib.aif360.prejudice_remover.html
 .. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html
-.. _`RejectOptionClassification`: lale.lib.aif360.reject_option_classification.html
 .. _`Redacting`: lale.lib.aif360.redacting.html
+.. _`RejectOptionClassification`: lale.lib.aif360.reject_option_classification.html
 .. _`Reweighing`: lale.lib.aif360.reweighing.html
-
-Functions:
-==========
-* `accuracy_and_disparate_impact`_
-* `dataset_fairness_info`_
-* `dataset_to_pandas`_
-* `disparate_impact`_
-* `r2_and_disparate_impact`_
-* `statistical_parity_difference`_
-
 .. _`accuracy_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.accuracy_and_disparate_impact
 .. _`dataset_fairness_info`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_fairness_info
 .. _`dataset_to_pandas`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_to_pandas
@@ -60,6 +73,7 @@ from .adversarial_debiasing import AdversarialDebiasing
 from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
+from .lfr import LFR
 from .prejudice_remover import PrejudiceRemover
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting

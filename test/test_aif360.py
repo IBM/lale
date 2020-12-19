@@ -26,6 +26,7 @@ import lale.lib.aif360
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
 from lale.lib.aif360 import (
+    LFR,
     AdversarialDebiasing,
     DisparateImpactRemover,
     PrejudiceRemover,
@@ -401,6 +402,22 @@ class TestAIF360(unittest.TestCase):
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
         self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
         print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+
+    def test_lfr_pd_num(self):
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
+        }
+        trainable_remi = LFR(**fairness_info) >> LogisticRegression(max_iter=1000)
+        train_X = self.creditg_pd_num["train_X"]
+        train_y = self.creditg_pd_num["train_y"]
+        trained_remi = trainable_remi.fit(train_X, train_y)
+        test_X = self.creditg_pd_num["test_X"]
+        test_y = self.creditg_pd_num["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
+        self.assertTrue(0.9 < impact_remi < 1.1, f"impact_remi {impact_remi}")
+        print(f"impact_remi {impact_remi}")
 
     def test_prejudice_remover_pd_num(self):
         fairness_info = {
