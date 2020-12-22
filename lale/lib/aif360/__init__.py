@@ -21,12 +21,12 @@ Preprocessing Operators:
 ========================
 * `DisparateImpactRemover`_
 * `LFR`_
-* `OptimPreproc`_
 * `Reweighing`_
 
 Inprocessing Operators:
 =======================
 * `AdversarialDebiasing`_
+* `GerryFairClassifier`_
 * `PrejudiceRemover`_
 
 Postprocessing Operators:
@@ -57,6 +57,8 @@ Other Functions:
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html
 .. _`LFR`: lale.lib.aif360.lfr.html
+.. _`GerryFairClassifier`: lale.lib.aif360.gerry_fair_classifier.html
+.. _`MetaFairClassifier`: lale.lib.aif360.meta_fair_classifier.html
 .. _`OptimPreproc`: lale.lib.aif360.optim_preproc.html
 .. _`PrejudiceRemover`: lale.lib.aif360.prejudice_remover.html
 .. _`ProtectedAttributesEncoder`: lale.lib.aif360.protected_attributes_encoder.html
@@ -75,7 +77,9 @@ from .adversarial_debiasing import AdversarialDebiasing
 from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
+from .gerry_fair_classifier import GerryFairClassifier
 from .lfr import LFR
+from .meta_fair_classifier import MetaFairClassifier
 from .optim_preproc import OptimPreproc
 from .prejudice_remover import PrejudiceRemover
 from .protected_attributes_encoder import ProtectedAttributesEncoder
