@@ -203,7 +203,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`Optimized Preprocessing`_ for fairness mitigation.
+    "description": """Work-in-progress, not covered in successful test yet: `Optimized Preprocessing`_ for fairness mitigation.
 
 .. _`Optimized Preprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.OptimPreproc.html
 """,
