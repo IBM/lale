@@ -50,7 +50,7 @@ class PrejudiceRemoverImpl:
             else:
                 encoded_y = y
             encoded_y = encoded_y.apply(lambda v: _group_flag(v, self.favorable_labels))
-        result = self.pandas_to_dataset(X, encoded_y)
+        result = self.pandas_to_dataset.convert(X, encoded_y)
         return result
 
     def fit(self, X, y):

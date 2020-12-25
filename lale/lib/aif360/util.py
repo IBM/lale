@@ -252,7 +252,7 @@ class _PandasToDatasetConverter:
         )
         self.protected_attribute_names = protected_attribute_names
 
-    def __call__(self, X, y):
+    def convert(self, X, y):
         assert isinstance(X, pd.DataFrame), type(X)
         assert isinstance(y, pd.Series), type(y)
         assert X.shape[0] == y.shape[0], f"X.shape {X.shape}, y.shape {y.shape}"
@@ -349,9 +349,14 @@ class _BinaryLabelScorer:
             unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
             privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
 
-            from lale.lib.aif360 import ProtectedAttributesEncoder as ProtAttrEnc
+            from lale.lib.aif360 import ProtectedAttributesEncoder
 
-            self.prot_attr_enc = ProtAttrEnc(protected_attributes=protected_attributes)
+            self.prot_attr_enc = ProtectedAttributesEncoder(
+                favorable_labels=favorable_labels,
+                protected_attributes=protected_attributes,
+                remainder="drop",
+                return_X_y=True,
+            )
         self.fairness_info = {
             "favorable_label": favorable_label,
             "unfavorable_label": unfavorable_label,
@@ -370,11 +375,8 @@ class _BinaryLabelScorer:
         y_name = y.name if isinstance(y, pd.Series) else _ensure_str(X.shape[1])
         y_pred = _ndarray_to_series(predicted, y_name, index, y.dtype)
         if getattr(self, "favorable_labels", None) is not None:
-            if isinstance(y_pred, np.ndarray):
-                y_pred = _ndarray_to_series(y_pred, X.shape[1])
-            y_pred = y_pred.apply(lambda v: _group_flag(v, self.favorable_labels))
-            X = self.prot_attr_enc.transform(X)
-        dataset_pred = self.pandas_to_dataset(X, y_pred)
+            X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        dataset_pred = self.pandas_to_dataset.convert(X, y_pred)
         fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
             dataset_pred,
             self.fairness_info["unprivileged_groups"],
@@ -731,15 +733,15 @@ class _BasePostprocessingImpl:
         self.estimator = self.estimator.fit(X, y_true)
         predicted = self.estimator.predict(X)
         y_pred = _ndarray_to_series(predicted, self.y_name, X.index, self.y_dtype)
-        dataset_true = self.pandas_to_dataset(X, y_true)
-        dataset_pred = self.pandas_to_dataset(X, y_pred)
+        dataset_true = self.pandas_to_dataset.convert(X, y_true)
+        dataset_pred = self.pandas_to_dataset.convert(X, y_pred)
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
         return self
 
     def predict(self, X):
         predicted = self.estimator.predict(X)
         y_pred = _ndarray_to_series(predicted, self.y_name, X.index, self.y_dtype)
-        dataset_pred = self.pandas_to_dataset(X, y_pred)
+        dataset_pred = self.pandas_to_dataset.convert(X, y_pred)
         dataset_out = self.mitigator.predict(dataset_pred)
         _, y_out = dataset_to_pandas(dataset_out, return_only="y")
         return y_out
