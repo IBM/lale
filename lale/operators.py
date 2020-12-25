@@ -583,7 +583,7 @@ class TrainedOperator(TrainableOperator):
         return make_pipeline(self, other)
 
     @abstractmethod
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> Any:
         """Transform the data.
 
         Parameters
@@ -1578,7 +1578,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError("Must call `fit` before `summary`.")
 
     @if_delegate_has_method(delegate="_impl")
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> Any:
         """
         .. deprecated:: 0.0.0
            The `transform` method is deprecated on a trainable
@@ -1801,7 +1801,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             return self
 
     @if_delegate_has_method(delegate="_impl")
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> Any:
         """Transform the data.
 
         Parameters
@@ -2603,7 +2603,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         self._trained = result
         return result
 
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> Any:
         """
         .. deprecated:: 0.0.0
            The `transform` method is deprecated on a trainable
@@ -2905,7 +2905,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             )  # otherwise scorers return zero-dim array
         return result
 
-    def transform(self, X, y=None):
+    def transform(self, X, y=None) -> Any:
         # TODO: What does a transform on a pipeline mean, if the last step is not a transformer
         # can it be just the output of predict of the last step?
         # If this implementation changes, check to make sure that the implementation of

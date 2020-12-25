@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import aif360.algorithms.inprocessing
-import numpy as np
-import pandas as pd
 import sklearn.linear_model
 
 import lale.docstrings
@@ -23,8 +21,6 @@ import lale.operators
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .util import (
     _categorical_fairness_properties,
-    _group_flag,
-    _ndarray_to_series,
     _PandasToDatasetConverter,
     dataset_to_pandas,
 )
@@ -69,7 +65,10 @@ class GerryFairClassifierImpl:
         }
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         self._prot_attr_enc = ProtectedAttributesEncoder(
-            protected_attributes=protected_attributes
+            favorable_labels=favorable_labels,
+            protected_attributes=protected_attributes,
+            remainder="passthrough",
+            return_X_y=True,
         )
         self._pandas_to_dataset = _PandasToDatasetConverter(
             favorable_label=1,
@@ -78,23 +77,11 @@ class GerryFairClassifierImpl:
         )
 
     def _encode(self, X, y=None):
-        encoded_X = self._prot_attr_enc.transform(X)
-        if y is None:
-            encoded_y = pd.Series(
-                data=0.0, index=X.index, dtype=np.float64, name=self._class_attr,
-            )
-        else:
-            if isinstance(y, np.ndarray):
-                encoded_y = _ndarray_to_series(y, X.shape[1])
-            else:
-                encoded_y = y
-            favorable_labels = self._hyperparams["favorable_labels"]
-            encoded_y = encoded_y.apply(lambda v: _group_flag(v, favorable_labels))
-        result = self._pandas_to_dataset(encoded_X, encoded_y)
+        encoded_X, encoded_y = self._prot_attr_enc.transform(X, y)
+        result = self._pandas_to_dataset.convert(encoded_X, encoded_y)
         return result
 
     def fit(self, X, y, early_termination=True):
-        self._class_attr = y.name
         self._wrapped_model = aif360.algorithms.inprocessing.GerryFairClassifier(
             C=self._hyperparams["C"],
             printflag=self._hyperparams["printflag"],

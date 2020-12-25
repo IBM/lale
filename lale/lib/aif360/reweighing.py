@@ -13,19 +13,13 @@
 # limitations under the License.
 
 import aif360.algorithms.preprocessing
-import numpy as np
 
 import lale.docstrings
 import lale.operators
 
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
-from .util import (
-    _categorical_fairness_properties,
-    _group_flag,
-    _ndarray_to_series,
-    _PandasToDatasetConverter,
-)
+from .util import _categorical_fairness_properties, _PandasToDatasetConverter
 
 
 class ReweighingImpl:
@@ -38,19 +32,17 @@ class ReweighingImpl:
 
     def fit(self, X, y):
         prot_attr_enc = ProtectedAttributesEncoder(
-            protected_attributes=self.protected_attributes
+            favorable_labels=self.favorable_labels,
+            protected_attributes=self.protected_attributes,
+            remainder="drop",
+            return_X_y=True,
         )
-        encoded_X = prot_attr_enc.transform(X)
-        if isinstance(y, np.ndarray):
-            encoded_y = _ndarray_to_series(y, X.shape[1])
-        else:
-            encoded_y = y
-        encoded_y = encoded_y.apply(lambda v: _group_flag(v, self.favorable_labels))
+        encoded_X, encoded_y = prot_attr_enc.transform(X, y)
         pans = [pa["feature"] for pa in self.protected_attributes]
         pandas_to_dataset = _PandasToDatasetConverter(
             favorable_label=1, unfavorable_label=0, protected_attribute_names=pans
         )
-        encoded_data = pandas_to_dataset(encoded_X, encoded_y)
+        encoded_data = pandas_to_dataset.convert(encoded_X, encoded_y)
         unpriv_groups = [{pa["feature"]: 0 for pa in self.protected_attributes}]
         priv_groups = [{pa["feature"]: 1 for pa in self.protected_attributes}]
         reweighing_trainable = aif360.algorithms.preprocessing.Reweighing(
@@ -59,11 +51,7 @@ class ReweighingImpl:
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)
         sample_weight = reweighted_data.instance_weights
-        redacting_trainable = Redacting(
-            protected_attribute_names=[
-                pa["feature"] for pa in self.protected_attributes
-            ]
-        )
+        redacting_trainable = Redacting(protected_attribute_names=pans)
         self.redacting = redacting_trainable.fit(X)
         redacted_X = self.redacting.transform(X)
         if isinstance(self.estimator, lale.operators.TrainablePipeline):

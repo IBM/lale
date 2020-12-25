@@ -348,12 +348,9 @@ class TestAIF360(unittest.TestCase):
         self.assertRegex(log_context_manager.output[-1], "is ill-defined")
         self.assertEqual(impact, 0.0)
 
-    def test_adversarial_debiasing_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
-        }
-        trainable_remi = AdversarialDebiasing(**fairness_info)
+    def _attempt_remi_creditg_pd_num(
+        self, fairness_info, trainable_remi, min_di, max_di
+    ):
         train_X = self.creditg_pd_num["train_X"]
         train_y = self.creditg_pd_num["train_y"]
         trained_remi = trainable_remi.fit(train_X, train_y)
@@ -361,9 +358,18 @@ class TestAIF360(unittest.TestCase):
         test_y = self.creditg_pd_num["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        # disabling this assertion because the returned impact is sometimes 0.0
-        # self.assertTrue(0.9 < impact_remi < 1.1, f"impact_remi {impact_remi}")
-        print(f"impact_remi {impact_remi}")
+        self.assertTrue(
+            min_di <= impact_remi <= max_di, f"{min_di} <= {impact_remi} <= {max_di}",
+        )
+        return impact_remi
+
+    def test_adversarial_debiasing_pd_num(self):
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
+        }
+        trainable_remi = AdversarialDebiasing(**fairness_info)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.1)
 
     def test_disparate_impact_remover_pd_num(self):
         fairness_info = {
@@ -413,15 +419,7 @@ class TestAIF360(unittest.TestCase):
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
         }
         trainable_remi = GerryFairClassifier(**fairness_info)
-        train_X = self.creditg_pd_num["train_X"]
-        train_y = self.creditg_pd_num["train_y"]
-        trained_remi = trainable_remi.fit(train_X, train_y)
-        test_X = self.creditg_pd_num["test_X"]
-        test_y = self.creditg_pd_num["test_y"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(0.9 < impact_remi < 1.1, f"impact_remi {impact_remi}")
-        print(f"impact_remi {impact_remi}")
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
 
     def test_lfr_pd_num(self):
         fairness_info = {
@@ -429,15 +427,7 @@ class TestAIF360(unittest.TestCase):
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
         }
         trainable_remi = LFR(**fairness_info) >> LogisticRegression(max_iter=1000)
-        train_X = self.creditg_pd_num["train_X"]
-        train_y = self.creditg_pd_num["train_y"]
-        trained_remi = trainable_remi.fit(train_X, train_y)
-        test_X = self.creditg_pd_num["test_X"]
-        test_y = self.creditg_pd_num["test_y"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(0.9 < impact_remi < 1.1, f"impact_remi {impact_remi}")
-        print(f"impact_remi {impact_remi}")
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
 
     def test_meta_fair_classifier_pd_num(self):
         fairness_info = {
@@ -445,8 +435,7 @@ class TestAIF360(unittest.TestCase):
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
         }
         _ = MetaFairClassifier(**fairness_info)
-        # TODO: calling fit raises a ZeroDivisionError
-        # TODO: this test does not yet call fit or predict
+        # TODO: this test does not yet call fit or predict, since those hang
 
     def test_optim_preproc_pd_cat(self):
         # TODO: set the optimizer options as shown in the example https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb
@@ -476,35 +465,17 @@ class TestAIF360(unittest.TestCase):
         trainable_remi = PrejudiceRemover(
             sensitive_attr="age", favorable_labels=fairness_info["favorable_labels"],
         )
-        train_X = self.creditg_pd_num["train_X"]
-        train_y = self.creditg_pd_num["train_y"]
-        trained_remi = trainable_remi.fit(train_X, train_y)
-        test_X = self.creditg_pd_num["test_X"]
-        test_y = self.creditg_pd_num["test_y"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
-        print(f"impact_remi {impact_remi}")
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
 
     def test_redacting_pd_num(self):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
         }
-        trainable_orig = LogisticRegression(max_iter=1000)
-        trainable_remi = Redacting(protected_attribute_names=["age"]) >> trainable_orig
-        train_X = self.creditg_pd_num["train_X"]
-        train_y = self.creditg_pd_num["train_y"]
-        trained_orig = trainable_orig.fit(train_X, train_y)
-        trained_remi = trainable_remi.fit(train_X, train_y)
-        test_X = self.creditg_pd_num["test_X"]
-        test_y = self.creditg_pd_num["test_y"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
-        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
-        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+        redacting = Redacting(protected_attribute_names=["age"])
+        logistic_regression = LogisticRegression(max_iter=1000)
+        trainable_remi = redacting >> logistic_regression
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
 
     def test_reweighing_pd_cat(self):
         fairness_info = {
@@ -545,15 +516,4 @@ class TestAIF360(unittest.TestCase):
         }
         trainable_orig = LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
-        train_X = self.creditg_pd_num["train_X"]
-        train_y = self.creditg_pd_num["train_y"]
-        trained_orig = trainable_orig.fit(train_X, train_y)
-        trained_remi = trainable_remi.fit(train_X, train_y)
-        test_X = self.creditg_pd_num["test_X"]
-        test_y = self.creditg_pd_num["test_y"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
-        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
-        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
