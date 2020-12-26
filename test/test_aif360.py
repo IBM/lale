@@ -462,9 +462,7 @@ class TestAIF360(unittest.TestCase):
             "favorable_labels": [1],
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
         }
-        trainable_remi = PrejudiceRemover(
-            sensitive_attr="age", favorable_labels=fairness_info["favorable_labels"],
-        )
+        trainable_remi = PrejudiceRemover(**fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
 
     def test_redacting_pd_num(self):

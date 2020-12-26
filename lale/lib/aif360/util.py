@@ -24,6 +24,8 @@ import sklearn.metrics
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
+import lale.lib.lale
+import lale.operators
 import lale.type_checking
 
 logger = logging.getLogger(__name__)
@@ -694,6 +696,62 @@ def statistical_parity_difference(
 statistical_parity_difference.__doc__ = (
     str(statistical_parity_difference.__doc__) + _SCORER_DOCSTRING
 )
+
+
+class _BaseInprocessingImpl:
+    def __init__(
+        self, favorable_labels, protected_attributes, preprocessing, mitigator
+    ):
+        self.favorable_labels = favorable_labels
+        self.protected_attributes = protected_attributes
+        if preprocessing is None:
+            preprocessing = lale.lib.lale.NoOp
+        self.preprocessing = preprocessing
+        self.mitigator = mitigator
+
+    def _prep_and_encode(self, X, y=None):
+        prepared_X = self.redact_and_prep.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        combined_attribute_names = list(prepared_X.columns) + [
+            name for name in encoded_X.columns if name not in prepared_X.columns
+        ]
+        combined_columns = [
+            encoded_X[name] if name in encoded_X else prepared_X[name]
+            for name in combined_attribute_names
+        ]
+        combined_X = pd.concat(combined_columns, axis=1)
+        result = self.pandas_to_dataset.convert(combined_X, encoded_y)
+        return result
+
+    def fit(self, X, y):
+        from lale.lib.aif360 import ProtectedAttributesEncoder, Redacting
+
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
+        redacting = Redacting(protected_attribute_names=prot_attr_names)
+        preprocessing = self.preprocessing
+        trainable_redact_and_prep = redacting >> preprocessing
+        assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
+        self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            favorable_labels=self.favorable_labels,
+            protected_attributes=self.protected_attributes,
+            remainder="drop",
+            return_X_y=True,
+        )
+        self.pandas_to_dataset = _PandasToDatasetConverter(
+            favorable_label=1,
+            unfavorable_label=0,
+            protected_attribute_names=prot_attr_names,
+        )
+        encoded_data = self._prep_and_encode(X, y)
+        self.mitigator.fit(encoded_data)
+        return self
+
+    def predict(self, X):
+        encoded_data = self._prep_and_encode(X)
+        result_data = self.mitigator.predict(encoded_data)
+        _, result_y = dataset_to_pandas(result_data, return_only="y")
+        return result_y
 
 
 _postprocessing_base_hyperparams = {

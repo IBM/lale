@@ -17,58 +17,28 @@ import aif360.algorithms.inprocessing
 import lale.docstrings
 import lale.operators
 
-from .protected_attributes_encoder import ProtectedAttributesEncoder
-from .util import (
-    _categorical_fairness_properties,
-    _PandasToDatasetConverter,
-    dataset_to_pandas,
-)
+from .util import _BaseInprocessingImpl, _categorical_fairness_properties
 
 
-class MetaFairClassifierImpl:
+class MetaFairClassifierImpl(_BaseInprocessingImpl):
     def __init__(
-        self, favorable_labels, protected_attributes, tau=0.8, type="fdr",
+        self,
+        favorable_labels,
+        protected_attributes,
+        preprocessing=None,
+        tau=0.8,
+        type="fdr",
     ):
-        self._hyperparams = {
-            "favorable_labels": favorable_labels,
-            "protected_attributes": protected_attributes,
-            "tau": tau,
-            "type": type,
-        }
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
-        self._prot_attr_enc = ProtectedAttributesEncoder(
+        mitigator = aif360.algorithms.inprocessing.MetaFairClassifier(
+            tau=tau, sensitive_attr=prot_attr_names[0], type=type,
+        )
+        super(MetaFairClassifierImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
-            remainder="passthrough",
-            return_X_y=True,
+            preprocessing=preprocessing,
+            mitigator=mitigator,
         )
-        self._pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label=1,
-            unfavorable_label=0,
-            protected_attribute_names=prot_attr_names,
-        )
-
-    def _encode(self, X, y=None):
-        encoded_X, encoded_y = self._prot_attr_enc.transform(X, y)
-        result = self._pandas_to_dataset.convert(encoded_X, encoded_y)
-        return result
-
-    def fit(self, X, y):
-        pans = [pa["feature"] for pa in self._hyperparams["protected_attributes"]]
-        self._wrapped_model = aif360.algorithms.inprocessing.MetaFairClassifier(
-            tau=self._hyperparams["tau"],
-            sensitive_attr=pans[0],
-            type=self._hyperparams["type"],
-        )
-        encoded_data = self._encode(X, y)
-        self._wrapped_model.fit(encoded_data)
-        return self
-
-    def predict(self, X):
-        encoded_data = self._encode(X)
-        result_data = self._wrapped_model.predict(encoded_data)
-        _, result_y = dataset_to_pandas(result_data, return_only="y")
-        return result_y
 
 
 _input_fit_schema = {
@@ -79,7 +49,10 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
@@ -99,8 +72,11 @@ _input_predict_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+            },
+        }
     },
 }
 
@@ -119,7 +95,13 @@ _hyperparams_schema = {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["favorable_labels", "protected_attributes", "tau", "type",],
+            "required": [
+                "favorable_labels",
+                "protected_attributes",
+                "preprocessing",
+                "tau",
+                "type",
+            ],
             "relevantToOptimizer": ["tau", "type"],
             "properties": {
                 "favorable_labels": _categorical_fairness_properties[
@@ -129,6 +111,14 @@ _hyperparams_schema = {
                     **_categorical_fairness_properties["protected_attributes"],
                     "minItems": 1,
                     "maxItems": 1,
+                },
+                "preprocessing": {
+                    "description": "Transformer, which may be an individual operator or a sub-pipeline.",
+                    "anyOf": [
+                        {"laleType": "operator",},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None],},
+                    ],
+                    "default": None,
                 },
                 "tau": {
                     "description": "Fairness penalty parameter.",

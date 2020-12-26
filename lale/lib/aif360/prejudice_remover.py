@@ -13,62 +13,24 @@
 # limitations under the License.
 
 import aif360.algorithms.inprocessing
-import numpy as np
-import pandas as pd
 
 import lale.docstrings
 import lale.operators
 
-from .util import (
-    _categorical_fairness_properties,
-    _group_flag,
-    _ndarray_to_series,
-    _PandasToDatasetConverter,
-    dataset_to_pandas,
-)
+from .util import _BaseInprocessingImpl, _categorical_fairness_properties
 
 
-class PrejudiceRemoverImpl:
-    def __init__(self, eta=1.0, sensitive_attr="", favorable_labels=[1.0]):
-        self.eta = eta
-        self.sensitive_attr = sensitive_attr
-        self.favorable_labels = favorable_labels
-        self.pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label=1,
-            unfavorable_label=0,
-            protected_attribute_names=[sensitive_attr],
+class PrejudiceRemoverImpl(_BaseInprocessingImpl):
+    def __init__(
+        self, favorable_labels, protected_attributes, preprocessing=None, eta=1.0,
+    ):
+        mitigator = aif360.algorithms.inprocessing.PrejudiceRemover(eta=eta)
+        super(PrejudiceRemoverImpl, self).__init__(
+            favorable_labels=favorable_labels,
+            protected_attributes=protected_attributes,
+            preprocessing=preprocessing,
+            mitigator=mitigator,
         )
-
-    def _encode(self, X, y=None):
-        if y is None:
-            encoded_y = pd.Series(
-                data=0.0, index=X.index, dtype=np.float64, name=self.class_attr,
-            )
-        else:
-            if isinstance(y, np.ndarray):
-                encoded_y = _ndarray_to_series(y, X.shape[1])
-            else:
-                encoded_y = y
-            encoded_y = encoded_y.apply(lambda v: _group_flag(v, self.favorable_labels))
-        result = self.pandas_to_dataset.convert(X, encoded_y)
-        return result
-
-    def fit(self, X, y):
-        self.class_attr = y.name
-        self._wrapped_model = aif360.algorithms.inprocessing.PrejudiceRemover(
-            eta=self.eta,
-            sensitive_attr=self.sensitive_attr,
-            class_attr=self.class_attr,
-        )
-        encoded_data = self._encode(X, y)
-        self._wrapped_model.fit(encoded_data)
-        return self
-
-    def predict(self, X):
-        encoded_data = self._encode(X)
-        result_data = self._wrapped_model.predict(encoded_data)
-        _, result_y = dataset_to_pandas(result_data, return_only="y")
-        return result_y
 
 
 _input_fit_schema = {
@@ -79,7 +41,10 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
@@ -99,7 +64,10 @@ _input_predict_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+            },
         }
     },
 }
@@ -119,9 +87,30 @@ _hyperparams_schema = {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["eta", "sensitive_attr", "favorable_labels"],
+            "required": [
+                "favorable_labels",
+                "protected_attributes",
+                "preprocessing",
+                "eta",
+            ],
             "relevantToOptimizer": ["eta"],
             "properties": {
+                "favorable_labels": _categorical_fairness_properties[
+                    "favorable_labels"
+                ],
+                "protected_attributes": {
+                    **_categorical_fairness_properties["protected_attributes"],
+                    "minItems": 1,
+                    "maxItems": 1,
+                },
+                "preprocessing": {
+                    "description": "Transformer, which may be an individual operator or a sub-pipeline.",
+                    "anyOf": [
+                        {"laleType": "operator",},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None],},
+                    ],
+                    "default": None,
+                },
                 "eta": {
                     "description": "Fairness penalty parameter.",
                     "type": "number",
@@ -131,13 +120,6 @@ _hyperparams_schema = {
                     "minimumForOptimizer": 0.03125,
                     "maximumForOptimizer": 32768,
                 },
-                "sensitive_attr": {
-                    "description": "Name of protected attribute.",
-                    "type": "string",
-                },
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
             },
         },
     ],
