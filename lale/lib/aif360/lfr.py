@@ -83,18 +83,19 @@ class LFRImpl:
         return mitigated_X
 
     def fit(self, X, y):
-        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
-        redacting = Redacting(protected_attribute_names=prot_attr_names)
+        fairness_info = {
+            "favorable_labels": self.favorable_labels,
+            "protected_attributes": self.protected_attributes,
+        }
+        redacting = Redacting(**fairness_info)
         preprocessing = self.preprocessing
         trainable_redact1_and_prep = redacting >> preprocessing
         assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
         self.redact1_and_prep = trainable_redact1_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
-            favorable_labels=self.favorable_labels,
-            protected_attributes=self.protected_attributes,
-            remainder="drop",
-            return_X_y=True,
+            **fairness_info, remainder="drop", return_X_y=True,
         )
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         self.pandas_to_dataset = _PandasToDatasetConverter(
             favorable_label=1,
             unfavorable_label=0,

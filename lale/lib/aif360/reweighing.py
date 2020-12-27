@@ -31,27 +31,30 @@ class ReweighingImpl:
         self.protected_attributes = protected_attributes
 
     def fit(self, X, y):
+        fairness_info = {
+            "favorable_labels": self.favorable_labels,
+            "protected_attributes": self.protected_attributes,
+        }
         prot_attr_enc = ProtectedAttributesEncoder(
-            favorable_labels=self.favorable_labels,
-            protected_attributes=self.protected_attributes,
-            remainder="drop",
-            return_X_y=True,
+            **fairness_info, remainder="drop", return_X_y=True,
         )
         encoded_X, encoded_y = prot_attr_enc.transform(X, y)
-        pans = [pa["feature"] for pa in self.protected_attributes]
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label=1, unfavorable_label=0, protected_attribute_names=pans
+            favorable_label=1,
+            unfavorable_label=0,
+            protected_attribute_names=prot_attr_names,
         )
         encoded_data = pandas_to_dataset.convert(encoded_X, encoded_y)
-        unpriv_groups = [{pa["feature"]: 0 for pa in self.protected_attributes}]
-        priv_groups = [{pa["feature"]: 1 for pa in self.protected_attributes}]
+        unpriv_groups = [{name: 0 for name in prot_attr_names}]
+        priv_groups = [{name: 1 for name in prot_attr_names}]
         reweighing_trainable = aif360.algorithms.preprocessing.Reweighing(
             unprivileged_groups=unpriv_groups, privileged_groups=priv_groups,
         )
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)
         sample_weight = reweighted_data.instance_weights
-        redacting_trainable = Redacting(protected_attribute_names=pans)
+        redacting_trainable = Redacting(**fairness_info)
         self.redacting = redacting_trainable.fit(X)
         redacted_X = self.redacting.transform(X)
         if isinstance(self.estimator, lale.operators.TrainablePipeline):
