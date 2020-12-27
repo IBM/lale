@@ -14,8 +14,10 @@
 
 import aif360.algorithms.preprocessing
 import aif360.datasets
+import pandas as pd
 
 import lale.docstrings
+import lale.lib.lale
 import lale.operators
 
 from .protected_attributes_encoder import ProtectedAttributesEncoder
@@ -32,6 +34,7 @@ class LFRImpl:
         self,
         favorable_labels,
         protected_attributes,
+        preprocessing=None,
         k=5,
         Ax=0.01,
         Az=1.0,
@@ -40,60 +43,73 @@ class LFRImpl:
         verbose=0,
         seed=None,
     ):
-        self._hyperparams = {
-            "favorable_labels": favorable_labels,
-            "protected_attributes": protected_attributes,
-            "k": k,
-            "Ax": Ax,
-            "Az": Az,
-            "Ay": Ay,
-            "print_interval": print_interval,
-            "verbose": verbose,
-            "seed": seed,
-        }
+        self.favorable_labels = favorable_labels
+        self.protected_attributes = protected_attributes
+        if preprocessing is None:
+            preprocessing = lale.lib.lale.NoOp
+        self.preprocessing = preprocessing
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
-        self._unprivileged_groups = [{name: 0 for name in prot_attr_names}]
-        self._privileged_groups = [{name: 1 for name in prot_attr_names}]
-        self._prot_attr_enc = ProtectedAttributesEncoder(
-            favorable_labels=favorable_labels,
-            protected_attributes=protected_attributes,
-            remainder="passthrough",
+        unprivileged_groups = [{name: 0 for name in prot_attr_names}]
+        privileged_groups = [{name: 1 for name in prot_attr_names}]
+        self.mitigator = aif360.algorithms.preprocessing.LFR(
+            unprivileged_groups=unprivileged_groups,
+            privileged_groups=privileged_groups,
+            k=k,
+            Ax=Ax,
+            Az=Az,
+            Ay=Ay,
+            print_interval=print_interval,
+            verbose=verbose,
+            seed=seed,
+        )
+
+    def _prep_and_encode(self, X, y=None):
+        prepared_X = self.redact1_and_prep.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        combined_attribute_names = list(prepared_X.columns) + [
+            name for name in encoded_X.columns if name not in prepared_X.columns
+        ]
+        combined_columns = [
+            encoded_X[name] if name in encoded_X else prepared_X[name]
+            for name in combined_attribute_names
+        ]
+        combined_X = pd.concat(combined_columns, axis=1)
+        result = self.pandas_to_dataset.convert(combined_X, encoded_y)
+        return result
+
+    def _mitigate(self, encoded_data):
+        mitigated_data = self.mitigator.transform(encoded_data)
+        mitigated_X, _ = dataset_to_pandas(mitigated_data, return_only="X")
+        return mitigated_X
+
+    def fit(self, X, y):
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
+        redacting = Redacting(protected_attribute_names=prot_attr_names)
+        preprocessing = self.preprocessing
+        trainable_redact1_and_prep = redacting >> preprocessing
+        assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
+        self.redact1_and_prep = trainable_redact1_and_prep.fit(X, y)
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            favorable_labels=self.favorable_labels,
+            protected_attributes=self.protected_attributes,
+            remainder="drop",
             return_X_y=True,
         )
-        self._pandas_to_dataset = _PandasToDatasetConverter(
+        self.pandas_to_dataset = _PandasToDatasetConverter(
             favorable_label=1,
             unfavorable_label=0,
             protected_attribute_names=prot_attr_names,
         )
-        self._redacting = Redacting(protected_attribute_names=prot_attr_names)
-
-    def _encode(self, X, y=None):
-        encoded_X, encoded_y = self._prot_attr_enc.transform(X, y)
-        result = self._pandas_to_dataset.convert(encoded_X, encoded_y)
-        return result
-
-    def fit(self, X, y):
-        self._wrapped_model = aif360.algorithms.preprocessing.LFR(
-            unprivileged_groups=self._unprivileged_groups,
-            privileged_groups=self._privileged_groups,
-            k=self._hyperparams["k"],
-            Ax=self._hyperparams["Ax"],
-            Az=self._hyperparams["Az"],
-            Ay=self._hyperparams["Ay"],
-            print_interval=self._hyperparams["print_interval"],
-            verbose=self._hyperparams["verbose"],
-            seed=self._hyperparams["seed"],
-        )
-        encoded_data = self._encode(X, y)
-        self._wrapped_model.fit(encoded_data)
-        self._redacting = self._redacting.fit(X)
+        encoded_data = self._prep_and_encode(X, y)
+        self.mitigator.fit(encoded_data)
+        mitigated_X = self._mitigate(encoded_data)
+        self.redact2 = redacting.fit(mitigated_X)
         return self
 
     def transform(self, X):
-        encoded_data = self._encode(X)
-        remediated_data = self._wrapped_model.transform(encoded_data)
-        remediated_X, _ = dataset_to_pandas(remediated_data, return_only="X")
-        redacted_X = self._redacting.transform(remediated_X)
+        encoded_data = self._prep_and_encode(X)
+        mitigated_X = self._mitigate(encoded_data)
+        redacted_X = self.redact2.transform(mitigated_X)
         return redacted_X
 
 
@@ -105,7 +121,10 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
@@ -126,7 +145,10 @@ _input_transform_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         }
     },
 }
@@ -146,6 +168,7 @@ _hyperparams_schema = {
             "required": [
                 "favorable_labels",
                 "protected_attributes",
+                "preprocessing",
                 "k",
                 "Ax",
                 "Az",
@@ -163,6 +186,14 @@ _hyperparams_schema = {
                     **_categorical_fairness_properties["protected_attributes"],
                     "minItems": 1,
                     "maxItems": 1,
+                },
+                "preprocessing": {
+                    "description": "Transformer, which may be an individual operator or a sub-pipeline.",
+                    "anyOf": [
+                        {"laleType": "operator"},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None]},
+                    ],
+                    "default": None,
                 },
                 "k": {
                     "description": "Number of prototypes.",

@@ -86,7 +86,7 @@ _input_fit_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         },
         "y": {
@@ -111,7 +111,7 @@ _input_predict_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         },
     },

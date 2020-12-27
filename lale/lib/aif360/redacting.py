@@ -76,7 +76,7 @@ _input_fit_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         },
         "y": {"description": "Target values; the array is over samples."},
@@ -94,7 +94,7 @@ _input_transform_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         },
     },
@@ -105,7 +105,7 @@ _output_transform_schema = {
     "type": "array",
     "items": {
         "type": "array",
-        "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+        "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
     },
 }
 

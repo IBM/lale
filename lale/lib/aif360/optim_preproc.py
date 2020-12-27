@@ -164,7 +164,7 @@ _hyperparams_schema = {
                 "optimizer": {
                     "description": "Optimizer class.",
                     "anyOf": [
-                        {"description": "User-provided.", "laleType": "Any",},
+                        {"description": "User-provided.", "laleType": "Any"},
                         {
                             "description": "Use `aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools.OptTools`.",
                             "enum": [None],

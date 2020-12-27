@@ -51,7 +51,7 @@ _input_fit_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         },
         "y": {
@@ -74,7 +74,7 @@ _input_predict_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         }
     },
@@ -115,8 +115,8 @@ _hyperparams_schema = {
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
-                        {"laleType": "operator",},
-                        {"description": "lale.lib.lale.NoOp", "enum": [None],},
+                        {"laleType": "operator"},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None]},
                     ],
                     "default": None,
                 },
