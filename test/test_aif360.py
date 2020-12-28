@@ -19,6 +19,7 @@ import pandas as pd
 import sklearn.datasets
 import sklearn.metrics
 import sklearn.model_selection
+import tensorflow as tf
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
@@ -46,6 +47,17 @@ from lale.lib.sklearn import (
 
 
 class TestAIF360(unittest.TestCase):
+    @classmethod
+    def _prep_pd_cat(cls):
+        result = (
+            (
+                Project(columns={"type": "string"})
+                >> OneHotEncoder(handle_unknown="ignore")
+            )
+            & Project(columns={"type": "number"})
+        ) >> ConcatFeatures
+        return result
+
     @classmethod
     def _creditg_pd_cat(cls):
         (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
@@ -186,6 +198,7 @@ class TestAIF360(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.prep_pd_cat = cls._prep_pd_cat()
         cls.creditg_pd_cat = cls._creditg_pd_cat()
         cls.creditg_pd_num = cls._creditg_pd_num()
         cls.creditg_np_cat = cls._creditg_np_cat()
@@ -256,17 +269,7 @@ class TestAIF360(unittest.TestCase):
 
     def test_scorers_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
-        trainable = (
-            (
-                (
-                    Project(columns={"type": "string"})
-                    >> OneHotEncoder(handle_unknown="ignore")
-                )
-                & Project(columns={"type": "number"})
-            )
-            >> ConcatFeatures
-            >> LogisticRegression(max_iter=1000)
-        )
+        trainable = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         train_X = self.creditg_pd_cat["train_X"]
         train_y = self.creditg_pd_cat["train_y"]
         trained = trainable.fit(train_X, train_y)
@@ -326,17 +329,7 @@ class TestAIF360(unittest.TestCase):
             "favorable_labels": ["good"],
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
         }
-        trainable = (
-            (
-                (
-                    Project(columns={"type": "string"})
-                    >> OneHotEncoder(handle_unknown="ignore")
-                )
-                & Project(columns={"type": "number"})
-            )
-            >> ConcatFeatures
-            >> LogisticRegression(max_iter=1000)
-        )
+        trainable = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         train_X = self.creditg_pd_cat["train_X"]
         train_y = self.creditg_pd_cat["train_y"]
         trained = trainable.fit(train_X, train_y)
@@ -368,6 +361,7 @@ class TestAIF360(unittest.TestCase):
             "favorable_labels": [1],
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
         }
+        tf.reset_default_graph()
         trainable_remi = AdversarialDebiasing(**fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.1)
 
@@ -463,38 +457,6 @@ class TestAIF360(unittest.TestCase):
         trainable_remi = redacting >> logistic_regression
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
 
-    def test_reweighing_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
-        trainable_orig = (
-            (
-                (
-                    Project(columns={"type": "string"})
-                    >> OneHotEncoder(handle_unknown="ignore")
-                )
-                & Project(columns={"type": "number"})
-            )
-            >> ConcatFeatures
-            >> LogisticRegression(max_iter=1000)
-        )
-        trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
-        train_X = self.creditg_pd_cat["train_X"]
-        train_y = self.creditg_pd_cat["train_y"]
-        trained_orig = trainable_orig.fit(train_X, train_y)
-        trained_remi = trainable_remi.fit(train_X, train_y)
-        test_X = self.creditg_pd_cat["test_X"]
-        test_y = self.creditg_pd_cat["test_y"]
-        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
-        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
-        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
-
     def test_reweighing_pd_num(self):
         fairness_info = {
             "favorable_labels": [1],
@@ -503,3 +465,90 @@ class TestAIF360(unittest.TestCase):
         trainable_orig = LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
+
+    def _attempt_remi_creditg_pd_cat(
+        self, fairness_info, trainable_remi, min_di, max_di
+    ):
+        train_X = self.creditg_pd_cat["train_X"]
+        train_y = self.creditg_pd_cat["train_y"]
+        trained_remi = trainable_remi.fit(train_X, train_y)
+        test_X = self.creditg_pd_cat["test_X"]
+        test_y = self.creditg_pd_cat["test_y"]
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
+        self.assertTrue(
+            min_di <= impact_remi <= max_di, f"{min_di} <= {impact_remi} <= {max_di}",
+        )
+        return impact_remi
+
+    def test_adversarial_debiasing_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        tf.reset_default_graph()
+        trainable_remi = AdversarialDebiasing(
+            **fairness_info, preprocessing=self.prep_pd_cat
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.1)
+
+    def test_disparate_impact_remover_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        trainable_remi = DisparateImpactRemover(
+            **fairness_info, preprocessing=self.prep_pd_cat
+        ) >> LogisticRegression(max_iter=1000)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
+
+    def test_gerry_fair_classifier_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        trainable_remi = GerryFairClassifier(
+            **fairness_info, preprocessing=self.prep_pd_cat
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.1)
+
+    def test_lfr_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        trainable_remi = LFR(
+            **fairness_info, preprocessing=self.prep_pd_cat
+        ) >> LogisticRegression(max_iter=1000)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
+
+    def test_prejudice_remover_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        trainable_remi = PrejudiceRemover(
+            **fairness_info, preprocessing=self.prep_pd_cat
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.0)
+
+    def test_reweighing_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        trainable_orig = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.0)

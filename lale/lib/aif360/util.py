@@ -723,6 +723,13 @@ class _BaseInprocessingImpl:
         result = self.pandas_to_dataset.convert(combined_X, encoded_y)
         return result
 
+    def _decode(self, y):
+        assert isinstance(y, pd.Series)
+        assert len(self.favorable_labels) == 1 and len(self.unfavorable_labels) == 1
+        favorable, unfavorable = self.favorable_labels[0], self.unfavorable_labels[0]
+        result = y.map(lambda label: favorable if label == 1 else unfavorable)
+        return result
+
     def fit(self, X, y):
         from lale.lib.aif360 import ProtectedAttributesEncoder, Redacting
 
@@ -746,13 +753,15 @@ class _BaseInprocessingImpl:
         )
         encoded_data = self._prep_and_encode(X, y)
         self.mitigator.fit(encoded_data)
+        self.unfavorable_labels = list(set(list(y)) - set(list(self.favorable_labels)))
         return self
 
     def predict(self, X):
         encoded_data = self._prep_and_encode(X)
         result_data = self.mitigator.predict(encoded_data)
         _, result_y = dataset_to_pandas(result_data, return_only="y")
-        return result_y
+        decoded_y = self._decode(result_y)
+        return decoded_y
 
 
 _postprocessing_base_hyperparams = {

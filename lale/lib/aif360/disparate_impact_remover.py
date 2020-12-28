@@ -103,7 +103,7 @@ class DisparateImpactRemoverImpl:
             features = encoded_X.tolist()
         mitigated_X = self.mitigator.repair(features)
         if isinstance(X, pd.DataFrame):
-            result = pd.DataFrame(mitigated_X, index=X.index, columns=X.columns)
+            result = pd.DataFrame(mitigated_X, index=X.index, columns=encoded_X.columns)
         else:
             result = np.array(mitigated_X)
         return result
