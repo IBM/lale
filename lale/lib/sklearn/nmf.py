@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 from sklearn.decomposition import NMF as SKLModel
 
 import lale.docstrings
@@ -233,6 +234,21 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NMFImpl, _combined_schemas)
-
+NMF: lale.operators.PlannedIndividualOp
 NMF = lale.operators.make_operator(NMFImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.NMF.html
+    from lale.schemas import AnyOf, Enum, Null
+
+    NMF = NMF.customize_schema(
+        regularization=AnyOf(
+            desc="Select whether the regularization affects the components (H), the transformation (W), both or none of them.",
+            types=[Enum(values=["both", "components", "transformation"]), Null(),],
+            default="both",
+            forOptimizer=True,
+        )
+    )
+
+lale.docstrings.set_docstrings(NMFImpl, NMF._schemas)

@@ -18,7 +18,7 @@ from typing import Any
 
 from lightgbm import LGBMClassifier as baz
 from sklearn.decomposition import PCA as foo
-from sklearn.linear_model.least_angle import Lars as foobar
+from sklearn.linear_model import Lars as foobar
 from xgboost import XGBClassifier as bar
 
 import lale

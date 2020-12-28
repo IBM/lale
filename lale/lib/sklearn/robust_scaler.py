@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.preprocessing
 
 import lale.docstrings
@@ -137,6 +138,20 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RobustScalerImpl, _combined_schemas)
-
+RobustScaler: lale.operators.PlannedIndividualOp
 RobustScaler = lale.operators.make_operator(RobustScalerImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.RobustScaler.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.preprocessing.RobustScaler.html
+    from lale.schemas import Bool
+
+    RobustScaler = RobustScaler.customize_schema(
+        unit_variance=Bool(
+            desc="If True, scale data so that normally distributed features have a variance of 1. In general, if the difference between the x-values of q_max and q_min for a standard normal distribution is greater than 1, the dataset will be scaled down. If less than 1, the dataset will be scaled up.",
+            default=False,
+            forOptimizer=True,
+        )
+    )
+
+lale.docstrings.set_docstrings(RobustScalerImpl, RobustScaler._schemas)

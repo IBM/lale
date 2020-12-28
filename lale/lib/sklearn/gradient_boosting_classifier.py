@@ -359,7 +359,7 @@ GradientBoostingClassifier = lale.operators.make_operator(
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
     from lale.schemas import AnyOf, Bool, Enum, Float
 
     GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
@@ -374,6 +374,29 @@ if sklearn.__version__ >= "0.22":
             forOptimizer=False,
             min=0.0,
             maxForOptimizer=0.1,
+        ),
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    from lale.schemas import JSON
+
+    GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
+        presort=None,
+        criterion=JSON(
+            {
+                "description": "Function to measure the quality of a split.",
+                "anyOf": [
+                    {"enum": ["mse", "friedman_mse"]},
+                    {
+                        "description": "Deprecated since version 0.24.",
+                        "enum": ["mae"],
+                        "forOptimizer": False,
+                    },
+                ],
+                "default": "friedman_mse",
+            }
         ),
     )
 

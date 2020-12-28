@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.linear_model
 
 import lale.docstrings
@@ -146,6 +147,31 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LinearRegressionImpl, _combined_schemas)
-
+LinearRegression: lale.operators.PlannedIndividualOp
 LinearRegression = lale.operators.make_operator(LinearRegressionImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LinearRegression.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.LinearRegression.html
+    from lale.schemas import JSON, Bool
+
+    LinearRegression = LinearRegression.customize_schema(
+        positive=Bool(
+            desc="When set to True, forces the coefficients to be positive.",
+            default=False,
+            forOptimizer=False,
+        )
+    )
+    LinearRegression = LinearRegression.customize_schema(
+        constraint=JSON(
+            {
+                "description": "Setting positive=True is only supported for dense arrays.",
+                "anyOf": [
+                    {"type": "object", "properties": {"positive": {"enum": [False]}}},
+                    {"type": "object", "laleNot": "X/isSparse"},
+                ],
+            }
+        )
+    )
+
+lale.docstrings.set_docstrings(LinearRegressionImpl, LinearRegression._schemas)
