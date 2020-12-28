@@ -18,59 +18,117 @@ import numpy as np
 import pandas as pd
 
 import lale.docstrings
+import lale.lib.lale
 import lale.operators
+
+from .protected_attributes_encoder import ProtectedAttributesEncoder
+from .redacting import Redacting
+from .util import _categorical_fairness_properties
 
 
 class DisparateImpactRemoverImpl:
-    def __init__(self, repair_level=1.0, sensitive_attribute=None):
-        self._hyperparams = {
-            "repair_level": repair_level,
-            "sensitive_attribute": sensitive_attribute,
-        }
+    def __init__(
+        self,
+        favorable_labels,
+        protected_attributes,
+        preprocessing=None,
+        repair_level=1.0,
+    ):
+        self.favorable_labels = favorable_labels
+        self.protected_attributes = protected_attributes
+        if preprocessing is None:
+            preprocessing = lale.lib.lale.NoOp
+        self.preprocessing = preprocessing
+        self.repair_level = repair_level
+
+    def _prep_and_encode(self, X, y=None):
+        prepared_X = self.redact1_and_prep.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        if isinstance(prepared_X, pd.DataFrame) and isinstance(encoded_X, pd.DataFrame):
+            combined_attribute_names = list(prepared_X.columns) + [
+                name for name in encoded_X.columns if name not in prepared_X.columns
+            ]
+            combined_columns = [
+                encoded_X[name] if name in encoded_X else prepared_X[name]
+                for name in combined_attribute_names
+            ]
+            combined_X = pd.concat(combined_columns, axis=1)
+        else:
+            if isinstance(prepared_X, pd.DataFrame):
+                prepared_X = prepared_X.to_numpy()
+            assert isinstance(prepared_X, np.ndarray)
+            if isinstance(encoded_X, pd.DataFrame):
+                encoded_X = encoded_X.to_numpy()
+            assert isinstance(encoded_X, np.ndarray)
+            combined_X = np.concatenate([prepared_X, encoded_X], axis=1)
+        return combined_X
 
     def fit(self, X, y=None):
-        repair_level = self._hyperparams["repair_level"]
-        sensitive_attribute = self._hyperparams["sensitive_attribute"]
-        dimpr = aif360.algorithms.preprocessing.DisparateImpactRemover(
-            repair_level=repair_level, sensitive_attribute=sensitive_attribute
+        fairness_info = {
+            "favorable_labels": self.favorable_labels,
+            "protected_attributes": self.protected_attributes,
+        }
+        redacting = Redacting(**fairness_info)
+        preprocessing = self.preprocessing
+        trainable_redact1_and_prep = redacting >> preprocessing
+        assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
+        self.redact1_and_prep = trainable_redact1_and_prep.fit(X, y)
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            **fairness_info, remainder="drop", return_X_y=True,
         )
-        if isinstance(X, pd.DataFrame):
-            features = X.to_numpy().tolist()
-        else:
-            features = X.tolist()
+        encoded_X = self._prep_and_encode(X, y)
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
+        sensitive_attribute = prot_attr_names[0]
         if isinstance(sensitive_attribute, str):
-            index = X.columns.to_list().index(sensitive_attribute)
+            assert isinstance(encoded_X, pd.DataFrame)
+            features = encoded_X.to_numpy().tolist()
+            index = encoded_X.columns.to_list().index(sensitive_attribute)
         else:
-            index = sensitive_attribute
+            assert isinstance(encoded_X, np.ndarray)
+            features = encoded_X.tolist()
+            index = encoded_X.shape[1] - 1
         # since DisparateImpactRemover does not have separate fit and transform
-        self._repairer = dimpr.Repairer(features, index, repair_level, False)
+        di_remover = aif360.algorithms.preprocessing.DisparateImpactRemover(
+            repair_level=self.repair_level, sensitive_attribute=sensitive_attribute
+        )
+        self.mitigator = di_remover.Repairer(features, index, self.repair_level, False)
         return self
 
     def transform(self, X):
-        if isinstance(X, pd.DataFrame):
-            features = X.to_numpy().tolist()
+        encoded_X = self._prep_and_encode(X)
+        if isinstance(encoded_X, pd.DataFrame):
+            features = encoded_X.to_numpy().tolist()
         else:
-            features = X.tolist()
-        repaired = self._repairer.repair(features)
+            assert isinstance(encoded_X, np.ndarray)
+            features = encoded_X.tolist()
+        mitigated_X = self.mitigator.repair(features)
         if isinstance(X, pd.DataFrame):
-            result = pd.DataFrame(repaired, columns=X.columns)
+            result = pd.DataFrame(mitigated_X, index=X.index, columns=X.columns)
         else:
-            result = np.array(repaired)
+            result = np.array(mitigated_X)
         return result
 
 
 _input_fit_schema = {
-    "description": "Input data schema for training.",
     "type": "object",
-    "required": ["X"],
+    "required": ["X", "y"],
     "additionalProperties": False,
     "properties": {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         },
-        "y": {"description": "Target class labels; the array is over samples."},
+        "y": {
+            "description": "Target class labels; the array is over samples.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+            ],
+        },
     },
 }
 
@@ -83,7 +141,10 @@ _input_transform_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         }
     },
 }
@@ -100,19 +161,36 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["repair_level", "sensitive_attribute"],
+            "required": [
+                "favorable_labels",
+                "protected_attributes",
+                "preprocessing",
+                "repair_level",
+            ],
             "relevantToOptimizer": ["repair_level"],
             "properties": {
+                "favorable_labels": _categorical_fairness_properties[
+                    "favorable_labels"
+                ],
+                "protected_attributes": {
+                    **_categorical_fairness_properties["protected_attributes"],
+                    "minItems": 1,
+                    "maxItems": 1,
+                },
+                "preprocessing": {
+                    "description": "Transformer, which may be an individual operator or a sub-pipeline.",
+                    "anyOf": [
+                        {"laleType": "operator"},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None]},
+                    ],
+                    "default": None,
+                },
                 "repair_level": {
                     "description": "Repair amount from 0 = none to 1 = full.",
                     "type": "number",
                     "minimum": 0,
                     "maximum": 1,
                     "default": 1,
-                },
-                "sensitive_attribute": {
-                    "description": "Column name or index of protected attribute.",
-                    "anyOf": [{"type": "string"}, {"type": "integer"}],
                 },
             },
         }

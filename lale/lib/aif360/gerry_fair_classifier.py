@@ -18,19 +18,15 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
-from .protected_attributes_encoder import ProtectedAttributesEncoder
-from .util import (
-    _categorical_fairness_properties,
-    _PandasToDatasetConverter,
-    dataset_to_pandas,
-)
+from .util import _BaseInprocessingImpl, _categorical_fairness_properties
 
 
-class GerryFairClassifierImpl:
+class GerryFairClassifierImpl(_BaseInprocessingImpl):
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
+        preprocessing=None,
         C=10,
         printflag=False,
         heatmapflag=False,
@@ -48,71 +44,39 @@ class GerryFairClassifierImpl:
                 predictor = predictor._impl_instance()._wrapped_model
             else:
                 raise ValueError(
-                    "If predictor is a Lale operator, it needs to be an individual operator. "
+                    "If predictor is a Lale operator, it needs to be an individual operator."
                 )
-        self._hyperparams = {
-            "favorable_labels": favorable_labels,
-            "protected_attributes": protected_attributes,
-            "C": C,
-            "printflag": printflag,
-            "heatmapflag": heatmapflag,
-            "heatmap_iter": heatmap_iter,
-            "heatmap_path": heatmap_path,
-            "max_iters": max_iters,
-            "gamma": gamma,
-            "fairness_def": fairness_def,
-            "predictor": predictor,
-        }
-        prot_attr_names = [pa["feature"] for pa in protected_attributes]
-        self._prot_attr_enc = ProtectedAttributesEncoder(
+        mitigator = aif360.algorithms.inprocessing.GerryFairClassifier(
+            C=C,
+            printflag=printflag,
+            heatmapflag=heatmapflag,
+            heatmap_iter=heatmap_iter,
+            heatmap_path=heatmap_path,
+            max_iters=max_iters,
+            gamma=gamma,
+            fairness_def=fairness_def,
+            predictor=predictor,
+        )
+        super(GerryFairClassifierImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
-            remainder="passthrough",
-            return_X_y=True,
+            preprocessing=preprocessing,
+            mitigator=mitigator,
         )
-        self._pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label=1,
-            unfavorable_label=0,
-            protected_attribute_names=prot_attr_names,
-        )
-
-    def _encode(self, X, y=None):
-        encoded_X, encoded_y = self._prot_attr_enc.transform(X, y)
-        result = self._pandas_to_dataset.convert(encoded_X, encoded_y)
-        return result
-
-    def fit(self, X, y, early_termination=True):
-        self._wrapped_model = aif360.algorithms.inprocessing.GerryFairClassifier(
-            C=self._hyperparams["C"],
-            printflag=self._hyperparams["printflag"],
-            heatmapflag=self._hyperparams["heatmapflag"],
-            heatmap_iter=self._hyperparams["heatmap_iter"],
-            heatmap_path=self._hyperparams["heatmap_path"],
-            max_iters=self._hyperparams["max_iters"],
-            gamma=self._hyperparams["gamma"],
-            fairness_def=self._hyperparams["fairness_def"],
-            predictor=self._hyperparams["predictor"],
-        )
-        encoded_data = self._encode(X, y)
-        self._wrapped_model.fit(encoded_data, early_termination)
-        return self
-
-    def predict(self, X, threshold=0.5):
-        encoded_data = self._encode(X)
-        result_data = self._wrapped_model.predict(encoded_data, threshold)
-        _, result_y = dataset_to_pandas(result_data, return_only="y")
-        return result_y
 
 
 _input_fit_schema = {
     "type": "object",
-    "required": ["X", "y", "early_termination"],
+    "required": ["X", "y"],
     "additionalProperties": False,
     "properties": {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
@@ -121,30 +85,22 @@ _input_fit_schema = {
                 {"type": "array", "items": {"type": "string"}},
             ],
         },
-        "early_termination": {
-            "description": "Terminate early if auditor can't find fairness violation of more than gamma.",
-            "type": "boolean",
-            "default": True,
-        },
     },
 }
 
 _input_predict_schema = {
     "type": "object",
-    "required": ["X", "threshold"],
+    "required": ["X"],
     "additionalProperties": False,
     "properties": {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
-        "threshold": {
-            "description": "The positive prediction cutoff for the soft-classifier.",
-            "type": "number",
-            "minimum": 0.0,
-            "exclusiveMinimum": True,
-        },
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        }
     },
 }
 
@@ -166,6 +122,7 @@ _hyperparams_schema = {
             "required": [
                 "favorable_labels",
                 "protected_attributes",
+                "preprocessing",
                 "C",
                 "printflag",
                 "heatmapflag",
@@ -184,6 +141,14 @@ _hyperparams_schema = {
                 "protected_attributes": _categorical_fairness_properties[
                     "protected_attributes"
                 ],
+                "preprocessing": {
+                    "description": "Transformer, which may be an individual operator or a sub-pipeline.",
+                    "anyOf": [
+                        {"laleType": "operator"},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None]},
+                    ],
+                    "default": None,
+                },
                 "C": {
                     "description": "Maximum L1 norm for the dual variables.",
                     "type": "number",

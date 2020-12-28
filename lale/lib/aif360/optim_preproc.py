@@ -50,21 +50,22 @@ class OptimPreprocImpl:
             "verbose": verbose,
             "seed": seed,
         }
+        fairness_info = {
+            "favorable_labels": favorable_labels,
+            "protected_attributes": protected_attributes,
+        }
+        self._prot_attr_enc = ProtectedAttributesEncoder(
+            **fairness_info, remainder="passthrough", return_X_y=True,
+        )
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         self._unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         self._privileged_groups = [{name: 1 for name in prot_attr_names}]
-        self._prot_attr_enc = ProtectedAttributesEncoder(
-            favorable_labels=favorable_labels,
-            protected_attributes=protected_attributes,
-            remainder="passthrough",
-            return_X_y=True,
-        )
         self._pandas_to_dataset = _PandasToDatasetConverter(
             favorable_label=1,
             unfavorable_label=0,
             protected_attribute_names=prot_attr_names,
         )
-        self._redacting = Redacting(protected_attribute_names=prot_attr_names)
+        self._redacting = Redacting(**fairness_info)
 
     def _encode(self, X, y=None):
         encoded_X, encoded_y = self._prot_attr_enc.transform(X, y)
@@ -164,7 +165,7 @@ _hyperparams_schema = {
                 "optimizer": {
                     "description": "Optimizer class.",
                     "anyOf": [
-                        {"description": "User-provided.", "laleType": "Any",},
+                        {"description": "User-provided.", "laleType": "Any"},
                         {
                             "description": "Use `aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools.OptTools`.",
                             "enum": [None],

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-Scikit-learn compatible wrappers for a subset of the operators from AIF360_ along with schemas to enable hyperparameter tuning.
+Scikit-learn compatible wrappers for most of the operators from AIF360_ along with schemas to enable hyperparameter tuning.
 
 .. _AIF360: https://github.com/IBM/AIF360
 

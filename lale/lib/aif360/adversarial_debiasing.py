@@ -24,19 +24,15 @@ except ImportError:
 import lale.docstrings
 import lale.operators
 
-from .protected_attributes_encoder import ProtectedAttributesEncoder
-from .util import (
-    _categorical_fairness_properties,
-    _PandasToDatasetConverter,
-    dataset_to_pandas,
-)
+from .util import _BaseInprocessingImpl, _categorical_fairness_properties
 
 
-class AdversarialDebiasingImpl:
+class AdversarialDebiasingImpl(_BaseInprocessingImpl):
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
+        preprocessing=None,
         scope_name="adversarial_debiasing",
         sess=None,
         seed=None,
@@ -53,62 +49,27 @@ or with
         assert "1.13.1" <= tf.__version__ <= "2", tf.__version__
         if sess is None:
             sess = tf.Session()
-        self._hyperparams = {
-            "favorable_labels": favorable_labels,
-            "protected_attributes": protected_attributes,
-            "scope_name": scope_name,
-            "sess": sess,
-            "seed": seed,
-            "adversary_loss_weight": adversary_loss_weight,
-            "num_epochs": num_epochs,
-            "batch_size": batch_size,
-            "classifier_num_hidden_units": classifier_num_hidden_units,
-            "debias": debias,
-        }
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
-        self._unprivileged_groups = [{name: 0 for name in prot_attr_names}]
-        self._privileged_groups = [{name: 1 for name in prot_attr_names}]
-        self._prot_attr_enc = ProtectedAttributesEncoder(
+        unprivileged_groups = [{name: 0 for name in prot_attr_names}]
+        privileged_groups = [{name: 1 for name in prot_attr_names}]
+        mitigator = aif360.algorithms.inprocessing.AdversarialDebiasing(
+            unprivileged_groups=unprivileged_groups,
+            privileged_groups=privileged_groups,
+            scope_name=scope_name,
+            sess=sess,
+            seed=seed,
+            adversary_loss_weight=adversary_loss_weight,
+            num_epochs=num_epochs,
+            batch_size=batch_size,
+            classifier_num_hidden_units=classifier_num_hidden_units,
+            debias=debias,
+        )
+        super(AdversarialDebiasingImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
-            remainder="passthrough",
-            return_X_y=True,
+            preprocessing=preprocessing,
+            mitigator=mitigator,
         )
-        self._pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label=1,
-            unfavorable_label=0,
-            protected_attribute_names=prot_attr_names,
-        )
-
-    def _encode(self, X, y=None):
-        encoded_X, encoded_y = self._prot_attr_enc.transform(X, y)
-        result = self._pandas_to_dataset.convert(encoded_X, encoded_y)
-        return result
-
-    def fit(self, X, y):
-        self._wrapped_model = aif360.algorithms.inprocessing.AdversarialDebiasing(
-            unprivileged_groups=self._unprivileged_groups,
-            privileged_groups=self._privileged_groups,
-            scope_name=self._hyperparams["scope_name"],
-            sess=self._hyperparams["sess"],
-            seed=self._hyperparams["seed"],
-            adversary_loss_weight=self._hyperparams["adversary_loss_weight"],
-            num_epochs=self._hyperparams["num_epochs"],
-            batch_size=self._hyperparams["batch_size"],
-            classifier_num_hidden_units=self._hyperparams[
-                "classifier_num_hidden_units"
-            ],
-            debias=self._hyperparams["debias"],
-        )
-        encoded_data = self._encode(X, y)
-        self._wrapped_model.fit(encoded_data)
-        return self
-
-    def predict(self, X):
-        encoded_data = self._encode(X)
-        result_data = self._wrapped_model.predict(encoded_data)
-        _, result_y = dataset_to_pandas(result_data, return_only="y")
-        return result_y
 
 
 _input_fit_schema = {
@@ -119,7 +80,10 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
@@ -139,7 +103,10 @@ _input_predict_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         }
     },
 }
@@ -162,6 +129,7 @@ _hyperparams_schema = {
             "required": [
                 "favorable_labels",
                 "protected_attributes",
+                "preprocessing",
                 "scope_name",
                 "sess",
                 "seed",
@@ -185,6 +153,14 @@ _hyperparams_schema = {
                     **_categorical_fairness_properties["protected_attributes"],
                     "minItems": 1,
                     "maxItems": 1,
+                },
+                "preprocessing": {
+                    "description": "Transformer, which may be an individual operator or a sub-pipeline.",
+                    "anyOf": [
+                        {"laleType": "operator"},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None]},
+                    ],
+                    "default": None,
                 },
                 "scope_name": {
                     "description": "Scope name for the tenforflow variables.",

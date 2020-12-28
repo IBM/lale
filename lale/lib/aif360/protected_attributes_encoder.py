@@ -64,7 +64,7 @@ _hyperparams_schema = {
         {
             "description": "If returning y, need to know how to encode it.",
             "anyOf": [
-                {"type": "object", "properties": {"return_X_y": {"enum": [False]}},},
+                {"type": "object", "properties": {"return_X_y": {"enum": [False]}}},
                 {
                     "type": "object",
                     "properties": {"favorable_labels": {"not": {"enum": [None]}}},

@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
 import pandas as pd
 
 import lale.docstrings
 import lale.operators
 
-from .util import _dataset_fairness_properties
+from .util import _categorical_fairness_properties
 
 
 def _redaction_value(column_values):
     all_numbers = all([isinstance(val, (int, float)) for val in column_values])
     value_to_count = {}
-    all_numbers = True
     for val in column_values:
         value_to_count[val] = value_to_count.get(val, 0) + 1
         if all_numbers and len(value_to_count) > 10:
@@ -39,25 +39,39 @@ def _redaction_value(column_values):
 
 
 class RedactingImpl:
-    def __init__(self, protected_attribute_names):
-        self.protected_attribute_names = protected_attribute_names
+    def __init__(self, favorable_labels, protected_attributes):
+        self.prot_attr_names = [pa["feature"] for pa in protected_attributes]
 
     def fit(self, X, y=None):
-        self.redaction_values = {
-            pa: _redaction_value(X[pa]) for pa in self.protected_attribute_names
-        }
+        if isinstance(X, pd.DataFrame):
+            self.redaction_values = {
+                pa: _redaction_value(X[pa]) for pa in self.prot_attr_names
+            }
+        elif isinstance(X, np.ndarray):
+            self.redaction_values = {
+                pa: _redaction_value(X[:, pa]) for pa in self.prot_attr_names
+            }
+        else:
+            raise TypeError(f"unexpected type {type(X)}")
         return self
 
     def transform(self, X):
-        new_columns = [
-            (
-                X[name].map(lambda val: self.redaction_values[name])
-                if name in self.redaction_values
-                else X[name]
-            )
-            for name in X.columns
-        ]
-        result = pd.concat(new_columns, axis=1)
+        if isinstance(X, pd.DataFrame):
+            new_columns = [
+                (
+                    X[name].map(lambda val: self.redaction_values[name])
+                    if name in self.redaction_values
+                    else X[name]
+                )
+                for name in X.columns
+            ]
+            result = pd.concat(new_columns, axis=1)
+        elif isinstance(X, np.ndarray):
+            result = X.copy()
+            for column, value in self.redaction_values.items():
+                result[:, column].fill(value)
+        else:
+            raise TypeError(f"unexpected type {type(X)}")
         return result
 
     def transform_schema(self, s_X):
@@ -76,7 +90,7 @@ _input_fit_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         },
         "y": {"description": "Target values; the array is over samples."},
@@ -94,7 +108,7 @@ _input_transform_schema = {
             "type": "array",
             "items": {
                 "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
         },
     },
@@ -105,7 +119,7 @@ _output_transform_schema = {
     "type": "array",
     "items": {
         "type": "array",
-        "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
+        "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
     },
 }
 
@@ -115,11 +129,12 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["protected_attribute_names"],
+            "required": ["favorable_labels", "protected_attributes"],
             "relevantToOptimizer": [],
             "properties": {
-                "protected_attribute_names": _dataset_fairness_properties[
-                    "protected_attribute_names"
+                "favorable_labels": {"description": "Ignored.", "laleType": "Any",},
+                "protected_attributes": _categorical_fairness_properties[
+                    "protected_attributes"
                 ],
             },
         }
