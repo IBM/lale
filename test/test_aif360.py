@@ -19,6 +19,7 @@ import pandas as pd
 import sklearn.datasets
 import sklearn.metrics
 import sklearn.model_selection
+import tensorflow as tf
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
@@ -360,6 +361,7 @@ class TestAIF360(unittest.TestCase):
             "favorable_labels": [1],
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
         }
+        tf.reset_default_graph()
         trainable_remi = AdversarialDebiasing(**fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.1)
 
@@ -486,6 +488,7 @@ class TestAIF360(unittest.TestCase):
                 {"feature": "age", "privileged_groups": [[26, 1000]]},
             ],
         }
+        tf.reset_default_graph()
         trainable_remi = AdversarialDebiasing(
             **fairness_info, preprocessing=self.prep_pd_cat
         )
