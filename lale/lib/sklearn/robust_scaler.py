@@ -20,19 +20,8 @@ import lale.operators
 
 
 class RobustScalerImpl:
-    def __init__(
-        self,
-        with_centering=True,
-        with_scaling=True,
-        quantile_range=(0.25, 0.75),
-        copy=None,
-    ):
-        self._hyperparams = {
-            "with_centering": with_centering,
-            "with_scaling": with_scaling,
-            "quantile_range": quantile_range,
-            "copy": copy,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.RobustScaler(**self._hyperparams)
 
     def fit(self, X, y=None):

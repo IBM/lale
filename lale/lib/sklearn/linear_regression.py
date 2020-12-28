@@ -20,13 +20,8 @@ import lale.operators
 
 
 class LinearRegressionImpl:
-    def __init__(self, fit_intercept=True, normalize=False, copy_X=True, n_jobs=None):
-        self._hyperparams = {
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "copy_X": copy_X,
-            "n_jobs": n_jobs,
-        }
+    def __init__(self, **hyperparams):
+        self._hyperparams = hyperparams
         self._wrapped_model = sklearn.linear_model.LinearRegression(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):

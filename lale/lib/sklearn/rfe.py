@@ -21,13 +21,8 @@ from lale.sklearn_compat import make_sklearn_compat
 
 
 class RFEImpl:
-    def __init__(self, estimator, n_features_to_select=None, step=1, verbose=0):
-        self._hyperparams = {
-            "estimator": make_sklearn_compat(estimator),
-            "n_features_to_select": n_features_to_select,
-            "step": step,
-            "verbose": verbose,
-        }
+    def __init__(self, estimator, **hyperparams):
+        self._hyperparams = {"estimator": make_sklearn_compat(estimator), **hyperparams}
         self._wrapped_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y):
