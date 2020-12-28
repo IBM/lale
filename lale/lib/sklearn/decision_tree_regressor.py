@@ -297,7 +297,7 @@ DecisionTreeRegressor = lale.operators.make_operator(
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeRegressor.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeRegressor.html
     from lale.schemas import AnyOf, Bool, Enum, Float
 
     DecisionTreeRegressor = DecisionTreeRegressor.customize_schema(
@@ -313,6 +313,25 @@ if sklearn.__version__ >= "0.22":
             min=0.0,
             maxForOptimizer=0.1,
         ),
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    from lale.schemas import JSON
+
+    DecisionTreeRegressor = DecisionTreeRegressor.customize_schema(
+        criterion=JSON(
+            {
+                "description": "Function to measure the quality of a split.",
+                "anyOf": [
+                    {"enum": ["mse", "friedman_mse", "poisson"]},
+                    {"enum": ["mae"], "forOptimizer": False},
+                ],
+                "default": "mse",
+            }
+        ),
+        presort=None,
     )
 
 lale.docstrings.set_docstrings(

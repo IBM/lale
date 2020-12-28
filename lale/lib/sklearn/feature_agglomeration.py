@@ -185,7 +185,7 @@ FeatureAgglomeration = lale.operators.make_operator(
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     from lale.schemas import AnyOf, Enum, Float, Int, Null, Object
 
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
@@ -216,6 +216,19 @@ if sklearn.__version__ >= "0.21":
             ],
             desc="compute_full_tree must be True if distance_threshold is not None.",
         )
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    from lale.schemas import Bool
+
+    FeatureAgglomeration = FeatureAgglomeration.customize_schema(
+        compute_distances=Bool(
+            desc="Computes distances between clusters even if distance_threshold is not used. This can be used to make dendrogram visualization, but introduces a computational and memory overhead.",
+            default=False,
+            forOptimizer=False,
+        ),
     )
 
 lale.docstrings.set_docstrings(FeatureAgglomerationImpl, FeatureAgglomeration._schemas)

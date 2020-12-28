@@ -261,7 +261,7 @@ ExtraTreesRegressor = lale.operators.make_operator(
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
     from lale.schemas import AnyOf, Float, Int, Null
 
     ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
@@ -293,6 +293,24 @@ if sklearn.__version__ >= "0.22":
             ],
             desc="If bootstrap is True, the number of samples to draw from X to train each base estimator.",
             default=None,
+        ),
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    from lale.schemas import JSON
+
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        criterion=JSON(
+            {
+                "description": "Function to measure the quality of a split.",
+                "anyOf": [
+                    {"enum": ["mse", "friedman_mse", "poisson"]},
+                    {"enum": ["mae"], "forOptimizer": False},
+                ],
+                "default": "mse",
+            }
         ),
     )
 

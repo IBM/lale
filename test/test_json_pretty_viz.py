@@ -518,16 +518,17 @@ pipeline = make_pipeline(tam, lgbm_classifier)"""
     def test_autoai_libs_tam_3(self):
         import autoai_libs.cognito.transforms.transform_utils
         import numpy as np
-        import sklearn.cluster.hierarchical
+        import sklearn.cluster
         import sklearn.linear_model
         import sklearn.pipeline
 
         import lale.helpers
+        import lale.operators
         import lale.pretty_print
 
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
             autoai_libs.cognito.transforms.transform_utils.TAM(
-                tans_class=sklearn.cluster.hierarchical.FeatureAgglomeration(
+                tans_class=sklearn.cluster.FeatureAgglomeration(
                     affinity="euclidean",
                     compute_full_tree="auto",
                     connectivity=None,
@@ -573,7 +574,6 @@ pipeline = tam >> logistic_regression"""
     def test_autoai_libs_tam_4(self):
         import autoai_libs.cognito.transforms.transform_utils
         import numpy as np
-        import sklearn.cluster.hierarchical
         import sklearn.decomposition
         import sklearn.linear_model
         import sklearn.pipeline
@@ -724,9 +724,6 @@ pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
             CompressStrings,
             NumpyColumnSelector,
         )
-
-        import lale.operators
-        import lale.pretty_print
 
         numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3, 5])
         compress_strings = CompressStrings(
