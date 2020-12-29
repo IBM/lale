@@ -324,7 +324,7 @@ def _ndarray_to_dataframe(array):
     return result
 
 
-class _BinaryLabelScorer:
+class _ScorerFactory:
     def __init__(
         self,
         metric,
@@ -336,7 +336,12 @@ class _BinaryLabelScorer:
         favorable_labels=None,
         protected_attributes=None,
     ):
-        assert hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric)
+        if hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric):
+            self.kind = "BinaryLabelDatasetMetric"
+        elif hasattr(aif360.metrics.ClassificationMetric, metric):
+            self.kind = "ClassificationMetric"
+        else:
+            raise ValueError(f"unknown metric {metric}")
         self.metric = metric
         if favorable_labels is None:
             self.prot_attr_enc = None
@@ -376,14 +381,29 @@ class _BinaryLabelScorer:
         index = X.index if isinstance(X, pd.DataFrame) else None
         y_name = y.name if isinstance(y, pd.Series) else _ensure_str(X.shape[1])
         y_pred = _ndarray_to_series(predicted, y_name, index, y.dtype)
-        if getattr(self, "favorable_labels", None) is not None:
-            X, y_pred = self.prot_attr_enc.transform(X, y_pred)
-        dataset_pred = self.pandas_to_dataset.convert(X, y_pred)
-        fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
-            dataset_pred,
-            self.fairness_info["unprivileged_groups"],
-            self.fairness_info["privileged_groups"],
-        )
+        if getattr(self, "favorable_labels", None) is None:
+            encoded_X = X
+        else:
+            encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        dataset_pred = self.pandas_to_dataset.convert(encoded_X, y_pred)
+        if self.kind == "BinaryLabelDatasetMetric":
+            fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
+                dataset_pred,
+                self.fairness_info["unprivileged_groups"],
+                self.fairness_info["privileged_groups"],
+            )
+        else:
+            assert self.kind == "ClassificationMetric"
+            y_orig = _ndarray_to_series(y, y_name, index, y.dtype)
+            if getattr(self, "favorable_labels", None) is not None:
+                _, y_orig = self.prot_attr_enc.transform(X, y_orig)
+            dataset_orig = self.pandas_to_dataset.convert(encoded_X, y_orig)
+            fairness_metrics = aif360.metrics.ClassificationMetric(
+                dataset_orig,
+                dataset_pred,
+                self.fairness_info["unprivileged_groups"],
+                self.fairness_info["privileged_groups"],
+            )
         method = getattr(fairness_metrics, self.metric)
         result = method()
         if np.isnan(result) or not np.isfinite(result):
@@ -398,7 +418,7 @@ class _BinaryLabelScorer:
             if self.metric == "disparate_impact":
                 result = 0.0
             logger.warning(
-                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration."
+                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration. The set of predicted labels is {set(predicted)}."
             )
         return result
 
@@ -565,6 +585,35 @@ accuracy_and_disparate_impact.__doc__ = (
 )
 
 
+def average_odds_difference(
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
+):
+    """Create a scikit-learn compatible `average odds difference`_ scorer given the fairness info.
+
+.. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
+    return _ScorerFactory(
+        "average_odds_difference",
+        favorable_label,
+        unfavorable_label,
+        protected_attribute_names,
+        unprivileged_groups,
+        privileged_groups,
+        favorable_labels,
+        protected_attributes,
+    )
+
+
+average_odds_difference.__doc__ = (
+    str(average_odds_difference.__doc__) + _SCORER_DOCSTRING
+)
+
+
 def disparate_impact(
     favorable_label=None,
     unfavorable_label=None,
@@ -577,7 +626,7 @@ def disparate_impact(
     """Create a scikit-learn compatible `disparate impact`_ scorer given the fairness info.
 
 .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
-    return _BinaryLabelScorer(
+    return _ScorerFactory(
         "disparate_impact",
         favorable_label,
         unfavorable_label,
@@ -590,6 +639,35 @@ def disparate_impact(
 
 
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
+
+
+def equal_opportunity_difference(
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
+):
+    """Create a scikit-learn compatible `equal opportunity difference`_ scorer given the fairness info.
+
+.. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
+    return _ScorerFactory(
+        "equal_opportunity_difference",
+        favorable_label,
+        unfavorable_label,
+        protected_attribute_names,
+        unprivileged_groups,
+        privileged_groups,
+        favorable_labels,
+        protected_attributes,
+    )
+
+
+equal_opportunity_difference.__doc__ = (
+    str(equal_opportunity_difference.__doc__) + _SCORER_DOCSTRING
+)
 
 
 class _R2AndDisparateImpact:
@@ -681,7 +759,7 @@ def statistical_parity_difference(
     """Create a scikit-learn compatible `statistical parity difference`_ scorer given the fairness info.
 
 .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference"""
-    return _BinaryLabelScorer(
+    return _ScorerFactory(
         "statistical_parity_difference",
         favorable_label,
         unfavorable_label,
@@ -695,6 +773,35 @@ def statistical_parity_difference(
 
 statistical_parity_difference.__doc__ = (
     str(statistical_parity_difference.__doc__) + _SCORER_DOCSTRING
+)
+
+
+def theil_index(
+    favorable_label=None,
+    unfavorable_label=None,
+    protected_attribute_names=None,
+    unprivileged_groups=None,
+    privileged_groups=None,
+    favorable_labels=None,
+    protected_attributes=None,
+):
+    """Create a scikit-learn compatible `Theil index`_ scorer given the fairness info.
+
+.. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index"""
+    return _ScorerFactory(
+        "theil_index",
+        favorable_label,
+        unfavorable_label,
+        protected_attribute_names,
+        unprivileged_groups,
+        privileged_groups,
+        favorable_labels,
+        protected_attributes,
+    )
+
+
+average_odds_difference.__doc__ = (
+    str(average_odds_difference.__doc__) + _SCORER_DOCSTRING
 )
 
 

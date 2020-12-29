@@ -259,6 +259,15 @@ class TestAIF360(unittest.TestCase):
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, -0.1)
+        eo_diff_scorer = lale.lib.aif360.equal_opportunity_difference(**fi)
+        eo_diff = eo_diff_scorer(estimator, test_X, test_y)
+        self.assertLess(eo_diff, 0.0)
+        ao_diff_scorer = lale.lib.aif360.average_odds_difference(**fi)
+        ao_diff = ao_diff_scorer(estimator, test_X, test_y)
+        self.assertLess(ao_diff, 0.0)
+        theil_index_scorer = lale.lib.aif360.theil_index(**fi)
+        theil_index = theil_index_scorer(estimator, test_X, test_y)
+        self.assertGreater(theil_index, 0.15)
 
     def test_scorers_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
