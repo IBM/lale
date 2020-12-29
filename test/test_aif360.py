@@ -29,12 +29,15 @@ from lale.datasets.data_schemas import NDArrayWithSchema
 from lale.lib.aif360 import (
     LFR,
     AdversarialDebiasing,
+    CalibratedEqOddsPostprocessing,
     DisparateImpactRemover,
+    EqOddsPostprocessing,
     GerryFairClassifier,
     MetaFairClassifier,
     OptimPreproc,
     PrejudiceRemover,
     Redacting,
+    RejectOptionClassification,
     Reweighing,
 )
 from lale.lib.lale import ConcatFeatures, Project
@@ -365,6 +368,17 @@ class TestAIF360(unittest.TestCase):
         trainable_remi = AdversarialDebiasing(**fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.1)
 
+    def test_calibrated_eq_odds_postprocessing_pd_num(self):
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
+        }
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = CalibratedEqOddsPostprocessing(
+            **fairness_info, estimator=estim
+        )
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.7, 1.1)
+
     def test_disparate_impact_remover_pd_num(self):
         fairness_info = {
             "favorable_labels": [1],
@@ -394,6 +408,15 @@ class TestAIF360(unittest.TestCase):
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
         self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
         print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+
+    def test_eq_odds_postprocessing_pd_num(self):
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
+        }
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
 
     def test_gerry_fair_classifier_pd_num(self):
         fairness_info = {
@@ -457,13 +480,22 @@ class TestAIF360(unittest.TestCase):
         trainable_remi = redacting >> logistic_regression
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
 
+    def test_reject_option_classification_pd_num(self):
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
+        }
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = RejectOptionClassification(**fairness_info, estimator=estim)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
+
     def test_reweighing_pd_num(self):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
         }
-        trainable_orig = LogisticRegression(max_iter=1000)
-        trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
 
     def _attempt_remi_creditg_pd_cat(
@@ -494,6 +526,19 @@ class TestAIF360(unittest.TestCase):
         )
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.1)
 
+    def test_calibrated_eq_odds_postprocessing_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = CalibratedEqOddsPostprocessing(
+            **fairness_info, estimator=estim
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 1.1)
+
     def test_disparate_impact_remover_pd_cat(self):
         fairness_info = {
             "favorable_labels": ["good"],
@@ -505,6 +550,17 @@ class TestAIF360(unittest.TestCase):
             **fairness_info, preprocessing=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
+
+    def test_eq_odds_postprocessing_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.1)
 
     def test_gerry_fair_classifier_pd_cat(self):
         fairness_info = {
@@ -542,6 +598,17 @@ class TestAIF360(unittest.TestCase):
         )
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.0)
 
+    def test_reject_option_classification_pd_cat(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[26, 1000]]},
+            ],
+        }
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = RejectOptionClassification(**fairness_info, estimator=estim)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 1.1)
+
     def test_reweighing_pd_cat(self):
         fairness_info = {
             "favorable_labels": ["good"],
@@ -549,6 +616,6 @@ class TestAIF360(unittest.TestCase):
                 {"feature": "age", "privileged_groups": [[26, 1000]]},
             ],
         }
-        trainable_orig = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
-        trainable_remi = Reweighing(estimator=trainable_orig, **fairness_info)
+        estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.0)

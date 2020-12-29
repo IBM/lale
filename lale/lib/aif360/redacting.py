@@ -18,7 +18,12 @@ import pandas as pd
 import lale.docstrings
 import lale.operators
 
-from .util import _categorical_fairness_properties
+from .util import (
+    _categorical_fairness_properties,
+    _categorical_input_transform_schema,
+    _categorical_output_transform_schema,
+    _categorical_unsupervised_input_fit_schema,
+)
 
 
 def _redaction_value(column_values):
@@ -79,49 +84,9 @@ class RedactingImpl:
         return s_X
 
 
-_input_fit_schema = {
-    "description": "Input data schema for training.",
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        },
-        "y": {"description": "Target values; the array is over samples."},
-    },
-}
-
-_input_transform_schema = {
-    "description": "Input data schema for transform.",
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        },
-    },
-}
-
-_output_transform_schema = {
-    "description": "Output data schema for transform.",
-    "type": "array",
-    "items": {
-        "type": "array",
-        "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-    },
-}
+_input_fit_schema = _categorical_unsupervised_input_fit_schema
+_input_transform_schema = _categorical_input_transform_schema
+_output_transform_schema = _categorical_output_transform_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",

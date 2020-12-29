@@ -19,7 +19,13 @@ import lale.operators
 
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
-from .util import _categorical_fairness_properties, _PandasToDatasetConverter
+from .util import (
+    _categorical_fairness_properties,
+    _categorical_input_predict_schema,
+    _categorical_output_predict_schema,
+    _categorical_supervised_input_fit_schema,
+    _PandasToDatasetConverter,
+)
 
 
 class ReweighingImpl:
@@ -78,56 +84,9 @@ class ReweighingImpl:
         return result
 
 
-_input_fit_schema = {
-    "description": "Input data schema for training.",
-    "type": "object",
-    "required": ["X", "y"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        },
-        "y": {
-            "description": "The predicted classes.",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-        },
-    },
-}
-
-_input_predict_schema = {
-    "description": "Input data schema for transform.",
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        },
-    },
-}
-
-_output_predict_schema = {
-    "description": "The predicted classes.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
-    ],
-}
+_input_fit_schema = _categorical_supervised_input_fit_schema
+_input_predict_schema = _categorical_input_predict_schema
+_output_predict_schema = _categorical_output_predict_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",

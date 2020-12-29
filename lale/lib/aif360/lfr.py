@@ -24,6 +24,9 @@ from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
 from .util import (
     _categorical_fairness_properties,
+    _categorical_input_transform_schema,
+    _categorical_supervised_input_fit_schema,
+    _numeric_output_transform_schema,
     _PandasToDatasetConverter,
     dataset_to_pandas,
 )
@@ -114,51 +117,9 @@ class LFRImpl:
         return redacted_X
 
 
-_input_fit_schema = {
-    "type": "object",
-    "required": ["X", "y"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        },
-        "y": {
-            "description": "Target class labels; the array is over samples.",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-            ],
-        },
-    },
-}
-
-_input_transform_schema = {
-    "description": "Input data schema for transform.",
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        }
-    },
-}
-
-_output_transform_schema = {
-    "description": "Output data schema for transform.",
-    "type": "array",
-    "items": {"type": "array", "items": {"type": "number"}},
-}
+_input_fit_schema = _categorical_supervised_input_fit_schema
+_input_transform_schema = _categorical_input_transform_schema
+_output_transform_schema = _numeric_output_transform_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",

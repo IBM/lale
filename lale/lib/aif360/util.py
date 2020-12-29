@@ -738,8 +738,7 @@ class _BaseInprocessingImpl:
             "protected_attributes": self.protected_attributes,
         }
         redacting = Redacting(**fairness_info)
-        preprocessing = self.preprocessing
-        trainable_redact_and_prep = redacting >> preprocessing
+        trainable_redact_and_prep = redacting >> self.preprocessing
         assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
         self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
@@ -764,58 +763,66 @@ class _BaseInprocessingImpl:
         return decoded_y
 
 
-_postprocessing_base_hyperparams = {
-    "estimator": {
-        "description": "Nested supervised learning operator for which to mitigate fairness.",
-        "laleType": "operator",
-    },
-    "favorable_label": _dataset_fairness_properties["favorable_label"],
-    "unfavorable_label": _dataset_fairness_properties["unfavorable_label"],
-    "protected_attribute_names": _dataset_fairness_properties[
-        "protected_attribute_names"
-    ],
-}
-
-
 class _BasePostprocessingImpl:
     def __init__(
-        self,
-        mitigator,
-        estimator,
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
+        self, favorable_labels, protected_attributes, estimator, mitigator,
     ):
-        self.mitigator = mitigator
+        self.favorable_labels = favorable_labels
+        self.protected_attributes = protected_attributes
         self.estimator = estimator
-        self.pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label, unfavorable_label, protected_attribute_names
-        )
-        self.y_dtype = None
-        self.y_name = None
+        self.mitigator = mitigator
+
+    def _decode(self, y):
+        assert isinstance(y, pd.Series)
+        assert len(self.favorable_labels) == 1 and len(self.unfavorable_labels) == 1
+        favorable, unfavorable = self.favorable_labels[0], self.unfavorable_labels[0]
+        result = y.map(lambda label: favorable if label == 1 else unfavorable)
+        return result
 
     def fit(self, X, y):
-        self.y_dtype = y.dtype
-        self.y_name = y.name
-        y_true = y
-        self.estimator = self.estimator.fit(X, y_true)
-        predicted = self.estimator.predict(X)
-        y_pred = _ndarray_to_series(predicted, self.y_name, X.index, self.y_dtype)
-        dataset_true = self.pandas_to_dataset.convert(X, y_true)
-        dataset_pred = self.pandas_to_dataset.convert(X, y_pred)
+        from lale.lib.aif360 import ProtectedAttributesEncoder, Redacting
+
+        fairness_info = {
+            "favorable_labels": self.favorable_labels,
+            "protected_attributes": self.protected_attributes,
+        }
+        redacting = Redacting(**fairness_info)
+        trainable_redact_and_estim = redacting >> self.estimator
+        assert isinstance(trainable_redact_and_estim, lale.operators.TrainablePipeline)
+        self.redact_and_estim = trainable_redact_and_estim.fit(X, y)
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            **fairness_info, remainder="drop", return_X_y=True,
+        )
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
+        self.pandas_to_dataset = _PandasToDatasetConverter(
+            favorable_label=1,
+            unfavorable_label=0,
+            protected_attribute_names=prot_attr_names,
+        )
+        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        self.y_dtype = encoded_y.dtype
+        self.y_name = encoded_y.name
+        predicted_y = self.redact_and_estim.predict(X)
+        predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
+        _, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        dataset_true = self.pandas_to_dataset.convert(encoded_X, encoded_y)
+        dataset_pred = self.pandas_to_dataset.convert(encoded_X, predicted_y)
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
+        self.unfavorable_labels = list(set(list(y)) - set(list(self.favorable_labels)))
         return self
 
     def predict(self, X):
-        predicted = self.estimator.predict(X)
-        y_pred = _ndarray_to_series(predicted, self.y_name, X.index, self.y_dtype)
-        dataset_pred = self.pandas_to_dataset.convert(X, y_pred)
+        predicted_y = self.redact_and_estim.predict(X)
+        predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
+        encoded_X, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        dataset_pred = self.pandas_to_dataset.convert(encoded_X, predicted_y)
         dataset_out = self.mitigator.predict(dataset_pred)
-        _, y_out = dataset_to_pandas(dataset_out, return_only="y")
-        return y_out
+        _, result_y = dataset_to_pandas(dataset_out, return_only="y")
+        decoded_y = self._decode(result_y)
+        return decoded_y
 
 
-_numeric_supervised_input_fit_schema = {
+_categorical_supervised_input_fit_schema = {
     "type": "object",
     "required": ["X", "y"],
     "additionalProperties": False,
@@ -823,17 +830,23 @@ _numeric_supervised_input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
-            "type": "array",
-            "items": {"type": "number"},
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+            ],
         },
     },
 }
 
-_numeric_input_predict_schema = {
+_categorical_unsupervised_input_fit_schema = {
+    "description": "Input data schema for training.",
     "type": "object",
     "required": ["X"],
     "additionalProperties": False,
@@ -841,15 +854,69 @@ _numeric_input_predict_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        },
+        "y": {"description": "Target values; the array is over samples."},
+    },
+}
+
+_categorical_input_predict_schema = {
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
         }
     },
 }
 
-_numeric_output_predict_schema = {
+_categorical_output_predict_schema = {
     "description": "Predicted class label per sample.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "string"}},
+    ],
+}
+
+_categorical_input_transform_schema = {
+    "description": "Input data schema for transform.",
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        }
+    },
+}
+
+_categorical_output_transform_schema = {
+    "description": "Output data schema for reweighted features.",
     "type": "array",
-    "items": {"type": "number"},
+    "items": {
+        "type": "array",
+        "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+    },
+}
+
+_numeric_output_transform_schema = {
+    "description": "Output data schema for reweighted features.",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
 }
 
 
