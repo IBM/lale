@@ -19,52 +19,36 @@ import lale.operators
 
 from .util import (
     _BasePostprocessingImpl,
-    _dataset_fairness_properties,
-    _numeric_input_predict_schema,
-    _numeric_output_predict_schema,
-    _numeric_supervised_input_fit_schema,
-    _postprocessing_base_hyperparams,
+    _categorical_fairness_properties,
+    _categorical_input_predict_schema,
+    _categorical_output_predict_schema,
+    _categorical_supervised_input_fit_schema,
 )
-
-_additional_hyperparams = {
-    "unprivileged_groups": _dataset_fairness_properties["unprivileged_groups"],
-    "privileged_groups": _dataset_fairness_properties["privileged_groups"],
-    "seed": {
-        "description": "Seed to make `predict` repeatable.",
-        "anyOf": [{"type": "integer"}, {"enum": [None]}],
-        "default": None,
-    },
-}
 
 
 class EqOddsPostprocessingImpl(_BasePostprocessingImpl):
     def __init__(
-        self,
-        estimator,
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        seed=None,
+        self, favorable_labels, protected_attributes, estimator, seed=None,
     ):
+        prot_attr_names = [pa["feature"] for pa in protected_attributes]
+        unprivileged_groups = [{name: 0 for name in prot_attr_names}]
+        privileged_groups = [{name: 1 for name in prot_attr_names}]
         mitigator = aif360.algorithms.postprocessing.EqOddsPostprocessing(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
             seed=seed,
         )
         super(EqOddsPostprocessingImpl, self).__init__(
-            mitigator=mitigator,
+            favorable_labels=favorable_labels,
+            protected_attributes=protected_attributes,
             estimator=estimator,
-            favorable_label=favorable_label,
-            unfavorable_label=unfavorable_label,
-            protected_attribute_names=protected_attribute_names,
+            mitigator=mitigator,
         )
 
 
-_input_fit_schema = _numeric_supervised_input_fit_schema
-_input_predict_schema = _numeric_input_predict_schema
-_output_predict_schema = _numeric_output_predict_schema
+_input_fit_schema = _categorical_supervised_input_fit_schema
+_input_predict_schema = _categorical_input_predict_schema
+_output_predict_schema = _categorical_output_predict_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
@@ -74,14 +58,29 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints.",
             "type": "object",
             "additionalProperties": False,
-            "required": (
-                list(_postprocessing_base_hyperparams.keys())
-                + list(_additional_hyperparams.keys())
-            ),
+            "required": [
+                "favorable_labels",
+                "protected_attributes",
+                "estimator",
+                "seed",
+            ],
             "relevantToOptimizer": [],
             "properties": {
-                **_postprocessing_base_hyperparams,
-                **_additional_hyperparams,
+                "favorable_labels": _categorical_fairness_properties[
+                    "favorable_labels"
+                ],
+                "protected_attributes": _categorical_fairness_properties[
+                    "protected_attributes"
+                ],
+                "estimator": {
+                    "description": "Nested supervised learning operator for which to mitigate fairness.",
+                    "laleType": "operator",
+                },
+                "seed": {
+                    "description": "Seed to make `predict` repeatable.",
+                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "default": None,
+                },
             },
         }
     ],

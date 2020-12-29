@@ -17,7 +17,13 @@ import aif360.algorithms.inprocessing
 import lale.docstrings
 import lale.operators
 
-from .util import _BaseInprocessingImpl, _categorical_fairness_properties
+from .util import (
+    _BaseInprocessingImpl,
+    _categorical_fairness_properties,
+    _categorical_input_predict_schema,
+    _categorical_output_predict_schema,
+    _categorical_supervised_input_fit_schema,
+)
 
 
 class PrejudiceRemoverImpl(_BaseInprocessingImpl):
@@ -33,52 +39,9 @@ class PrejudiceRemoverImpl(_BaseInprocessingImpl):
         )
 
 
-_input_fit_schema = {
-    "type": "object",
-    "required": ["X", "y"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        },
-        "y": {
-            "description": "Target class labels; the array is over samples.",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-            ],
-        },
-    },
-}
-
-_input_predict_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
-            },
-        }
-    },
-}
-
-_output_predict_schema = {
-    "description": "Predicted class label per sample.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-    ],
-}
+_input_fit_schema = _categorical_supervised_input_fit_schema
+_input_predict_schema = _categorical_input_predict_schema
+_output_predict_schema = _categorical_output_predict_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
