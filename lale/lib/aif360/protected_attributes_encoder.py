@@ -40,7 +40,7 @@ _hyperparams_schema = {
             "relevantToOptimizer": [],
             "properties": {
                 "favorable_labels": {
-                    "anyof": [
+                    "anyOf": [
                         _categorical_fairness_properties["favorable_labels"],
                         {"enum": [None]},
                     ],
@@ -59,6 +59,11 @@ _hyperparams_schema = {
                     "type": "boolean",
                     "default": False,
                 },
+                "combine": {
+                    "description": "How to handle the case when there is more than one protected attribute.",
+                    "enum": ["keep_separate", "and", "or", "error"],
+                    "default": "keep_separate",
+                },
             },
         },
         {
@@ -68,6 +73,21 @@ _hyperparams_schema = {
                 {
                     "type": "object",
                     "properties": {"favorable_labels": {"not": {"enum": [None]}}},
+                },
+            ],
+        },
+        {
+            "description": "If combine is error, must have only one protected attribute.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"combine": {"not": {"enum": ["error"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "protected_attributes": {"type": "array", "maxItems": 1}
+                    },
                 },
             ],
         },
@@ -170,11 +190,13 @@ class ProtectedAttributesEncoderImpl:
         protected_attributes=None,
         remainder="drop",
         return_X_y=False,
+        combine="keep_separate",
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.remainder = remainder
         self.return_X_y = return_X_y
+        self.combine = combine
 
     def transform(self, X, y=None):
         if isinstance(X, np.ndarray):
@@ -190,6 +212,28 @@ class ProtectedAttributesEncoderImpl:
                 column = X.iloc[:, feature]
             series = column.apply(lambda v: _group_flag(v, groups))
             protected[feature] = series
+        if self.combine in ["and", "or"]:
+            prot_attr_names = [
+                _ensure_str(pa["feature"]) for pa in self.protected_attributes
+            ]
+            comb_name = "_and_".join(prot_attr_names)
+            if comb_name in X.columns:
+                suffix = 0
+                while f"{comb_name}_{suffix}" in X.columns:
+                    suffix += 1
+                comb_name = f"{comb_name}_{suffix}"
+            if self.combine == "and":
+                comb_series = pd.Series(data=1, index=X.index)
+                for name, series in protected.items():
+                    comb_series = comb_series & series
+            elif self.combine == "or":
+                comb_series = pd.Series(data=0, index=X.index)
+                for name, series in protected.items():
+                    comb_series = comb_series | series
+            else:
+                assert False, self.combine
+            comb_series.name = comb_name
+            protected = {comb_name: comb_series}
         if self.remainder == "drop":
             result_X = pd.concat([protected[f] for f in protected], axis=1)
         else:
@@ -218,7 +262,7 @@ class ProtectedAttributesEncoderImpl:
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""
         s_X = lale.datasets.data_schemas.to_schema(s_X)
-        if self.remainder == "drop":
+        if self.remainder == "drop" and self.combine == "keep_separate":
             out_names = [pa["feature"] for pa in self.protected_attributes]
             if all([isinstance(n, str) for n in out_names]):
                 result = {

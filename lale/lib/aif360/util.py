@@ -125,6 +125,7 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
     "protected_attributes": {
         "description": "Features for which fairness is desired.",
         "type": "array",
+        "minItems": 1,
         "items": {
             "type": "object",
             "required": ["feature", "privileged_groups"],

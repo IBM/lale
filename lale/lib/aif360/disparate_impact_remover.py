@@ -49,7 +49,9 @@ class DisparateImpactRemoverImpl:
     def _prep_and_encode(self, X, y=None):
         prepared_X = self.redact1_and_prep.transform(X, y)
         encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
-        if isinstance(prepared_X, pd.DataFrame) and isinstance(encoded_X, pd.DataFrame):
+        assert isinstance(encoded_X, pd.DataFrame), type(encoded_X)
+        assert encoded_X.shape[1] == 1, encoded_X.columns
+        if isinstance(prepared_X, pd.DataFrame):
             combined_attribute_names = list(prepared_X.columns) + [
                 name for name in encoded_X.columns if name not in prepared_X.columns
             ]
@@ -58,15 +60,16 @@ class DisparateImpactRemoverImpl:
                 for name in combined_attribute_names
             ]
             combined_X = pd.concat(combined_columns, axis=1)
+            sensitive_attribute = list(encoded_X.columns)[0]
         else:
             if isinstance(prepared_X, pd.DataFrame):
                 prepared_X = prepared_X.to_numpy()
             assert isinstance(prepared_X, np.ndarray)
-            if isinstance(encoded_X, pd.DataFrame):
-                encoded_X = encoded_X.to_numpy()
+            encoded_X = encoded_X.to_numpy()
             assert isinstance(encoded_X, np.ndarray)
             combined_X = np.concatenate([prepared_X, encoded_X], axis=1)
-        return combined_X
+            sensitive_attribute = combined_X.shape[1] - 1
+        return combined_X, sensitive_attribute
 
     def fit(self, X, y=None):
         fairness_info = {
@@ -79,11 +82,9 @@ class DisparateImpactRemoverImpl:
         assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
         self.redact1_and_prep = trainable_redact1_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="drop", return_X_y=True,
+            **fairness_info, remainder="drop", return_X_y=True, combine="and"
         )
-        encoded_X = self._prep_and_encode(X, y)
-        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
-        sensitive_attribute = prot_attr_names[0]
+        encoded_X, sensitive_attribute = self._prep_and_encode(X, y)
         if isinstance(sensitive_attribute, str):
             assert isinstance(encoded_X, pd.DataFrame)
             features = encoded_X.to_numpy().tolist()
@@ -91,7 +92,7 @@ class DisparateImpactRemoverImpl:
         else:
             assert isinstance(encoded_X, np.ndarray)
             features = encoded_X.tolist()
-            index = encoded_X.shape[1] - 1
+            index = sensitive_attribute
         # since DisparateImpactRemover does not have separate fit and transform
         di_remover = aif360.algorithms.preprocessing.DisparateImpactRemover(
             repair_level=self.repair_level, sensitive_attribute=sensitive_attribute
@@ -100,7 +101,7 @@ class DisparateImpactRemoverImpl:
         return self
 
     def transform(self, X):
-        encoded_X = self._prep_and_encode(X)
+        encoded_X, _ = self._prep_and_encode(X)
         if isinstance(encoded_X, pd.DataFrame):
             features = encoded_X.to_numpy().tolist()
         else:
@@ -135,11 +136,9 @@ _hyperparams_schema = {
                 "favorable_labels": _categorical_fairness_properties[
                     "favorable_labels"
                 ],
-                "protected_attributes": {
-                    **_categorical_fairness_properties["protected_attributes"],
-                    "minItems": 1,
-                    "maxItems": 1,
-                },
+                "protected_attributes": _categorical_fairness_properties[
+                    "protected_attributes"
+                ],
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
