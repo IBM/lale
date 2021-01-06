@@ -206,7 +206,7 @@ _hyperparams_schema = {
                 "n_estimators": {
                     "description": "Number of trees to fit.",
                     "type": "integer",
-                    "default": 200,
+                    "default": 100,
                     "minimumForOptimizer": 50,
                     "maximumForOptimizer": 1000,
                 },

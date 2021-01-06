@@ -105,7 +105,6 @@ import inspect
 import logging
 import os
 import shutil
-import time
 import warnings
 from abc import abstractmethod
 from typing import (
@@ -1492,7 +1491,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             self._validate_hyperparams(hp_explicit, hp_all, hp_schema_2)
 
     def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
-        logger.info("%s enter fit %s", time.asctime(), self.name())
+        # logger.info("%s enter fit %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "fit")
         y = self._validate_input_schema("y", y, "fit")
         self._validate_hyperparam_data_constraints(X, y)
@@ -1509,7 +1508,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         result = TrainedIndividualOp(self.name(), trained_impl, self._schemas)
         result._hyperparams = self._trained_hyperparams(trained_impl)
         self._trained = result
-        logger.info("%s exit  fit %s", time.asctime(), self.name())
+        # logger.info("%s exit  fit %s", time.asctime(), self.name())
         return result
 
     def partial_fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
@@ -1814,7 +1813,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Transformed features; see output_transform schema of the operator.
         """
-        logger.info("%s enter transform %s", time.asctime(), self.name())
+        # logger.info("%s enter transform %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "transform")
         if "y" in [
             required_property.lower()
@@ -1825,7 +1824,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         else:
             raw_result = self._impl_instance().transform(X)
         result = self._validate_output_schema(raw_result, "transform")
-        logger.info("%s exit  transform %s", time.asctime(), self.name())
+        # logger.info("%s exit  transform %s", time.asctime(), self.name())
         return result
 
     def _predict(self, X):
@@ -1848,9 +1847,9 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Predictions; see output_predict schema of the operator.
         """
-        logger.info("%s enter predict %s", time.asctime(), self.name())
+        # logger.info("%s enter predict %s", time.asctime(), self.name())
         result = self._predict(X)
-        logger.info("%s exit  predict %s", time.asctime(), self.name())
+        # logger.info("%s exit  predict %s", time.asctime(), self.name())
         if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
             return lale.datasets.data_schemas.strip_schema(
                 result
@@ -1871,11 +1870,11 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Probabilities; see output_predict_proba schema of the operator.
         """
-        logger.info("%s enter predict_proba %s", time.asctime(), self.name())
+        # logger.info("%s enter predict_proba %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "predict_proba")
         raw_result = self._impl_instance().predict_proba(X)
         result = self._validate_output_schema(raw_result, "predict_proba")
-        logger.info("%s exit  predict_proba %s", time.asctime(), self.name())
+        # logger.info("%s exit  predict_proba %s", time.asctime(), self.name())
         return result
 
     @if_delegate_has_method(delegate="_impl")
@@ -1892,11 +1891,11 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result :
             Confidences; see output_decision_function schema of the operator.
         """
-        logger.info("%s enter decision_function %s", time.asctime(), self.name())
+        # logger.info("%s enter decision_function %s", time.asctime(), self.name())
         X = self._validate_input_schema("X", X, "decision_function")
         raw_result = self._impl_instance().decision_function(X)
         result = self._validate_output_schema(raw_result, "decision_function")
-        logger.info("%s exit  decision_function %s", time.asctime(), self.name())
+        # logger.info("%s exit  decision_function %s", time.asctime(), self.name())
         return result
 
     def freeze_trainable(self) -> "TrainedIndividualOp":
