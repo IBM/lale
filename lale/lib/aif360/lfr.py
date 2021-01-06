@@ -54,7 +54,6 @@ class LFRImpl:
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]
-        print(f"unpriv {unprivileged_groups}, priv {privileged_groups}")
         self.mitigator = aif360.algorithms.preprocessing.LFR(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
