@@ -128,8 +128,7 @@ _hyperparams_schema = {
             "type": "object",
             "additionalProperties": False,
             "required": [
-                "favorable_labels",
-                "protected_attributes",
+                *_categorical_fairness_properties.keys(),
                 "preprocessing",
                 "k",
                 "Ax",
@@ -141,14 +140,7 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": ["k", "Ax", "Az", "Ay"],
             "properties": {
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": {
-                    **_categorical_fairness_properties["protected_attributes"],
-                    "minItems": 1,
-                    "maxItems": 1,
-                },
+                **_categorical_fairness_properties,
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [

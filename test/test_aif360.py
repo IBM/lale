@@ -97,11 +97,11 @@ class TestAIF360(unittest.TestCase):
         assert isinstance(train_X, pd.DataFrame), type(train_X)
         assert isinstance(train_y, pd.Series), type(train_y)
         fairness_info = {
-            "favorable_label": 1,
-            "unfavorable_label": 0,
-            "protected_attribute_names": ["sex", "age"],
-            "unprivileged_groups": [{"sex": 0, "age": 0}],
-            "privileged_groups": [{"sex": 1, "age": 1}],
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [1]},
+                {"feature": "sex", "privileged_groups": [1]},
+            ],
         }
         result = {
             "train_X": train_X,
@@ -377,36 +377,6 @@ class TestAIF360(unittest.TestCase):
         )
         return impact_remi
 
-    def test_adversarial_debiasing_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
-        tf.reset_default_graph()
-        trainable_remi = AdversarialDebiasing(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.1)
-
-    def test_calibrated_eq_odds_postprocessing_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
-        estim = LogisticRegression(max_iter=1000)
-        trainable_remi = CalibratedEqOddsPostprocessing(
-            **fairness_info, estimator=estim
-        )
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.7, 1.1)
-
-    def test_disparate_impact_remover_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
-        trainable_remi = DisparateImpactRemover(**fairness_info) >> LogisticRegression(
-            max_iter=1000
-        )
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.0)
-
     def test_disparate_impact_remover_np_num(self):
         fairness_info = {
             "favorable_labels": [1.0],
@@ -427,94 +397,71 @@ class TestAIF360(unittest.TestCase):
         self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
         print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
 
+    def test_adversarial_debiasing_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        tf.reset_default_graph()
+        trainable_remi = AdversarialDebiasing(**fairness_info)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.1)
+
+    def test_calibrated_eq_odds_postprocessing_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        estim = LogisticRegression(max_iter=1000)
+        trainable_remi = CalibratedEqOddsPostprocessing(
+            **fairness_info, estimator=estim
+        )
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.7, 1.1)
+
+    def test_disparate_impact_remover_pd_num(self):
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        trainable_remi = DisparateImpactRemover(**fairness_info) >> LogisticRegression(
+            max_iter=1000
+        )
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.0)
+
     def test_eq_odds_postprocessing_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.1)
 
     def test_gerry_fair_classifier_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = GerryFairClassifier(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.1)
 
     def test_lfr_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = LFR(**fairness_info) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
 
     def test_meta_fair_classifier_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         _ = MetaFairClassifier(**fairness_info)
         # TODO: this test does not yet call fit or predict, since those hang
 
-    def test_optim_preproc_pd_cat(self):
-        # TODO: set the optimizer options as shown in the example https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {
-                    "feature": "personal_status",
-                    "privileged_groups": [
-                        "male div/sep",
-                        "male mar/wid",
-                        "male single",
-                    ],
-                },
-            ],
-        }
-        _ = OptimPreproc(**fairness_info, optim_options={}) >> LogisticRegression(
-            max_iter=1000
-        )
-        # TODO: this test does not yet call fit or predict
-
     def test_prejudice_remover_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = PrejudiceRemover(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.0)
 
     def test_redacting_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         redacting = Redacting(**fairness_info)
         logistic_regression = LogisticRegression(max_iter=1000)
         trainable_remi = redacting >> logistic_regression
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.0)
 
     def test_reject_option_classification_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = RejectOptionClassification(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.1)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.1)
 
     def test_reweighing_pd_num(self):
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
-        }
+        fairness_info = self.creditg_pd_num["fairness_info"]
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.9, 1.0)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.0)
 
     def _attempt_remi_creditg_pd_cat(
         self, fairness_info, trainable_remi, min_di, max_di
@@ -532,12 +479,7 @@ class TestAIF360(unittest.TestCase):
         return impact_remi
 
     def test_adversarial_debiasing_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         tf.reset_default_graph()
         trainable_remi = AdversarialDebiasing(
             **fairness_info, preprocessing=self.prep_pd_cat
@@ -545,12 +487,7 @@ class TestAIF360(unittest.TestCase):
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.1)
 
     def test_calibrated_eq_odds_postprocessing_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = CalibratedEqOddsPostprocessing(
             **fairness_info, estimator=estim
@@ -565,70 +502,48 @@ class TestAIF360(unittest.TestCase):
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
 
     def test_eq_odds_postprocessing_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.1)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.1)
 
     def test_gerry_fair_classifier_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = GerryFairClassifier(
             **fairness_info, preprocessing=self.prep_pd_cat
         )
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.1)
 
     def test_lfr_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = LFR(
             **fairness_info, preprocessing=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
 
+    def test_optim_preproc_pd_cat(self):
+        # TODO: set the optimizer options as shown in the example https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        _ = OptimPreproc(**fairness_info, optim_options={}) >> LogisticRegression(
+            max_iter=1000
+        )
+        # TODO: this test does not yet call fit or predict
+
     def test_prejudice_remover_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = PrejudiceRemover(
             **fairness_info, preprocessing=self.prep_pd_cat
         )
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.0)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
 
     def test_reject_option_classification_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = RejectOptionClassification(**fairness_info, estimator=estim)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 1.1)
 
     def test_reweighing_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.9, 1.0)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)

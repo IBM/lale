@@ -126,19 +126,13 @@ _hyperparams_schema = {
             "type": "object",
             "additionalProperties": False,
             "required": [
-                "favorable_labels",
-                "protected_attributes",
+                *_categorical_fairness_properties.keys(),
                 "preprocessing",
                 "repair_level",
             ],
             "relevantToOptimizer": ["repair_level"],
             "properties": {
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
+                **_categorical_fairness_properties,
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [

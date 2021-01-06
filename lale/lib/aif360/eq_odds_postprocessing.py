@@ -58,20 +58,10 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints.",
             "type": "object",
             "additionalProperties": False,
-            "required": [
-                "favorable_labels",
-                "protected_attributes",
-                "estimator",
-                "seed",
-            ],
+            "required": [*_categorical_fairness_properties.keys(), "estimator", "seed"],
             "relevantToOptimizer": [],
             "properties": {
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
+                **_categorical_fairness_properties,
                 "estimator": {
                     "description": "Nested supervised learning operator for which to mitigate fairness.",
                     "laleType": "operator",
