@@ -211,18 +211,27 @@ class TestAIF360(unittest.TestCase):
     def test_encoder_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
         orig_X = self.creditg_pd_cat["train_X"]
-        encoder = lale.lib.aif360.ProtectedAttributesEncoder(
+        encoder_separate = lale.lib.aif360.ProtectedAttributesEncoder(
             protected_attributes=info["protected_attributes"]
         )
-        conv_X = encoder.transform(orig_X)
+        csep_X = encoder_separate.transform(orig_X)
+        encoder_and = lale.lib.aif360.ProtectedAttributesEncoder(
+            protected_attributes=info["protected_attributes"], combine="and"
+        )
+        cand_X = encoder_and.transform(orig_X)
         for i in orig_X.index:
             orig_row = orig_X.loc[i]
-            conv_row = conv_X.loc[i]
+            csep_row = csep_X.loc[i]
+            cand_row = cand_X.loc[i]
+            cand_name = list(cand_X.columns)[0]
             self.assertEqual(
                 orig_row["personal_status"].startswith("male"),
-                conv_row["personal_status"],
+                csep_row["personal_status"],
             )
-            self.assertEqual(orig_row["age"] >= 26, conv_row["age"])
+            self.assertEqual(orig_row["age"] >= 26, csep_row["age"])
+            self.assertEqual(
+                cand_row[cand_name], csep_row["personal_status"] and csep_row["age"]
+            )
 
     def test_encoder_np_cat(self):
         info = self.creditg_np_cat["fairness_info"]
@@ -549,12 +558,7 @@ class TestAIF360(unittest.TestCase):
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 1.1)
 
     def test_disparate_impact_remover_pd_cat(self):
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
+        fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = DisparateImpactRemover(
             **fairness_info, preprocessing=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)

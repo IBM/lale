@@ -53,7 +53,7 @@ AIF360 provides three kinds of fairness mitigators, illustrated in the
 following picture. *Preprocessing* mitigators transform the data
 before it gets to an estimator; *inprocessing* mitigators include
 their own estimator; and *postprocessing* mitigators transform
-predictions *after* those come back from an estimator.
+predictions after those come back from an estimator.
 
 .. image:: ../../docs/img/fairness_patterns.png
 
@@ -71,11 +71,11 @@ example, consider the following code:
         >> ConcatFeatures
     ) >> LogisticRegression(max_iter=1000)
 
-In this example, the *mitigator* is `LFR` preprocessing, the
-*estimator* is `LogisticRegression`, and the *preprocessing* is a
+In this example, the *mitigator* is LFR preprocessing, the
+*estimator* is LogisticRegression, and the *preprocessing* is a
 sub-pipeline that one-hot-encodes strings. If all features of the data
 are numerical, then the preprocessing can be omitted. Internally, the
-`LFR` higher-order operator uses two auxiliary operators, Redacting
+LFR higher-order operator uses two auxiliary operators, Redacting
 and ProtectedAttributesEncoder.  Redacting sets protected attributes
 to a constant to prevent them from directly influencing
 fairness-agnostic preprocessing or estimators. And the
