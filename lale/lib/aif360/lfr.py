@@ -54,6 +54,7 @@ class LFRImpl:
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]
+        print(f"unpriv {unprivileged_groups}, priv {privileged_groups}")
         self.mitigator = aif360.algorithms.preprocessing.LFR(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
@@ -128,8 +129,7 @@ _hyperparams_schema = {
             "type": "object",
             "additionalProperties": False,
             "required": [
-                "favorable_labels",
-                "protected_attributes",
+                *_categorical_fairness_properties.keys(),
                 "preprocessing",
                 "k",
                 "Ax",
@@ -141,14 +141,7 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": ["k", "Ax", "Az", "Ay"],
             "properties": {
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": {
-                    **_categorical_fairness_properties["protected_attributes"],
-                    "minItems": 1,
-                    "maxItems": 1,
-                },
+                **_categorical_fairness_properties,
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [

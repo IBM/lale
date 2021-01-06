@@ -30,11 +30,11 @@ from .util import (
 
 class ReweighingImpl:
     def __init__(
-        self, estimator, favorable_labels, protected_attributes,
+        self, favorable_labels, protected_attributes, estimator,
     ):
-        self.estimator = estimator
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.estimator = estimator
 
     def fit(self, X, y):
         fairness_info = {
@@ -94,19 +94,14 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["estimator", "favorable_labels", "protected_attributes"],
+            "required": [*_categorical_fairness_properties.keys(), "estimator"],
             "relevantToOptimizer": [],
             "properties": {
+                **_categorical_fairness_properties,
                 "estimator": {
                     "description": "Nested classifier, fit method must support sample_weight.",
                     "laleType": "operator",
                 },
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
             },
         }
     ],

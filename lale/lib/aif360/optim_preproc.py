@@ -147,8 +147,7 @@ _hyperparams_schema = {
             "type": "object",
             "additionalProperties": False,
             "required": [
-                "favorable_labels",
-                "protected_attributes",
+                *_categorical_fairness_properties.keys(),
                 "optimizer",
                 "optim_options",
                 "verbose",
@@ -156,12 +155,7 @@ _hyperparams_schema = {
             ],
             "relevantToOptimizer": [],
             "properties": {
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
+                **_categorical_fairness_properties,
                 "optimizer": {
                     "description": "Optimizer class.",
                     "anyOf": [

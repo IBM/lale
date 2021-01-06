@@ -65,20 +65,14 @@ _hyperparams_schema = {
             "type": "object",
             "additionalProperties": False,
             "required": [
-                "favorable_labels",
-                "protected_attributes",
+                *_categorical_fairness_properties.keys(),
                 "estimator",
                 "cost_constraint",
                 "seed",
             ],
             "relevantToOptimizer": ["cost_constraint"],
             "properties": {
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
+                **_categorical_fairness_properties,
                 "estimator": {
                     "description": "Nested supervised learning operator for which to mitigate fairness.",
                     "laleType": "operator",
