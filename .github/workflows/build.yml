@@ -95,6 +95,9 @@ jobs:
         - test-case: test/test_autogen_lib.py
           python-version: 3.6
           setup-target: '.[test]'
+        - test-case: test/test_halving_gridsearchcv.py
+          python-version: 3.6
+          setup-target: '.[test]'
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -123,6 +126,9 @@ jobs:
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
+    - name: Install deps for test_halving_gridsearchcv
+      if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
+      run: pip install 'scikit-learn==0.24.1'
     - name: Run test
       run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
     - name: Upload coverage metrics to CodeCov
