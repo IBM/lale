@@ -24,6 +24,7 @@ Estimators:
 * lale.lib.lale. `BaselineClassifier`_
 * lale.lib.lale. `BaselineRegressor`_
 * lale.lib.lale. `GridSearchCV`_
+* lale.lib.lale. `HalvingGridSearchCV`_
 * lale.lib.lale. `Hyperopt`_
 * lale.lib.lale. `TopKVotingClassifier`_
 * lale.lib.lale. `SMAC`_
@@ -98,6 +99,7 @@ from .concat_features import ConcatFeatures
 from .functions import categorical, date_time
 from .grid_search_cv import GridSearchCV
 from .group_by import GroupBy
+from .halving_grid_search_cv import HalvingGridSearchCV
 from .hyperopt import Hyperopt
 from .identity_wrapper import IdentityWrapper
 from .join import Join
