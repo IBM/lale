@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import logging
-import sys
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -540,7 +539,7 @@ class _AccuracyAndDisparateImpact:
             return accuracy
         assert 0.0 <= accuracy <= 1.0 and 0.0 <= disp_impact, (accuracy, disp_impact)
         if disp_impact == 0.0:
-            return -sys.float_info.max
+            return 0.0
         elif disp_impact <= 1.0:
             symmetric_impact = disp_impact
         else:
@@ -700,7 +699,7 @@ class _R2AndDisparateImpact:
             return r2
         assert r2 <= 1.0 and 0.0 <= disp_impact, (r2, disp_impact)
         if disp_impact == 0.0:
-            return -sys.float_info.max
+            return np.finfo(np.float32).min
         elif disp_impact <= 1.0:
             symmetric_impact = disp_impact
         else:
