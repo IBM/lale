@@ -32,7 +32,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         clf = snapml.RandomForestClassifier()
         self.assertIsInstance(clf, snapml.RandomForestClassifier)
         fit_result = clf.fit(self.train_X, self.train_y)
-        #self.assertIsNone(fit_result)
+        self.assertIsInstance(fit_result, snapml.RandomForestClassifier)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         _ = scorer(clf, self.test_X, self.test_y)
 
