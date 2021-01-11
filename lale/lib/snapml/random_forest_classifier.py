@@ -281,7 +281,7 @@ _input_predict_schema = {
                 "items": {"type": "number"},
             },
         },
-        "num_threads": {
+        "n_jobs": {
             "type": "integer",
             "minimum": 0,
             "default": 0,
@@ -297,6 +297,37 @@ _output_predict_schema = {
         {"type": "array", "items": {"type": "string"}},
         {"type": "array", "items": {"type": "boolean"}},
     ],
+}
+
+_input_predict_proba_schema = {
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        },
+        "n_jobs": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of threads used to run inference. By default inference runs with maximum number of available threads..",
+        },
+    },
+}
+
+_output_predict_proba_schema = {
+    "type": "array",
+    "description": "The outer array is over samples aka rows.",
+    "items": {
+        "type": "array",
+        "description": "The inner array has items corresponding to each class.",
+        "items": {"type": "number"},
+    },
 }
 
 _combined_schemas = {

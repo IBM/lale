@@ -282,7 +282,7 @@ _input_predict_schema = {
                 "items": {"type": "number"},
             },
         },
-        "num_threads": {
+        "n_jobs": {
             "type": "integer",
             "minimum": 0,
             "default": 0,
