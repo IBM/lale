@@ -20,12 +20,14 @@ import aif360.metrics
 import numpy as np
 import pandas as pd
 import sklearn.metrics
+import sklearn.model_selection
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.lib.lale
 import lale.operators
 import lale.type_checking
+from lale.datasets.data_schemas import add_schema_adjusting_n_rows
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -376,11 +378,17 @@ class _ScorerFactory:
             favorable_label, unfavorable_label, protected_attribute_names
         )
 
-    def __call__(self, estimator, X, y):
-        predicted = estimator.predict(X)
-        index = X.index if isinstance(X, pd.DataFrame) else None
-        y_name = y.name if isinstance(y, pd.Series) else _ensure_str(X.shape[1])
-        y_pred = _ndarray_to_series(predicted, y_name, index, y.dtype)
+    def scoring(self, y_true, y_pred, X):
+        y_pred_orig = y_pred
+        if not isinstance(y_pred, pd.Series):
+            y_pred = _ndarray_to_series(
+                y_pred,
+                y_true.name
+                if isinstance(y_true, pd.Series)
+                else _ensure_str(X.shape[1]),
+                X.index if isinstance(X, pd.DataFrame) else None,
+                y_pred.dtype,
+            )
         if getattr(self, "favorable_labels", None) is None:
             encoded_X = X
         else:
@@ -394,12 +402,15 @@ class _ScorerFactory:
             )
         else:
             assert self.kind == "ClassificationMetric"
-            y_orig = _ndarray_to_series(y, y_name, index, y.dtype)
+            if not isinstance(y_true, pd.Series):
+                y_true = _ndarray_to_series(
+                    y_true, y_pred.name, y_pred.index, y_pred_orig.dtype
+                )
             if getattr(self, "favorable_labels", None) is not None:
-                _, y_orig = self.prot_attr_enc.transform(X, y_orig)
-            dataset_orig = self.pandas_to_dataset.convert(encoded_X, y_orig)
+                _, y_true = self.prot_attr_enc.transform(X, y_true)
+            dataset_true = self.pandas_to_dataset.convert(encoded_X, y_true)
             fairness_metrics = aif360.metrics.ClassificationMetric(
-                dataset_orig,
+                dataset_true,
                 dataset_pred,
                 self.fairness_info["unprivileged_groups"],
                 self.fairness_info["privileged_groups"],
@@ -418,9 +429,15 @@ class _ScorerFactory:
             if self.metric == "disparate_impact":
                 result = 0.0
             logger.warning(
-                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration. The set of predicted labels is {set(predicted)}."
+                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration. The set of predicted labels is {set(y_pred_orig)}."
             )
         return result
+
+    def scorer(self, estimator, X, y):
+        return self.scoring(y_true=y, y_pred=estimator.predict(X), X=X)
+
+    def __call__(self, estimator, X, y):
+        return self.scorer(estimator, X, y)
 
 
 _SCORER_DOCSTRING = """
@@ -1027,33 +1044,237 @@ _numeric_output_transform_schema = {
 }
 
 
+def column_for_stratification(X, y, favorable_labels, protected_attributes):
+    from lale.lib.aif360 import ProtectedAttributesEncoder
+
+    prot_attr_enc = ProtectedAttributesEncoder(
+        favorable_labels=favorable_labels,
+        protected_attributes=protected_attributes,
+        remainder="drop",
+        return_X_y=True,
+    )
+    encoded_X, encoded_y = prot_attr_enc.transform(X, y)
+    df = pd.concat([encoded_X, encoded_y], axis=1)
+
+    def label_for_stratification(row):
+        return "".join(["T" if v == 1 else "F" for v in row])
+
+    result = df.apply(label_for_stratification, axis=1)
+    result.name = "stratify"
+    return result
+
+
+def fair_stratified_train_test_split(
+    X, y, favorable_labels, protected_attributes, test_size=0.25
+):
+    """
+    Splits X and y into random train and test subsets stratified by labels and protected attributes.
+
+    Behaves similar to the `train_test_split`_ function from scikit-learn.
+
+.. _`train_test_split`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
+
+    Parameters
+    ----------
+    X : array
+
+      Features including protected attributes as numpy ndarray or pandas dataframe.
+
+    y : array
+
+      Labels as numpy ndarray or pandas series.
+
+    favorable_labels : array
+
+      Label values which are considered favorable (i.e. "positive").
+
+    protected_attributes : array
+
+      Features for which fairness is desired.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: train_X
+
+      - item 1: test_X
+
+      - item 2: train_y
+
+      - item 3: test_y
+    """
+    stratify = column_for_stratification(X, y, favorable_labels, protected_attributes)
+    train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
+        X, y, test_size=test_size, random_state=42, stratify=stratify
+    )
+    if hasattr(X, "json_schema"):
+        train_X = add_schema_adjusting_n_rows(train_X, X.json_schema)
+        test_X = add_schema_adjusting_n_rows(test_X, X.json_schema)
+    if hasattr(y, "json_schema"):
+        train_y = add_schema_adjusting_n_rows(train_y, y.json_schema)
+        test_y = add_schema_adjusting_n_rows(test_y, y.json_schema)
+    return train_X, test_X, train_y, test_y
+
+
+class FairStratifiedKFold:
+    """
+    Stratified k-folds cross-validator by labels and protected attributes.
+
+    Behaves similar to the `StratifiedKFold`_ class from scikit-learn.
+    This cross-validation object can be passed to the `cv` argument of
+    the `auto_configure`_ method.
+
+.. _`StratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+.. _`auto_configure`: https://lale.readthedocs.io/en/latest/modules/lale.operators.html#lale.operators.PlannedOperator.auto_configure
+    """
+
+    def __init__(
+        self,
+        favorable_labels,
+        protected_attributes,
+        n_splits=5,
+        shuffle=False,
+        random_state=None,
+    ):
+        """
+        Parameters
+        ----------
+        favorable_labels : array
+
+          Label values which are considered favorable (i.e. "positive").
+
+        protected_attributes : array
+
+          Features for which fairness is desired.
+
+        n_splits : integer, optional, default 5
+
+          Number of folds. Must be at least 2.
+
+        shuffle : boolean, optional, default False
+
+          Whether to shuffle each class's samples before splitting into batches.
+
+        random_state : union type, not for optimizer, default None
+
+          When shuffle is True, random_state affects the ordering of the indices.
+
+          - None
+
+              RandomState used by np.random
+
+          - numpy.random.RandomState
+
+              Use the provided random state, only affecting other users of that same random state instance.
+
+          - integer
+
+              Explicit seed.
+        """
+        self._fairness_info = {
+            "favorable_labels": favorable_labels,
+            "protected_attributes": protected_attributes,
+        }
+        self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
+            n_splits=n_splits, shuffle=shuffle, random_state=random_state
+        )
+
+    def get_n_splits(self, X=None, y=None, groups=None):
+        """
+        The number of splitting iterations in the cross-validator.
+
+        Parameters
+        ----------
+        X : Any
+
+            Always ignored, exists for compatibility.
+
+        y : Any
+
+            Always ignored, exists for compatibility.
+
+        groups : Any
+
+            Always ignored, exists for compatibility.
+
+        Returns
+        -------
+        integer
+            The number of splits.
+        """
+        return self._stratified_k_fold.get_n_splits(X, y, groups)
+
+    def split(self, X, y, groups=None):
+        """
+        Generate indices to split data into training and test set.
+
+        X : array **of** items : array **of** items : Any
+
+            Training data, including columns with the protected attributes.
+
+        y : union type
+
+            Target class labels; the array is over samples.
+
+            - array **of** items : float
+
+            - array **of** items : string
+
+        groups : Any
+
+            Always ignored, exists for compatibility.
+
+        Yields
+        ------
+        result : tuple
+
+            - train
+
+                The training set indices for that split.
+
+            - test
+
+                The testing set indices for that split.
+        """
+        stratify = column_for_stratification(X, y, **self._fairness_info)
+        result = self._stratified_k_fold.split(X, stratify, groups)
+        return result
+
+
 def fetch_creditg_df():
-    (orig_train_X, train_y), (orig_test_X, test_y) = lale.datasets.openml.fetch(
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
         "credit-g", "classification", astype="pandas"
     )
-
-    def replace_protected_attr(orig_X):
-        sex = pd.Series(
-            (orig_X["personal_status_male div/sep"] == 1.0)
-            | (orig_X["personal_status_male mar/wid"] == 1.0)
-            | (orig_X["personal_status_male single"] == 1.0),
-            dtype=np.float64,
-        )
-        age = pd.Series(orig_X["age"] > 25, dtype=np.float64)
-        dropped = orig_X.drop(
-            labels=[
-                "personal_status_female div/dep/mar",
-                "personal_status_male div/sep",
-                "personal_status_male mar/wid",
-                "personal_status_male single",
-            ],
-            axis=1,
-        )
-        added = dropped.assign(sex=sex, age=age)
-        return added
-
-    train_X = replace_protected_attr(orig_train_X)
-    test_X = replace_protected_attr(orig_test_X)
+    all_X = pd.concat([train_X, test_X])
+    all_y = pd.concat([train_y, test_y])
+    sex = pd.Series(
+        (all_X["personal_status_male div/sep"] == 1.0)
+        | (all_X["personal_status_male mar/wid"] == 1.0)
+        | (all_X["personal_status_male single"] == 1.0),
+        dtype=np.float64,
+    )
+    age = pd.Series(all_X["age"] > 25, dtype=np.float64)
+    dropped_X = all_X.drop(
+        labels=[
+            "personal_status_female div/dep/mar",
+            "personal_status_male div/sep",
+            "personal_status_male mar/wid",
+            "personal_status_male single",
+        ],
+        axis=1,
+    )
+    added_X = dropped_X.assign(sex=sex, age=age)
+    fairness_info = {
+        "favorable_labels": [1],
+        "protected_attributes": [
+            {"feature": "age", "privileged_groups": [1]},
+            {"feature": "sex", "privileged_groups": [1]},
+        ],
+    }
+    train_X, test_X, train_y, test_y = fair_stratified_train_test_split(
+        added_X, all_y, **fairness_info, test_size=0.33
+    )
     return (train_X, train_y), (test_X, test_y)
 
 

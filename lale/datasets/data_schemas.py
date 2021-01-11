@@ -135,6 +135,15 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
     return result
 
 
+def add_schema_adjusting_n_rows(obj, schema):
+    assert isinstance(obj, (np.ndarray, pd.DataFrame, pd.Series)), type(obj)
+    assert schema.get("type", None) == "array", schema
+    n_rows = obj.shape[0]
+    mod_schema = {**schema, "minItems": n_rows, "maxItems": n_rows}
+    result = add_schema(obj, mod_schema)
+    return result
+
+
 def strip_schema(obj):
     if isinstance(obj, NDArrayWithSchema):
         result = np.array(obj)
