@@ -39,6 +39,7 @@ from lale.lib.aif360 import (
     Redacting,
     RejectOptionClassification,
     Reweighing,
+    fair_stratified_train_test_split,
 )
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.sklearn import (
@@ -82,6 +83,11 @@ class TestAIF360(unittest.TestCase):
                 {"feature": "age", "privileged_groups": [[26, 1000]]},
             ],
         }
+        all_X = pd.concat([train_X, test_X])
+        all_y = pd.concat([train_y, test_y])
+        train_X, test_X, train_y, test_y = fair_stratified_train_test_split(
+            all_X, all_y, **fairness_info, test_size=0.33
+        )
         result = {
             "train_X": train_X,
             "train_y": train_y,
@@ -246,6 +252,22 @@ class TestAIF360(unittest.TestCase):
             )
             self.assertEqual(orig_X[i, 12] >= 26, conv_X.at[i, "f12"])
 
+    def test_column_for_stratification(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        train_X = self.creditg_pd_cat["train_X"]
+        train_y = self.creditg_pd_cat["train_y"]
+        stratify = lale.lib.aif360.util.column_for_stratification(
+            train_X, train_y, **fairness_info
+        )
+        for i in train_X.index:
+            male = train_X.loc[i]["personal_status"].startswith("male")
+            old = train_X.loc[i]["age"] >= 26
+            favorable = train_y.loc[i] == "good"
+            strat = stratify.loc[i]
+            self.assertEqual(male, strat[0] == "T")
+            self.assertEqual(old, strat[1] == "T")
+            self.assertEqual(favorable, strat[2] == "T")
+
     def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fi)
@@ -267,16 +289,16 @@ class TestAIF360(unittest.TestCase):
             self.assertLess(combined, r2)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
-        self.assertLess(parity, -0.1)
+        self.assertLess(parity, 0.0)
         eo_diff_scorer = lale.lib.aif360.equal_opportunity_difference(**fi)
         eo_diff = eo_diff_scorer(estimator, test_X, test_y)
         self.assertLess(eo_diff, 0.0)
         ao_diff_scorer = lale.lib.aif360.average_odds_difference(**fi)
         ao_diff = ao_diff_scorer(estimator, test_X, test_y)
-        self.assertLess(ao_diff, 0.0)
+        self.assertLess(ao_diff, 0.1)
         theil_index_scorer = lale.lib.aif360.theil_index(**fi)
         theil_index = theil_index_scorer(estimator, test_X, test_y)
-        self.assertGreater(theil_index, 0.15)
+        self.assertGreater(theil_index, 0.1)
 
     def test_scorers_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -427,7 +449,7 @@ class TestAIF360(unittest.TestCase):
     def test_gerry_fair_classifier_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = GerryFairClassifier(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.1)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.6, 1.1)
 
     def test_lfr_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -442,7 +464,7 @@ class TestAIF360(unittest.TestCase):
     def test_prejudice_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = PrejudiceRemover(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.0)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.6, 1.0)
 
     def test_redacting_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -461,7 +483,7 @@ class TestAIF360(unittest.TestCase):
         fairness_info = self.creditg_pd_num["fairness_info"]
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.0)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.8, 1.1)
 
     def _attempt_remi_creditg_pd_cat(
         self, fairness_info, trainable_remi, min_di, max_di
@@ -505,7 +527,7 @@ class TestAIF360(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.1)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.2)
 
     def test_gerry_fair_classifier_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
@@ -546,4 +568,4 @@ class TestAIF360(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.2)
