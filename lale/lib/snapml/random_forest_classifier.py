@@ -47,7 +47,7 @@ class RandomForestClassifierImpl:
     ):
         assert (
             snapml_installed
-        ), """Your Python environment does not have snapml installed. Install using: pip install snapml""
+        ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
             "n_estimators": n_estimators,
             "criterion": criterion,
