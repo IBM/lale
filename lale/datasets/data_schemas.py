@@ -17,7 +17,6 @@ import pandas as pd
 import scipy.sparse
 
 import lale.type_checking
-from lale.settings import disable_data_schema_validation
 from lale.type_checking import JSON_TYPE
 
 try:
@@ -99,6 +98,8 @@ def is_list_tensor(obj) -> bool:
 
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
+    from lale.settings import disable_data_schema_validation
+
     if disable_data_schema_validation:
         return obj
     if obj is None:

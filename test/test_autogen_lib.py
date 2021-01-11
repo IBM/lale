@@ -2,6 +2,7 @@ import inspect
 import logging
 from random import choice
 
+import numpy as np
 import pytest
 from sklearn import datasets
 
@@ -225,8 +226,8 @@ def test_ordinal_encoder():
     from lale.lib.autogen import OrdinalEncoder as Op
 
     def data_loader():
-        X = [[choice([0, 2]), choice([1, 2, 3])] for _ in range(100)]
-        y = [choice([0, 1]) for _ in X]
+        X = np.array([[choice([0, 2]), choice([1, 2, 3])] for _ in range(100)])
+        y = np.array([choice([0, 1]) for _ in X])
         return X, y
 
     base_test("OrdinalEncoder", Op >> LR, data_loader)
@@ -237,8 +238,10 @@ def test_missing_indicator():
     from lale.lib.autogen import MissingIndicator as Op
 
     def data_loader():
-        X = [[choice([-1, 1, 2, 3]), choice([-1, 1, 2, 3])] for _ in range(100)]
-        y = [choice([0, 1]) for _ in X]
+        X = np.array(
+            [[choice([-1, 1, 2, 3]), choice([-1, 1, 2, 3])] for _ in range(100)]
+        )
+        y = np.array([choice([0, 1]) for _ in X])
         return X, y
 
     base_test("MissingIndicator", Op >> LR, data_loader)
