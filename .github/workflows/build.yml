@@ -176,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     # This should run only on the master branch of the main repo
     if: github.repository == 'IBM/lale' && github.ref == 'refs/heads/master' && success()
-    needs: [static, test_matrix, test_snapml, test_notebooks]
+    needs: [static, test_matrix, test_notebooks]
     strategy:
       matrix:
         python-version: [3.6]
