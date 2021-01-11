@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import numpy as np
 import pandas as pd
 import scipy.sparse
 
 import lale.type_checking
-from lale.type_checking import JSON_TYPE
+from lale.type_checking import JSON_TYPE, disable_data_schema_validation
 
 try:
     import torch
@@ -100,8 +98,7 @@ def is_list_tensor(obj) -> bool:
 
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    if disable_data_schema_validation:
         return obj
     if obj is None:
         return None

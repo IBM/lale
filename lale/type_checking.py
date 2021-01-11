@@ -32,7 +32,6 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
-import os
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
@@ -46,6 +45,9 @@ if TYPE_CHECKING:
     import lale.operators
 
 JSON_TYPE = Dict[str, Any]
+
+disable_hyperparams_schema_validation = False
+disable_data_schema_validation = True
 
 
 def _validate_lale_type(validator, laleType, instance, schema):
@@ -141,8 +143,7 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
     jsonschema.ValidationError
         The value was invalid for the schema.
     """
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    if disable_hyperparams_schema_validation:
         return True  # if schema validation is disabled, always return as valid
     return always_validate_schema(value, schema, subsample_array=subsample_array)
 
@@ -271,8 +272,7 @@ def validate_schema_or_subschema(lhs: Any, super_schema: JSON_TYPE):
     SubschemaError
         The lhs was or had a schema that was not a subschema of super_schema.
     """
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    if disable_data_schema_validation:
         return True  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
     if is_schema(lhs):
@@ -512,3 +512,33 @@ def replace_data_constraints(
 
     result = recursive_replace(hyperparam_schema)
     return result
+
+
+def set_disable_data_schema_validation(flag: bool):
+    """Lale can validate the input and output data used for fit, predict, predict_proba etc.
+against the data schemas defined for an operator. This method allows users to control
+whether the data schema validation should be turned on or not.
+
+    Parameters
+    ----------
+    flag : bool
+        A value of True will disable the data schema validation, and a value of False will enable it.
+        It is True by default.
+    """
+    global disable_data_schema_validation
+    disable_data_schema_validation = flag
+
+
+def set_disable_hyperparams_schema_validation(flag: bool):
+    """Lale can validate the hyperparameter values passed while creating an operator against
+the json schema defined for hyperparameters of an operator. This method allows users to control
+whether such validation should be turned on or not.
+
+    Parameters
+    ----------
+    flag : bool
+        A value of True will disable the hyperparameter schema validation, and a value of False will enable it.
+        It is False by default.
+    """
+    global disable_hyperparams_schema_validation
+    disable_hyperparams_schema_validation = flag
