@@ -17,7 +17,8 @@ import pandas as pd
 import scipy.sparse
 
 import lale.type_checking
-from lale.type_checking import JSON_TYPE, disable_data_schema_validation
+from lale.settings import disable_data_schema_validation
+from lale.type_checking import JSON_TYPE
 
 try:
     import torch

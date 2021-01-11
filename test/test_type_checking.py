@@ -19,7 +19,7 @@ import jsonschema
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures, IdentityWrapper, NoOp
 from lale.lib.sklearn import NMF, LogisticRegression, TfidfVectorizer
-from lale.type_checking import (
+from lale.settings import (
     disable_data_schema_validation,
     disable_hyperparams_schema_validation,
     set_disable_data_schema_validation,
