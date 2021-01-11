@@ -38,7 +38,6 @@ class boolean2floatImpl:
             s_X = lale.datasets.data_schemas.to_schema(X)
             s_result = self.transform_schema(s_X)
             result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)
-            assert result.json_schema == s_result
         else:
             result = raw
         return result

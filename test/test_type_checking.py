@@ -496,6 +496,8 @@ class TestDatasetSchemas(unittest.TestCase):
     def test_transform_schema_pipeline(self):
         from lale.datasets.data_schemas import to_schema
 
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
         pipeline = NMF >> LogisticRegression
         input_schema = to_schema(self._digits["X"])
         transformed_schema = pipeline.transform_schema(input_schema)
@@ -506,6 +508,7 @@ class TestDatasetSchemas(unittest.TestCase):
         }
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_transform_schema_choice(self):
         from lale.datasets.data_schemas import to_schema

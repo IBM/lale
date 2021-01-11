@@ -40,10 +40,6 @@ import jsonschema.validators
 import jsonsubschema
 
 import lale.helpers
-from lale.settings import (
-    disable_data_schema_validation,
-    disable_hyperparams_schema_validation,
-)
 
 if TYPE_CHECKING:
     import lale.operators
@@ -144,6 +140,8 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
     jsonschema.ValidationError
         The value was invalid for the schema.
     """
+    from lale.settings import disable_hyperparams_schema_validation
+
     if disable_hyperparams_schema_validation:
         return True  # if schema validation is disabled, always return as valid
     return always_validate_schema(value, schema, subsample_array=subsample_array)
@@ -273,6 +271,8 @@ def validate_schema_or_subschema(lhs: Any, super_schema: JSON_TYPE):
     SubschemaError
         The lhs was or had a schema that was not a subschema of super_schema.
     """
+    from lale.settings import disable_data_schema_validation
+
     if disable_data_schema_validation:
         return True  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]

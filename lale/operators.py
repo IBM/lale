@@ -138,7 +138,6 @@ from lale import schema2enums as enum_gen
 from lale.json_operator import JSON_TYPE
 from lale.schemas import Schema
 from lale.search.PGO import remove_defaults_dict
-from lale.settings import disable_data_schema_validation
 from lale.util.VisitorMeta import AbstractVisitorMeta
 
 logger = logging.getLogger(__name__)
@@ -1275,6 +1274,8 @@ class IndividualOp(Operator):
         return result
 
     def transform_schema(self, s_X) -> JSON_TYPE:
+        from lale.settings import disable_data_schema_validation
+
         if disable_data_schema_validation:
             return {}
         elif self.is_transformer():
@@ -1740,6 +1741,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return self
 
     def transform_schema(self, s_X):
+        from lale.settings import disable_data_schema_validation
+
         if disable_data_schema_validation:
             return {}
         if hasattr(self._impl, "transform_schema"):
@@ -2303,6 +2306,8 @@ class BasePipeline(Operator, Generic[OpType]):
         self._validate_or_transform_schema(X, y, validate=True)
 
     def transform_schema(self, s_X):
+        from lale.settings import disable_data_schema_validation
+
         if disable_data_schema_validation:
             return {}
         else:
@@ -3210,6 +3215,8 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
             step.validate_schema(X, y)
 
     def transform_schema(self, s_X):
+        from lale.settings import disable_data_schema_validation
+
         if disable_data_schema_validation:
             return {}
         else:
