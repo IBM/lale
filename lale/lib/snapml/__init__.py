@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ Operators
 
 Classifiers:
 
-* lale.lib.pai4sk. `DecisionTreeClassifier`_
-* lale.lib.pai4sk. `RandomForestClassifier`_
-* lale.lib.pai4sk. `RandomForestRegressor`_
+* lale.lib.snapml. `DecisionTreeClassifier`_
+* lale.lib.snapml. `RandomForestClassifier`_
+* lale.lib.snapml. `RandomForestRegressor`_
 
-.. _`DecisionTreeClassifier`: lale.lib.pai4sk.decision_tree_classifier.html
-.. _`RandomForestClassifier`: lale.lib.pai4sk.random_forest_classifier.html
-.. _`RandomForestRegressor`: lale.lib.pai4sk.random_forest_regressor.html
+.. _`DecisionTreeClassifier`: lale.lib.snapml.decision_tree_classifier.html
+.. _`RandomForestClassifier`: lale.lib.snapml.random_forest_classifier.html
+.. _`RandomForestRegressor`: lale.lib.snapml.random_forest_regressor.html
 """
 
 from .decision_tree_classifier import DecisionTreeClassifier

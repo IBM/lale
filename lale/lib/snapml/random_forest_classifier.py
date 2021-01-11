@@ -11,56 +11,62 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from typing import TYPE_CHECKING
 
 try:
-    import pai4sk  # type: ignore
+    import snapml  # type: ignore
 
-    pai4sk_installed = True
+    snapml_installed = True
 except ImportError:
-    pai4sk_installed = False
+    snapml_installed = False
     if TYPE_CHECKING:
-        import pai4sk  # type: ignore
+        import snapml  # type: ignore
 
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
 
-class DecisionTreeClassifierImpl:
+class RandomForestClassifierImpl:
     def __init__(
         self,
+        n_estimators=10,
         criterion="gini",
-        splitter="best",
         max_depth=None,
         min_samples_leaf=1,
-        max_features=None,
+        max_features="auto",
+        bootstrap=True,
+        n_jobs=1,
         random_state=None,
-        n_threads=1,
+        verbose=False,
         use_histograms=False,
         hist_nbins=256,
         use_gpu=False,
-        gpu_id=0,
-        verbose=False,
+        gpu_ids=None,
     ):
         assert (
-            pai4sk_installed
-        ), """Your Python environment does not have pai4sk installed. For installation instructions see: https://www.zurich.ibm.com/snapml/"""
+            snapml_installed
+        ), """Your Python environment does not have snapml installed. For installation instructions see: https://www.zurich.ibm.com/snapml/"""
         self._hyperparams = {
+            "n_estimators": n_estimators,
             "criterion": criterion,
-            "splitter": splitter,
             "max_depth": max_depth,
             "min_samples_leaf": min_samples_leaf,
             "max_features": max_features,
+            "bootstrap": bootstrap,
+            "n_jobs": n_jobs,
             "random_state": random_state,
-            "n_threads": n_threads,
+            "verbose": verbose,
             "use_histograms": use_histograms,
             "hist_nbins": hist_nbins,
             "use_gpu": use_gpu,
-            "gpu_id": gpu_id,
-            "verbose": verbose,
+            "gpu_ids": gpu_ids,
         }
-        self._wrapped_model = pai4sk.DecisionTreeClassifier(**self._hyperparams)
+        modified_hps = {**self._hyperparams}
+        if modified_hps["gpu_ids"] is None:
+            modified_hps["gpu_ids"] = [0]  # TODO: support list as default
+        self._wrapped_model = snapml.RandomForestClassifier(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -75,13 +81,6 @@ class DecisionTreeClassifierImpl:
         else:
             return self._wrapped_model.predict(X, **predict_params)
 
-    def predict_proba(self, X, **predict_proba_params):
-        X = lale.datasets.data_schemas.strip_schema(X)
-        if predict_proba_params is None:
-            return self._wrapped_model.predict_proba(X)
-        else:
-            return self._wrapped_model.predict_proba(X, **predict_proba_params)
-
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
@@ -90,23 +89,27 @@ _hyperparams_schema = {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
             "relevantToOptimizer": [
+                "n_estimators",
                 "criterion",
-                "splitter",
                 "max_depth",
                 "min_samples_leaf",
                 "max_features",
+                "bootstrap",
             ],
             "additionalProperties": False,
             "properties": {
+                "n_estimators": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "minimumForOptimizer": 10,
+                    "maximumForOptimizer": 100,
+                    "default": 10,
+                    "description": "The number of trees in the forest.",
+                },
                 "criterion": {
                     "enum": ["gini"],
                     "default": "gini",
                     "description": "Function to measure the quality of a split.",
-                },
-                "splitter": {
-                    "enum": ["best"],
-                    "default": "best",
-                    "description": "The strategy used to choose the split at each node.",
                 },
                 "max_depth": {
                     "anyOf": [
@@ -164,6 +167,17 @@ _hyperparams_schema = {
                     "default": "auto",
                     "description": "The number of features to consider when looking for the best split.",
                 },
+                "bootstrap": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Whether bootstrap samples are used when building trees.",
+                },
+                "n_jobs": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1,
+                    "description": "Number of CPU threads to use.",
+                },
                 "random_state": {
                     "description": "Seed of pseudo-random number generator.",
                     "anyOf": [
@@ -175,11 +189,10 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                 },
-                "n_threads": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 1,
-                    "description": "Number of CPU threads to use.",
+                "verbose": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "If True, it prints debugging information while training. Warning: this will increase the training time. For performance evaluation, use verbose=False.",
                 },
                 "use_histograms": {
                     "type": "boolean",
@@ -196,15 +209,13 @@ _hyperparams_schema = {
                     "default": False,
                     "description": "Use GPU acceleration (only supported for histogram-based splits).",
                 },
-                "gpu_id": {
-                    "type": "integer",
-                    "default": 0,
-                    "description": "Device ID of the GPU which will be used when GPU acceleration is enabled.",
-                },
-                "verbose": {
-                    "type": "boolean",
-                    "default": False,
-                    "description": "If True, it prints debugging information while training. Warning: this will increase the training time. For performance evaluation, use verbose=False.",
+                "gpu_ids": {
+                    "anyOf": [
+                        {"description": "Use [0].", "enum": [None]},
+                        {"type": "array", "items": {"type": "integer"}},
+                    ],
+                    "default": None,
+                    "description": "Device IDs of the GPUs which will be used when GPU acceleration is enabled.",
                 },
             },
         },
@@ -216,17 +227,10 @@ _hyperparams_schema = {
             ],
         },
         {
-            "description": "GPU only supported for histogram-based splits.",
-            "anyOf": [
-                {"type": "object", "properties": {"use_histograms": {"enum": [True]}}},
-                {"type": "object", "properties": {"use_histograms": {"enum": [False]}}},
-            ],
-        },
-        {
-            "description": "Only need gpu_id when use_gpu is true.",
+            "description": "Only need gpu_ids when use_gpu is true.",
             "anyOf": [
                 {"type": "object", "properties": {"use_gpu": {"enum": [True]}}},
-                {"type": "object", "properties": {"gpu_id": {"enum": [0]}}},
+                {"type": "object", "properties": {"gpu_ids": {"enum": [None]}}},
             ],
         },
     ],
@@ -295,46 +299,15 @@ _output_predict_schema = {
     ],
 }
 
-_input_predict_proba_schema = {
-    "type": "object",
-    "properties": {
-        "X": {
-            "type": "array",
-            "description": "The outer array is over samples aka rows.",
-            "items": {
-                "type": "array",
-                "description": "The inner array is over features aka columns.",
-                "items": {"type": "number"},
-            },
-        },
-        "num_threads": {
-            "type": "integer",
-            "minimum": 0,
-            "default": 0,
-            "description": "Number of threads used to run inference. By default inference runs with maximum number of available threads..",
-        },
-    },
-}
-
-_output_predict_proba_schema = {
-    "type": "array",
-    "description": "The outer array is over samples aka rows.",
-    "items": {
-        "type": "array",
-        "description": "The inner array has items corresponding to each class.",
-        "items": {"type": "number"},
-    },
-}
-
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Decision tree classifier`_ from `Snap ML`_. It can be used for binary classification problems.
+    "description": """`Random forest classifier`_ from `Snap ML`_. It can be used for binary classification problems.
 
-.. _`Decision tree classifier`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/dectreeapidoc.html
+.. _`Random forest classifier`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/ranforapidoc.html
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.pai4sk.random_forest_classifier.html",
-    "import_from": "pai4sk",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_classifier.html",
+    "import_from": "snapml",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
@@ -342,13 +315,11 @@ _combined_schemas = {
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 
-lale.docstrings.set_docstrings(DecisionTreeClassifierImpl, _combined_schemas)
+lale.docstrings.set_docstrings(RandomForestClassifierImpl, _combined_schemas)
 
-DecisionTreeClassifier = lale.operators.make_operator(
-    DecisionTreeClassifierImpl, _combined_schemas
+RandomForestClassifier = lale.operators.make_operator(
+    RandomForestClassifierImpl, _combined_schemas
 )
