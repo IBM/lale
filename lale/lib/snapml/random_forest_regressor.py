@@ -48,7 +48,7 @@ class RandomForestRegressorImpl:
     ):
         assert (
             snapml_installed
-        ), """Your Python environment does not have snapml installed. For installation instructions see: https://www.zurich.ibm.com/snapml/"""
+        ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
             "n_estimators": n_estimators,
             "criterion": criterion,
