@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019,2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,24 +15,25 @@
 from typing import TYPE_CHECKING
 
 try:
-    import pai4sk  # type: ignore
+    import snapml  # type: ignore
 
-    pai4sk_installed = True
+    snapml_installed = True
 except ImportError:
-    pai4sk_installed = False
+    snapml_installed = False
     if TYPE_CHECKING:
-        import pai4sk  # type: ignore
+        import snapml  # type: ignore
+
 
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
 
-class RandomForestClassifierImpl:
+class RandomForestRegressorImpl:
     def __init__(
         self,
         n_estimators=10,
-        criterion="gini",
+        criterion="mse",
         max_depth=None,
         min_samples_leaf=1,
         max_features="auto",
@@ -46,8 +47,8 @@ class RandomForestClassifierImpl:
         gpu_ids=None,
     ):
         assert (
-            pai4sk_installed
-        ), """Your Python environment does not have pai4sk installed. For installation instructions see: https://www.zurich.ibm.com/snapml/"""
+            snapml_installed
+        ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
             "n_estimators": n_estimators,
             "criterion": criterion,
@@ -66,7 +67,7 @@ class RandomForestClassifierImpl:
         modified_hps = {**self._hyperparams}
         if modified_hps["gpu_ids"] is None:
             modified_hps["gpu_ids"] = [0]  # TODO: support list as default
-        self._wrapped_model = pai4sk.RandomForestClassifier(**modified_hps)
+        self._wrapped_model = snapml.RandomForestRegressor(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -107,8 +108,8 @@ _hyperparams_schema = {
                     "description": "The number of trees in the forest.",
                 },
                 "criterion": {
-                    "enum": ["gini"],
-                    "default": "gini",
+                    "enum": ["mse"],
+                    "default": "mse",
                     "description": "Function to measure the quality of a split.",
                 },
                 "max_depth": {
@@ -173,16 +174,10 @@ _hyperparams_schema = {
                     "description": "Whether bootstrap samples are used when building trees.",
                 },
                 "n_jobs": {
-                    "anyOf": [
-                        {"description": "1 process.", "enum": [None]},
-                        {
-                            "description": "Number of CPU cores.",
-                            "type": "integer",
-                            "minimum": 1,
-                        },
-                    ],
-                    "default": None,
-                    "description": "Number of jobs to run in parallel for fit.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1,
+                    "description": "Number of CPU threads to use.",
                 },
                 "random_state": {
                     "description": "Seed of pseudo-random number generator.",
@@ -287,7 +282,7 @@ _input_predict_schema = {
                 "items": {"type": "number"},
             },
         },
-        "num_threads": {
+        "n_jobs": {
             "type": "integer",
             "minimum": 0,
             "default": 0,
@@ -307,15 +302,15 @@ _output_predict_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Random forest classifier`_ from `Snap ML`_. It can be used for binary classification problems.
+    "description": """`Random forest regressor`_ from `Snap ML`_. It can be used for binary classification problems.
 
-.. _`Random forest classifier`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/ranforapidoc.html
+.. _`Random forest regressor`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/ranforapidoc.html
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.pai4sk.random_forest_classifier.html",
-    "import_from": "pai4sk",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_regressor.html",
+    "import_from": "snapml",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
@@ -324,8 +319,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RandomForestClassifierImpl, _combined_schemas)
+lale.docstrings.set_docstrings(RandomForestRegressorImpl, _combined_schemas)
 
-RandomForestClassifier = lale.operators.make_operator(
-    RandomForestClassifierImpl, _combined_schemas
+RandomForestRegressor = lale.operators.make_operator(
+    RandomForestRegressorImpl, _combined_schemas
 )

@@ -43,7 +43,7 @@ Operator libraries
 * `lale.lib.autogen`_ auto-generated based on `scikit-learn`_
 * `lale.lib.imblearn`_ based on `imbalanced-learn`_
 * `lale.lib.lightgbm`_ based on `LightGBM`_
-* `lale.lib.pai4sk`_ based on `Snap ML`_
+* `lale.lib.snapml`_ based on `Snap ML`_
 * `lale.lib.pytorch`_ based on `PyTorch`_
 * `lale.lib.spacy`_ based on `spaCy`_
 * `lale.lib.tensorflow`_ based on `TensorFlow`_
@@ -61,7 +61,7 @@ Operator libraries
 .. _`imbalanced-learn`: https://imbalanced-learn.readthedocs.io/en/stable/index.html
 .. _`lale.lib.lightgbm`: modules/lale.lib.lightgbm.html#module-lale.lib.lightgbm
 .. _`LightGBM`: https://lightgbm.readthedocs.io/en/latest/Python-API.html
-.. _`lale.lib.pai4sk`: modules/lale.lib.pai4sk.html#module-lale.lib.pai4sk
+.. _`lale.lib.snapml`: modules/lale.lib.snapml.html#module-lale.lib.snapml
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 .. _`lale.lib.pytorch`: modules/lale.lib.pytorch.html#module-lale.lib.pytorch
 .. _`PyTorch`: https://pytorch.org/

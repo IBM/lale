@@ -88,6 +88,7 @@ jobs:
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_relational.py
+        - test/test_snapml.py
         python-version: [3.6]
         setup-target: ['.[full,test]']
         include:
@@ -127,57 +128,6 @@ jobs:
     - name: Upload coverage metrics to CodeCov
       uses: codecov/codecov-action@v1
 
-  test_snapml:
-    name: Test Snap ML
-    runs-on: ubuntu-latest
-    needs: [static]
-    strategy:
-      fail-fast: false
-      matrix:
-        test-case: [test/test_snap_ml.py]
-        python-version: [3.6]
-        setup-target: ['.[full,test]']
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install system packages
-      run: sudo apt-get install graphviz swig
-    - name: Cache conda
-      uses: actions/cache@v2
-      env:
-        # Increase this value to reset cache if setup.py has not changed
-        CACHE_NUMBER: 0
-      with:
-        path: ~/conda_pkgs_dir
-        key:
-          ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-          hashFiles('setup.py') }}
-    - name: Setup anoconda
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        auto-update-conda: true
-        python-version: ${{ matrix.python-version }}
-        channels: 'https://public.dhe.ibm.com/ibmdl/export/pub/software/server/ibm-ai/conda/'
-        activate-environment: conda-snapml-env
-    - name: Install numpy
-      shell: bash -l {0}
-      run: pip install -U numpy
-    - name: Install dependencies
-      shell: bash -l {0}
-      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install SnapML
-      shell: bash -l {0}
-      run: |
-          $CONDA/bin/conda config --set always_yes yes --set changeps1 no
-          export IBM_POWERAI_LICENSE_ACCEPT=yes
-          conda install pai4sk
-    - name: Run Test
-      shell: bash -l {0}
-      run: |
-          conda install pytest
-          py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
-          bash <(curl -s https://codecov.io/bash)
-    - name: Upload coverage metrics to CodeCov
-      uses: codecov/codecov-action@v1
   test_notebooks:
     name: Test Notebooks
     needs: [static]
@@ -226,7 +176,7 @@ jobs:
     runs-on: ubuntu-latest
     # This should run only on the master branch of the main repo
     if: github.repository == 'IBM/lale' && github.ref == 'refs/heads/master' && success()
-    needs: [static, test_matrix, test_snapml, test_notebooks]
+    needs: [static, test_matrix, test_notebooks]
     strategy:
       matrix:
         python-version: [3.6]

@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020,2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,36 +27,36 @@ class TestSnapMLClassifiers(unittest.TestCase):
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_without_lale(self):
-        import pai4sk  # type: ignore
+        import snapml  # type: ignore
 
-        clf = pai4sk.RandomForestClassifier()
-        self.assertIsInstance(clf, pai4sk.RandomForestClassifier)
+        clf = snapml.RandomForestClassifier()
+        self.assertIsInstance(clf, snapml.RandomForestClassifier)
         fit_result = clf.fit(self.train_X, self.train_y)
-        self.assertIsNone(fit_result)
+        self.assertIsInstance(fit_result, snapml.RandomForestClassifier)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         _ = scorer(clf, self.test_X, self.test_y)
 
     def test_random_forest_classifier(self):
-        import lale.lib.pai4sk
+        import lale.lib.snapml
 
-        trainable = lale.lib.pai4sk.RandomForestClassifier()
+        trainable = lale.lib.snapml.RandomForestClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         _ = scorer(trained, self.test_X, self.test_y)
 
     def test_decision_tree_classifier(self):
-        import lale.lib.pai4sk
+        import lale.lib.snapml
 
-        trainable = lale.lib.pai4sk.DecisionTreeClassifier()
+        trainable = lale.lib.snapml.DecisionTreeClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
         _ = scorer(trained, self.test_X, self.test_y)
 
     def test_sklearn_compat(self):
-        import lale.lib.pai4sk
+        import lale.lib.snapml
         import lale.sklearn_compat
 
-        trainable = lale.lib.pai4sk.RandomForestClassifier()
+        trainable = lale.lib.snapml.RandomForestClassifier()
         compat = lale.sklearn_compat.make_sklearn_compat(trainable)
         trained = compat.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
@@ -72,9 +72,9 @@ class TestSnapMLRegressors(unittest.TestCase):
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_random_forest_regressor(self):
-        import lale.lib.pai4sk
+        import lale.lib.snapml
 
-        trainable = lale.lib.pai4sk.RandomForestRegressor()
+        trainable = lale.lib.snapml.RandomForestRegressor()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         _ = scorer(trained, self.test_X, self.test_y)
