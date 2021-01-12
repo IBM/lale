@@ -1274,7 +1274,11 @@ class IndividualOp(Operator):
         return result
 
     def transform_schema(self, s_X) -> JSON_TYPE:
-        if self.is_transformer():
+        from lale.settings import disable_data_schema_validation
+
+        if disable_data_schema_validation:
+            return {}
+        elif self.is_transformer():
             return self.output_schema_transform()
         elif hasattr(self._impl, "predict_proba"):
             return self.output_schema_predict_proba()
@@ -1737,6 +1741,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return self
 
     def transform_schema(self, s_X):
+        from lale.settings import disable_data_schema_validation
+
+        if disable_data_schema_validation:
+            return {}
         if hasattr(self._impl, "transform_schema"):
             try:
                 return self._impl_instance().transform_schema(s_X)
@@ -2298,7 +2306,12 @@ class BasePipeline(Operator, Generic[OpType]):
         self._validate_or_transform_schema(X, y, validate=True)
 
     def transform_schema(self, s_X):
-        return self._validate_or_transform_schema(s_X, validate=False)
+        from lale.settings import disable_data_schema_validation
+
+        if disable_data_schema_validation:
+            return {}
+        else:
+            return self._validate_or_transform_schema(s_X, validate=False)
 
     def input_schema_fit(self) -> JSON_TYPE:
         sources = self._find_source_nodes()
@@ -3202,9 +3215,14 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
             step.validate_schema(X, y)
 
     def transform_schema(self, s_X):
-        transformed_schemas = [st.transform_schema(s_X) for st in self.steps()]
-        result = lale.type_checking.join_schemas(*transformed_schemas)
-        return result
+        from lale.settings import disable_data_schema_validation
+
+        if disable_data_schema_validation:
+            return {}
+        else:
+            transformed_schemas = [st.transform_schema(s_X) for st in self.steps()]
+            result = lale.type_checking.join_schemas(*transformed_schemas)
+            return result
 
     def input_schema_fit(self) -> JSON_TYPE:
         pipeline_inputs = [s.input_schema_fit() for s in self.steps()]

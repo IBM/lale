@@ -16,6 +16,7 @@ import unittest
 from test.mock_module import UnknownOp
 from typing import Any
 
+import numpy as np
 from lightgbm import LGBMClassifier as baz
 from sklearn.decomposition import PCA as foo
 from sklearn.linear_model import Lars as foobar
@@ -25,6 +26,10 @@ import lale
 import lale.schemas as schemas
 import lale.type_checking
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+from lale.settings import (
+    disable_data_schema_validation,
+    set_disable_data_schema_validation,
+)
 
 
 class TestCustomSchema(unittest.TestCase):
@@ -415,10 +420,12 @@ class TestFreeze(unittest.TestCase):
     def test_individual_op_freeze_trained(self):
         from lale.lib.sklearn import KNeighborsClassifier
 
+        existing_schema_validation_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
         trainable = KNeighborsClassifier(n_neighbors=1)
-        X = [[0.0], [1.0], [2.0]]
-        y_old = [0.0, 0.0, 1.0]
-        y_new = [1.0, 0.0, 0.0]
+        X = np.array([[0.0], [1.0], [2.0]])
+        y_old = np.array([0.0, 0.0, 1.0])
+        y_new = np.array([1.0, 0.0, 0.0])
         liquid_old = trainable.fit(X, y_old)
         self.assertEqual(list(liquid_old.predict(X)), list(y_old))
         liquid_new = liquid_old.fit(X, y_new)
@@ -429,6 +436,7 @@ class TestFreeze(unittest.TestCase):
         self.assertEqual(list(frozen_old.predict(X)), list(y_old))
         frozen_new = frozen_old.fit(X, y_new)
         self.assertEqual(list(frozen_new.predict(X)), list(y_old))
+        set_disable_data_schema_validation(existing_schema_validation_flag)
 
     def test_pipeline_freeze_trained(self):
         from lale.lib.sklearn import LogisticRegression, MinMaxScaler
@@ -445,9 +453,12 @@ class TestFreeze(unittest.TestCase):
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.operators import TrainedIndividualOp
 
+        existing_schema_validation_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
         trainable = KNeighborsClassifier(n_neighbors=1)
-        X = [[0.0], [1.0], [2.0]]
-        y_old = [0.0, 0.0, 1.0]
+        X = np.array([[0.0], [1.0], [2.0]])
+        y_old = np.array([0.0, 0.0, 1.0])
         liquid = trainable.fit(X, y_old)
         self.assertIsInstance(liquid, TrainedIndividualOp)
         self.assertFalse(liquid.is_frozen_trainable())
@@ -457,6 +468,7 @@ class TestFreeze(unittest.TestCase):
         self.assertTrue(frozen.is_frozen_trainable())
         self.assertFalse(frozen.is_frozen_trained())
         self.assertEqual(len(frozen.free_hyperparams()), 0)
+        set_disable_data_schema_validation(existing_schema_validation_flag)
 
     def test_trained_pipeline_freeze_trainable(self):
         from lale.lib.sklearn import LogisticRegression, MinMaxScaler

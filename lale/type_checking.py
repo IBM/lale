@@ -32,7 +32,6 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
-import os
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
@@ -141,8 +140,9 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
     jsonschema.ValidationError
         The value was invalid for the schema.
     """
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    from lale.settings import disable_hyperparams_schema_validation
+
+    if disable_hyperparams_schema_validation:
         return True  # if schema validation is disabled, always return as valid
     return always_validate_schema(value, schema, subsample_array=subsample_array)
 
@@ -271,8 +271,9 @@ def validate_schema_or_subschema(lhs: Any, super_schema: JSON_TYPE):
     SubschemaError
         The lhs was or had a schema that was not a subschema of super_schema.
     """
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    from lale.settings import disable_data_schema_validation
+
+    if disable_data_schema_validation:
         return True  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
     if is_schema(lhs):

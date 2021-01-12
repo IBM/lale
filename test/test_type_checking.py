@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import unittest
 
 import jsonschema
@@ -20,6 +19,12 @@ import jsonschema
 import lale.lib.lale
 from lale.lib.lale import ConcatFeatures, IdentityWrapper, NoOp
 from lale.lib.sklearn import NMF, LogisticRegression, TfidfVectorizer
+from lale.settings import (
+    disable_data_schema_validation,
+    disable_hyperparams_schema_validation,
+    set_disable_data_schema_validation,
+    set_disable_hyperparams_schema_validation,
+)
 
 
 class TestDatasetSchemas(unittest.TestCase):
@@ -27,6 +32,8 @@ class TestDatasetSchemas(unittest.TestCase):
     def setUpClass(cls):
         from sklearn.datasets import load_iris
 
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
         irisArr = load_iris()
         cls._irisArr = {"X": irisArr.data, "y": irisArr.target}
         from lale.datasets import sklearn_to_pandas
@@ -51,6 +58,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
         train_X, train_y, test_X, test_y = fetch_drugscom()
         cls._drugRev = {"X": train_X, "y": train_y}
+        set_disable_data_schema_validation(existing_flag)
 
     @classmethod
     def tearDownClass(cls):
@@ -309,6 +317,9 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(transformed_schema, transformed_expected)
 
     def test_keep_non_numbers(self):
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import Project
 
@@ -414,6 +425,7 @@ class TestDatasetSchemas(unittest.TestCase):
         }
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_input_schema_fit(self):
         self.maxDiff = None
@@ -475,6 +487,9 @@ class TestDatasetSchemas(unittest.TestCase):
     def test_transform_schema_NoOp(self):
         from lale.datasets.data_schemas import to_schema
 
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
         for ds in [
             self._irisArr,
             self._irisDf,
@@ -487,10 +502,13 @@ class TestDatasetSchemas(unittest.TestCase):
             s_input = to_schema(ds["X"])
             s_output = NoOp.transform_schema(s_input)
             self.assertIs(s_input, s_output)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_transform_schema_pipeline(self):
         from lale.datasets.data_schemas import to_schema
 
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
         pipeline = NMF >> LogisticRegression
         input_schema = to_schema(self._digits["X"])
         transformed_schema = pipeline.transform_schema(input_schema)
@@ -501,9 +519,13 @@ class TestDatasetSchemas(unittest.TestCase):
         }
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_transform_schema_choice(self):
         from lale.datasets.data_schemas import to_schema
+
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
 
         choice = NMF | LogisticRegression
         input_schema = to_schema(self._digits["X"])
@@ -514,9 +536,13 @@ class TestDatasetSchemas(unittest.TestCase):
         }
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_transform_schema_higher_order(self):
         from lale.datasets.data_schemas import to_schema
+
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
 
         inner = LogisticRegression
         outer = IdentityWrapper(op=LogisticRegression)
@@ -525,9 +551,13 @@ class TestDatasetSchemas(unittest.TestCase):
         transformed_outer = outer.transform_schema(input_schema)
         self.maxDiff = None
         self.assertEqual(transformed_inner, transformed_outer)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_transform_schema_Concat_irisArr(self):
         from lale.datasets.data_schemas import to_schema
+
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
 
         data_X, data_y = self._irisArr["X"], self._irisArr["y"]
         s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
@@ -549,9 +579,13 @@ class TestDatasetSchemas(unittest.TestCase):
         check(s_out_Xy, 5, {"type": "number"})
         s_out_XXX = ConcatFeatures.transform_schema({"items": [s_in_X, s_in_X, s_in_X]})
         check(s_out_XXX, 12, {"type": "number"})
+        set_disable_data_schema_validation(existing_flag)
 
     def test_transform_schema_Concat_irisDf(self):
         from lale.datasets.data_schemas import to_schema
+
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
 
         data_X, data_y = self._irisDf["X"], self._irisDf["y"]
         s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
@@ -573,8 +607,12 @@ class TestDatasetSchemas(unittest.TestCase):
         check(s_out_Xy, 5, {"type": "number"})
         s_out_XXX = ConcatFeatures.transform_schema({"items": [s_in_X, s_in_X, s_in_X]})
         check(s_out_XXX, 12, {"type": "number"})
+        set_disable_data_schema_validation(existing_flag)
 
     def test_lr_with_all_datasets(self):
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
         should_succeed = ["irisArr", "irisDf", "digits", "housing"]
         should_fail = ["creditG", "movies", "drugRev"]
         for name in should_succeed:
@@ -584,8 +622,12 @@ class TestDatasetSchemas(unittest.TestCase):
             dataset = getattr(self, f"_{name}")
             with self.assertRaises(ValueError):
                 LogisticRegression.validate_schema(**dataset)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_project_with_all_datasets(self):
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
         should_succeed = [
             "irisArr",
             "irisDf",
@@ -602,8 +644,12 @@ class TestDatasetSchemas(unittest.TestCase):
             dataset = getattr(self, f"_{name}")
             with self.assertRaises(ValueError):
                 lale.lib.lale.Project.validate_schema(**dataset)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_nmf_with_all_datasets(self):
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
         should_succeed = ["digits"]
         should_fail = ["irisArr", "irisDf", "housing", "creditG", "movies", "drugRev"]
         for name in should_succeed:
@@ -613,8 +659,12 @@ class TestDatasetSchemas(unittest.TestCase):
             dataset = getattr(self, f"_{name}")
             with self.assertRaises(ValueError):
                 NMF.validate_schema(**dataset)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_tfidf_with_all_datasets(self):
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
         should_succeed = ["movies"]
         should_fail = ["irisArr", "irisDf", "digits", "housing", "creditG", "drugRev"]
         for name in should_succeed:
@@ -624,6 +674,7 @@ class TestDatasetSchemas(unittest.TestCase):
             dataset = getattr(self, f"_{name}")
             with self.assertRaises(ValueError):
                 TfidfVectorizer.validate_schema(**dataset)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_decision_function_binary(self):
         from lale.lib.lale import Project
@@ -799,7 +850,8 @@ class TestDisablingSchemaValidation(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_disable_schema_validation_individual_op(self):
-        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"] = "True"
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(True)
         import lale.schemas as schemas
         from lale.lib.sklearn import PCA
 
@@ -828,10 +880,46 @@ class TestDisablingSchemaValidation(unittest.TestCase):
         abc = foo()
         trained_pca = abc.fit(self.X_train)
         trained_pca.transform(self.X_test)
-        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"] = "False"
+        set_disable_data_schema_validation(existing_flag)
+
+    def test_enable_schema_validation_individual_op(self):
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+        import lale.schemas as schemas
+        from lale.lib.sklearn import PCA
+
+        pca_input = schemas.Object(
+            X=schemas.AnyOf(
+                [
+                    schemas.Array(schemas.Array(schemas.String())),
+                    schemas.Array(schemas.String()),
+                ]
+            )
+        )
+
+        foo = PCA.customize_schema(input_fit=pca_input)
+
+        pca_output = schemas.Object(
+            X=schemas.AnyOf(
+                [
+                    schemas.Array(schemas.Array(schemas.String())),
+                    schemas.Array(schemas.String()),
+                ]
+            )
+        )
+
+        foo = foo.customize_schema(output_transform=pca_output)
+
+        abc = foo()
+        with self.assertRaises(ValueError):
+            trained_pca = abc.fit(self.X_train)
+            trained_pca.transform(self.X_test)
+        set_disable_data_schema_validation(existing_flag)
 
     def test_disable_schema_validation_pipeline(self):
-        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"] = "True"
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(True)
+
         import lale.schemas as schemas
         from lale.lib.sklearn import PCA, LogisticRegression
 
@@ -851,4 +939,41 @@ class TestDisablingSchemaValidation(unittest.TestCase):
         pipeline = PCA() >> abc
         trained_pipeline = pipeline.fit(self.X_train, self.y_train)
         trained_pipeline.predict(self.X_test)
-        os.environ["LALE_DISABLE_SCHEMA_VALIDATION"] = "False"
+        set_disable_data_schema_validation(existing_flag)
+
+    def test_enable_schema_validation_pipeline(self):
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+
+        import lale.schemas as schemas
+        from lale.lib.sklearn import PCA, LogisticRegression
+
+        lr_input = schemas.Object(
+            required=["X", "y"],
+            X=schemas.AnyOf(
+                [
+                    schemas.Array(schemas.Array(schemas.String())),
+                    schemas.Array(schemas.String()),
+                ]
+            ),
+            y=schemas.Array(schemas.String()),
+        )
+
+        foo = LogisticRegression.customize_schema(input_fit=lr_input)
+        abc = foo()
+        pipeline = PCA() >> abc
+        with self.assertRaises(ValueError):
+            trained_pipeline = pipeline.fit(self.X_train, self.y_train)
+            trained_pipeline.predict(self.X_test)
+        set_disable_data_schema_validation(existing_flag)
+
+    def test_disable_enable_hyperparam_validation(self):
+        from lale.lib.sklearn import PCA
+
+        existing_flag = disable_hyperparams_schema_validation
+        set_disable_hyperparams_schema_validation(True)
+        PCA(n_components=True)
+        set_disable_hyperparams_schema_validation(False)
+        with self.assertRaises(jsonschema.exceptions.ValidationError):
+            PCA(n_components=True)
+        set_disable_hyperparams_schema_validation(existing_flag)
