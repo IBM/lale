@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -101,6 +101,7 @@ The following picture illustrates the core operator class hierarchy.
 
 import copy
 import enum as enumeration
+import importlib
 import inspect
 import logging
 import os
@@ -1166,7 +1167,7 @@ class IndividualOp(Operator):
         relevantToOptimizer: Optional[List[str]] = None,
         constraint: Optional[Schema] = None,
         tags: Optional[Dict] = None,
-        **kwargs: Optional[Schema],
+        **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "IndividualOp":
         return customize_schema(
             self, schemas, relevantToOptimizer, constraint, tags, **kwargs
@@ -1429,7 +1430,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         relevantToOptimizer: Optional[List[str]] = None,
         constraint: Optional[Schema] = None,
         tags: Optional[Dict] = None,
-        **kwargs: Optional[Schema],
+        **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "PlannedIndividualOp":
         return customize_schema(
             self, schemas, relevantToOptimizer, constraint, tags, **kwargs
@@ -1768,7 +1769,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         relevantToOptimizer: Optional[List[str]] = None,
         constraint: Optional[Schema] = None,
         tags: Optional[Dict] = None,
-        **kwargs: Optional[Schema],
+        **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainableIndividualOp":
         return customize_schema(
             self, schemas, relevantToOptimizer, constraint, tags, **kwargs
@@ -1956,7 +1957,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         relevantToOptimizer: Optional[List[str]] = None,
         constraint: Optional[Schema] = None,
         tags: Optional[Dict] = None,
-        **kwargs: Optional[Schema],
+        **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainedIndividualOp":
         return customize_schema(
             self, schemas, relevantToOptimizer, constraint, tags, **kwargs
@@ -1982,6 +1983,35 @@ def make_pretrained_operator(
     return x
 
 
+def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
+    assert inspect.isclass(impl_class)
+    assert not issubclass(impl_class, Operator)
+    assert hasattr(impl_class, "predict") or hasattr(impl_class, "transform")
+    if impl_class.__module__.startswith("lale.lib"):
+        assert impl_class.__name__.endswith("Impl"), impl_class.__name__
+        module = importlib.import_module(impl_class.__module__)
+        class_name = impl_class.__name__[: -len("Impl")]
+        result = getattr(module, class_name)
+    else:
+        try:
+            module_name = impl_class.__module__.split(".")[0]
+            module = importlib.import_module("lale.lib." + module_name)
+            result = getattr(module, impl_class.__name__)
+        except (ModuleNotFoundError, AttributeError):
+            try:
+                module = importlib.import_module("lale.lib.autogen")
+                result = getattr(module, impl_class.__name__)
+            except (ModuleNotFoundError, AttributeError):
+                result = None
+    assert result is None or isinstance(result, IndividualOp)
+    return result
+
+
+def get_lib_schemas(impl_class) -> Optional[JSON_TYPE]:
+    operator = get_op_from_lale_lib(impl_class)
+    return None if operator is None else operator._schemas
+
+
 def make_operator(
     impl, schemas=None, name: Optional[str] = None
 ) -> PlannedIndividualOp:
@@ -1993,6 +2023,9 @@ def make_operator(
                 name = n
             else:
                 name = "Unknown"
+    if schemas is None:
+        impl_class = impl if inspect.isclass(impl) else impl.__class__
+        schemas = get_lib_schemas(impl_class)
     if inspect.isclass(impl):
         if hasattr(impl, "fit"):
             operatorObj = PlannedIndividualOp(name, impl, schemas)
@@ -3417,7 +3450,7 @@ def customize_schema(
     relevantToOptimizer: Optional[List[str]] = None,
     constraint: Optional[Schema] = None,
     tags: Optional[Dict] = None,
-    **kwargs: Optional[Schema],
+    **kwargs: Union[Schema, JSON_TYPE, None],
 ) -> CustomizeOpType:
     """Return a new operator with a customized schema
 
@@ -3469,7 +3502,7 @@ def customize_schema(
             value = kwargs[arg]
             if arg in [p + n for p in ["input_", "output_"] for n in methods]:
                 # multiple input types (e.g., fit, predict)
-                assert value is not None
+                assert value is not None and isinstance(value, Schema)
                 lale.type_checking.validate_method(op, arg)
                 lale.type_checking.validate_is_schema(value.schema)
                 op._schemas["properties"][arg] = value.schema
@@ -3485,7 +3518,7 @@ def customize_schema(
             else:
                 op._schemas["properties"]["hyperparams"]["allOf"][0]["properties"][
                     arg
-                ] = value.schema
+                ] = getattr(value, "schema", value)
     # since the schema has changed, we need to invalidate any
     # cached enum attributes
     op._invalidate_enum_attributes()

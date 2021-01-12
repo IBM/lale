@@ -421,6 +421,7 @@ cat_encoder = CatEncoder(
     categories="auto",
     dtype=np.float64,
     handle_unknown="error",
+    sklearn_version_family="23",
 )
 pipeline = cat_encoder >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -509,7 +510,9 @@ tam = TAM(
         np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
-lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
+lgbm_classifier = LGBMClassifier(
+    class_weight="balanced", learning_rate=0.18, n_estimators=100
+)
 pipeline = make_pipeline(tam, lgbm_classifier)"""
         self._roundtrip(
             expected, lale.pretty_print.to_string(pipeline, combinators=False)
@@ -713,7 +716,9 @@ t_no_op = TNoOp(
     feat_constraints=[],
     tgraph="tgraph",
 )
-lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
+lgbm_classifier = LGBMClassifier(
+    class_weight="balanced", learning_rate=0.18, n_estimators=100
+)
 pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
         self._roundtrip(
             expected, lale.pretty_print.to_string(pipeline, combinators=False)
@@ -1113,3 +1118,25 @@ class TestToAndFromJSON(unittest.TestCase):
         operator_2 = from_json(json)
         json_2 = to_json(operator_2)
         self.assertEqual(json, json_2)
+
+    def test_customize_schema(self):
+        from lale.json_operator import from_json, to_json
+        from lale.lib.sklearn import LogisticRegression as LR
+
+        operator = LR.customize_schema(
+            solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"}
+        )
+        json_expected = {
+            "class": "lale.lib.sklearn.logistic_regression.LogisticRegressionImpl",
+            "state": "planned",
+            "operator": "LogisticRegression",
+            "label": "LR",
+            "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html",
+            "customize_schema": "not_available",
+        }
+        json = to_json(operator)
+        self.maxDiff = None
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        _ = to_json(operator_2)
+        # TODO: self.assertEqual(json, json_2)
