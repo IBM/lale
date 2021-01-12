@@ -32,6 +32,8 @@ class TestDatasetSchemas(unittest.TestCase):
     def setUpClass(cls):
         from sklearn.datasets import load_iris
 
+        existing_flag = disable_data_schema_validation
+        set_disable_data_schema_validation(False)
         irisArr = load_iris()
         cls._irisArr = {"X": irisArr.data, "y": irisArr.target}
         from lale.datasets import sklearn_to_pandas
@@ -56,6 +58,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
         train_X, train_y, test_X, test_y = fetch_drugscom()
         cls._drugRev = {"X": train_X, "y": train_y}
+        set_disable_data_schema_validation(existing_flag)
 
     @classmethod
     def tearDownClass(cls):
@@ -159,7 +162,6 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(train_X_schema, train_X_expected)
         self.assertEqual(train_y_schema, train_y_expected)
 
-    @unittest.skip("skipping because the transformed schema does not have enums.")
     def test_arff_to_schema(self):
         from lale.datasets.data_schemas import to_schema
         from lale.type_checking import validate_schema
@@ -283,7 +285,6 @@ class TestDatasetSchemas(unittest.TestCase):
         self.assertEqual(train_X_schema, train_X_expected)
         self.assertEqual(train_y_schema, train_y_expected)
 
-    @unittest.skip("skipping because the transformed schema does not have enums.")
     def test_keep_numbers(self):
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import Project
@@ -315,7 +316,6 @@ class TestDatasetSchemas(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(transformed_schema, transformed_expected)
 
-    @unittest.skip("skipping because the transformed schema does not have enums.")
     def test_keep_non_numbers(self):
         existing_flag = disable_data_schema_validation
         set_disable_data_schema_validation(False)
