@@ -365,6 +365,10 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     "default": "gain",
                     "description": "The feature importance type for the feature_importances_ property.",
                 },
+                "seed": {
+                    "default": None,
+                    "description": "deprecated and replaced with random_state, but adding to be backward compatible. ",
+                },
             },
         }
     ],
@@ -509,15 +513,16 @@ if xgboost_installed and xgboost.__version__ >= "0.90":
                 "anyOf": [
                     {
                         "enum": [
-                            "reg:squarederror",
+                            "reg:linear",
                             "reg:logistic",
                             "reg:gamma",
                             "reg:tweedie",
+                            "reg:squarederror",
                         ]
                     },
                     {"laleType": "callable"},
                 ],
-                "default": "reg:squarederror",
+                "default": "reg:linear",
             }
         )
     )

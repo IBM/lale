@@ -72,7 +72,9 @@ SCHEMA = {
                 "is_frozen_trainable": {"type": "boolean"},
                 "is_frozen_trained": {"type": "boolean"},
                 "coefs": {"enum": [None, "coefs_not_available"]},
-                "customize_schema": {"enum": ["not_available"]},
+                "customize_schema": {
+                    "anyOf": [{"enum": ["not_available"]}, {"type": "object"},],
+                },
             },
         },
         "planned_individual_op": {
@@ -324,6 +326,53 @@ def _hps_to_json_rec(hps, cls2label: Dict[str, str], gensym: _GenSym, steps) -> 
         return hps
 
 
+def _get_customize_schema(after, before):
+    if after == before:
+        return {}
+
+    def dict_equal_modulo(d1, d2, mod):
+        for k in d1.keys():
+            if k != mod and (k not in d2 or d1[k] != d2[k]):
+                return False
+        for k in d2.keys():
+            if k != mod and k not in d1:
+                return False
+        return True
+
+    def list_equal_modulo(l1, l2, mod):
+        if len(l1) != len(l2):
+            return False
+        for i in range(len(l1)):
+            if i != mod and l1[i] != l2[i]:
+                return False
+        return True
+
+    if not dict_equal_modulo(after, before, "properties"):
+        return "not_available"
+    after = after["properties"]
+    before = before["properties"]
+    if not dict_equal_modulo(after, before, "hyperparams"):
+        return "not_available"
+    after = after["hyperparams"]["allOf"]
+    before = before["hyperparams"]["allOf"]
+    if not list_equal_modulo(after, before, 0):
+        return "not_available"
+    after = after[0]
+    before = before[0]
+    if not dict_equal_modulo(after, before, "properties"):
+        return "not_available"
+    after = after["properties"]
+    before = before["properties"]
+    # TODO: only supports customizing the schema for individual hyperparams
+    hp_diff = {
+        hp_name: hp_schema
+        for hp_name, hp_schema in after.items()
+        if hp_name not in before or hp_schema != before[hp_name]
+    }
+    result = {"properties": {"hyperparams": {"allOf": [hp_diff]}}}
+    return result
+
+
 def _op_to_json_rec(
     op: "lale.operators.Operator", cls2label: Dict[str, str], gensym: _GenSym
 ) -> Tuple[str, JSON_TYPE]:
@@ -356,10 +405,9 @@ def _op_to_json_rec(
             else:
                 jsn["coefs"] = None
             jsn["is_frozen_trained"] = op.is_frozen_trained()
-        orig_schema = lale.operators.get_lib_schemas(op._impl_class())
-        if op._schemas is not orig_schema:
-            # TODO: record meaningful difference
-            jsn["customize_schema"] = "not_available"
+        orig_schemas = lale.operators.get_lib_schemas(op._impl_class())
+        if op._schemas is not orig_schemas:
+            jsn["customize_schema"] = _get_customize_schema(op._schemas, orig_schemas)
     elif isinstance(op, lale.operators.BasePipeline):
         uid = gensym("pipeline")
         child2uid: Dict[lale.operators.Operator, str] = {}
@@ -427,6 +475,9 @@ def _op_from_json_rec(jsn: JSON_TYPE) -> "lale.operators.Operator":
         schemas = lale.operators.get_lib_schemas(impl)
         name = jsn["operator"]
         result = lale.operators.make_operator(impl, schemas, name)
+        if jsn.get("customize_schema", {}) != {}:
+            new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][0]
+            result = result.customize_schema(**new_hps)
         if jsn["state"] in ["trainable", "trained"]:
             if _get_state(result) == "planned":
                 hps = jsn["hyperparams"]

@@ -2003,7 +2003,8 @@ def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
                 result = getattr(module, impl_class.__name__)
             except (ModuleNotFoundError, AttributeError):
                 result = None
-    assert result is None or isinstance(result, IndividualOp)
+    if result is not None:
+        result._check_schemas()
     return result
 
 
@@ -2024,8 +2025,12 @@ def make_operator(
             else:
                 name = "Unknown"
     if schemas is None:
-        impl_class = impl if inspect.isclass(impl) else impl.__class__
-        schemas = get_lib_schemas(impl_class)
+        if isinstance(impl, IndividualOp):
+            schemas = impl._schemas
+        elif inspect.isclass(impl):
+            schemas = get_lib_schemas(impl)
+        else:
+            schemas = get_lib_schemas(impl.__class__)
     if inspect.isclass(impl):
         if hasattr(impl, "fit"):
             operatorObj = PlannedIndividualOp(name, impl, schemas)
@@ -3345,7 +3350,6 @@ def make_pipeline(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
 
 
 def make_pipeline(*orig_steps):
-
     steps: List[Operator] = []
     edges: List[Tuple[Operator, Operator]] = []
     prev_op: Optional[Operator] = None
@@ -3500,12 +3504,15 @@ def customize_schema(
 
         for arg in kwargs:
             value = kwargs[arg]
+            if isinstance(value, Schema):
+                value = value.schema
+            if value is not None:
+                lale.type_checking.validate_is_schema(value)
             if arg in [p + n for p in ["input_", "output_"] for n in methods]:
                 # multiple input types (e.g., fit, predict)
-                assert value is not None and isinstance(value, Schema)
+                assert value is not None
                 lale.type_checking.validate_method(op, arg)
-                lale.type_checking.validate_is_schema(value.schema)
-                op._schemas["properties"][arg] = value.schema
+                op._schemas["properties"][arg] = value
             elif value is None:
                 scm = op._schemas["properties"]["hyperparams"]["allOf"][0]
                 scm["required"] = [k for k in scm["required"] if k != arg]
@@ -3518,7 +3525,7 @@ def customize_schema(
             else:
                 op._schemas["properties"]["hyperparams"]["allOf"][0]["properties"][
                     arg
-                ] = getattr(value, "schema", value)
+                ] = value
     # since the schema has changed, we need to invalidate any
     # cached enum attributes
     op._invalidate_enum_attributes()

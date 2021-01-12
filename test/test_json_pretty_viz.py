@@ -1132,11 +1132,24 @@ class TestToAndFromJSON(unittest.TestCase):
             "operator": "LogisticRegression",
             "label": "LR",
             "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html",
-            "customize_schema": "not_available",
+            "customize_schema": {
+                "properties": {
+                    "hyperparams": {
+                        "allOf": [
+                            {
+                                "solver": {
+                                    "default": "liblinear",
+                                    "enum": ["lbfgs", "liblinear"],
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
         }
         json = to_json(operator)
         self.maxDiff = None
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
-        _ = to_json(operator_2)
-        # TODO: self.assertEqual(json, json_2)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json, json_2)

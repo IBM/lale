@@ -498,6 +498,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     # if not, call make operator on sklearn classes and create a lale pipeline.
 
     def get_equivalent_lale_op(sklearn_obj, fitted):
+        if isinstance(sklearn_obj, lale.operators.Operator):
+            return sklearn_obj
+
         # Validate that the sklearn_obj is a valid sklearn-compatible object
         if sklearn_obj is None or not hasattr(sklearn_obj, "get_params"):
             raise ValueError(
