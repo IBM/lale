@@ -14,6 +14,7 @@
 
 import pickle
 import traceback
+import typing
 import unittest
 
 import sklearn.datasets
@@ -214,7 +215,10 @@ class TestImportExport(unittest.TestCase):
         anova_filter = SelectKBest(f_regression, k=3)
         clf = SklearnSVC(kernel="linear")
         sklearn_pipeline = Pipeline([("anova", anova_filter), ("svc", clf)])
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
             sklearn_step_params = sklearn_pipeline.named_steps[
                 pipeline_step
@@ -232,7 +236,10 @@ class TestImportExport(unittest.TestCase):
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
             SklearnPCA(n_components=3), SklearnKNN()
         )
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
             sklearn_step_params = sklearn_pipeline.named_steps[
                 pipeline_step
@@ -256,7 +263,10 @@ class TestImportExport(unittest.TestCase):
             ]
         )
         sklearn_pipeline = sklearn.pipeline.make_pipeline(union, SklearnKNN())
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
         self.assertEqual(len(lale_pipeline.edges()), 3)
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
@@ -292,7 +302,10 @@ class TestImportExport(unittest.TestCase):
             ]
         )
         sklearn_pipeline = sklearn.pipeline.make_pipeline(union, SklearnKNN())
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
         self.assertEqual(len(lale_pipeline.edges()), 4)
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
@@ -343,7 +356,10 @@ class TestImportExport(unittest.TestCase):
             ]
         )
         sklearn_pipeline = sklearn.pipeline.make_pipeline(union, SklearnKNN())
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
         self.assertEqual(len(lale_pipeline.edges()), 8)
         # These assertions assume topological sort, which may not be unique. So the assertions are brittle.
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
@@ -392,7 +408,10 @@ class TestImportExport(unittest.TestCase):
             ]
         )
         sklearn_pipeline = sklearn.pipeline.make_pipeline(union, SklearnKNN())
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
         self.assertEqual(len(lale_pipeline.edges()), 5)
         from lale.lib.lale.concat_features import ConcatFeaturesImpl
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifierImpl
@@ -549,7 +568,10 @@ class TestImportExport(unittest.TestCase):
         clf = SklearnSVC(kernel="linear")
         sklearn_pipeline = Pipeline([("anova", anova_filter), ("svc", clf)])
         sklearn_pipeline.fit(self.X_train, self.y_train)
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainedPipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline),
+        )
         lale_pipeline.predict(self.X_test)
 
     def test_import_from_sklearn_pipeline3(self):
@@ -560,7 +582,10 @@ class TestImportExport(unittest.TestCase):
         anova_filter = SelectKBest(f_regression, k=3)
         clf = SklearnSVC(kernel="linear")
         sklearn_pipeline = Pipeline([("anova", anova_filter), ("svc", clf)])
-        lale_pipeline = import_from_sklearn_pipeline(sklearn_pipeline, fitted=False)
+        lale_pipeline = typing.cast(
+            lale.operators.TrainablePipeline,
+            import_from_sklearn_pipeline(sklearn_pipeline, fitted=False),
+        )
         with self.assertRaises(
             ValueError
         ):  # fitted=False returns a Trainable, so calling predict is invalid.

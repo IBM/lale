@@ -15,7 +15,6 @@
 from typing import TYPE_CHECKING
 
 import pandas as pd
-from sklearn.base import BaseEstimator
 
 import lale.docstrings
 import lale.operators
@@ -46,94 +45,19 @@ def _rename_all_features(X):
     return pd.DataFrame(data=X, columns=mapped)
 
 
-class XGBRegressorImpl(BaseEstimator):
-    def __init__(
-        self,
-        max_depth=3,
-        learning_rate=0.1,
-        n_estimators=100,
-        verbosity=1,
-        silent=None,
-        objective="reg:linear",
-        booster="gbtree",
-        tree_method="auto",
-        n_jobs=1,
-        nthread=None,
-        gamma=0,
-        min_child_weight=1,
-        max_delta_step=0,
-        subsample=1,
-        colsample_bytree=1,
-        colsample_bylevel=1,
-        colsample_bynode=1,
-        reg_alpha=0,
-        reg_lambda=1,
-        scale_pos_weight=1,
-        base_score=0.5,
-        random_state=0,
-        seed=None,
-        missing=None,
-        importance_type="gain",
-    ):
+class XGBRegressorImpl:
+    _wrapped_model: xgboost.XGBRegressor
+
+    def __init__(self, **hyperparams):
         assert xgboost_installed, """Your Python environment does not have xgboost installed. You can install it with
     pip install xgboost
 or with
     pip install 'lale[full]'"""
-        self.max_depth = max_depth
-        self.learning_rate = learning_rate
-        self.n_estimators = n_estimators
-        self.verbosity = verbosity
-        self.silent = silent
-        self.objective = objective
-        self.booster = booster
-        self.tree_method = tree_method
-        self.n_jobs = n_jobs
-        self.nthread = nthread
-        self.gamma = gamma
-        self.min_child_weight = min_child_weight
-        self.max_delta_step = max_delta_step
-        self.subsample = subsample
-        self.colsample_bytree = colsample_bytree
-        self.colsample_bylevel = colsample_bylevel
-        self.colsample_bynode = colsample_bynode
-        self.reg_alpha = reg_alpha
-        self.reg_lambda = reg_lambda
-        self.scale_pos_weight = scale_pos_weight
-        self.base_score = base_score
-        self.random_state = random_state
-        self.seed = seed
-        self.missing = missing
-        self.importance_type = importance_type
+        self._hyperparams = hyperparams
 
     def fit(self, X, y, **fit_params):
-        result = XGBRegressorImpl(
-            self.max_depth,
-            self.learning_rate,
-            self.n_estimators,
-            self.verbosity,
-            self.silent,
-            self.objective,
-            self.booster,
-            self.tree_method,
-            self.n_jobs,
-            self.nthread,
-            self.gamma,
-            self.min_child_weight,
-            self.max_delta_step,
-            self.subsample,
-            self.colsample_bytree,
-            self.colsample_bylevel,
-            self.colsample_bynode,
-            self.reg_alpha,
-            self.reg_lambda,
-            self.scale_pos_weight,
-            self.base_score,
-            self.random_state,
-            self.seed,
-            self.missing,
-            self.importance_type,
-        )
-        result._wrapped_model = xgboost.XGBRegressor(**self.get_params())
+        result = XGBRegressorImpl(**self._hyperparams)
+        result._wrapped_model = xgboost.XGBRegressor(**self._hyperparams)
         renamed_X = _rename_all_features(X)
         result._wrapped_model.fit(renamed_X, y, **fit_params)
         return result
@@ -199,7 +123,7 @@ _hyperparams_schema = {
                     "maximumForOptimizer": 7,
                 },
                 "learning_rate": {
-                    "description": "Boosting learning rate (xgb’s “eta”)",
+                    "description": """Boosting learning rate (xgb's "eta")""",
                     "type": "number",
                     "default": 0.1,
                     "distribution": "loguniform",
@@ -365,6 +289,10 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     "default": "gain",
                     "description": "The feature importance type for the feature_importances_ property.",
                 },
+                "seed": {
+                    "default": None,
+                    "description": "deprecated and replaced with random_state, but adding to be backward compatible. ",
+                },
             },
         }
     ],
@@ -509,17 +437,205 @@ if xgboost_installed and xgboost.__version__ >= "0.90":
                 "anyOf": [
                     {
                         "enum": [
-                            "reg:squarederror",
+                            "reg:linear",
                             "reg:logistic",
                             "reg:gamma",
                             "reg:tweedie",
+                            "reg:squarederror",
                         ]
                     },
                     {"laleType": "callable"},
                 ],
-                "default": "reg:squarederror",
+                "default": "reg:linear",
             }
         )
+    )
+
+if xgboost_installed and xgboost.__version__ >= "1.3":
+    # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+    XGBRegressor = XGBRegressor.customize_schema(
+        monotone_constraints={
+            "description": "Constraint of variable monotonicity.",
+            "anyOf": [{"enum": [None]}, {"type": "string"}],
+            "default": None,
+        },
+        interaction_constraints={
+            "description": "Constraints for interaction representing permitted interactions. The constraints must be specified in the form of a nest list, e.g. [[0, 1], [2, 3, 4]], where each inner list is a group of indices of features that are allowed to interact with each other.",
+            "anyOf": [{"enum": [None]}, {"type": "string"}],
+            "default": None,
+        },
+        num_parallel_tree={
+            "description": "Used for boosting random forest.",
+            "anyOf": [{"enum": [None]}, {"type": "integer"}],
+            "default": None,
+        },
+        validate_parameters={
+            "description": "Give warnings for unknown parameter.",
+            "anyOf": [{"enum": [None]}, {"type": "boolean"}],
+            "default": None,
+        },
+        gpu_id={"description": "Device ordinal.", "enum": [None], "default": None,},
+        max_depth={
+            "description": "Maximum tree depth for base learners.",
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "minimum": 0,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 7,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        learning_rate={
+            "description": """Boosting learning rate (xgb's "eta")""",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "distribution": "loguniform",
+                    "minimumForOptimizer": 0.02,
+                    "maximumForOptimizer": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        booster={
+            "description": "Specify which booster to use.",
+            "enum": ["gbtree", "gblinear", "dart", None],
+            "default": None,
+        },
+        tree_method={
+            "description": """Specify which tree method to use.
+Default to auto. If this parameter is set to default, XGBoost will choose the most conservative option available.
+Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
+            "enum": ["auto", "exact", "approx", "hist", "gpu_hist", None],
+            "default": None,
+        },
+        gamma={
+            "description": "Minimum loss reduction required to make a further partition on a leaf node of the tree.",
+            "anyOf": [
+                {"type": "number", "minimum": 0, "maximumForOptimizer": 1.0,},
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        min_child_weight={
+            "description": "Minimum sum of instance weight(hessian) needed in a child.",
+            "anyOf": [
+                {
+                    "type": "integer",
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 20,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        max_delta_step={
+            "description": "Maximum delta step we allow each tree's weight estimation to be.",
+            "anyOf": [{"enum": [None]}, {"type": "integer"}],
+            "default": None,
+        },
+        subsample={
+            "description": "Subsample ratio of the training instance.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        colsample_bytree={
+            "description": "Subsample ratio of columns when constructing each tree.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        colsample_bylevel={
+            "description": "Subsample ratio of columns for each split, in each level.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1.0,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        colsample_bynode={
+            "description": "Subsample ratio of columns for each split.",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        reg_alpha={
+            "description": "L1 regularization term on weights",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0,
+                    "maximumForOptimizer": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        reg_lambda={
+            "description": "L2 regularization term on weights",
+            "anyOf": [
+                {
+                    "type": "number",
+                    "distribution": "uniform",
+                    "minimumForOptimizer": 0.1,
+                    "maximumForOptimizer": 1,
+                },
+                {"enum": [None], "forOptimizer": False},
+            ],
+            "default": None,
+        },
+        scale_pos_weight={
+            "description": "Balancing of positive and negative weights.",
+            "anyOf": [{"type": "number"}, {"enum": [None], "forOptimizer": False},],
+            "default": None,
+        },
+        base_score={
+            "description": "The initial prediction score of all instances, global bias.",
+            "anyOf": [{"type": "number"}, {"enum": [None], "forOptimizer": False},],
+            "default": None,
+        },
     )
 
 lale.docstrings.set_docstrings(XGBRegressorImpl, XGBRegressor._schemas)

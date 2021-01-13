@@ -58,8 +58,8 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.get_schema("input_fit"), pca_input)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.get_schema("input_fit"), init_input_schema)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, input_fit={})
-        self.assertRaises(Exception, self.sk_pca.customize_schema, input_foo=pca_input)
+        self.assertRaises(Exception, self.sk_pca.customize_schema, input_fit=42)
+        _ = self.sk_pca.customize_schema(input_foo=pca_input)
 
     def test_override_output(self):
         init_output_schema = self.sk_pca.get_schema("output_transform")
@@ -68,10 +68,8 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.get_schema("output_transform"), pca_output)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.get_schema("output_transform"), init_output_schema)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, output={})
-        self.assertRaises(
-            Exception, self.sk_pca.customize_schema, output_foo=pca_output
-        )
+        self.assertRaises(Exception, self.sk_pca.customize_schema, output=42)
+        _ = self.sk_pca.customize_schema(output_foo=pca_output)
 
     def test_override_output2(self):
         init_output_schema = self.sk_pca.get_schema("output_transform")
@@ -104,7 +102,7 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.hyperparam_schema("whiten"), expected)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.hyperparam_schema("whiten"), init)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, whitenX={})
+        self.assertRaises(Exception, self.sk_pca.customize_schema, whitenX=42)
 
     def test_override_bool_param_ll(self):
         init = self.ll_pca.hyperparam_schema("whiten")
@@ -113,7 +111,7 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.hyperparam_schema("whiten"), expected)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.ll_pca.hyperparam_schema("whiten"), init)
-        self.assertRaises(Exception, self.ll_pca.customize_schema, whitenX={})
+        self.assertRaises(Exception, self.ll_pca.customize_schema, whitenX=42)
 
     def test_override_enum_param(self):
         init = self.ll_pca.hyperparam_schema("svd_solver")
