@@ -804,6 +804,33 @@ pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
         printed = lale.pretty_print.to_string(pipeline, astype="sklearn")
         self._roundtrip(expected, printed)
 
+    def test_customize_schema(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        pipeline = LogisticRegression.customize_schema(
+            solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"},
+            tol={
+                "type": "number",
+                "minimum": 0.00001,
+                "maximum": 0.1,
+                "default": 0.0001,
+            },
+        )(solver="lbfgs")
+        expected = """from sklearn.linear_model import LogisticRegression
+import lale
+
+lale.wrap_imported_operators()
+pipeline = LogisticRegression.customize_schema(
+    solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"},
+    tol={
+        "type": "number",
+        "minimum": 1e-05,
+        "maximum": 0.1,
+        "default": 0.0001,
+    },
+)(solver="lbfgs")"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):
@@ -1124,7 +1151,13 @@ class TestToAndFromJSON(unittest.TestCase):
         from lale.lib.sklearn import LogisticRegression as LR
 
         operator = LR.customize_schema(
-            solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"}
+            solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"},
+            tol={
+                "type": "number",
+                "minimum": 0.00001,
+                "maximum": 0.1,
+                "default": 0.0001,
+            },
         )
         json_expected = {
             "class": "lale.lib.sklearn.logistic_regression.LogisticRegressionImpl",
@@ -1140,7 +1173,13 @@ class TestToAndFromJSON(unittest.TestCase):
                                 "solver": {
                                     "default": "liblinear",
                                     "enum": ["lbfgs", "liblinear"],
-                                }
+                                },
+                                "tol": {
+                                    "type": "number",
+                                    "minimum": 0.00001,
+                                    "maximum": 0.1,
+                                    "default": 0.0001,
+                                },
                             }
                         ]
                     }
