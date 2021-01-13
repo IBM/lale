@@ -24,9 +24,11 @@ import traceback
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 import h5py
+import jsonschema
 import numpy as np
 import pandas as pd
 import scipy.sparse
+import sklearn.pipeline
 from sklearn.metrics import accuracy_score, check_scoring, log_loss
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.metaestimators import _safe_split
@@ -498,6 +500,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     # if not, call make operator on sklearn classes and create a lale pipeline.
 
     def get_equivalent_lale_op(sklearn_obj, fitted):
+        import lale.operators
+        import lale.type_checking
+
         if isinstance(sklearn_obj, lale.operators.Operator):
             return sklearn_obj
 
@@ -506,28 +511,6 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             raise ValueError(
                 "The input pipeline has a step that is not scikit-learn compatible."
             )
-        module_names = ["lale.lib.sklearn", "lale.lib.autoai_libs"]
-        from lale.operators import TrainedIndividualOp, make_operator
-
-        lale_wrapper_found = False
-        class_name = sklearn_obj.__class__.__name__
-        for module_name in module_names:
-            module = importlib.import_module(module_name)
-            try:
-                class_ = getattr(module, class_name)
-                lale_wrapper_found = True
-                break
-            except AttributeError:
-                continue
-        else:
-            class_ = make_operator(sklearn_obj, name=class_name)
-
-        if (
-            not fitted
-        ):  # If fitted is False, we do not want to return a Trained operator.
-            lale_op = class_
-        else:
-            lale_op = TrainedIndividualOp(class_._name, class_._impl, class_._schemas)
 
         orig_hyperparams = sklearn_obj.get_params()
         higher_order = False
@@ -544,7 +527,38 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         else:
             hyperparams = orig_hyperparams
 
-        class_ = lale_op(**hyperparams)
+        module_names = ["lale.lib.sklearn", "lale.lib.autoai_libs"]
+
+        lale_wrapper_found = False
+        class_name = sklearn_obj.__class__.__name__
+        for module_name in module_names:
+            module = importlib.import_module(module_name)
+            try:
+                class_ = getattr(module, class_name)
+                lale_wrapper_found = True
+                break
+            except AttributeError:
+                continue
+        else:
+            class_ = lale.operators.make_operator(sklearn_obj, name=class_name)
+
+        if (
+            not fitted
+        ):  # If fitted is False, we do not want to return a Trained operator.
+            lale_op = class_
+        else:
+            lale_op = lale.operators.TrainedIndividualOp(
+                class_._name, class_._impl, class_._schemas
+            )
+
+        try:
+            class_ = lale_op(**hyperparams)
+        except jsonschema.ValidationError as e:
+            logger.debug(f"Mismatch between get_params and schema: {e}")
+            schema = lale.type_checking.get_default_schema(sklearn_obj)
+            planned = lale.operators.make_operator(sklearn_obj, schema, class_name)
+            class_ = planned(**hyperparams)
+
         if lale_wrapper_found:
             wrapped_model = copy.deepcopy(sklearn_obj)
             class_._impl_instance()._wrapped_model = wrapped_model
@@ -552,24 +566,20 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             class_._impl = copy.deepcopy(sklearn_obj)
         return class_
 
-    from sklearn.pipeline import FeatureUnion, Pipeline
-
-    from lale.operators import make_pipeline, make_union
-
-    if isinstance(sklearn_pipeline, Pipeline):
+    if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
         nested_pipeline_steps = sklearn_pipeline.named_steps.values()
         nested_pipeline_lale_objects = [
             import_from_sklearn_pipeline(nested_pipeline_step, fitted=fitted)
             for nested_pipeline_step in nested_pipeline_steps
         ]
-        lale_op_obj = make_pipeline(*nested_pipeline_lale_objects)
-    elif isinstance(sklearn_pipeline, FeatureUnion):
+        lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
+    elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
         transformer_list = sklearn_pipeline.transformer_list
         concat_predecessors = [
             import_from_sklearn_pipeline(transformer[1], fitted=fitted)
             for transformer in transformer_list
         ]
-        lale_op_obj = make_union(*concat_predecessors)
+        lale_op_obj = lale.operators.make_union(*concat_predecessors)
     else:
         lale_op_obj = get_equivalent_lale_op(sklearn_pipeline, fitted=fitted)
     return lale_op_obj
