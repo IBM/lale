@@ -16,6 +16,7 @@ import ast
 import importlib
 import json
 import keyword
+import logging
 import math
 import pprint
 import re
@@ -28,6 +29,8 @@ import lale.expressions
 import lale.json_operator
 import lale.operators
 import lale.type_checking
+
+logger = logging.getLogger(__name__)
 
 JSON_TYPE = Dict[str, Any]
 _black78 = black.Mode(line_length=78)
@@ -430,11 +433,24 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
             for step_uid, step_val in jsn.get("steps", {}).items()
         }
+        op_expr = label
+        if "customize_schema" in jsn:
+            if jsn["customize_schema"] == "not_available":
+                logger.warning(f"missing {label}.customize_schema(..) call")
+            else:
+                new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][
+                    0
+                ]
+                customize_schema_string = ",".join(
+                    [
+                        f"{hp_name}={json_to_string(hp_schema)}"
+                        for hp_name, hp_schema in new_hps.items()
+                    ]
+                )
+                op_expr = f"{op_expr}.customize_schema({customize_schema_string})"
         if "hyperparams" in jsn and jsn["hyperparams"] is not None:
             hp_string = hyperparams_to_string(jsn["hyperparams"], printed_steps, gen)
-            op_expr = f"{label}({hp_string})"
-        else:
-            op_expr = label
+            op_expr = f"{op_expr}({hp_string})"
         if re.fullmatch(r".+\(.+\)", op_expr):
             gen.assigns.append(f"{uid} = {op_expr}")
             return uid
