@@ -437,7 +437,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
         if "customize_schema" in jsn:
             if jsn["customize_schema"] == "not_available":
                 logger.warning(f"missing {label}.customize_schema(..) call")
-            else:
+            elif jsn["customize_schema"] != {}:
                 new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][
                     0
                 ]
