@@ -41,10 +41,13 @@ class _CodeGenState:
     assigns: List[str]
     _names: Set[str]
 
-    def __init__(self, names: Set[str], combinators: bool, astype: str):
+    def __init__(
+        self, names: Set[str], combinators: bool, customize_schema: bool, astype: str
+    ):
         self.imports = []
         self.assigns = []
         self.combinators = combinators
+        self.customize_schema = customize_schema
         self.astype = astype
         self._names = (
             {
@@ -434,7 +437,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             for step_uid, step_val in jsn.get("steps", {}).items()
         }
         op_expr = label
-        if "customize_schema" in jsn:
+        if "customize_schema" in jsn and gen.customize_schema:
             if jsn["customize_schema"] == "not_available":
                 logger.warning(f"missing {label}.customize_schema(..) call")
             elif jsn["customize_schema"] != {}:
@@ -504,9 +507,13 @@ def _format_code(printed_code):
 
 
 def _operator_jsn_to_string(
-    jsn: JSON_TYPE, show_imports: bool, combinators: bool, astype=str
+    jsn: JSON_TYPE,
+    show_imports: bool,
+    combinators: bool,
+    customize_schema: bool,
+    astype: str,
 ) -> str:
-    gen = _CodeGenState(_collect_names(jsn), combinators, astype)
+    gen = _CodeGenState(_collect_names(jsn), combinators, customize_schema, astype)
     expr = _operator_jsn_to_string_rec("pipeline", jsn, gen)
     if expr != "pipeline":
         gen.assigns.append(f"pipeline = {expr}")
@@ -540,6 +547,7 @@ def to_string(
     arg: Union[JSON_TYPE, "lale.operators.Operator"],
     show_imports: bool = True,
     combinators: bool = True,
+    customize_schema: bool = False,
     astype: str = "lale",
     call_depth: int = 1,
 ) -> str:
@@ -550,7 +558,9 @@ def to_string(
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth + 1)
-        return _operator_jsn_to_string(jsn, show_imports, combinators, astype)
+        return _operator_jsn_to_string(
+            jsn, show_imports, combinators, customize_schema, astype
+        )
     else:
         raise ValueError(f"Unexpected argument type {type(arg)} for {arg}")
 

@@ -829,7 +829,7 @@ pipeline = LogisticRegression.customize_schema(
         "default": 0.0001,
     },
 )(solver="lbfgs")"""
-        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+        self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
 
 
 class TestToAndFromJSON(unittest.TestCase):
