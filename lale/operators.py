@@ -304,6 +304,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         show_imports: bool = True,
         combinators: bool = True,
+        customize_schema: bool = False,
         astype: str = "lale",
         ipython_display: Union[bool, str] = False,
     ):
@@ -318,6 +319,10 @@ class Operator(metaclass=AbstractVisitorMeta):
         combinators : bool, default True
 
             If True, pretty-print with combinators (`>>`, `|`, `&`). Otherwise, pretty-print with functions (`make_pipeline`, `make_choice`, `make_union`) instead. Always False when astype is 'sklearn'.
+
+        customize_schema : bool, default False
+
+            If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
 
         astype : union type, default 'lale'
 
@@ -349,7 +354,7 @@ class Operator(metaclass=AbstractVisitorMeta):
             If called with ipython_display=False, return pretty-printed Python source code as a Python string.
         """
         result = lale.pretty_print.to_string(
-            self, show_imports, combinators, astype, call_depth=2
+            self, show_imports, combinators, customize_schema, astype, call_depth=2
         )
         if ipython_display is False:
             return result
