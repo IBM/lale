@@ -187,11 +187,11 @@ def fold_schema(X, y, cv=1, is_classifier=True):
         return aux_result
 
     n_splits = cv if isinstance(cv, int) else cv.get_n_splits()
-    n_samples = X.shape[0]
+    n_samples = X.shape[0] if hasattr(X, "shape") else len(X)
     if n_splits == 1:
         n_rows_fold = n_samples
     elif is_classifier:
-        n_classes = 2 if len(y.shape) == 1 else y.shape[1]
+        n_classes = len(set(y))
         n_rows_unstratified = (n_samples // n_splits) * (n_splits - 1)
         # in stratified case, fold sizes can differ by up to n_classes
         n_rows_fold = max(1, n_rows_unstratified - n_classes)
