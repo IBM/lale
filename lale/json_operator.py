@@ -329,6 +329,8 @@ def _hps_to_json_rec(hps, cls2label: Dict[str, str], gensym: _GenSym, steps) -> 
 def _get_customize_schema(after, before):
     if after == before:
         return {}
+    if after is None or before is None:
+        return "not_available"
 
     def dict_equal_modulo(d1, d2, mod):
         for k in d1.keys():
