@@ -23,14 +23,17 @@ Operators
 Classifiers:
 
 * lale.lib.snapml. `DecisionTreeClassifier`_
+* lale.lib.snapml. `DecisionTreeRegressor_
 * lale.lib.snapml. `RandomForestClassifier`_
 * lale.lib.snapml. `RandomForestRegressor`_
 
 .. _`DecisionTreeClassifier`: lale.lib.snapml.decision_tree_classifier.html
+.. _`DecisionTreeRegressor`: lale.lib.snapml.decision_tree_regressor.html
 .. _`RandomForestClassifier`: lale.lib.snapml.random_forest_classifier.html
 .. _`RandomForestRegressor`: lale.lib.snapml.random_forest_regressor.html
 """
 
+from .decision_tree_regressor import DecisionTreeRegressor
 from .decision_tree_classifier import DecisionTreeClassifier
 from .random_forest_classifier import RandomForestClassifier
 from .random_forest_regressor import RandomForestRegressor

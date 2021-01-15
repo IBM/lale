@@ -273,7 +273,7 @@ _output_predict_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Decision tree Regressor`_ from `Snap ML`_. 
+    "description": """`Decision tree Regressor`_ from `Snap ML`_.
 
 .. _`Decision tree Regressor`: https://snapml.readthedocs.io/en/latest/#snapml.DecisionTreeRegressor
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
