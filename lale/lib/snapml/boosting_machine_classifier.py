@@ -54,36 +54,36 @@ class BoostingMachineClassifierImpl:
         regularizer=1.0, 
         fit_intercept=False, 
         gamma=1.0,
-        n_components=10
+        n_components=10,
     ):
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
-            'num_round': num_round,
-            'learning_rate': learning_rate,
-            'random_state': random_state,
-            'colsample_bytree': colsample_bytree,
-            'subsample': subsample,
-            'verbose': verbose,
-            'lambda_l2': lambda_l2,
-            'early_stopping_rounds': early_stopping_rounds,
-            'compress_trees': compress_trees,
-            'base_score': base_score,
-            'class_weight': class_weight,
-            'max_depth': max_depth,
-            'min_max_depth': min_max_depth,
-            'max_max_depth': max_max_depth,
-            'n_jobs': n_jobs,
-            'use_histograms': use_histograms,
-            'hist_nbins': hist_nbins,
-            'use_gpu': use_gpu,
-            'gpu_id': gpu_id,
-            'tree_select_probability': tree_select_probability,
-            'regularizer': regularizer,
-            'fit_intercept': fit_intercept,
-            'gamma': gamma,
-            'n_components': n_components
+            "num_round": num_round,
+            "learning_rate": learning_rate,
+            "random_state": random_state,
+            "colsample_bytree": colsample_bytree,
+            "subsample": subsample,
+            "verbose": verbose,
+            "lambda_l2": lambda_l2,
+            "early_stopping_rounds": early_stopping_rounds,
+            "compress_trees": compress_trees,
+            "base_score": base_score,
+            "class_weight": class_weight,
+            "max_depth": max_depth,
+            "min_max_depth": min_max_depth,
+            "max_max_depth": max_max_depth,
+            "n_jobs": n_jobs,
+            "use_histograms": use_histograms,
+            "hist_nbins": hist_nbins,
+            "use_gpu": use_gpu,
+            "gpu_id": gpu_id,
+            "tree_select_probability": tree_select_probability,
+            "regularizer": regularizer,
+            "fit_intercept": fit_intercept,
+            "gamma": gamma,
+            "n_components": n_components
         }
         self._wrapped_model = snapml.BoostingMachineClassifier(**self._hyperparams)
 
@@ -114,7 +114,12 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": ["num_round", "learning_rate", "min_max_depth", "max_max_depth"],
+            "relevantToOptimizer": [
+                "num_round", 
+                "learning_rate", 
+                "min_max_depth", 
+                "max_max_depth"
+            ],
             "additionalProperties": False,
             "properties": {
                 "num_round": {
@@ -144,7 +149,7 @@ _hyperparams_schema = {
                     "type": "number",
                     "minimum": 0.0,
                     "exclusiveMinimum": True,
-                    'maximum': 1.0,
+                    "maximum": 1.0,
                     "default": 1.0,
                     "description": "Fraction of feature columns used at each boosting iteration.",
                 },
@@ -152,7 +157,7 @@ _hyperparams_schema = {
                     "type": "number",
                     "minimum": 0.0,
                     "exclusiveMinimum": True,
-                    'maximum': 1.0,
+                    "maximum": 1.0,
                     "default": 1.0,
                     "description": "Fraction of training examples used at each boosting iteration.",
                 },
@@ -179,12 +184,7 @@ _hyperparams_schema = {
                     "description": "Compress trees after training for fast inference.",
                 },
                 "base_score": {
-                    "anyOf": [
-                        {
-                            "type": "number",
-                        },
-                        {"enum": [None]},
-                    ],
+                    "anyOf": [{"type": "number",}, {"enum": [None]},],
                     "default": None,
                     "description": "Base score to initialize boosting algorithm. If None then the algorithm will initialize the base score to be the the logit of the probability of the positive class.",
                 },
@@ -194,13 +194,7 @@ _hyperparams_schema = {
                     "description": "If set to 'balanced' samples weights will be applied to account for class imbalance, otherwise no sample weights will be used.",
                 },
                 "max_depth": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimum": 1,
-                        },
-                        {"enum": [None]},
-                    ],
+                    "anyOf": [{"type": "integer", "minimum": 1,}, {"enum": [None]},],
                     "default": None,
                     "description": "If set, will set min_max_depth = max_depth = max_max_depth",
                 },
@@ -410,7 +404,7 @@ _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """`Boosting machine classifier`_ from `Snap ML`_. It can be used for binary classification problems.
 
-.. _`Random forest classifier`: https://snapml.readthedocs.io/en/latest/#snapml.BoostingMachineClassifier
+.. _`Boosting machine classifier`: https://snapml.readthedocs.io/en/latest/#snapml.BoostingMachineClassifier
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.boosting_machine_classifier.html",
