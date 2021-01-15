@@ -332,7 +332,10 @@ _input_fit_schema = {
         "sample_weight_val": {
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
-                {"enum": [None], "description": "Validation samples are equally weighted."},
+                {
+                    "enum": [None],
+                    "description": "Validation samples are equally weighted.",
+                },
             ],
             "description": "Validation sample weights.",
             "default": None,

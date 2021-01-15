@@ -18,6 +18,8 @@ try:
     import snapml  # type: ignore
 
     snapml_installed = True
+except ImportError:
+    snapml_installed = False
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -320,7 +322,10 @@ _input_fit_schema = {
         "sample_weight_val": {
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
-                {"enum": [None], "description": "Validation samples are equally weighted."},
+                {
+                    "enum": [None],
+                    "description": "Validation samples are equally weighted.",
+                },
             ],
             "description": "Validation sample weights.",
             "default": None,
