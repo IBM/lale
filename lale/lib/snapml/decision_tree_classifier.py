@@ -240,6 +240,7 @@ _input_fit_schema = {
                 {"enum": [None], "description": "Samples are equally weighted."},
             ],
             "description": "Sample weights.",
+            "default": None,
         },
     },
 }
