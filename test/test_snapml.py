@@ -99,3 +99,11 @@ class TestSnapMLRegressors(unittest.TestCase):
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         _ = scorer(trained, self.test_X, self.test_y)
+
+    def test_boosting_machine_regressor(self):
+        import lale.lib.snapml
+
+        trainable = lale.lib.snapml.BoostingMachineRegressor()
+        trained = trainable.fit(self.train_X, self.train_y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+        _ = scorer(trained, self.test_X, self.test_y)
