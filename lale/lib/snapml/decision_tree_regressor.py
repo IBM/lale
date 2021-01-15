@@ -227,9 +227,7 @@ _input_fit_schema = {
         },
         "y": {
             "description": "The regression target.",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-            ],
+            "anyOf": [{"type": "array", "items": {"type": "number"}},],
         },
         "sample_weight": {
             "anyOf": [
