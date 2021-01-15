@@ -32,7 +32,7 @@ class BoostingMachineRegressorImpl:
     def __init__(
         self,
         num_round=100,
-        objective='mse',
+        objective="mse",
         learning_rate=0.1,
         random_state=0,
         colsample_bytree=1.0,
