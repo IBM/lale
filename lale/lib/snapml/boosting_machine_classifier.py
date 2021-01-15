@@ -141,7 +141,7 @@ _hyperparams_schema = {
                     "description": "Learning rate / shrinkage factor.",
                 },
                 "random_state": {
-                    "type": "interger",
+                    "type": "integer",
                     "default": 0,
                     "description": "Random seed.",
                 },
