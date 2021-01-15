@@ -27,10 +27,10 @@ import lale.docstrings
 import lale.operators
 
 
-class DecisionTreeClassifierImpl:
+class DecisionTreeRegressorImpl:
     def __init__(
         self,
-        criterion="gini",
+        criterion="mse",
         splitter="best",
         max_depth=None,
         min_samples_leaf=1,
@@ -60,7 +60,7 @@ class DecisionTreeClassifierImpl:
             "gpu_id": gpu_id,
             "verbose": verbose,
         }
-        self._wrapped_model = snapml.DecisionTreeClassifier(**self._hyperparams)
+        self._wrapped_model = snapml.DecisionTreeRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -74,14 +74,6 @@ class DecisionTreeClassifierImpl:
             return self._wrapped_model.predict(X)
         else:
             return self._wrapped_model.predict(X, **predict_params)
-
-    def predict_proba(self, X, **predict_proba_params):
-        X = lale.datasets.data_schemas.strip_schema(X)
-        if predict_proba_params is None:
-            return self._wrapped_model.predict_proba(X)
-        else:
-            return self._wrapped_model.predict_proba(X, **predict_proba_params)
-
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
@@ -97,8 +89,8 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "criterion": {
-                    "enum": ["gini"],
-                    "default": "gini",
+                    "enum": ["mse"],
+                    "default": "mse",
                     "description": "Function to measure the quality of a split.",
                 },
                 "splitter": {
@@ -237,7 +229,7 @@ _input_fit_schema = {
             },
         },
         "y": {
-            "description": "The classes.",
+            "description": "The regression target.",
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
                 {"type": "array", "items": {"type": "string"}},
@@ -277,68 +269,34 @@ _input_predict_schema = {
 }
 
 _output_predict_schema = {
-    "description": "The predicted classes.",
+    "description": "The predicted values.",
     "anyOf": [
         {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
     ],
 }
 
-_input_predict_proba_schema = {
-    "type": "object",
-    "properties": {
-        "X": {
-            "type": "array",
-            "description": "The outer array is over samples aka rows.",
-            "items": {
-                "type": "array",
-                "description": "The inner array is over features aka columns.",
-                "items": {"type": "number"},
-            },
-        },
-        "n_jobs": {
-            "type": "integer",
-            "minimum": 0,
-            "default": 0,
-            "description": "Number of threads used to run inference. By default inference runs with maximum number of available threads..",
-        },
-    },
-}
-
-_output_predict_proba_schema = {
-    "type": "array",
-    "description": "The outer array is over samples aka rows.",
-    "items": {
-        "type": "array",
-        "description": "The inner array contains probabilities corresponding to each class.",
-        "items": {"type": "number"},
-    },
-}
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Decision tree classifier`_ from `Snap ML`_. It can be used for binary classification problems.
+    "description": """`Decision tree Regressor`_ from `Snap ML`_. 
 
-.. _`Decision tree classifier`: https://snapml.readthedocs.io/en/latest/#snapml.DecisionTreeClassifier
+.. _`Decision tree Regressor`: https://snapml.readthedocs.io/en/latest/#snapml.DecisionTreeRegressor
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.decision_tree_classifier.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.decision_tree_regressor.html",
     "import_from": "snapml",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 
-lale.docstrings.set_docstrings(DecisionTreeClassifierImpl, _combined_schemas)
+lale.docstrings.set_docstrings(DecisionTreeRegressorImpl, _combined_schemas)
 
-DecisionTreeClassifier = lale.operators.make_operator(
-    DecisionTreeClassifierImpl, _combined_schemas
+DecisionTreeRegressor = lale.operators.make_operator(
+    DecisionTreeRegressorImpl, _combined_schemas
 )
