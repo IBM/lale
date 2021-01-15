@@ -20,8 +20,6 @@ try:
     snapml_installed = True
 except ImportError:
     snapml_installed = False
-    if TYPE_CHECKING:
-        import snapml  # type: ignore
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -95,17 +93,11 @@ class BoostingMachineClassifierImpl:
 
     def predict(self, X, **predict_params):
         X = lale.datasets.data_schemas.strip_schema(X)
-        if predict_params is None:
-            return self._wrapped_model.predict(X)
-        else:
-            return self._wrapped_model.predict(X, **predict_params)
+        return self._wrapped_model.predict(X, **predict_params)
 
     def predict_proba(self, X, **predict_proba_params):
         X = lale.datasets.data_schemas.strip_schema(X)
-        if predict_proba_params is None:
-            return self._wrapped_model.predict_proba(X)
-        else:
-            return self._wrapped_model.predict_proba(X, **predict_proba_params)
+        return self._wrapped_model.predict_proba(X, **predict_proba_params)
 
 
 _hyperparams_schema = {
@@ -310,30 +302,40 @@ _input_fit_schema = {
                 {"enum": [None], "description": "Samples are equally weighted."},
             ],
             "description": "Sample weights.",
+            "default": None,
         },
         "X_val": {
-            "type": "array",
-            "description": "The outer array is over validation samples aka rows.",
-            "items": {
-                "type": "array",
-                "description": "The inner array is over features aka columns.",
-                "items": {"type": "number"},
-            },
+            "anyOf": [
+                {
+                    "type": "array",
+                    "description": "The outer array is over validation samples aka rows.",
+                    "items": {
+                        "type": "array",
+                        "description": "The inner array is over features aka columns.",
+                        "items": {"type": "number"},
+                    },
+                },
+                {"enum": [None], "description": "No validation set provided."},
+            ],
+            "default": None,
         },
         "y_val": {
-            "description": "The validation classes.",
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
                 {"type": "array", "items": {"type": "string"}},
                 {"type": "array", "items": {"type": "boolean"}},
+                {"enum": [None], "description": "No validation set provided."},
             ],
+            "description": "The validation classes.",
+            "default": None,
         },
         "sample_weight_val": {
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
-                {"enum": [None], "description": "Samples are equally weighted."},
+                {"enum": [None], "description": "Validation samples are equally weighted."},
             ],
             "description": "Validation sample weights.",
+            "default": None,
         },
     },
 }

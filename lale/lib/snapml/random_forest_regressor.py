@@ -20,9 +20,6 @@ try:
     snapml_installed = True
 except ImportError:
     snapml_installed = False
-    if TYPE_CHECKING:
-        import snapml  # type: ignore
-
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -77,10 +74,7 @@ class RandomForestRegressorImpl:
 
     def predict(self, X, **predict_params):
         X = lale.datasets.data_schemas.strip_schema(X)
-        if predict_params is None:
-            return self._wrapped_model.predict(X)
-        else:
-            return self._wrapped_model.predict(X, **predict_params)
+        return self._wrapped_model.predict(X, **predict_params)
 
 
 _hyperparams_schema = {
@@ -127,6 +121,7 @@ _hyperparams_schema = {
                             "type": "integer",
                             "minimum": 1,
                             "forOptimizer": False,
+                            "laleMaximum": "X/maxItems",  # number of rows
                             "description": "Consider min_samples_leaf as the minimum number.",
                         },
                         {
@@ -146,6 +141,7 @@ _hyperparams_schema = {
                             "type": "integer",
                             "minimum": 1,
                             "forOptimizer": False,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
                             "description": "Consider max_features features at each split.",
                         },
                         {
