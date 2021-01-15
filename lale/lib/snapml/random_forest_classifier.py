@@ -88,6 +88,7 @@ class RandomForestClassifierImpl:
         else:
             return self._wrapped_model.predict_proba(X, **predict_proba_params)
 
+
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
     "allOf": [

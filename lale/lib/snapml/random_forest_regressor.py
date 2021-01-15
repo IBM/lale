@@ -89,14 +89,7 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": [
-                "n_estimators",
-                "criterion",
-                "max_depth",
-                "min_samples_leaf",
-                "max_features",
-                "bootstrap",
-            ],
+            "relevantToOptimizer": ["n_estimators", "max_depth", "max_features"],
             "additionalProperties": False,
             "properties": {
                 "n_estimators": {
@@ -151,7 +144,7 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimum": 2,
+                            "minimum": 1,
                             "forOptimizer": False,
                             "description": "Consider max_features features at each split.",
                         },
@@ -160,6 +153,8 @@ _hyperparams_schema = {
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
                             "maximum": 1.0,
+                            "minimumForOptimizer": 0.1,
+                            "maximumForOptimizer": 0.9,
                             "distribution": "uniform",
                             "description": "max_features is a fraction and int(max_features * n_features) features are considered at each split.",
                         },
@@ -221,17 +216,10 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "Only need hist_nbins when use_histograms is true.",
+            "description": "GPU only supported for histogram-based splits.",
             "anyOf": [
+                {"type": "object", "properties": {"use_gpu": {"enum": [False]}}},
                 {"type": "object", "properties": {"use_histograms": {"enum": [True]}}},
-                {"type": "object", "properties": {"hist_nbins": {"enum": [256]}}},
-            ],
-        },
-        {
-            "description": "Only need gpu_ids when use_gpu is true.",
-            "anyOf": [
-                {"type": "object", "properties": {"use_gpu": {"enum": [True]}}},
-                {"type": "object", "properties": {"gpu_ids": {"enum": [None]}}},
             ],
         },
     ],
@@ -252,11 +240,9 @@ _input_fit_schema = {
             },
         },
         "y": {
-            "description": "The predicted classes.",
+            "description": "The regression target.",
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
             ],
         },
         "sample_weight": {
@@ -292,19 +278,17 @@ _input_predict_schema = {
 }
 
 _output_predict_schema = {
-    "description": "The predicted classes.",
+    "description": "The predicted values.",
     "anyOf": [
         {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
     ],
 }
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Random forest regressor`_ from `Snap ML`_. It can be used for binary classification problems.
+    "description": """`Random forest regressor`_ from `Snap ML`_.
 
-.. _`Random forest regressor`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/ranforapidoc.html
+.. _`Random forest regressor`: https://snapml.readthedocs.io/en/latest/#snapml.RandomForestRegressor
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_regressor.html",
