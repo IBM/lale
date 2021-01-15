@@ -81,6 +81,12 @@ class RandomForestClassifierImpl:
         else:
             return self._wrapped_model.predict(X, **predict_params)
 
+    def predict_proba(self, X, **predict_proba_params):
+        X = lale.datasets.data_schemas.strip_schema(X)
+        if predict_proba_params is None:
+            return self._wrapped_model.predict_proba(X)
+        else:
+            return self._wrapped_model.predict_proba(X, **predict_proba_params)
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
@@ -88,14 +94,7 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": [
-                "n_estimators",
-                "criterion",
-                "max_depth",
-                "min_samples_leaf",
-                "max_features",
-                "bootstrap",
-            ],
+            "relevantToOptimizer": ["n_estimators", "max_depth", "max_features"],
             "additionalProperties": False,
             "properties": {
                 "n_estimators": {
@@ -150,7 +149,7 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimum": 2,
+                            "minimum": 1,
                             "forOptimizer": False,
                             "description": "Consider max_features features at each split.",
                         },
@@ -159,6 +158,8 @@ _hyperparams_schema = {
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
                             "maximum": 1.0,
+                            "minimumForOptimizer": 0.1,
+                            "maximumForOptimizer": 0.9,
                             "distribution": "uniform",
                             "description": "max_features is a fraction and int(max_features * n_features) features are considered at each split.",
                         },
@@ -220,17 +221,10 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "Only need hist_nbins when use_histograms is true.",
+            "description": "GPU only supported for histogram-based splits.",
             "anyOf": [
+                {"type": "object", "properties": {"use_gpu": {"enum": [False]}}},
                 {"type": "object", "properties": {"use_histograms": {"enum": [True]}}},
-                {"type": "object", "properties": {"hist_nbins": {"enum": [256]}}},
-            ],
-        },
-        {
-            "description": "Only need gpu_ids when use_gpu is true.",
-            "anyOf": [
-                {"type": "object", "properties": {"use_gpu": {"enum": [True]}}},
-                {"type": "object", "properties": {"gpu_ids": {"enum": [None]}}},
             ],
         },
     ],
@@ -251,7 +245,7 @@ _input_fit_schema = {
             },
         },
         "y": {
-            "description": "The predicted classes.",
+            "description": "The classes.",
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
                 {"type": "array", "items": {"type": "string"}},
@@ -325,7 +319,7 @@ _output_predict_proba_schema = {
     "description": "The outer array is over samples aka rows.",
     "items": {
         "type": "array",
-        "description": "The inner array has items corresponding to each class.",
+        "description": "The inner array contains probabilities corresponding to each class.",
         "items": {"type": "number"},
     },
 }
@@ -334,7 +328,7 @@ _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """`Random forest classifier`_ from `Snap ML`_. It can be used for binary classification problems.
 
-.. _`Random forest classifier`: https://ibmsoe.github.io/snap-ml-doc/v1.6.0/ranforapidoc.html
+.. _`Random forest classifier`: https://snapml.readthedocs.io/en/latest/#snapml.RandomForestClassifier
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_classifier.html",
@@ -346,6 +340,8 @@ _combined_schemas = {
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 

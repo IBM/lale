@@ -150,7 +150,7 @@ _hyperparams_schema = {
                         },
                         {"enum": ["auto", "sqrt", "log2", None]},
                     ],
-                    "default": "None",
+                    "default": None,
                     "description": "The number of features to consider when looking for the best split.",
                 },
                 "random_state": {
