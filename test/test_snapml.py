@@ -33,24 +33,28 @@ class TestSnapMLClassifiers(unittest.TestCase):
         self.assertIsInstance(clf, snapml.RandomForestClassifier)
         fit_result = clf.fit(self.train_X, self.train_y)
         self.assertIsInstance(fit_result, snapml.RandomForestClassifier)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        _ = scorer(clf, self.test_X, self.test_y)
-
-    def test_random_forest_classifier(self):
-        import lale.lib.snapml
-
-        trainable = lale.lib.snapml.RandomForestClassifier()
-        trained = trainable.fit(self.train_X, self.train_y)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        _ = scorer(trained, self.test_X, self.test_y)
+        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
+            scorer = sklearn.metrics.make_scorer(metric)
+            _ = scorer(clf, self.test_X, self.test_y)
 
     def test_decision_tree_classifier(self):
         import lale.lib.snapml
 
         trainable = lale.lib.snapml.DecisionTreeClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        _ = scorer(trained, self.test_X, self.test_y)
+        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
+            scorer = sklearn.metrics.make_scorer(metric)
+            _ = scorer(trained, self.test_X, self.test_y)
+
+
+    def test_random_forest_classifier(self):
+        import lale.lib.snapml
+
+        trainable = lale.lib.snapml.RandomForestClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
+            scorer = sklearn.metrics.make_scorer(metric)
+            _ = scorer(trained, self.test_X, self.test_y)
 
     def test_sklearn_compat(self):
         import lale.lib.snapml
@@ -59,9 +63,9 @@ class TestSnapMLClassifiers(unittest.TestCase):
         trainable = lale.lib.snapml.RandomForestClassifier()
         compat = lale.sklearn_compat.make_sklearn_compat(trainable)
         trained = compat.fit(self.train_X, self.train_y)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.accuracy_score)
-        _ = scorer(trained, self.test_X, self.test_y)
-
+        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
+            scorer = sklearn.metrics.make_scorer(metric)
+            _ = scorer(trained, self.test_X, self.test_y)
 
 class TestSnapMLRegressors(unittest.TestCase):
     def setUp(self):
@@ -70,6 +74,14 @@ class TestSnapMLRegressors(unittest.TestCase):
 
         X, y = load_diabetes(return_X_y=True)
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
+
+    def test_decision_tree_regressor(self):
+        import lale.lib.snapml
+
+        trainable = lale.lib.snapml.DecisionTreeRegressor()
+        trained = trainable.fit(self.train_X, self.train_y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+        _ = scorer(trained, self.test_X, self.test_y)
 
     def test_random_forest_regressor(self):
         import lale.lib.snapml
