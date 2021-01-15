@@ -33,7 +33,7 @@ Classifiers:
 .. _`RandomForestRegressor`: lale.lib.snapml.random_forest_regressor.html
 """
 
-from .decision_tree_regressor import DecisionTreeRegressor
 from .decision_tree_classifier import DecisionTreeClassifier
+from .decision_tree_regressor import DecisionTreeRegressor
 from .random_forest_classifier import RandomForestClassifier
 from .random_forest_regressor import RandomForestRegressor

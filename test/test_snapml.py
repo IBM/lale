@@ -46,7 +46,6 @@ class TestSnapMLClassifiers(unittest.TestCase):
             scorer = sklearn.metrics.make_scorer(metric)
             _ = scorer(trained, self.test_X, self.test_y)
 
-
     def test_random_forest_classifier(self):
         import lale.lib.snapml
 
@@ -66,6 +65,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
             scorer = sklearn.metrics.make_scorer(metric)
             _ = scorer(trained, self.test_X, self.test_y)
+
 
 class TestSnapMLRegressors(unittest.TestCase):
     def setUp(self):
