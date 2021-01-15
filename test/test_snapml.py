@@ -55,6 +55,15 @@ class TestSnapMLClassifiers(unittest.TestCase):
             scorer = sklearn.metrics.make_scorer(metric)
             _ = scorer(trained, self.test_X, self.test_y)
 
+    def test_boosting_machine_classifier(self):
+        import lale.lib.snapml
+
+        trainable = lale.lib.snapml.BoostingMachineClassifier()
+        trained = trainable.fit(self.train_X, self.train_y)
+        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
+            scorer = sklearn.metrics.make_scorer(metric)
+            _ = scorer(trained, self.test_X, self.test_y)
+
     def test_sklearn_compat(self):
         import lale.lib.snapml
         import lale.sklearn_compat
