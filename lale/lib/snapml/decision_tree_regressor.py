@@ -75,17 +75,14 @@ class DecisionTreeRegressorImpl:
         else:
             return self._wrapped_model.predict(X, **predict_params)
 
+
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
     "allOf": [
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": [
-                "max_depth",
-                "max_features",
-                "hist_nbins"
-            ],
+            "relevantToOptimizer": ["max_depth", "max_features", "hist_nbins"],
             "additionalProperties": False,
             "properties": {
                 "criterion": {
@@ -270,9 +267,7 @@ _input_predict_schema = {
 
 _output_predict_schema = {
     "description": "The predicted values.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-    ],
+    "anyOf": [{"type": "array", "items": {"type": "number"}},],
 }
 
 

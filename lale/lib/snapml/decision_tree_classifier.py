@@ -89,11 +89,7 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": [
-                "max_depth",
-                "max_features",
-                "hist_nbins"
-            ],
+            "relevantToOptimizer": ["max_depth", "max_features", "hist_nbins"],
             "additionalProperties": False,
             "properties": {
                 "criterion": {
