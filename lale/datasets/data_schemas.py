@@ -353,6 +353,8 @@ def to_schema(obj) -> JSON_TYPE:
         result = liac_arff_to_schema(obj)
     elif lale.type_checking.is_schema(obj):
         result = obj
+    elif isinstance(obj, list):
+        result = ndarray_to_schema(np.array(obj))
     else:
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
     lale.type_checking.validate_is_schema(result)
