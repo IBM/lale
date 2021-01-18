@@ -438,7 +438,7 @@ class PlannedOperator(Operator):
             Labels that conform to the y property of input_schema_fit.
             Default is None.
         optimizer:
-            lale.lib.lale.HyperoptCV or lale.lib.lale.GridSearchCV
+            lale.lib.lale.Hyperopt or lale.lib.lale.GridSearchCV
             default is None.
         cv:
             cross-validation option that is valid for the optimizer.

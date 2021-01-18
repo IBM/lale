@@ -489,6 +489,26 @@ experiments_dict["breast-cancer"][
 experiments_dict["breast-cancer"]["task_type"] = "classification"
 experiments_dict["breast-cancer"]["target"] = "class"
 
+experiments_dict["compas"] = {}
+experiments_dict["compas"][
+    "download_arff_url"
+] = "https://www.openml.org/data/download/21757035/compas.arff"
+experiments_dict["compas"][
+    "download_csv_url"
+] = "https://www.openml.org/data/get_csv/21757035/compas.arff"
+experiments_dict["compas"]["task_type"] = "classification"
+experiments_dict["compas"]["target"] = "two_year_recid"
+
+experiments_dict["ricci"] = {}
+experiments_dict["ricci"][
+    "download_arff_url"
+] = "https://www.openml.org/data/download/22044446/ricci_processed.arff"
+experiments_dict["ricci"][
+    "download_csv_url"
+] = "https://www.openml.org/data/get_csv/22044446/ricci_processed.arff"
+experiments_dict["ricci"]["task_type"] = "classification"
+experiments_dict["ricci"]["target"] = "promotion"
+
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
