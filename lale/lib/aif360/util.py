@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -378,9 +378,12 @@ class _ScorerFactory:
             favorable_label, unfavorable_label, protected_attribute_names
         )
 
-    def scoring(self, y_true, y_pred, X):
+    def scoring(self, y_true=None, y_pred=None, X=None):
+        assert y_pred is not None
+        assert X is not None
         y_pred_orig = y_pred
         if not isinstance(y_pred, pd.Series):
+            assert y_true is not None
             y_pred = _ndarray_to_series(
                 y_pred,
                 y_true.name
@@ -402,6 +405,7 @@ class _ScorerFactory:
             )
         else:
             assert self.kind == "ClassificationMetric"
+            assert y_true is not None
             if not isinstance(y_true, pd.Series):
                 y_true = _ndarray_to_series(
                     y_true, y_pred.name, y_pred.index, y_pred_orig.dtype
@@ -1072,7 +1076,7 @@ def fair_stratified_train_test_split(
 
     Behaves similar to the `train_test_split`_ function from scikit-learn.
 
-.. _`train_test_split`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
+    .. _`train_test_split`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
 
     Parameters
     ----------
@@ -1240,71 +1244,3 @@ class FairStratifiedKFold:
         stratify = column_for_stratification(X, y, **self._fairness_info)
         result = self._stratified_k_fold.split(X, stratify, groups)
         return result
-
-
-def fetch_creditg_df():
-    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-        "credit-g", "classification", astype="pandas"
-    )
-    all_X = pd.concat([train_X, test_X])
-    all_y = pd.concat([train_y, test_y])
-    sex = pd.Series(
-        (all_X["personal_status_male div/sep"] == 1.0)
-        | (all_X["personal_status_male mar/wid"] == 1.0)
-        | (all_X["personal_status_male single"] == 1.0),
-        dtype=np.float64,
-    )
-    age = pd.Series(all_X["age"] > 25, dtype=np.float64)
-    dropped_X = all_X.drop(
-        labels=[
-            "personal_status_female div/dep/mar",
-            "personal_status_male div/sep",
-            "personal_status_male mar/wid",
-            "personal_status_male single",
-        ],
-        axis=1,
-    )
-    added_X = dropped_X.assign(sex=sex, age=age)
-    fairness_info = {
-        "favorable_labels": [1],
-        "protected_attributes": [
-            {"feature": "age", "privileged_groups": [1]},
-            {"feature": "sex", "privileged_groups": [1]},
-        ],
-    }
-    train_X, test_X, train_y, test_y = fair_stratified_train_test_split(
-        added_X, all_y, **fairness_info, test_size=0.33
-    )
-    return (train_X, train_y), (test_X, test_y)
-
-
-def fetch_adult_df(test_size=0.3):
-    (orig_train_X, train_y), (orig_test_X, test_y) = lale.datasets.openml.fetch(
-        "adult", "classification", astype="pandas", test_size=test_size
-    )
-
-    def replace_protected_attr(orig_X):
-        sex = pd.Series(orig_X["sex_Male"] == 1.0, dtype=np.float64)
-        race = pd.Series(orig_X["race_White"] == 1.0, dtype=np.float64)
-        dropped = orig_X.drop(
-            labels=[
-                "race_Amer-Indian-Eskimo",
-                "race_Asian-Pac-Islander",
-                "race_Black",
-                "race_Other",
-                "race_White",
-                "sex_Female",
-                "sex_Male",
-            ],
-            axis=1,
-        )
-        added = dropped.assign(sex=sex, race=race)
-        return added
-
-    train_X = replace_protected_attr(orig_train_X)
-    test_X = replace_protected_attr(orig_test_X)
-    assert not train_X.isna().any().any()
-    assert not train_y.isna().any().any()
-    assert not test_X.isna().any().any()
-    assert not test_y.isna().any().any()
-    return (train_X, train_y), (test_X, test_y)

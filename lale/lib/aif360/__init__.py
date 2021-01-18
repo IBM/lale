@@ -121,6 +121,10 @@ Other Functions:
 * `dataset_fairness_info`_
 * `dataset_to_pandas`_
 * `fair_stratified_train_test_split`_
+* `fetch_adult_df`_
+* `fetch_compas_df`_
+* `fetch_creditg_df`_
+* `fetch_ricci_df`_
 
 .. _`AdversarialDebiasing`: lale.lib.aif360.adversarial_debiasing.html
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html
@@ -143,6 +147,10 @@ Other Functions:
 .. _`disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
 .. _`equal_opportunity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.equal_opportunity_difference
 .. _`fair_stratified_train_test_split`: lale.lib.aif360.util.html#lale.lib.aif360.util.fair_stratified_train_test_split
+.. _`fetch_adult_df`: lale.lib.aif360.util.html#lale.lib.aif360.datasets.fetch_adult_df
+.. _`fetch_compas_df`: lale.lib.aif360.util.html#lale.lib.aif360.datasets.fetch_compas_df
+.. _`fetch_creditg_df`: lale.lib.aif360.util.html#lale.lib.aif360.datasets.fetch_creditg_df
+.. _`fetch_ricci_df`: lale.lib.aif360.util.html#lale.lib.aif360.datasets.fetch_ricci_df
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 .. _`theil_index`: lale.lib.aif360.util.html#lale.lib.aif360.util.theil_index
@@ -150,6 +158,7 @@ Other Functions:
 
 from .adversarial_debiasing import AdversarialDebiasing
 from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
+from .datasets import fetch_adult_df, fetch_compas_df, fetch_creditg_df, fetch_ricci_df
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
 from .gerry_fair_classifier import GerryFairClassifier
@@ -170,8 +179,6 @@ from .util import (
     disparate_impact,
     equal_opportunity_difference,
     fair_stratified_train_test_split,
-    fetch_adult_df,
-    fetch_creditg_df,
     r2_and_disparate_impact,
     statistical_parity_difference,
     theil_index,

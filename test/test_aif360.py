@@ -21,8 +21,6 @@ import sklearn.metrics
 import sklearn.model_selection
 import tensorflow as tf
 
-import lale.datasets.data_schemas
-import lale.datasets.openml
 import lale.lib.aif360
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
@@ -64,30 +62,12 @@ class TestAIF360(unittest.TestCase):
 
     @classmethod
     def _creditg_pd_cat(cls):
-        (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-            "credit-g", "classification", astype="pandas", preprocess=False
+        all_X, all_y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        train_X, test_X, train_y, test_y = fair_stratified_train_test_split(
+            all_X, all_y, **fairness_info, test_size=0.33,
         )
         assert isinstance(train_X, pd.DataFrame), type(train_X)
         assert isinstance(train_y, pd.Series), type(train_y)
-        fairness_info = {
-            "favorable_labels": ["good"],
-            "protected_attributes": [
-                {
-                    "feature": "personal_status",
-                    "privileged_groups": [
-                        "male div/sep",
-                        "male mar/wid",
-                        "male single",
-                    ],
-                },
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
-            ],
-        }
-        all_X = pd.concat([train_X, test_X])
-        all_y = pd.concat([train_y, test_y])
-        train_X, test_X, train_y, test_y = fair_stratified_train_test_split(
-            all_X, all_y, **fairness_info, test_size=0.33
-        )
         result = {
             "train_X": train_X,
             "train_y": train_y,
@@ -99,16 +79,12 @@ class TestAIF360(unittest.TestCase):
 
     @classmethod
     def _creditg_pd_num(cls):
-        (train_X, train_y), (test_X, test_y) = lale.lib.aif360.fetch_creditg_df()
+        all_X, all_y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=True)
+        train_X, test_X, train_y, test_y = fair_stratified_train_test_split(
+            all_X, all_y, **fairness_info, test_size=0.33,
+        )
         assert isinstance(train_X, pd.DataFrame), type(train_X)
         assert isinstance(train_y, pd.Series), type(train_y)
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [
-                {"feature": "age", "privileged_groups": [1]},
-                {"feature": "sex", "privileged_groups": [1]},
-            ],
-        }
         result = {
             "train_X": train_X,
             "train_y": train_y,
@@ -128,18 +104,20 @@ class TestAIF360(unittest.TestCase):
         assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
         assert isinstance(train_y, np.ndarray), type(train_y)
         assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
+        pd_columns = cls.creditg_pd_cat["train_X"].columns
+        pd_fav_labels = cls.creditg_pd_cat["fairness_info"]["favorable_labels"]
+        pd_prot_attrs = cls.creditg_pd_cat["fairness_info"]["protected_attributes"]
         fairness_info = {
-            "favorable_labels": ["good"],
+            "favorable_labels": pd_fav_labels,
             "protected_attributes": [
                 {
-                    "feature": 8,
-                    "privileged_groups": [
-                        "male div/sep",
-                        "male mar/wid",
-                        "male single",
-                    ],
+                    "feature": pd_columns.get_loc("personal_status"),
+                    "privileged_groups": pd_prot_attrs[0]["privileged_groups"],
                 },
-                {"feature": 12, "privileged_groups": [[26, 1000]]},
+                {
+                    "feature": pd_columns.get_loc("age"),
+                    "privileged_groups": pd_prot_attrs[1]["privileged_groups"],
+                },
             ],
         }
         result = {
@@ -161,11 +139,12 @@ class TestAIF360(unittest.TestCase):
         assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
         assert isinstance(train_y, np.ndarray), type(train_y)
         assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
+        pd_columns = cls.creditg_pd_num["train_X"].columns
         fairness_info = {
-            "favorable_labels": [1.0],
+            "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": 57, "privileged_groups": [1.0]},
-                {"feature": 55, "privileged_groups": [2.0]},
+                {"feature": pd_columns.get_loc("sex"), "privileged_groups": [1],},
+                {"feature": pd_columns.get_loc("age"), "privileged_groups": [1],},
             ],
         }
         result = {
@@ -267,6 +246,78 @@ class TestAIF360(unittest.TestCase):
             self.assertEqual(male, strat[0] == "T")
             self.assertEqual(old, strat[1] == "T")
             self.assertEqual(favorable, strat[2] == "T")
+
+    def test_dataset_adult_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_adult_df(preprocess=False)
+        self.assertEqual(X.shape, (48_842, 14))
+        self.assertEqual(y.shape, (48_842,))
+        self.assertEqual(set(y), {"<=50K", ">50K"})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.227, places=3)
+
+    def test_dataset_adult_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_adult_df(preprocess=True)
+        self.assertEqual(X.shape, (48_842, 100))
+        self.assertEqual(y.shape, (48_842,))
+        self.assertEqual(set(y), {0, 1})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.227, places=3)
+
+    def test_dataset_compas_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=False)
+        self.assertEqual(X.shape, (5_278, 13))
+        self.assertEqual(y.shape, (5_278,))
+        self.assertEqual(set(y), {0, 1})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.919, places=3)
+
+    def test_dataset_compas_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=True)
+        self.assertEqual(X.shape, (5_278, 12))
+        self.assertEqual(y.shape, (5_278,))
+        self.assertEqual(set(y), {0, 1})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.919, places=3)
+
+    def test_dataset_creditg_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        self.assertEqual(X.shape, (1_000, 20))
+        self.assertEqual(y.shape, (1_000,))
+        self.assertEqual(set(y), {"bad", "good"})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.748, places=3)
+
+    def test_dataset_creditg_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=True)
+        self.assertEqual(X.shape, (1_000, 58))
+        self.assertEqual(y.shape, (1_000,))
+        self.assertEqual(set(y), {0, 1})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.748, places=3)
+
+    def test_dataset_ricci_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=False)
+        self.assertEqual(X.shape, (118, 5))
+        self.assertEqual(y.shape, (118,))
+        self.assertEqual(set(y), {"No promotion", "Promotion"})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.498, places=3)
+
+    def test_dataset_ricci_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=True)
+        self.assertEqual(X.shape, (118, 6))
+        self.assertEqual(y.shape, (118,))
+        self.assertEqual(set(y), {0, 1})
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di, 0.498, places=3)
 
     def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info
@@ -400,10 +451,7 @@ class TestAIF360(unittest.TestCase):
         return impact_remi
 
     def test_disparate_impact_remover_np_num(self):
-        fairness_info = {
-            "favorable_labels": [1.0],
-            "protected_attributes": [{"feature": 57, "privileged_groups": [1.0]}],
-        }
+        fairness_info = self.creditg_np_num["fairness_info"]
         trainable_orig = LogisticRegression(max_iter=1000)
         trainable_remi = DisparateImpactRemover(**fairness_info) >> trainable_orig
         train_X = self.creditg_np_num["train_X"]
@@ -414,10 +462,9 @@ class TestAIF360(unittest.TestCase):
         test_y = self.creditg_np_num["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         impact_orig = disparate_impact_scorer(trained_orig, test_X, test_y)
-        self.assertTrue(0.8 < impact_orig < 1.0, f"impact_orig {impact_orig}")
+        self.assertTrue(0.7 < impact_orig < 1.0, f"impact_orig {impact_orig}")
         impact_remi = disparate_impact_scorer(trained_remi, test_X, test_y)
-        self.assertTrue(0.9 < impact_remi < 1.0, f"impact_remi {impact_remi}")
-        print(f"impact_orig {impact_orig}, impact_remi {impact_remi}")
+        self.assertTrue(0.8 < impact_remi < 1.0, f"impact_remi {impact_remi}")
 
     def test_adversarial_debiasing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -556,7 +603,7 @@ class TestAIF360(unittest.TestCase):
         trainable_remi = PrejudiceRemover(
             **fairness_info, preprocessing=self.prep_pd_cat
         )
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.8, 1.0)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.7, 1.0)
 
     def test_reject_option_classification_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
