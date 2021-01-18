@@ -24,8 +24,10 @@ def fetch_adult_df(preprocess=False):
     It contains information about individuals from the 1994 U.S. census.
     The prediction task is a binary classification on whether the
     income of a person exceeds 50K a year. Without preprocessing,
-    the dataset has 48,842 rows and 14 columns. The data includes
-    both categorical and numeric columns, and has some missing values.
+    the dataset has 48,842 rows and 14 columns. There are two
+    protected attributes, sex and race, and the disparate impact is
+    0.23. The data includes both categorical and numeric columns, and
+    has some missing values.
 
     .. _`adult`: https://www.openml.org/d/179
 
@@ -99,14 +101,109 @@ def fetch_adult_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
+def fetch_bank_df(preprocess=False):
+    """
+    Fetch the `bank-marketing`_ dataset from OpenML and add `fairness_info`.
+
+    It contains information from marketing campaigns of a Portuguise
+    bank.  The prediction task is a binary classification on whether
+    the client will subscribe a term deposit. Without preprocessing,
+    the dataset has 45,211 rows and 16 columns. There is one protected
+    attribute, age, and the disparate impact of 0.84. The data
+    includes both categorical and numeric columns, with no missing
+    values.
+
+    .. _`bank-marketing`: https://www.openml.org/d/1461
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups;
+      encode labels in y as 0 or 1 to indicate favorable outcomes;
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protecteded attributes.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "bank-marketing", "classification", astype="pandas", preprocess=preprocess
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
+    column_map = {
+        "v1": "age",
+        "v2": "job",
+        "v3": "marital",
+        "v4": "education",
+        "v5": "default",
+        "v6": "balance",
+        "v7": "housing",
+        "v8": "loan",
+        "v9": "contact",
+        "v10": "day",
+        "v11": "month",
+        "v12": "duration",
+        "v13": "campaign",
+        "v14": "pdays",
+        "v15": "previous",
+        "v16": "poutcome",
+    }
+    if preprocess:
+
+        def map_col(col):
+            if col.find("_") == -1:
+                return column_map[col]
+            prefix, suffix = col.split("_")
+            return column_map[prefix] + "_" + suffix
+
+        orig_X.columns = [map_col(col) for col in orig_X.columns]
+        age = pd.Series(orig_X["age"] >= 25, dtype=np.float64)
+        encoded_X = orig_X.assign(age=age)
+        encoded_y = pd.Series(orig_y == 0, dtype=np.float64, name=orig_y.name)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
+        }
+        return encoded_X, encoded_y, fairness_info
+    else:
+        orig_X.columns = [column_map[col] for col in orig_X.columns]
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [[25, 1000]]},
+            ],
+        }
+        return orig_X, orig_y, fairness_info
+
+
 def fetch_compas_df(preprocess=False):
     """
-    Fetch the `compas-two-years`_ dataset from OpenML and add `fairness_info`.
-    It contains information about individuals with a binary classification
-    for recidivism, indicating whether they were re-arrested within two
-    years after the first arrest. Without preprocessing, the dataset
-    has 5,287 rows and 13 columns. The data includes only numeric columns,
-    with no missing values.
+    Fetch the `compas-two-years`_ dataset, also known as ProPublica recidivism, from OpenML and add `fairness_info`.
+
+    It contains information about individuals with a binary
+    classification for recidivism, indicating whether they were
+    re-arrested within two years after the first arrest. Without
+    preprocessing, the dataset has 5,287 rows and 13 columns.  There
+    are two protected attributes, sex and race, and the disparate
+    impact is 0.92.  The data includes only numeric columns, with no
+    missing values.
 
     .. _`compas-two-years`: https://www.openml.org/d/42193
 
@@ -114,8 +211,8 @@ def fetch_compas_df(preprocess=False):
     ----------
     preprocess : boolean, optional, default False
 
-      If True, compute column race from race_caucasian, and drop
-      columns race_african-american and race_caucasian.
+      If True, compute column `race` from `race_caucasian`, and drop
+      columns `race_african-american` and `race_caucasian`.
 
     Returns
     -------
@@ -167,10 +264,13 @@ def fetch_compas_df(preprocess=False):
 def fetch_creditg_df(preprocess=False):
     """
     Fetch the `credit-g`_ dataset from OpenML and add `fairness_info`.
-    It contains information about individuals with a binary classification
-    into good or bad credit risks. Without preprocessing, the dataset
-    has 1,000 rows and 20 columns. The data includes both categorical
-    and numeric columns, with no missing values.
+
+    It contains information about individuals with a binary
+    classification into good or bad credit risks. Without
+    preprocessing, the dataset has 1,000 rows and 20 columns. There
+    are two protected attributs, personal_status/sex and age, and the
+    disparate impact is 0.75.  The data includes both categorical and
+    numeric columns, with no missing values.
 
     .. _`credit-g`: https://www.openml.org/d/31
 
@@ -253,11 +353,13 @@ def fetch_creditg_df(preprocess=False):
 def fetch_ricci_df(preprocess=False):
     """
     Fetch the `ricci_vs_destefano`_ dataset from OpenML and add `fairness_info`.
-    It contains test scores for 2003 New Haven Fire Department promotion
-    exams with a binary classification into promotion or no promotion.
-    Without preprocessing, the dataset has 118 rows and 5 columns.
-    The data includes both categorical and numeric columns, with no
-    missing values.
+
+    It contains test scores for 2003 New Haven Fire Department
+    promotion exams with a binary classification into promotion or no
+    promotion.  Without preprocessing, the dataset has 118 rows and 5
+    columns.  There is one protected attribute, race, and the
+    disparate impact is 0.50.  The data includes both categorical and
+    numeric columns, with no missing values.
 
     .. _`ricci_vs_destefano`: https://www.openml.org/d/42665
 
@@ -294,9 +396,6 @@ def fetch_ricci_df(preprocess=False):
     orig_X = pd.concat([train_X, test_X]).sort_index()
     orig_y = pd.concat([train_y, test_y]).sort_index()
     if preprocess:
-        from lale.helpers import println_pos
-
-        println_pos(f"orig_X.columns {orig_X.columns}")
         race = pd.Series(orig_X["race_W"] == 1, dtype=np.float64)
         dropped_X = orig_X.drop(labels=["race_B", "race_H", "race_W"], axis=1)
         encoded_X = dropped_X.assign(race=race)
