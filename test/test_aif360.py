@@ -247,77 +247,57 @@ class TestAIF360(unittest.TestCase):
             self.assertEqual(old, strat[1] == "T")
             self.assertEqual(favorable, strat[2] == "T")
 
+    def _attempt_dataset(
+        self, X, y, fairness_info, n_rows, n_columns, set_y, di_expected
+    ):
+        self.assertEqual(X.shape, (n_rows, n_columns))
+        self.assertEqual(y.shape, (n_rows,))
+        self.assertEqual(set(y), set_y)
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di_measured = di_scorer.scoring(X=X, y_pred=y)
+        self.assertAlmostEqual(di_measured, di_expected, places=3)
+
     def test_dataset_adult_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_adult_df(preprocess=False)
-        self.assertEqual(X.shape, (48_842, 14))
-        self.assertEqual(y.shape, (48_842,))
-        self.assertEqual(set(y), {"<=50K", ">50K"})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.227, places=3)
+        self._attempt_dataset(X, y, fairness_info, 48_842, 14, {"<=50K", ">50K"}, 0.227)
 
     def test_dataset_adult_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_adult_df(preprocess=True)
-        self.assertEqual(X.shape, (48_842, 100))
-        self.assertEqual(y.shape, (48_842,))
-        self.assertEqual(set(y), {0, 1})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.227, places=3)
+        self._attempt_dataset(X, y, fairness_info, 48_842, 100, {0, 1}, 0.227)
+
+    def test_dataset_bank_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_bank_df(preprocess=False)
+        self._attempt_dataset(X, y, fairness_info, 45_211, 16, {1, 2}, 0.840)
+
+    def test_dataset_bank_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_bank_df(preprocess=True)
+        self._attempt_dataset(X, y, fairness_info, 45_211, 51, {0, 1}, 0.840)
 
     def test_dataset_compas_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=False)
-        self.assertEqual(X.shape, (5_278, 13))
-        self.assertEqual(y.shape, (5_278,))
-        self.assertEqual(set(y), {0, 1})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.919, places=3)
+        self._attempt_dataset(X, y, fairness_info, 5_278, 13, {0, 1}, 0.919)
 
     def test_dataset_compas_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=True)
-        self.assertEqual(X.shape, (5_278, 12))
-        self.assertEqual(y.shape, (5_278,))
-        self.assertEqual(set(y), {0, 1})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.919, places=3)
+        self._attempt_dataset(X, y, fairness_info, 5_278, 12, {0, 1}, 0.919)
 
     def test_dataset_creditg_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
-        self.assertEqual(X.shape, (1_000, 20))
-        self.assertEqual(y.shape, (1_000,))
-        self.assertEqual(set(y), {"bad", "good"})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.748, places=3)
+        self._attempt_dataset(X, y, fairness_info, 1_000, 20, {"bad", "good"}, 0.748)
 
     def test_dataset_creditg_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=True)
-        self.assertEqual(X.shape, (1_000, 58))
-        self.assertEqual(y.shape, (1_000,))
-        self.assertEqual(set(y), {0, 1})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.748, places=3)
+        self._attempt_dataset(X, y, fairness_info, 1_000, 58, {0, 1}, 0.748)
 
     def test_dataset_ricci_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=False)
-        self.assertEqual(X.shape, (118, 5))
-        self.assertEqual(y.shape, (118,))
-        self.assertEqual(set(y), {"No promotion", "Promotion"})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.498, places=3)
+        self._attempt_dataset(
+            X, y, fairness_info, 118, 5, {"No promotion", "Promotion"}, 0.498
+        )
 
     def test_dataset_ricci_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=True)
-        self.assertEqual(X.shape, (118, 6))
-        self.assertEqual(y.shape, (118,))
-        self.assertEqual(set(y), {0, 1})
-        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di = di_scorer.scoring(X=X, y_pred=y)
-        self.assertAlmostEqual(di, 0.498, places=3)
+        self._attempt_dataset(X, y, fairness_info, 118, 6, {0, 1}, 0.498)
 
     def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info
