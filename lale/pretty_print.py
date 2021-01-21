@@ -33,7 +33,7 @@ import lale.type_checking
 logger = logging.getLogger(__name__)
 
 JSON_TYPE = Dict[str, Any]
-_black78 = black.Mode(line_length=78)
+_black78 = black.FileMode(line_length=78)
 
 
 class _CodeGenState:
