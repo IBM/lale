@@ -41,7 +41,6 @@ if on_rtd:
 else:
     install_requires = [
         "numpy",
-        "black",
         "graphviz",
         "hyperopt",
         "jsonschema",
