@@ -1129,7 +1129,9 @@ class IndividualOp(Operator):
         if inspect.isclass(self._impl):
             class_ = self._impl
             try:
-                instance = class_()  # always with default values of hyperparams
+                instance = class_(
+                    **self.get_defaults()
+                )  # always with default values of hyperparams
             except TypeError as e:
                 logger.debug(
                     f"Constructor for {class_.__module__}.{class_.__name__} "
@@ -1740,6 +1742,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
     def set_params(self, **impl_params):
         # TODO: This mutates the operator, should we mark it deprecated?
         filtered_impl_params = _fixup_hyperparams_dict(impl_params)
+        defaults = self.get_defaults()
+        for k in defaults.keys():
+            if k not in filtered_impl_params.keys():
+                filtered_impl_params[k] = defaults[k]
         self._impl = lale.helpers.create_individual_op_using_reflection(
             self.class_name(), self._name, filtered_impl_params
         )
