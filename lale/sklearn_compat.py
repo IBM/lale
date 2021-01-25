@@ -98,46 +98,6 @@ def sklearn_compat_clone(impl: Any) -> Any:
     return cp
 
 
-def clone_lale(op: Ops.Operator) -> Ops.Operator:
-    return op._lale_clone(sklearn_compat_clone)
-
-
-class WithoutGetParams(object):
-    """ This wrapper forwards everything except "get_attr" to what it is wrapping
-    """
-
-    def __init__(self, base):
-        self._base = base
-        assert self._base != self
-
-    def __getattr__(self, name):
-        # This is needed because in python copy skips calling the __init__ method
-        if name == "_base":
-            raise AttributeError
-        if name == "get_params":
-            raise AttributeError
-        if name in ["__getstate__", "__setstate__", "__repr__"]:
-            raise AttributeError
-        else:
-            return getattr(self._base, name)
-
-    @classmethod
-    def clone_wgp(cls, obj: "WithoutGetParams") -> "WithoutGetParams":
-        while isinstance(obj, WithoutGetParams):
-            obj = obj._base
-        assert isinstance(obj, Ops.Operator)
-        return WithoutGetParams(clone_lale(obj))
-
-    def __str__(self):
-        b = getattr(self, "_base", None)
-        s: str
-        if b is None:
-            s = ""
-        else:
-            s = str(b)
-        return f"WGP<{s}>"
-
-
 def partition_sklearn_params(
     d: Dict[str, Any]
 ) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
@@ -251,7 +211,13 @@ def set_structured_params(k, params: Dict[str, Any], hyper_parent):
                 if not isinstance(hyper, dict):
                     assert is_numeric_structure(structure_type)
                     actual_key = int(elem_key)
-                    hyper[actual_key] = elem_value
+                    # we may need to extend the array
+                    try:
+                        hyper[actual_key] = elem_value
+                    except IndexError:
+                        assert 0 <= actual_key
+                        hyper.extend((actual_key - len(hyper)) * [None])
+                        hyper.append(elem_value)
                 else:
                     actual_key = elem_key
                     hyper[actual_key] = elem_value
@@ -300,7 +266,6 @@ def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperato
         # we have now updated any nested operators
         # (if this is a higher order operator)
         # and can work on the main operator
-
         all_params = {**hyper, **main_params}
         return op.set_params(**all_params)
     elif isinstance(op, Ops.BasePipeline):
@@ -368,40 +333,59 @@ def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperato
         assert False, f"Not yet supported operation of type: {op.__class__.__name__}"
 
 
+NEW_STUFF = "_new_stuff"
+PLANNED_OPERATOR_NAME = "PlannedOperator"
+INDIVIDUAL_OPERATOR_NAME = "IndividualOperator"
+
+
 class SKlearnCompatWrapper(object):
-    _base: WithoutGetParams
-    # This is used to trick clone into leaving us alone
-    _old_params_for_clone: Optional[Dict[str, Any]]
+    _base: Ops.Operator
 
     @classmethod
-    def make_wrapper(cls, base: Ops.Operator):
+    def make_wrapper(cls, base: Ops.Operator) -> "SKlearnCompatWrapper":
         b: Any = base
         if isinstance(base, SKlearnCompatWrapper):
             return base
-        elif not isinstance(base, WithoutGetParams):
-            b = WithoutGetParams(base)
         return cls(__lale_wrapper_init_base=b)
+
+    @classmethod
+    def lale_class_to_string(cls, op_class):
+        return op_class.__name__
+
+    @classmethod
+    def lale_string_to_class(cls, op_str):
+        from lale.grammar import Grammar, NonTerminal
+
+        if not hasattr(cls, "_str_to_class_lookup"):
+            op_concrete_class_list = [
+                Ops.IndividualOp,
+                Ops.PlannedIndividualOp,
+                Ops.TrainableIndividualOp,
+                Ops.TrainedIndividualOp,
+                Ops.OperatorChoice,
+                Ops.BasePipeline,
+                Ops.PlannedPipeline,
+                Ops.TrainablePipeline,
+                Ops.TrainedPipeline,
+                NonTerminal,
+                Grammar,
+            ]
+            d = {k.__name__: k for k in op_concrete_class_list}
+            cls._str_to_class_lookup = d
+        return cls._str_to_class_lookup[op_str]
 
     def __init__(self, **kwargs):
         if "__lale_wrapper_init_base" in kwargs:
             # if we are being called by make_wrapper
             # then we don't need to make a copy
             self._base = kwargs["__lale_wrapper_init_base"]
-            self._old_params_for_clone = None
-
         else:
-            # otherwise, we are part of a get_params/init clone
-            # and we need to make a copy
-            self.init_params_internal(**kwargs)
+            args = dict(kwargs)
+            life = SKlearnCompatWrapper.lale_string_to_class(args["_lale_class"])
+            del args["_lale_class"]
+            self._base = life(**args)
+        assert self._base is not None
         assert self._base != self
-
-    def init_params_internal(self, **kwargs):
-        op = kwargs["__lale_wrapper_base"]
-        self._base = WithoutGetParams.clone_wgp(op)
-        self._old_params_for_clone = kwargs
-
-    def get_params_internal(self, out: Dict[str, Any]):
-        out["__lale_wrapper_base"] = self._base
 
     def set_params_internal(self, **impl_params):
         self._base = impl_params["__lale_wrapper_base"]
@@ -411,14 +395,7 @@ class SKlearnCompatWrapper(object):
         return params
 
     def to_lale(self) -> Ops.Operator:
-        cur: Any = self
-        assert cur is not None
-        assert cur._base is not None
-        cur = cur._base
-        while isinstance(cur, WithoutGetParams):
-            cur = cur._base
-        assert isinstance(cur, Ops.Operator)
-        return cur
+        return self._base
 
     # sklearn calls __repr__ instead of __str__
     def __repr__(self):
@@ -433,40 +410,58 @@ class SKlearnCompatWrapper(object):
         else:
             return super().__repr__()
 
-    def __getattribute__(self, name):
-        """ Try proxying unknown attributes to the underlying operator
-            getattribute is used instead of getattr to ensure that the
-            correct underlying error is thrown in case
-            a property (such as classes_) throws an AttributeError
-        """
-
+    def __getattr__(self, name):
         # This is needed because in python copy skips calling the __init__ method
-        try:
-            return super(SKlearnCompatWrapper, self).__getattribute__(name)
-        except AttributeError as e:
-            if name == "_base":
-                raise AttributeError
-            try:
-                return getattr(self._base, name)
-            except AttributeError:
-                raise e
+        if name == "_base":
+            raise AttributeError
+        if name in ["__getstate__", "__setstate__", "__repr__"]:
+            raise AttributeError
+        else:
+            return getattr(self._base, name)
+
+    # def __getattribute__(self, name):
+    #     """ Try proxying unknown attributes to the underlying operator
+    #         getattribute is used instead of getattr to ensure that the
+    #         correct underlying error is thrown in case
+    #         a property (such as classes_) throws an AttributeError
+    #     """
+
+    #     # This is needed because in python copy skips calling the __init__ method
+    #     try:
+    #         return super(SKlearnCompatWrapper, self).__getattribute__(name)
+    #     except AttributeError as e:
+    #         if name == "_base":
+    #             raise AttributeError
+    #         try:
+    #             return getattr(super(SKlearnCompatWrapper, self).__getattribute__("_base"), name)
+    #         except AttributeError:
+    #             raise e
+
+    @classmethod
+    def get_op_type(cls, op: Ops.Operator):
+        if isinstance(op, Ops.TrainableIndividualOp):
+            return Ops.TrainableIndividualOp
+        elif isinstance(op, Ops.TrainablePipeline):
+            return Ops.TrainablePipeline
+        else:
+            return op.__class__
 
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
-        # TODO: We currently ignore deep
-        out: Dict[str, Any] = {}
-        if self._old_params_for_clone is not None:
-            # lie to clone to make it happy
-            params = self._old_params_for_clone
-            self._old_params_for_clone = None
-            return params
-        else:
-            self.get_params_internal(out)
-        return out
+        op = self.to_lale()
+        op_out = op.get_params(deep=deep)
+        # we need to stringify the class object, since the class object
+        # has a get_params method (the instance method), which causes problems for
+        # sklearn clone
+        op_out["_lale_class"] = SKlearnCompatWrapper.lale_class_to_string(
+            self.get_op_type(op)
+        )
+        return op_out
 
     def fit(self, X, y=None, **fit_params):
-        if hasattr(self._base, "fit"):
+        f = getattr(self._base, "fit", None)
+        if f is not None:
             filtered_params = remove_defaults_dict(fit_params)
-            return self._base.fit(X, y=y, **filtered_params)
+            return f(X, y=y, **filtered_params)
         else:
             pass
 
@@ -475,21 +470,14 @@ class SKlearnCompatWrapper(object):
         if "__lale_wrapper_base" in impl_params:
             self.set_params_internal(**impl_params)
         else:
-            cur: Union[WithoutGetParams, Ops.Operator] = self._base
-            assert self != cur
-            assert cur is not None
-            prev: WithoutGetParams = cur  # Note that this assignment is spurious, since the loop will always run at least once
-            while isinstance(cur, WithoutGetParams):
-                assert cur != cur._base
-                prev = cur
-                cur = cur._base
-            assert isinstance(cur, Ops.Operator)
+            cur: Ops.Operator = self._base
             fixed_params = self.fixup_params_internal(**impl_params)
+            fixed_params.pop("_lale_class", None)
             new_s = set_operator_params(cur, **fixed_params)
-            if not isinstance(new_s, Ops.TrainableOperator):
-                assert False
+            #            if not isinstance(new_s, Ops.TrainableOperator):
+            #                assert False
             if new_s != cur:
-                prev._base = new_s
+                self._base = new_s
         return self
 
     def get_defaults(self) -> Dict[str, Any]:
