@@ -279,7 +279,8 @@ def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperato
         # we have now updated any nested operators
         # (if this is a higher order operator)
         # and can work on the main operator
-        all_params = {**main_params, **hyper}
+
+        all_params = {**hyper, **main_params}
         return op.set_params(**all_params)
     elif isinstance(op, Ops.BasePipeline):
         steps = op.steps()
