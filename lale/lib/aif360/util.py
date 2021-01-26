@@ -256,7 +256,7 @@ class _PandasToDatasetConverter:
         )
         self.protected_attribute_names = protected_attribute_names
 
-    def convert(self, X, y):
+    def convert(self, X, y, probas=None):
         assert isinstance(X, pd.DataFrame), type(X)
         assert isinstance(y, pd.Series), type(y)
         assert X.shape[0] == y.shape[0], f"X.shape {X.shape}, y.shape {y.shape}"
@@ -274,6 +274,9 @@ class _PandasToDatasetConverter:
             df=df,
             label_names=label_names,
         )
+        if probas is not None:
+            pos_ind = 1  # TODO: is this always the case?
+            result.scores = probas[:, pos_ind].reshape(-1, 1)
         return result
 
 
@@ -933,17 +936,23 @@ class _BasePostprocessingImpl:
         predicted_y = self.redact_and_estim.predict(X)
         predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
         _, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        predicted_probas = self.redact_and_estim.predict_proba(X)
         dataset_true = self.pandas_to_dataset.convert(encoded_X, encoded_y)
-        dataset_pred = self.pandas_to_dataset.convert(encoded_X, predicted_y)
+        dataset_pred = self.pandas_to_dataset.convert(
+            encoded_X, predicted_y, predicted_probas
+        )
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
         self.unfavorable_labels = list(set(list(y)) - set(list(self.favorable_labels)))
         return self
 
     def predict(self, X):
         predicted_y = self.redact_and_estim.predict(X)
+        predicted_probas = self.redact_and_estim.predict_proba(X)
         predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
         encoded_X, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
-        dataset_pred = self.pandas_to_dataset.convert(encoded_X, predicted_y)
+        dataset_pred = self.pandas_to_dataset.convert(
+            encoded_X, predicted_y, predicted_probas
+        )
         dataset_out = self.mitigator.predict(dataset_pred)
         _, result_y = dataset_to_pandas(dataset_out, return_only="y")
         decoded_y = self._decode(result_y)
