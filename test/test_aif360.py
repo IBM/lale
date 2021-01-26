@@ -300,14 +300,14 @@ class TestAIF360Num(unittest.TestCase):
         trainable_remi = CalibratedEqOddsPostprocessing(
             **fairness_info, estimator=estim
         )
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.71, 0.81)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.65, 0.80)
 
     def test_disparate_impact_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = DisparateImpactRemover(**fairness_info) >> LogisticRegression(
             max_iter=1000
         )
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.827, 0.828)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.78, 0.88)
 
     def test_eq_odds_postprocessing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -340,7 +340,7 @@ class TestAIF360Num(unittest.TestCase):
         redacting = Redacting(**fairness_info)
         logistic_regression = LogisticRegression(max_iter=1000)
         trainable_remi = redacting >> logistic_regression
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.83, 0.93)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.80, 0.90)
 
     def test_reject_option_classification_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -618,13 +618,13 @@ class TestAIF360Cat(unittest.TestCase):
         trainable_remi = DisparateImpactRemover(
             **fairness_info, preprocessing=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.868, 0.869)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.78, 0.88)
 
     def test_eq_odds_postprocessing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.952, 0.953)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.88, 0.98)
 
     def test_gerry_fair_classifier_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
@@ -653,27 +653,27 @@ class TestAIF360Cat(unittest.TestCase):
         trainable_remi = PrejudiceRemover(
             **fairness_info, preprocessing=self.prep_pd_cat
         )
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.763, 0.764)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.70, 0.80)
 
     def test_redacting_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Redacting(**fairness_info) >> estim
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.887, 0.888)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.81, 0.91)
 
     def test_reject_option_classification_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = RejectOptionClassification(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.970, 0.971)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.88, 0.98)
 
     def test_sans_mitigation_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.664, 0.665)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.66, 0.76)
 
     def test_reweighing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.911, 0.912)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.87, 0.97)
