@@ -140,7 +140,7 @@ jobs:
         - test/test_core_regressors.py
         - test/test_core_transformers.py
         python-version: [3.8]
-        setup-target: ['.[full,test]']
+        setup-target: ['.[test]']
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -163,8 +163,8 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Get sklearn 0.24
-      run: pip install 'scikit-learn==0.24.1'
+    - name: Get latest sklearn
+      run: pip install --upgrade --upgrade-strategy eager scikit-learn
     - name: Run test
       run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
     - name: Upload coverage metrics to CodeCov
