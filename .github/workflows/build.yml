@@ -164,7 +164,7 @@ jobs:
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install pytest, codecov, and lightgbm
-      run: pip install pytest-cov codecov lightgbm
+      run: pip install pytest-cov codecov 'lightgbm==2.2.3'
     - name: Install latest scikit-learn and xgboost
       run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost
     - name: Run test
