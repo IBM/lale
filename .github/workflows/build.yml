@@ -129,7 +129,7 @@ jobs:
       uses: codecov/codecov-action@v1
 
   test_newer:
-    name: Test with newer scikit-learn version
+    name: Test with newest sklearn
     runs-on: ubuntu-latest
     needs: [static]
     strategy:
@@ -163,10 +163,10 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install pytest, codecov, and lightgbm
-      run: pip install pytest-cov codecov 'lightgbm==2.2.3'
-    - name: Install latest scikit-learn and xgboost
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost
+    - name: Install pytest and codecov
+      run: pip install pytest-cov codecov
+    - name: Install latest scikit-learn, xgboost, and lightgbm
+      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
     - name: Run test
       run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
     - name: Upload coverage metrics to CodeCov
