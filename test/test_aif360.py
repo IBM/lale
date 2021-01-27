@@ -292,7 +292,7 @@ class TestAIF360Num(unittest.TestCase):
         fairness_info = self.creditg_pd_num["fairness_info"]
         tf.reset_default_graph()
         trainable_remi = AdversarialDebiasing(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.90, 1.05)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.90, 1.10)
 
     def test_calibrated_eq_odds_postprocessing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -300,7 +300,7 @@ class TestAIF360Num(unittest.TestCase):
         trainable_remi = CalibratedEqOddsPostprocessing(
             **fairness_info, estimator=estim
         )
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.65, 0.80)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.65, 0.85)
 
     def test_disparate_impact_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -603,7 +603,7 @@ class TestAIF360Cat(unittest.TestCase):
         trainable_remi = AdversarialDebiasing(
             **fairness_info, preprocessing=self.prep_pd_cat
         )
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.1)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.2)
 
     def test_calibrated_eq_odds_postprocessing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
@@ -611,7 +611,7 @@ class TestAIF360Cat(unittest.TestCase):
         trainable_remi = CalibratedEqOddsPostprocessing(
             **fairness_info, estimator=estim
         )
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.72, 0.82)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.65, 0.85)
 
     def test_disparate_impact_remover_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]

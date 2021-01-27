@@ -1172,7 +1172,7 @@ class IndividualOp(Operator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Optional[Schema] = None,
+        constraint: Union[Schema, JSON_TYPE, None] = None,
         tags: Optional[Dict] = None,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "IndividualOp":
@@ -1439,7 +1439,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Optional[Schema] = None,
+        constraint: Union[Schema, JSON_TYPE, None] = None,
         tags: Optional[Dict] = None,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "PlannedIndividualOp":
@@ -1786,7 +1786,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Optional[Schema] = None,
+        constraint: Union[Schema, JSON_TYPE, None] = None,
         tags: Optional[Dict] = None,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainableIndividualOp":
@@ -1974,7 +1974,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Optional[Schema] = None,
+        constraint: Union[Schema, JSON_TYPE, None] = None,
         tags: Optional[Dict] = None,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainedIndividualOp":
@@ -3481,7 +3481,7 @@ def customize_schema(
     op: CustomizeOpType,
     schemas: Optional[Schema] = None,
     relevantToOptimizer: Optional[List[str]] = None,
-    constraint: Optional[Schema] = None,
+    constraint: Union[Schema, JSON_TYPE, None] = None,
     tags: Optional[Dict] = None,
     **kwargs: Union[Schema, JSON_TYPE, None],
 ) -> CustomizeOpType:
@@ -3526,7 +3526,9 @@ def customize_schema(
                 "relevantToOptimizer"
             ] = relevantToOptimizer
         if constraint is not None:
-            op._schemas["properties"]["hyperparams"]["allOf"].append(constraint.schema)
+            if isinstance(constraint, Schema):
+                constraint = constraint.schema
+            op._schemas["properties"]["hyperparams"]["allOf"].append(constraint)
         if tags is not None:
             assert isinstance(tags, dict)
             op._schemas["tags"] = tags

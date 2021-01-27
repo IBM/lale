@@ -128,6 +128,50 @@ jobs:
     - name: Upload coverage metrics to CodeCov
       uses: codecov/codecov-action@v1
 
+  test_newer:
+    name: Test with newest sklearn
+    runs-on: ubuntu-latest
+    needs: [static]
+    strategy:
+      fail-fast: false
+      matrix:
+        test-case:
+        - test/test_core_classifiers.py
+        - test/test_core_regressors.py
+        - test/test_core_transformers.py
+        python-version: [3.8]
+        setup-target: ['.']
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install system packages
+      run: sudo apt-get install graphviz swig
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
+    - name: Install numpy
+      run: pip install -U numpy
+    - name: Install dependencies
+      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+    - name: Install pytest and codecov
+      run: pip install pytest-cov codecov
+    - name: Install latest scikit-learn, xgboost, and lightgbm
+      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
+    - name: Run test
+      run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
+    - name: Upload coverage metrics to CodeCov
+      uses: codecov/codecov-action@v1
+
   test_notebooks:
     name: Test Notebooks
     needs: [static]

@@ -76,6 +76,8 @@ or with
         self._wrapped_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
 
     def fit(self, X, y=None, **fit_params):
+        if X.shape[0] * self._wrapped_model.subsample < 1.0:
+            self._wrapped_model.subsample = 1.001 / X.shape[0]
         try:
             self._wrapped_model.fit(X, y, **fit_params)
         except Exception as e:

@@ -136,54 +136,45 @@ RFE = lale.operators.make_operator(RFEImpl, _combined_schemas)
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.RFE.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.feature_selection.RFE.html
-    from lale.schemas import JSON
-
     RFE = RFE.customize_schema(
-        n_features_to_select=JSON(
-            {
-                "anyOf": [
-                    {
-                        "description": "Half of the features are selected.",
-                        "enum": [None],
-                    },
-                    {
-                        "description": "Absolute number of features to select.",
-                        "type": "integer",
-                        "minimum": 1,
-                        "laleMaximum": "X/items/maxItems",  # number of columns
-                        "forOptimizer": False,
-                    },
-                    {
-                        "description": "Fraction of features to select",
-                        "type": "number",
-                        "minimum": 0.0,
-                        "exclusiveMinimum": True,
-                        "maximum": 1.0,
-                        "exclusiveMaximum": True,
-                    },
-                ],
-                "default": None,
-            }
-        ),
-        importance_getter=JSON(
-            {
-                "anyOf": [
-                    {
-                        "description": "Use the feature importance either through a coef_ or feature_importances_ attributes of estimator.",
-                        "enum": ["auto"],
-                    },
-                    {
-                        "description": "Attribute name/path for extracting feature importance (implemented with attrgetter).",
-                        "type": "string",
-                    },
-                    {
-                        "description": "The callable is passed with the fitted estimator and it should return importance for each feature.",
-                        "laleType": "callable",
-                    },
-                ],
-                "default": ["auto"],
-            },
-        ),
+        n_features_to_select={
+            "anyOf": [
+                {"description": "Half of the features are selected.", "enum": [None],},
+                {
+                    "description": "Absolute number of features to select.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "forOptimizer": False,
+                },
+                {
+                    "description": "Fraction of features to select",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1.0,
+                    "exclusiveMaximum": True,
+                },
+            ],
+            "default": None,
+        },
+        importance_getter={
+            "anyOf": [
+                {
+                    "description": "Use the feature importance either through a coef_ or feature_importances_ attributes of estimator.",
+                    "enum": ["auto"],
+                },
+                {
+                    "description": "Attribute name/path for extracting feature importance (implemented with attrgetter).",
+                    "type": "string",
+                },
+                {
+                    "description": "The callable is passed with the fitted estimator and it should return importance for each feature.",
+                    "laleType": "callable",
+                },
+            ],
+            "default": "auto",
+        },
     )
 
 lale.docstrings.set_docstrings(RFEImpl, RFE._schemas)

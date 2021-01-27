@@ -133,14 +133,12 @@ MinMaxScaler = lale.operators.make_operator(MinMaxScalerImpl, _combined_schemas)
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.preprocessing.MinMaxScaler.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.preprocessing.MinMaxScaler.html
-    from lale.schemas import Bool
-
     MinMaxScaler = MinMaxScaler.customize_schema(
-        clip=Bool(
-            desc="Set to True to clip transformed values of held-out data to provided feature range.",
-            default=False,
-            forOptimizer=False,
-        ),
+        clip={
+            "type": "boolean",
+            "description": "Set to True to clip transformed values of held-out data to provided feature range.",
+            "default": False,
+        },
     )
 
 lale.docstrings.set_docstrings(MinMaxScalerImpl, MinMaxScaler._schemas)

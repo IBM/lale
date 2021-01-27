@@ -23,8 +23,6 @@ import lale.sklearn_compat
 
 from .observing import Observing, ObservingImpl
 
-# from abc import ABC
-
 
 class GridSearchCVImpl:
     _best_estimator: Optional[lale.operators.TrainedOperator] = None
@@ -33,6 +31,7 @@ class GridSearchCVImpl:
         self,
         estimator=None,
         cv=5,
+        verbose=0,
         scoring=None,
         n_jobs=None,
         lale_num_samples=None,
@@ -54,6 +53,7 @@ class GridSearchCVImpl:
         self._hyperparams = {
             "estimator": estimator,
             "cv": cv,
+            "verbose": verbose,
             "scoring": scoring,
             "n_jobs": n_jobs,
             "lale_num_samples": lale_num_samples,
@@ -106,6 +106,7 @@ class GridSearchCVImpl:
                     lale.sklearn_compat.make_sklearn_compat(observed_op),
                     hp_grid,
                     cv=self._hyperparams["cv"],
+                    verbose=self._hyperparams["verbose"],
                     scoring=self._hyperparams["scoring"],
                     n_jobs=self._hyperparams["n_jobs"],
                 )
@@ -151,6 +152,7 @@ _hyperparams_schema = {
             "required": [
                 "estimator",
                 "cv",
+                "verbose",
                 "scoring",
                 "n_jobs",
                 "lale_num_samples",
@@ -176,6 +178,11 @@ _hyperparams_schema = {
                     "type": "integer",
                     "minimum": 1,
                     "default": 5,
+                },
+                "verbose": {
+                    "description": "Controls the verbosity: the higher, the more messages.",
+                    "type": "integer",
+                    "default": 0,
                 },
                 "scoring": {
                     "description": """Scorer object, or known scorer named by string.

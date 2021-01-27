@@ -68,10 +68,22 @@ def create_function_test_classifier(clf_name):
         trained = clf.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
+        from lale.lib.sklearn.gradient_boosting_classifier import (
+            GradientBoostingClassifierImpl,
+        )
+
+        if clf._impl_class() == GradientBoostingClassifierImpl:
+            # because exponential loss does not work with iris dataset as it is not binary classification
+            import lale.schemas as schemas
+
+            clf = clf.customize_schema(
+                loss=schemas.Enum(default="deviance", values=["deviance"])
+            )
+
         # test_with_hyperopt
         from lale.lib.lale import Hyperopt
 
-        hyperopt = Hyperopt(estimator=clf, max_evals=1)
+        hyperopt = Hyperopt(estimator=clf, max_evals=1, verbose=True)
         trained = hyperopt.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
@@ -86,17 +98,6 @@ def create_function_test_classifier(clf_name):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            from lale.lib.sklearn.gradient_boosting_classifier import (
-                GradientBoostingClassifierImpl,
-            )
-
-            if clf._impl_class() == GradientBoostingClassifierImpl:
-                # because exponential loss does not work with iris dataset as it is not binary classification
-                import lale.schemas as schemas
-
-                clf = clf.customize_schema(
-                    loss=schemas.Enum(default="deviance", values=["deviance"])
-                )
             grid_search = lale.lib.lale.GridSearchCV(
                 estimator=clf,
                 lale_num_samples=1,
