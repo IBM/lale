@@ -130,8 +130,11 @@ class TestNMF(unittest.TestCase):
         _ = trained.predict(test_X)
 
     def test_not_randome_state(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = NMF(random_state='"not RandomState"')
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = NMF(random_state='"not RandomState"')
 
 
 class TestFunctionTransformer(unittest.TestCase):
@@ -148,8 +151,11 @@ class TestFunctionTransformer(unittest.TestCase):
         _ = trained.predict(test_X)
 
     def test_not_callable(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = FunctionTransformer(func='"not callable"')
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = FunctionTransformer(func='"not callable"')
 
 
 class TestMissingIndicator(unittest.TestCase):
@@ -193,8 +199,11 @@ class TestRFE(unittest.TestCase):
         _ = trained.predict(X)
 
     def test_not_operator(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = RFE(estimator='"not an operator"', n_features_to_select=2)
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = RFE(estimator='"not an operator"', n_features_to_select=2)
 
     def test_attrib_sklearn(self):
         import sklearn.datasets
@@ -411,30 +420,36 @@ class TestConcatFeatures(unittest.TestCase):
 
 class TestTfidfVectorizer(unittest.TestCase):
     def test_more_hyperparam_values(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = TfidfVectorizer(
-                max_df=2.5, min_df=2, max_features=1000, stop_words="english"
-            )
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = TfidfVectorizer(
-                max_df=2,
-                min_df=2,
-                max_features=1000,
-                stop_words=["I", "we", "not", "this", "that"],
-                analyzer="char",
-            )
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = TfidfVectorizer(
+                    max_df=2.5, min_df=2, max_features=1000, stop_words="english"
+                )
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = TfidfVectorizer(
+                    max_df=2,
+                    min_df=2,
+                    max_features=1000,
+                    stop_words=["I", "we", "not", "this", "that"],
+                    analyzer="char",
+                )
 
     def test_non_null_tokenizer(self):
         # tokenize the doc and lemmatize its tokens
         def my_tokenizer():
             return "abc"
 
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = TfidfVectorizer(
-                max_df=2,
-                min_df=2,
-                max_features=1000,
-                stop_words="english",
-                tokenizer=my_tokenizer,
-                analyzer="char",
-            )
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = TfidfVectorizer(
+                    max_df=2,
+                    min_df=2,
+                    max_features=1000,
+                    stop_words="english",
+                    tokenizer=my_tokenizer,
+                    analyzer="char",
+                )

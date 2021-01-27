@@ -49,7 +49,10 @@ class TestCustomSchema(unittest.TestCase):
         foo = self.sk_pca.customize_schema(schemas=schemas.JSON(pca_schemas))
         self.assertEqual(foo._schemas, pca_schemas)
         self.assertEqual(self.sk_pca._schemas, init_schemas)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, schemas={})
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            self.assertRaises(Exception, self.sk_pca.customize_schema, schemas={})
 
     def test_override_input(self):
         init_input_schema = self.sk_pca.get_schema("input_fit")
@@ -58,7 +61,10 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.get_schema("input_fit"), pca_input)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.get_schema("input_fit"), init_input_schema)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, input_fit=42)
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            self.assertRaises(Exception, self.sk_pca.customize_schema, input_fit=42)
         _ = self.sk_pca.customize_schema(input_foo=pca_input)
 
     def test_override_output(self):
@@ -68,7 +74,10 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.get_schema("output_transform"), pca_output)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.get_schema("output_transform"), init_output_schema)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, output=42)
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            self.assertRaises(Exception, self.sk_pca.customize_schema, output=42)
         _ = self.sk_pca.customize_schema(output_foo=pca_output)
 
     def test_override_output2(self):
@@ -102,7 +111,10 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.hyperparam_schema("whiten"), expected)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.hyperparam_schema("whiten"), init)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, whitenX=42)
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            self.assertRaises(Exception, self.sk_pca.customize_schema, whitenX=42)
 
     def test_override_bool_param_ll(self):
         init = self.ll_pca.hyperparam_schema("whiten")
@@ -111,7 +123,10 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo.hyperparam_schema("whiten"), expected)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.ll_pca.hyperparam_schema("whiten"), init)
-        self.assertRaises(Exception, self.ll_pca.customize_schema, whitenX=42)
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            self.assertRaises(Exception, self.ll_pca.customize_schema, whitenX=42)
 
     def test_override_enum_param(self):
         init = self.ll_pca.hyperparam_schema("svd_solver")
@@ -307,7 +322,10 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(foo._schemas["tags"], tags)
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.ll_pca._schemas["tags"], init)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, tags=42)
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            self.assertRaises(Exception, self.sk_pca.customize_schema, tags=42)
 
     def test_wrap_imported_operators(self):
         old_globals = {**globals()}

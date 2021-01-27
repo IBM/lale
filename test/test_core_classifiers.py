@@ -37,6 +37,37 @@ from lale.lib.sklearn import (
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 
 
+class EnableSchemaValidation:
+    def __init__(self):
+        pass
+
+    def __enter__(self):
+        from lale.settings import (
+            disable_data_schema_validation,
+            disable_hyperparams_schema_validation,
+            set_disable_data_schema_validation,
+            set_disable_hyperparams_schema_validation,
+        )
+
+        self.existing_data_schema_validation_flag = disable_data_schema_validation
+        self.existing_hyperparams_schema_validation_flag = (
+            disable_hyperparams_schema_validation
+        )
+        set_disable_data_schema_validation(False)
+        set_disable_hyperparams_schema_validation(False)
+
+    def __exit__(self, value, type, traceback):
+        from lale.settings import (
+            set_disable_data_schema_validation,
+            set_disable_hyperparams_schema_validation,
+        )
+
+        set_disable_data_schema_validation(self.existing_data_schema_validation_flag)
+        set_disable_hyperparams_schema_validation(
+            self.existing_hyperparams_schema_validation_flag
+        )
+
+
 class TestClassification(unittest.TestCase):
     def setUp(self):
         from sklearn.model_selection import train_test_split
@@ -444,20 +475,25 @@ class TestLogisticRegression(unittest.TestCase):
         )
 
     def test_hyperparam_exclusive_min(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
 
     def test_hyperparam_penalty_solver_dependence(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(
-                LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(
+                    LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
+                )
 
     def test_hyperparam_dual_penalty_solver_dependence(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(
-                LogisticRegression.penalty.l2, LogisticRegression.solver.sag, dual=True
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(
+                    LogisticRegression.penalty.l2,
+                    LogisticRegression.solver.sag,
+                    dual=True,
+                )
 
     def test_sample_weight(self):
         import numpy as np

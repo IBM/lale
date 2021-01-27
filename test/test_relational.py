@@ -375,8 +375,11 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["string_indexed"][2], 0)
 
     def test_not_expression(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = Map(columns=[123, "hello"])
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if not disable_hyperparams_schema_validation:
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = Map(columns=[123, "hello"])
 
     def test_with_hyperopt(self):
         from sklearn.datasets import load_iris
