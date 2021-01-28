@@ -292,7 +292,7 @@ class TestAIF360Num(unittest.TestCase):
         fairness_info = self.creditg_pd_num["fairness_info"]
         tf.reset_default_graph()
         trainable_remi = AdversarialDebiasing(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.90, 1.10)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.2)
 
     def test_calibrated_eq_odds_postprocessing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
