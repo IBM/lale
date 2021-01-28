@@ -3533,6 +3533,16 @@ def customize_schema(
     """
     op = copy.deepcopy(op)
     methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
+    # explicitly enable the hyperparams schema check because it is important
+    from lale.settings import (
+        disable_hyperparams_schema_validation,
+        set_disable_hyperparams_schema_validation,
+    )
+
+    existing_disable_hyperparams_schema_validation = (
+        disable_hyperparams_schema_validation
+    )
+    set_disable_hyperparams_schema_validation(False)
 
     if schemas is not None:
         schemas.schema["$schema"] = "http://json-schema.org/draft-04/schema#"
@@ -3577,4 +3587,7 @@ def customize_schema(
     # since the schema has changed, we need to invalidate any
     # cached enum attributes
     op._invalidate_enum_attributes()
+    set_disable_hyperparams_schema_validation(
+        existing_disable_hyperparams_schema_validation
+    )
     return op

@@ -24,6 +24,8 @@ try:
 except ImportError:
     spark_installed = False
 
+from test import EnableSchemaValidation
+
 from lale import wrap_imported_operators
 from lale.expressions import (
     count,
@@ -375,9 +377,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["string_indexed"][2], 0)
 
     def test_not_expression(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = Map(columns=[123, "hello"])
 
