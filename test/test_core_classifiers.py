@@ -14,6 +14,7 @@
 
 import unittest
 import warnings
+from test import EnableSchemaValidation
 
 import jsonschema
 from sklearn.datasets import load_iris
@@ -35,37 +36,6 @@ from lale.lib.sklearn import (
     VotingClassifier,
 )
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
-
-
-class EnableSchemaValidation:
-    def __init__(self):
-        pass
-
-    def __enter__(self):
-        from lale.settings import (
-            disable_data_schema_validation,
-            disable_hyperparams_schema_validation,
-            set_disable_data_schema_validation,
-            set_disable_hyperparams_schema_validation,
-        )
-
-        self.existing_data_schema_validation_flag = disable_data_schema_validation
-        self.existing_hyperparams_schema_validation_flag = (
-            disable_hyperparams_schema_validation
-        )
-        set_disable_data_schema_validation(False)
-        set_disable_hyperparams_schema_validation(False)
-
-    def __exit__(self, value, type, traceback):
-        from lale.settings import (
-            set_disable_data_schema_validation,
-            set_disable_hyperparams_schema_validation,
-        )
-
-        set_disable_data_schema_validation(self.existing_data_schema_validation_flag)
-        set_disable_hyperparams_schema_validation(
-            self.existing_hyperparams_schema_validation_flag
-        )
 
 
 class TestClassification(unittest.TestCase):

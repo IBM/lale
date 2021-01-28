@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from test import EnableSchemaValidation
 from typing import Any
 
 import jsonschema
@@ -130,9 +131,7 @@ class TestNMF(unittest.TestCase):
         _ = trained.predict(test_X)
 
     def test_not_randome_state(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = NMF(random_state='"not RandomState"')
 
@@ -151,9 +150,7 @@ class TestFunctionTransformer(unittest.TestCase):
         _ = trained.predict(test_X)
 
     def test_not_callable(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = FunctionTransformer(func='"not callable"')
 
@@ -199,9 +196,7 @@ class TestRFE(unittest.TestCase):
         _ = trained.predict(X)
 
     def test_not_operator(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = RFE(estimator='"not an operator"', n_features_to_select=2)
 
@@ -420,9 +415,7 @@ class TestConcatFeatures(unittest.TestCase):
 
 class TestTfidfVectorizer(unittest.TestCase):
     def test_more_hyperparam_values(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = TfidfVectorizer(
                     max_df=2.5, min_df=2, max_features=1000, stop_words="english"
@@ -441,9 +434,7 @@ class TestTfidfVectorizer(unittest.TestCase):
         def my_tokenizer():
             return "abc"
 
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = TfidfVectorizer(
                     max_df=2,

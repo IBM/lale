@@ -1,4 +1,4 @@
-disable_hyperparams_schema_validation = True
+disable_hyperparams_schema_validation = False
 disable_data_schema_validation = True
 
 

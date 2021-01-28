@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from test import EnableSchemaValidation
 
 import jsonschema
 import numpy as np
@@ -64,9 +65,7 @@ class TestDecisionTreeClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
@@ -96,9 +95,7 @@ class TestDecisionTreeRegressor(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
@@ -137,18 +134,14 @@ class TestExtraTreesClassifier(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
                 _ = ExtraTreesClassifier(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'max_samples' was unexpected"
             ):
@@ -182,18 +175,14 @@ class TestExtraTreesRegressor(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
                 _ = ExtraTreesRegressor(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'max_samples' was unexpected"
             ):
@@ -301,9 +290,7 @@ class TestGradientBoostingClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
@@ -333,9 +320,7 @@ class TestGradientBoostingRegressor(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
@@ -406,9 +391,7 @@ class TestLogisticRegression(unittest.TestCase):
         self.assertEqual(default, "liblinear")
 
     def test_l1_ratio(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'l1_ratio' was unexpected"
             ):
@@ -438,9 +421,7 @@ class TestMLPClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_max_fun(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'max_fun' was unexpected"
             ):
@@ -470,9 +451,7 @@ class TestPolynomialFeatures(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_order(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'order' was unexpected"
             ):
@@ -506,18 +485,14 @@ class TestRandomForestClassifier(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
                 _ = RandomForestClassifier(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'max_samples' was unexpected"
             ):
@@ -551,9 +526,7 @@ class TestRandomForestRegressor(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
             ):
@@ -626,9 +599,7 @@ class TestSVC(unittest.TestCase):
         self.assertEqual(default, "auto_deprecated")
 
     def test_break_ties(self):
-        from lale.settings import disable_hyperparams_schema_validation
-
-        if not disable_hyperparams_schema_validation:
+        with EnableSchemaValidation():
             with self.assertRaisesRegex(
                 jsonschema.ValidationError, "argument 'break_ties' was unexpected"
             ):
