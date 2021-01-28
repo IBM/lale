@@ -155,7 +155,12 @@ def _json_meta_schema() -> Dict[str, Any]:
 
 
 def validate_is_schema(value: Dict[str, Any]):
-    # TODO: move this function to lale.type_checking
+    # only checking hyperparams schema validation flag because it is likely to be true and this call is cheap.
+    from lale.settings import disable_hyperparams_schema_validation
+
+    if disable_hyperparams_schema_validation:
+        return True
+
     if "$schema" in value:
         assert value["$schema"] == _JSON_META_SCHEMA_URL
     jsonschema.validate(value, _json_meta_schema())

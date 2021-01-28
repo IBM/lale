@@ -24,6 +24,8 @@ try:
 except ImportError:
     spark_installed = False
 
+from test import EnableSchemaValidation
+
 from lale import wrap_imported_operators
 from lale.expressions import (
     count,
@@ -375,8 +377,9 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["string_indexed"][2], 0)
 
     def test_not_expression(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = Map(columns=[123, "hello"])
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = Map(columns=[123, "hello"])
 
     def test_with_hyperopt(self):
         from sklearn.datasets import load_iris

@@ -1181,6 +1181,11 @@ class IndividualOp(Operator):
         )
 
     def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema):
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if disable_hyperparams_schema_validation:
+            return
+
         try:
             lale.type_checking.validate_schema(hp_all, hp_schema)
         except jsonschema.ValidationError as e_orig:
@@ -1230,6 +1235,11 @@ class IndividualOp(Operator):
                 self._validate_input_schema("y", y, method)
 
     def _validate_input_schema(self, arg_name: str, arg, method: str):
+        from lale.settings import disable_data_schema_validation
+
+        if disable_data_schema_validation:
+            return arg
+
         if not lale.helpers.is_empty_dict(arg):
             if method == "fit" or method == "partial_fit":
                 schema = self.input_schema_fit()
@@ -1262,6 +1272,11 @@ class IndividualOp(Operator):
         return arg
 
     def _validate_output_schema(self, result, method):
+        from lale.settings import disable_data_schema_validation
+
+        if disable_data_schema_validation:
+            return result
+
         if method == "transform":
             schema = self.output_schema_transform()
         elif method == "predict":
@@ -1489,6 +1504,10 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         return result
 
     def _validate_hyperparam_data_constraints(self, X, y=None):
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if disable_hyperparams_schema_validation:
+            return True
         hp_schema = self.hyperparam_schema()
         if not hasattr(self, "__has_data_constraints"):
             has_dc = lale.type_checking.has_data_constraints(hp_schema)
@@ -3514,6 +3533,16 @@ def customize_schema(
     """
     op = copy.deepcopy(op)
     methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
+    # explicitly enable the hyperparams schema check because it is important
+    from lale.settings import (
+        disable_hyperparams_schema_validation,
+        set_disable_hyperparams_schema_validation,
+    )
+
+    existing_disable_hyperparams_schema_validation = (
+        disable_hyperparams_schema_validation
+    )
+    set_disable_hyperparams_schema_validation(False)
 
     if schemas is not None:
         schemas.schema["$schema"] = "http://json-schema.org/draft-04/schema#"
@@ -3560,4 +3589,7 @@ def customize_schema(
     # since the schema has changed, we need to invalidate any
     # cached enum attributes
     op._invalidate_enum_attributes()
+    set_disable_hyperparams_schema_validation(
+        existing_disable_hyperparams_schema_validation
+    )
     return op

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from test import EnableSchemaValidation
 
 import jsonschema
 import numpy as np
@@ -64,10 +65,11 @@ class TestDecisionTreeClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = DecisionTreeClassifier(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = DecisionTreeClassifier(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = DecisionTreeClassifier
@@ -93,10 +95,11 @@ class TestDecisionTreeRegressor(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = DecisionTreeRegressor(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = DecisionTreeRegressor(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = DecisionTreeRegressor
@@ -131,16 +134,18 @@ class TestExtraTreesClassifier(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = ExtraTreesClassifier(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = ExtraTreesClassifier(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'max_samples' was unexpected"
-        ):
-            _ = ExtraTreesClassifier(max_samples=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'max_samples' was unexpected"
+            ):
+                _ = ExtraTreesClassifier(max_samples=0.01)
 
     def test_with_hyperopt(self):
         planned = ExtraTreesClassifier
@@ -170,16 +175,18 @@ class TestExtraTreesRegressor(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = ExtraTreesRegressor(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = ExtraTreesRegressor(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'max_samples' was unexpected"
-        ):
-            _ = ExtraTreesRegressor(max_samples=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'max_samples' was unexpected"
+            ):
+                _ = ExtraTreesRegressor(max_samples=0.01)
 
     def test_with_hyperopt(self):
         planned = ExtraTreesRegressor
@@ -283,10 +290,11 @@ class TestGradientBoostingClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = GradientBoostingClassifier(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = GradientBoostingClassifier(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = GradientBoostingClassifier
@@ -312,10 +320,11 @@ class TestGradientBoostingRegressor(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = GradientBoostingRegressor(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = GradientBoostingRegressor(ccp_alpha=0.01)
 
     def test_with_hyperopt(self):
         planned = GradientBoostingRegressor
@@ -382,10 +391,11 @@ class TestLogisticRegression(unittest.TestCase):
         self.assertEqual(default, "liblinear")
 
     def test_l1_ratio(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'l1_ratio' was unexpected"
-        ):
-            _ = LogisticRegression(l1_ratio=0.2)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'l1_ratio' was unexpected"
+            ):
+                _ = LogisticRegression(l1_ratio=0.2)
 
     def test_with_hyperopt(self):
         planned = LogisticRegression
@@ -411,10 +421,11 @@ class TestMLPClassifier(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_max_fun(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'max_fun' was unexpected"
-        ):
-            _ = MLPClassifier(max_fun=1000)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'max_fun' was unexpected"
+            ):
+                _ = MLPClassifier(max_fun=1000)
 
     def test_with_hyperopt(self):
         planned = MLPClassifier(max_iter=20)
@@ -440,10 +451,11 @@ class TestPolynomialFeatures(unittest.TestCase):
         _ = trained.predict(self.test_X)
 
     def test_order(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'order' was unexpected"
-        ):
-            _ = PolynomialFeatures(order="F") >> LogisticRegression()
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'order' was unexpected"
+            ):
+                _ = PolynomialFeatures(order="F") >> LogisticRegression()
 
     def test_with_hyperopt(self):
         planned = PolynomialFeatures >> LogisticRegression
@@ -473,16 +485,18 @@ class TestRandomForestClassifier(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = RandomForestClassifier(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = RandomForestClassifier(ccp_alpha=0.01)
 
     def test_max_samples(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'max_samples' was unexpected"
-        ):
-            _ = RandomForestClassifier(max_samples=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'max_samples' was unexpected"
+            ):
+                _ = RandomForestClassifier(max_samples=0.01)
 
     def test_with_hyperopt(self):
         planned = RandomForestClassifier
@@ -512,10 +526,11 @@ class TestRandomForestRegressor(unittest.TestCase):
         self.assertEqual(default, 10)
 
     def test_ccp_alpha(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
-        ):
-            _ = RandomForestRegressor(ccp_alpha=0.01)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'ccp_alpha' was unexpected"
+            ):
+                _ = RandomForestRegressor(ccp_alpha=0.01)
 
     def test_max_samples(self):
         with self.assertRaisesRegex(
@@ -584,10 +599,11 @@ class TestSVC(unittest.TestCase):
         self.assertEqual(default, "auto_deprecated")
 
     def test_break_ties(self):
-        with self.assertRaisesRegex(
-            jsonschema.ValidationError, "argument 'break_ties' was unexpected"
-        ):
-            _ = SVC(break_ties=True)
+        with EnableSchemaValidation():
+            with self.assertRaisesRegex(
+                jsonschema.ValidationError, "argument 'break_ties' was unexpected"
+            ):
+                _ = SVC(break_ties=True)
 
     def test_with_hyperopt(self):
         planned = SVC

@@ -14,6 +14,7 @@
 
 import unittest
 import warnings
+from test import EnableSchemaValidation
 
 import jsonschema
 import numpy as np
@@ -976,8 +977,9 @@ class TestKNeighborsClassifier(unittest.TestCase):
 
     def test_schema_validation(self):
         trainable_16 = KNeighborsClassifier(n_neighbors=16)
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = trainable_16.fit(self.train_X, self.train_y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = trainable_16.fit(self.train_X, self.train_y)
         trainable_15 = KNeighborsClassifier(n_neighbors=15)
         trained_15 = trainable_15.fit(self.train_X, self.train_y)
         _ = trained_15.predict(self.test_X)
@@ -1024,8 +1026,9 @@ class TestKNeighborsRegressor(unittest.TestCase):
 
     def test_schema_validation(self):
         trainable_16 = KNeighborsRegressor(n_neighbors=16)
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = trainable_16.fit(self.train_X, self.train_y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = trainable_16.fit(self.train_X, self.train_y)
         trainable_15 = KNeighborsRegressor(n_neighbors=15)
         trained_15 = trainable_15.fit(self.train_X, self.train_y)
         _ = trained_15.predict(self.test_X)
@@ -1078,8 +1081,9 @@ class TestStandardScaler(unittest.TestCase):
         trainable_okay = StandardScaler(with_mean=False) >> LogisticRegression()
         _ = trainable_okay.fit(self.train_X, self.train_y)
         trainable_bad = StandardScaler(with_mean=True) >> LogisticRegression()
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = trainable_bad.fit(self.train_X, self.train_y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = trainable_bad.fit(self.train_X, self.train_y)
 
     def test_hyperopt(self):
         planned = StandardScaler >> LogisticRegression().freeze_trainable()

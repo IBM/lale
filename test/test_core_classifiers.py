@@ -14,6 +14,7 @@
 
 import unittest
 import warnings
+from test import EnableSchemaValidation
 
 import jsonschema
 from sklearn.datasets import load_iris
@@ -445,20 +446,25 @@ class TestLogisticRegression(unittest.TestCase):
         )
 
     def test_hyperparam_exclusive_min(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
 
     def test_hyperparam_penalty_solver_dependence(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(
-                LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(
+                    LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
+                )
 
     def test_hyperparam_dual_penalty_solver_dependence(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(
-                LogisticRegression.penalty.l2, LogisticRegression.solver.sag, dual=True
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(
+                    LogisticRegression.penalty.l2,
+                    LogisticRegression.solver.sag,
+                    dual=True,
+                )
 
     def test_sample_weight(self):
         import numpy as np
