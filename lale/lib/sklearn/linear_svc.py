@@ -181,6 +181,7 @@ _hyperparams_schema = {
                 },
                 "max_iter": {
                     "type": "integer",
+                    "minimum": 1,
                     "minimumForOptimizer": 10,
                     "maximumForOptimizer": 1000,
                     "default": 1000,

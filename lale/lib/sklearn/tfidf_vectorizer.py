@@ -93,11 +93,17 @@ _hyperparams_schema = {
                 "strip_accents": {"enum": ["ascii", "unicode", None], "default": None},
                 "lowercase": {"type": "boolean", "default": True},
                 "preprocessor": {
-                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "callable", "forOptimizer": False},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                 },
                 "tokenizer": {
-                    "anyOf": [{"laleType": "callable"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "callable", "forOptimizer": False},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                 },
                 "analyzer": {
@@ -161,7 +167,10 @@ _hyperparams_schema = {
                     "default": 1,
                 },
                 "max_features": {
-                    "anyOf": [{"anyOf": [{"type": "number"}, {"enum": [None]}]}],
+                    "anyOf": [
+                        {"type": "integer", "minimum": 1, "maximumForOptimizer": 10000},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                 },
                 "vocabulary": {

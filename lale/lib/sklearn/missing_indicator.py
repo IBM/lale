@@ -63,13 +63,12 @@ _hyperparams_schema = {
                         {"enum": [None]},
                     ],
                     "description": "The placeholder for the missing values.",
-                    "type": "number",
                     "default": nan,
                 },
                 "features": {
-                    "type": "string",
+                    "enum": ["missing-only", "all"],
                     "default": "missing-only",
-                    "description": "Whether the imputer mask should represent all or a subset of",
+                    "description": "Whether the imputer mask should represent all or a subset of features.",
                 },
                 "sparse": {
                     "anyOf": [{"type": "boolean"}, {"enum": ["auto"]}],

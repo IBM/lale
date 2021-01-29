@@ -111,6 +111,7 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
+                            "minimum": 1,
                             "minimumForOptimizer": 10,
                             "maximumForOptimizer": 1000,
                         },

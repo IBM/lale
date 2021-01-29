@@ -150,12 +150,17 @@ _hyperparams_schema = {
                     "description": "The initial learning rate used. It controls the "
                     "step-size in updating the weights.",
                     "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
                     "default": 0.001,
+                    "maximumForOptimizer": 0.1,
                 },
                 "power_t": {
                     "description": "The exponent for inverse scaling learning rate.",
                     "type": "number",
                     "default": 0.5,
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 10,
                 },
                 "max_iter": {
                     "description": "Maximum number of iterations. The solver iterates until "
@@ -276,6 +281,7 @@ _hyperparams_schema = {
                     "type": "integer",
                     "default": 10,
                     "minimum": 1,
+                    "maximumForOptimizer": 50,
                 },
             },
         }

@@ -48,7 +48,7 @@ _hyperparams_schema = {
                 "copy": {
                     "type": "boolean",
                     "default": True,
-                    "description": "set to False to perform inplace row normalization and avoid a",
+                    "description": "Set to False to perform inplace row normalization and avoid a copy.",
                 },
             },
         }

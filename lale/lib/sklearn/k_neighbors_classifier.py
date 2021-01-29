@@ -68,6 +68,7 @@ _hyperparams_schema = {
                     "distribution": "uniform",
                     "minimum": 1,
                     "default": 30,
+                    "maximumForOptimizer": 100,
                 },
                 "p": {
                     "description": "Power parameter for the Minkowski metric.",

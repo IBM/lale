@@ -61,6 +61,7 @@ _hyperparams_schema = {
             "properties": {
                 "n_estimators": {
                     "type": "integer",
+                    "minimum": 1,
                     "minimumForOptimizer": 10,
                     "maximumForOptimizer": 100,
                     "default": 10,
@@ -95,6 +96,9 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 2,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "minimumForOptimizer": 2,
+                            "maximumForOptimizer": 5,
                             "forOptimizer": False,
                             "description": "Consider min_samples_split as the minimum number.",
                         },
@@ -117,6 +121,9 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 1,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "minimumForOptimizer": 1,
+                            "maximumForOptimizer": 5,
                             "forOptimizer": False,
                             "description": "Consider min_samples_leaf as the minimum number.",
                         },
@@ -135,6 +142,8 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.0,
                     "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.",
                 },
@@ -144,6 +153,7 @@ _hyperparams_schema = {
                             "type": "integer",
                             "minimum": 2,
                             "forOptimizer": False,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
                             "description": "Consider max_features features at each split.",
                         },
                         {
@@ -163,7 +173,12 @@ _hyperparams_schema = {
                 },
                 "max_leaf_nodes": {
                     "anyOf": [
-                        {"type": "integer"},
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
                         {
                             "enum": [None],
                             "description": "Unlimited number of leaf nodes.",
@@ -174,6 +189,8 @@ _hyperparams_schema = {
                 },
                 "min_impurity_decrease": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "default": 0.0,
                     "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },

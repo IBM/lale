@@ -48,17 +48,17 @@ _hyperparams_schema = {
                     "minimumForOptimizer": 2,
                     "maximumForOptimizer": 3,
                     "default": 2,
-                    "description": "The degree of the polynomial features. Default = 2.",
+                    "description": "The degree of the polynomial features.",
                 },
                 "interaction_only": {
                     "type": "boolean",
                     "default": False,
-                    "description": "If true, only interaction features are produced: features that are",
+                    "description": "If true, only interaction features are produced: features that are products of at most degree distinct input features (so not x[1] ** 2, x[0] * x[2] ** 3, etc.).",
                 },
                 "include_bias": {
                     "type": "boolean",
                     "default": True,
-                    "description": "If True (default), then include a bias column, the feature in which",
+                    "description": "If True (default), then include a bias column, the feature in which all polynomial powers are zero (i.e. a column of ones - acts as an intercept term in a linear model).",
                 },
             },
         }

@@ -67,14 +67,18 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 1,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
                             "minimumForOptimizer": 2,
                             "maximumForOptimizer": 256,
                             "distribution": "uniform",
                         },
-                        {"enum": [None]},
+                        {
+                            "description": "If not set, keep all components.",
+                            "enum": [None],
+                        },
                     ],
                     "default": None,
-                    "description": "Number of components, if n_components is not set all features",
+                    "description": "Number of components.",
                 },
                 "init": {
                     "enum": ["custom", "nndsvd", "nndsvda", "nndsvdar", "random", None],
@@ -89,7 +93,11 @@ _hyperparams_schema = {
                 "beta_loss": {
                     "description": "Beta divergence to be minimized, measuring the distance between X and the dot product WH.",
                     "anyOf": [
-                        {"type": "number"},
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": -1,
+                            "maximumForOptimizer": 1,
+                        },
                         {"enum": ["frobenius", "kullback-leibler", "itakura-saito"]},
                     ],
                     "default": "frobenius",

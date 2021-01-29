@@ -93,7 +93,7 @@ _hyperparams_schema = {
                 "copy": {
                     "type": "boolean",
                     "default": True,
-                    "description": "If True, a copy of X will be created. If False, imputation will",
+                    "description": "If True, a copy of X will be created.",
                 },
             },
         }
