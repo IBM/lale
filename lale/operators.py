@@ -774,6 +774,11 @@ class IndividualOp(Operator):
             self._hyperparams = None
 
     def _check_schemas(self):
+        from lale.settings import disable_hyperparams_schema_validation
+
+        if disable_hyperparams_schema_validation:
+            return
+
         lale.type_checking.validate_is_schema(self._schemas)
         from lale.pretty_print import json_to_string
 
