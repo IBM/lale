@@ -434,10 +434,13 @@ def _op_to_json_rec(
 
 
 def to_json(op: "lale.operators.Operator", call_depth: int = 1) -> JSON_TYPE:
+    from lale.settings import disable_hyperparams_schema_validation
+
     cls2label = _get_cls2label(call_depth + 1)
     gensym = _GenSym(op, cls2label)
     uid, jsn = _op_to_json_rec(op, cls2label, gensym)
-    jsonschema.validate(jsn, SCHEMA, jsonschema.Draft4Validator)
+    if not disable_hyperparams_schema_validation:
+        jsonschema.validate(jsn, SCHEMA, jsonschema.Draft4Validator)
     return jsn
 
 
