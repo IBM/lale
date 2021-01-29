@@ -1,5 +1,5 @@
 import random
-from typing import List, Optional, cast
+from typing import Any, Dict, List, Optional, cast
 
 from lale.lib.lale import NoOp
 from lale.operators import (
@@ -19,11 +19,13 @@ class NonTerminal(Operator):
     """ Abstract operator for non-terminal grammar rules.
     """
 
+    def get_params(self, deep: bool = True) -> Dict[str, Any]:
+        out = {}
+        out["name"] = self._name
+        return out
+
     def __init__(self, name):
         self._name = name
-
-    def _lale_clone(self, cloner):
-        return NonTerminal(self.name())
 
     def _has_same_impl(self):
         pass
@@ -48,8 +50,16 @@ class Grammar(Operator):
     """ Base class for Lale grammars.
     """
 
-    def __init__(self):
-        self._variables = {}
+    _variables: Dict[str, Operator]
+
+    def get_params(self, deep: bool = True) -> Dict[str, Any]:
+        out = {}
+        out["variables"] = self.variables
+        # todo: support deep=True
+        return out
+
+    def __init__(self, variables: Dict[str, Operator] = {}):
+        self._variables = variables
 
     def __getattr__(self, name):
         if name.startswith("_"):
@@ -63,9 +73,6 @@ class Grammar(Operator):
             self.__dict__[name] = value
         else:
             self._variables[name] = value
-
-    def _lale_clone(self):
-        pass
 
     def _has_same_impl(self):
         pass

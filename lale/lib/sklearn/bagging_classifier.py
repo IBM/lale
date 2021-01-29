@@ -16,7 +16,7 @@ from sklearn.ensemble import BaggingClassifier as SKLModel
 
 import lale.docstrings
 import lale.operators
-from lale.sklearn_compat import make_sklearn_compat
+from lale.sklearn_compat import make_sklearn_compat_opt
 
 
 class BaggingClassifierImpl:
@@ -35,7 +35,7 @@ class BaggingClassifierImpl:
         verbose=0,
     ):
         self._hyperparams = {
-            "base_estimator": make_sklearn_compat(base_estimator),
+            "base_estimator": make_sklearn_compat_opt(base_estimator),
             "n_estimators": n_estimators,
             "max_samples": max_samples,
             "max_features": max_features,

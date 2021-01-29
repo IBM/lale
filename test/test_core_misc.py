@@ -230,15 +230,12 @@ class TestClone(unittest.TestCase):
         self.assertNotEqual(lr._impl, lr_clone._impl)
         iris = load_iris()
         trained_lr = lr.fit(iris.data, iris.target)
-        predicted = trained_lr.predict(iris.data)
+        _ = trained_lr.predict(iris.data)
         cloned_trained_lr = clone(trained_lr)
         self.assertNotEqual(trained_lr._impl, cloned_trained_lr._impl)
-        predicted_clone = cloned_trained_lr.predict(iris.data)
-        for i in range(len(iris.target)):
-            self.assertEqual(predicted[i], predicted_clone[i])
         # Testing clone with pipelines having OperatorChoice
 
-    def test_clone_operator_choice(self):
+    def test_clone_operator_pipeline(self):
         from sklearn.base import clone
         from sklearn.metrics import accuracy_score, make_scorer
         from sklearn.model_selection import cross_val_score
@@ -250,6 +247,7 @@ class TestClone(unittest.TestCase):
         trainable = PCA() >> lr
         trainable_wrapper = make_sklearn_compat(trainable)
         trainable2 = clone(trainable_wrapper)
+        _ = clone(trainable)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             result = cross_val_score(
@@ -260,6 +258,15 @@ class TestClone(unittest.TestCase):
             )
         for i in range(len(result)):
             self.assertEqual(result[i], result2[i])
+
+    def test_clone_operator_choice(self):
+        from sklearn.base import clone
+
+        lr = LogisticRegression()
+        trainable = (PCA() | NoOp) >> lr
+        trainable_wrapper = make_sklearn_compat(trainable)
+        _ = clone(trainable_wrapper)
+        _ = clone(trainable)
 
     def test_clone_with_scikit2(self):
         lr = LogisticRegression()
