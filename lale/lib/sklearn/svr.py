@@ -93,6 +93,8 @@ _hyperparams_schema = {
                 },
                 "coef0": {
                     "type": "number",
+                    "minimumForOptimizer": -1,
+                    "maximumForOptimizer": 1,
                     "default": 0.0,
                     "description": "Independent term in kernel function.",
                 },
@@ -141,6 +143,8 @@ _hyperparams_schema = {
                 },
                 "max_iter": {
                     "type": "integer",
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 1000,
                     "default": -1,
                     "description": "Hard limit on iterations within solver, or -1 for no limit.",
                 },

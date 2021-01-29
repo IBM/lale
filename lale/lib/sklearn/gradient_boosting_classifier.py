@@ -60,7 +60,7 @@ _hyperparams_schema = {
                 "loss": {
                     "enum": ["deviance", "exponential"],
                     "default": "deviance",
-                    "description": "loss function to be optimized. 'deviance' refers to",
+                    "description": "The loss function to be optimized. 'deviance' refers to deviance (= logistic regression) for classification with probabilistic outputs. For loss 'exponential' gradient boosting recovers the AdaBoost algorithm.",
                 },
                 "learning_rate": {
                     "type": "number",
@@ -72,35 +72,43 @@ _hyperparams_schema = {
                 },
                 "n_estimators": {
                     "type": "integer",
+                    "minimum": 1,
                     "minimumForOptimizer": 10,
                     "maximumForOptimizer": 100,
                     "distribution": "uniform",
                     "default": 100,
-                    "description": "The number of boosting stages to perform. Gradient boosting",
+                    "description": "The number of boosting stages to perform.",
                 },
                 "subsample": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1.0,
                     "minimumForOptimizer": 0.01,
                     "maximumForOptimizer": 1.0,
                     "distribution": "uniform",
                     "default": 1.0,
-                    "description": "The fraction of samples to be used for fitting the individual base",
+                    "description": "The fraction of samples to be used for fitting the individual base learners.",
                 },
                 "criterion": {
                     "enum": ["friedman_mse", "mse", "mae"],
                     "default": "friedman_mse",
-                    "description": "The function to measure the quality of a split. Supported criteria",
+                    "description": "The function to measure the quality of a split.",
                 },
                 "min_samples_split": {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 2,
-                            "maximumForOptimizer": 20,
+                            "minimum": 2,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "forOptimizer": False,
                             "distribution": "uniform",
                         },
                         {
                             "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
                             "minimumForOptimizer": 0.01,
                             "maximumForOptimizer": 0.5,
                             "default": 0.05,
@@ -113,14 +121,16 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 1,
-                            "maximumForOptimizer": 20,
-                            "distribution": "uniform",
+                            "minimum": 1,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "forOptimizer": False,
                         },
                         {
                             "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 0.5,
                             "minimumForOptimizer": 0.01,
-                            "maximumForOptimizer": 0.5,
                             "default": 0.05,
                         },
                     ],
@@ -129,30 +139,34 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.0,
-                    "description": "The minimum weighted fraction of the sum total of weights (of all",
+                    "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.",
                 },
                 "max_depth": {
                     "type": "integer",
                     "minimumForOptimizer": 3,
                     "maximumForOptimizer": 5,
                     "default": 3,
-                    "description": "maximum depth of the individual regression estimators. The maximum",
+                    "description": "Maximum depth of the individual regression estimators.",
                 },
                 "min_impurity_decrease": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "default": 0.0,
-                    "description": "A node will be split if this split induces a decrease of the impurity",
+                    "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },
                 "min_impurity_split": {
-                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "anyOf": [{"type": "number", "minimum": 0.0}, {"enum": [None]}],
                     "default": None,
-                    "description": "Threshold for early stopping in tree growth. A node will split",
+                    "description": "Threshold for early stopping in tree growth.",
                 },
                 "init": {
-                    "anyOf": [{"type": "object"}, {"enum": ["zero", None]}],
+                    "anyOf": [{"laleType": "operator"}, {"enum": ["zero", None]}],
                     "default": None,
-                    "description": "An estimator object that is used to compute the initial",
+                    "description": "An estimator object that is used to compute the initial predictions.",
                 },
                 "random_state": {
                     "anyOf": [
@@ -165,7 +179,13 @@ _hyperparams_schema = {
                 },
                 "max_features": {
                     "anyOf": [
-                        {"type": "integer", "minimum": 1, "forOptimizer": False},
+                        {
+                            "type": "integer",
+                            "minimum": 2,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
+                            "forOptimizer": False,
+                            "description": "Consider max_features features at each split.",
+                        },
                         {
                             "type": "number",
                             "minimum": 0.0,
@@ -187,14 +207,25 @@ _hyperparams_schema = {
                     "description": "Enable verbose output. If 1 then it prints progress and performance",
                 },
                 "max_leaf_nodes": {
-                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
+                        {
+                            "enum": [None],
+                            "description": "Unlimited number of leaf nodes.",
+                        },
+                    ],
                     "default": None,
                     "description": "Grow trees with ``max_leaf_nodes`` in best-first fashion.",
                 },
                 "warm_start": {
                     "type": "boolean",
                     "default": False,
-                    "description": "When set to ``True``, reuse the solution of the previous call to fit",
+                    "description": "When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just erase the previous solution.",
                 },
                 "presort": {
                     "anyOf": [{"type": "boolean"}, {"enum": ["auto"]}],
@@ -203,8 +234,10 @@ _hyperparams_schema = {
                 },
                 "validation_fraction": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.1,
-                    "description": "The proportion of training data to set aside as validation set for",
+                    "description": "The proportion of training data to set aside as validation set for early stopping.",
                 },
                 "n_iter_no_change": {
                     "anyOf": [

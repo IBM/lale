@@ -108,6 +108,7 @@ _hyperparams_schema = {
                             "type": "integer",
                             "minimum": 2,
                             "laleMaximum": "X/maxItems",  # number of rows
+                            "forOptimizer": False,
                         },
                         {
                             "description": "Draw max_samples * X.shape[0] samples.",
@@ -127,6 +128,7 @@ _hyperparams_schema = {
                             "type": "integer",
                             "minimum": 2,
                             "laleMaximum": "X/items/maxItems",  # number of columns
+                            "forOptimizer": False,
                         },
                         {
                             "description": "Draw max_samples * X.shape[1] features.",
@@ -141,7 +143,7 @@ _hyperparams_schema = {
                 "bootstrap": {
                     "type": "boolean",
                     "default": True,
-                    "description": "Whether samples are drawn with replacement. If False, sampling",
+                    "description": "Whether samples are drawn with (True) or without (False) replacement.",
                 },
                 "bootstrap_features": {
                     "type": "boolean",
@@ -156,7 +158,7 @@ _hyperparams_schema = {
                 "warm_start": {
                     "type": "boolean",
                     "default": False,
-                    "description": "When set to True, reuse the solution of the previous call to fit",
+                    "description": "When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just fit a whole new ensemble.",
                 },
                 "n_jobs": {
                     "description": "The number of jobs to run in parallel for both `fit` and `predict`.",
@@ -192,8 +194,8 @@ _hyperparams_schema = {
         }
     ],
 }
+
 _input_fit_schema = {
-    "description": "Build a Bagging ensemble of estimators from the training",
     "type": "object",
     "required": ["y", "X"],
     "properties": {
@@ -216,25 +218,24 @@ _input_fit_schema = {
         },
     },
 }
+
 _input_predict_schema = {
-    "description": "Predict class for X.",
     "type": "object",
     "required": ["X"],
     "properties": {
         "X": {
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"},},
-            "description": "The training input samples. Sparse matrices are accepted only if",
         },
     },
 }
+
 _output_predict_schema = {
-    "description": "The predicted classes.",
     "type": "array",
     "items": {"type": "number"},
 }
+
 _input_predict_proba_schema = {
-    "description": "Predict class probabilities for X.",
     "type": "object",
     "required": ["X"],
     "properties": {
@@ -245,8 +246,8 @@ _input_predict_proba_schema = {
         },
     },
 }
+
 _output_predict_proba_schema = {
-    "description": "The class probabilities of the input samples. The order of the",
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"},},
 }
@@ -265,7 +266,6 @@ _input_decision_function_schema = {
 }
 
 _output_decision_function_schema = {
-    "description": "Confidence scores for samples for each class in the model.",
     "anyOf": [
         {
             "description": "In the multi-way case, score per (sample, class) combination.",

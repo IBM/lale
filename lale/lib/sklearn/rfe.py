@@ -48,7 +48,14 @@ _hyperparams_schema = {
                 },
                 "n_features_to_select": {
                     "description": "The number of features to select. If None, half of the features are selected.",
-                    "anyOf": [{"type": "integer", "minimum": 1}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                 },
                 "step": {

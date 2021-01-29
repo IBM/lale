@@ -131,6 +131,8 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.0,
                     "description": "Minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node.",
                 },
@@ -172,7 +174,12 @@ _hyperparams_schema = {
                 },
                 "max_leaf_nodes": {
                     "anyOf": [
-                        {"type": "integer"},
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
                         {
                             "enum": [None],
                             "description": "Unlimited number of leaf nodes.",
@@ -184,6 +191,8 @@ _hyperparams_schema = {
                 "min_impurity_decrease": {
                     "type": "number",
                     "default": 0.0,
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },
                 "min_impurity_split": {

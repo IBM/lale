@@ -54,6 +54,7 @@ _hyperparams_schema = {
             "properties": {
                 "n_estimators": {
                     "type": "integer",
+                    "minimum": 1,
                     "minimumForOptimizer": 10,
                     "maximumForOptimizer": 100,
                     "default": 10,
@@ -62,12 +63,13 @@ _hyperparams_schema = {
                 "criterion": {
                     "enum": ["gini", "entropy"],
                     "default": "gini",
-                    "description": "The function to measure the quality of a split. Supported criteria are",
+                    "description": "The function to measure the quality of a split.",
                 },
                 "max_depth": {
                     "anyOf": [
                         {
                             "type": "integer",
+                            "minimum": 1,
                             "minimumForOptimizer": 3,
                             "maximumForOptimizer": 5,
                         },
@@ -80,32 +82,40 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 2,
-                            "maximumForOptimizer": 20,
-                            "distribution": "uniform",
+                            "minimum": 2,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "forOptimizer": False,
+                            "description": "Consider min_samples_split as the minimum number.",
                         },
                         {
                             "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
                             "minimumForOptimizer": 0.01,
                             "maximumForOptimizer": 0.5,
                             "default": 0.05,
+                            "description": "min_samples_split is a fraction and ceil(min_samples_split * n_samples) are the minimum number of samples for each split.",
                         },
                     ],
                     "default": 2,
-                    "description": "The minimum number of samples required to split an internal node:",
+                    "description": "The minimum number of samples required to split an internal node.",
                 },
                 "min_samples_leaf": {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 1,
-                            "maximumForOptimizer": 20,
-                            "distribution": "uniform",
+                            "minimum": 1,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "forOptimizer": False,
+                            "description": "Consider min_samples_leaf as the minimum number.",
                         },
                         {
                             "type": "number",
-                            "minimumForOptimizer": 0.01,
-                            "maximumForOptimizer": 0.5,
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 0.5,
+                            "description": "min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.",
                             "default": 0.05,
                         },
                     ],
@@ -114,20 +124,29 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.0,
-                    "description": "The minimum weighted fraction of the sum total of weights (of all",
+                    "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.",
                 },
                 "max_features": {
                     "anyOf": [
-                        {"type": "integer", "forOptimizer": False},
+                        {
+                            "type": "integer",
+                            "minimum": 2,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
+                            "forOptimizer": False,
+                            "description": "Consider max_features features at each split.",
+                        },
                         {
                             "type": "number",
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
-                            "minimumForOptimizer": 0.01,
-                            "maximumForOptimizer": 1.0,
+                            "maximum": 1.0,
                             "distribution": "uniform",
+                            "minimumForOptimizer": 0.01,
                             "default": 0.5,
+                            "description": "max_features is a fraction and int(max_features * n_features) features are considered at each split.",
                         },
                         {"enum": ["auto", "sqrt", "log2", None]},
                     ],
@@ -135,29 +154,42 @@ _hyperparams_schema = {
                     "description": "The number of features to consider when looking for the best split:",
                 },
                 "max_leaf_nodes": {
-                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
+                        {
+                            "enum": [None],
+                            "description": "Unlimited number of leaf nodes.",
+                        },
+                    ],
                     "default": None,
                     "description": "Grow trees with ``max_leaf_nodes`` in best-first fashion.",
                 },
                 "min_impurity_decrease": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "default": 0.0,
-                    "description": "A node will be split if this split induces a decrease of the impurity",
+                    "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },
                 "min_impurity_split": {
-                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "anyOf": [{"type": "number", "minimum": 0.0}, {"enum": [None]}],
                     "default": None,
                     "description": "Threshold for early stopping in tree growth. A node will split",
                 },
                 "bootstrap": {
                     "type": "boolean",
                     "default": False,
-                    "description": "Whether bootstrap samples are used when building trees. If False, the",
+                    "description": "Whether bootstrap samples are used when building trees. If False, the whole dataset is used to build each tree.",
                 },
                 "oob_score": {
                     "type": "boolean",
                     "default": False,
-                    "description": "Whether to use out-of-bag samples to estimate",
+                    "description": "Whether to use out-of-bag samples to estimate the generalization accuracy.",
                 },
                 "n_jobs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
@@ -181,7 +213,7 @@ _hyperparams_schema = {
                 "warm_start": {
                     "type": "boolean",
                     "default": False,
-                    "description": "When set to ``True``, reuse the solution of the previous call to fit",
+                    "description": "When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just erase the previous solution.",
                 },
                 "class_weight": {
                     "anyOf": [

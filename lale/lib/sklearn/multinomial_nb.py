@@ -52,7 +52,7 @@ _hyperparams_schema = {
                     "minimumForOptimizer": 1e-10,
                     "maximumForOptimizer": 1.0,
                     "default": 1.0,
-                    "description": "Additive (Laplace/Lidstone) smoothing parameter",
+                    "description": "Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing).",
                 },
                 "fit_prior": {
                     "type": "boolean",
@@ -65,7 +65,7 @@ _hyperparams_schema = {
                         {"enum": [None]},
                     ],
                     "default": None,
-                    "description": "Prior probabilities of the classes. If specified the priors are not",
+                    "description": "Prior probabilities of the classes. If specified the priors are not adjusted according to the data.",
                 },
             },
         }

@@ -53,8 +53,10 @@ _hyperparams_schema = {
                 },
                 "var_smoothing": {
                     "type": "number",
+                    "minimumForOptimizer": 0.0,
+                    "maximumForOptimizer": 1.0,
                     "default": 1e-09,
-                    "description": "Portion of the largest variance of all features that is added to",
+                    "description": "Portion of the largest variance of all features that is added to variances for calculation stability.",
                 },
             },
         }

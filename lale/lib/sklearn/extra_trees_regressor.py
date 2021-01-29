@@ -59,6 +59,7 @@ _hyperparams_schema = {
             "properties": {
                 "n_estimators": {
                     "type": "integer",
+                    "minimum": 1,
                     "minimumForOptimizer": 10,
                     "maximumForOptimizer": 100,
                     "default": 10,
@@ -88,12 +89,14 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 2,
-                            "maximumForOptimizer": 20,
-                            "distribution": "uniform",
+                            "minimum": 2,
+                            "laleMaximum": "X/maxItems",  # number of rows
                         },
                         {
                             "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
                             "minimumForOptimizer": 0.01,
                             "maximumForOptimizer": 0.5,
                             "default": 0.05,
@@ -106,14 +109,15 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 1,
-                            "maximumForOptimizer": 20,
-                            "distribution": "uniform",
+                            "minimum": 1,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "forOptimizer": False,
                         },
                         {
                             "type": "number",
-                            "minimumForOptimizer": 0.01,
-                            "maximumForOptimizer": 0.5,
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 0.5,
                             "default": 0.05,
                         },
                     ],

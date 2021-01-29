@@ -83,7 +83,7 @@ _hyperparams_schema = {
                 "check_inverse": {
                     "type": "boolean",
                     "default": True,
-                    "description": "Whether to check that or ``func`` followed by ``inverse_func`` leads to the original inputs.",
+                    "description": "Whether to check that ``func`` followed by ``inverse_func`` leads to the original inputs.",
                 },
                 "kw_args": {
                     "anyOf": [{"type": "object"}, {"enum": [None]}],

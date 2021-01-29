@@ -235,11 +235,15 @@ _hyperparams_schema = {
                 },
                 "validation_fraction": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.1,
                     "description": "The proportion of training data to set aside as validation set for",
                 },
                 "n_iter_no_change": {
                     "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 10,
                     "default": 5,
                     "description": "Number of iterations with no improvement to wait before early stopping.",
                 },
@@ -249,9 +253,12 @@ _hyperparams_schema = {
                     "description": "When set to True, reuse the solution of the previous call to fit as",
                 },
                 "average": {
-                    "anyOf": [{"type": "boolean"}, {"type": "integer"}],
+                    "anyOf": [
+                        {"type": "boolean"},
+                        {"type": "integer", "forOptimizer": False},
+                    ],
                     "default": False,
-                    "description": "When set to True, computes the averaged SGD weights and stores the",
+                    "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute.",
                 },
             },
         },
