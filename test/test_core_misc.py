@@ -35,7 +35,6 @@ from lale.lib.sklearn import (
     OneHotEncoder,
     RandomForestClassifier,
 )
-from lale.sklearn_compat import make_sklearn_compat
 
 
 class TestTags(unittest.TestCase):
@@ -245,7 +244,7 @@ class TestClone(unittest.TestCase):
 
         lr = LogisticRegression()
         trainable = PCA() >> lr
-        trainable_wrapper = make_sklearn_compat(trainable)
+        trainable_wrapper = trainable
         trainable2 = clone(trainable_wrapper)
         _ = clone(trainable)
         with warnings.catch_warnings():
@@ -264,7 +263,7 @@ class TestClone(unittest.TestCase):
 
         lr = LogisticRegression()
         trainable = (PCA() | NoOp) >> lr
-        trainable_wrapper = make_sklearn_compat(trainable)
+        trainable_wrapper = trainable
         _ = clone(trainable_wrapper)
         _ = clone(trainable)
 
@@ -409,7 +408,7 @@ class TestHyperparamRanges(unittest.TestCase):
             PCA,
             RandomForestClassifier,
         ]:
-            skop = make_sklearn_compat(op)
+            skop = op
             self.validate_get_param_ranges(skop)
             self.validate_get_param_dist(skop)
 

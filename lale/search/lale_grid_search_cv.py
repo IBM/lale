@@ -27,7 +27,6 @@ from lale.search.search_space import (
     should_print_search_space,
 )
 from lale.search.search_space_grid import SearchSpaceGrid, get_search_space_grids
-from lale.sklearn_compat import make_sklearn_compat
 
 if TYPE_CHECKING:
     from lale.operators import PlannedOperator
@@ -39,7 +38,7 @@ def get_defaults_as_param_grid(op: "Ops.IndividualOp"):
 
 
 def get_lale_gridsearchcv_op(op, params, **kwargs):
-    g = sklearn.model_selection.GridSearchCV(make_sklearn_compat(op), params, **kwargs)
+    g = sklearn.model_selection.GridSearchCV(op, params, **kwargs)
     return g
 
 

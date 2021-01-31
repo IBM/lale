@@ -33,7 +33,6 @@ from lale.search.search_space import (
     should_print_search_space,
 )
 from lale.search.search_space_grid import SearchSpaceGrid, get_search_space_grids
-from lale.sklearn_compat import make_sklearn_compat
 
 if TYPE_CHECKING:
     import lale.operators as Ops
@@ -42,7 +41,7 @@ if TYPE_CHECKING:
 def lale_op_smac_tae(op: "Ops.PlannedOperator", f_min):
     # TODO: we can probably do this in a different way, but get_smac_configuration_space
     # we already have these sklearn compatibility wrappers it is easier for now to use them
-    op_compat = make_sklearn_compat(op)
+    op_compat = op
 
     def f(cfg):
         from sklearn.base import clone
@@ -61,7 +60,7 @@ def lale_trainable_op_from_config(
 ) -> "Ops.TrainableOperator":
     from sklearn.base import clone
 
-    op_compat = make_sklearn_compat(op)
+    op_compat = op
 
     wrapped_op = clone(op_compat)
     cfg2 = smac_fixup_params(cfg)

@@ -11,84 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from typing import Any, Dict, Iterable, List, Optional, Tuple, TypeVar, Union
-
-import sklearn.base
+import warnings
+from typing import Any, Dict, List, Tuple, TypeVar, Union
 
 import lale.operators as Ops
-from lale.pretty_print import hyperparams_to_string
-from lale.search.PGO import remove_defaults_dict
-from lale.util.Visitor import Visitor, accept
-
-# We support an argument encoding schema intended to be a
-# conservative extension to sklearn's encoding schema
-# sklearn uses __ to separate elements in a hierarchy
-# (pipeline's have operators that have keys)
-
-# Since we support richer computation graphs, we need to extend this encoding
-# to support it. Graphs that could be represented in sklearn
-# should be encoded identically
-
-# our encoding scheme:
-# * __ separates nested components (as-in sklearn)
-# * ? is the discriminant (choice made) for a choice
-# * ? is also a prefix for the nested parts of the chosen branch
-# * x@n In a pipeline, if multiple components have identical names,
-# ** everything but the first are suffixed with a number (starting with 1)
-# ** indicating which one we are talking about.
-# ** For example, given (x >> y >> x), we would treat this much the same as
-# ** (x >> y >> x@1)
-# * $ is used in the rare case that sklearn would expect the key of an object,
-# ** but we allow (and have) a non-object schema.  In that case,
-# ** $ is used as the key. This should only happen at the top level,
-# ** since nested occurences should be removed.
-# * # is a structure indicator, and the value should be one of 'list', 'tuple', or 'dict'
-# * n is used to represent the nth component in an array or tuple
 
 
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
-def make_sklearn_compat(
-    op: Union[Ops.Operator, "SKlearnCompatWrapper", Any]
-) -> "SKlearnCompatWrapper":
-    """Top level function for providing compatibiltiy with sklearn operations
-       This returns a wrapper around the provided sklearn operator graph which can be passed
-       to sklearn methods such as clone and GridSearchCV
-       The wrapper may modify the wrapped lale operator/pipeline as part of providing
-       compatibility with these methods.
-       After the sklearn operation is complete,
-       SKlearnCompatWrapper.to_lale() can be called to recover the
-       wrapped lale operator for future use
-    """
-    if isinstance(op, SKlearnCompatWrapper):
-        return op
-    else:
-        return SKlearnCompatWrapper.make_wrapper(Ops.wrap_operator(op))
-
-
-def make_sklearn_compat_opt(
-    op: Union[Ops.Operator, "SKlearnCompatWrapper", Any]
-) -> Any:
-    """Top level function for providing compatibiltiy with sklearn operations
-        This returns a wrapper around the provided lale operator graph which can be passed
-        to sklearn methods such as clone and GridSearchCV
-        The wrapper may modify the wrapped lale operator/pipeline as part of providing
-        compatibility with these methods.
-        After the sklearn operation is complete,
-        SKlearnCompatWrapper.to_lale() can be called to recover the
-        wrapped lale operator for future use
-        if the input was not a lale operator, it returns it unchanged
-    """
-    if op is None:
-        return None
-    elif isinstance(op, Ops.Operator):
-        return make_sklearn_compat(op)
-    else:
-        return op
+def make_sklearn_compat(op):
+    """This is a deprecated method for backward compatibility and will be removed soon"""
+    warnings.warn(
+        Ops._mutation_warning("sklearn_compat.make_sklearn_compat"), DeprecationWarning
+    )
+    return op
 
 
 def sklearn_compat_clone(impl: Any) -> Any:
+    """This is a deprecated method for backward compatibility and will be removed soon.
+       call lale.operators.clone (or scikit-learn clone) instead"""
+    warnings.warn(
+        Ops._mutation_warning("sklearn_compat.make_sklearn_compat"), DeprecationWarning
+    )
     if impl is None:
         return None
 
@@ -251,7 +195,7 @@ def set_structured_params(k, params: Dict[str, Any], hyper_parent):
         hyper_parent[k] = trainable_sub_op
 
 
-def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperator:
+def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.Operator:
     """May return a new operator, in which case the old one should be overwritten
     """
     if isinstance(op, Ops.PlannedIndividualOp):
@@ -267,7 +211,7 @@ def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperato
         # (if this is a higher order operator)
         # and can work on the main operator
         all_params = {**hyper, **main_params}
-        return op.set_params(**all_params)
+        return op.set_op_params(**all_params)
     elif isinstance(op, Ops.BasePipeline):
         steps = op.steps()
         main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
@@ -302,17 +246,11 @@ def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.TrainableOperato
             assert n in found_names and i <= found_names[n]
         if step_map:
             op._subst_steps(step_map)
-            if not isinstance(op, Ops.TrainablePipeline):
-                # As a result of choices made, we may now be a TrainableIndividualOp
-                ret = Ops.make_pipeline_graph(op.steps(), op.edges(), ordered=True)
-                if not isinstance(ret, Ops.TrainableOperator):
-                    assert False
-                return ret
-            else:
-                return op
-        else:
-            assert isinstance(op, Ops.TrainableOperator)
-            return op
+
+        pipeline_graph_class = Ops._pipeline_graph_class(op.steps())
+        op.__class__ = pipeline_graph_class  # type: ignore
+        assert isinstance(op, Ops.TrainableOperator)
+        return op
     elif isinstance(op, Ops.OperatorChoice):
         choices = op.steps()
         choice_index: int
@@ -338,285 +276,18 @@ PLANNED_OPERATOR_NAME = "PlannedOperator"
 INDIVIDUAL_OPERATOR_NAME = "IndividualOperator"
 
 
-class SKlearnCompatWrapper(object):
-    _base: Ops.Operator
-
-    @classmethod
-    def make_wrapper(cls, base: Ops.Operator) -> "SKlearnCompatWrapper":
-        b: Any = base
-        if isinstance(base, SKlearnCompatWrapper):
-            return base
-        return cls(__lale_wrapper_init_base=b)
-
-    @classmethod
-    def lale_class_to_string(cls, op_class):
-        return op_class.__name__
-
-    @classmethod
-    def lale_string_to_class(cls, op_str):
-        from lale.grammar import Grammar, NonTerminal
-
-        if not hasattr(cls, "_str_to_class_lookup"):
-            op_concrete_class_list = [
-                Ops.IndividualOp,
-                Ops.PlannedIndividualOp,
-                Ops.TrainableIndividualOp,
-                Ops.TrainedIndividualOp,
-                Ops.OperatorChoice,
-                Ops.BasePipeline,
-                Ops.PlannedPipeline,
-                Ops.TrainablePipeline,
-                Ops.TrainedPipeline,
-                NonTerminal,
-                Grammar,
-            ]
-            d = {k.__name__: k for k in op_concrete_class_list}
-            cls._str_to_class_lookup = d
-        return cls._str_to_class_lookup[op_str]
-
-    def __init__(self, **kwargs):
-        if "__lale_wrapper_init_base" in kwargs:
-            # if we are being called by make_wrapper
-            # then we don't need to make a copy
-            self._base = kwargs["__lale_wrapper_init_base"]
-        else:
-            args = dict(kwargs)
-            life = SKlearnCompatWrapper.lale_string_to_class(args["_lale_class"])
-            del args["_lale_class"]
-            self._base = life(**args)
-        assert self._base is not None
-        assert self._base != self
-
-    def set_params_internal(self, **impl_params):
-        self._base = impl_params["__lale_wrapper_base"]
-        assert self._base != self
-
-    def fixup_params_internal(self, **params):
-        return params
-
-    def to_lale(self) -> Ops.Operator:
-        return self._base
-
-    # sklearn calls __repr__ instead of __str__
-    def __repr__(self):
-        op = self.to_lale()
-        if isinstance(op, Ops.TrainableIndividualOp):
-            name = op.name()
-            hyps = ""
-            hps = op.hyperparams()
-            if hps is not None:
-                hyps = hyperparams_to_string(hps)
-            return name + "(" + hyps + ")"
-        else:
-            return super().__repr__()
-
-    def __getattr__(self, name):
-        # This is needed because in python copy skips calling the __init__ method
-        if name == "_base":
-            raise AttributeError
-        if name in ["__getstate__", "__setstate__", "__repr__"]:
-            raise AttributeError
-        else:
-            return getattr(self._base, name)
-
-    # def __getattribute__(self, name):
-    #     """ Try proxying unknown attributes to the underlying operator
-    #         getattribute is used instead of getattr to ensure that the
-    #         correct underlying error is thrown in case
-    #         a property (such as classes_) throws an AttributeError
-    #     """
-
-    #     # This is needed because in python copy skips calling the __init__ method
-    #     try:
-    #         return super(SKlearnCompatWrapper, self).__getattribute__(name)
-    #     except AttributeError as e:
-    #         if name == "_base":
-    #             raise AttributeError
-    #         try:
-    #             return getattr(super(SKlearnCompatWrapper, self).__getattribute__("_base"), name)
-    #         except AttributeError:
-    #             raise e
-
-    @classmethod
-    def get_op_type(cls, op: Ops.Operator):
-        if isinstance(op, Ops.TrainableIndividualOp):
-            return Ops.TrainableIndividualOp
-        elif isinstance(op, Ops.TrainablePipeline):
-            return Ops.TrainablePipeline
-        else:
-            return op.__class__
-
-    def get_params(self, deep: bool = True) -> Dict[str, Any]:
-        op = self.to_lale()
-        op_out = op.get_params(deep=deep)
-        # we need to stringify the class object, since the class object
-        # has a get_params method (the instance method), which causes problems for
-        # sklearn clone
-        op_out["_lale_class"] = SKlearnCompatWrapper.lale_class_to_string(
-            self.get_op_type(op)
-        )
-        return op_out
-
-    def fit(self, X, y=None, **fit_params):
-        f = getattr(self._base, "fit", None)
-        if f is not None:
-            filtered_params = remove_defaults_dict(fit_params)
-            return f(X, y=y, **filtered_params)
-        else:
-            pass
-
-    def set_params(self, **impl_params):
-
-        if "__lale_wrapper_base" in impl_params:
-            self.set_params_internal(**impl_params)
-        else:
-            cur: Ops.Operator = self._base
-            fixed_params = self.fixup_params_internal(**impl_params)
-            fixed_params.pop("_lale_class", None)
-            new_s = set_operator_params(cur, **fixed_params)
-            #            if not isinstance(new_s, Ops.TrainableOperator):
-            #                assert False
-            if new_s != cur:
-                self._base = new_s
-        return self
-
-    def get_defaults(self) -> Dict[str, Any]:
-        return DefaultsVisitor.run(self.to_lale())
-
-    def _final_individual_op(self) -> Optional[Ops.IndividualOp]:
-        op: Optional[Ops.Operator] = self.to_lale()
-        while op is not None and isinstance(op, Ops.BasePipeline):
-            op = op.get_last()
-        if op is not None and not isinstance(op, Ops.IndividualOp):
-            op = None
-        return op
-
-    @property
-    def _final_estimator(self) -> Any:
-        op: Optional[Ops.IndividualOp] = self._final_individual_op()
-        model = None
-        if op is not None:
-            # if fit was called, we want to use trained result
-            # even if the code uses the original operrator
-            # since sklearn assumes that fit mutates the operator
-            if hasattr(op, "_trained"):
-                tr_op: Any = op._trained
-                assert isinstance(tr_op, Ops.TrainedIndividualOp)
-                op = tr_op
-            if hasattr(op, "_impl"):
-                impl = op._impl_instance()
-                if hasattr(impl, "_wrapped_model"):
-                    model = impl._wrapped_model
-                elif isinstance(impl, sklearn.base.BaseEstimator):
-                    model = impl
-        return "passthrough" if model is None else model
-
-    @property
-    def classes_(self):
-        return self._final_estimator.classes_
-
-    @property
-    def n_classes_(self):
-        return self._final_estimator.n_classes_
-
-    @property
-    def _estimator_type(self):
-        return self._final_estimator._estimator_type
-
-    @property
-    def _get_tags(self):
-        return self._final_estimator._get_tags
-
-    @property
-    def coef_(self):
-        return self._final_estimator.coef_
-
-    @property
-    def feature_importances_(self):
-        return self._final_estimator.feature_importances_
-
-    def get_param_ranges(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
-        """Returns two dictionaries, ranges and cat_idx, for hyperparameters.
-
-        The ranges dictionary has two kinds of entries. Entries for
-        numeric and Boolean hyperparameters are tuples of the form
-        (min, max, default). Entries for categorical hyperparameters
-        are lists of their values.
-
-        The cat_idx dictionary has (min, max, default) entries of indices
-        into the corresponding list of values.
-
-        Warning: ignores side constraints and unions."""
-        op: Optional[Ops.IndividualOp] = self._final_individual_op()
-        if op is None:
-            raise ValueError("This pipeline does not end with an individual operator")
-        else:
-            return op.get_param_ranges()
-
-    def get_param_dist(self, size=10) -> Dict[str, List[Any]]:
-        """Returns a dictionary for discretized hyperparameters.
-
-        Each entry is a list of values. For continuous hyperparameters,
-        it returns up to `size` uniformly distributed values.
-
-        Warning: ignores side constraints, unions, and distributions."""
-        op: Optional[Ops.IndividualOp] = self._final_individual_op()
-        if op is None:
-            raise ValueError("This pipeline does not end with an individual operator")
-        else:
-            return op.get_param_dist(size=size)
-
-    # sklearn compatibility
-    # @property
-    # def _final_estimator(self):
-    #     lale_op = self.to_lale()
-    #     if lale_op is _
-
-    #     estimator = self.steps[-1][1]
-    #     return 'passthrough' if estimator is None else estimator
-
-
-class DefaultsVisitor(Visitor):
-    @classmethod
-    def run(cls, op: Ops.Operator) -> Dict[str, Any]:
-        visitor = cls()
-        return accept(op, visitor)
-
-    def __init__(self):
-        super(DefaultsVisitor, self).__init__()
-
-    def visitIndividualOp(self, op: Ops.IndividualOp) -> Dict[str, Any]:
-        return op.get_defaults()
-
-    visitPlannedIndividualOp = visitIndividualOp
-    visitTrainableIndividualOp = visitIndividualOp
-    visitTrainedIndividualOp = visitIndividualOp
-
-    def visitPipeline(self, op: Ops.PlannedPipeline) -> Dict[str, Any]:
-
-        defaults_list: Iterable[Dict[str, Any]] = (
-            nest_HPparams(s.name(), accept(s, self)) for s in op.steps()
-        )
-
-        defaults: Dict[str, Any] = {}
-        for d in defaults_list:
-            defaults.update(d)
-
-        return defaults
-
-    visitPlannedPipeline = visitPipeline
-    visitTrainablePipeline = visitPipeline
-    visitTrainedPipeline = visitPipeline
-
-    def visitOperatorChoice(self, op: Ops.OperatorChoice) -> Dict[str, Any]:
-
-        defaults_list: Iterable[Dict[str, Any]] = (accept(s, self) for s in op.steps())
-
-        defaults: Dict[str, Any] = {}
-        for d in defaults_list:
-            defaults.update(d)
-
-        return defaults
+# # sklearn calls __repr__ instead of __str__
+# def __repr__(self):
+#     op = self.to_lale()
+#     if isinstance(op, Ops.TrainableIndividualOp):
+#         name = op.name()
+#         hyps = ""
+#         hps = op.hyperparams()
+#         if hps is not None:
+#             hyps = hyperparams_to_string(hps)
+#         return name + "(" + hyps + ")"
+#     else:
+#         return super().__repr__()
 
 
 # Auxiliary functions
@@ -673,7 +344,7 @@ def clone_op(op: OpType, name: str = None) -> OpType:
     """
     from sklearn.base import clone
 
-    nop = clone(make_sklearn_compat(op)).to_lale()
+    nop = clone(op)
     if name:
         nop._set_name(name)
     return nop

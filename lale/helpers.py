@@ -548,7 +548,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             lale_op = class_
         else:
             lale_op = lale.operators.TrainedIndividualOp(
-                class_._name, class_._impl, class_._schemas, None
+                class_._name, class_._impl, class_._schemas, None, _lale_trained=True
             )
 
         try:
