@@ -43,8 +43,8 @@ Operator libraries
 * `lale.lib.autogen`_ auto-generated based on `scikit-learn`_
 * `lale.lib.imblearn`_ based on `imbalanced-learn`_
 * `lale.lib.lightgbm`_ based on `LightGBM`_
-* `lale.lib.snapml`_ based on `Snap ML`_
 * `lale.lib.pytorch`_ based on `PyTorch`_
+* `lale.lib.snapml`_ based on `Snap ML`_
 * `lale.lib.spacy`_ based on `spaCy`_
 * `lale.lib.tensorflow`_ based on `TensorFlow`_
 * `lale.lib.xgboost`_ based on `XGBoost`_
