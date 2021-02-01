@@ -57,8 +57,8 @@ predictions after those come back from an estimator.
 
 .. image:: ../../docs/img/fairness_patterns.png
 
-In the picture, italics indicate parameters of the pattern. For
-example, consider the following code:
+In the picture, italics indicate parameters of the pattern.
+For example, consider the following code:
 
 .. code:: Python
 
@@ -81,6 +81,10 @@ to a constant to prevent them from directly influencing
 fairness-agnostic preprocessing or estimators. And the
 ProtectedAttributesEncoder encodes protected attributes and labels as
 zero or one to simplify the task for the mitigator.
+
+See the following notebooks for more detailed examples:
+* https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
+* https://nbviewer.jupyter.org/github/IBM/watson-machine-learning-samples/blob/master/cloud/notebooks/python_sdk/experiments/autoai/Use%20Lale%20AIF360%20scorers%20to%20calculate%20and%20mitigate%20bias%20for%20credit%20risk%20AutoAI%20model.ipynb
 
 Preprocessing Operators:
 ========================
@@ -118,7 +122,6 @@ Other Classes and Operators:
 
 Other Functions:
 ================
-* `dataset_fairness_info`_
 * `dataset_to_pandas`_
 * `fair_stratified_train_test_split`_
 * `fetch_adult_df`_
@@ -143,7 +146,6 @@ Other Functions:
 .. _`Reweighing`: lale.lib.aif360.reweighing.html
 .. _`accuracy_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.accuracy_and_disparate_impact
 .. _`average_odds_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.average_odds_difference
-.. _`dataset_fairness_info`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_fairness_info
 .. _`dataset_to_pandas`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_to_pandas
 .. _`disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
 .. _`equal_opportunity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.equal_opportunity_difference
@@ -179,10 +181,10 @@ from .redacting import Redacting
 from .reject_option_classification import RejectOptionClassification
 from .reweighing import Reweighing
 from .util import (
+    FAIRNESS_INFO_SCHEMA,
     FairStratifiedKFold,
     accuracy_and_disparate_impact,
     average_odds_difference,
-    dataset_fairness_info,
     dataset_to_pandas,
     disparate_impact,
     equal_opportunity_difference,

@@ -70,40 +70,6 @@ def dataset_to_pandas(dataset, return_only="Xy"):
     return result_X, result_y
 
 
-_dataset_fairness_properties: lale.type_checking.JSON_TYPE = {
-    "favorable_label": {
-        "description": 'Label value which is considered favorable (i.e. "positive").',
-        "type": "number",
-    },
-    "unfavorable_label": {
-        "description": 'Label value which is considered unfavorable (i.e. "negative").',
-        "type": "number",
-    },
-    "protected_attribute_names": {
-        "description": "Subset of feature names for which fairness is desired.",
-        "type": "array",
-        "items": {"type": "string"},
-    },
-    "unprivileged_groups": {
-        "description": "Representation for unprivileged group.",
-        "type": "array",
-        "items": {
-            "description": "Map from feature names to group-indicating values.",
-            "type": "object",
-            "additionalProperties": {"type": "number"},
-        },
-    },
-    "privileged_groups": {
-        "description": "Representation for privileged group.",
-        "type": "array",
-        "items": {
-            "description": "Map from feature names to group-indicating values.",
-            "type": "object",
-            "additionalProperties": {"type": "number"},
-        },
-    },
-}
-
 _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
     "favorable_labels": {
         "description": 'Label values which are considered favorable (i.e. "positive").',
@@ -158,102 +124,16 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
     },
 }
 
-_categorical_fairness_schema = {
+FAIRNESS_INFO_SCHEMA = {
     "type": "object",
     "properties": _categorical_fairness_properties,
 }
 
-_dataset_fairness_schema = {
-    "type": "object",
-    "properties": _dataset_fairness_properties,
-}
-
-
-def dataset_fairness_info(dataset):
-    """
-    Inspect the AIF360 dataset and return its fairness metadata as JSON.
-
-    Parameters
-    ----------
-    dataset : aif360.datasets.BinaryLabelDataset
-
-    Returns
-    -------
-    result : dict
-
-      JSON data structure with fairness information.
-
-      - favorable_label : number
-
-          Label value which is considered favorable (i.e. "positive").
-
-      - unfavorable_label : number
-
-          Label value which is considered unfavorable (i.e. "negative").
-
-      - protected_attribute_names : array **of** items : string
-
-          Subset of feature names for which fairness is desired.
-
-      - unprivileged_groups : array
-
-          Representation for unprivileged group.
-
-          - items : dict
-
-              Map from feature names to group-indicating values.
-
-      - privileged_groups : array
-
-          Representation for privileged group.
-
-          - items : dict
-
-              Map from feature names to group-indicating values.
-    """
-
-    def attributes_to_groups(names, value_arrays):
-        result = [{}]
-        for i in range(len(names)):
-            next_result = []
-            for d in result:
-                for next_v in value_arrays[i]:
-                    next_d = {**d, names[i]: next_v}
-                    next_result.append(next_d)
-            result = next_result
-        return result
-
-    unprivileged_groups = attributes_to_groups(
-        dataset.protected_attribute_names, dataset.unprivileged_protected_attributes
-    )
-    privileged_groups = attributes_to_groups(
-        dataset.protected_attribute_names, dataset.privileged_protected_attributes
-    )
-    result = {
-        "favorable_label": dataset.favorable_label,
-        "unfavorable_label": dataset.unfavorable_label,
-        "protected_attribute_names": dataset.protected_attribute_names,
-        "unprivileged_groups": unprivileged_groups,
-        "privileged_groups": privileged_groups,
-    }
-    lale.type_checking.validate_schema(result, _dataset_fairness_schema)
-    return result
-
 
 class _PandasToDatasetConverter:
     def __init__(self, favorable_label, unfavorable_label, protected_attribute_names):
-        lale.type_checking.validate_schema(
-            favorable_label, _dataset_fairness_properties["favorable_label"]
-        )
         self.favorable_label = favorable_label
-        lale.type_checking.validate_schema(
-            unfavorable_label, _dataset_fairness_properties["unfavorable_label"]
-        )
         self.unfavorable_label = unfavorable_label
-        lale.type_checking.validate_schema(
-            protected_attribute_names,
-            _dataset_fairness_properties["protected_attribute_names"],
-        )
         self.protected_attribute_names = protected_attribute_names
 
     def convert(self, X, y, probas=None):
@@ -330,17 +210,7 @@ def _ndarray_to_dataframe(array):
 
 
 class _ScorerFactory:
-    def __init__(
-        self,
-        metric,
-        favorable_label=None,
-        unfavorable_label=None,
-        protected_attribute_names=None,
-        unprivileged_groups=None,
-        privileged_groups=None,
-        favorable_labels=None,
-        protected_attributes=None,
-    ):
+    def __init__(self, metric, favorable_labels, protected_attributes):
         if hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric):
             self.kind = "BinaryLabelDatasetMetric"
         elif hasattr(aif360.metrics.ClassificationMetric, metric):
@@ -348,37 +218,24 @@ class _ScorerFactory:
         else:
             raise ValueError(f"unknown metric {metric}")
         self.metric = metric
-        if favorable_labels is None:
-            self.prot_attr_enc = None
-        else:
-            self.favorable_labels = favorable_labels
-            assert favorable_label is None and unfavorable_label is None
-            favorable_label, unfavorable_label = 1, 0
-            assert protected_attribute_names is None
-            pas = protected_attributes
-            protected_attribute_names = [_ensure_str(pa["feature"]) for pa in pas]
-            assert unprivileged_groups is None and privileged_groups is None
-            unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
-            privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
-
-            from lale.lib.aif360 import ProtectedAttributesEncoder
-
-            self.prot_attr_enc = ProtectedAttributesEncoder(
-                favorable_labels=favorable_labels,
-                protected_attributes=protected_attributes,
-                remainder="drop",
-                return_X_y=True,
-            )
         self.fairness_info = {
-            "favorable_label": favorable_label,
-            "unfavorable_label": unfavorable_label,
-            "protected_attribute_names": protected_attribute_names,
-            "unprivileged_groups": unprivileged_groups,
-            "privileged_groups": privileged_groups,
+            "favorable_labels": favorable_labels,
+            "protected_attributes": protected_attributes,
         }
-        lale.type_checking.validate_schema(self.fairness_info, _dataset_fairness_schema)
+
+        from lale.lib.aif360 import ProtectedAttributesEncoder
+
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            **self.fairness_info, remainder="drop", return_X_y=True,
+        )
+        pas = protected_attributes
+        self.unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
+        self.privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
+
         self.pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label, unfavorable_label, protected_attribute_names
+            favorable_label=1,
+            unfavorable_label=0,
+            protected_attribute_names=[_ensure_str(pa["feature"]) for pa in pas],
         )
 
     def scoring(self, y_true=None, y_pred=None, X=None):
@@ -395,16 +252,11 @@ class _ScorerFactory:
                 X.index if isinstance(X, pd.DataFrame) else None,
                 y_pred.dtype,
             )
-        if getattr(self, "favorable_labels", None) is None:
-            encoded_X = X
-        else:
-            encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
         dataset_pred = self.pandas_to_dataset.convert(encoded_X, y_pred)
         if self.kind == "BinaryLabelDatasetMetric":
             fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
-                dataset_pred,
-                self.fairness_info["unprivileged_groups"],
-                self.fairness_info["privileged_groups"],
+                dataset_pred, self.unprivileged_groups, self.privileged_groups
             )
         else:
             assert self.kind == "ClassificationMetric"
@@ -413,14 +265,13 @@ class _ScorerFactory:
                 y_true = _ndarray_to_series(
                     y_true, y_pred.name, y_pred.index, y_pred_orig.dtype
                 )
-            if getattr(self, "favorable_labels", None) is not None:
-                _, y_true = self.prot_attr_enc.transform(X, y_true)
+            _, y_true = self.prot_attr_enc.transform(X, y_true)
             dataset_true = self.pandas_to_dataset.convert(encoded_X, y_true)
             fairness_metrics = aif360.metrics.ClassificationMetric(
                 dataset_true,
                 dataset_pred,
-                self.fairness_info["unprivileged_groups"],
-                self.fairness_info["privileged_groups"],
+                self.unprivileged_groups,
+                self.privileged_groups,
             )
         method = getattr(fairness_metrics, self.metric)
         result = method()
@@ -449,41 +300,8 @@ class _ScorerFactory:
 
 _SCORER_DOCSTRING = """
 
-There are two ways to construct this scorer, either with
-(favorable_label, unfavorable_label, protected_attribute_names,
-unprivileged_groups, privileged_groups) or with
-(favorable_labels, protected_attributes).
-
 Parameters
 ----------
-favorable_label : number
-
-  Label value which is considered favorable (i.e. "positive").
-
-unfavorable_label : number
-
-  Label value which is considered unfavorable (i.e. "negative").
-
-protected_attribute_names : array **of** items : string
-
-  Subset of feature names for which fairness is desired.
-
-unprivileged_groups : array
-
-  Representation for unprivileged group.
-
-  - items : dict
-
-      Map from feature names to group-indicating values.
-
-privileged_groups : array
-
-  Representation for privileged group.
-
-  - items : dict
-
-      Map from feature names to group-indicating values.
-
 favorable_labels : array of union
 
   Label values which are considered favorable (i.e. "positive").
@@ -529,31 +347,19 @@ Returns
 result : callable
 
   Scorer that takes three arguments (estimator, X, y) and returns score.
+  Furthermore, the returned object also has two methods,
+  `scoring(y_true, y_pred, X)` for evaluating datasets and
+  `scorer(estimator, X, y)` for evaluating estimators.
 """
 
 
 class _AccuracyAndDisparateImpact:
-    def __init__(
-        self,
-        favorable_label=None,
-        unfavorable_label=None,
-        protected_attribute_names=None,
-        unprivileged_groups=None,
-        privileged_groups=None,
-        favorable_labels=None,
-        protected_attributes=None,
-    ):
+    def __init__(self, favorable_labels, protected_attributes):
         self.accuracy_scorer = sklearn.metrics.make_scorer(
             sklearn.metrics.accuracy_score
         )
         self.disparate_impact_scorer = disparate_impact(
-            favorable_label,
-            unfavorable_label,
-            protected_attribute_names,
-            unprivileged_groups,
-            privileged_groups,
-            favorable_labels,
-            protected_attributes,
+            favorable_labels, protected_attributes
         )
 
     def __call__(self, estimator, X, y):
@@ -580,28 +386,12 @@ class _AccuracyAndDisparateImpact:
         return result
 
 
-def accuracy_and_disparate_impact(
-    favorable_label=None,
-    unfavorable_label=None,
-    protected_attribute_names=None,
-    unprivileged_groups=None,
-    privileged_groups=None,
-    favorable_labels=None,
-    protected_attributes=None,
-):
+def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible combined scorer for `accuracy`_ and `disparate impact`_ given the fairness info.
 
 .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
 .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
-    return _AccuracyAndDisparateImpact(
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        favorable_labels,
-        protected_attributes,
-    )
+    return _AccuracyAndDisparateImpact(favorable_labels, protected_attributes)
 
 
 accuracy_and_disparate_impact.__doc__ = (
@@ -609,27 +399,12 @@ accuracy_and_disparate_impact.__doc__ = (
 )
 
 
-def average_odds_difference(
-    favorable_label=None,
-    unfavorable_label=None,
-    protected_attribute_names=None,
-    unprivileged_groups=None,
-    privileged_groups=None,
-    favorable_labels=None,
-    protected_attributes=None,
-):
+def average_odds_difference(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `average odds difference`_ scorer given the fairness info.
 
 .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
     return _ScorerFactory(
-        "average_odds_difference",
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        favorable_labels,
-        protected_attributes,
+        "average_odds_difference", favorable_labels, protected_attributes
     )
 
 
@@ -638,54 +413,22 @@ average_odds_difference.__doc__ = (
 )
 
 
-def disparate_impact(
-    favorable_label=None,
-    unfavorable_label=None,
-    protected_attribute_names=None,
-    unprivileged_groups=None,
-    privileged_groups=None,
-    favorable_labels=None,
-    protected_attributes=None,
-):
+def disparate_impact(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `disparate impact`_ scorer given the fairness info.
 
 .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
-    return _ScorerFactory(
-        "disparate_impact",
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        favorable_labels,
-        protected_attributes,
-    )
+    return _ScorerFactory("disparate_impact", favorable_labels, protected_attributes)
 
 
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
 
 
-def equal_opportunity_difference(
-    favorable_label=None,
-    unfavorable_label=None,
-    protected_attribute_names=None,
-    unprivileged_groups=None,
-    privileged_groups=None,
-    favorable_labels=None,
-    protected_attributes=None,
-):
+def equal_opportunity_difference(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `equal opportunity difference`_ scorer given the fairness info.
 
 .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
     return _ScorerFactory(
-        "equal_opportunity_difference",
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        favorable_labels,
-        protected_attributes,
+        "equal_opportunity_difference", favorable_labels, protected_attributes,
     )
 
 
@@ -695,25 +438,10 @@ equal_opportunity_difference.__doc__ = (
 
 
 class _R2AndDisparateImpact:
-    def __init__(
-        self,
-        favorable_label=None,
-        unfavorable_label=None,
-        protected_attribute_names=None,
-        unprivileged_groups=None,
-        privileged_groups=None,
-        favorable_labels=None,
-        protected_attributes=None,
-    ):
+    def __init__(self, favorable_labels, protected_attributes):
         self.r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         self.disparate_impact_scorer = disparate_impact(
-            favorable_label,
-            unfavorable_label,
-            protected_attribute_names,
-            unprivileged_groups,
-            privileged_groups,
-            favorable_labels,
-            protected_attributes,
+            favorable_labels, protected_attributes
         )
 
     def __call__(self, estimator, X, y):
@@ -742,28 +470,12 @@ class _R2AndDisparateImpact:
         return result
 
 
-def r2_and_disparate_impact(
-    favorable_label=None,
-    unfavorable_label=None,
-    protected_attribute_names=None,
-    unprivileged_groups=None,
-    privileged_groups=None,
-    favorable_labels=None,
-    protected_attributes=None,
-):
+def r2_and_disparate_impact(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info.
 
 .. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
 .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
-    return _R2AndDisparateImpact(
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        favorable_labels,
-        protected_attributes,
-    )
+    return _R2AndDisparateImpact(favorable_labels, protected_attributes)
 
 
 r2_and_disparate_impact.__doc__ = (
@@ -771,27 +483,12 @@ r2_and_disparate_impact.__doc__ = (
 )
 
 
-def statistical_parity_difference(
-    favorable_label=None,
-    unfavorable_label=None,
-    protected_attribute_names=None,
-    unprivileged_groups=None,
-    privileged_groups=None,
-    favorable_labels=None,
-    protected_attributes=None,
-):
+def statistical_parity_difference(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `statistical parity difference`_ scorer given the fairness info.
 
 .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference"""
     return _ScorerFactory(
-        "statistical_parity_difference",
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        favorable_labels,
-        protected_attributes,
+        "statistical_parity_difference", favorable_labels, protected_attributes
     )
 
 
@@ -800,28 +497,11 @@ statistical_parity_difference.__doc__ = (
 )
 
 
-def theil_index(
-    favorable_label=None,
-    unfavorable_label=None,
-    protected_attribute_names=None,
-    unprivileged_groups=None,
-    privileged_groups=None,
-    favorable_labels=None,
-    protected_attributes=None,
-):
+def theil_index(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `Theil index`_ scorer given the fairness info.
 
 .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index"""
-    return _ScorerFactory(
-        "theil_index",
-        favorable_label,
-        unfavorable_label,
-        protected_attribute_names,
-        unprivileged_groups,
-        privileged_groups,
-        favorable_labels,
-        protected_attributes,
-    )
+    return _ScorerFactory("theil_index", favorable_labels, protected_attributes)
 
 
 average_odds_difference.__doc__ = (
