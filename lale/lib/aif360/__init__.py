@@ -12,16 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Scikit-learn compatible wrappers for several operators and metrics from AIF360_ along with schemas to enable hyperparameter tuning.
+"""Scikit-learn compatible wrappers for several operators and metrics from AIF360_ along with schemas to enable hyperparameter tuning.
 
 .. _AIF360: https://github.com/IBM/AIF360
 
 All operators and metrics in the Lale wrappers for AIF360 take two
 arguments, `favorable_labels` and `protected_attributes`, collectively
 referred to as *fairness info*. For example, the following code
-indicates that male values in the `personal_status` attribute belong
-to the priviliged group:
+indicates that the privileged groups comprise male values in the
+`personal_status` attribute as well as values from 26 to 1000 in the
+`age` attribute.
 
 .. code:: Python
 
@@ -34,55 +34,12 @@ to the priviliged group:
                     "male div/sep", "male mar/wid", "male single",
                 ],
             },
-        ],
-    }
-
-Similarly, the following code indicates that values from 26 to 1000 in
-the `age` attribute belong to the privileged group:
-
-.. code:: Python
-
-    fairness_info_age = {
-        "favorable_labels": ["good"],
-        "protected_attributes": [
             {"feature": "age", "privileged_groups": [[26, 1000]]},
         ],
     }
 
-AIF360 provides three kinds of fairness mitigators, illustrated in the
-following picture. *Preprocessing* mitigators transform the data
-before it gets to an estimator; *inprocessing* mitigators include
-their own estimator; and *postprocessing* mitigators transform
-predictions after those come back from an estimator.
-
-.. image:: ../../docs/img/fairness_patterns.png
-
-In the picture, italics indicate parameters of the pattern.
-For example, consider the following code:
-
-.. code:: Python
-
-    pipeline = LFR(
-        **fairness_info,
-        preprocessing=(
-            (Project(columns={"type": "string"}) >> OneHotEncoder(handle_unknown="ignore"))
-            & Project(columns={"type": "number"})
-        )
-        >> ConcatFeatures
-    ) >> LogisticRegression(max_iter=1000)
-
-In this example, the *mitigator* is LFR preprocessing, the
-*estimator* is LogisticRegression, and the *preprocessing* is a
-sub-pipeline that one-hot-encodes strings. If all features of the data
-are numerical, then the preprocessing can be omitted. Internally, the
-LFR higher-order operator uses two auxiliary operators, Redacting
-and ProtectedAttributesEncoder.  Redacting sets protected attributes
-to a constant to prevent them from directly influencing
-fairness-agnostic preprocessing or estimators. And the
-ProtectedAttributesEncoder encodes protected attributes and labels as
-zero or one to simplify the task for the mitigator.
-
 See the following notebooks for more detailed examples:
+
 * https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
 * https://nbviewer.jupyter.org/github/IBM/watson-machine-learning-samples/blob/master/cloud/notebooks/python_sdk/experiments/autoai/Use%20Lale%20AIF360%20scorers%20to%20calculate%20and%20mitigate%20bias%20for%20credit%20risk%20AutoAI%20model.ipynb
 
@@ -130,6 +87,43 @@ Other Functions:
 * `fetch_creditg_df`_
 * `fetch_ricci_df`_
 
+Mitigator Patterns:
+===================
+
+AIF360 provides three kinds of fairness mitigators, illustrated in the
+following picture. *Preprocessing* mitigators transform the data
+before it gets to an estimator; *inprocessing* mitigators include
+their own estimator; and *postprocessing* mitigators transform
+predictions after those come back from an estimator.
+
+.. image:: ../../docs/img/fairness_patterns.png
+
+In the picture, italics indicate parameters of the pattern.
+For example, consider the following code:
+
+.. code:: Python
+
+    pipeline = LFR(
+        **fairness_info,
+        preprocessing=(
+            (Project(columns={"type": "string"}) >> OneHotEncoder(handle_unknown="ignore"))
+            & Project(columns={"type": "number"})
+        )
+        >> ConcatFeatures
+    ) >> LogisticRegression(max_iter=1000)
+
+In this example, the *mitigator* is LFR preprocessing, the
+*estimator* is LogisticRegression, and the *preprocessing* is a
+sub-pipeline that one-hot-encodes strings. If all features of the data
+are numerical, then the preprocessing can be omitted. Internally, the
+LFR higher-order operator uses two auxiliary operators, Redacting
+and ProtectedAttributesEncoder.  Redacting sets protected attributes
+to a constant to prevent them from directly influencing
+fairness-agnostic preprocessing or estimators. And the
+ProtectedAttributesEncoder encodes protected attributes and labels as
+zero or one to simplify the task for the mitigator.
+
+
 .. _`AdversarialDebiasing`: lale.lib.aif360.adversarial_debiasing.html
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html
@@ -158,6 +152,7 @@ Other Functions:
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 .. _`theil_index`: lale.lib.aif360.util.html#lale.lib.aif360.util.theil_index
+
 """
 
 from .adversarial_debiasing import AdversarialDebiasing

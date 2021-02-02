@@ -347,7 +347,7 @@ Returns
 result : callable
 
   Scorer that takes three arguments (estimator, X, y) and returns score.
-  Furthermore, the returned object also has two methods,
+  Furthermore, besides being callable, the returned object also has two methods,
   `scoring(y_true, y_pred, X)` for evaluating datasets and
   `scorer(estimator, X, y)` for evaluating estimators.
 """
@@ -362,9 +362,7 @@ class _AccuracyAndDisparateImpact:
             favorable_labels, protected_attributes
         )
 
-    def __call__(self, estimator, X, y):
-        disp_impact = self.disparate_impact_scorer(estimator, X, y)
-        accuracy = self.accuracy_scorer(estimator, X, y)
+    def _combine(self, accuracy, disp_impact):
         if np.isnan(disp_impact):  # empty privileged or unprivileged groups
             return accuracy
         assert 0.0 <= accuracy <= 1.0 and 0.0 <= disp_impact, (accuracy, disp_impact)
@@ -384,6 +382,19 @@ class _AccuracyAndDisparateImpact:
         assert 0.0 <= result <= accuracy <= 1.0, (result, accuracy)
         assert symmetric_impact >= 0.9 or result < accuracy
         return result
+
+    def scoring(self, y_true=None, y_pred=None, X=None):
+        accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
+        disp_impact = self.disparate_impact_scorer.scoring(y_true, y_pred, X)
+        return self._combine(accuracy, disp_impact)
+
+    def scorer(self, estimator, X, y):
+        accuracy = self.accuracy_scorer(estimator, X, y)
+        disp_impact = self.disparate_impact_scorer.scorer(estimator, X, y)
+        return self._combine(accuracy, disp_impact)
+
+    def __call__(self, estimator, X, y):
+        return self.scorer(estimator, X, y)
 
 
 def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
@@ -444,9 +455,7 @@ class _R2AndDisparateImpact:
             favorable_labels, protected_attributes
         )
 
-    def __call__(self, estimator, X, y):
-        disp_impact = self.disparate_impact_scorer(estimator, X, y)
-        r2 = self.r2_scorer(estimator, X, y)
+    def _combine(self, r2, disp_impact):
         if np.isnan(disp_impact):  # empty privileged or unprivileged groups
             return r2
         assert r2 <= 1.0 and 0.0 <= disp_impact, (r2, disp_impact)
@@ -468,6 +477,19 @@ class _R2AndDisparateImpact:
         assert result <= r2 <= 1.0, (result, r2)
         assert symmetric_impact >= 0.9 or result < r2
         return result
+
+    def scoring(self, y_true=None, y_pred=None, X=None):
+        r2 = sklearn.metrics.r2_score(y_true, y_pred)
+        disp_impact = self.disparate_impact_scorer.scoring(y_true, y_pred, X)
+        return self._combine(r2, disp_impact)
+
+    def scorer(self, estimator, X, y):
+        r2 = self.r2_scorer(estimator, X, y)
+        disp_impact = self.disparate_impact_scorer.scorer(estimator, X, y)
+        return self._combine(r2, disp_impact)
+
+    def __call__(self, estimator, X, y):
+        return self.scorer(estimator, X, y)
 
 
 def r2_and_disparate_impact(favorable_labels, protected_attributes):
