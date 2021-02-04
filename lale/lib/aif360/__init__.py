@@ -25,7 +25,7 @@ indicates that the privileged groups comprise male values in the
 
 .. code:: Python
 
-    fairness_info_sex = {
+    creditg_fairness_info = {
         "favorable_labels": ["good"],
         "protected_attributes": [
             {
