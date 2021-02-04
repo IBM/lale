@@ -780,7 +780,7 @@ def column_for_stratification(X, y, favorable_labels, protected_attributes):
 
 
 def fair_stratified_train_test_split(
-    X, y, favorable_labels, protected_attributes, test_size=0.25
+    X, y, favorable_labels, protected_attributes, test_size=0.25, random_state=42
 ):
     """
     Splits X and y into random train and test subsets stratified by labels and protected attributes.
@@ -821,7 +821,7 @@ def fair_stratified_train_test_split(
     """
     stratify = column_for_stratification(X, y, favorable_labels, protected_attributes)
     train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
-        X, y, test_size=test_size, random_state=42, stratify=stratify
+        X, y, test_size=test_size, random_state=random_state, stratify=stratify
     )
     if hasattr(X, "json_schema"):
         train_X = add_schema_adjusting_n_rows(train_X, X.json_schema)
