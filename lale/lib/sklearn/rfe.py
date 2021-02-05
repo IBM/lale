@@ -61,13 +61,14 @@ _hyperparams_schema = {
                 "step": {
                     "description": "If greater than or equal to 1, then step corresponds to the (integer) number of features to remove at each iteration. If within (0.0, 1.0), then step corresponds to the percentage (rounded down) of features to remove at each iteration.",
                     "anyOf": [
-                        {"type": "integer", "minimum": 1},
+                        {"type": "integer", "minimum": 1, "forOptimizer": False,},
                         {
                             "type": "number",
                             "minimum": 0,
                             "exclusiveMinimum": True,
                             "maximum": 1,
                             "exclusiveMaximum": True,
+                            "maximumForOptimizer": 0.5,
                         },
                     ],
                     "default": 1,

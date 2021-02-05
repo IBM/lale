@@ -132,6 +132,8 @@ _hyperparams_schema = {
                 },
                 "cache_size": {
                     "type": "integer",
+                    "minimum": 0,
+                    "maximumForOptimizer": 1000,
                     "default": 200,
                     "description": "Specify the size of the kernel cache (in MB).",
                 },

@@ -149,14 +149,27 @@ _hyperparams_schema = {
                     "description": "The number of features to consider when looking for the best split.",
                 },
                 "max_leaf_nodes": {
-                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
+                        {
+                            "enum": [None],
+                            "description": "Unlimited number of leaf nodes.",
+                        },
+                    ],
                     "default": None,
                     "description": "Grow trees with ``max_leaf_nodes`` in best-first fashion.",
                 },
                 "min_impurity_decrease": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "default": 0.0,
-                    "description": "A node will be split if this split induces a decrease of the impurity",
+                    "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },
                 "min_impurity_split": {
                     "anyOf": [{"type": "number"}, {"enum": [None]}],
