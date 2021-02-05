@@ -92,7 +92,7 @@ setup(
             "torch>=1.0",
             "BlackBoxAuditing",
             "imbalanced-learn",
-            "cvxpy>=1.0",
+            "cvxpy>=1.0,<=1.1.7",
         ],
         "dev": ["pre-commit"],
         "test": [
