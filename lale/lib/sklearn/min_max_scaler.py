@@ -92,6 +92,18 @@ _hyperparams_schema = {
                     "laleType": "tuple",
                     "minItems": 2,
                     "maxItems": 2,
+                    "items": [
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": -1,
+                            "maximumForOptimizer": 0,
+                        },
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.001,
+                            "maximumForOptimizer": 1,
+                        },
+                    ],
                     "default": [0, 1],
                 },
                 "copy": {

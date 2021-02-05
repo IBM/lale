@@ -126,8 +126,10 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 0.5,
                     "default": 0.0,
-                    "description": "The minimum weighted fraction of the sum total of weights (of all",
+                    "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.",
                 },
                 "max_features": {
                     "anyOf": [
@@ -144,7 +146,7 @@ _hyperparams_schema = {
                         {"enum": ["auto", "sqrt", "log2", None]},
                     ],
                     "default": "auto",
-                    "description": "The number of features to consider when looking for the best split:",
+                    "description": "The number of features to consider when looking for the best split.",
                 },
                 "max_leaf_nodes": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],

@@ -134,7 +134,7 @@ _hyperparams_schema = {
                 "min_weight_fraction_leaf": {
                     "type": "number",
                     "minimum": 0.0,
-                    "maximum": 1.0,
+                    "maximum": 0.5,
                     "default": 0.0,
                     "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.",
                 },
