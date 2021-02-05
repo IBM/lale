@@ -807,6 +807,28 @@ def fair_stratified_train_test_split(
 
       Features for which fairness is desired.
 
+    test_size : float or int, default=0.25
+
+      If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the test split.
+      If int, represents the absolute number of test samples.
+
+    random_state : int, RandomState instance or None, default=42
+
+      Controls the shuffling applied to the data before applying the split.
+      Pass an integer for reproducible output across multiple function calls.
+
+      - None
+
+          RandomState used by numpy.random
+
+      - numpy.random.RandomState
+
+          Use the provided random state, only affecting other users of that same random state instance.
+
+      - integer
+
+          Explicit seed.
+
     Returns
     -------
     result : tuple
