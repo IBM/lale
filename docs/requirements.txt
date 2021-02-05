@@ -16,7 +16,7 @@ liac-arff>=2.4.0
 numba==0.49.0
 aif360
 imbalanced-learn
-cvxpy>=1.0
+cvxpy>=1.0,<=1.1.7
 autoai-libs
 sphinx==2.4.4
 m2r
