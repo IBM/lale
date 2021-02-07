@@ -22,24 +22,24 @@ Operators
 
 Classifiers:
 
-* lale.lib.snapml. `BoostingMachineClassifier`_
-* lale.lib.snapml. `BoostingMachineRegressor`_
-* lale.lib.snapml. `DecisionTreeClassifier`_
-* lale.lib.snapml. `DecisionTreeRegressor_
-* lale.lib.snapml. `RandomForestClassifier`_
-* lale.lib.snapml. `RandomForestRegressor`_
+* lale.lib.snapml. `SnapBoostingMachineClassifier`_
+* lale.lib.snapml. `SnapBoostingMachineRegressor`_
+* lale.lib.snapml. `SnapDecisionTreeClassifier`_
+* lale.lib.snapml. `SnapDecisionTreeRegressor_
+* lale.lib.snapml. `SnapRandomForestClassifier`_
+* lale.lib.snapml. `SnapRandomForestRegressor`_
 
-.. _`BoostingMachineClassifier`: lale.lib.snapml.boosting_machine_classifier.html
-.. _`BoostingMachineRegressor`: lale.lib.snapml.boosting_machine_regressor.html
-.. _`DecisionTreeClassifier`: lale.lib.snapml.decision_tree_classifier.html
-.. _`DecisionTreeRegressor`: lale.lib.snapml.decision_tree_regressor.html
-.. _`RandomForestClassifier`: lale.lib.snapml.random_forest_classifier.html
-.. _`RandomForestRegressor`: lale.lib.snapml.random_forest_regressor.html
+.. _`SnapBoostingMachineClassifier`: lale.lib.snapml.boosting_machine_classifier.html
+.. _`SnapBoostingMachineRegressor`: lale.lib.snapml.boosting_machine_regressor.html
+.. _`SnapDecisionTreeClassifier`: lale.lib.snapml.decision_tree_classifier.html
+.. _`SnapDecisionTreeRegressor`: lale.lib.snapml.decision_tree_regressor.html
+.. _`SnapRandomForestClassifier`: lale.lib.snapml.random_forest_classifier.html
+.. _`SnapRandomForestRegressor`: lale.lib.snapml.random_forest_regressor.html
 """
 
-from .boosting_machine_classifier import BoostingMachineClassifier
-from .boosting_machine_regressor import BoostingMachineRegressor
-from .decision_tree_classifier import DecisionTreeClassifier
-from .decision_tree_regressor import DecisionTreeRegressor
-from .random_forest_classifier import RandomForestClassifier
-from .random_forest_regressor import RandomForestRegressor
+from .boosting_machine_classifier import SnapBoostingMachineClassifier
+from .boosting_machine_regressor import SnapBoostingMachineRegressor
+from .decision_tree_classifier import SnapDecisionTreeClassifier
+from .decision_tree_regressor import SnapDecisionTreeRegressor
+from .random_forest_classifier import SnapRandomForestClassifier
+from .random_forest_regressor import SnapRandomForestRegressor

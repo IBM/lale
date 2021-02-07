@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class BoostingMachineRegressorImpl:
+class SnapBoostingMachineRegressorImpl:
     def __init__(
         self,
         num_round=100,
@@ -376,8 +376,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(BoostingMachineRegressorImpl, _combined_schemas)
+lale.docstrings.set_docstrings(SnapBoostingMachineRegressorImpl, _combined_schemas)
 
-BoostingMachineRegressor = lale.operators.make_operator(
-    BoostingMachineRegressorImpl, _combined_schemas
+SnapBoostingMachineRegressor = lale.operators.make_operator(
+    SnapBoostingMachineRegressorImpl, _combined_schemas
 )
