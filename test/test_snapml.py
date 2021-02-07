@@ -40,7 +40,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
     def test_decision_tree_classifier(self):
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.DecisionTreeClassifier()
+        trainable = lale.lib.snapml.SnapDecisionTreeClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
             scorer = sklearn.metrics.make_scorer(metric)
@@ -49,7 +49,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
     def test_random_forest_classifier(self):
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.RandomForestClassifier()
+        trainable = lale.lib.snapml.SnapRandomForestClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
             scorer = sklearn.metrics.make_scorer(metric)
@@ -58,7 +58,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
     def test_boosting_machine_classifier(self):
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.BoostingMachineClassifier()
+        trainable = lale.lib.snapml.SnapBoostingMachineClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
             scorer = sklearn.metrics.make_scorer(metric)
@@ -68,7 +68,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
         import lale.lib.snapml
         import lale.sklearn_compat
 
-        trainable = lale.lib.snapml.RandomForestClassifier()
+        trainable = lale.lib.snapml.SnapRandomForestClassifier()
         compat = lale.sklearn_compat.make_sklearn_compat(trainable)
         trained = compat.fit(self.train_X, self.train_y)
         for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
@@ -87,7 +87,7 @@ class TestSnapMLRegressors(unittest.TestCase):
     def test_decision_tree_regressor(self):
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.DecisionTreeRegressor()
+        trainable = lale.lib.snapml.SnapDecisionTreeRegressor()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         _ = scorer(trained, self.test_X, self.test_y)
@@ -95,7 +95,7 @@ class TestSnapMLRegressors(unittest.TestCase):
     def test_random_forest_regressor(self):
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.RandomForestRegressor()
+        trainable = lale.lib.snapml.SnapRandomForestRegressor()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         _ = scorer(trained, self.test_X, self.test_y)
@@ -103,7 +103,7 @@ class TestSnapMLRegressors(unittest.TestCase):
     def test_boosting_machine_regressor(self):
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.BoostingMachineRegressor()
+        trainable = lale.lib.snapml.SnapBoostingMachineRegressor()
         trained = trainable.fit(self.train_X, self.train_y)
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         _ = scorer(trained, self.test_X, self.test_y)
