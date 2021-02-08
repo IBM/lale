@@ -23,10 +23,11 @@ import lale.docstrings
 import lale.operators
 
 
-class BoostingMachineClassifierImpl:
+class SnapBoostingMachineRegressorImpl:
     def __init__(
         self,
         num_round=100,
+        objective="mse",
         learning_rate=0.1,
         random_state=0,
         colsample_bytree=1.0,
@@ -36,7 +37,6 @@ class BoostingMachineClassifierImpl:
         early_stopping_rounds=10,
         compress_trees=False,
         base_score=None,
-        class_weight=None,
         max_depth=None,
         min_max_depth=1,
         max_max_depth=5,
@@ -56,6 +56,7 @@ class BoostingMachineClassifierImpl:
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
             "num_round": num_round,
+            "objective": objective,
             "learning_rate": learning_rate,
             "random_state": random_state,
             "colsample_bytree": colsample_bytree,
@@ -65,7 +66,6 @@ class BoostingMachineClassifierImpl:
             "early_stopping_rounds": early_stopping_rounds,
             "compress_trees": compress_trees,
             "base_score": base_score,
-            "class_weight": class_weight,
             "max_depth": max_depth,
             "min_max_depth": min_max_depth,
             "max_max_depth": max_max_depth,
@@ -80,7 +80,7 @@ class BoostingMachineClassifierImpl:
             "gamma": gamma,
             "n_components": n_components,
         }
-        self._wrapped_model = snapml.BoostingMachineClassifier(**self._hyperparams)
+        self._wrapped_model = snapml.BoostingMachineRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -91,10 +91,6 @@ class BoostingMachineClassifierImpl:
     def predict(self, X, **predict_params):
         X = lale.datasets.data_schemas.strip_schema(X)
         return self._wrapped_model.predict(X, **predict_params)
-
-    def predict_proba(self, X, **predict_proba_params):
-        X = lale.datasets.data_schemas.strip_schema(X)
-        return self._wrapped_model.predict_proba(X, **predict_proba_params)
 
 
 _hyperparams_schema = {
@@ -118,6 +114,11 @@ _hyperparams_schema = {
                     "maximumForOptimizer": 1000,
                     "default": 100,
                     "description": "Number of boosting iterations.",
+                },
+                "objective": {
+                    "enum": ["mse", "cross_entropy"],
+                    "default": "mse",
+                    "description": "Training objective.",
                 },
                 "learning_rate": {
                     "type": "number",
@@ -176,11 +177,6 @@ _hyperparams_schema = {
                     "anyOf": [{"type": "number",}, {"enum": [None]},],
                     "default": None,
                     "description": "Base score to initialize boosting algorithm. If None then the algorithm will initialize the base score to be the the logit of the probability of the positive class.",
-                },
-                "class_weight": {
-                    "enum": ["balanced", None],
-                    "default": None,
-                    "description": "If set to 'balanced' samples weights will be applied to account for class imbalance, otherwise no sample weights will be used.",
                 },
                 "max_depth": {
                     "anyOf": [{"type": "integer", "minimum": 1,}, {"enum": [None]},],
@@ -286,12 +282,8 @@ _input_fit_schema = {
             },
         },
         "y": {
-            "description": "The classes.",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
+            "description": "The regression target.",
+            "anyOf": [{"type": "array", "items": {"type": "number"}},],
         },
         "sample_weight": {
             "anyOf": [
@@ -319,11 +311,9 @@ _input_fit_schema = {
         "y_val": {
             "anyOf": [
                 {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
                 {"enum": [None], "description": "No validation set provided."},
             ],
-            "description": "The validation classes.",
+            "description": "The validation regression target.",
             "default": None,
         },
         "sample_weight_val": {
@@ -363,68 +353,31 @@ _input_predict_schema = {
 }
 
 _output_predict_schema = {
-    "description": "The predicted classes.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
-    ],
-}
-
-_input_predict_proba_schema = {
-    "type": "object",
-    "properties": {
-        "X": {
-            "type": "array",
-            "description": "The outer array is over samples aka rows.",
-            "items": {
-                "type": "array",
-                "description": "The inner array is over features aka columns.",
-                "items": {"type": "number"},
-            },
-        },
-        "n_jobs": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 1,
-            "description": "Number of threads used to run inference.",
-        },
-    },
-}
-
-_output_predict_proba_schema = {
-    "type": "array",
-    "description": "The outer array is over samples aka rows.",
-    "items": {
-        "type": "array",
-        "description": "The inner array contains probabilities corresponding to each class.",
-        "items": {"type": "number"},
-    },
+    "description": "The predicted values.",
+    "anyOf": [{"type": "array", "items": {"type": "number"}},],
 }
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Boosting machine classifier`_ from `Snap ML`_. It can be used for binary classification problems.
+    "description": """`Boosting machine Regressor`_ from `Snap ML`_.
 
-.. _`Boosting machine classifier`: https://snapml.readthedocs.io/en/latest/#snapml.BoostingMachineClassifier
+.. _`Boosting machine Regressor`: https://snapml.readthedocs.io/en/latest/#snapml.BoostingMachineRegressor
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.boosting_machine_classifier.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.boosting_machine_regressor.html",
     "import_from": "snapml",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 
-lale.docstrings.set_docstrings(BoostingMachineClassifierImpl, _combined_schemas)
+lale.docstrings.set_docstrings(SnapBoostingMachineRegressorImpl, _combined_schemas)
 
-BoostingMachineClassifier = lale.operators.make_operator(
-    BoostingMachineClassifierImpl, _combined_schemas
+SnapBoostingMachineRegressor = lale.operators.make_operator(
+    SnapBoostingMachineRegressorImpl, _combined_schemas
 )

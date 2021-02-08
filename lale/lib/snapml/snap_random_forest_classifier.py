@@ -23,16 +23,16 @@ import lale.docstrings
 import lale.operators
 
 
-class RandomForestRegressorImpl:
+class SnapRandomForestClassifierImpl:
     def __init__(
         self,
         n_estimators=10,
-        criterion="mse",
+        criterion="gini",
         max_depth=None,
         min_samples_leaf=1,
         max_features="auto",
         bootstrap=True,
-        n_jobs=None,
+        n_jobs=1,
         random_state=None,
         verbose=False,
         use_histograms=False,
@@ -61,7 +61,7 @@ class RandomForestRegressorImpl:
         modified_hps = {**self._hyperparams}
         if modified_hps["gpu_ids"] is None:
             modified_hps["gpu_ids"] = [0]  # TODO: support list as default
-        self._wrapped_model = snapml.RandomForestRegressor(**modified_hps)
+        self._wrapped_model = snapml.RandomForestClassifier(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -72,6 +72,10 @@ class RandomForestRegressorImpl:
     def predict(self, X, **predict_params):
         X = lale.datasets.data_schemas.strip_schema(X)
         return self._wrapped_model.predict(X, **predict_params)
+
+    def predict_proba(self, X, **predict_proba_params):
+        X = lale.datasets.data_schemas.strip_schema(X)
+        return self._wrapped_model.predict_proba(X, **predict_proba_params)
 
 
 _hyperparams_schema = {
@@ -92,8 +96,8 @@ _hyperparams_schema = {
                     "description": "The number of trees in the forest.",
                 },
                 "criterion": {
-                    "enum": ["mse"],
-                    "default": "mse",
+                    "enum": ["gini"],
+                    "default": "gini",
                     "description": "Function to measure the quality of a split.",
                 },
                 "max_depth": {
@@ -233,8 +237,12 @@ _input_fit_schema = {
             },
         },
         "y": {
-            "description": "The regression target.",
-            "anyOf": [{"type": "array", "items": {"type": "number"}},],
+            "description": "The classes.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
         },
         "sample_weight": {
             "anyOf": [
@@ -270,31 +278,68 @@ _input_predict_schema = {
 }
 
 _output_predict_schema = {
-    "description": "The predicted values.",
-    "anyOf": [{"type": "array", "items": {"type": "number"}},],
+    "description": "The predicted classes.",
+    "anyOf": [
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "array", "items": {"type": "boolean"}},
+    ],
+}
+
+_input_predict_proba_schema = {
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "description": "The outer array is over samples aka rows.",
+            "items": {
+                "type": "array",
+                "description": "The inner array is over features aka columns.",
+                "items": {"type": "number"},
+            },
+        },
+        "n_jobs": {
+            "type": "integer",
+            "minimum": 0,
+            "default": 0,
+            "description": "Number of threads used to run inference. By default inference runs with maximum number of available threads..",
+        },
+    },
+}
+
+_output_predict_proba_schema = {
+    "type": "array",
+    "description": "The outer array is over samples aka rows.",
+    "items": {
+        "type": "array",
+        "description": "The inner array contains probabilities corresponding to each class.",
+        "items": {"type": "number"},
+    },
 }
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Random forest regressor`_ from `Snap ML`_.
+    "description": """`Random forest classifier`_ from `Snap ML`_. It can be used for binary classification problems.
 
-.. _`Random forest regressor`: https://snapml.readthedocs.io/en/latest/#snapml.RandomForestRegressor
+.. _`Random forest classifier`: https://snapml.readthedocs.io/en/latest/#snapml.RandomForestClassifier
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_regressor.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_classifier.html",
     "import_from": "snapml",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 
-lale.docstrings.set_docstrings(RandomForestRegressorImpl, _combined_schemas)
+lale.docstrings.set_docstrings(SnapRandomForestClassifierImpl, _combined_schemas)
 
-RandomForestRegressor = lale.operators.make_operator(
-    RandomForestRegressorImpl, _combined_schemas
+SnapRandomForestClassifier = lale.operators.make_operator(
+    SnapRandomForestClassifierImpl, _combined_schemas
 )

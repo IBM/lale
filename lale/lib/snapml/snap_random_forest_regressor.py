@@ -23,40 +23,45 @@ import lale.docstrings
 import lale.operators
 
 
-class DecisionTreeRegressorImpl:
+class SnapRandomForestRegressorImpl:
     def __init__(
         self,
+        n_estimators=10,
         criterion="mse",
-        splitter="best",
         max_depth=None,
         min_samples_leaf=1,
-        max_features=None,
+        max_features="auto",
+        bootstrap=True,
+        n_jobs=None,
         random_state=None,
-        n_jobs=1,
-        use_histograms=True,
+        verbose=False,
+        use_histograms=False,
         hist_nbins=256,
         use_gpu=False,
-        gpu_id=0,
-        verbose=False,
+        gpu_ids=None,
     ):
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
+            "n_estimators": n_estimators,
             "criterion": criterion,
-            "splitter": splitter,
             "max_depth": max_depth,
             "min_samples_leaf": min_samples_leaf,
             "max_features": max_features,
-            "random_state": random_state,
+            "bootstrap": bootstrap,
             "n_jobs": n_jobs,
+            "random_state": random_state,
+            "verbose": verbose,
             "use_histograms": use_histograms,
             "hist_nbins": hist_nbins,
             "use_gpu": use_gpu,
-            "gpu_id": gpu_id,
-            "verbose": verbose,
+            "gpu_ids": gpu_ids,
         }
-        self._wrapped_model = snapml.DecisionTreeRegressor(**self._hyperparams)
+        modified_hps = {**self._hyperparams}
+        if modified_hps["gpu_ids"] is None:
+            modified_hps["gpu_ids"] = [0]  # TODO: support list as default
+        self._wrapped_model = snapml.RandomForestRegressor(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -75,18 +80,21 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": ["max_depth", "max_features", "hist_nbins"],
+            "relevantToOptimizer": ["n_estimators", "max_depth", "max_features"],
             "additionalProperties": False,
             "properties": {
+                "n_estimators": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "minimumForOptimizer": 10,
+                    "maximumForOptimizer": 100,
+                    "default": 10,
+                    "description": "The number of trees in the forest.",
+                },
                 "criterion": {
                     "enum": ["mse"],
                     "default": "mse",
                     "description": "Function to measure the quality of a split.",
-                },
-                "splitter": {
-                    "enum": ["best"],
-                    "default": "best",
-                    "description": "The strategy used to choose the split at each node.",
                 },
                 "max_depth": {
                     "anyOf": [
@@ -145,8 +153,19 @@ _hyperparams_schema = {
                         },
                         {"enum": ["auto", "sqrt", "log2", None]},
                     ],
-                    "default": None,
+                    "default": "auto",
                     "description": "The number of features to consider when looking for the best split.",
+                },
+                "bootstrap": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Whether bootstrap samples are used when building trees.",
+                },
+                "n_jobs": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 1,
+                    "description": "Number of CPU threads to use.",
                 },
                 "random_state": {
                     "description": "Seed of pseudo-random number generator.",
@@ -159,24 +178,19 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                 },
-                "n_jobs": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 1,
-                    "description": "Number of CPU threads to use.",
+                "verbose": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "If True, it prints debugging information while training. Warning: this will increase the training time. For performance evaluation, use verbose=False.",
                 },
                 "use_histograms": {
                     "type": "boolean",
-                    "default": True,
+                    "default": False,
                     "description": "Use histogram-based splits rather than exact splits.",
                 },
                 "hist_nbins": {
                     "type": "integer",
                     "default": 256,
-                    "minimum": 1,
-                    "maximum": 256,
-                    "minimumForOptimizer": 16,
-                    "maximumForOptimizer": 256,
                     "description": "Number of histogram bins.",
                 },
                 "use_gpu": {
@@ -184,15 +198,13 @@ _hyperparams_schema = {
                     "default": False,
                     "description": "Use GPU acceleration (only supported for histogram-based splits).",
                 },
-                "gpu_id": {
-                    "type": "integer",
-                    "default": 0,
-                    "description": "Device ID of the GPU which will be used when GPU acceleration is enabled.",
-                },
-                "verbose": {
-                    "type": "boolean",
-                    "default": False,
-                    "description": "If True, it prints debugging information while training. Warning: this will increase the training time. For performance evaluation, use verbose=False.",
+                "gpu_ids": {
+                    "anyOf": [
+                        {"description": "Use [0].", "enum": [None]},
+                        {"type": "array", "items": {"type": "integer"}},
+                    ],
+                    "default": None,
+                    "description": "Device IDs of the GPUs which will be used when GPU acceleration is enabled.",
                 },
             },
         },
@@ -207,7 +219,7 @@ _hyperparams_schema = {
 }
 
 _input_fit_schema = {
-    "description": "Build a decision tree from the training set (X, y).",
+    "description": "Build a forest of trees from the training set (X, y).",
     "type": "object",
     "required": ["X", "y"],
     "properties": {
@@ -262,15 +274,14 @@ _output_predict_schema = {
     "anyOf": [{"type": "array", "items": {"type": "number"}},],
 }
 
-
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Decision tree Regressor`_ from `Snap ML`_.
+    "description": """`Random forest regressor`_ from `Snap ML`_.
 
-.. _`Decision tree Regressor`: https://snapml.readthedocs.io/en/latest/#snapml.DecisionTreeRegressor
+.. _`Random forest regressor`: https://snapml.readthedocs.io/en/latest/#snapml.RandomForestRegressor
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.decision_tree_regressor.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_regressor.html",
     "import_from": "snapml",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
@@ -282,8 +293,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(DecisionTreeRegressorImpl, _combined_schemas)
+lale.docstrings.set_docstrings(SnapRandomForestRegressorImpl, _combined_schemas)
 
-DecisionTreeRegressor = lale.operators.make_operator(
-    DecisionTreeRegressorImpl, _combined_schemas
+SnapRandomForestRegressor = lale.operators.make_operator(
+    SnapRandomForestRegressorImpl, _combined_schemas
 )
