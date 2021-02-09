@@ -78,7 +78,7 @@ setup(
         "full": [
             "xgboost",
             "lightgbm",
-            "snapml",
+            "snapml>=1.7.0rc3",
             "liac-arff>=2.4.0",
             "pytorch-pretrained-bert>=0.6.1",
             "torchvision>=0.2.2",
