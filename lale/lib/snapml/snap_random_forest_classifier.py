@@ -61,7 +61,7 @@ class SnapRandomForestClassifierImpl:
         modified_hps = {**self._hyperparams}
         if modified_hps["gpu_ids"] is None:
             modified_hps["gpu_ids"] = [0]  # TODO: support list as default
-        self._wrapped_model = snapml.RandomForestClassifier(**modified_hps)
+        self._wrapped_model = snapml.SnapRandomForestClassifier(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -324,7 +324,7 @@ _combined_schemas = {
 .. _`Random forest classifier`: https://snapml.readthedocs.io/en/latest/#snapml.RandomForestClassifier
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.random_forest_classifier.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_random_forest_classifier.html",
     "import_from": "snapml",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},

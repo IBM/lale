@@ -56,7 +56,7 @@ class SnapDecisionTreeRegressorImpl:
             "gpu_id": gpu_id,
             "verbose": verbose,
         }
-        self._wrapped_model = snapml.DecisionTreeRegressor(**self._hyperparams)
+        self._wrapped_model = snapml.SnapDecisionTreeRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -270,7 +270,7 @@ _combined_schemas = {
 .. _`Decision tree Regressor`: https://snapml.readthedocs.io/en/latest/#snapml.DecisionTreeRegressor
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.decision_tree_regressor.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_decision_tree_regressor.html",
     "import_from": "snapml",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
