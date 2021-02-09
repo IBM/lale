@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BaseInprocessingImpl,
+    _BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -26,14 +26,20 @@ from .util import (
 )
 
 
-class PrejudiceRemoverImpl(_BaseInprocessingImpl):
+class PrejudiceRemoverImpl(_BaseInEstimatorImpl):
     def __init__(
-        self, favorable_labels, protected_attributes, preprocessing=None, eta=1.0,
+        self,
+        favorable_labels,
+        protected_attributes,
+        redact=True,
+        preprocessing=None,
+        eta=1.0,
     ):
         mitigator = aif360.algorithms.inprocessing.PrejudiceRemover(eta=eta)
         super(PrejudiceRemoverImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
+            redact=redact,
             preprocessing=preprocessing,
             mitigator=mitigator,
         )
@@ -52,12 +58,18 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": [
                 *_categorical_fairness_properties.keys(),
+                "redact",
                 "preprocessing",
                 "eta",
             ],
             "relevantToOptimizer": ["eta"],
             "properties": {
                 **_categorical_fairness_properties,
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
@@ -81,7 +93,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`PrejudiceRemover`_ in-processing operator for fairness mitigation.
+    "description": """`PrejudiceRemover`_ in-estimator fairness mitigator.
 
 .. _`PrejudiceRemover`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.PrejudiceRemover.html
 """,

@@ -620,6 +620,13 @@ class TestAIF360Cat(unittest.TestCase):
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.78, 0.88)
 
+    def test_disparate_impact_remover_pd_cat_no_redact(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        trainable_remi = DisparateImpactRemover(
+            **fairness_info, redact=False, preprocessing=self.prep_pd_cat
+        ) >> LogisticRegression(max_iter=1000)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.65, 0.75)
+
     def test_eq_odds_postprocessing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)

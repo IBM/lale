@@ -37,6 +37,7 @@ class LFRImpl:
         self,
         favorable_labels,
         protected_attributes,
+        redact=True,
         preprocessing=None,
         k=5,
         Ax=0.01,
@@ -48,6 +49,7 @@ class LFRImpl:
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.redact = redact
         if preprocessing is None:
             preprocessing = lale.lib.lale.NoOp
         self.preprocessing = preprocessing
@@ -90,7 +92,7 @@ class LFRImpl:
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
         }
-        redacting = Redacting(**fairness_info)
+        redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         preprocessing = self.preprocessing
         trainable_redact1_and_prep = redacting >> preprocessing
         assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
@@ -129,6 +131,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": [
                 *_categorical_fairness_properties.keys(),
+                "redact",
                 "preprocessing",
                 "k",
                 "Ax",
@@ -141,6 +144,11 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["k", "Ax", "Az", "Ay"],
             "properties": {
                 **_categorical_fairness_properties,
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
@@ -199,7 +207,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`LFR`_ (learning fair representations) preprocessor for fairness mitigation.
+    "description": """`LFR`_ (learning fair representations) pre-estimator fairness mitigator.
 
 .. _`LFR`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.LFR.html
 """,

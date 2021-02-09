@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BasePostprocessingImpl,
+    _BasePostEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -26,12 +26,13 @@ from .util import (
 )
 
 
-class RejectOptionClassificationImpl(_BasePostprocessingImpl):
+class RejectOptionClassificationImpl(_BasePostEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
         estimator,
+        redact=True,
         low_class_thresh=0.01,
         high_class_thresh=0.99,
         num_class_thresh=100,
@@ -58,6 +59,7 @@ class RejectOptionClassificationImpl(_BasePostprocessingImpl):
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             estimator=estimator,
+            redact=redact,
             mitigator=mitigator,
         )
 
@@ -77,6 +79,7 @@ _hyperparams_schema = {
             "required": [
                 *_categorical_fairness_properties.keys(),
                 "estimator",
+                "redact",
                 "low_class_thresh",
                 "high_class_thresh",
                 "num_class_thresh",
@@ -91,6 +94,11 @@ _hyperparams_schema = {
                 "estimator": {
                     "description": "Nested supervised learning operator for which to mitigate fairness.",
                     "laleType": "operator",
+                },
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
                 },
                 "low_class_thresh": {
                     "description": "Smallest classification threshold to use in the optimization.",
@@ -144,7 +152,7 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Reject option classification`_ postprocessing for fairness mitigation.
+    "description": """`Reject option classification`_ post-estimator fairness mitigator.
 
 .. _`Reject option classification`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.RejectOptionClassification.html
 """,

@@ -17,14 +17,15 @@ import aif360.algorithms.inprocessing
 import lale.docstrings
 import lale.operators
 
-from .util import _BaseInprocessingImpl, _categorical_fairness_properties
+from .util import _BaseInEstimatorImpl, _categorical_fairness_properties
 
 
-class MetaFairClassifierImpl(_BaseInprocessingImpl):
+class MetaFairClassifierImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
+        redact=True,
         preprocessing=None,
         tau=0.8,
         type="fdr",
@@ -36,6 +37,7 @@ class MetaFairClassifierImpl(_BaseInprocessingImpl):
         super(MetaFairClassifierImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
+            redact=redact,
             preprocessing=preprocessing,
             mitigator=mitigator,
         )
@@ -97,6 +99,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": [
                 *_categorical_fairness_properties.keys(),
+                "redact",
                 "preprocessing",
                 "tau",
                 "type",
@@ -104,6 +107,11 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["tau", "type"],
             "properties": {
                 **_categorical_fairness_properties,
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
@@ -139,7 +147,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """Work-in-progress, not covered in successful test yet: `MetaFairClassifier`_ in-processing operator for fairness mitigation.
+    "description": """Work-in-progress, not covered in successful test yet: `MetaFairClassifier`_ in-estimator fairness mitigator.
 
 .. _`MetaFairClassifier`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.MetaFairClassifier.html
 """,
