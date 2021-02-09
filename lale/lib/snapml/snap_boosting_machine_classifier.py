@@ -80,7 +80,7 @@ class SnapBoostingMachineClassifierImpl:
             "gamma": gamma,
             "n_components": n_components,
         }
-        self._wrapped_model = snapml.BoostingMachineClassifier(**self._hyperparams)
+        self._wrapped_model = snapml.SnapBoostingMachineClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -409,7 +409,7 @@ _combined_schemas = {
 .. _`Boosting machine classifier`: https://snapml.readthedocs.io/en/latest/#snapml.BoostingMachineClassifier
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.boosting_machine_classifier.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_boosting_machine_classifier.html",
     "import_from": "snapml",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},

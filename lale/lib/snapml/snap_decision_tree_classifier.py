@@ -56,7 +56,7 @@ class SnapDecisionTreeClassifierImpl:
             "gpu_id": gpu_id,
             "verbose": verbose,
         }
-        self._wrapped_model = snapml.DecisionTreeClassifier(**self._hyperparams)
+        self._wrapped_model = snapml.SnapDecisionTreeClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -312,7 +312,7 @@ _combined_schemas = {
 .. _`Decision tree classifier`: https://snapml.readthedocs.io/en/latest/#snapml.DecisionTreeClassifier
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.decision_tree_classifier.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_decision_tree_classifier.html",
     "import_from": "snapml",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
