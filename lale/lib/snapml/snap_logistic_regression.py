@@ -26,58 +26,58 @@ import lale.operators
 class SnapLogisticRegressionImpl:
     def __init__(
         self,
-        max_iter = 1000,
-        regularizer = 1.0,
-        device_ids = None,
-        verbose = False,
-        use_gpu = False,
-        class_weight = None,
-        dual = True,
-        n_jobs = 1,
-        penalty = "l2",
-        tol = 0.001,
-        generate_training_history = None,
-        privacy = False,
-        eta = 0.3,
-        batch_size = 100,
-        privacy_epsilon = 10,
-        grad_clip = 1,
-        fit_intercept = False,
-        intercept_scaling = 1.0,
+        max_iter=1000,
+        regularizer=1.0,
+        device_ids=None,
+        verbose=False,
+        use_gpu=False,
+        class_weight=None,
+        dual=True,
+        n_jobs=1,
+        penalty="l2",
+        tol=0.001,
+        generate_training_history=None,
+        privacy=False,
+        eta=0.3,
+        batch_size=100,
+        privacy_epsilon=10,
+        grad_clip=1,
+        fit_intercept=False,
+        intercept_scaling=1.0,
         normalize=False,
         kernel=None,
         gamma=1.0,
         n_components=100,
-        random_state=None
+        random_state=None,
     ):
 
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         self._hyperparams = {
-            'max_iter': max_iter,
-            'regularizer': regularizer,
-            'device_ids': device_ids,
-            'verbose': verbose,
-            'use_gpu': use_gpu,
-            'class_weight': class_weight,
-            'dual': dual,
-            'n_jobs': n_jobs,
-            'penalty': penalty,
-            'tol': tol,
-            'generate_training_history': generate_training_history,
-            'privacy': privacy,
-            'eta': eta,
-            'batch_size': batch_size,
-            'privacy_epsilon': privacy_epsilon,
-            'grad_clip': grad_clip,
-            'fit_intercept': fit_intercept,
-            'intercept_scaling': intercept_scaling,
-            'normalize': normalize,
-            'kernel': kernel,
-            'gamma': gamma,
-            'n_components': n_components,
-            'random_state': random_state,
+            "max_iter": max_iter,
+            "regularizer": regularizer,
+            "device_ids": device_ids,
+            "verbose": verbose,
+            "use_gpu": use_gpu,
+            "class_weight": class_weight,
+            "dual": dual,
+            "n_jobs": n_jobs,
+            "penalty": penalty,
+            "tol": tol,
+            "generate_training_history": generate_training_history,
+            "privacy": privacy,
+            "eta": eta,
+            "batch_size": batch_size,
+            "privacy_epsilon": privacy_epsilon,
+            "grad_clip": grad_clip,
+            "fit_intercept": fit_intercept,
+            "intercept_scaling": intercept_scaling,
+            "normalize": normalize,
+            "kernel": kernel,
+            "gamma": gamma,
+            "n_components": n_components,
+            "random_state": random_state,
         }
         modified_hps = {**self._hyperparams}
         if modified_hps["device_ids"] is None:
@@ -105,11 +105,7 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": [
-                "fit_intercept",
-                "regularizer",
-                "max_iter",
-            ],
+            "relevantToOptimizer": ["fit_intercept", "regularizer", "max_iter",],
             "additionalProperties": False,
             "properties": {
                 "max_iter": {
@@ -288,7 +284,6 @@ _hyperparams_schema = {
                 {"type": "object", "properties": {"fit_intercept": {"enum": [False]}}},
             ],
         },
-
     ],
 }
 
@@ -383,7 +378,7 @@ _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """`Logistic Regression`_ from `Snap ML`_.
 
-.. _`Logisitc Regression`: https://snapml.readthedocs.io/en/latest/#snapml.LogisticRegression
+.. _`Logistic Regression`: https://snapml.readthedocs.io/en/latest/#snapml.LogisticRegression
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_logistic_regression.html",
