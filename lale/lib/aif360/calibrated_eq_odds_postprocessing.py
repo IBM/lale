@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BasePostprocessingImpl,
+    _BasePostEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -26,12 +26,13 @@ from .util import (
 )
 
 
-class CalibratedEqOddsPostprocessingImpl(_BasePostprocessingImpl):
+class CalibratedEqOddsPostprocessingImpl(_BasePostEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
         estimator,
+        redact=True,
         cost_constraint="weighted",
         seed=None,
     ):
@@ -48,6 +49,7 @@ class CalibratedEqOddsPostprocessingImpl(_BasePostprocessingImpl):
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             estimator=estimator,
+            redact=redact,
             mitigator=mitigator,
         )
 
@@ -67,6 +69,7 @@ _hyperparams_schema = {
             "required": [
                 *_categorical_fairness_properties.keys(),
                 "estimator",
+                "redact",
                 "cost_constraint",
                 "seed",
             ],
@@ -76,6 +79,11 @@ _hyperparams_schema = {
                 "estimator": {
                     "description": "Nested supervised learning operator for which to mitigate fairness.",
                     "laleType": "operator",
+                },
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
                 },
                 "cost_constraint": {
                     "enum": ["fpr", "fnr", "weighted"],
@@ -93,7 +101,7 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Calibrated equalized odds postprocessing`_ for fairness mitigation.
+    "description": """`Calibrated equalized odds postprocessing`_ post-estimator fairness mitigator.
 
 .. _`Calibrated equalized odds postprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.CalibratedEqOddsPostprocessing.html
 """,

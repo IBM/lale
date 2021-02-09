@@ -43,20 +43,20 @@ See the following notebooks for more detailed examples:
 * https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb
 * https://nbviewer.jupyter.org/github/IBM/watson-machine-learning-samples/blob/master/cloud/notebooks/python_sdk/experiments/autoai/Use%20Lale%20AIF360%20scorers%20to%20calculate%20and%20mitigate%20bias%20for%20credit%20risk%20AutoAI%20model.ipynb
 
-Preprocessing Operators:
-========================
+Pre-Estimator Mitigation Operators:
+===================================
 * `DisparateImpactRemover`_
 * `LFR`_
 * `Reweighing`_
 
-Inprocessing Operators:
-=======================
+In-Estimator Mitigation Operators:
+==================================
 * `AdversarialDebiasing`_
 * `GerryFairClassifier`_
 * `PrejudiceRemover`_
 
-Postprocessing Operators:
-=========================
+Post-Estimator Mitigation Operators:
+====================================
 * `CalibratedEqOddsPostprocessing`_
 * `EqOddsPostprocessing`_
 * `RejectOptionClassification`_
@@ -91,9 +91,9 @@ Mitigator Patterns:
 ===================
 
 AIF360 provides three kinds of fairness mitigators, illustrated in the
-following picture. *Preprocessing* mitigators transform the data
-before it gets to an estimator; *inprocessing* mitigators include
-their own estimator; and *postprocessing* mitigators transform
+following picture. *Pre-estimator* mitigators transform the data
+before it gets to an estimator; *in-estimator* mitigators include
+their own estimator; and *post-estimator* mitigators transform
 predictions after those come back from an estimator.
 
 .. image:: ../../docs/img/fairness_patterns.png
@@ -112,7 +112,7 @@ For example, consider the following code:
         >> ConcatFeatures
     ) >> LogisticRegression(max_iter=1000)
 
-In this example, the *mitigator* is LFR preprocessing, the
+In this example, the *mitigator* is LFR (which is pre-estimator), the
 *estimator* is LogisticRegression, and the *preprocessing* is a
 sub-pipeline that one-hot-encodes strings. If all features of the data
 are numerical, then the preprocessing can be omitted. Internally, the
