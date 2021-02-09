@@ -36,18 +36,20 @@ class DisparateImpactRemoverImpl:
         self,
         favorable_labels,
         protected_attributes,
+        redact=True,
         preprocessing=None,
         repair_level=1.0,
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.redact = redact
         if preprocessing is None:
             preprocessing = lale.lib.lale.NoOp
         self.preprocessing = preprocessing
         self.repair_level = repair_level
 
     def _prep_and_encode(self, X, y=None):
-        prepared_X = self.redact1_and_prep.transform(X, y)
+        prepared_X = self.redact_and_prep.transform(X, y)
         encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
         assert isinstance(encoded_X, pd.DataFrame), type(encoded_X)
         assert encoded_X.shape[1] == 1, encoded_X.columns
@@ -76,11 +78,11 @@ class DisparateImpactRemoverImpl:
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
         }
-        redacting = Redacting(**fairness_info)
+        redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         preprocessing = self.preprocessing
-        trainable_redact1_and_prep = redacting >> preprocessing
-        assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
-        self.redact1_and_prep = trainable_redact1_and_prep.fit(X, y)
+        trainable_redact_and_prep = redacting >> preprocessing
+        assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
+        self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info, remainder="drop", return_X_y=True, combine="and"
         )
@@ -127,12 +129,18 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": [
                 *_categorical_fairness_properties.keys(),
+                "redact",
                 "preprocessing",
                 "repair_level",
             ],
             "relevantToOptimizer": ["repair_level"],
             "properties": {
                 **_categorical_fairness_properties,
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
@@ -154,7 +162,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`Disparate impact remover`_ preprocessor for fairness mitigation.
+    "description": """`Disparate impact remover`_ pre-estimator fairness mitigator.
 
 .. _`Disparate impact remover`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.DisparateImpactRemover.html
 """,

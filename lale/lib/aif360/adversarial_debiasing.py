@@ -25,7 +25,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BaseInprocessingImpl,
+    _BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -33,11 +33,12 @@ from .util import (
 )
 
 
-class AdversarialDebiasingImpl(_BaseInprocessingImpl):
+class AdversarialDebiasingImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
+        redact=True,
         preprocessing=None,
         scope_name="adversarial_debiasing",
         sess=None,
@@ -73,6 +74,7 @@ or with
         super(AdversarialDebiasingImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
+            redact=redact,
             preprocessing=preprocessing,
             mitigator=mitigator,
         )
@@ -91,6 +93,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": [
                 *_categorical_fairness_properties.keys(),
+                "redact",
                 "preprocessing",
                 "scope_name",
                 "sess",
@@ -109,6 +112,11 @@ _hyperparams_schema = {
             ],
             "properties": {
                 **_categorical_fairness_properties,
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
@@ -187,7 +195,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`AdversarialDebiasing`_ in-processing operator for fairness mitigation.
+    "description": """`AdversarialDebiasing`_ in-estimator fairness mitigator.
 
 .. _`AdversarialDebiasing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.AdversarialDebiasing.html
 """,

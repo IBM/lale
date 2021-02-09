@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BaseInprocessingImpl,
+    _BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -27,11 +27,12 @@ from .util import (
 )
 
 
-class GerryFairClassifierImpl(_BaseInprocessingImpl):
+class GerryFairClassifierImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
         protected_attributes,
+        redact=True,
         preprocessing=None,
         C=10,
         printflag=False,
@@ -66,6 +67,7 @@ class GerryFairClassifierImpl(_BaseInprocessingImpl):
         super(GerryFairClassifierImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
+            redact=redact,
             preprocessing=preprocessing,
             mitigator=mitigator,
         )
@@ -84,6 +86,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": [
                 *_categorical_fairness_properties.keys(),
+                "redact",
                 "preprocessing",
                 "C",
                 "printflag",
@@ -98,6 +101,11 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["C", "max_iters", "gamma", "fairness_def"],
             "properties": {
                 **_categorical_fairness_properties,
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
                 "preprocessing": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
@@ -177,7 +185,7 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`GerryFairClassifier`_ in-processing operator for fairness mitigation.
+    "description": """`GerryFairClassifier`_ in-estimator fairness mitigator.
 
 .. _`GerryFairClassifier`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.GerryFairClassifier.html
 """,

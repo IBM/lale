@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BasePostprocessingImpl,
+    _BasePostEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -26,9 +26,9 @@ from .util import (
 )
 
 
-class EqOddsPostprocessingImpl(_BasePostprocessingImpl):
+class EqOddsPostprocessingImpl(_BasePostEstimatorImpl):
     def __init__(
-        self, favorable_labels, protected_attributes, estimator, seed=None,
+        self, favorable_labels, protected_attributes, estimator, redact=True, seed=None,
     ):
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
@@ -42,6 +42,7 @@ class EqOddsPostprocessingImpl(_BasePostprocessingImpl):
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             estimator=estimator,
+            redact=redact,
             mitigator=mitigator,
         )
 
@@ -58,13 +59,23 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints.",
             "type": "object",
             "additionalProperties": False,
-            "required": [*_categorical_fairness_properties.keys(), "estimator", "seed"],
+            "required": [
+                *_categorical_fairness_properties.keys(),
+                "estimator",
+                "redact",
+                "seed",
+            ],
             "relevantToOptimizer": [],
             "properties": {
                 **_categorical_fairness_properties,
                 "estimator": {
                     "description": "Nested supervised learning operator for which to mitigate fairness.",
                     "laleType": "operator",
+                },
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
                 },
                 "seed": {
                     "description": "Seed to make `predict` repeatable.",
@@ -78,7 +89,7 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Equalized odds postprocessing`_ for fairness mitigation.
+    "description": """`Equalized odds postprocessing`_ post-estimator fairness mitigator.
 
 .. _`Equalized odds postprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.EqOddsPostprocessing.html
 """,

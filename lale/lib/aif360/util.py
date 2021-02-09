@@ -531,12 +531,13 @@ average_odds_difference.__doc__ = (
 )
 
 
-class _BaseInprocessingImpl:
+class _BaseInEstimatorImpl:
     def __init__(
-        self, favorable_labels, protected_attributes, preprocessing, mitigator
+        self, favorable_labels, protected_attributes, redact, preprocessing, mitigator
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.redact = redact
         if preprocessing is None:
             preprocessing = lale.lib.lale.NoOp
         self.preprocessing = preprocessing
@@ -570,7 +571,7 @@ class _BaseInprocessingImpl:
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
         }
-        redacting = Redacting(**fairness_info)
+        redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         trainable_redact_and_prep = redacting >> self.preprocessing
         assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
         self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
@@ -596,13 +597,14 @@ class _BaseInprocessingImpl:
         return decoded_y
 
 
-class _BasePostprocessingImpl:
+class _BasePostEstimatorImpl:
     def __init__(
-        self, favorable_labels, protected_attributes, estimator, mitigator,
+        self, favorable_labels, protected_attributes, estimator, redact, mitigator,
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator
+        self.redact = redact
         self.mitigator = mitigator
 
     def _decode(self, y):
@@ -619,7 +621,7 @@ class _BasePostprocessingImpl:
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
         }
-        redacting = Redacting(**fairness_info)
+        redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         trainable_redact_and_estim = redacting >> self.estimator
         assert isinstance(trainable_redact_and_estim, lale.operators.TrainablePipeline)
         self.redact_and_estim = trainable_redact_and_estim.fit(X, y)

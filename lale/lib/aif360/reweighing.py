@@ -15,6 +15,7 @@
 import aif360.algorithms.preprocessing
 
 import lale.docstrings
+import lale.lib.lale
 import lale.operators
 
 from .protected_attributes_encoder import ProtectedAttributesEncoder
@@ -29,12 +30,11 @@ from .util import (
 
 
 class ReweighingImpl:
-    def __init__(
-        self, favorable_labels, protected_attributes, estimator,
-    ):
+    def __init__(self, favorable_labels, protected_attributes, estimator, redact=True):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator
+        self.redact = redact
 
     def fit(self, X, y):
         fairness_info = {
@@ -60,8 +60,11 @@ class ReweighingImpl:
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)
         sample_weight = reweighted_data.instance_weights
-        redacting_trainable = Redacting(**fairness_info)
-        self.redacting = redacting_trainable.fit(X)
+        if self.redact:
+            redacting_trainable = Redacting(**fairness_info)
+            self.redacting = redacting_trainable.fit(X)
+        else:
+            self.redacting = lale.lib.lale.NoOp
         redacted_X = self.redacting.transform(X)
         if isinstance(self.estimator, lale.operators.TrainablePipeline):
             trainable_prefix = self.estimator.remove_last()
@@ -94,7 +97,11 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": [*_categorical_fairness_properties.keys(), "estimator"],
+            "required": [
+                *_categorical_fairness_properties.keys(),
+                "estimator",
+                "redact",
+            ],
             "relevantToOptimizer": [],
             "properties": {
                 **_categorical_fairness_properties,
@@ -102,13 +109,18 @@ _hyperparams_schema = {
                     "description": "Nested classifier, fit method must support sample_weight.",
                     "laleType": "operator",
                 },
+                "redact": {
+                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
             },
         }
     ],
 }
 
 _combined_schemas = {
-    "description": """`Reweighing`_ preprocessor for fairness mitigation.
+    "description": """`Reweighing`_ pre-estimator fairness mitigator.
 
 .. _`Reweighing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.sklearn.preprocessing.Reweighing.html
 """,
