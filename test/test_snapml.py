@@ -76,7 +76,7 @@ class TestSnapMLClassifiers(unittest.TestCase):
     def test_support_vector_machine(self):
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapSupportVectorMachine()
+        trainable = lale.lib.snapml.SnapSVMClassifier()
         trained = trainable.fit(self.train_X, self.train_y)
         for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
             scorer = sklearn.metrics.make_scorer(metric)
