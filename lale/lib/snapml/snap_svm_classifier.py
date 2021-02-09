@@ -97,7 +97,7 @@ _hyperparams_schema = {
                 "max_iter",
                 "kernel",
                 "gamma",
-                "n_components"
+                "n_components",
             ],
             "additionalProperties": False,
             "properties": {
