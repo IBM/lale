@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapSupportVectorMachineImpl:
+class SnapSVMClassifierImpl:
     def __init__(
         self,
         max_iter=1000,
@@ -41,7 +41,7 @@ class SnapSupportVectorMachineImpl:
         kernel=None,
         gamma=1.0,
         n_components=100,
-        random_state=None
+        random_state=None,
     ):
 
         assert (
@@ -68,7 +68,7 @@ class SnapSupportVectorMachineImpl:
         modified_hps = {**self._hyperparams}
         if modified_hps["device_ids"] is None:
             modified_hps["device_ids"] = [0]  # TODO: support list as default
-        self._wrapped_model = snapml.SnapSupportVectorMachine(**modified_hps)
+        self._wrapped_model = snapml.SnapSVMClassifier(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -91,7 +91,14 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": ["fit_intercept", "regularizer", "max_iter",],
+            "relevantToOptimizer": [
+                "fit_intercept",
+                "regularizer",
+                "max_iter",
+                "kernel",
+                "gamma",
+                "n_components"
+            ],
             "additionalProperties": False,
             "properties": {
                 "max_iter": {
@@ -155,7 +162,7 @@ _hyperparams_schema = {
                 },
                 "fit_intercept": {
                     "type": "boolean",
-                    "default": False,
+                    "default": True,
                     "description": "Add bias term -- note, may affect speed of convergence, especially for sparse datasets.",
                 },
                 "intercept_scaling": {
@@ -167,12 +174,12 @@ _hyperparams_schema = {
                 },
                 "normalize": {
                     "type": "boolean",
-                    "default": False,
+                    "default": True,
                     "description": "Normalize rows of dataset (recommended for fast convergence).",
                 },
                 "kernel": {
-                    "enum": ["rbf", None],
-                    "default": None,
+                    "enum": ["rbf", "linear"],
+                    "default": "rbf",
                     "description": "Approximate feature map of a specified kernel function.",
                 },
                 "gamma": {
@@ -180,12 +187,17 @@ _hyperparams_schema = {
                     "minimum": 0.0,
                     "default": 1.0,
                     "exclusiveMinimum": True,
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 100.0,
+                    "distribution": "uniform",
                     "description": "Parameter of RBF kernel: exp(-gamma * x^2).",
                 },
                 "n_components": {
                     "type": "integer",
                     "minimum": 1,
                     "default": 100,
+                    "minimumForOptimizer": 10,
+                    "maximumForOptimizer": 200,
                     "description": "Dimensionality of the feature space when approximating a kernel function.",
                 },
                 "random_state": {
@@ -295,7 +307,7 @@ _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """`Support Vector Machine`_ from `Snap ML`_.
 
-.. _`Logisitc Regression`: https://snapml.readthedocs.io/en/latest/#snapml.SupportVectorMachine
+.. _`Support Vector Machine`: https://snapml.readthedocs.io/en/latest/#snapml.SupportVectorMachine
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_support_vector_machine.html",
@@ -312,8 +324,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SnapSupportVectorMachineImpl, _combined_schemas)
+lale.docstrings.set_docstrings(SnapSVMClassifierImpl, _combined_schemas)
 
-SnapSupportVectorMachine = lale.operators.make_operator(
-    SnapSupportVectorMachineImpl, _combined_schemas
+SnapSVMClassifier = lale.operators.make_operator(
+    SnapSVMClassifierImpl, _combined_schemas
 )

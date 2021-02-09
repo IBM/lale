@@ -210,7 +210,7 @@ _hyperparams_schema = {
                 },
                 "fit_intercept": {
                     "type": "boolean",
-                    "default": False,
+                    "default": True,
                     "description": "Add bias term -- note, may affect speed of convergence, especially for sparse datasets.",
                 },
                 "intercept_scaling": {
@@ -222,12 +222,12 @@ _hyperparams_schema = {
                 },
                 "normalize": {
                     "type": "boolean",
-                    "default": False,
+                    "default": True,
                     "description": "Normalize rows of dataset (recommended for fast convergence).",
                 },
                 "kernel": {
-                    "enum": ["rbf", None],
-                    "default": None,
+                    "enum": ["rbf", "linear"],
+                    "default": "linear",
                     "description": "Approximate feature map of a specified kernel function.",
                 },
                 "gamma": {

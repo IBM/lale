@@ -29,7 +29,7 @@ Classifiers:
 * lale.lib.snapml. `SnapLogisticRegression`_
 * lale.lib.snapml. `SnapRandomForestClassifier`_
 * lale.lib.snapml. `SnapRandomForestRegressor`_
-* lale.lib.snapml. `SnapSupportVectorMachine`_
+* lale.lib.snapml. `SnapSVMClassifier`_
 
 .. _`SnapBoostingMachineClassifier`: lale.lib.snapml.snap_boosting_machine_classifier.html
 .. _`SnapBoostingMachineRegressor`: lale.lib.snapml.snap_boosting_machine_regressor.html
@@ -38,7 +38,7 @@ Classifiers:
 .. _`SnapLogisticRegression`: lale.lib.snapml.snap_logistic_regression.html
 .. _`SnapRandomForestClassifier`: lale.lib.snapml.snap_random_forest_classifier.html
 .. _`SnapRandomForestRegressor`: lale.lib.snapml.snap_random_forest_regressor.html
-.. _`SnapSupportVectorMachine`: lale.lib.snapml.snap_support_vector_machine.html
+.. _`SnapSVMClassifier`: lale.lib.snapml.snap_svm_classifier.html
 """
 
 from .snap_boosting_machine_classifier import SnapBoostingMachineClassifier
@@ -48,4 +48,4 @@ from .snap_decision_tree_regressor import SnapDecisionTreeRegressor
 from .snap_logistic_regression import SnapLogisticRegression
 from .snap_random_forest_classifier import SnapRandomForestClassifier
 from .snap_random_forest_regressor import SnapRandomForestRegressor
-from .snap_support_vector_machine import SnapSupportVectorMachine
+from .snap_svm_classifier import SnapSVMClassifier
