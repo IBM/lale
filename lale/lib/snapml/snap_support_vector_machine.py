@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapLogisticRegressionImpl:
+class SnapSupportVectorMachineImpl:
     def __init__(
         self,
         max_iter = 1000,
@@ -32,17 +32,10 @@ class SnapLogisticRegressionImpl:
         verbose = False,
         use_gpu = False,
         class_weight = None,
-        dual = True,
         n_jobs = 1,
-        penalty = "l2",
         tol = 0.001,
         generate_training_history = None,
-        privacy = False,
-        eta = 0.3,
-        batch_size = 100,
-        privacy_epsilon = 10,
-        grad_clip = 1,
-        fit_intercept = False,
+        fit_intercept=False,
         intercept_scaling = 1.0,
         normalize=False,
         kernel=None,
@@ -61,16 +54,9 @@ class SnapLogisticRegressionImpl:
             'verbose': verbose,
             'use_gpu': use_gpu,
             'class_weight': class_weight,
-            'dual': dual,
             'n_jobs': n_jobs,
-            'penalty': penalty,
             'tol': tol,
             'generate_training_history': generate_training_history,
-            'privacy': privacy,
-            'eta': eta,
-            'batch_size': batch_size,
-            'privacy_epsilon': privacy_epsilon,
-            'grad_clip': grad_clip,
             'fit_intercept': fit_intercept,
             'intercept_scaling': intercept_scaling,
             'normalize': normalize,
@@ -82,7 +68,7 @@ class SnapLogisticRegressionImpl:
         modified_hps = {**self._hyperparams}
         if modified_hps["device_ids"] is None:
             modified_hps["device_ids"] = [0]  # TODO: support list as default
-        self._wrapped_model = snapml.SnapLogisticRegression(**modified_hps)
+        self._wrapped_model = snapml.SnapSupportVectorMachine(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -94,9 +80,9 @@ class SnapLogisticRegressionImpl:
         X = lale.datasets.data_schemas.strip_schema(X)
         return self._wrapped_model.predict(X, **predict_params)
 
-    def predict_proba(self, X, **predict_proba_params):
+    def decision_function(self, X, **decision_function_params):
         X = lale.datasets.data_schemas.strip_schema(X)
-        return self._wrapped_model.predict_proba(X, **predict_proba_params)
+        return self._wrapped_model.decision_function(X, **decision_function_params)
 
 
 _hyperparams_schema = {
@@ -148,11 +134,6 @@ _hyperparams_schema = {
                     "default": None,
                     "description": "If set to 'balanced' samples weights will be applied to account for class imbalance, otherwise no sample weights will be used.",
                 },
-                "dual": {
-                    "type": "boolean",
-                    "default": True,
-                    "description": "Use dual formulation (rather than primal).",
-                },
                 "verbose": {
                     "type": "boolean",
                     "default": False,
@@ -163,11 +144,6 @@ _hyperparams_schema = {
                     "minimum": 1,
                     "default": 1,
                     "description": "The number of threads used for running the training. The value of this parameter should be a multiple of 32 if the training is performed on GPU (use_gpu=True).",
-                },
-                "penalty": {
-                    "enum": ["l1", "l2"],
-                    "default": "l2",
-                    "description": "The regularization / penalty type. Possible values are 'l2' for L2 regularization (LogisticRegression) or 'l1' for L1 regularization (SparseLogisticRegression). L1 regularization is possible only for the primal optimization problem (dual=False).",
                 },
                 "tol": {
                     "type": "number",
@@ -180,37 +156,6 @@ _hyperparams_schema = {
                     "enum": ["summary", "full", None],
                     "default": None,
                     "description": "Determines the level of summary statistics that are generated during training.",
-                },
-                "privacy": {
-                    "type": "boolean",
-                    "default": False,
-                    "description": "Train the model using a differentially private algorithm.",
-                },
-                "eta": {
-                    "type": "number",
-                    "minimum": 0.0,
-                    "default": 0.3,
-                    "exclusiveMinimum": True,
-                    "description": "Learning rate for the differentially private training algorithm.",
-                },
-                "batch_size": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 100,
-                    "description": "Mini-batch size for the differentially private training algorithm.",
-                },
-                "privacy_epsilon": {
-                    "type": "number",
-                    "minimum": 0.0,
-                    "default": 10.0,
-                    "exclusiveMinimum": True,
-                    "description": "Target privacy gaurantee. Learned model will be (privacy_epsilon, 0.01)-private.",
-                },
-                "grad_clip": {
-                    "type": "number",
-                    "minimum": 0.0,
-                    "default": 1.0,
-                    "description": "Gradient clipping parameter for the differentially private training algorithm.",
                 },
                 "fit_intercept": {
                     "type": "boolean",
@@ -260,35 +205,6 @@ _hyperparams_schema = {
                 },
             },
         },
-        {
-            "description": "L1 regularization is supported only for primal optimization problems.",
-            "anyOf": [
-                {"type": "object", "properties": {"penalty": {"enum": ["l2"]}}},
-                {"type": "object", "properties": {"dual": {"enum": [False]}}},
-            ],
-        },
-        {
-            "description": "Privacy only supported for primal objective functions.",
-            "anyOf": [
-                {"type": "object", "properties": {"privacy": {"enum": [False]}}},
-                {"type": "object", "properties": {"dual": {"enum": [False]}}},
-            ],
-        },
-        {
-            "description": "Privacy only supported for L2-regularized objective functions.",
-            "anyOf": [
-                {"type": "object", "properties": {"privacy": {"enum": [False]}}},
-                {"type": "object", "properties": {"penalty": {"enum": ["l2"]}}},
-            ],
-        },
-        {
-            "description": "Privacy not supported with fit_intercept=True.",
-            "anyOf": [
-                {"type": "object", "properties": {"privacy": {"enum": [False]}}},
-                {"type": "object", "properties": {"fit_intercept": {"enum": [False]}}},
-            ],
-        },
-
     ],
 }
 
@@ -348,7 +264,7 @@ _output_predict_schema = {
     ],
 }
 
-_input_predict_proba_schema = {
+_input_decision_function_schema = {
     "type": "object",
     "properties": {
         "X": {
@@ -369,24 +285,24 @@ _input_predict_proba_schema = {
     },
 }
 
-_output_predict_proba_schema = {
+_output_decision_function_schema = {
     "type": "array",
     "description": "The outer array is over samples aka rows.",
     "items": {
         "type": "array",
-        "description": "The inner array contains probabilities corresponding to each class.",
+        "description": "The inner array contains confidence scores corresponding to each class.",
         "items": {"type": "number"},
     },
 }
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Logistic Regression`_ from `Snap ML`_.
+    "description": """`Support Vector Machine`_ from `Snap ML`_.
 
-.. _`Logisitc Regression`: https://snapml.readthedocs.io/en/latest/#snapml.LogisticRegression
+.. _`Logisitc Regression`: https://snapml.readthedocs.io/en/latest/#snapml.SupportVectorMachine
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_logistic_regression.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.snapml.snap_support_vector_machine.html",
     "import_from": "snapml",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
@@ -395,13 +311,13 @@ _combined_schemas = {
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
+        "input_decision_function": _input_decision_function_schema,
+        "output_decision_function": _output_decision_function_schema,
     },
 }
 
-lale.docstrings.set_docstrings(SnapLogisticRegressionImpl, _combined_schemas)
+lale.docstrings.set_docstrings(SnapSupportVectorMachineImpl, _combined_schemas)
 
-SnapLogisticRegression = lale.operators.make_operator(
-    SnapLogisticRegressionImpl, _combined_schemas
+SnapSupportVectorMachine = lale.operators.make_operator(
+    SnapSupportVectorMachineImpl, _combined_schemas
 )
