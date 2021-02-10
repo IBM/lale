@@ -8,11 +8,11 @@ from lale.operators import (
     Operator,
     OperatorChoice,
     PlannedOperator,
+    clone_op,
     make_choice,
     make_pipeline,
     make_pipeline_graph,
 )
-from lale.sklearn_compat import clone_op
 
 
 class NonTerminal(Operator):

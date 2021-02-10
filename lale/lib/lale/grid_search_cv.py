@@ -96,10 +96,10 @@ class GridSearchCVImpl:
             # if hp_grid is specified manually, we need to add a level of nesting
             # since we are wrapping it in an observer
             if isinstance(hp_grid, list):
-                hp_grid = lale.sklearn_compat.nest_all_HPparams("op", hp_grid)
+                hp_grid = lale.helpers.nest_all_HPparams("op", hp_grid)
             else:
                 assert isinstance(hp_grid, dict)
-                hp_grid = lale.sklearn_compat.nest_HPparams("op", hp_grid)
+                hp_grid = lale.helpers.nest_HPparams("op", hp_grid)
 
         if not hp_grid and isinstance(op, lale.operators.IndividualOp):
             hp_grid = [

@@ -12,13 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import warnings
-from typing import Any, Dict, List, Tuple, TypeVar, Union
+from typing import Any, Dict, Union
 
 import lale.operators as Ops
 
-
 # This method (and the to_lale() method on the returned value)
 # are the only ones intended to be exported
+from lale.helpers import (
+    get_name_and_index,
+    is_numeric_structure,
+    make_degen_indexed_name,
+    make_indexed_name,
+    partition_sklearn_choice_params,
+    partition_sklearn_params,
+    structure_type_name,
+)
+
+
 def make_sklearn_compat(op):
     """This is a deprecated method for backward compatibility and will be removed soon"""
     warnings.warn(
@@ -40,92 +50,6 @@ def sklearn_compat_clone(impl: Any) -> Any:
 
     cp = clone(impl, safe=False)
     return cp
-
-
-def partition_sklearn_params(
-    d: Dict[str, Any]
-) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
-    sub_parts: Dict[str, Dict[str, Any]] = {}
-    main_parts: Dict[str, Any] = {}
-
-    for k, v in d.items():
-        ks = k.split("__", 1)
-        if len(ks) == 1:
-            assert k not in main_parts
-            main_parts[k] = v
-        else:
-            assert len(ks) == 2
-            bucket: Dict[str, Any] = {}
-            group: str = ks[0]
-            param: str = ks[1]
-            if group in sub_parts:
-                bucket = sub_parts[group]
-            else:
-                sub_parts[group] = bucket
-            assert param not in bucket
-            bucket[param] = v
-    return (main_parts, sub_parts)
-
-
-def partition_sklearn_choice_params(d: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
-    discriminant_value: int = -1
-    choice_parts: Dict[str, Any] = {}
-
-    for k, v in d.items():
-        if k == discriminant_name:
-            assert discriminant_value == -1
-            discriminant_value = int(v)
-        else:
-            k_rest = unnest_choice(k)
-            choice_parts[k_rest] = v
-    assert discriminant_value != -1
-    return (discriminant_value, choice_parts)
-
-
-DUMMY_SEARCH_SPACE_GRID_PARAM_NAME: str = "$"
-discriminant_name: str = "?"
-choice_prefix: str = "?"
-structure_type_name: str = "#"
-structure_type_list: str = "list"
-structure_type_tuple: str = "tuple"
-structure_type_dict: str = "dict"
-
-
-def get_name_and_index(name: str) -> Tuple[str, int]:
-    """ given a name of the form "name@i", returns (name, i)
-        if given a name of the form "name", returns (name, 0)
-    """
-    splits = name.split("@", 1)
-    if len(splits) == 1:
-        return splits[0], 0
-    else:
-        return splits[0], int(splits[1])
-
-
-def make_degen_indexed_name(name, index):
-    return f"{name}@{index}"
-
-
-def make_indexed_name(name, index):
-    if index == 0:
-        return name
-    else:
-        return f"{name}@{index}"
-
-
-def make_array_index_name(index, is_tuple: bool = False):
-    sep = "##" if is_tuple else "#"
-    return f"{sep}{str(index)}"
-
-
-def is_numeric_structure(structure_type: str):
-
-    if structure_type == "list" or structure_type == "tuple":
-        return True
-    elif structure_type == "dict":
-        return False
-    else:
-        assert False, f"Unknown structure type {structure_type} found"
 
 
 def set_structured_params(k, params: Dict[str, Any], hyper_parent):
@@ -269,82 +193,3 @@ def set_operator_params(op: Ops.Operator, **impl_params) -> Ops.Operator:
         return new_step
     else:
         assert False, f"Not yet supported operation of type: {op.__class__.__name__}"
-
-
-NEW_STUFF = "_new_stuff"
-PLANNED_OPERATOR_NAME = "PlannedOperator"
-INDIVIDUAL_OPERATOR_NAME = "IndividualOperator"
-
-
-# # sklearn calls __repr__ instead of __str__
-# def __repr__(self):
-#     op = self.to_lale()
-#     if isinstance(op, Ops.TrainableIndividualOp):
-#         name = op.name()
-#         hyps = ""
-#         hps = op.hyperparams()
-#         if hps is not None:
-#             hyps = hyperparams_to_string(hps)
-#         return name + "(" + hyps + ")"
-#     else:
-#         return super().__repr__()
-
-
-# Auxiliary functions
-V = TypeVar("V")
-
-
-def nest_HPparam(name: str, key: str):
-    if key == DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:
-        # we can get rid of the dummy now, since we have a name for it
-        return name
-    return name + "__" + key
-
-
-def nest_HPparams(name: str, grid: Dict[str, V]) -> Dict[str, V]:
-    return {(nest_HPparam(name, k)): v for k, v in grid.items()}
-
-
-def nest_all_HPparams(name: str, grids: List[Dict[str, V]]) -> List[Dict[str, V]]:
-    """ Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
-        to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
-    """
-    return [nest_HPparams(name, grid) for grid in grids]
-
-
-def nest_choice_HPparam(key: str):
-    return choice_prefix + key
-
-
-def nest_choice_HPparams(grid: Dict[str, V]) -> Dict[str, V]:
-    return {(nest_choice_HPparam(k)): v for k, v in grid.items()}
-
-
-def nest_choice_all_HPparams(grids: List[Dict[str, V]]) -> List[Dict[str, V]]:
-    """ this transforms every key(parameter name) in the grids
-        to be nested under a choice, using a ? as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
-    """
-    return [nest_choice_HPparams(grid) for grid in grids]
-
-
-def unnest_choice(k: str) -> str:
-    assert k.startswith(choice_prefix)
-    return k[len(choice_prefix) :]
-
-
-def unnest_HPparams(k: str) -> List[str]:
-    return k.split("__")
-
-
-OpType = TypeVar("OpType", bound=Ops.Operator)
-
-
-def clone_op(op: OpType, name: str = None) -> OpType:
-    """ Clone any operator.
-    """
-    from sklearn.base import clone
-
-    nop = clone(op)
-    if name:
-        nop._set_name(name)
-    return nop

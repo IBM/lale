@@ -1438,6 +1438,17 @@ class IndividualOp(Operator):
     def __str__(self) -> str:
         return self.name()
 
+    # # sklearn calls __repr__ instead of __str__
+    def __repr__(self):
+        name = self.name()
+        hps = self.hyperparams()
+        hyp_string: str
+        if hps is None:
+            hyp_string = ""
+        else:
+            hyp_string = lale.pretty_print.hyperparams_to_string(hps)
+        return name + "(" + hyp_string + ")"
+
     def _has_same_impl(self, other: Operator) -> bool:
         """Checks if the type of the operator implementations are compatible
         """
@@ -1736,20 +1747,6 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         s_2 = fix_hyperparams(s_1)
         s_3 = lale.type_checking.replace_data_constraints(s_2, data_schema)
         return s_3
-
-        # This should *only* ever be called by the sklearn_compat wrapper
-
-    # def set_op_params(self, **impl_params):
-    #     params = dict(impl_params)
-    #     params.pop("_lale_name", None)
-    #     params.pop("_lale_impl", None)
-    #     params.pop("_lale_schemas", None)
-    #     params.pop("_lale_frozen_hyperparameters", None)
-    #     # this is not ideal -- we should avoid the extra copies done by this
-    #     result = self._configure(**params)
-    #     self._hyperparams = result._hyperparams
-    #     self._cached_frozen_hyperparameters = None
-    #     return self
 
     def freeze_trainable(self) -> "TrainableIndividualOp":
         return self._configure().freeze_trainable()
@@ -2924,11 +2921,9 @@ class BasePipeline(Operator, Generic[OpType]):
         return True
 
     def get_defaults(self) -> Dict[str, Any]:
-        import lale.sklearn_compat
 
         defaults_list: Iterable[Dict[str, Any]] = (
-            lale.sklearn_compat.nest_HPparams(s.name(), s.get_defaults())
-            for s in self.steps()
+            lale.helpers.nest_HPparams(s.name(), s.get_defaults()) for s in self.steps()
         )
 
         # TODO: could this just be dict(defaults_list)
@@ -4047,3 +4042,17 @@ def customize_schema(
         existing_disable_hyperparams_schema_validation
     )
     return op
+
+
+CloneOpType = TypeVar("CloneOpType", bound=Operator)
+
+
+def clone_op(op: CloneOpType, name: str = None) -> CloneOpType:
+    """ Clone any operator.
+    """
+    from sklearn.base import clone
+
+    nop = clone(op)
+    if name:
+        nop._set_name(name)
+    return nop
