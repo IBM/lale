@@ -169,13 +169,6 @@ outputs with unit component-wise variances.""",
             ],
         },
         {
-            "description": "Option tol can be set for svd_solver arpack.",
-            "anyOf": [
-                {"type": "object", "properties": {"tol": {"enum": [0.0]}}},
-                {"type": "object", "properties": {"svd_solver": {"enum": ["arpack"]},}},
-            ],
-        },
-        {
             "description": "Option iterated_power can be set for svd_solver randomized.",
             "anyOf": [
                 {
