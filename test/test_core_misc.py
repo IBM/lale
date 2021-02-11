@@ -19,6 +19,7 @@ import io
 import logging
 import unittest
 import warnings
+from typing import Any, Dict
 
 from sklearn.datasets import load_iris
 
@@ -344,6 +345,70 @@ class TestClone(unittest.TestCase):
         X, y = iris.data, iris.target
         lr_trained = lr_trainable.fit(X, y)
         self.assertIsNot(lr_trainable._impl, lr_trained._impl)
+
+
+class TestGetParams(unittest.TestCase):
+    @classmethod
+    def remove_lale_params(cls, params: Dict[str, Any]) -> Dict[str, Any]:
+        return {k: v for (k, v) in params.items() if not k.startswith("_lale_")}
+
+    # @unittest.skip("currently incorrect")
+    # def test_shallow_planned_individual_operator(self):
+    #     op : Ops.PlannedIndividualOp = LogisticRegression
+    #     params = op.get_params(deep=False)
+    #     filtered_params = self.remove_lale_params(params)
+    #
+    #     expected = LogisticRegression.get_defaults()
+    #
+    #     self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trainable_individual_operator_defaults(self):
+        op: Ops.TrainableIndividualOp = LogisticRegression()
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trainable_individual_operator_configured(self):
+        op: Ops.TrainableIndividualOp = LogisticRegression(
+            LogisticRegression.solver.saga
+        )
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = dict(LogisticRegression.get_defaults())
+        expected["solver"] = "saga"
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trained_individual_operator_defaults(self):
+        op1: Ops.TrainableIndividualOp = LogisticRegression()
+        iris = load_iris()
+        op: Ops.TrainedIndividualOp = op1.fit(iris.data, iris.target)
+
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trained_individual_operator_configured(self):
+        op1: Ops.TrainableIndividualOp = LogisticRegression(
+            LogisticRegression.solver.saga
+        )
+        iris = load_iris()
+        op: Ops.TrainedIndividualOp = op1.fit(iris.data, iris.target)
+
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = dict(LogisticRegression.get_defaults())
+        expected["solver"] = "saga"
+
+        self.assertEqual(filtered_params, expected)
 
 
 class TestHyperparamRanges(unittest.TestCase):

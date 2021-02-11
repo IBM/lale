@@ -146,6 +146,7 @@ import os
 import shutil
 import warnings
 from abc import abstractmethod
+from types import MappingProxyType
 from typing import (
     AbstractSet,
     Any,
@@ -1214,7 +1215,11 @@ class IndividualOp(Operator):
         if not hasattr(self, "_hyperparam_defaults"):
             schema = self.hyperparam_schema()
             props = next(iter(schema.get("allOf", [])), {}).get("properties", {})
-            defaults = {k: props[k].get("default") for k in props.keys()}
+            # since we want to share this, we don't want callers
+            # to modify the returned dictionary, htereby modifying the defaults
+            defaults = MappingProxyType(
+                {k: props[k].get("default") for k in props.keys()}
+            )
             self._hyperparam_defaults = defaults
         return self._hyperparam_defaults
 

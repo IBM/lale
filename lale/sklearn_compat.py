@@ -28,6 +28,10 @@ from lale.helpers import (
     structure_type_name,
 )
 
+# This entire file is deprecated, and will be removed soon.
+# Please remove all calls to make_sklearn_compat from your code
+# as they are no longer needed
+
 
 def make_sklearn_compat(op):
     """This is a deprecated method for backward compatibility and will be removed soon"""
