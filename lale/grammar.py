@@ -8,11 +8,11 @@ from lale.operators import (
     Operator,
     OperatorChoice,
     PlannedOperator,
+    clone_op,
     make_choice,
     make_pipeline,
     make_pipeline_graph,
 )
-from lale.sklearn_compat import clone_op
 
 
 class NonTerminal(Operator):
@@ -23,6 +23,25 @@ class NonTerminal(Operator):
         out = {}
         out["name"] = self._name
         return out
+
+    def _with_params(self, try_mutate: bool, **impl_params) -> Operator:
+        """
+        This method updates the parameters of the operator.  NonTerminals do not support
+        in-place mutation
+        """
+        known_keys = set(["name"])
+        if impl_params:
+            new_keys = set(impl_params.keys())
+            if not new_keys.issubset(known_keys):
+                unknowns = {k: v for k, v in impl_params.items() if k not in known_keys}
+                raise ValueError(
+                    f"NonTerminal._with_params called with unknown parameters: {unknowns}"
+                )
+            else:
+                assert "name" in impl_params
+                return NonTerminal(impl_params["name"])
+        else:
+            return self
 
     def __init__(self, name):
         self._name = name
@@ -56,7 +75,18 @@ class Grammar(Operator):
         out = {}
         out["variables"] = self.variables
         # todo: support deep=True
+        # just like a higher order operator does
         return out
+
+    def _with_params(self, try_mutate: bool, **impl_params) -> Operator:
+        """
+        This method updates the parameters of the operator.
+        If try_mutate is set, it will attempt to update the operator in place
+        this may not always be possible
+        """
+        # TODO implement support
+        # from this point of view, Grammar is just a higher order operator
+        raise NotImplementedError("setting Grammar parameters is not yet supported")
 
     def __init__(self, variables: Dict[str, Operator] = {}):
         self._variables = variables

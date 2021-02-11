@@ -192,7 +192,7 @@ class SearchSpaceOperatorVisitor(Visitor):
         # we now augment the search space as needed with the specified hyper-parameters
         # even if they are marked as not relevant to the optimizer, we still want to include them now
         if hasattr(op, "_hyperparams"):
-            hyperparams = op._hyperparams
+            hyperparams = op.hyperparams()
             if hyperparams:
                 for (k, v) in hyperparams.items():
                     add_sub_space(space, k, v)

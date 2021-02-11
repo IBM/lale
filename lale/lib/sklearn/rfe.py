@@ -17,12 +17,11 @@ from sklearn.feature_selection import RFE as SKLModel
 
 import lale.docstrings
 import lale.operators
-from lale.sklearn_compat import make_sklearn_compat
 
 
 class RFEImpl:
     def __init__(self, estimator, **hyperparams):
-        self._hyperparams = {"estimator": make_sklearn_compat(estimator), **hyperparams}
+        self._hyperparams = {"estimator": estimator, **hyperparams}
         self._wrapped_model = SKLModel(**self._hyperparams)
 
     def fit(self, X, y):

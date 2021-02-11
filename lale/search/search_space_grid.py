@@ -19,6 +19,17 @@ import warnings
 from collections import ChainMap
 from typing import Any, Dict, Iterable, List, Optional, Union
 
+from lale.helpers import (
+    DUMMY_SEARCH_SPACE_GRID_PARAM_NAME,
+    discriminant_name,
+    make_indexed_name,
+    nest_all_HPparams,
+    nest_choice_all_HPparams,
+    structure_type_dict,
+    structure_type_list,
+    structure_type_name,
+    structure_type_tuple,
+)
 from lale.operators import PlannedOperator
 from lale.search.PGO import PGO
 from lale.search.schema2search_space import op_to_search_space
@@ -35,17 +46,6 @@ from lale.search.search_space import (
     SearchSpaceProduct,
     SearchSpaceSum,
     should_print_search_space,
-)
-from lale.sklearn_compat import (
-    DUMMY_SEARCH_SPACE_GRID_PARAM_NAME,
-    discriminant_name,
-    make_indexed_name,
-    nest_all_HPparams,
-    nest_choice_all_HPparams,
-    structure_type_dict,
-    structure_type_list,
-    structure_type_name,
-    structure_type_tuple,
 )
 from lale.util.Visitor import Visitor, accept
 

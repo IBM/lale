@@ -15,8 +15,7 @@
 import inspect
 import logging
 
-from lale.operators import Operator, get_op_from_lale_lib, make_operator
-from lale.sklearn_compat import clone_op
+from lale.operators import Operator, clone_op, get_op_from_lale_lib, make_operator
 
 logger = logging.getLogger(__name__)
 
