@@ -100,6 +100,7 @@ The column headers of the generated features will be appended to this and return
                     "description": "If text columns are sent, then text detection is not done again.",
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
+                        {"type": "array", "items": {"type": "integer"}},
                         {"enum": [None]},
                     ],
                     "default": None,

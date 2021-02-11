@@ -502,16 +502,17 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     def get_equivalent_lale_op(sklearn_obj, fitted):
         import lale.operators
         import lale.type_checking
+        from lale.sklearn_compat import SKlearnCompatWrapper
 
         if isinstance(sklearn_obj, lale.operators.Operator):
             return sklearn_obj
-
+        elif isinstance(sklearn_obj, SKlearnCompatWrapper):
+            return sklearn_obj.to_lale()
         # Validate that the sklearn_obj is a valid sklearn-compatible object
         if sklearn_obj is None or not hasattr(sklearn_obj, "get_params"):
             raise ValueError(
                 "The input pipeline has a step that is not scikit-learn compatible."
             )
-
         orig_hyperparams = sklearn_obj.get_params()
         higher_order = False
         for hp_name, hp_val in orig_hyperparams.items():

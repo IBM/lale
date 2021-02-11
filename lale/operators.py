@@ -1819,16 +1819,25 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         assert result.is_frozen_trainable(), str(result.free_hyperparams())
         return result
 
-    def hyperparams(self):
+    def hyperparams(self) -> Optional[Dict[str, Any]]:
+        import numpy as np
+
         if self._hyperparams is None:
             return None
         actuals = self._hyperparams
         defaults = self.get_defaults()
-        actuals_minus_defaults = {
-            k: actuals[k]
-            for k in actuals
-            if k not in defaults or actuals[k] != defaults[k]
-        }
+        actuals_minus_defaults: Dict[str, Any] = {}
+        for k, _ in actuals.items():
+            try:
+                if k not in defaults or actuals[k] != defaults[k]:
+                    actuals_minus_defaults[k] = actuals[k]
+            except ValueError:  # occurs for numpy arrays
+                try:
+                    if k not in defaults or np.any(actuals[k] != defaults[k]):
+                        actuals_minus_defaults[k] = actuals[k]
+                except BaseException:
+                    actuals_minus_defaults[k] = actuals[k]
+
         if not hasattr(self, "_hyperparam_positionals"):
             sig = inspect.signature(self._impl_class().__init__)
             positionals = {

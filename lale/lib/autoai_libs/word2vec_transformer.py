@@ -107,6 +107,7 @@ appended to this.""",
                     "description": "If passed, then word2vec features are applied to these columns.",
                     "anyOf": [
                         {"type": "array", "items": {"type": "string"}},
+                        {"type": "array", "items": {"type": "integer"}},
                         {"enum": [None]},
                     ],
                     "default": None,
