@@ -909,6 +909,30 @@ class TestHigherOrderOperators(unittest.TestCase):
         )
 
 
+class TestSelectKBestTransformer(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_hyperopt(self):
+        from lale.lib.sklearn import SelectKBest
+
+        planned = SelectKBest >> LogisticRegression
+        trained = planned.auto_configure(
+            self.X_train,
+            self.y_train,
+            cv=3,
+            optimizer=Hyperopt,
+            max_evals=3,
+            verbose=True,
+        )
+        _ = trained.predict(self.X_test)
+
+
 class TestTopKVotingClassifier(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris

@@ -71,8 +71,14 @@ class GridSearchCVImpl:
 
         observed_op = op
         obs = self._hyperparams["observer"]
-        if obs is not None:
-            observed_op = Observing(op=op, observer=obs)
+        # We always create an observer.
+        # Otherwise, we can have a problem with PlannedOperators
+        # (that are not trainable):
+        # GridSearchCV checks if a fit method is present before
+        # configuring the operator, and our planned operators
+        # don't have a fit method
+        # Observing always has a fit method, and so solves this problem.
+        observed_op = Observing(op=op, observer=obs)
 
         hp_grid = self._hyperparams["hp_grid"]
         data_schema = lale.helpers.fold_schema(
@@ -86,14 +92,24 @@ class GridSearchCVImpl:
                 pgo=self._hyperparams["pgo"],
                 data_schema=data_schema,
             )
+        else:
+            # if hp_grid is specified manually, we need to add a level of nesting
+            # since we are wrapping it in an observer
+            if isinstance(hp_grid, list):
+                hp_grid = lale.helpers.nest_all_HPparams("op", hp_grid)
+            else:
+                assert isinstance(hp_grid, dict)
+                hp_grid = lale.helpers.nest_HPparams("op", hp_grid)
+
         if not hp_grid and isinstance(op, lale.operators.IndividualOp):
             hp_grid = [
-                lale.search.lale_grid_search_cv.get_defaults_as_param_grid(observed_op)
+                lale.search.lale_grid_search_cv.get_defaults_as_param_grid(observed_op)  # type: ignore
             ]
         be: lale.operators.TrainableOperator
         if hp_grid:
             if obs is not None:
-                observed_op._impl.startObserving(
+                impl = observed_op._impl  # type: ignore
+                impl.startObserving(
                     "optimize",
                     hp_grid=hp_grid,
                     op=op,
@@ -103,7 +119,7 @@ class GridSearchCVImpl:
                 )
             try:
                 self.grid = lale.search.lale_grid_search_cv.get_lale_gridsearchcv_op(
-                    lale.sklearn_compat.make_sklearn_compat(observed_op),
+                    observed_op,
                     hp_grid,
                     cv=self._hyperparams["cv"],
                     verbose=self._hyperparams["verbose"],
@@ -111,19 +127,22 @@ class GridSearchCVImpl:
                     n_jobs=self._hyperparams["n_jobs"],
                 )
                 self.grid.fit(X, y)
-                be = self.grid.best_estimator_.to_lale()
+                be = self.grid.best_estimator_
             except BaseException as e:
                 if obs is not None:
-                    assert isinstance(observed_op._impl, ObservingImpl)
-                    observed_op._impl.failObserving("optimize", e)
+                    impl = observed_op._impl  # type: ignore
+                    assert isinstance(impl, ObservingImpl)
+                    impl.failObserving("optimize", e)
                 raise
 
-            if obs is not None:
-                impl = getattr(be, "_impl")
-                if impl is not None:
-                    assert isinstance(impl, ObservingImpl)
-                    be = impl.getOp()
-                    observed_op._impl.endObserving("optimize", best=be)
+            impl = getattr(be, "_impl", None)
+            if impl is not None:
+                assert isinstance(impl, ObservingImpl)
+                be = impl.getOp()
+                if obs is not None:
+                    obs_impl = observed_op._impl  # type: ignore
+
+                    obs_impl.endObserving("optimize", best=be)
         else:
             assert isinstance(op, lale.operators.TrainableOperator)
             be = op
@@ -142,7 +161,8 @@ class GridSearchCVImpl:
         if result is None or astype == "lale":
             return result
         assert astype == "sklearn", astype
-        return lale.sklearn_compat.make_sklearn_compat(result)
+        # TODO: should this try and return an actual sklearn pipeline?
+        return result
 
 
 _hyperparams_schema = {

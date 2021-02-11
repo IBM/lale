@@ -217,7 +217,8 @@ or with
         if result is None or astype == "lale":
             return result
         assert astype == "sklearn", astype
-        return lale.sklearn_compat.make_sklearn_compat(result)
+        # TODO: should this try and return an actual sklearn pipeline?
+        return result
 
 
 _hyperparams_schema = {

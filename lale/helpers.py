@@ -21,7 +21,18 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import h5py
 import jsonschema
@@ -434,8 +445,9 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
 
     if isinstance(lale_object, PlannedIndividualOp):
         new_hyperparams: Dict[str, Any] = dict_without(hyperparams, "name")
-        if lale_object._hyperparams is not None:
-            obj_hyperparams = dict(lale_object._hyperparams)
+        hps = lale_object.hyperparams()
+        if hps is not None:
+            obj_hyperparams = dict(hps)
         else:
             obj_hyperparams = {}
 
@@ -548,7 +560,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             lale_op = class_
         else:
             lale_op = lale.operators.TrainedIndividualOp(
-                class_._name, class_._impl, class_._schemas, None
+                class_._name, class_._impl, class_._schemas, None, _lale_trained=True
             )
 
         try:
@@ -767,3 +779,140 @@ def add_missing_values(orig_X, missing_rate=0.1, seed=None):
                 i_missing_sample += 1
                 missing_X.iloc[i_sample, i_feature] = np.nan
     return missing_X
+
+
+# helpers for manipulating (extended) sklearn style paths.
+# documentation of the path format is part of the operators module docstring
+
+
+def partition_sklearn_params(
+    d: Dict[str, Any]
+) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    sub_parts: Dict[str, Dict[str, Any]] = {}
+    main_parts: Dict[str, Any] = {}
+
+    for k, v in d.items():
+        ks = k.split("__", 1)
+        if len(ks) == 1:
+            assert k not in main_parts
+            main_parts[k] = v
+        else:
+            assert len(ks) == 2
+            bucket: Dict[str, Any] = {}
+            group: str = ks[0]
+            param: str = ks[1]
+            if group in sub_parts:
+                bucket = sub_parts[group]
+            else:
+                sub_parts[group] = bucket
+            assert param not in bucket
+            bucket[param] = v
+    return (main_parts, sub_parts)
+
+
+def partition_sklearn_choice_params(d: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    discriminant_value: int = -1
+    choice_parts: Dict[str, Any] = {}
+
+    for k, v in d.items():
+        if k == discriminant_name:
+            assert discriminant_value == -1
+            discriminant_value = int(v)
+        else:
+            k_rest = unnest_choice(k)
+            choice_parts[k_rest] = v
+    assert discriminant_value != -1
+    return (discriminant_value, choice_parts)
+
+
+DUMMY_SEARCH_SPACE_GRID_PARAM_NAME: str = "$"
+discriminant_name: str = "?"
+choice_prefix: str = "?"
+structure_type_name: str = "#"
+structure_type_list: str = "list"
+structure_type_tuple: str = "tuple"
+structure_type_dict: str = "dict"
+
+
+def get_name_and_index(name: str) -> Tuple[str, int]:
+    """ given a name of the form "name@i", returns (name, i)
+        if given a name of the form "name", returns (name, 0)
+    """
+    splits = name.split("@", 1)
+    if len(splits) == 1:
+        return splits[0], 0
+    else:
+        return splits[0], int(splits[1])
+
+
+def make_degen_indexed_name(name, index):
+    return f"{name}@{index}"
+
+
+def make_indexed_name(name, index):
+    if index == 0:
+        return name
+    else:
+        return f"{name}@{index}"
+
+
+def make_array_index_name(index, is_tuple: bool = False):
+    sep = "##" if is_tuple else "#"
+    return f"{sep}{str(index)}"
+
+
+def is_numeric_structure(structure_type: str):
+
+    if structure_type == "list" or structure_type == "tuple":
+        return True
+    elif structure_type == "dict":
+        return False
+    else:
+        assert False, f"Unknown structure type {structure_type} found"
+
+
+V = TypeVar("V")
+
+
+def nest_HPparam(name: str, key: str):
+    if key == DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:
+        # we can get rid of the dummy now, since we have a name for it
+        return name
+    return name + "__" + key
+
+
+def nest_HPparams(name: str, grid: Mapping[str, V]) -> Dict[str, V]:
+    return {(nest_HPparam(name, k)): v for k, v in grid.items()}
+
+
+def nest_all_HPparams(
+    name: str, grids: Iterable[Mapping[str, V]]
+) -> List[Dict[str, V]]:
+    """ Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
+        to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """
+    return [nest_HPparams(name, grid) for grid in grids]
+
+
+def nest_choice_HPparam(key: str):
+    return choice_prefix + key
+
+
+def nest_choice_HPparams(grid: Mapping[str, V]) -> Dict[str, V]:
+    return {(nest_choice_HPparam(k)): v for k, v in grid.items()}
+
+
+def nest_choice_all_HPparams(grids: Iterable[Mapping[str, V]]) -> List[Dict[str, V]]:
+    """ this transforms every key(parameter name) in the grids
+        to be nested under a choice, using a ? as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """
+    return [nest_choice_HPparams(grid) for grid in grids]
+
+
+def unnest_choice(k: str) -> str:
+    assert k.startswith(choice_prefix)
+    return k[len(choice_prefix) :]
+
+
+def unnest_HPparams(k: str) -> List[str]:
+    return k.split("__")

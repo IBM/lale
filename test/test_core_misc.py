@@ -19,6 +19,7 @@ import io
 import logging
 import unittest
 import warnings
+from typing import Any, Dict
 
 from sklearn.datasets import load_iris
 
@@ -35,7 +36,6 @@ from lale.lib.sklearn import (
     OneHotEncoder,
     RandomForestClassifier,
 )
-from lale.sklearn_compat import make_sklearn_compat
 
 
 class TestTags(unittest.TestCase):
@@ -245,7 +245,7 @@ class TestClone(unittest.TestCase):
 
         lr = LogisticRegression()
         trainable = PCA() >> lr
-        trainable_wrapper = make_sklearn_compat(trainable)
+        trainable_wrapper = trainable
         trainable2 = clone(trainable_wrapper)
         _ = clone(trainable)
         with warnings.catch_warnings():
@@ -264,7 +264,7 @@ class TestClone(unittest.TestCase):
 
         lr = LogisticRegression()
         trainable = (PCA() | NoOp) >> lr
-        trainable_wrapper = make_sklearn_compat(trainable)
+        trainable_wrapper = trainable
         _ = clone(trainable_wrapper)
         _ = clone(trainable)
 
@@ -347,6 +347,170 @@ class TestClone(unittest.TestCase):
         self.assertIsNot(lr_trainable._impl, lr_trained._impl)
 
 
+class TestGetParams(unittest.TestCase):
+    @classmethod
+    def remove_lale_params(cls, params: Dict[str, Any]) -> Dict[str, Any]:
+        return {k: v for (k, v) in params.items() if not k.startswith("_lale_")}
+
+    def test_shallow_planned_individual_operator(self):
+        op: Ops.PlannedIndividualOp = LogisticRegression
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trainable_individual_operator_defaults(self):
+        op: Ops.TrainableIndividualOp = LogisticRegression()
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trainable_individual_operator_configured(self):
+        op: Ops.TrainableIndividualOp = LogisticRegression(
+            LogisticRegression.solver.saga
+        )
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = dict(LogisticRegression.get_defaults())
+        expected["solver"] = "saga"
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trained_individual_operator_defaults(self):
+        op1: Ops.TrainableIndividualOp = LogisticRegression()
+        iris = load_iris()
+        op: Ops.TrainedIndividualOp = op1.fit(iris.data, iris.target)
+
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_trained_individual_operator_configured(self):
+        op1: Ops.TrainableIndividualOp = LogisticRegression(
+            LogisticRegression.solver.saga
+        )
+        iris = load_iris()
+        op: Ops.TrainedIndividualOp = op1.fit(iris.data, iris.target)
+
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = dict(LogisticRegression.get_defaults())
+        expected["solver"] = "saga"
+
+        self.assertEqual(filtered_params, expected)
+
+    def test_shallow_planned_pipeline(self):
+        op: Ops.PlannedPipeline = PCA >> LogisticRegression
+
+        params = op.get_params(deep=False)
+        assert "steps" in params
+        assert "preds" in params
+        assert "ordered" in params
+        assert params["ordered"] is True
+        pca = params["steps"][0]
+        lr = params["steps"][1]
+        assert isinstance(pca, Ops.PlannedIndividualOp)
+        assert isinstance(lr, Ops.PlannedIndividualOp)
+        lr_params = lr.get_params()
+        lr_filtered_params = self.remove_lale_params(lr_params)
+
+        lr_expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(lr_filtered_params, lr_expected)
+
+    def test_shallow_planned_pipeline_with_trainable_default(self):
+        op: Ops.PlannedPipeline = PCA >> LogisticRegression()
+
+        params = op.get_params(deep=False)
+        assert "steps" in params
+        assert "preds" in params
+        assert "ordered" in params
+        assert params["ordered"] is True
+        pca = params["steps"][0]
+        lr = params["steps"][1]
+        assert isinstance(pca, Ops.PlannedIndividualOp)
+        assert isinstance(lr, Ops.TrainableIndividualOp)
+        lr_params = lr.get_params()
+        lr_filtered_params = self.remove_lale_params(lr_params)
+
+        lr_expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(lr_filtered_params, lr_expected)
+
+    def test_shallow_planned_pipeline_with_trainable_configured(self):
+        op: Ops.PlannedPipeline = PCA >> LogisticRegression(
+            LogisticRegression.solver.saga
+        )
+
+        params = op.get_params(deep=False)
+        assert "steps" in params
+        assert "preds" in params
+        assert "ordered" in params
+        assert params["ordered"] is True
+        pca = params["steps"][0]
+        lr = params["steps"][1]
+        assert isinstance(pca, Ops.PlannedIndividualOp)
+        assert isinstance(lr, Ops.TrainableIndividualOp)
+        lr_params = lr.get_params()
+        lr_filtered_params = self.remove_lale_params(lr_params)
+
+        lr_expected = dict(LogisticRegression.get_defaults())
+        lr_expected["solver"] = "saga"
+
+        self.assertEqual(lr_filtered_params, lr_expected)
+
+    def test_shallow_trainable_pipeline_default(self):
+        op: Ops.TrainablePipeline = PCA() >> LogisticRegression()
+
+        params = op.get_params(deep=False)
+        assert "steps" in params
+        assert "preds" in params
+        assert "ordered" in params
+        assert params["ordered"] is True
+        pca = params["steps"][0]
+        lr = params["steps"][1]
+        assert isinstance(pca, Ops.TrainableIndividualOp)
+        assert isinstance(lr, Ops.TrainableIndividualOp)
+        lr_params = lr.get_params()
+        lr_filtered_params = self.remove_lale_params(lr_params)
+
+        lr_expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(lr_filtered_params, lr_expected)
+
+    def test_shallow_trainable_pipeline_configured(self):
+        op: Ops.TrainablePipeline = PCA() >> LogisticRegression(
+            LogisticRegression.solver.saga
+        )
+
+        params = op.get_params(deep=False)
+        assert "steps" in params
+        assert "preds" in params
+        assert "ordered" in params
+        assert params["ordered"] is True
+        pca = params["steps"][0]
+        lr = params["steps"][1]
+        assert isinstance(pca, Ops.TrainableIndividualOp)
+        assert isinstance(lr, Ops.TrainableIndividualOp)
+        lr_params = lr.get_params()
+        lr_filtered_params = self.remove_lale_params(lr_params)
+
+        lr_expected = dict(LogisticRegression.get_defaults())
+        lr_expected["solver"] = "saga"
+
+        self.assertEqual(lr_filtered_params, lr_expected)
+
+
 class TestHyperparamRanges(unittest.TestCase):
     def exactly_relevant_properties(self, keys1, operator):
         def sorted(ll):
@@ -409,7 +573,7 @@ class TestHyperparamRanges(unittest.TestCase):
             PCA,
             RandomForestClassifier,
         ]:
-            skop = make_sklearn_compat(op)
+            skop = op
             self.validate_get_param_ranges(skop)
             self.validate_get_param_dist(skop)
 

@@ -380,7 +380,6 @@ class TestWrapUnknownOps(unittest.TestCase):
         from sklearn.base import clone
 
         from lale.operators import TrainableIndividualOp, make_operator
-        from lale.sklearn_compat import make_sklearn_compat
 
         self.assertFalse(isinstance(UnknownOp, TrainableIndividualOp))
         instance = UnknownOp(n_neighbors=3)
@@ -390,10 +389,10 @@ class TestWrapUnknownOps(unittest.TestCase):
         assert isinstance(
             wrapped, TrainableIndividualOp
         )  # help type checkers that don't know about assertTrue
-        self.assertEqual(wrapped.hyperparams(), {"n_neighbors": 3})
-        cloned = clone(make_sklearn_compat(wrapped)).to_lale()
+        self.assertEqual(wrapped.reduced_hyperparams(), {"n_neighbors": 3})
+        cloned = clone(wrapped)
         self.assertTrue(isinstance(cloned, TrainableIndividualOp))
-        self.assertEqual(cloned.hyperparams(), {"n_neighbors": 3})
+        self.assertEqual(cloned.reduced_hyperparams(), {"n_neighbors": 3})
 
 
 class TestFreeze(unittest.TestCase):
