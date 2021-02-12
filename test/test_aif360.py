@@ -251,6 +251,14 @@ class TestAIF360Num(unittest.TestCase):
         test_y = self.boston["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
+    def test_scorers_combine(self):
+        fairness_info = self.boston["fairness_info"]
+        combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fairness_info)
+        for r2 in [-2, 0, 0.5, 1]:
+            for disp_impact in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
+                score = combined_scorer._combine(r2, disp_impact)
+                print(f"r2 {r2:5.2f}, di {disp_impact:.2f}, score {score:5.2f}")
+
     def _attempt_remi_creditg_pd_num(
         self, fairness_info, trainable_remi, min_di, max_di
     ):
