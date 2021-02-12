@@ -471,11 +471,11 @@ class _R2AndDisparateImpact:
         else:
             scaling_factor = 1.0
         scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
-        positive_r2 = 1.0 - r2
-        scaled_r2 = positive_r2 / scaling_factor ** scaling_hardness
-        result = 1.0 - scaled_r2
+        positive_r2 = 1 / (2.0 - r2)
+        scaled_r2 = positive_r2 * scaling_factor ** scaling_hardness
+        result = 2.0 - 1 / scaled_r2
         assert result <= r2 <= 1.0, (result, r2)
-        assert symmetric_impact >= 0.9 or result < r2
+        assert symmetric_impact >= 0.9 or result < r2, (symmetric_impact, result, r2)
         return result
 
     def scoring(self, y_true=None, y_pred=None, X=None):
