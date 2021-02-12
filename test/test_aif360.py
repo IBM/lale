@@ -257,8 +257,7 @@ class TestAIF360Num(unittest.TestCase):
         for r2 in [-2, 0, 0.5, 1]:
             for disp_impact in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
                 score = combined_scorer._combine(r2, disp_impact)
-                if True:
-                    print(f"r2 {r2:5.2f}, di {disp_impact:.2f}, score {score:5.2f}")
+                print(f"r2 {r2:5.2f}, di {disp_impact:.2f}, score {score:5.2f}")
 
     def _attempt_remi_creditg_pd_num(
         self, fairness_info, trainable_remi, min_di, max_di
