@@ -99,7 +99,7 @@ The following picture illustrates the core operator class hierarchy.
 
 - scikit-learn compatibility:
   lale Operators attempt to behave like reasonable sckit-learn operators when possible.
-  In particular, operators support
+  In particular, operators support:
   - get_params to return the hyperparameter settings for an operator.
     (Note that setting deep=True is currently ignored, but we plan on supporting it
     in a future version).
@@ -175,6 +175,15 @@ import lale.json_operator
 import lale.pretty_print
 import lale.type_checking
 from lale import schema2enums as enum_gen
+from lale.helpers import (
+    get_name_and_index,
+    is_numeric_structure,
+    make_degen_indexed_name,
+    make_indexed_name,
+    partition_sklearn_choice_params,
+    partition_sklearn_params,
+    structure_type_name,
+)
 from lale.json_operator import JSON_TYPE
 from lale.schemas import Schema
 from lale.search.PGO import remove_defaults_dict
@@ -542,14 +551,20 @@ class Operator(metaclass=AbstractVisitorMeta):
         cp = clone(self)
         return cp
 
-    def set_params(self, **impl_params):
-        import lale.sklearn_compat
+    def with_params(self, **impl_params):
+        """This implements a functional version of set_params
+           which returns a new operator instead of modifying the original
+           """
+        return self._with_params(False, **impl_params)
 
-        fixed_params = dict(**impl_params)
-        new_s = lale.sklearn_compat.set_operator_params(self, **fixed_params)
-        #            if not isinstance(new_s, Ops.TrainableOperator):
-        #                assert False
-        return new_s
+    @abstractmethod
+    def _with_params(self, try_mutate: bool, **impl_params) -> "Operator":
+        """
+        This method updates the parameters of the operator.
+        If try_mutate is set, it will attempt to update the operator in place,
+        although this may not always be possible
+        """
+        pass
 
     def to_lale(self):
         """This is a deprecated method for backward compatibility and will be removed soon"""
@@ -1033,6 +1048,95 @@ class IndividualOp(Operator):
         out["_lale_frozen_hyperparameters"] = cached_frozen_keys
 
         return out
+
+    def _with_params(self, try_mutate: bool, **impl_params) -> "IndividualOp":
+        main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
+        hyper = self._hyperparams
+        if hyper is None:
+            hyper = {}
+        else:
+            hyper = dict(hyper)
+        # we set the sub params first
+        for sub_key, sub_params in partitioned_sub_params.items():
+            set_structured_params(try_mutate, sub_key, sub_params, hyper)
+
+        # we have now updated any nested operators
+        # (if this is a higher order operator)
+        # and can work on the main operator
+        all_params = {**hyper, **main_params}
+        filtered_impl_params = _fixup_hyperparams_dict(all_params)
+        # These are used by lale.  Since they are returned by get_param
+        # they may show up here (if the user calls get_param, changes
+        # a values, and then calls set_param), so we remove them here
+
+        filtered_impl_params.pop("_lale_name", None)
+        filtered_impl_params.pop("_lale_impl", None)
+        filtered_impl_params.pop("_lale_schemas", None)
+        filtered_impl_params.pop("_lale_frozen_hyperparameters", None)
+
+        return self._with_op_params(try_mutate, **all_params)
+
+    def _with_op_params(
+        self, try_mutate: bool, **impl_params
+    ) -> "TrainableIndividualOp":
+        # for an individual (and planned individual) operator,
+        # we don't mutate the operator itself even if try_mutate is True
+
+        res = self._configure(**impl_params)
+        return res
+
+    def _configure(self, *args, **kwargs) -> "TrainableIndividualOp":
+        class_ = self._impl_class()
+        hyperparams = {}
+        for arg in args:
+            k, v = self._enum_to_strings(arg)
+            hyperparams[k] = v
+        for k, v in _fixup_hyperparams_dict(kwargs).items():
+
+            if k in hyperparams:
+                raise ValueError("Duplicate argument {}.".format(k))
+            v = lale.helpers.val_wrapper.unwrap(v)
+            if isinstance(v, enumeration.Enum):
+                k2, v2 = self._enum_to_strings(v)
+                if k != k2:
+                    raise ValueError(
+                        "Invalid keyword {} for argument {}.".format(k2, v2)
+                    )
+            else:
+                v2 = v
+            hyperparams[k] = v2
+        # using params_all instead of hyperparams to ensure the construction is consistent with schema
+        trainable_to_get_params = TrainableIndividualOp(
+            _lale_name=self.name(),
+            _lale_impl=class_,
+            _lale_schemas=self._schemas,
+            _lale_frozen_hyperparameters=None,
+        )
+        trainable_to_get_params._hyperparams = hyperparams
+        params_all = trainable_to_get_params._get_params_all()
+        self._validate_hyperparams(hyperparams, params_all, self.hyperparam_schema())
+        if len(params_all) == 0:
+            impl = class_()
+        else:
+            impl = class_(**params_all)
+
+        if self._should_configure_trained(impl):
+            result: TrainableIndividualOp = TrainedIndividualOp(
+                _lale_name=self.name(),
+                _lale_impl=impl,
+                _lale_schemas=self._schemas,
+                _lale_frozen_hyperparameters=None,
+                _lale_trained=True,
+            )
+        else:
+            result = TrainableIndividualOp(
+                _lale_name=self.name(),
+                _lale_impl=impl,
+                _lale_schemas=self._schemas,
+                _lale_frozen_hyperparameters=None,
+            )
+        result._hyperparams = hyperparams
+        return result
 
     @property
     def enum(self) -> _DictionaryObjectForEnum:
@@ -1665,70 +1769,6 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         assert isinstance(trained, TrainedIndividualOp)
         return trained
 
-    def set_op_params(self, **impl_params):
-        filtered_impl_params = _fixup_hyperparams_dict(impl_params)
-        filtered_impl_params.pop("_lale_name", None)
-        filtered_impl_params.pop("_lale_impl", None)
-        filtered_impl_params.pop("_lale_schemas", None)
-        filtered_impl_params.pop("_lale_frozen_hyperparameters", None)
-
-        res = self._configure(**impl_params)
-        res._move_into(self)
-        return self
-
-    def _configure(self, *args, **kwargs) -> "TrainableIndividualOp":
-        class_ = self._impl_class()
-        hyperparams = {}
-        for arg in args:
-            k, v = self._enum_to_strings(arg)
-            hyperparams[k] = v
-        for k, v in _fixup_hyperparams_dict(kwargs).items():
-
-            if k in hyperparams:
-                raise ValueError("Duplicate argument {}.".format(k))
-            v = lale.helpers.val_wrapper.unwrap(v)
-            if isinstance(v, enumeration.Enum):
-                k2, v2 = self._enum_to_strings(v)
-                if k != k2:
-                    raise ValueError(
-                        "Invalid keyword {} for argument {}.".format(k2, v2)
-                    )
-            else:
-                v2 = v
-            hyperparams[k] = v2
-        # using params_all instead of hyperparams to ensure the construction is consistent with schema
-        trainable_to_get_params = TrainableIndividualOp(
-            _lale_name=self.name(),
-            _lale_impl=class_,
-            _lale_schemas=self._schemas,
-            _lale_frozen_hyperparameters=None,
-        )
-        trainable_to_get_params._hyperparams = hyperparams
-        params_all = trainable_to_get_params._get_params_all()
-        self._validate_hyperparams(hyperparams, params_all, self.hyperparam_schema())
-        if len(params_all) == 0:
-            impl = class_()
-        else:
-            impl = class_(**params_all)
-
-        if self._should_configure_trained(impl):
-            result: TrainableIndividualOp = TrainedIndividualOp(
-                _lale_name=self.name(),
-                _lale_impl=impl,
-                _lale_schemas=self._schemas,
-                _lale_frozen_hyperparameters=None,
-                _lale_trained=True,
-            )
-        else:
-            result = TrainableIndividualOp(
-                _lale_name=self.name(),
-                _lale_impl=impl,
-                _lale_schemas=self._schemas,
-                _lale_frozen_hyperparameters=None,
-            )
-        result._hyperparams = hyperparams
-        return result
-
     def __call__(self, *args, **kwargs) -> "TrainableIndividualOp":
         return self._configure(*args, **kwargs)
 
@@ -1806,31 +1846,14 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             _lale_name, _lale_impl, _lale_schemas, _lale_frozen_hyperparameters, **hp
         )
 
-    def _move_into(self, victim: PlannedIndividualOp) -> None:
-        fields: List[str] = [
-            "_name",
-            "_schemas",
-            "_hyperparams",
-            "_impl",
-            "_impl_class",
-            "_cached_frozen_hyperparameters",
-            "_trained",
-            "_frozen_trained",
-        ]
-        for f in fields:
-            try:
-                setattr(victim, f, getattr(self, f))
-            except AttributeError:
-                pass
-        victim.__class__ = self.__class__
+    def set_params(self, **impl_params):
+        """This implements the set_params, as per the scikit-learn convention,
+           extended as documented in the module docstring"""
+        return self._with_params(True, **impl_params)
 
-    def set_op_params(self, **impl_params):
-        filtered_impl_params = _fixup_hyperparams_dict(impl_params)
-        filtered_impl_params.pop("_lale_name", None)
-        filtered_impl_params.pop("_lale_impl", None)
-        filtered_impl_params.pop("_lale_schemas", None)
-        filtered_impl_params.pop("_lale_frozen_hyperparameters", None)
-
+    def _with_op_params(self, try_mutate, **impl_params) -> "TrainableIndividualOp":
+        if not try_mutate:
+            return super()._with_op_params(try_mutate)
         if self._hyperparams:
             hyperparams = {**self._hyperparams, **impl_params}
         else:
@@ -2507,6 +2530,73 @@ class BasePipeline(Operator, Generic[OpType]):
             # TODO: do something here
             pass
         return out
+
+    def set_params(self, **impl_params):
+        """This implements the set_params, as per the scikit-learn convention,
+           extended as documented in the module docstring"""
+        return self._with_params(True, **impl_params)
+
+    def _with_params(self, try_mutate: bool, **impl_params) -> "BasePipeline[OpType]":
+        steps = self.steps()
+        main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
+        assert not main_params, f"Unexpected non-nested arguments {main_params}"
+        found_names: Dict[str, int] = {}
+        step_map: Dict[OpType, OpType] = {}
+        for s in steps:
+            name = s.name()
+            name_index = 0
+            params: Dict[str, Any] = {}
+            if name in found_names:
+                name_index = found_names[name] + 1
+                found_names[name] = name_index
+                uname = make_indexed_name(name, name_index)
+                if uname in partitioned_sub_params:
+                    params = partitioned_sub_params[uname]
+            else:
+                found_names[name] = 0
+                uname = make_degen_indexed_name(name, 0)
+                if uname in partitioned_sub_params:
+                    params = partitioned_sub_params[uname]
+                    assert name not in partitioned_sub_params
+                elif name in partitioned_sub_params:
+                    params = partitioned_sub_params[name]
+            new_s = s._with_params(try_mutate, **params)
+            if s != new_s:
+                # getting this to statically type check would be very complicated
+                # if even possible
+                step_map[s] = new_s  # type: ignore
+        # make sure that no parameters were passed in for operations
+        # that are not actually part of this pipeline
+        for k in partitioned_sub_params.keys():
+            n, i = get_name_and_index(k)
+            assert n in found_names and i <= found_names[n]
+
+        if try_mutate:
+            if step_map:
+                self._subst_steps(step_map)
+
+            pipeline_graph_class = _pipeline_graph_class(self.steps())
+            self.__class__ = pipeline_graph_class  # type: ignore
+            return self
+        else:
+            needs_copy = False
+            if step_map:
+                needs_copy = True
+            else:
+                pipeline_graph_class = _pipeline_graph_class(self.steps())
+                if pipeline_graph_class != self.__class__:
+                    needs_copy = True
+            if needs_copy:
+                # it may be better practice to change the steps/edges ahead of time
+                # and then create the correct class
+                op_copy = make_pipeline_graph(self.steps(), self.edges(), ordered=True)  # type: ignore
+                op_copy._subst_steps(step_map)
+
+                pipeline_graph_class = _pipeline_graph_class(op_copy.steps())
+                op_copy.__class__ = pipeline_graph_class  # type: ignore
+                return op_copy
+            else:
+                return self
 
     def __init__(
         self,
@@ -3672,6 +3762,37 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
             pass
         return out
 
+    def set_params(self, **impl_params):
+        """This implements the set_params, as per the scikit-learn convention,
+           extended as documented in the module docstring"""
+        return self._with_params(True, **impl_params)
+
+    # TODO: enhance to support setting params of a choice without picking a choice
+    # TODO: also, enhance to support mutating it in place?
+    def _with_params(self, try_mutate: bool, **impl_params) -> Operator:
+        """
+        This method updates the parameters of the operator.
+        If try_mutate is set, it will attempt to update the operator in place
+        this may not always be possible
+        """
+        choices = self.steps()
+        choice_index: int
+        choice_params: Dict[str, Any]
+        if len(choices) == 1:
+            choice_index = 0
+            chosen_params = impl_params
+        else:
+            (choice_index, chosen_params) = partition_sklearn_choice_params(impl_params)
+
+        assert 0 <= choice_index and choice_index < len(choices)
+        choice: Operator = choices[choice_index]
+
+        new_step = choice._with_params(try_mutate, **chosen_params)
+        # in the functional case
+        # we remove the OperatorChoice, replacing it with the branch that was taken
+        # TODO: in the mutating case, we could update this choice
+        return new_step
+
     def __init__(self, steps, name: Optional[str] = None) -> None:
         if name is None or name == "":
             name = lale.helpers.assignee_name(level=2)
@@ -4061,3 +4182,70 @@ def clone_op(op: CloneOpType, name: str = None) -> CloneOpType:
     if name:
         nop._set_name(name)
     return nop
+
+
+def set_structured_params(try_mutate, k, params: Dict[str, Any], hyper_parent):
+    # need to handle the different encoding schemes used
+    if params is None:
+        return None
+    if structure_type_name in params:
+        # this is a structured type
+        structure_type = params[structure_type_name]
+        type_params, sub_params = partition_sklearn_params(params)
+
+        hyper = None
+        if isinstance(hyper_parent, dict):
+            hyper = hyper_parent.get(k, None)
+        elif isinstance(hyper_parent, list) and k < len(hyper_parent):
+            hyper = hyper_parent[k]
+        if hyper is None:
+            hyper = {}
+        elif isinstance(hyper, tuple):
+            # to make it mutable
+            hyper = list(hyper)
+
+        del type_params[structure_type_name]
+        actual_key: Union[str, int]
+        for elem_key, elem_value in type_params.items():
+            if elem_value is not None:
+                if not isinstance(hyper, dict):
+                    assert is_numeric_structure(structure_type)
+                    actual_key = int(elem_key)
+                    # we may need to extend the array
+                    try:
+                        hyper[actual_key] = elem_value
+                    except IndexError:
+                        assert 0 <= actual_key
+                        hyper.extend((actual_key - len(hyper)) * [None])
+                        hyper.append(elem_value)
+                else:
+                    actual_key = elem_key
+                    hyper[actual_key] = elem_value
+
+        for elem_key, elem_params in sub_params.items():
+            if not isinstance(hyper, dict):
+                assert is_numeric_structure(structure_type)
+                actual_key = int(elem_key)
+            else:
+                actual_key = elem_key
+            set_structured_params(try_mutate, actual_key, elem_params, hyper)
+        if isinstance(hyper, dict) and is_numeric_structure(structure_type):
+            max_key = max(map(int, hyper.keys()))
+            hyper = [hyper.get(str(x), None) for x in range(max_key)]
+        if structure_type == "tuple":
+            hyper = tuple(hyper)
+        hyper_parent[k] = hyper
+    else:
+        # if it is not a structured parameter
+        # then it must be a nested higher order operator
+        sub_op = hyper_parent[k]
+        if isinstance(sub_op, list):
+            if len(sub_op) == 1:
+                sub_op = sub_op[0]
+            else:
+                (disc, chosen_params) = partition_sklearn_choice_params(params)
+                assert 0 <= disc and disc < len(sub_op)
+                sub_op = sub_op[disc]
+                params = chosen_params
+        trainable_sub_op = sub_op._with_params(try_mutate, **params)
+        hyper_parent[k] = trainable_sub_op

@@ -24,6 +24,15 @@ class NonTerminal(Operator):
         out["name"] = self._name
         return out
 
+    def _with_params(self, try_mutate: bool, **impl_params) -> Operator:
+        """
+        This method updates the parameters of the operator.
+        If try_mutate is set, it will attempt to update the operator in place
+        this may not always be possible
+        """
+        # TODO implement support
+        raise NotImplementedError("setting NonTerminal parameters is not yet supported")
+
     def __init__(self, name):
         self._name = name
 
@@ -57,6 +66,16 @@ class Grammar(Operator):
         out["variables"] = self.variables
         # todo: support deep=True
         return out
+
+    def _with_params(self, try_mutate: bool, **impl_params) -> Operator:
+        """
+        This method updates the parameters of the operator.
+        If try_mutate is set, it will attempt to update the operator in place
+        this may not always be possible
+        """
+        # TODO implement support
+        # from this point of view, Grammar is just a higher order operator
+        raise NotImplementedError("setting Grammar parameters is not yet supported")
 
     def __init__(self, variables: Dict[str, Operator] = {}):
         self._variables = variables
