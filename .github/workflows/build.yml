@@ -30,10 +30,10 @@ jobs:
           ${{ runner.os }}-
     - name: Install numpy
       run: pip install -U numpy
-    - name: Install autoai_libs from test pypi
-      run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple autoai_libs==1.12.5
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
+    - name: Install autoai_libs from test pypi
+      run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple autoai_libs==1.12.5
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
