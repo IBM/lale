@@ -32,8 +32,6 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
-    - name: Install scikit-learn
-      run: pip install scikit-learn==0.23.1
     - name: Install autoai_libs from test pypi
       run: pip install --upgrade --upgrade-strategy eager --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple autoai_libs==1.12.5
     - name: pre-commit checks
