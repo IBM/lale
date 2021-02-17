@@ -96,7 +96,6 @@ setup(
         ],
         "dev": ["pre-commit"],
         "test": [
-            "autoai-libs",
             "joblib",
             "jupyter",
             "numpydoc",
