@@ -100,6 +100,10 @@ def hyperparams_to_string(
             if gen is not None:
                 gen.imports.append("import numpy as np")
             return f"np.{value.__repr__()}"
+        elif isinstance(value, np.ndarray):
+            if gen is not None:
+                gen.imports.append("import numpy as np")
+            return f"np.{value.__repr__()}"
         elif isinstance(value, np.ufunc):
             if gen is not None:
                 gen.imports.append("import numpy as np")
