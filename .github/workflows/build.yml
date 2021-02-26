@@ -109,7 +109,7 @@ jobs:
         # This path is specific to Ubuntu
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
-        key: ${{ runner.os }}-pip-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        key: ${{ runner.os }}-pip-${{ env.pythonLocation }}
         restore-keys: |
           ${{ runner.os }}-pip-
           ${{ runner.os }}-
