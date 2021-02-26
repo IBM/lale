@@ -32,7 +32,7 @@ class PrejudiceRemoverImpl(_BaseInEstimatorImpl):
         favorable_labels,
         protected_attributes,
         redact=True,
-        preprocessing=None,
+        preparation=None,
         eta=1.0,
     ):
         mitigator = aif360.algorithms.inprocessing.PrejudiceRemover(eta=eta)
@@ -40,7 +40,7 @@ class PrejudiceRemoverImpl(_BaseInEstimatorImpl):
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             redact=redact,
-            preprocessing=preprocessing,
+            preparation=preparation,
             mitigator=mitigator,
         )
 
@@ -59,18 +59,18 @@ _hyperparams_schema = {
             "required": [
                 *_categorical_fairness_properties.keys(),
                 "redact",
-                "preprocessing",
+                "preparation",
                 "eta",
             ],
             "relevantToOptimizer": ["eta"],
             "properties": {
                 **_categorical_fairness_properties,
                 "redact": {
-                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "description": "Whether to redact protected attributes before data preparation (recommended) or not.",
                     "type": "boolean",
                     "default": True,
                 },
-                "preprocessing": {
+                "preparation": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
                         {"laleType": "operator"},

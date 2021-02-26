@@ -533,14 +533,14 @@ average_odds_difference.__doc__ = (
 
 class _BaseInEstimatorImpl:
     def __init__(
-        self, favorable_labels, protected_attributes, redact, preprocessing, mitigator
+        self, favorable_labels, protected_attributes, redact, preparation, mitigator
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.redact = redact
-        if preprocessing is None:
-            preprocessing = lale.lib.lale.NoOp
-        self.preprocessing = preprocessing
+        if preparation is None:
+            preparation = lale.lib.lale.NoOp
+        self.preparation = preparation
         self.mitigator = mitigator
 
     def _prep_and_encode(self, X, y=None):
@@ -572,7 +572,7 @@ class _BaseInEstimatorImpl:
             "protected_attributes": self.protected_attributes,
         }
         redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
-        trainable_redact_and_prep = redacting >> self.preprocessing
+        trainable_redact_and_prep = redacting >> self.preparation
         assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
         self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
@@ -782,7 +782,7 @@ def column_for_stratification(X, y, favorable_labels, protected_attributes):
 
 
 def fair_stratified_train_test_split(
-    X, y, favorable_labels, protected_attributes, test_size=0.25, random_state=42
+    X, y, favorable_labels, protected_attributes, test_size=0.25, random_state=None
 ):
     """
     Splits X and y into random train and test subsets stratified by labels and protected attributes.
@@ -814,7 +814,7 @@ def fair_stratified_train_test_split(
       If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the test split.
       If int, represents the absolute number of test samples.
 
-    random_state : int, RandomState instance or None, default=42
+    random_state : int, RandomState instance or None, default=None
 
       Controls the shuffling applied to the data before applying the split.
       Pass an integer for reproducible output across multiple function calls.

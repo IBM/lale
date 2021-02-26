@@ -38,7 +38,7 @@ class LFRImpl:
         favorable_labels,
         protected_attributes,
         redact=True,
-        preprocessing=None,
+        preparation=None,
         k=5,
         Ax=0.01,
         Az=1.0,
@@ -50,9 +50,9 @@ class LFRImpl:
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.redact = redact
-        if preprocessing is None:
-            preprocessing = lale.lib.lale.NoOp
-        self.preprocessing = preprocessing
+        if preparation is None:
+            preparation = lale.lib.lale.NoOp
+        self.preparation = preparation
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]
@@ -93,8 +93,8 @@ class LFRImpl:
             "protected_attributes": self.protected_attributes,
         }
         redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
-        preprocessing = self.preprocessing
-        trainable_redact1_and_prep = redacting >> preprocessing
+        preparation = self.preparation
+        trainable_redact1_and_prep = redacting >> preparation
         assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
         self.redact1_and_prep = trainable_redact1_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
@@ -132,7 +132,7 @@ _hyperparams_schema = {
             "required": [
                 *_categorical_fairness_properties.keys(),
                 "redact",
-                "preprocessing",
+                "preparation",
                 "k",
                 "Ax",
                 "Az",
@@ -145,11 +145,11 @@ _hyperparams_schema = {
             "properties": {
                 **_categorical_fairness_properties,
                 "redact": {
-                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "description": "Whether to redact protected attributes before data preparation (recommended) or not.",
                     "type": "boolean",
                     "default": True,
                 },
-                "preprocessing": {
+                "preparation": {
                     "description": "Transformer, which may be an individual operator or a sub-pipeline.",
                     "anyOf": [
                         {"laleType": "operator"},
