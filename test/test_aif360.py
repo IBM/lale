@@ -609,7 +609,7 @@ class TestAIF360Cat(unittest.TestCase):
     def test_adversarial_debiasing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = AdversarialDebiasing(
-            **fairness_info, preprocessing=self.prep_pd_cat
+            **fairness_info, preparation=self.prep_pd_cat
         )
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.2)
 
@@ -624,14 +624,14 @@ class TestAIF360Cat(unittest.TestCase):
     def test_disparate_impact_remover_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = DisparateImpactRemover(
-            **fairness_info, preprocessing=self.prep_pd_cat
+            **fairness_info, preparation=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.78, 0.88)
 
     def test_disparate_impact_remover_pd_cat_no_redact(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = DisparateImpactRemover(
-            **fairness_info, redact=False, preprocessing=self.prep_pd_cat
+            **fairness_info, redact=False, preparation=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.65, 0.75)
 
@@ -644,14 +644,14 @@ class TestAIF360Cat(unittest.TestCase):
     def test_gerry_fair_classifier_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = GerryFairClassifier(
-            **fairness_info, preprocessing=self.prep_pd_cat
+            **fairness_info, preparation=self.prep_pd_cat
         )
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.677, 0.678)
 
     def test_lfr_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = LFR(
-            **fairness_info, preprocessing=self.prep_pd_cat
+            **fairness_info, preparation=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 1.000, 1.000)
 
@@ -665,9 +665,7 @@ class TestAIF360Cat(unittest.TestCase):
 
     def test_prejudice_remover_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
-        trainable_remi = PrejudiceRemover(
-            **fairness_info, preprocessing=self.prep_pd_cat
-        )
+        trainable_remi = PrejudiceRemover(**fairness_info, preparation=self.prep_pd_cat)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.70, 0.80)
 
     def test_redacting_pd_cat(self):

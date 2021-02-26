@@ -105,7 +105,7 @@ For example, consider the following code:
 
     pipeline = LFR(
         **fairness_info,
-        preprocessing=(
+        preparation=(
             (Project(columns={"type": "string"}) >> OneHotEncoder(handle_unknown="ignore"))
             & Project(columns={"type": "number"})
         )
@@ -113,13 +113,13 @@ For example, consider the following code:
     ) >> LogisticRegression(max_iter=1000)
 
 In this example, the *mitigator* is LFR (which is pre-estimator), the
-*estimator* is LogisticRegression, and the *preprocessing* is a
+*estimator* is LogisticRegression, and the *preparation* is a
 sub-pipeline that one-hot-encodes strings. If all features of the data
-are numerical, then the preprocessing can be omitted. Internally, the
+are numerical, then the preparation can be omitted. Internally, the
 LFR higher-order operator uses two auxiliary operators, Redacting
 and ProtectedAttributesEncoder.  Redacting sets protected attributes
 to a constant to prevent them from directly influencing
-fairness-agnostic preprocessing or estimators. And the
+fairness-agnostic data preparation or estimators. And the
 ProtectedAttributesEncoder encodes protected attributes and labels as
 zero or one to simplify the task for the mitigator.
 

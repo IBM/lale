@@ -73,7 +73,7 @@ _hyperparams_schema = {
                     "laleType": "operator",
                 },
                 "redact": {
-                    "description": "Whether to redact protected attributes before preprocessing (recommended) or not.",
+                    "description": "Whether to redact protected attributes before data preparation (recommended) or not.",
                     "type": "boolean",
                     "default": True,
                 },

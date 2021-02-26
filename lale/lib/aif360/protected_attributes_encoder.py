@@ -167,7 +167,7 @@ ranges. This transformer encodes protected attributes with values of
 protected attributes suitable as input for downstream fairness
 mitigation operators. This operator does not encode the remaining
 (non-protected) attributes. A common usage is to encode non-protected
-attributes with a separate preprocessing pipeline and to perform a
+attributes with a separate data preparation pipeline and to perform a
 feature union before piping the transformed data to downstream
 operators that require numeric data.
 """,
