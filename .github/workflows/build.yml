@@ -110,9 +110,9 @@ jobs:
         path: ${{ env.pythonLocation }}
         # Look to see if there is a cache hit for the setup file
         key: ${{ runner.os }}-pip-${{ env.pythonLocation }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
-          ${{ runner.os }}-
+        # restore-keys: |
+        #   ${{ runner.os }}-pip-
+        #   ${{ runner.os }}-
     - name: Install numpy
       run: pip install -U numpy
     - name: Install dependencies
