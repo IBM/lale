@@ -539,7 +539,13 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         else:
             hyperparams = orig_hyperparams
 
-        module_names = ["lale.lib.sklearn", "lale.lib.autoai_libs"]
+        module_names = [
+            "lale.lib.sklearn",
+            "lale.lib.autoai_libs",
+            "lale.lib.xgboost",
+            "lale.lib.lightgbm",
+            "lale.lib.snapml",
+        ]
 
         lale_wrapper_found = False
         class_name = sklearn_obj.__class__.__name__
