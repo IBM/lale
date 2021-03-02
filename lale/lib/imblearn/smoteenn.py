@@ -184,6 +184,7 @@ Combine over- and under-sampling using SMOTE and Edited Nearest Neighbours.""",
     },
 }
 
-lale.docstrings.set_docstrings(SMOTEENNImpl, _combined_schemas)
 
 SMOTEENN = lale.operators.make_operator(SMOTEENNImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SMOTEENN)

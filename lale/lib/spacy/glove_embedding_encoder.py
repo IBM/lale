@@ -195,8 +195,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(GloveEmbeddingEncoderImpl, _combined_schemas)
 
 GloveEmbeddingEncoder = lale.operators.make_operator(
     GloveEmbeddingEncoderImpl(), _combined_schemas
 )
+
+lale.docstrings.set_docstrings(GloveEmbeddingEncoder)

@@ -91,8 +91,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(BaselineRegressorImpl, _combined_schemas)
 
 BaselineRegressor = lale.operators.make_operator(
     BaselineRegressorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(BaselineRegressor)

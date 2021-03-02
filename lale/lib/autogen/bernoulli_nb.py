@@ -133,5 +133,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(BernoulliNBImpl, _combined_schemas)
 BernoulliNB = make_operator(BernoulliNBImpl, _combined_schemas)
+
+set_docstrings(BernoulliNB)

@@ -184,6 +184,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TB1Impl, _combined_schemas)
 
 TB1 = lale.operators.make_operator(TB1Impl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TB1)

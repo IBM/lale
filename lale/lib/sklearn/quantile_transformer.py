@@ -161,8 +161,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(QuantileTransformerImpl, _combined_schemas)
 
 QuantileTransformer = lale.operators.make_operator(
     QuantileTransformerImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(QuantileTransformer)

@@ -125,6 +125,7 @@ Otherwise, use the most frequent value in the column.
     },
 }
 
-lale.docstrings.set_docstrings(RedactingImpl, _combined_schemas)
 
 Redacting = lale.operators.make_operator(RedactingImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Redacting)

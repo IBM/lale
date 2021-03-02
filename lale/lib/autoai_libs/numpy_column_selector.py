@@ -115,8 +115,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NumpyColumnSelectorImpl, _combined_schemas)
 
 NumpyColumnSelector = lale.operators.make_operator(
     NumpyColumnSelectorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(NumpyColumnSelector)

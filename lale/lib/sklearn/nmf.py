@@ -234,4 +234,4 @@ if sklearn.__version__ >= "0.24":
         )
     )
 
-lale.docstrings.set_docstrings(NMFImpl, NMF._schemas)
+lale.docstrings.set_docstrings(NMF)

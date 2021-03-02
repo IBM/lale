@@ -122,8 +122,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NumpyPermuteArrayImpl, _combined_schemas)
 
 NumpyPermuteArray = lale.operators.make_operator(
     NumpyPermuteArrayImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(NumpyPermuteArray)

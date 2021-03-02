@@ -158,9 +158,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ObservingImpl, _combined_schemas)
-
 Observing = lale.operators.make_operator(ObservingImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Observing)
 
 
 class LoggingObserver:

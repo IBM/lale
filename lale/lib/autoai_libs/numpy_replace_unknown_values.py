@@ -152,8 +152,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NumpyReplaceUnknownValuesImpl, _combined_schemas)
 
 NumpyReplaceUnknownValues = lale.operators.make_operator(
     NumpyReplaceUnknownValuesImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(NumpyReplaceUnknownValues)

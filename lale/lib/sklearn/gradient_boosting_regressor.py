@@ -375,6 +375,4 @@ if sklearn.__version__ >= "0.24":
         },
     )
 
-lale.docstrings.set_docstrings(
-    GradientBoostingRegressorImpl, GradientBoostingRegressor._schemas
-)
+lale.docstrings.set_docstrings(GradientBoostingRegressor)

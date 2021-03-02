@@ -362,6 +362,4 @@ if sklearn.__version__ >= "0.22":
         ),
     )
 
-lale.docstrings.set_docstrings(
-    RandomForestRegressorImpl, RandomForestRegressor._schemas
-)
+lale.docstrings.set_docstrings(RandomForestRegressor)

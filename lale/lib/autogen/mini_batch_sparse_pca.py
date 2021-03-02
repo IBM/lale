@@ -182,5 +182,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(MiniBatchSparsePCAImpl, _combined_schemas)
 MiniBatchSparsePCA = make_operator(MiniBatchSparsePCAImpl, _combined_schemas)
+
+set_docstrings(MiniBatchSparsePCA)

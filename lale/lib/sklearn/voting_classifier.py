@@ -282,4 +282,5 @@ if sklearn.__version__ >= "0.24":
         }
     )
 
-lale.docstrings.set_docstrings(VotingClassifierImpl, VotingClassifier._schemas)
+
+lale.docstrings.set_docstrings(VotingClassifier)

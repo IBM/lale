@@ -473,6 +473,7 @@ For an example, see `demo_auto_pipeline.ipynb`_.
     },
 }
 
-lale.docstrings.set_docstrings(AutoPipelineImpl, _combined_schemas)
 
 AutoPipeline = lale.operators.make_operator(AutoPipelineImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(AutoPipeline)

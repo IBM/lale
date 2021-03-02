@@ -167,7 +167,8 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(GaussianProcessRegressorImpl, _combined_schemas)
 GaussianProcessRegressor = make_operator(
     GaussianProcessRegressorImpl, _combined_schemas
 )
+
+set_docstrings(GaussianProcessRegressor)

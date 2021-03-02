@@ -195,5 +195,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(LassoLarsImpl, _combined_schemas)
 LassoLars = make_operator(LassoLarsImpl, _combined_schemas)
+
+set_docstrings(LassoLars)

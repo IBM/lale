@@ -163,6 +163,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(CatImputerImpl, _combined_schemas)
 
 CatImputer = lale.operators.make_operator(CatImputerImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(CatImputer)

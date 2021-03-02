@@ -282,8 +282,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SnapDecisionTreeRegressorImpl, _combined_schemas)
 
 SnapDecisionTreeRegressor = lale.operators.make_operator(
     SnapDecisionTreeRegressorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(SnapDecisionTreeRegressor)

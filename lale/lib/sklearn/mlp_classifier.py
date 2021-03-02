@@ -396,4 +396,5 @@ if sklearn.__version__ >= "0.22":
         )
     )
 
-lale.docstrings.set_docstrings(MLPClassifierImpl, MLPClassifier._schemas)
+
+lale.docstrings.set_docstrings(MLPClassifier)

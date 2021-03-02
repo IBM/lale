@@ -214,8 +214,8 @@ NDArrayWithSchema([[11, 12, 13, 14, 15],
     },
 }
 
-lale.docstrings.set_docstrings(ConcatFeaturesImpl, _combined_schemas)
-
 ConcatFeatures = lale.operators.make_pretrained_operator(
     ConcatFeaturesImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(ConcatFeatures)

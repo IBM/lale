@@ -294,5 +294,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(LogisticRegressionCVImpl, _combined_schemas)
 LogisticRegressionCV = make_operator(LogisticRegressionCVImpl, _combined_schemas)
+
+set_docstrings(LogisticRegressionCV)

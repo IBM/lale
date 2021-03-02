@@ -175,5 +175,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(BayesianRidgeImpl, _combined_schemas)
 BayesianRidge = make_operator(BayesianRidgeImpl, _combined_schemas)
+
+set_docstrings(BayesianRidge)

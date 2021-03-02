@@ -72,6 +72,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NoOpImpl, _combined_schemas)
 
 NoOp = lale.operators.make_operator(NoOpImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(NoOp)

@@ -149,5 +149,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(BirchImpl, _combined_schemas)
 Birch = make_operator(BirchImpl, _combined_schemas)
+
+set_docstrings(Birch)

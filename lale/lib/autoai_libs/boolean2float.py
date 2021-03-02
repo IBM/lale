@@ -131,6 +131,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(boolean2floatImpl, _combined_schemas)
 
 boolean2float = lale.operators.make_operator(boolean2floatImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(boolean2float)

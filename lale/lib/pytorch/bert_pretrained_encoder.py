@@ -193,8 +193,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(BertPretrainedEncoderImpl, _combined_schemas)
 
 BertPretrainedEncoder = lale.operators.make_operator(
     BertPretrainedEncoderImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(BertPretrainedEncoder)

@@ -167,8 +167,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(AdaBoostRegressorImpl, _combined_schemas)
 
 AdaBoostRegressor = lale.operators.make_operator(
     AdaBoostRegressorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(AdaBoostRegressor)

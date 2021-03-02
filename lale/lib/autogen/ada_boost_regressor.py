@@ -129,5 +129,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(AdaBoostRegressorImpl, _combined_schemas)
 AdaBoostRegressor = make_operator(AdaBoostRegressorImpl, _combined_schemas)
+
+set_docstrings(AdaBoostRegressor)

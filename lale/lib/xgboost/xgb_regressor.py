@@ -638,4 +638,5 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         },
     )
 
-lale.docstrings.set_docstrings(XGBRegressorImpl, XGBRegressor._schemas)
+
+lale.docstrings.set_docstrings(XGBRegressor)

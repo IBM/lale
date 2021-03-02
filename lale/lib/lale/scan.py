@@ -78,6 +78,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ScanImpl, _combined_schemas)
 
 Scan = lale.operators.make_operator(ScanImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Scan)

@@ -299,8 +299,8 @@ class ProtectedAttributesEncoderImpl:
         return result
 
 
-lale.docstrings.set_docstrings(ProtectedAttributesEncoderImpl, _combined_schemas)
-
 ProtectedAttributesEncoder = lale.operators.make_operator(
     ProtectedAttributesEncoderImpl, _combined_schemas,
 )
+
+lale.docstrings.set_docstrings(ProtectedAttributesEncoder)

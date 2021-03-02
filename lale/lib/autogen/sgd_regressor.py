@@ -289,5 +289,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(SGDRegressorImpl, _combined_schemas)
 SGDRegressor = make_operator(SGDRegressorImpl, _combined_schemas)
+
+set_docstrings(SGDRegressor)

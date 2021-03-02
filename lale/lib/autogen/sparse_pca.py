@@ -193,5 +193,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(SparsePCAImpl, _combined_schemas)
 SparsePCA = make_operator(SparsePCAImpl, _combined_schemas)
+
+set_docstrings(SparsePCA)

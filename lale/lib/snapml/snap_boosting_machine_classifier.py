@@ -423,8 +423,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SnapBoostingMachineClassifierImpl, _combined_schemas)
 
 SnapBoostingMachineClassifier = lale.operators.make_operator(
     SnapBoostingMachineClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(SnapBoostingMachineClassifier)

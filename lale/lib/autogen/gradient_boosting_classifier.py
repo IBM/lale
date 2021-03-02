@@ -324,7 +324,8 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(GradientBoostingClassifierImpl, _combined_schemas)
 GradientBoostingClassifier = make_operator(
     GradientBoostingClassifierImpl, _combined_schemas
 )
+
+set_docstrings(GradientBoostingClassifier)

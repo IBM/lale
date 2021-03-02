@@ -104,5 +104,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(RobustScalerImpl, _combined_schemas)
 RobustScaler = make_operator(RobustScalerImpl, _combined_schemas)
+
+set_docstrings(RobustScaler)

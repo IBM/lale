@@ -373,5 +373,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(SGDClassifierImpl, _combined_schemas)
 SGDClassifier = make_operator(SGDClassifierImpl, _combined_schemas)
+
+set_docstrings(SGDClassifier)

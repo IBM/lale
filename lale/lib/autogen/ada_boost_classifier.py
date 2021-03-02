@@ -177,5 +177,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(AdaBoostClassifierImpl, _combined_schemas)
 AdaBoostClassifier = make_operator(AdaBoostClassifierImpl, _combined_schemas)
+
+set_docstrings(AdaBoostClassifier)

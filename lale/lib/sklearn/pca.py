@@ -238,6 +238,6 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(PCAImpl, _combined_schemas)
-
 PCA = lale.operators.make_operator(PCAImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(PCA)

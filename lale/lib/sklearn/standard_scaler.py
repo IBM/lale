@@ -123,6 +123,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(StandardScalerImpl, _combined_schemas)
 
 StandardScaler = lale.operators.make_operator(StandardScalerImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(StandardScaler)

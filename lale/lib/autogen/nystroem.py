@@ -135,5 +135,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(NystroemImpl, _combined_schemas)
 Nystroem = make_operator(NystroemImpl, _combined_schemas)
+
+set_docstrings(Nystroem)

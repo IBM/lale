@@ -385,5 +385,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(MLPClassifierImpl, _combined_schemas)
 MLPClassifier = make_operator(MLPClassifierImpl, _combined_schemas)
+
+set_docstrings(MLPClassifier)

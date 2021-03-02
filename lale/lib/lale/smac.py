@@ -440,6 +440,7 @@ Other scoring metrics:
     },
 }
 
-lale.docstrings.set_docstrings(SMACImpl, _combined_schemas)
 
 SMAC = lale.operators.make_operator(SMACImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SMAC)

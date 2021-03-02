@@ -201,6 +201,7 @@ Borderline samples will be detected and used to generate new synthetic samples."
     },
 }
 
-lale.docstrings.set_docstrings(BorderlineSMOTEImpl, _combined_schemas)
 
 BorderlineSMOTE = lale.operators.make_operator(BorderlineSMOTEImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(BorderlineSMOTE)

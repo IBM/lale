@@ -124,8 +124,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NumpyReplaceMissingValuesImpl, _combined_schemas)
 
 NumpyReplaceMissingValues = lale.operators.make_operator(
     NumpyReplaceMissingValuesImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(NumpyReplaceMissingValues)

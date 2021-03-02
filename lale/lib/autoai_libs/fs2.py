@@ -156,6 +156,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(FS2Impl, _combined_schemas)
 
 FS2 = lale.operators.make_operator(FS2Impl, _combined_schemas)
+
+lale.docstrings.set_docstrings(FS2)

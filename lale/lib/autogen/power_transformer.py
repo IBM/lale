@@ -100,5 +100,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(PowerTransformerImpl, _combined_schemas)
 PowerTransformer = make_operator(PowerTransformerImpl, _combined_schemas)
+
+set_docstrings(PowerTransformer)

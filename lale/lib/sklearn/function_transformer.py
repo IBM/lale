@@ -177,4 +177,5 @@ if sklearn.__version__ >= "0.22":
         pass_y=None,
     )
 
-lale.docstrings.set_docstrings(FunctionTransformerImpl, FunctionTransformer._schemas)
+
+lale.docstrings.set_docstrings(FunctionTransformer)

@@ -190,6 +190,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(CompressStringsImpl, _combined_schemas)
 
 CompressStrings = lale.operators.make_operator(CompressStringsImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(CompressStrings)

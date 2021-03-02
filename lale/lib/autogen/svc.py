@@ -257,5 +257,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(SVCImpl, _combined_schemas)
 SVC = make_operator(SVCImpl, _combined_schemas)
+
+set_docstrings(SVC)

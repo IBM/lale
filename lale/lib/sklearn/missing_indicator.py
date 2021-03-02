@@ -141,6 +141,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(MissingIndicatorImpl, _combined_schemas)
 
 MissingIndicator = lale.operators.make_operator(MissingIndicatorImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(MissingIndicator)

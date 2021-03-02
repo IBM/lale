@@ -225,7 +225,8 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(PassiveAggressiveRegressorImpl, _combined_schemas)
 PassiveAggressiveRegressor = make_operator(
     PassiveAggressiveRegressorImpl, _combined_schemas
 )
+
+set_docstrings(PassiveAggressiveRegressor)

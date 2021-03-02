@@ -152,6 +152,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(AllKNNImpl, _combined_schemas)
 
 AllKNN = lale.operators.make_operator(AllKNNImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(AllKNN)

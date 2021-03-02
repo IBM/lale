@@ -395,8 +395,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SnapLogisticRegressionImpl, _combined_schemas)
 
 SnapLogisticRegression = lale.operators.make_operator(
     SnapLogisticRegressionImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(SnapLogisticRegression)

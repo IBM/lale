@@ -217,4 +217,5 @@ if sklearn.__version__ >= "0.21":
         ),
     )
 
-lale.docstrings.set_docstrings(PipelineImpl, Pipeline._schemas)
+
+lale.docstrings.set_docstrings(Pipeline)

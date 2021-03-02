@@ -92,5 +92,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(OrdinalEncoderImpl, _combined_schemas)
 OrdinalEncoder = make_operator(OrdinalEncoderImpl, _combined_schemas)
+
+set_docstrings(OrdinalEncoder)

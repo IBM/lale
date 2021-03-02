@@ -214,8 +214,8 @@ class KNeighborsRegressorImpl:
         return self._wrapped_model.predict(X)
 
 
-lale.docstrings.set_docstrings(KNeighborsRegressorImpl, _combined_schemas)
-
 KNeighborsRegressor = lale.operators.make_operator(
     KNeighborsRegressorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(KNeighborsRegressor)

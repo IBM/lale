@@ -185,8 +185,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TopKVotingClassifierImpl, _combined_schemas)
 
 TopKVotingClassifier = lale.operators.make_operator(
     TopKVotingClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(TopKVotingClassifier)

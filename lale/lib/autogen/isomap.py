@@ -144,5 +144,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(IsomapImpl, _combined_schemas)
 Isomap = make_operator(IsomapImpl, _combined_schemas)
+
+set_docstrings(Isomap)

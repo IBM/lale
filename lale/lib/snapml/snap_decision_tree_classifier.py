@@ -326,8 +326,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SnapDecisionTreeClassifierImpl, _combined_schemas)
 
 SnapDecisionTreeClassifier = lale.operators.make_operator(
     SnapDecisionTreeClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(SnapDecisionTreeClassifier)

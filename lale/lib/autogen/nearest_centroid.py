@@ -95,5 +95,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(NearestCentroidImpl, _combined_schemas)
 NearestCentroid = make_operator(NearestCentroidImpl, _combined_schemas)
+
+set_docstrings(NearestCentroid)

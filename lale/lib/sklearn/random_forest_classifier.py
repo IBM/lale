@@ -400,6 +400,4 @@ if sklearn.__version__ >= "0.22":
         ),
     )
 
-lale.docstrings.set_docstrings(
-    RandomForestClassifierImpl, RandomForestClassifier._schemas
-)
+lale.docstrings.set_docstrings(RandomForestClassifier)

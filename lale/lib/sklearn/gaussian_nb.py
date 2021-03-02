@@ -144,6 +144,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(GaussianNBImpl, _combined_schemas)
 
 GaussianNB = lale.operators.make_operator(GaussianNBImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(GaussianNB)

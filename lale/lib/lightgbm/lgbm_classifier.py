@@ -499,6 +499,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LGBMClassifierImpl, _combined_schemas)
 
 LGBMClassifier = lale.operators.make_operator(LGBMClassifierImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(LGBMClassifier)

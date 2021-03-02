@@ -109,6 +109,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(PrejudiceRemoverImpl, _combined_schemas)
 
 PrejudiceRemover = lale.operators.make_operator(PrejudiceRemoverImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(PrejudiceRemover)

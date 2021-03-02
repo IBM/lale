@@ -128,5 +128,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(MultinomialNBImpl, _combined_schemas)
 MultinomialNB = make_operator(MultinomialNBImpl, _combined_schemas)
+
+set_docstrings(MultinomialNB)

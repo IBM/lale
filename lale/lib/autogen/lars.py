@@ -191,5 +191,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(LarsImpl, _combined_schemas)
 Lars = make_operator(LarsImpl, _combined_schemas)
+
+set_docstrings(Lars)

@@ -186,5 +186,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(NMFImpl, _combined_schemas)
 NMF = make_operator(NMFImpl, _combined_schemas)
+
+set_docstrings(NMF)

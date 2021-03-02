@@ -238,5 +238,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(MiniBatchKMeansImpl, _combined_schemas)
 MiniBatchKMeans = make_operator(MiniBatchKMeansImpl, _combined_schemas)
+
+set_docstrings(MiniBatchKMeans)

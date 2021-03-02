@@ -283,6 +283,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TfidfVectorizerImpl, _combined_schemas)
 
 TfidfVectorizer = lale.operators.make_operator(TfidfVectorizerImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TfidfVectorizer)

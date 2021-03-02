@@ -279,7 +279,8 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(PassiveAggressiveClassifierImpl, _combined_schemas)
 PassiveAggressiveClassifier = make_operator(
     PassiveAggressiveClassifierImpl, _combined_schemas
 )
+
+set_docstrings(PassiveAggressiveClassifier)

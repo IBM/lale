@@ -223,6 +223,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LFRImpl, _combined_schemas)
 
 LFR = lale.operators.make_operator(LFRImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(LFR)

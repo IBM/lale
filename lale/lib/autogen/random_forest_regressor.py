@@ -274,5 +274,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(RandomForestRegressorImpl, _combined_schemas)
 RandomForestRegressor = make_operator(RandomForestRegressorImpl, _combined_schemas)
+
+set_docstrings(RandomForestRegressor)

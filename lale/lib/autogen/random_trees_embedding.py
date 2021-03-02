@@ -217,5 +217,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(RandomTreesEmbeddingImpl, _combined_schemas)
 RandomTreesEmbedding = make_operator(RandomTreesEmbeddingImpl, _combined_schemas)
+
+set_docstrings(RandomTreesEmbedding)

@@ -103,5 +103,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(SkewedChi2SamplerImpl, _combined_schemas)
 SkewedChi2Sampler = make_operator(SkewedChi2SamplerImpl, _combined_schemas)
+
+set_docstrings(SkewedChi2Sampler)

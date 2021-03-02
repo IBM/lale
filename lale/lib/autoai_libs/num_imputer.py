@@ -134,6 +134,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NumImputerImpl, _combined_schemas)
 
 NumImputer = lale.operators.make_operator(NumImputerImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(NumImputer)

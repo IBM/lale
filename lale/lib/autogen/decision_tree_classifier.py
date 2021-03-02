@@ -308,5 +308,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(DecisionTreeClassifierImpl, _combined_schemas)
 DecisionTreeClassifier = make_operator(DecisionTreeClassifierImpl, _combined_schemas)
+
+set_docstrings(DecisionTreeClassifier)

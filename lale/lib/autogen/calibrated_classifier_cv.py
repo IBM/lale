@@ -135,5 +135,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(CalibratedClassifierCVImpl, _combined_schemas)
 CalibratedClassifierCV = make_operator(CalibratedClassifierCVImpl, _combined_schemas)
+
+set_docstrings(CalibratedClassifierCV)

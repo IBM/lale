@@ -339,6 +339,4 @@ if sklearn.__version__ >= "0.24":
         presort=None,
     )
 
-lale.docstrings.set_docstrings(
-    DecisionTreeRegressorImpl, DecisionTreeRegressor._schemas
-)
+lale.docstrings.set_docstrings(DecisionTreeRegressor)

@@ -161,5 +161,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(PLSRegressionImpl, _combined_schemas)
 PLSRegression = make_operator(PLSRegressionImpl, _combined_schemas)
+
+set_docstrings(PLSRegression)

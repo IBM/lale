@@ -214,6 +214,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TGenImpl, _combined_schemas)
 
 TGen = lale.operators.make_operator(TGenImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TGen)

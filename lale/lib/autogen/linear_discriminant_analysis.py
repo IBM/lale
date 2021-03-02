@@ -245,7 +245,8 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(LinearDiscriminantAnalysisImpl, _combined_schemas)
 LinearDiscriminantAnalysis = make_operator(
     LinearDiscriminantAnalysisImpl, _combined_schemas
 )
+
+set_docstrings(LinearDiscriminantAnalysis)

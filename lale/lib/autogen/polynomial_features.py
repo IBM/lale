@@ -111,5 +111,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(PolynomialFeaturesImpl, _combined_schemas)
 PolynomialFeatures = make_operator(PolynomialFeaturesImpl, _combined_schemas)
+
+set_docstrings(PolynomialFeatures)

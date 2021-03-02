@@ -153,7 +153,8 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(OrthogonalMatchingPursuitImpl, _combined_schemas)
 OrthogonalMatchingPursuit = make_operator(
     OrthogonalMatchingPursuitImpl, _combined_schemas
 )
+
+set_docstrings(OrthogonalMatchingPursuit)

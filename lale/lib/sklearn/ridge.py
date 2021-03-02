@@ -230,6 +230,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RidgeImpl, _combined_schemas)
 
 Ridge = lale.operators.make_operator(RidgeImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Ridge)

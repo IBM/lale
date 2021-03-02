@@ -324,6 +324,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LinearSVCImpl, _combined_schemas)
 
 LinearSVC = lale.operators.make_operator(LinearSVCImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(LinearSVC)

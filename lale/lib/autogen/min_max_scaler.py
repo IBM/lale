@@ -92,5 +92,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(MinMaxScalerImpl, _combined_schemas)
 MinMaxScaler = make_operator(MinMaxScalerImpl, _combined_schemas)
+
+set_docstrings(MinMaxScaler)

@@ -176,5 +176,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(ARDRegressionImpl, _combined_schemas)
 ARDRegression = make_operator(ARDRegressionImpl, _combined_schemas)
+
+set_docstrings(ARDRegression)

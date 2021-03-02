@@ -154,6 +154,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(FloatStr2FloatImpl, _combined_schemas)
 
 FloatStr2Float = lale.operators.make_operator(FloatStr2FloatImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(FloatStr2Float)

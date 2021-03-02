@@ -165,6 +165,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TAMImpl, _combined_schemas)
 
 TAM = lale.operators.make_operator(TAMImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TAM)

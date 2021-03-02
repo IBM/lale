@@ -309,6 +309,7 @@ NDArrayWithSchema([[1, 3],
     },
 }
 
-lale.docstrings.set_docstrings(ProjectImpl, _combined_schemas)
 
 Project = lale.operators.make_operator(ProjectImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Project)

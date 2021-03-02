@@ -97,5 +97,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(NormalizerImpl, _combined_schemas)
 Normalizer = make_operator(NormalizerImpl, _combined_schemas)
+
+set_docstrings(Normalizer)

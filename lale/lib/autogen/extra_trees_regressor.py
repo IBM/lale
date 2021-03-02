@@ -274,5 +274,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(ExtraTreesRegressorImpl, _combined_schemas)
 ExtraTreesRegressor = make_operator(ExtraTreesRegressorImpl, _combined_schemas)
+
+set_docstrings(ExtraTreesRegressor)

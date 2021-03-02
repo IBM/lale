@@ -116,5 +116,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(MissingIndicatorImpl, _combined_schemas)
 MissingIndicator = make_operator(MissingIndicatorImpl, _combined_schemas)
+
+set_docstrings(MissingIndicator)

@@ -211,8 +211,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(AdversarialDebiasingImpl, _combined_schemas)
-
 AdversarialDebiasing = lale.operators.make_operator(
     AdversarialDebiasingImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(AdversarialDebiasing)

@@ -156,5 +156,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(HuberRegressorImpl, _combined_schemas)
 HuberRegressor = make_operator(HuberRegressorImpl, _combined_schemas)
+
+set_docstrings(HuberRegressor)

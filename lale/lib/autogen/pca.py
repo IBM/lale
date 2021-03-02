@@ -159,5 +159,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(PCAImpl, _combined_schemas)
 PCA = make_operator(PCAImpl, _combined_schemas)
+
+set_docstrings(PCA)

@@ -432,6 +432,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LGBMRegressorImpl, _combined_schemas)
 
 LGBMRegressor = lale.operators.make_operator(LGBMRegressorImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(LGBMRegressor)

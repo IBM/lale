@@ -201,8 +201,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(GerryFairClassifierImpl, _combined_schemas)
-
 GerryFairClassifier = lale.operators.make_operator(
     GerryFairClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(GerryFairClassifier)

@@ -159,6 +159,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SimpleImputerImpl, _combined_schemas)
 
 SimpleImputer = lale.operators.make_operator(SimpleImputerImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SimpleImputer)

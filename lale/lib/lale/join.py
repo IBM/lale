@@ -93,6 +93,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(JoinImpl, _combined_schemas)
 
 Join = lale.operators.make_operator(JoinImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Join)

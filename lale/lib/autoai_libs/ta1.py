@@ -221,6 +221,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TA1Impl, _combined_schemas)
 
 TA1 = lale.operators.make_operator(TA1Impl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TA1)
