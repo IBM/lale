@@ -139,8 +139,8 @@ def replace(df: Any, replace_expr: Expr, new_column_name: str):
         if new_column_name != column_name:
             del df[column_name]
     elif spark_installed and isinstance(df, spark_df):
-        mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])
-        df = df.withColumn(new_column_name, mapping_expr[df[column_name]])
+        mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])  # type: ignore
+        df = df.withColumn(new_column_name, mapping_expr[df[column_name]])  # type: ignore
         if new_column_name != column_name:
             df = df.drop(column_name)
     else:
@@ -166,7 +166,7 @@ def time_functions(
         if new_column_name != column_name:
             del df[column_name]
     elif spark_installed and isinstance(df, spark_df):
-        df = df.withColumn(column_name, to_timestamp(df[column_name], fmt))
+        df = df.withColumn(column_name, to_timestamp(df[column_name], fmt))  # type: ignore
         df = df.select(eval(spark_func + "(df[column_name])").alias(new_column_name))
         if new_column_name != column_name:
             df = df.drop(column_name)
