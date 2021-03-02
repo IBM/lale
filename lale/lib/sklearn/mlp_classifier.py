@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class MLPClassifierImpl:
+class _MLPClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.neural_network.MLPClassifier(**self._hyperparams)
@@ -380,7 +380,7 @@ _combined_schemas = {
 }
 
 MLPClassifier: lale.operators.PlannedIndividualOp
-MLPClassifier = lale.operators.make_operator(MLPClassifierImpl, _combined_schemas)
+MLPClassifier = lale.operators.make_operator(_MLPClassifierImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html

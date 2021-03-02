@@ -17,7 +17,7 @@ from imblearn.over_sampling import RandomOverSampler as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,7 +30,7 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class RandomOverSamplerImpl(BaseResamplerImpl):
+class _RandomOverSamplerImpl(_BaseResamplerImpl):
     def __init__(self, operator=None, sampling_strategy="auto", random_state=None):
         if operator is None:
             raise ValueError("Operator is a required argument.")
@@ -41,7 +41,7 @@ class RandomOverSamplerImpl(BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(RandomOverSamplerImpl, self).__init__(
+        super(_RandomOverSamplerImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -165,7 +165,7 @@ _combined_schemas = {
 
 
 RandomOverSampler = lale.operators.make_operator(
-    RandomOverSamplerImpl, _combined_schemas
+    _RandomOverSamplerImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(RandomOverSampler)

@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class TA2Impl:
+class _TA2Impl:
     def __init__(
         self,
         fun,
@@ -204,6 +204,6 @@ _combined_schemas = {
 }
 
 
-TA2 = lale.operators.make_operator(TA2Impl, _combined_schemas)
+TA2 = lale.operators.make_operator(_TA2Impl, _combined_schemas)
 
 lale.docstrings.set_docstrings(TA2)

@@ -227,7 +227,7 @@ _combined_schemas = {
 }
 
 
-class KNeighborsClassifierImpl:
+class _KNeighborsClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.neighbors.KNeighborsClassifier(
@@ -246,7 +246,7 @@ class KNeighborsClassifierImpl:
 
 
 KNeighborsClassifier = lale.operators.make_operator(
-    KNeighborsClassifierImpl, _combined_schemas,
+    _KNeighborsClassifierImpl, _combined_schemas,
 )
 
 lale.docstrings.set_docstrings(KNeighborsClassifier)

@@ -20,7 +20,7 @@ import lale.operators
 from lale.schemas import Int
 
 
-class PassiveAggressiveClassifierImpl:
+class _PassiveAggressiveClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.linear_model.PassiveAggressiveClassifier(
@@ -287,7 +287,7 @@ _combined_schemas = {
 
 PassiveAggressiveClassifier: lale.operators.PlannedIndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(
-    PassiveAggressiveClassifierImpl, _combined_schemas
+    _PassiveAggressiveClassifierImpl, _combined_schemas
 )
 
 

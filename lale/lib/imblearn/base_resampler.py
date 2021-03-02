@@ -13,7 +13,7 @@
 # limitations under the License.
 
 
-class BaseResamplerImpl:
+class _BaseResamplerImpl:
     def __init__(self, operator=None, resampler=None):
         self.operator = operator
         self.resampler = resampler

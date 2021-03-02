@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class ExtraTreesClassifierImpl:
+class _ExtraTreesClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -304,6 +304,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-ExtraTreesClassifier = make_operator(ExtraTreesClassifierImpl, _combined_schemas)
+ExtraTreesClassifier = make_operator(_ExtraTreesClassifierImpl, _combined_schemas)
 
 set_docstrings(ExtraTreesClassifier)

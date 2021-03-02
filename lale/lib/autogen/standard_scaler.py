@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class StandardScalerImpl:
+class _StandardScalerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -102,6 +102,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-StandardScaler = make_operator(StandardScalerImpl, _combined_schemas)
+StandardScaler = make_operator(_StandardScalerImpl, _combined_schemas)
 
 set_docstrings(StandardScaler)

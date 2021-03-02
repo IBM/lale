@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class SVCImpl:
+class _SVCImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -257,6 +257,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-SVC = make_operator(SVCImpl, _combined_schemas)
+SVC = make_operator(_SVCImpl, _combined_schemas)
 
 set_docstrings(SVC)

@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class PassiveAggressiveClassifierImpl:
+class _PassiveAggressiveClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -280,7 +280,7 @@ _combined_schemas = {
     },
 }
 PassiveAggressiveClassifier = make_operator(
-    PassiveAggressiveClassifierImpl, _combined_schemas
+    _PassiveAggressiveClassifierImpl, _combined_schemas
 )
 
 set_docstrings(PassiveAggressiveClassifier)

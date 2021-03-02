@@ -17,7 +17,7 @@ from imblearn.over_sampling import SVMSMOTE as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,7 +30,7 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class SVMSMOTEImpl(BaseResamplerImpl):
+class _SVMSMOTEImpl(_BaseResamplerImpl):
     def __init__(
         self,
         operator=None,
@@ -56,7 +56,7 @@ class SVMSMOTEImpl(BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(SVMSMOTEImpl, self).__init__(
+        super(_SVMSMOTEImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -210,6 +210,6 @@ Variant of SMOTE algorithm which use an SVM algorithm to detect sample to use fo
 }
 
 
-SVMSMOTE = lale.operators.make_operator(SVMSMOTEImpl, _combined_schemas)
+SVMSMOTE = lale.operators.make_operator(_SVMSMOTEImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(SVMSMOTE)

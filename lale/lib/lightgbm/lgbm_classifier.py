@@ -23,7 +23,7 @@ except ImportError:
     lightgbm_installed = False
 
 
-class LGBMClassifierImpl:
+class _LGBMClassifierImpl:
     def __init__(
         self,
         boosting_type="gbdt",
@@ -500,6 +500,6 @@ _combined_schemas = {
 }
 
 
-LGBMClassifier = lale.operators.make_operator(LGBMClassifierImpl, _combined_schemas)
+LGBMClassifier = lale.operators.make_operator(_LGBMClassifierImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(LGBMClassifier)

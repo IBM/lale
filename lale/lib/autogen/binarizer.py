@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class BinarizerImpl:
+class _BinarizerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -93,6 +93,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-Binarizer = make_operator(BinarizerImpl, _combined_schemas)
+Binarizer = make_operator(_BinarizerImpl, _combined_schemas)
 
 set_docstrings(Binarizer)

@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class RandomForestClassifierImpl:
+class _RandomForestClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.ensemble.RandomForestClassifier(
@@ -360,7 +360,7 @@ _combined_schemas = {
 
 RandomForestClassifier: lale.operators.PlannedIndividualOp
 RandomForestClassifier = lale.operators.make_operator(
-    RandomForestClassifierImpl, _combined_schemas
+    _RandomForestClassifierImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

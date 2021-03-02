@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BasePostEstimatorImpl,
+    __BasePostEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -26,7 +26,7 @@ from .util import (
 )
 
 
-class RejectOptionClassificationImpl(_BasePostEstimatorImpl):
+class _RejectOptionClassificationImpl(__BasePostEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
@@ -55,7 +55,7 @@ class RejectOptionClassificationImpl(_BasePostEstimatorImpl):
             metric_ub=metric_ub,
             metric_lb=metric_lb,
         )
-        super(RejectOptionClassificationImpl, self).__init__(
+        super(_RejectOptionClassificationImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             estimator=estimator,
@@ -170,7 +170,7 @@ _combined_schemas = {
 
 
 RejectOptionClassification = lale.operators.make_operator(
-    RejectOptionClassificationImpl, _combined_schemas
+    _RejectOptionClassificationImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(RejectOptionClassification)

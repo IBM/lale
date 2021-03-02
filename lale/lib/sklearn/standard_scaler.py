@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class StandardScalerImpl:
+class _StandardScalerImpl:
     def __init__(self, copy=True, with_mean=True, with_std=True):
         self._hyperparams = {"copy": copy, "with_mean": with_mean, "with_std": with_std}
         self._wrapped_model = sklearn.preprocessing.StandardScaler(**self._hyperparams)
@@ -124,6 +124,6 @@ _combined_schemas = {
 }
 
 
-StandardScaler = lale.operators.make_operator(StandardScalerImpl, _combined_schemas)
+StandardScaler = lale.operators.make_operator(_StandardScalerImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(StandardScaler)

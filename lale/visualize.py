@@ -20,7 +20,7 @@ import graphviz
 import lale.json_operator
 import lale.pretty_print
 
-_LALE_SKL_PIPELINE = "lale.lib.sklearn.pipeline.PipelineImpl"
+_LALE_SKL_PIPELINE = "lale.lib.sklearn.pipeline._PipelineImpl"
 
 
 def _get_cluster2reps(jsn) -> Tuple[Dict[str, str], Dict[str, str]]:

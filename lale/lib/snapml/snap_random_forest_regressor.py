@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapRandomForestRegressorImpl:
+class _SnapRandomForestRegressorImpl:
     def __init__(
         self,
         n_estimators=10,
@@ -295,7 +295,7 @@ _combined_schemas = {
 
 
 SnapRandomForestRegressor = lale.operators.make_operator(
-    SnapRandomForestRegressorImpl, _combined_schemas
+    _SnapRandomForestRegressorImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SnapRandomForestRegressor)

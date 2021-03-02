@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LabelBinarizerImpl:
+class _LabelBinarizerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -117,6 +117,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-LabelBinarizer = make_operator(LabelBinarizerImpl, _combined_schemas)
+LabelBinarizer = make_operator(_LabelBinarizerImpl, _combined_schemas)
 
 set_docstrings(LabelBinarizer)

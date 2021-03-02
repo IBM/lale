@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class VotingClassifierImpl:
+class _VotingClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.ensemble.VotingClassifier(**self._hyperparams)
@@ -244,7 +244,9 @@ _combined_schemas = {
 }
 
 VotingClassifier: lale.operators.PlannedIndividualOp
-VotingClassifier = lale.operators.make_operator(VotingClassifierImpl, _combined_schemas)
+VotingClassifier = lale.operators.make_operator(
+    _VotingClassifierImpl, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html

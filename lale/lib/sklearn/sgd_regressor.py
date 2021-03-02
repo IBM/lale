@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SGDRegressorImpl:
+class _SGDRegressorImpl:
     def __init__(
         self,
         loss="squared_loss",
@@ -352,7 +352,7 @@ _combined_schemas = {
     },
 }
 
-SGDRegressor = lale.operators.make_operator(SGDRegressorImpl, _combined_schemas)
+SGDRegressor = lale.operators.make_operator(_SGDRegressorImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDRegressor.html

@@ -21,10 +21,10 @@ import lale.operators
 import lale.search.lale_grid_search_cv
 import lale.sklearn_compat
 
-from .observing import Observing, ObservingImpl
+from .observing import Observing, _ObservingImpl
 
 
-class GridSearchCVImpl:
+class _GridSearchCVImpl:
     _best_estimator: Optional[lale.operators.TrainedOperator] = None
 
     def __init__(
@@ -131,13 +131,13 @@ class GridSearchCVImpl:
             except BaseException as e:
                 if obs is not None:
                     impl = observed_op._impl  # type: ignore
-                    assert isinstance(impl, ObservingImpl)
+                    assert isinstance(impl, _ObservingImpl)
                     impl.failObserving("optimize", e)
                 raise
 
             impl = getattr(be, "_impl", None)
             if impl is not None:
-                assert isinstance(impl, ObservingImpl)
+                assert isinstance(impl, _ObservingImpl)
                 be = impl.getOp()
                 if obs is not None:
                     obs_impl = observed_op._impl  # type: ignore
@@ -340,6 +340,6 @@ _combined_schemas = {
 }
 
 
-GridSearchCV = lale.operators.make_operator(GridSearchCVImpl, _combined_schemas)
+GridSearchCV = lale.operators.make_operator(_GridSearchCVImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(GridSearchCV)

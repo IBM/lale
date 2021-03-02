@@ -18,7 +18,9 @@ import lale.docstrings
 import lale.operators
 
 
-class Word2VecTransformerImpl:
+# This is currently needed just to hide get_params so that lale does not call clone
+# when doing a defensive copy
+class _Word2VecTransformerImpl:
     def __init__(
         self,
         output_dim=30,
@@ -182,7 +184,7 @@ _combined_schemas = {
 }
 
 Word2VecTransformer = lale.operators.make_operator(
-    Word2VecTransformerImpl, _combined_schemas
+    _Word2VecTransformerImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(Word2VecTransformer)

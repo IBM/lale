@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class TheilSenRegressorImpl:
+class _TheilSenRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -172,6 +172,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-TheilSenRegressor = make_operator(TheilSenRegressorImpl, _combined_schemas)
+TheilSenRegressor = make_operator(_TheilSenRegressorImpl, _combined_schemas)
 
 set_docstrings(TheilSenRegressor)

@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NumpyReplaceUnknownValuesImpl:
+class _NumpyReplaceUnknownValuesImpl:
     def __init__(
         self,
         known_values_list=None,
@@ -154,7 +154,7 @@ _combined_schemas = {
 
 
 NumpyReplaceUnknownValues = lale.operators.make_operator(
-    NumpyReplaceUnknownValuesImpl, _combined_schemas
+    _NumpyReplaceUnknownValuesImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(NumpyReplaceUnknownValues)

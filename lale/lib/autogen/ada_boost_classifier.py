@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class AdaBoostClassifierImpl:
+class _AdaBoostClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -177,6 +177,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-AdaBoostClassifier = make_operator(AdaBoostClassifierImpl, _combined_schemas)
+AdaBoostClassifier = make_operator(_AdaBoostClassifierImpl, _combined_schemas)
 
 set_docstrings(AdaBoostClassifier)

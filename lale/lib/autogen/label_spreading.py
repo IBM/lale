@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LabelSpreadingImpl:
+class _LabelSpreadingImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -172,6 +172,6 @@ _combined_schemas = {
     },
 }
 
-LabelSpreading = make_operator(LabelSpreadingImpl, _combined_schemas)
+LabelSpreading = make_operator(_LabelSpreadingImpl, _combined_schemas)
 
 set_docstrings(LabelSpreading)

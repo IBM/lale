@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapSVMClassifierImpl:
+class _SnapSVMClassifierImpl:
     def __init__(
         self,
         max_iter=1000,
@@ -326,7 +326,7 @@ _combined_schemas = {
 
 
 SnapSVMClassifier = lale.operators.make_operator(
-    SnapSVMClassifierImpl, _combined_schemas
+    _SnapSVMClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SnapSVMClassifier)

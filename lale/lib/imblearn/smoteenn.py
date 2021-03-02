@@ -17,7 +17,7 @@ from imblearn.combine import SMOTEENN as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,7 +30,7 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class SMOTEENNImpl(BaseResamplerImpl):
+class _SMOTEENNImpl(_BaseResamplerImpl):
     def __init__(
         self,
         operator=None,
@@ -50,7 +50,7 @@ class SMOTEENNImpl(BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(SMOTEENNImpl, self).__init__(
+        super(_SMOTEENNImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -185,6 +185,6 @@ Combine over- and under-sampling using SMOTE and Edited Nearest Neighbours.""",
 }
 
 
-SMOTEENN = lale.operators.make_operator(SMOTEENNImpl, _combined_schemas)
+SMOTEENN = lale.operators.make_operator(_SMOTEENNImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(SMOTEENN)

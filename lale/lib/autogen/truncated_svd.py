@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class TruncatedSVDImpl:
+class _TruncatedSVDImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -120,6 +120,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-TruncatedSVD = make_operator(TruncatedSVDImpl, _combined_schemas)
+TruncatedSVD = make_operator(_TruncatedSVDImpl, _combined_schemas)
 
 set_docstrings(TruncatedSVD)

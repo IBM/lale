@@ -17,7 +17,7 @@ from imblearn.over_sampling import ADASYN as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,7 +30,7 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class ADASYNImpl(BaseResamplerImpl):
+class _ADASYNImpl(_BaseResamplerImpl):
     def __init__(
         self,
         operator=None,
@@ -50,7 +50,7 @@ class ADASYNImpl(BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(ADASYNImpl, self).__init__(
+        super(_ADASYNImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -192,6 +192,6 @@ _combined_schemas = {
 }
 
 
-ADASYN = lale.operators.make_operator(ADASYNImpl, _combined_schemas)
+ADASYN = lale.operators.make_operator(_ADASYNImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(ADASYN)

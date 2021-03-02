@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class IncrementalPCAImpl:
+class _IncrementalPCAImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -119,6 +119,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-IncrementalPCA = make_operator(IncrementalPCAImpl, _combined_schemas)
+IncrementalPCA = make_operator(_IncrementalPCAImpl, _combined_schemas)
 
 set_docstrings(IncrementalPCA)

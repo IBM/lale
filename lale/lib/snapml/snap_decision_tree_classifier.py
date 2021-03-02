@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapDecisionTreeClassifierImpl:
+class _SnapDecisionTreeClassifierImpl:
     def __init__(
         self,
         criterion="gini",
@@ -328,7 +328,7 @@ _combined_schemas = {
 
 
 SnapDecisionTreeClassifier = lale.operators.make_operator(
-    SnapDecisionTreeClassifierImpl, _combined_schemas
+    _SnapDecisionTreeClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SnapDecisionTreeClassifier)

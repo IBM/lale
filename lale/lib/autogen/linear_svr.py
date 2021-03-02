@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LinearSVRImpl:
+class _LinearSVRImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -186,6 +186,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-LinearSVR = make_operator(LinearSVRImpl, _combined_schemas)
+LinearSVR = make_operator(_LinearSVRImpl, _combined_schemas)
 
 set_docstrings(LinearSVR)

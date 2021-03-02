@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class MultinomialNBImpl:
+class _MultinomialNBImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -128,6 +128,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-MultinomialNB = make_operator(MultinomialNBImpl, _combined_schemas)
+MultinomialNB = make_operator(_MultinomialNBImpl, _combined_schemas)
 
 set_docstrings(MultinomialNB)

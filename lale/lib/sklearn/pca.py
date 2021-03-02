@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class PCAImpl:
+class _PCAImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.decomposition.PCA(**self._hyperparams)
@@ -238,6 +238,6 @@ _combined_schemas = {
     },
 }
 
-PCA = lale.operators.make_operator(PCAImpl, _combined_schemas)
+PCA = lale.operators.make_operator(_PCAImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(PCA)

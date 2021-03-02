@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class ExtraTreesRegressorImpl:
+class _ExtraTreesRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.ensemble.ExtraTreesRegressor(**self._hyperparams)
@@ -275,7 +275,7 @@ _combined_schemas = {
 
 ExtraTreesRegressor: lale.operators.PlannedIndividualOp
 ExtraTreesRegressor = lale.operators.make_operator(
-    ExtraTreesRegressorImpl, _combined_schemas
+    _ExtraTreesRegressorImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

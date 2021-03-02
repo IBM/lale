@@ -28,7 +28,7 @@ from .util import (
 )
 
 
-class OptimPreprocImpl:
+class _OptimPreprocImpl:
     def __init__(
         self,
         favorable_labels,
@@ -206,6 +206,6 @@ _combined_schemas = {
 }
 
 
-OptimPreproc = lale.operators.make_operator(OptimPreprocImpl, _combined_schemas)
+OptimPreproc = lale.operators.make_operator(_OptimPreprocImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(OptimPreproc)

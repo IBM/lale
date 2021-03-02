@@ -94,7 +94,7 @@ def auto_gbt(prediction_type):
             return GradientBoostingClassifier
 
 
-class AutoPipelineImpl:
+class _AutoPipelineImpl:
     _summary: Optional[pd.DataFrame]
 
     def __init__(
@@ -474,6 +474,6 @@ For an example, see `demo_auto_pipeline.ipynb`_.
 }
 
 
-AutoPipeline = lale.operators.make_operator(AutoPipelineImpl, _combined_schemas)
+AutoPipeline = lale.operators.make_operator(_AutoPipelineImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(AutoPipeline)

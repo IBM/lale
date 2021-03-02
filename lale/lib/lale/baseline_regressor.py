@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class BaselineRegressorImpl:
+class _BaselineRegressorImpl:
     def __init__(self):
         pass
 
@@ -93,7 +93,7 @@ _combined_schemas = {
 
 
 BaselineRegressor = lale.operators.make_operator(
-    BaselineRegressorImpl, _combined_schemas
+    _BaselineRegressorImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(BaselineRegressor)

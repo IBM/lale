@@ -183,7 +183,7 @@ operators that require numeric data.
 }
 
 
-class ProtectedAttributesEncoderImpl:
+class _ProtectedAttributesEncoderImpl:
     def __init__(
         self,
         favorable_labels=None,
@@ -300,7 +300,7 @@ class ProtectedAttributesEncoderImpl:
 
 
 ProtectedAttributesEncoder = lale.operators.make_operator(
-    ProtectedAttributesEncoderImpl, _combined_schemas,
+    _ProtectedAttributesEncoderImpl, _combined_schemas,
 )
 
 lale.docstrings.set_docstrings(ProtectedAttributesEncoder)

@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class RidgeImpl:
+class _RidgeImpl:
     def __init__(
         self,
         alpha=None,
@@ -231,6 +231,6 @@ _combined_schemas = {
 }
 
 
-Ridge = lale.operators.make_operator(RidgeImpl, _combined_schemas)
+Ridge = lale.operators.make_operator(_RidgeImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Ridge)

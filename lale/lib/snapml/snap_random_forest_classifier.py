@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapRandomForestClassifierImpl:
+class _SnapRandomForestClassifierImpl:
     def __init__(
         self,
         n_estimators=10,
@@ -340,7 +340,7 @@ _combined_schemas = {
 
 
 SnapRandomForestClassifier = lale.operators.make_operator(
-    SnapRandomForestClassifierImpl, _combined_schemas
+    _SnapRandomForestClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SnapRandomForestClassifier)

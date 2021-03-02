@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LinearRegressionImpl:
+class _LinearRegressionImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -132,6 +132,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-LinearRegression = make_operator(LinearRegressionImpl, _combined_schemas)
+LinearRegression = make_operator(_LinearRegressionImpl, _combined_schemas)
 
 set_docstrings(LinearRegression)

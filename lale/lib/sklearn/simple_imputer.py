@@ -21,7 +21,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SimpleImputerImpl:
+class _SimpleImputerImpl:
     def __init__(
         self,
         missing_values=None,
@@ -160,6 +160,6 @@ _combined_schemas = {
 }
 
 
-SimpleImputer = lale.operators.make_operator(SimpleImputerImpl, _combined_schemas)
+SimpleImputer = lale.operators.make_operator(_SimpleImputerImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(SimpleImputer)

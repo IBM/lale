@@ -21,7 +21,7 @@ import lale.docstrings
 import lale.operators
 
 
-class float32_transformImpl:
+class _float32_transformImpl:
     def __init__(self, activate_flag=True):
         self._hyperparams = {"activate_flag": activate_flag}
         self._wrapped_model = autoai_libs.transformers.exportable.float32_transform(
@@ -133,7 +133,7 @@ _combined_schemas = {
 
 
 float32_transform = lale.operators.make_operator(
-    float32_transformImpl, _combined_schemas
+    _float32_transformImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(float32_transform)

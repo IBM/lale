@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class FS2Impl:
+class _FS2Impl:
     def __init__(
         self, cols_ids_must_keep, additional_col_count_to_keep, ptype, eval_algo
     ):
@@ -157,6 +157,6 @@ _combined_schemas = {
 }
 
 
-FS2 = lale.operators.make_operator(FS2Impl, _combined_schemas)
+FS2 = lale.operators.make_operator(_FS2Impl, _combined_schemas)
 
 lale.docstrings.set_docstrings(FS2)

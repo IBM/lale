@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class RadiusNeighborsClassifierImpl:
+class _RadiusNeighborsClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -165,7 +165,7 @@ _combined_schemas = {
     },
 }
 RadiusNeighborsClassifier = make_operator(
-    RadiusNeighborsClassifierImpl, _combined_schemas
+    _RadiusNeighborsClassifierImpl, _combined_schemas
 )
 
 set_docstrings(RadiusNeighborsClassifier)

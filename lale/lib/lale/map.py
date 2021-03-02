@@ -26,7 +26,7 @@ import lale.docstrings
 import lale.operators
 
 
-class MapImpl:
+class _MapImpl:
     def __init__(self, columns, remainder="passthrough"):
         self.columns = columns
         self.remainder = remainder
@@ -152,6 +152,6 @@ _combined_schemas = {
 }
 
 
-Map = lale.operators.make_operator(MapImpl, _combined_schemas)
+Map = lale.operators.make_operator(_MapImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Map)

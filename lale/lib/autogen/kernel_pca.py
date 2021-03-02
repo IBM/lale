@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class KernelPCAImpl:
+class _KernelPCAImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -225,6 +225,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-KernelPCA = make_operator(KernelPCAImpl, _combined_schemas)
+KernelPCA = make_operator(_KernelPCAImpl, _combined_schemas)
 
 set_docstrings(KernelPCA)

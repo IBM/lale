@@ -19,7 +19,7 @@ import lale.helpers
 import lale.operators
 
 
-class BatchingImpl:
+class _BatchingImpl:
     def __init__(
         self,
         operator=None,
@@ -182,6 +182,6 @@ the intermediate outputs if specified.""",
 }
 
 
-Batching = lale.operators.make_operator(BatchingImpl, _combined_schemas)
+Batching = lale.operators.make_operator(_BatchingImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Batching)

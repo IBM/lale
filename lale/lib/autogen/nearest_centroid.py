@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class NearestCentroidImpl:
+class _NearestCentroidImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -95,6 +95,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-NearestCentroid = make_operator(NearestCentroidImpl, _combined_schemas)
+NearestCentroid = make_operator(_NearestCentroidImpl, _combined_schemas)
 
 set_docstrings(NearestCentroid)

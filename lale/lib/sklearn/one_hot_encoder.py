@@ -132,7 +132,7 @@ _combined_schemas = {
 }
 
 
-class OneHotEncoderImpl:
+class _OneHotEncoderImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.OneHotEncoder(**self._hyperparams)
@@ -181,6 +181,6 @@ class OneHotEncoderImpl:
         return result
 
 
-OneHotEncoder = lale.operators.make_operator(OneHotEncoderImpl, _combined_schemas)
+OneHotEncoder = lale.operators.make_operator(_OneHotEncoderImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(OneHotEncoder)

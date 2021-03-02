@@ -104,7 +104,7 @@ class TestOperatorWithoutSchema(unittest.TestCase):
         clf.fit(iris.data, iris.target)
 
 
-class TestLazyImpl(unittest.TestCase):
+class _TestLazyImpl(unittest.TestCase):
     def test_lazy_impl(self):
         from lale.lib.lale import Hyperopt
 

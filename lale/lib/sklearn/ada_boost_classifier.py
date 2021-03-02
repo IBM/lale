@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class AdaBoostClassifierImpl:
+class _AdaBoostClassifierImpl:
     def __init__(
         self,
         base_estimator=None,
@@ -231,7 +231,7 @@ _combined_schemas = {
 }
 
 AdaBoostClassifier = lale.operators.make_operator(
-    AdaBoostClassifierImpl, _combined_schemas
+    _AdaBoostClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(AdaBoostClassifier)

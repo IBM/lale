@@ -63,7 +63,7 @@ def _columns_to_list(columns, kind, X):
     return result
 
 
-class ProjectImpl:
+class _ProjectImpl:
     def __init__(self, columns=None, drop_columns=None):
         self._hyperparams = {"columns": columns, "drop_columns": drop_columns}
 
@@ -310,6 +310,6 @@ NDArrayWithSchema([[1, 3],
 }
 
 
-Project = lale.operators.make_operator(ProjectImpl, _combined_schemas)
+Project = lale.operators.make_operator(_ProjectImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Project)

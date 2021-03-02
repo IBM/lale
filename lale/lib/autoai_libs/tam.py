@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class TAMImpl:
+class _TAMImpl:
     def __init__(
         self,
         tans_class,
@@ -166,6 +166,6 @@ _combined_schemas = {
 }
 
 
-TAM = lale.operators.make_operator(TAMImpl, _combined_schemas)
+TAM = lale.operators.make_operator(_TAMImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(TAM)

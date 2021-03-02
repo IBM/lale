@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class SparsePCAImpl:
+class _SparsePCAImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -193,6 +193,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-SparsePCA = make_operator(SparsePCAImpl, _combined_schemas)
+SparsePCA = make_operator(_SparsePCAImpl, _combined_schemas)
 
 set_docstrings(SparsePCA)

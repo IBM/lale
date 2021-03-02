@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapDecisionTreeRegressorImpl:
+class _SnapDecisionTreeRegressorImpl:
     def __init__(
         self,
         criterion="mse",
@@ -284,7 +284,7 @@ _combined_schemas = {
 
 
 SnapDecisionTreeRegressor = lale.operators.make_operator(
-    SnapDecisionTreeRegressorImpl, _combined_schemas
+    _SnapDecisionTreeRegressorImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SnapDecisionTreeRegressor)

@@ -20,12 +20,12 @@ import sklearn.linear_model
 import lale.operators
 
 
-class IncreaseRowsImpl:
+class _IncreaseRowsImpl:
     def __init__(self, n_rows=5):
         self.n_rows = n_rows
 
     def fit(self, X, y=None):
-        result = IncreaseRowsImpl(self.n_rows)
+        result = _IncreaseRowsImpl(self.n_rows)
         return result
 
     def transform(self, X, y=None):
@@ -103,10 +103,10 @@ _combined_schemas = {
     },
 }
 
-IncreaseRows = lale.operators.make_operator(IncreaseRowsImpl, _combined_schemas)
+IncreaseRows = lale.operators.make_operator(_IncreaseRowsImpl, _combined_schemas)
 
 
-class MyLRImpl:
+class _MyLRImpl:
     _wrapped_model: sklearn.linear_model.LogisticRegression
 
     def __init__(self, penalty="l2", solver="liblinear", C=1.0):
@@ -115,7 +115,7 @@ class MyLRImpl:
         self.C = C
 
     def fit(self, X, y):
-        result = MyLRImpl(self.penalty, self.solver, self.C)
+        result = _MyLRImpl(self.penalty, self.solver, self.C)
         result._wrapped_model = sklearn.linear_model.LogisticRegression(
             penalty=self.penalty, solver=self.solver, C=self.C
         )
@@ -209,4 +209,4 @@ _combined_schemas = {
     },
 }
 
-MyLR = lale.operators.make_operator(MyLRImpl, _combined_schemas)
+MyLR = lale.operators.make_operator(_MyLRImpl, _combined_schemas)

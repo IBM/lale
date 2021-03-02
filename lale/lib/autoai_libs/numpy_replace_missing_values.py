@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NumpyReplaceMissingValuesImpl:
+class _NumpyReplaceMissingValuesImpl:
     def __init__(self, missing_values, filling_values=np.nan):
         self._hyperparams = {
             "missing_values": missing_values,
@@ -126,7 +126,7 @@ _combined_schemas = {
 
 
 NumpyReplaceMissingValues = lale.operators.make_operator(
-    NumpyReplaceMissingValuesImpl, _combined_schemas
+    _NumpyReplaceMissingValuesImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(NumpyReplaceMissingValues)

@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class GaussianProcessRegressorImpl:
+class _GaussianProcessRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -168,7 +168,7 @@ _combined_schemas = {
     },
 }
 GaussianProcessRegressor = make_operator(
-    GaussianProcessRegressorImpl, _combined_schemas
+    _GaussianProcessRegressorImpl, _combined_schemas
 )
 
 set_docstrings(GaussianProcessRegressor)

@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class OptStandardScalerImpl:
+class _OptStandardScalerImpl:
     def __init__(
         self,
         use_scaler_flag=True,
@@ -150,7 +150,7 @@ _combined_schemas = {
 
 
 OptStandardScaler = lale.operators.make_operator(
-    OptStandardScalerImpl, _combined_schemas
+    _OptStandardScalerImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(OptStandardScaler)

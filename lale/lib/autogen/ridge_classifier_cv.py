@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class RidgeClassifierCVImpl:
+class _RidgeClassifierCVImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -195,6 +195,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-RidgeClassifierCV = make_operator(RidgeClassifierCVImpl, _combined_schemas)
+RidgeClassifierCV = make_operator(_RidgeClassifierCVImpl, _combined_schemas)
 
 set_docstrings(RidgeClassifierCV)

@@ -32,7 +32,7 @@ from .util import (
 )
 
 
-class LFRImpl:
+class _LFRImpl:
     def __init__(
         self,
         favorable_labels,
@@ -224,6 +224,6 @@ _combined_schemas = {
 }
 
 
-LFR = lale.operators.make_operator(LFRImpl, _combined_schemas)
+LFR = lale.operators.make_operator(_LFRImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(LFR)

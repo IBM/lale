@@ -17,7 +17,7 @@ import lale.operators
 from lale.lib.lale.no_op import NoOp
 
 
-class BothImpl:
+class _BothImpl:
     # This should be equivalent to:
     # (op1 >> op2) | (op2 >> op1)
     # but with a smaller search space
@@ -122,6 +122,6 @@ _combined_schemas = {
 }
 
 
-Both = lale.operators.make_operator(BothImpl, _combined_schemas)
+Both = lale.operators.make_operator(_BothImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Both)

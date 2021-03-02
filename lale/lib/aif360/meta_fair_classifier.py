@@ -17,10 +17,10 @@ import aif360.algorithms.inprocessing
 import lale.docstrings
 import lale.operators
 
-from .util import _BaseInEstimatorImpl, _categorical_fairness_properties
+from .util import __BaseInEstimatorImpl, _categorical_fairness_properties
 
 
-class MetaFairClassifierImpl(_BaseInEstimatorImpl):
+class _MetaFairClassifierImpl(__BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
@@ -34,7 +34,7 @@ class MetaFairClassifierImpl(_BaseInEstimatorImpl):
         mitigator = aif360.algorithms.inprocessing.MetaFairClassifier(
             tau=tau, sensitive_attr=prot_attr_names[0], type=type,
         )
-        super(MetaFairClassifierImpl, self).__init__(
+        super(_MetaFairClassifierImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             redact=redact,
@@ -165,7 +165,7 @@ _combined_schemas = {
 
 
 MetaFairClassifier = lale.operators.make_operator(
-    MetaFairClassifierImpl, _combined_schemas
+    _MetaFairClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(MetaFairClassifier)

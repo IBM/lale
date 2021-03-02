@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SelectKBestImpl:
+class _SelectKBestImpl:
     def __init__(self, score_func=None, k=10):
         if score_func:
             self._hyperparams = {"score_func": score_func, "k": k}
@@ -133,6 +133,6 @@ _combined_schemas = {
 }
 
 
-SelectKBest = lale.operators.make_operator(SelectKBestImpl, _combined_schemas)
+SelectKBest = lale.operators.make_operator(_SelectKBestImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(SelectKBest)

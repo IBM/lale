@@ -45,7 +45,7 @@ def _rename_all_features(X):
     return pd.DataFrame(data=X, columns=mapped)
 
 
-class XGBClassifierImpl:
+class _XGBClassifierImpl:
     _wrapped_model: xgboost.XGBClassifier
 
     def __init__(self, **hyperparams):
@@ -56,7 +56,7 @@ or with
         self._hyperparams = hyperparams
 
     def fit(self, X, y, **fit_params):
-        result = XGBClassifierImpl(**self._hyperparams)
+        result = _XGBClassifierImpl(**self._hyperparams)
         result._wrapped_model = xgboost.XGBClassifier(**self._hyperparams)
         renamed_X = _rename_all_features(X)
         result._wrapped_model.fit(renamed_X, y, **fit_params)
@@ -434,7 +434,7 @@ _combined_schemas = {
 }
 
 XGBClassifier: lale.operators.PlannedIndividualOp
-XGBClassifier = lale.operators.make_operator(XGBClassifierImpl, _combined_schemas)
+XGBClassifier = lale.operators.make_operator(_XGBClassifierImpl, _combined_schemas)
 
 if xgboost_installed and xgboost.__version__ >= "0.90":
     # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/

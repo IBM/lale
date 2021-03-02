@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NMFImpl:
+class _NMFImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = SKLModel(**self._hyperparams)
@@ -218,7 +218,7 @@ _combined_schemas = {
 }
 
 NMF: lale.operators.PlannedIndividualOp
-NMF = lale.operators.make_operator(NMFImpl, _combined_schemas)
+NMF = lale.operators.make_operator(_NMFImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html

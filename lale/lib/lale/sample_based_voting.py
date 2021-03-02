@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SampleBasedVotingImpl:
+class _SampleBasedVotingImpl:
     def __init__(self, hyperparams=None):
         self._hyperparams = hyperparams
         self.end_index_list = None
@@ -102,7 +102,7 @@ _combined_schemas = {
 
 
 SampleBasedVoting = lale.operators.make_operator(
-    SampleBasedVotingImpl, _combined_schemas
+    _SampleBasedVotingImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SampleBasedVoting)

@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class AdaBoostRegressorImpl:
+class _AdaBoostRegressorImpl:
     def __init__(
         self,
         base_estimator=None,
@@ -169,7 +169,7 @@ _combined_schemas = {
 
 
 AdaBoostRegressor = lale.operators.make_operator(
-    AdaBoostRegressorImpl, _combined_schemas
+    _AdaBoostRegressorImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(AdaBoostRegressor)

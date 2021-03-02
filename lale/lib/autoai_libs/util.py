@@ -28,7 +28,7 @@ engineering."""
     estimator = orig_pipeline.get_last()
     prep = orig_pipeline.remove_last()
     cognito = None
-    PREP_END = "lale.lib.autoai_libs.numpy_permute_array.NumpyPermuteArrayImpl"
+    PREP_END = "lale.lib.autoai_libs.numpy_permute_array._NumpyPermuteArrayImpl"
     while True:
         last = prep.get_last()
         if last is None or not last.class_name().startswith("lale.lib.autoai_libs."):

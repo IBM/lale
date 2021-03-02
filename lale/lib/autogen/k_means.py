@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class KMeansImpl:
+class _KMeansImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -220,6 +220,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-KMeans = make_operator(KMeansImpl, _combined_schemas)
+KMeans = make_operator(_KMeansImpl, _combined_schemas)
 
 set_docstrings(KMeans)

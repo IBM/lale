@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class SimpleImputerImpl:
+class _SimpleImputerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -108,6 +108,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-SimpleImputer = make_operator(SimpleImputerImpl, _combined_schemas)
+SimpleImputer = make_operator(_SimpleImputerImpl, _combined_schemas)
 
 set_docstrings(SimpleImputer)

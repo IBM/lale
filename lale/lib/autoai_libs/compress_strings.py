@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class CompressStringsImpl:
+class _CompressStringsImpl:
     def __init__(
         self,
         compress_type="string",
@@ -191,6 +191,6 @@ _combined_schemas = {
 }
 
 
-CompressStrings = lale.operators.make_operator(CompressStringsImpl, _combined_schemas)
+CompressStrings = lale.operators.make_operator(_CompressStringsImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(CompressStrings)

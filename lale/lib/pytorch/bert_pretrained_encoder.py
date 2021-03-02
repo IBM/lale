@@ -26,7 +26,7 @@ import lale.operators
 logging.basicConfig(level=logging.INFO)
 
 
-class BertPretrainedEncoderImpl:
+class _BertPretrainedEncoderImpl:
     def __init__(self, batch_size=32):
         # Load pre-trained model tokenizer (vocabulary)
         self.tokenizer = BertTokenizer.from_pretrained("bert-base-uncased")
@@ -37,7 +37,7 @@ class BertPretrainedEncoderImpl:
 
     # def fit(self, X, y):
     #     # TODO: Find the right value for max sequence length
-    #     return BertPretrainedEncoderImpl()
+    #     return _BertPretrainedEncoderImpl()
 
     def transform(self, X):
         if isinstance(X, np.ndarray) or isinstance(X, pd.DataFrame):
@@ -195,7 +195,7 @@ _combined_schemas = {
 
 
 BertPretrainedEncoder = lale.operators.make_operator(
-    BertPretrainedEncoderImpl, _combined_schemas
+    _BertPretrainedEncoderImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(BertPretrainedEncoder)

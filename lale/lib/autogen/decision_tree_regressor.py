@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class DecisionTreeRegressorImpl:
+class _DecisionTreeRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -267,6 +267,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-DecisionTreeRegressor = make_operator(DecisionTreeRegressorImpl, _combined_schemas)
+DecisionTreeRegressor = make_operator(_DecisionTreeRegressorImpl, _combined_schemas)
 
 set_docstrings(DecisionTreeRegressor)

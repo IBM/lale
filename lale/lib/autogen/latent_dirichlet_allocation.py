@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LatentDirichletAllocationImpl:
+class _LatentDirichletAllocationImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -275,7 +275,7 @@ _combined_schemas = {
     },
 }
 LatentDirichletAllocation = make_operator(
-    LatentDirichletAllocationImpl, _combined_schemas
+    _LatentDirichletAllocationImpl, _combined_schemas
 )
 
 set_docstrings(LatentDirichletAllocation)

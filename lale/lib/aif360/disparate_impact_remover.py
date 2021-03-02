@@ -31,7 +31,7 @@ from .util import (
 )
 
 
-class DisparateImpactRemoverImpl:
+class _DisparateImpactRemoverImpl:
     def __init__(
         self,
         favorable_labels,
@@ -179,7 +179,7 @@ _combined_schemas = {
 }
 
 DisparateImpactRemover = lale.operators.make_operator(
-    DisparateImpactRemoverImpl, _combined_schemas
+    _DisparateImpactRemoverImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(DisparateImpactRemover)

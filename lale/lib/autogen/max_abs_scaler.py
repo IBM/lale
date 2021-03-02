@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class MaxAbsScalerImpl:
+class _MaxAbsScalerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -87,6 +87,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-MaxAbsScaler = make_operator(MaxAbsScalerImpl, _combined_schemas)
+MaxAbsScaler = make_operator(_MaxAbsScalerImpl, _combined_schemas)
 
 set_docstrings(MaxAbsScaler)

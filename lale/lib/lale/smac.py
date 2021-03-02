@@ -50,7 +50,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class SMACImpl:
+class _SMACImpl:
     def __init__(
         self,
         estimator=None,
@@ -441,6 +441,6 @@ Other scoring metrics:
 }
 
 
-SMAC = lale.operators.make_operator(SMACImpl, _combined_schemas)
+SMAC = lale.operators.make_operator(_SMACImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(SMAC)

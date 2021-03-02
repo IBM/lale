@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class FS1Impl:
+class _FS1Impl:
     def __init__(self, cols_ids_must_keep, additional_col_count_to_keep, ptype):
         self._hyperparams = {
             "cols_ids_must_keep": cols_ids_must_keep,
@@ -144,6 +144,6 @@ _combined_schemas = {
 }
 
 
-FS1 = lale.operators.make_operator(FS1Impl, _combined_schemas)
+FS1 = lale.operators.make_operator(_FS1Impl, _combined_schemas)
 
 lale.docstrings.set_docstrings(FS1)

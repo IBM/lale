@@ -16,7 +16,7 @@ import lale.docstrings
 import lale.operators
 
 
-class IdentityWrapperImpl:
+class _IdentityWrapperImpl:
     # This should be equivalent to:
     # the underlying operator:
     # IdentityWrapper(op) should behave the same as op
@@ -108,6 +108,6 @@ _combined_schemas = {
 }
 
 
-IdentityWrapper = lale.operators.make_operator(IdentityWrapperImpl, _combined_schemas)
+IdentityWrapper = lale.operators.make_operator(_IdentityWrapperImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(IdentityWrapper)
