@@ -812,12 +812,7 @@ class TestAutoPipeline(unittest.TestCase):
 
     def test_openml_creditg(self):
         import sklearn.model_selection
-        import xgboost
 
-        print(
-            "***************************************xgboost version*******",
-            xgboost.__version__,
-        )
         # classification, categoricals+numbers incl. string, no missing values
         (orig_train_X, orig_train_y), _ = lale.datasets.openml.fetch(
             "credit-g", "classification", preprocess=False
