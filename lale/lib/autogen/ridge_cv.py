@@ -173,5 +173,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(RidgeCVImpl, _combined_schemas)
 RidgeCV = make_operator(RidgeCVImpl, _combined_schemas)
+
+set_docstrings(RidgeCV)

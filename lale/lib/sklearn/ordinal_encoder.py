@@ -215,6 +215,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(OrdinalEncoderImpl, _combined_schemas)
 
 OrdinalEncoder = lale.operators.make_operator(OrdinalEncoderImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(OrdinalEncoder)

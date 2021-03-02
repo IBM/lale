@@ -374,4 +374,5 @@ if sklearn.__version__ >= "0.21":
         ),
     )
 
-lale.docstrings.set_docstrings(SGDRegressorImpl, SGDRegressor._schemas)
+
+lale.docstrings.set_docstrings(SGDRegressor)

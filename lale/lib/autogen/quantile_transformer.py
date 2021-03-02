@@ -136,5 +136,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(QuantileTransformerImpl, _combined_schemas)
 QuantileTransformer = make_operator(QuantileTransformerImpl, _combined_schemas)
+
+set_docstrings(QuantileTransformer)

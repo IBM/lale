@@ -125,7 +125,8 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(TransformedTargetRegressorImpl, _combined_schemas)
 TransformedTargetRegressor = make_operator(
     TransformedTargetRegressorImpl, _combined_schemas
 )
+
+set_docstrings(TransformedTargetRegressor)

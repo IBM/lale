@@ -158,5 +158,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(FactorAnalysisImpl, _combined_schemas)
 FactorAnalysis = make_operator(FactorAnalysisImpl, _combined_schemas)
+
+set_docstrings(FactorAnalysis)

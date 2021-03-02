@@ -313,5 +313,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(RandomForestClassifierImpl, _combined_schemas)
 RandomForestClassifier = make_operator(RandomForestClassifierImpl, _combined_schemas)
+
+set_docstrings(RandomForestClassifier)

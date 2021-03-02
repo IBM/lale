@@ -206,8 +206,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(InstanceHardnessThresholdImpl, _combined_schemas)
 
 InstanceHardnessThreshold = lale.operators.make_operator(
     InstanceHardnessThresholdImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(InstanceHardnessThreshold)

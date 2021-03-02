@@ -79,5 +79,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(LabelEncoderImpl, _combined_schemas)
 LabelEncoder = make_operator(LabelEncoderImpl, _combined_schemas)
+
+set_docstrings(LabelEncoder)

@@ -225,5 +225,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(MultiTaskElasticNetCVImpl, _combined_schemas)
 MultiTaskElasticNetCV = make_operator(MultiTaskElasticNetCVImpl, _combined_schemas)
+
+set_docstrings(MultiTaskElasticNetCV)

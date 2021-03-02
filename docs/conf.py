@@ -30,6 +30,7 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
+import builtins
 import os
 import sys
 from typing import Dict
@@ -48,6 +49,10 @@ release = ""
 
 sys.path.append(os.path.join(os.path.dirname(__name__), "../lale"))
 import sphinx_rtd_theme  # isort:skip # noqa:E402
+
+# This is so that we can detect if we are running a sphinx build
+# and so generate pseudo-classes for documentation
+setattr(builtins, "__sphinx_build__", True)
 
 # -- General configuration ---------------------------------------------------
 

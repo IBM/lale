@@ -161,5 +161,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(LabelPropagationImpl, _combined_schemas)
 LabelPropagation = make_operator(LabelPropagationImpl, _combined_schemas)
+
+set_docstrings(LabelPropagation)

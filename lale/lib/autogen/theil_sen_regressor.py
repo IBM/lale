@@ -172,5 +172,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(TheilSenRegressorImpl, _combined_schemas)
 TheilSenRegressor = make_operator(TheilSenRegressorImpl, _combined_schemas)
+
+set_docstrings(TheilSenRegressor)

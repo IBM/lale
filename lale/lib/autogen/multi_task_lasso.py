@@ -170,5 +170,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(MultiTaskLassoImpl, _combined_schemas)
 MultiTaskLasso = make_operator(MultiTaskLassoImpl, _combined_schemas)
+
+set_docstrings(MultiTaskLasso)

@@ -209,6 +209,7 @@ Variant of SMOTE algorithm which use an SVM algorithm to detect sample to use fo
     },
 }
 
-lale.docstrings.set_docstrings(SVMSMOTEImpl, _combined_schemas)
 
 SVMSMOTE = lale.operators.make_operator(SVMSMOTEImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SVMSMOTE)

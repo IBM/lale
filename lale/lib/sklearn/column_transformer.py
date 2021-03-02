@@ -226,4 +226,5 @@ if sklearn.__version__ >= "0.21":
         },
     )
 
-lale.docstrings.set_docstrings(ColumnTransformerImpl, ColumnTransformer._schemas)
+
+lale.docstrings.set_docstrings(ColumnTransformer)

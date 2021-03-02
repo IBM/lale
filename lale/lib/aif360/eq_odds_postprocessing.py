@@ -105,8 +105,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(EqOddsPostprocessingImpl, _combined_schemas)
-
 EqOddsPostprocessing = lale.operators.make_operator(
     EqOddsPostprocessingImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(EqOddsPostprocessing)

@@ -125,5 +125,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(FunctionTransformerImpl, _combined_schemas)
 FunctionTransformer = make_operator(FunctionTransformerImpl, _combined_schemas)
+
+set_docstrings(FunctionTransformer)

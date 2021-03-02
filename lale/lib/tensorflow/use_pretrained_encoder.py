@@ -219,8 +219,9 @@ Daniel Cer, et al. Universal Sentence Encoder. arXiv:1803.11175, 2018
     },
 }
 
-lale.docstrings.set_docstrings(USEPretrainedEncoderImpl, _combined_schemas)
 
 USEPretrainedEncoder = lale.operators.make_operator(
     USEPretrainedEncoderImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(USEPretrainedEncoder)

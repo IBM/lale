@@ -121,6 +121,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(BothImpl, _combined_schemas)
 
 Both = lale.operators.make_operator(BothImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Both)

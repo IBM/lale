@@ -245,4 +245,5 @@ if sklearn.__version__ >= "0.22":
         )
     )
 
-lale.docstrings.set_docstrings(SVRImpl, SVR._schemas)
+
+lale.docstrings.set_docstrings(SVR)

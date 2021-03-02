@@ -192,5 +192,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(KNeighborsClassifierImpl, _combined_schemas)
 KNeighborsClassifier = make_operator(KNeighborsClassifierImpl, _combined_schemas)
+
+set_docstrings(KNeighborsClassifier)

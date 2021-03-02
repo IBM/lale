@@ -324,8 +324,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SnapSVMClassifierImpl, _combined_schemas)
 
 SnapSVMClassifier = lale.operators.make_operator(
     SnapSVMClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(SnapSVMClassifier)

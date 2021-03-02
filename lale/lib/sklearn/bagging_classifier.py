@@ -301,8 +301,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(BaggingClassifierImpl, _combined_schemas)
 
 BaggingClassifier = lale.operators.make_operator(
     BaggingClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(BaggingClassifier)

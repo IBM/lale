@@ -274,7 +274,8 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(LatentDirichletAllocationImpl, _combined_schemas)
 LatentDirichletAllocation = make_operator(
     LatentDirichletAllocationImpl, _combined_schemas
 )
+
+set_docstrings(LatentDirichletAllocation)

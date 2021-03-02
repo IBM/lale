@@ -293,8 +293,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SnapRandomForestRegressorImpl, _combined_schemas)
 
 SnapRandomForestRegressor = lale.operators.make_operator(
     SnapRandomForestRegressorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(SnapRandomForestRegressor)

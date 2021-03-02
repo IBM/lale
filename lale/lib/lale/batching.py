@@ -181,6 +181,7 @@ the intermediate outputs if specified.""",
     },
 }
 
-lale.docstrings.set_docstrings(BatchingImpl, _combined_schemas)
 
 Batching = lale.operators.make_operator(BatchingImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Batching)

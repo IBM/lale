@@ -187,8 +187,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(QuadraticDiscriminantAnalysisImpl, _combined_schemas)
 
 QuadraticDiscriminantAnalysis = lale.operators.make_operator(
     QuadraticDiscriminantAnalysisImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(QuadraticDiscriminantAnalysis)

@@ -191,6 +191,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ADASYNImpl, _combined_schemas)
 
 ADASYN = lale.operators.make_operator(ADASYNImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(ADASYN)

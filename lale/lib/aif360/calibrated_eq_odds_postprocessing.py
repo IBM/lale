@@ -117,8 +117,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(CalibratedEqOddsPostprocessingImpl, _combined_schemas)
-
 CalibratedEqOddsPostprocessing = lale.operators.make_operator(
     CalibratedEqOddsPostprocessingImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(CalibratedEqOddsPostprocessing)

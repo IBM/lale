@@ -190,5 +190,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(LocallyLinearEmbeddingImpl, _combined_schemas)
 LocallyLinearEmbedding = make_operator(LocallyLinearEmbeddingImpl, _combined_schemas)
+
+set_docstrings(LocallyLinearEmbedding)

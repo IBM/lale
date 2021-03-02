@@ -108,5 +108,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(SimpleImputerImpl, _combined_schemas)
 SimpleImputer = make_operator(SimpleImputerImpl, _combined_schemas)
+
+set_docstrings(SimpleImputer)

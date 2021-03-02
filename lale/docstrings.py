@@ -1,4 +1,11 @@
+import inspect
 import pprint
+from typing import TYPE_CHECKING
+
+import lale.helpers
+
+if TYPE_CHECKING:
+    from lale.operators import IndividualOp
 
 
 def _indent(prefix, string, first_prefix=None):
@@ -162,17 +169,6 @@ def _params_docstring(params_schema):
     return result
 
 
-def _method_docstring(description, params_schema, result_schema=None):
-    result = description + "\n\n"
-    result += _params_docstring(params_schema)
-    if result_schema is not None:
-        result += "Returns\n-------\n"
-        item_docstring = _schema_docstring("result", result_schema)
-        result += _indent("  ", item_docstring, "")
-        result += "\n\n"
-    return result
-
-
 def _hyperparams_docstring(hyperparams_schema):
     result = _params_docstring(hyperparams_schema["allOf"][0])
     if len(hyperparams_schema["allOf"]) > 1:
@@ -185,13 +181,26 @@ def _hyperparams_docstring(hyperparams_schema):
     return result
 
 
-def _cls_docstring(impl_cls, combined_schemas):
+def _method_docstring(description, ready_string, params_schema, result_schema=None):
+    result = description + "\n\n"
+    if ready_string is not None:
+        result += "*Note: " + ready_string + "*\n\n"
+        result += (
+            "Once this method is available, it will have the following signature: \n\n"
+        )
+    result += _params_docstring(params_schema)
+    if result_schema is not None:
+        result += "Returns\n-------\n"
+        item_docstring = _schema_docstring("result", result_schema)
+        result += _indent("  ", item_docstring, "")
+        result += "\n\n"
+    return result
+
+
+def _cls_docstring(cls, combined_schemas):
     descr_lines = combined_schemas["description"].splitlines()
     result = descr_lines[0]
-    module_name = impl_cls.__module__
-    cls_name = impl_cls.__name__
-    result += f'\n\nInstead of using `{module_name}.{cls_name}` directly,\nuse its wrapper, `{module_name[:module_name.rfind(".")]}.{cls_name[:-4]}`.\n\n'
-    result += "This documentation is auto-generated from JSON schemas.\n\n"
+    result += "\n\nThis documentation is auto-generated from JSON schemas.\n\n"
     more_description = "\n".join(descr_lines[1:]).strip()
     if more_description != "":
         result += more_description + "\n\n"
@@ -200,44 +209,140 @@ def _cls_docstring(impl_cls, combined_schemas):
     return result
 
 
-def set_docstrings(impl_cls, combined_schemas):
-    assert impl_cls.__doc__ is None
-    impl_cls.__doc__ = _cls_docstring(impl_cls, combined_schemas)
-    if hasattr(impl_cls, "fit"):
-        fit_doc = _method_docstring(
-            "Train the operator.", combined_schemas["properties"]["input_fit"]
-        )
-        assert impl_cls.fit.__doc__ in [None, fit_doc]
-        impl_cls.fit.__doc__ = fit_doc
-    if hasattr(impl_cls, "transform"):
-        transform_doc = _method_docstring(
-            "Transform the data.",
-            combined_schemas["properties"]["input_transform"],
-            combined_schemas["properties"]["output_transform"],
-        )
-        assert impl_cls.transform.__doc__ in [None, transform_doc]
-        impl_cls.transform.__doc__ = transform_doc
-    if hasattr(impl_cls, "predict"):
-        predict_doc = _method_docstring(
-            "Make predictions.",
-            combined_schemas["properties"]["input_predict"],
-            combined_schemas["properties"]["output_predict"],
-        )
-        assert impl_cls.predict.__doc__ in [None, predict_doc]
-        impl_cls.predict.__doc__ = predict_doc
-    if hasattr(impl_cls, "predict_proba"):
-        predict_proba_doc = _method_docstring(
-            "Probability estimates for all classes.",
-            combined_schemas["properties"]["input_predict_proba"],
-            combined_schemas["properties"]["output_predict_proba"],
-        )
-        assert impl_cls.predict_proba.__doc__ in [None, predict_proba_doc]
-        impl_cls.predict_proba.__doc__ = predict_proba_doc
-    if hasattr(impl_cls, "decision_function"):
-        decision_function_doc = _method_docstring(
-            "Confidence scores for all classes.",
-            combined_schemas["properties"]["input_decision_function"],
-            combined_schemas["properties"]["output_decision_function"],
-        )
-        assert impl_cls.decision_function.__doc__ in [None, decision_function_doc]
-        impl_cls.decision_function.__doc__ = decision_function_doc
+def _set_docstrings_helper(cls, lale_op, combined_schemas):
+    properties = combined_schemas.get("properties", None)
+
+    assert cls.__doc__ is None
+    impl_cls = lale_op._impl_class()
+    cls.__doc__ = _cls_docstring(impl_cls, combined_schemas)
+
+    # def __init__(self):
+    #     pass
+    #
+    # if properties is not None:
+    #     hyperparams_schema = properties.get("hyperparams", None)
+    #     if hyperparams_schema is not None:
+    #         doc = _hyperparams_docstring(hyperparams_schema)
+    #         __init__.__doc__ = doc
+    #         cls.__init__ = __init__
+
+    def make_fun(
+        fun_name,
+        fake_fun,
+        description,
+        ready_string,
+        params_schema_key,
+        result_schema_key=None,
+    ):
+        params_schema = None
+        result_schema = None
+        if properties is not None:
+            if params_schema_key is not None:
+                params_schema = properties.get(params_schema_key, None)
+            if result_schema_key is not None:
+                result_schema = properties.get(result_schema_key, None)
+
+        if hasattr(impl_cls, fun_name):
+            ready_string_to_use = None
+            if not hasattr(cls, fun_name):
+                ready_string_to_use = ready_string
+            doc = _method_docstring(
+                description, ready_string_to_use, params_schema, result_schema
+            )
+            setattr(cls, fun_name, fake_fun)
+            fake_fun.__name__ = "fun_name"
+            fake_fun.__doc__ = doc
+
+    def fit(self, X, y=None, **fit_params):
+        pass
+
+    make_fun(
+        "fit",
+        fit,
+        "Train the operator.",
+        "The fit method is not available until this operator is trainable.",
+        "input_fit",
+    )
+
+    def transform(self, X, y=None):
+        pass
+
+    make_fun(
+        "transform",
+        transform,
+        "Transform the data.",
+        "The transform method is not available until this operator is trained.",
+        "input_transform",
+        "output_transform",
+    )
+
+    def predict(self, X):
+        pass
+
+    make_fun(
+        "predict",
+        predict,
+        "Make predictions.",
+        "The predict method is not available until this operator is trained.",
+        "input_predict",
+        "output_predict",
+    )
+
+    def predict_proba(self, X):
+        pass
+
+    make_fun(
+        "predict_proba",
+        predict_proba,
+        "Probability estimates for all classes.",
+        "The predict_proba method is not available until this operator is trained.",
+        "input_predict_proba",
+        "output_predict_proba",
+    )
+
+    def decision_function(self, X):
+        pass
+
+    make_fun(
+        "decision_function",
+        decision_function,
+        "Confidence scores for all classes.",
+        "The decision_function method is not available until this operator is trained.",
+        "input_decision_function",
+        "output_decision_function",
+    )
+
+
+def set_docstrings(lale_op: "IndividualOp"):
+    """
+    If we are running under sphinx, this will take
+    a variable whose value is a lale operator
+    and change it to a value of an artificial class
+    with appropriately documented methods.
+    """
+    try:
+        if __sphinx_build__:  # type: ignore
+            try:
+
+                # impl = lale_op._impl_class()
+                frm = inspect.stack()[1]
+                module = inspect.getmodule(frm[0])
+                assert module is not None
+                combined_schemas = lale_op._schemas
+                name = lale.helpers.arg_name(pos=0, level=1)
+                assert name is not None
+
+                # fake init method to hide the inherited init method
+                # so the internal constructor parameters are not displayed
+                def init(self):
+                    pass
+
+                new_class = type(name, (lale_op.__class__,), {"__init__": init})
+                new_class.__module__ = module.__name__
+                module.__dict__[name] = new_class
+
+                _set_docstrings_helper(new_class, lale_op, combined_schemas)
+            except NameError as e:
+                raise ValueError(e)
+    except NameError:
+        pass

@@ -119,5 +119,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(IncrementalPCAImpl, _combined_schemas)
 IncrementalPCA = make_operator(IncrementalPCAImpl, _combined_schemas)
+
+set_docstrings(IncrementalPCA)

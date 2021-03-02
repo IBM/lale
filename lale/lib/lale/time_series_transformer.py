@@ -518,8 +518,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TimeFreqEigenVectorsImpl, _combined_schemas)
 
 TimeFreqEigenVectors = lale.operators.make_operator(
     TimeFreqEigenVectorsImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(TimeFreqEigenVectors)

@@ -339,6 +339,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(GridSearchCVImpl, _combined_schemas)
 
 GridSearchCV = lale.operators.make_operator(GridSearchCVImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(GridSearchCV)

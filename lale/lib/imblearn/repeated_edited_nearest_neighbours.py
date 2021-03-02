@@ -152,8 +152,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RepeatedEditedNearestNeighboursImpl, _combined_schemas)
 
 RepeatedEditedNearestNeighbours = lale.operators.make_operator(
     RepeatedEditedNearestNeighboursImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(RepeatedEditedNearestNeighbours)

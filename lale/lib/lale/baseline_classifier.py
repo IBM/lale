@@ -102,8 +102,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(BaselineClassifierImpl, _combined_schemas)
 
 BaselineClassifier = lale.operators.make_operator(
     BaselineClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(BaselineClassifier)

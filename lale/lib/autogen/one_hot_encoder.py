@@ -111,5 +111,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(OneHotEncoderImpl, _combined_schemas)
 OneHotEncoder = make_operator(OneHotEncoderImpl, _combined_schemas)
+
+set_docstrings(OneHotEncoder)

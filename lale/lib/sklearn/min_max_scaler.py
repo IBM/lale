@@ -153,4 +153,5 @@ if sklearn.__version__ >= "0.24":
         },
     )
 
-lale.docstrings.set_docstrings(MinMaxScalerImpl, MinMaxScaler._schemas)
+
+lale.docstrings.set_docstrings(MinMaxScaler)

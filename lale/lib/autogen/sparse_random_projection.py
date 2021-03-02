@@ -155,5 +155,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(SparseRandomProjectionImpl, _combined_schemas)
 SparseRandomProjection = make_operator(SparseRandomProjectionImpl, _combined_schemas)
+
+set_docstrings(SparseRandomProjection)

@@ -194,5 +194,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(RidgeImpl, _combined_schemas)
 Ridge = make_operator(RidgeImpl, _combined_schemas)
+
+set_docstrings(Ridge)

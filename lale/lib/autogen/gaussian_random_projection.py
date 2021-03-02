@@ -138,7 +138,8 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(GaussianRandomProjectionImpl, _combined_schemas)
 GaussianRandomProjection = make_operator(
     GaussianRandomProjectionImpl, _combined_schemas
 )
+
+set_docstrings(GaussianRandomProjection)

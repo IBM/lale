@@ -100,8 +100,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SampleBasedVotingImpl, _combined_schemas)
 
 SampleBasedVoting = lale.operators.make_operator(
     SampleBasedVotingImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(SampleBasedVoting)

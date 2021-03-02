@@ -168,8 +168,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RejectOptionClassificationImpl, _combined_schemas)
 
 RejectOptionClassification = lale.operators.make_operator(
     RejectOptionClassificationImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(RejectOptionClassification)

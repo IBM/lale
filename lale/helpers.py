@@ -81,6 +81,27 @@ def assignee_name(level=1) -> Optional[str]:
     return None
 
 
+def arg_name(pos=0, level=1) -> Optional[str]:
+    tb = traceback.extract_stack()
+    file_name, line_number, function_name, text = tb[-(level + 2)]
+    try:
+        tree = ast.parse(text, file_name)
+    except SyntaxError:
+        return None
+    assert tree is not None and isinstance(tree, ast.Module)
+    if len(tree.body) == 1:
+        stmt = tree.body[0]
+        if isinstance(stmt, ast.Expr):
+            expr = stmt.value
+            if isinstance(expr, ast.Call):
+                args = expr.args
+                if pos < len(args):
+                    res = args[pos]
+                    if isinstance(res, ast.Name):
+                        return res.id
+    return None
+
+
 def data_to_json(data, subsample_array: bool = True) -> Union[list, dict]:
     if type(data) is tuple:
         # convert to list

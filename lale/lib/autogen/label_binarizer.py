@@ -117,5 +117,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(LabelBinarizerImpl, _combined_schemas)
 LabelBinarizer = make_operator(LabelBinarizerImpl, _combined_schemas)
+
+set_docstrings(LabelBinarizer)

@@ -245,8 +245,8 @@ class KNeighborsClassifierImpl:
         return self._wrapped_model.predict_proba(X)
 
 
-lale.docstrings.set_docstrings(KNeighborsClassifierImpl, _combined_schemas)
-
 KNeighborsClassifier = lale.operators.make_operator(
     KNeighborsClassifierImpl, _combined_schemas,
 )
+
+lale.docstrings.set_docstrings(KNeighborsClassifier)

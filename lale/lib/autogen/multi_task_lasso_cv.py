@@ -218,5 +218,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(MultiTaskLassoCVImpl, _combined_schemas)
 MultiTaskLassoCV = make_operator(MultiTaskLassoCVImpl, _combined_schemas)
+
+set_docstrings(MultiTaskLassoCV)

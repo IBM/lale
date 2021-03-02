@@ -146,6 +146,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(MultinomialNBImpl, _combined_schemas)
 
 MultinomialNB = lale.operators.make_operator(MultinomialNBImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(MultinomialNB)

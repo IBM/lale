@@ -107,6 +107,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(IdentityWrapperImpl, _combined_schemas)
 
 IdentityWrapper = lale.operators.make_operator(IdentityWrapperImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(IdentityWrapper)

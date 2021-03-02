@@ -223,5 +223,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(DictionaryLearningImpl, _combined_schemas)
 DictionaryLearning = make_operator(DictionaryLearningImpl, _combined_schemas)
+
+set_docstrings(DictionaryLearning)

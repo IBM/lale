@@ -136,6 +136,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ReweighingImpl, _combined_schemas)
 
 Reweighing = lale.operators.make_operator(ReweighingImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Reweighing)

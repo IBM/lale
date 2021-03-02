@@ -102,5 +102,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(StandardScalerImpl, _combined_schemas)
 StandardScaler = make_operator(StandardScalerImpl, _combined_schemas)
+
+set_docstrings(StandardScaler)

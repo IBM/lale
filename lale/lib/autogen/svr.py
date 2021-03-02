@@ -187,5 +187,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(SVRImpl, _combined_schemas)
 SVR = make_operator(SVRImpl, _combined_schemas)
+
+set_docstrings(SVR)

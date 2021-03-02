@@ -132,5 +132,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(LinearRegressionImpl, _combined_schemas)
 LinearRegression = make_operator(LinearRegressionImpl, _combined_schemas)
+
+set_docstrings(LinearRegression)

@@ -272,6 +272,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RidgeClassifierImpl, _combined_schemas)
 
 RidgeClassifier = lale.operators.make_operator(RidgeClassifierImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(RidgeClassifier)

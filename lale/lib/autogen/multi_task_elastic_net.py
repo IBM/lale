@@ -176,5 +176,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(MultiTaskElasticNetImpl, _combined_schemas)
 MultiTaskElasticNet = make_operator(MultiTaskElasticNetImpl, _combined_schemas)
+
+set_docstrings(MultiTaskElasticNet)

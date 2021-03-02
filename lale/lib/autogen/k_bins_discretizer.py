@@ -100,5 +100,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(KBinsDiscretizerImpl, _combined_schemas)
 KBinsDiscretizer = make_operator(KBinsDiscretizerImpl, _combined_schemas)
+
+set_docstrings(KBinsDiscretizer)

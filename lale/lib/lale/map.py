@@ -151,6 +151,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(MapImpl, _combined_schemas)
 
 Map = lale.operators.make_operator(MapImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Map)

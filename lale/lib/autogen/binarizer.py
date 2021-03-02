@@ -93,5 +93,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(BinarizerImpl, _combined_schemas)
 Binarizer = make_operator(BinarizerImpl, _combined_schemas)
+
+set_docstrings(Binarizer)

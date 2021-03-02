@@ -651,6 +651,7 @@ Other scoring metrics:
     },
 }
 
-lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
 
 Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Hyperopt)

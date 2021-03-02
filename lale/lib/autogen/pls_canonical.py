@@ -181,5 +181,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(PLSCanonicalImpl, _combined_schemas)
 PLSCanonical = make_operator(PLSCanonicalImpl, _combined_schemas)
+
+set_docstrings(PLSCanonical)

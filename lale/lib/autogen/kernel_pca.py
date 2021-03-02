@@ -225,5 +225,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(KernelPCAImpl, _combined_schemas)
 KernelPCA = make_operator(KernelPCAImpl, _combined_schemas)
+
+set_docstrings(KernelPCA)

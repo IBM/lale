@@ -118,6 +118,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TNoOpImpl, _combined_schemas)
 
 TNoOp = lale.operators.make_operator(TNoOpImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TNoOp)

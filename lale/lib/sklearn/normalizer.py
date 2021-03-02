@@ -110,6 +110,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NormalizerImpl, _combined_schemas)
 
 Normalizer = lale.operators.make_operator(NormalizerImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Normalizer)

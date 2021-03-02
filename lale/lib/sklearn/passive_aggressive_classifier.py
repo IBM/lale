@@ -311,6 +311,4 @@ if sklearn.__version__ >= "0.22":
         n_iter=None
     )
 
-lale.docstrings.set_docstrings(
-    PassiveAggressiveClassifierImpl, PassiveAggressiveClassifier._schemas
-)
+lale.docstrings.set_docstrings(PassiveAggressiveClassifier)

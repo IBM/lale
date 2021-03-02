@@ -108,5 +108,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(PLSSVDImpl, _combined_schemas)
 PLSSVD = make_operator(PLSSVDImpl, _combined_schemas)
+
+set_docstrings(PLSSVD)

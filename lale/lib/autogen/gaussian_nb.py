@@ -120,5 +120,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(GaussianNBImpl, _combined_schemas)
 GaussianNB = make_operator(GaussianNBImpl, _combined_schemas)
+
+set_docstrings(GaussianNB)

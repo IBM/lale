@@ -304,5 +304,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(ExtraTreesClassifierImpl, _combined_schemas)
 ExtraTreesClassifier = make_operator(ExtraTreesClassifierImpl, _combined_schemas)
+
+set_docstrings(ExtraTreesClassifier)

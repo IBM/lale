@@ -181,6 +181,6 @@ class OneHotEncoderImpl:
         return result
 
 
-lale.docstrings.set_docstrings(OneHotEncoderImpl, _combined_schemas)
-
 OneHotEncoder = lale.operators.make_operator(OneHotEncoderImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(OneHotEncoder)

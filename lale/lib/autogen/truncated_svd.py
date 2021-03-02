@@ -120,5 +120,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(TruncatedSVDImpl, _combined_schemas)
 TruncatedSVD = make_operator(TruncatedSVDImpl, _combined_schemas)
+
+set_docstrings(TruncatedSVD)

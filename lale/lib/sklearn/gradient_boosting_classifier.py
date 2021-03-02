@@ -429,6 +429,4 @@ if sklearn.__version__ >= "0.24":
         },
     )
 
-lale.docstrings.set_docstrings(
-    GradientBoostingClassifierImpl, GradientBoostingClassifier._schemas
-)
+lale.docstrings.set_docstrings(GradientBoostingClassifier)

@@ -156,7 +156,8 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(QuadraticDiscriminantAnalysisImpl, _combined_schemas)
 QuadraticDiscriminantAnalysis = make_operator(
     QuadraticDiscriminantAnalysisImpl, _combined_schemas
 )
+
+set_docstrings(QuadraticDiscriminantAnalysis)

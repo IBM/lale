@@ -183,8 +183,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(CondensedNearestNeighbourImpl, _combined_schemas)
 
 CondensedNearestNeighbour = lale.operators.make_operator(
     CondensedNearestNeighbourImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(CondensedNearestNeighbour)

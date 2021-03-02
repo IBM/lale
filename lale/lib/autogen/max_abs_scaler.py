@@ -87,5 +87,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(MaxAbsScalerImpl, _combined_schemas)
 MaxAbsScaler = make_operator(MaxAbsScalerImpl, _combined_schemas)
+
+set_docstrings(MaxAbsScaler)

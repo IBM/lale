@@ -238,5 +238,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(LassoCVImpl, _combined_schemas)
 LassoCV = make_operator(LassoCVImpl, _combined_schemas)
+
+set_docstrings(LassoCV)

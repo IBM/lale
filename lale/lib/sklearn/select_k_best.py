@@ -132,6 +132,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SelectKBestImpl, _combined_schemas)
 
 SelectKBest = lale.operators.make_operator(SelectKBestImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SelectKBest)

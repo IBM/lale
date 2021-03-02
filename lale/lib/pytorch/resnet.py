@@ -258,9 +258,10 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ResNet50Impl, _combined_schemas)
 
 ResNet50 = lale.operators.make_operator(ResNet50Impl, _combined_schemas)
+
+lale.docstrings.set_docstrings(ResNet50)
 
 if __name__ == "__main__":
     import torchvision.datasets as datasets

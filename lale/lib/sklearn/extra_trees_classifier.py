@@ -357,4 +357,5 @@ if sklearn.__version__ >= "0.22":
         ),
     )
 
-lale.docstrings.set_docstrings(ExtraTreesClassifierImpl, ExtraTreesClassifier._schemas)
+
+lale.docstrings.set_docstrings(ExtraTreesClassifier)

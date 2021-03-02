@@ -147,8 +147,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(EditedNearestNeighboursImpl, _combined_schemas)
 
 EditedNearestNeighbours = lale.operators.make_operator(
     EditedNearestNeighboursImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(EditedNearestNeighbours)

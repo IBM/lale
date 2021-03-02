@@ -164,7 +164,8 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(RadiusNeighborsClassifierImpl, _combined_schemas)
 RadiusNeighborsClassifier = make_operator(
     RadiusNeighborsClassifierImpl, _combined_schemas
 )
+
+set_docstrings(RadiusNeighborsClassifier)

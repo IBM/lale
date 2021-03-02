@@ -189,5 +189,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(LassoLarsCVImpl, _combined_schemas)
 LassoLarsCV = make_operator(LassoLarsCVImpl, _combined_schemas)
+
+set_docstrings(LassoLarsCV)

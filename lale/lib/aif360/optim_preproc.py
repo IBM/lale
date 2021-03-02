@@ -205,6 +205,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(OptimPreprocImpl, _combined_schemas)
 
 OptimPreproc = lale.operators.make_operator(OptimPreprocImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(OptimPreproc)

@@ -160,5 +160,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(CCAImpl, _combined_schemas)
 CCA = make_operator(CCAImpl, _combined_schemas)
+
+set_docstrings(CCA)

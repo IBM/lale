@@ -133,5 +133,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(ComplementNBImpl, _combined_schemas)
 ComplementNB = make_operator(ComplementNBImpl, _combined_schemas)
+
+set_docstrings(ComplementNB)

@@ -178,8 +178,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(DisparateImpactRemoverImpl, _combined_schemas)
-
 DisparateImpactRemover = lale.operators.make_operator(
     DisparateImpactRemoverImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(DisparateImpactRemover)

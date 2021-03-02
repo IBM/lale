@@ -185,7 +185,8 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(GaussianProcessClassifierImpl, _combined_schemas)
 GaussianProcessClassifier = make_operator(
     GaussianProcessClassifierImpl, _combined_schemas
 )
+
+set_docstrings(GaussianProcessClassifier)

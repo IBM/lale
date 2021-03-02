@@ -163,8 +163,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(MetaFairClassifierImpl, _combined_schemas)
 
 MetaFairClassifier = lale.operators.make_operator(
     MetaFairClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(MetaFairClassifier)

@@ -436,6 +436,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SGDClassifierImpl, _combined_schemas)
 
 SGDClassifier = lale.operators.make_operator(SGDClassifierImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SGDClassifier)

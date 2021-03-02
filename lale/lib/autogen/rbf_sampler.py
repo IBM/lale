@@ -103,5 +103,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-set_docstrings(RBFSamplerImpl, _combined_schemas)
 RBFSampler = make_operator(RBFSamplerImpl, _combined_schemas)
+
+set_docstrings(RBFSampler)

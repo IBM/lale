@@ -163,8 +163,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RandomOverSamplerImpl, _combined_schemas)
 
 RandomOverSampler = lale.operators.make_operator(
     RandomOverSamplerImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(RandomOverSampler)

@@ -125,6 +125,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RelationalImpl, _combined_schemas)
 
 Relational = lale.operators.make_operator(RelationalImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Relational)

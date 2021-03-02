@@ -282,5 +282,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(PerceptronImpl, _combined_schemas)
 Perceptron = make_operator(PerceptronImpl, _combined_schemas)
+
+set_docstrings(Perceptron)

@@ -195,5 +195,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(RidgeClassifierCVImpl, _combined_schemas)
 RidgeClassifierCV = make_operator(RidgeClassifierCVImpl, _combined_schemas)
+
+set_docstrings(RidgeClassifierCV)

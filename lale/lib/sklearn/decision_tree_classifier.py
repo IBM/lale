@@ -367,6 +367,4 @@ if sklearn.__version__ >= "0.24":
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(presort=None)
 
-lale.docstrings.set_docstrings(
-    DecisionTreeClassifierImpl, DecisionTreeClassifier._schemas
-)
+lale.docstrings.set_docstrings(DecisionTreeClassifier)

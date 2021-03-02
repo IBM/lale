@@ -659,4 +659,5 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         },
     )
 
-lale.docstrings.set_docstrings(XGBClassifierImpl, XGBClassifier._schemas)
+
+lale.docstrings.set_docstrings(XGBClassifier)

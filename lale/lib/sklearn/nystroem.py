@@ -221,4 +221,5 @@ if sklearn.__version__ >= "0.24":
         }
     )
 
-lale.docstrings.set_docstrings(NystroemImpl, Nystroem._schemas)
+
+lale.docstrings.set_docstrings(Nystroem)
