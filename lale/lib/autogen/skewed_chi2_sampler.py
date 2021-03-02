@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class SkewedChi2SamplerImpl:
+class _SkewedChi2SamplerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -103,6 +103,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-SkewedChi2Sampler = make_operator(SkewedChi2SamplerImpl, _combined_schemas)
+SkewedChi2Sampler = make_operator(_SkewedChi2SamplerImpl, _combined_schemas)
 
 set_docstrings(SkewedChi2Sampler)

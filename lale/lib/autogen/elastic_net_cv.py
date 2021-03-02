@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class ElasticNetCVImpl:
+class _ElasticNetCVImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -245,6 +245,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-ElasticNetCV = make_operator(ElasticNetCVImpl, _combined_schemas)
+ElasticNetCV = make_operator(_ElasticNetCVImpl, _combined_schemas)
 
 set_docstrings(ElasticNetCV)

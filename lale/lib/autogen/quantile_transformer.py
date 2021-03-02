@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class QuantileTransformerImpl:
+class _QuantileTransformerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -136,6 +136,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-QuantileTransformer = make_operator(QuantileTransformerImpl, _combined_schemas)
+QuantileTransformer = make_operator(_QuantileTransformerImpl, _combined_schemas)
 
 set_docstrings(QuantileTransformer)

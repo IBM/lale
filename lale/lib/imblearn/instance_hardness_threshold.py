@@ -17,7 +17,7 @@ from imblearn.under_sampling import InstanceHardnessThreshold as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,7 +30,7 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class InstanceHardnessThresholdImpl(BaseResamplerImpl):
+class _InstanceHardnessThresholdImpl(_BaseResamplerImpl):
     def __init__(
         self,
         operator=None,
@@ -52,7 +52,7 @@ class InstanceHardnessThresholdImpl(BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(InstanceHardnessThresholdImpl, self).__init__(
+        super(_InstanceHardnessThresholdImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -208,7 +208,7 @@ _combined_schemas = {
 
 
 InstanceHardnessThreshold = lale.operators.make_operator(
-    InstanceHardnessThresholdImpl, _combined_schemas
+    _InstanceHardnessThresholdImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(InstanceHardnessThreshold)

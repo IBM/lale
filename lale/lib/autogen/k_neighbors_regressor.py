@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class KNeighborsRegressorImpl:
+class _KNeighborsRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -166,6 +166,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-KNeighborsRegressor = make_operator(KNeighborsRegressorImpl, _combined_schemas)
+KNeighborsRegressor = make_operator(_KNeighborsRegressorImpl, _combined_schemas)
 
 set_docstrings(KNeighborsRegressor)

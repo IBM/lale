@@ -20,7 +20,7 @@ import lale.docstrings
 import lale.operators
 
 
-class OrdinalEncoderImpl:
+class _OrdinalEncoderImpl:
     def __init__(
         self,
         categories="auto",
@@ -216,6 +216,6 @@ _combined_schemas = {
 }
 
 
-OrdinalEncoder = lale.operators.make_operator(OrdinalEncoderImpl, _combined_schemas)
+OrdinalEncoder = lale.operators.make_operator(_OrdinalEncoderImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(OrdinalEncoder)

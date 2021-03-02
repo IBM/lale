@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NormalizerImpl:
+class _NormalizerImpl:
     def __init__(self, norm=None, copy=True):
         self._hyperparams = {"norm": norm, "copy": copy}
         self._wrapped_model = sklearn.preprocessing.Normalizer(**self._hyperparams)
@@ -111,6 +111,6 @@ _combined_schemas = {
 }
 
 
-Normalizer = lale.operators.make_operator(NormalizerImpl, _combined_schemas)
+Normalizer = lale.operators.make_operator(_NormalizerImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Normalizer)

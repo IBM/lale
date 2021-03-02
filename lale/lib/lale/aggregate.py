@@ -16,7 +16,7 @@ import lale.docstrings
 import lale.operators
 
 
-class AggregateImpl:
+class _AggregateImpl:
     def __init__(self, columns, group_by=[]):
         self._hyperparams = {"columns": columns, "group_by": group_by}
 
@@ -109,6 +109,6 @@ _combined_schemas = {
 }
 
 
-Aggregate = lale.operators.make_operator(AggregateImpl, _combined_schemas)
+Aggregate = lale.operators.make_operator(_AggregateImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Aggregate)

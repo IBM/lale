@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class BernoulliRBMImpl:
+class _BernoulliRBMImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -130,6 +130,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-BernoulliRBM = make_operator(BernoulliRBMImpl, _combined_schemas)
+BernoulliRBM = make_operator(_BernoulliRBMImpl, _combined_schemas)
 
 set_docstrings(BernoulliRBM)

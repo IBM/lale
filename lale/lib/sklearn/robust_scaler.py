@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class RobustScalerImpl:
+class _RobustScalerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.RobustScaler(**self._hyperparams)
@@ -128,7 +128,7 @@ _combined_schemas = {
 }
 
 RobustScaler: lale.operators.PlannedIndividualOp
-RobustScaler = lale.operators.make_operator(RobustScalerImpl, _combined_schemas)
+RobustScaler = lale.operators.make_operator(_RobustScalerImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.RobustScaler.html

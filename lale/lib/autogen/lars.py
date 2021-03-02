@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LarsImpl:
+class _LarsImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -191,6 +191,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-Lars = make_operator(LarsImpl, _combined_schemas)
+Lars = make_operator(_LarsImpl, _combined_schemas)
 
 set_docstrings(Lars)

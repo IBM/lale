@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SVRImpl:
+class _SVRImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.svm.SVR(**self._hyperparams)
@@ -221,7 +221,7 @@ _combined_schemas = {
 }
 
 SVR: lale.operators.PlannedIndividualOp
-SVR = lale.operators.make_operator(SVRImpl, _combined_schemas)
+SVR = lale.operators.make_operator(_SVRImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVR.html

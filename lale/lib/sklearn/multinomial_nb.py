@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class MultinomialNBImpl:
+class _MultinomialNBImpl:
     def __init__(self, alpha=1.0, fit_prior=True, class_prior=None):
         self._hyperparams = {
             "alpha": alpha,
@@ -147,6 +147,6 @@ _combined_schemas = {
 }
 
 
-MultinomialNB = lale.operators.make_operator(MultinomialNBImpl, _combined_schemas)
+MultinomialNB = lale.operators.make_operator(_MultinomialNBImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(MultinomialNB)

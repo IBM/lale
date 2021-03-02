@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class RANSACRegressorImpl:
+class _RANSACRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -246,6 +246,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-RANSACRegressor = make_operator(RANSACRegressorImpl, _combined_schemas)
+RANSACRegressor = make_operator(_RANSACRegressorImpl, _combined_schemas)
 
 set_docstrings(RANSACRegressor)

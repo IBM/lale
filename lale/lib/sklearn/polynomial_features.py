@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class PolynomialFeaturesImpl:
+class _PolynomialFeaturesImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.PolynomialFeatures(
@@ -116,7 +116,7 @@ _combined_schemas = {
 
 PolynomialFeatures: lale.operators.PlannedIndividualOp
 PolynomialFeatures = lale.operators.make_operator(
-    PolynomialFeaturesImpl, _combined_schemas
+    _PolynomialFeaturesImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":

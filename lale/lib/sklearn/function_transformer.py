@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class FunctionTransformerImpl:
+class _FunctionTransformerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.FunctionTransformer(
@@ -161,7 +161,7 @@ _combined_schemas = {
 
 FunctionTransformer: lale.operators.PlannedIndividualOp
 FunctionTransformer = lale.operators.make_operator(
-    FunctionTransformerImpl, _combined_schemas
+    _FunctionTransformerImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

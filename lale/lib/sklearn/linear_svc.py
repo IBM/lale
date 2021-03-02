@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class LinearSVCImpl:
+class _LinearSVCImpl:
     def __init__(
         self,
         penalty=None,
@@ -325,6 +325,6 @@ _combined_schemas = {
 }
 
 
-LinearSVC = lale.operators.make_operator(LinearSVCImpl, _combined_schemas)
+LinearSVC = lale.operators.make_operator(_LinearSVCImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(LinearSVC)

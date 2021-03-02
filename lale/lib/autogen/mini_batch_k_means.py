@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class MiniBatchKMeansImpl:
+class _MiniBatchKMeansImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -238,6 +238,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-MiniBatchKMeans = make_operator(MiniBatchKMeansImpl, _combined_schemas)
+MiniBatchKMeans = make_operator(_MiniBatchKMeansImpl, _combined_schemas)
 
 set_docstrings(MiniBatchKMeans)

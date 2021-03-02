@@ -18,7 +18,9 @@ import lale.docstrings
 import lale.operators
 
 
-class SuperTextTransformerImpl:
+# This is currently needed just to hide get_params so that lale does not call clone
+# when doing a defensive copy
+class _SuperTextTransformerImpl:
     def __init__(
         self,
         text_processing_options,
@@ -175,7 +177,7 @@ _combined_schemas = {
 }
 
 SuperTextTransformer = lale.operators.make_operator(
-    SuperTextTransformerImpl, _combined_schemas
+    _SuperTextTransformerImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SuperTextTransformer)

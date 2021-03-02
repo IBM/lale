@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NumpyColumnSelectorImpl:
+class _NumpyColumnSelectorImpl:
     def __init__(self, columns=None):
         self._hyperparams = {"columns": columns}
         self._wrapped_model = autoai_libs.transformers.exportable.NumpyColumnSelector(
@@ -117,7 +117,7 @@ _combined_schemas = {
 
 
 NumpyColumnSelector = lale.operators.make_operator(
-    NumpyColumnSelectorImpl, _combined_schemas
+    _NumpyColumnSelectorImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(NumpyColumnSelector)

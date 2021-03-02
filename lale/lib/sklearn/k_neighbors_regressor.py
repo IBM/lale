@@ -201,7 +201,7 @@ _combined_schemas = {
 }
 
 
-class KNeighborsRegressorImpl:
+class _KNeighborsRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.neighbors.KNeighborsRegressor(**self._hyperparams)
@@ -215,7 +215,7 @@ class KNeighborsRegressorImpl:
 
 
 KNeighborsRegressor = lale.operators.make_operator(
-    KNeighborsRegressorImpl, _combined_schemas
+    _KNeighborsRegressorImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(KNeighborsRegressor)

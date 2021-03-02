@@ -16,7 +16,7 @@ import lale.docstrings
 import lale.operators
 
 
-class GroupByImpl:
+class _GroupByImpl:
     def __init__(self, key=None):
         self._hyperparams = {"key": key}
 
@@ -73,6 +73,6 @@ _combined_schemas = {
 }
 
 
-GroupBy = lale.operators.make_operator(GroupByImpl, _combined_schemas)
+GroupBy = lale.operators.make_operator(_GroupByImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(GroupBy)

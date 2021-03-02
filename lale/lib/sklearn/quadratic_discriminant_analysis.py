@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class QuadraticDiscriminantAnalysisImpl:
+class _QuadraticDiscriminantAnalysisImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis(
@@ -189,7 +189,7 @@ _combined_schemas = {
 
 
 QuadraticDiscriminantAnalysis = lale.operators.make_operator(
-    QuadraticDiscriminantAnalysisImpl, _combined_schemas
+    _QuadraticDiscriminantAnalysisImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(QuadraticDiscriminantAnalysis)

@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class GaussianNBImpl:
+class _GaussianNBImpl:
     def __init__(self, priors=None, var_smoothing=1e-09):
         self._hyperparams = {"priors": priors, "var_smoothing": var_smoothing}
         self._wrapped_model = sklearn.naive_bayes.GaussianNB(**self._hyperparams)
@@ -145,6 +145,6 @@ _combined_schemas = {
 }
 
 
-GaussianNB = lale.operators.make_operator(GaussianNBImpl, _combined_schemas)
+GaussianNB = lale.operators.make_operator(_GaussianNBImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(GaussianNB)

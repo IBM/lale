@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NumImputerImpl:
+class _NumImputerImpl:
     def __init__(self, strategy, missing_values, activate_flag=True):
         self._hyperparams = {
             "strategy": strategy,
@@ -135,6 +135,6 @@ _combined_schemas = {
 }
 
 
-NumImputer = lale.operators.make_operator(NumImputerImpl, _combined_schemas)
+NumImputer = lale.operators.make_operator(_NumImputerImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(NumImputer)

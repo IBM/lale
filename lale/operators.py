@@ -202,7 +202,7 @@ from lale.util.VisitorMeta import AbstractVisitorMeta
 
 logger = logging.getLogger(__name__)
 
-_LALE_SKL_PIPELINE = "lale.lib.sklearn.pipeline.PipelineImpl"
+_LALE_SKL_PIPELINE = "lale.lib.sklearn.pipeline._PipelineImpl"
 
 _combinators_docstrings = """
     Methods
@@ -1471,9 +1471,9 @@ class IndividualOp(Operator):
         autoai_ranges = {hp: get_range(hp, s) for hp, s in defaulted.items()}
         if "min_samples_split" in autoai_ranges and "min_samples_leaf" in autoai_ranges:
             if self._name not in (
-                "GradientBoostingRegressorImpl",
-                "GradientBoostingClassifierImpl",
-                "ExtraTreesClassifierImpl",
+                "_GradientBoostingRegressorImpl",
+                "_GradientBoostingClassifierImpl",
+                "_ExtraTreesClassifierImpl",
             ):
                 autoai_ranges["min_samples_leaf"] = (1, 5, 1)
                 autoai_ranges["min_samples_split"] = (2, 5, 2)
@@ -2446,8 +2446,9 @@ def get_op_from_lale_lib(impl_class) -> Optional[IndividualOp]:
     assert hasattr(impl_class, "predict") or hasattr(impl_class, "transform")
     if impl_class.__module__.startswith("lale.lib"):
         assert impl_class.__name__.endswith("Impl"), impl_class.__name__
+        assert impl_class.__name__.startswith("_"), impl_class.__name__
         module = importlib.import_module(impl_class.__module__)
-        class_name = impl_class.__name__[: -len("Impl")]
+        class_name = impl_class.__name__[1 : -len("Impl")]
         result = getattr(module, class_name)
     else:
         try:
@@ -2476,8 +2477,12 @@ def make_operator(
     if name is None:
         name = lale.helpers.assignee_name(level=2)
         if name is None:
-            if inspect.isclass(impl) and impl.__name__.endswith("Impl"):
-                n: str = impl.__name__[: -len("Impl")]
+            if (
+                inspect.isclass(impl)
+                and impl.__name__.startswith("_")
+                and impl.__name__.endswith("Impl")
+            ):
+                n: str = impl.__name__[1 : -len("Impl")]
                 name = n
             else:
                 name = "Unknown"
@@ -2975,9 +2980,9 @@ class BasePipeline(Operator, Generic[OpType]):
     def export_to_sklearn_pipeline(self):
         from sklearn.pipeline import FeatureUnion, make_pipeline
 
-        from lale.lib.lale.concat_features import ConcatFeaturesImpl
-        from lale.lib.lale.no_op import NoOpImpl
-        from lale.lib.lale.relational import RelationalImpl
+        from lale.lib.lale.concat_features import _ConcatFeaturesImpl
+        from lale.lib.lale.no_op import _NoOpImpl
+        from lale.lib.lale.relational import _RelationalImpl
 
         def convert_nested_objects(node):
             for element in dir(node):  # Looking at only 1 level for now.
@@ -3008,10 +3013,10 @@ class BasePipeline(Operator, Generic[OpType]):
                     "A pipeline that has an OperatorChoice can not be converted to "
                     " a scikit-learn pipeline:{}".format(self.to_json())
                 )
-            if isinstance(sink_node._impl, RelationalImpl):
+            if isinstance(sink_node._impl, _RelationalImpl):
                 return None
             convert_nested_objects(sink_node._impl)
-            if sink_node._impl_class() == ConcatFeaturesImpl:
+            if sink_node._impl_class() == _ConcatFeaturesImpl:
                 list_of_transformers = []
                 for pred in self._preds[sink_node]:
                     pred_transformer = create_pipeline_from_sink_node(pred)
@@ -3048,14 +3053,14 @@ class BasePipeline(Operator, Generic[OpType]):
                         output_pipeline_steps = []
                         previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
                         if previous_sklearn_op is not None and not isinstance(
-                            previous_sklearn_op, NoOpImpl
+                            previous_sklearn_op, _NoOpImpl
                         ):
                             if isinstance(previous_sklearn_op, list):
                                 output_pipeline_steps = previous_sklearn_op
                             else:
                                 output_pipeline_steps.append(previous_sklearn_op)
                         if not isinstance(
-                            sklearn_op, NoOpImpl
+                            sklearn_op, _NoOpImpl
                         ):  # Append the current op only if not NoOp
                             output_pipeline_steps.append(sklearn_op)
                         return output_pipeline_steps
@@ -3071,7 +3076,7 @@ class BasePipeline(Operator, Generic[OpType]):
             )
         else:
             sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
-            # not checking for isinstance(sklearn_steps_list, NoOpImpl) here as there is no valid sklearn pipeline with just one NoOp.
+            # not checking for isinstance(sklearn_steps_list, _NoOpImpl) here as there is no valid sklearn pipeline with just one NoOp.
         try:
             sklearn_pipeline = (
                 make_pipeline(*sklearn_steps_list)

@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class DecisionTreeRegressorImpl:
+class _DecisionTreeRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.tree.DecisionTreeRegressor(**self._hyperparams)
@@ -301,7 +301,7 @@ _combined_schemas = {
 
 DecisionTreeRegressor: lale.operators.PlannedIndividualOp
 DecisionTreeRegressor = lale.operators.make_operator(
-    DecisionTreeRegressorImpl, _combined_schemas
+    _DecisionTreeRegressorImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

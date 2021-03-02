@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LogisticRegressionCVImpl:
+class _LogisticRegressionCVImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -294,6 +294,6 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-LogisticRegressionCV = make_operator(LogisticRegressionCVImpl, _combined_schemas)
+LogisticRegressionCV = make_operator(_LogisticRegressionCVImpl, _combined_schemas)
 
 set_docstrings(LogisticRegressionCV)

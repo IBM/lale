@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapLogisticRegressionImpl:
+class _SnapLogisticRegressionImpl:
     def __init__(
         self,
         max_iter=1000,
@@ -397,7 +397,7 @@ _combined_schemas = {
 
 
 SnapLogisticRegression = lale.operators.make_operator(
-    SnapLogisticRegressionImpl, _combined_schemas
+    _SnapLogisticRegressionImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SnapLogisticRegression)

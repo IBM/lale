@@ -45,7 +45,7 @@ end_prefix = "end_"
 fail_prefix = "fail_"
 
 
-class ObservingImpl:
+class _ObservingImpl:
     def __init__(self, op=None, observer=None):
         if observer is not None and isinstance(observer, type):
             # if we are given a class name, instantiate it
@@ -158,7 +158,7 @@ _combined_schemas = {
     },
 }
 
-Observing = lale.operators.make_operator(ObservingImpl, _combined_schemas)
+Observing = lale.operators.make_operator(_ObservingImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Observing)
 

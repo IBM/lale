@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class QuantileTransformerImpl:
+class _QuantileTransformerImpl:
     def __init__(
         self,
         n_quantiles=1000,
@@ -163,7 +163,7 @@ _combined_schemas = {
 
 
 QuantileTransformer = lale.operators.make_operator(
-    QuantileTransformerImpl, _combined_schemas
+    _QuantileTransformerImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(QuantileTransformer)

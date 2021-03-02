@@ -45,7 +45,7 @@ def _rename_all_features(X):
     return pd.DataFrame(data=X, columns=mapped)
 
 
-class XGBRegressorImpl:
+class _XGBRegressorImpl:
     _wrapped_model: xgboost.XGBRegressor
 
     def __init__(self, **hyperparams):
@@ -56,7 +56,7 @@ or with
         self._hyperparams = hyperparams
 
     def fit(self, X, y, **fit_params):
-        result = XGBRegressorImpl(**self._hyperparams)
+        result = _XGBRegressorImpl(**self._hyperparams)
         result._wrapped_model = xgboost.XGBRegressor(**self._hyperparams)
         renamed_X = _rename_all_features(X)
         result._wrapped_model.fit(renamed_X, y, **fit_params)
@@ -424,7 +424,7 @@ _combined_schemas = {
 }
 
 XGBRegressor: lale.operators.PlannedIndividualOp
-XGBRegressor = lale.operators.make_operator(XGBRegressorImpl, _combined_schemas)
+XGBRegressor = lale.operators.make_operator(_XGBRegressorImpl, _combined_schemas)
 
 if xgboost_installed and xgboost.__version__ >= "0.90":
     # page 58 of https://readthedocs.org/projects/xgboost/downloads/pdf/release_0.90/

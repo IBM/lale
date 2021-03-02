@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NumpyPermuteArrayImpl:
+class _NumpyPermuteArrayImpl:
     def __init__(self, permutation_indices=None, axis=None):
         self._hyperparams = {"permutation_indices": permutation_indices, "axis": axis}
         self._wrapped_model = autoai_libs.transformers.exportable.NumpyPermuteArray(
@@ -124,7 +124,7 @@ _combined_schemas = {
 
 
 NumpyPermuteArray = lale.operators.make_operator(
-    NumpyPermuteArrayImpl, _combined_schemas
+    _NumpyPermuteArrayImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(NumpyPermuteArray)

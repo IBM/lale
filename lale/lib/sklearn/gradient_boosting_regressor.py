@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class GradientBoostingRegressorImpl:
+class _GradientBoostingRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.ensemble.GradientBoostingRegressor(
@@ -333,7 +333,7 @@ _combined_schemas = {
 
 GradientBoostingRegressor: lale.operators.PlannedIndividualOp
 GradientBoostingRegressor = lale.operators.make_operator(
-    GradientBoostingRegressorImpl, _combined_schemas
+    _GradientBoostingRegressorImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

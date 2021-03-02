@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class KernelRidgeImpl:
+class _KernelRidgeImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -151,6 +151,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-KernelRidge = make_operator(KernelRidgeImpl, _combined_schemas)
+KernelRidge = make_operator(_KernelRidgeImpl, _combined_schemas)
 
 set_docstrings(KernelRidge)

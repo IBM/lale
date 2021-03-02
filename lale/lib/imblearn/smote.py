@@ -17,7 +17,7 @@ from imblearn.over_sampling import SMOTE as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,7 +30,7 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class SMOTEImpl(BaseResamplerImpl):
+class _SMOTEImpl(_BaseResamplerImpl):
     def __init__(
         self,
         operator=None,
@@ -50,7 +50,9 @@ class SMOTEImpl(BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(SMOTEImpl, self).__init__(operator=operator, resampler=resampler_instance)
+        super(_SMOTEImpl, self).__init__(
+            operator=operator, resampler=resampler_instance
+        )
 
 
 _hyperparams_schema = {
@@ -184,6 +186,6 @@ _combined_schemas = {
 }
 
 
-SMOTE = lale.operators.make_operator(SMOTEImpl, _combined_schemas)
+SMOTE = lale.operators.make_operator(_SMOTEImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(SMOTE)

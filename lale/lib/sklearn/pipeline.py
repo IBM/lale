@@ -27,7 +27,7 @@ from lale.schemas import Bool
 logger = logging.getLogger(__name__)
 
 
-class PipelineImpl:
+class _PipelineImpl:
     def __init__(self, **hyperparams):
         if hyperparams.get("memory", None):
             logger.warning("Caching is not yet implemented.")
@@ -202,7 +202,7 @@ _combined_schemas = {
 }
 
 
-Pipeline = lale.operators.make_operator(PipelineImpl, _combined_schemas)
+Pipeline = lale.operators.make_operator(_PipelineImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.pipeline.Pipeline.html

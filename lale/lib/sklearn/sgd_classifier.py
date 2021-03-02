@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SGDClassifierImpl:
+class _SGDClassifierImpl:
     def __init__(
         self,
         loss="hinge",
@@ -437,6 +437,6 @@ _combined_schemas = {
 }
 
 
-SGDClassifier = lale.operators.make_operator(SGDClassifierImpl, _combined_schemas)
+SGDClassifier = lale.operators.make_operator(_SGDClassifierImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(SGDClassifier)

@@ -23,7 +23,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SnapBoostingMachineClassifierImpl:
+class _SnapBoostingMachineClassifierImpl:
     def __init__(
         self,
         num_round=100,
@@ -425,7 +425,7 @@ _combined_schemas = {
 
 
 SnapBoostingMachineClassifier = lale.operators.make_operator(
-    SnapBoostingMachineClassifierImpl, _combined_schemas
+    _SnapBoostingMachineClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(SnapBoostingMachineClassifier)

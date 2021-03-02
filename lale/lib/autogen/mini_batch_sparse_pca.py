@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class MiniBatchSparsePCAImpl:
+class _MiniBatchSparsePCAImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -182,6 +182,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-MiniBatchSparsePCA = make_operator(MiniBatchSparsePCAImpl, _combined_schemas)
+MiniBatchSparsePCA = make_operator(_MiniBatchSparsePCAImpl, _combined_schemas)
 
 set_docstrings(MiniBatchSparsePCA)

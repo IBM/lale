@@ -26,7 +26,7 @@ from lale.lib.sklearn import VotingClassifier
 logger = logging.getLogger(__name__)
 
 
-class TopKVotingClassifierImpl:
+class _TopKVotingClassifierImpl:
     def __init__(self, estimator=None, optimizer=None, args_to_optimizer=None, k=10):
         self.estimator = estimator
         if self.estimator is None:
@@ -187,7 +187,7 @@ _combined_schemas = {
 
 
 TopKVotingClassifier = lale.operators.make_operator(
-    TopKVotingClassifierImpl, _combined_schemas
+    _TopKVotingClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(TopKVotingClassifier)

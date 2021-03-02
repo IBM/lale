@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class MinMaxScalerImpl:
+class _MinMaxScalerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.preprocessing.MinMaxScaler(**self._hyperparams)
@@ -140,7 +140,7 @@ _combined_schemas = {
 }
 
 MinMaxScaler: lale.operators.PlannedIndividualOp
-MinMaxScaler = lale.operators.make_operator(MinMaxScalerImpl, _combined_schemas)
+MinMaxScaler = lale.operators.make_operator(_MinMaxScalerImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.preprocessing.MinMaxScaler.html

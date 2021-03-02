@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class ColumnTransformerImpl:
+class _ColumnTransformerImpl:
     def __init__(self, **hyperparams):
         self._wrapped_model = sklearn.compose.ColumnTransformer(**hyperparams)
 
@@ -212,7 +212,7 @@ _combined_schemas = {
 
 ColumnTransformer: lale.operators.PlannedIndividualOp
 ColumnTransformer = lale.operators.make_operator(
-    ColumnTransformerImpl, _combined_schemas
+    _ColumnTransformerImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":

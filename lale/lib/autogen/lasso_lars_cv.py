@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LassoLarsCVImpl:
+class _LassoLarsCVImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -189,6 +189,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-LassoLarsCV = make_operator(LassoLarsCVImpl, _combined_schemas)
+LassoLarsCV = make_operator(_LassoLarsCVImpl, _combined_schemas)
 
 set_docstrings(LassoLarsCV)

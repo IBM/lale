@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class MultiTaskLassoCVImpl:
+class _MultiTaskLassoCVImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -218,6 +218,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-MultiTaskLassoCV = make_operator(MultiTaskLassoCVImpl, _combined_schemas)
+MultiTaskLassoCV = make_operator(_MultiTaskLassoCVImpl, _combined_schemas)
 
 set_docstrings(MultiTaskLassoCV)

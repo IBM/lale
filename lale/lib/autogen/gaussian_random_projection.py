@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class GaussianRandomProjectionImpl:
+class _GaussianRandomProjectionImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -139,7 +139,7 @@ _combined_schemas = {
     },
 }
 GaussianRandomProjection = make_operator(
-    GaussianRandomProjectionImpl, _combined_schemas
+    _GaussianRandomProjectionImpl, _combined_schemas
 )
 
 set_docstrings(GaussianRandomProjection)

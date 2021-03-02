@@ -17,7 +17,7 @@ from imblearn.under_sampling import CondensedNearestNeighbour as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,7 +30,7 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class CondensedNearestNeighbourImpl(BaseResamplerImpl):
+class _CondensedNearestNeighbourImpl(_BaseResamplerImpl):
     def __init__(
         self,
         operator=None,
@@ -52,7 +52,7 @@ class CondensedNearestNeighbourImpl(BaseResamplerImpl):
         }
 
         resampler_instance = OrigModel(**self._hyperparams)
-        super(CondensedNearestNeighbourImpl, self).__init__(
+        super(_CondensedNearestNeighbourImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -185,7 +185,7 @@ _combined_schemas = {
 
 
 CondensedNearestNeighbour = lale.operators.make_operator(
-    CondensedNearestNeighbourImpl, _combined_schemas
+    _CondensedNearestNeighbourImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(CondensedNearestNeighbour)

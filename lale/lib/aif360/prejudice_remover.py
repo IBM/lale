@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BaseInEstimatorImpl,
+    __BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -26,7 +26,7 @@ from .util import (
 )
 
 
-class PrejudiceRemoverImpl(_BaseInEstimatorImpl):
+class _PrejudiceRemoverImpl(__BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
@@ -36,7 +36,7 @@ class PrejudiceRemoverImpl(_BaseInEstimatorImpl):
         eta=1.0,
     ):
         mitigator = aif360.algorithms.inprocessing.PrejudiceRemover(eta=eta)
-        super(PrejudiceRemoverImpl, self).__init__(
+        super(_PrejudiceRemoverImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             redact=redact,
@@ -110,6 +110,8 @@ _combined_schemas = {
 }
 
 
-PrejudiceRemover = lale.operators.make_operator(PrejudiceRemoverImpl, _combined_schemas)
+PrejudiceRemover = lale.operators.make_operator(
+    _PrejudiceRemoverImpl, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(PrejudiceRemover)

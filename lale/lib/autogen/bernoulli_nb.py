@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class BernoulliNBImpl:
+class _BernoulliNBImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -133,6 +133,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-BernoulliNB = make_operator(BernoulliNBImpl, _combined_schemas)
+BernoulliNB = make_operator(_BernoulliNBImpl, _combined_schemas)
 
 set_docstrings(BernoulliNB)

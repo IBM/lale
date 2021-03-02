@@ -358,7 +358,7 @@ class FFTWithTimeFreqCorrelation:
         return np.concatenate((data1, data2), axis=data1.ndim - 1)
 
 
-class TimeFreqEigenVectorsImpl:
+class _TimeFreqEigenVectorsImpl:
     def __init__(
         self,
         window_length=1,
@@ -520,7 +520,7 @@ _combined_schemas = {
 
 
 TimeFreqEigenVectors = lale.operators.make_operator(
-    TimeFreqEigenVectorsImpl, _combined_schemas
+    _TimeFreqEigenVectorsImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(TimeFreqEigenVectors)

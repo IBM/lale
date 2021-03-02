@@ -321,7 +321,7 @@ _combined_schemas = {
 }
 
 
-class DecisionTreeClassifierImpl:
+class _DecisionTreeClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.tree.DecisionTreeClassifier(**self._hyperparams)
@@ -339,7 +339,7 @@ class DecisionTreeClassifierImpl:
 
 DecisionTreeClassifier: lale.operators.PlannedIndividualOp
 DecisionTreeClassifier = lale.operators.make_operator(
-    DecisionTreeClassifierImpl, _combined_schemas
+    _DecisionTreeClassifierImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

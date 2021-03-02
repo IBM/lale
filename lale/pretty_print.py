@@ -162,8 +162,12 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
     else:
         mod_name_short = mod_name_long[: mod_name_long.rfind(".")]
     unqualified = class_name[class_name.rfind(".") + 1 :]
-    if class_name.startswith("lale.") and unqualified.endswith("Impl"):
-        unqualified = unqualified[: -len("Impl")]
+    if (
+        class_name.startswith("lale.")
+        and unqualified.startswith("_")
+        and unqualified.endswith("Impl")
+    ):
+        unqualified = unqualified[1 : -len("Impl")]
     op = find_op(mod_name_short, op_name)
     if op is not None:
         mod = mod_name_short
@@ -276,7 +280,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
     def find_union(
         graph: JSON_TYPE,
     ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
-        cat_cls = "lale.lib.lale.concat_features.ConcatFeaturesImpl"
+        cat_cls = "lale.lib.lale.concat_features._ConcatFeaturesImpl"
         for seq_uid, seq_jsn in graph["steps"].items():
             if _op_kind(seq_jsn) == "Seq":
                 seq_uids = list(seq_jsn["steps"].keys())
@@ -432,6 +436,8 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             op_name = jsn["operator"]
         else:
             op_name = class_name[class_name.rfind(".") + 1 :]
+        if op_name.startswith("_"):
+            op_name = op_name[1:]
         if op_name.endswith("Impl"):
             op_name = op_name[: -len("Impl")]
         if op_name == label:

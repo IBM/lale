@@ -17,7 +17,7 @@ from imblearn.under_sampling import AllKNN as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,13 +30,13 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class AllKNNImpl(BaseResamplerImpl):
+class _AllKNNImpl(_BaseResamplerImpl):
     def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
         self._hyperparams = hyperparams
         resampler_instance = OrigModel(**self._hyperparams)
-        super(AllKNNImpl, self).__init__(
+        super(_AllKNNImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -153,6 +153,6 @@ _combined_schemas = {
 }
 
 
-AllKNN = lale.operators.make_operator(AllKNNImpl, _combined_schemas)
+AllKNN = lale.operators.make_operator(_AllKNNImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(AllKNN)

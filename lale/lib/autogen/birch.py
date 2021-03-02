@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class BirchImpl:
+class _BirchImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -149,6 +149,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-Birch = make_operator(BirchImpl, _combined_schemas)
+Birch = make_operator(_BirchImpl, _combined_schemas)
 
 set_docstrings(Birch)

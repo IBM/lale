@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class RandomTreesEmbeddingImpl:
+class _RandomTreesEmbeddingImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -217,6 +217,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-RandomTreesEmbedding = make_operator(RandomTreesEmbeddingImpl, _combined_schemas)
+RandomTreesEmbedding = make_operator(_RandomTreesEmbeddingImpl, _combined_schemas)
 
 set_docstrings(RandomTreesEmbedding)

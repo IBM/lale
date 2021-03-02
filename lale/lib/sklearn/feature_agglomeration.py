@@ -20,7 +20,7 @@ import lale.docstrings
 import lale.operators
 
 
-class FeatureAgglomerationImpl:
+class _FeatureAgglomerationImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.cluster.FeatureAgglomeration(**self._hyperparams)
@@ -180,7 +180,7 @@ _combined_schemas = {
 
 FeatureAgglomeration: lale.operators.PlannedIndividualOp
 FeatureAgglomeration = lale.operators.make_operator(
-    FeatureAgglomerationImpl, _combined_schemas
+    _FeatureAgglomerationImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":

@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class MultiTaskElasticNetImpl:
+class _MultiTaskElasticNetImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -176,6 +176,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-MultiTaskElasticNet = make_operator(MultiTaskElasticNetImpl, _combined_schemas)
+MultiTaskElasticNet = make_operator(_MultiTaskElasticNetImpl, _combined_schemas)
 
 set_docstrings(MultiTaskElasticNet)

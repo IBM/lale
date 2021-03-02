@@ -17,7 +17,7 @@ from imblearn.under_sampling import EditedNearestNeighbours as OrigModel
 import lale.docstrings
 import lale.operators
 from lale.lib.imblearn.base_resampler import (
-    BaseResamplerImpl,
+    _BaseResamplerImpl,
     _input_decision_function_schema,
     _input_fit_schema,
     _input_predict_proba_schema,
@@ -30,13 +30,13 @@ from lale.lib.imblearn.base_resampler import (
 )
 
 
-class EditedNearestNeighboursImpl(BaseResamplerImpl):
+class _EditedNearestNeighboursImpl(_BaseResamplerImpl):
     def __init__(self, operator=None, **hyperparams):
         if operator is None:
             raise ValueError("Operator is a required argument.")
         self._hyperparams = hyperparams
         resampler_instance = OrigModel(**self._hyperparams)
-        super(EditedNearestNeighboursImpl, self).__init__(
+        super(_EditedNearestNeighboursImpl, self).__init__(
             operator=operator, resampler=resampler_instance
         )
 
@@ -149,7 +149,7 @@ _combined_schemas = {
 
 
 EditedNearestNeighbours = lale.operators.make_operator(
-    EditedNearestNeighboursImpl, _combined_schemas
+    _EditedNearestNeighboursImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(EditedNearestNeighbours)

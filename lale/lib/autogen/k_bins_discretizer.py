@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class KBinsDiscretizerImpl:
+class _KBinsDiscretizerImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -100,6 +100,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-KBinsDiscretizer = make_operator(KBinsDiscretizerImpl, _combined_schemas)
+KBinsDiscretizer = make_operator(_KBinsDiscretizerImpl, _combined_schemas)
 
 set_docstrings(KBinsDiscretizer)

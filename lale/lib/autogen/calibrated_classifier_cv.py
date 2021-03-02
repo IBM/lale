@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class CalibratedClassifierCVImpl:
+class _CalibratedClassifierCVImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -135,6 +135,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-CalibratedClassifierCV = make_operator(CalibratedClassifierCVImpl, _combined_schemas)
+CalibratedClassifierCV = make_operator(_CalibratedClassifierCVImpl, _combined_schemas)
 
 set_docstrings(CalibratedClassifierCV)

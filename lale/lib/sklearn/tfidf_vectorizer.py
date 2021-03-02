@@ -20,7 +20,7 @@ import lale.docstrings
 import lale.operators
 
 
-class TfidfVectorizerImpl:
+class _TfidfVectorizerImpl:
     def __init__(self, **hyperparams):
         if "dtype" in hyperparams and hyperparams["dtype"] == "float64":
             hyperparams = {**hyperparams, "dtype": np.float64}
@@ -284,6 +284,6 @@ _combined_schemas = {
 }
 
 
-TfidfVectorizer = lale.operators.make_operator(TfidfVectorizerImpl, _combined_schemas)
+TfidfVectorizer = lale.operators.make_operator(_TfidfVectorizerImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(TfidfVectorizer)

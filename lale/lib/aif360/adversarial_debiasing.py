@@ -25,7 +25,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    _BaseInEstimatorImpl,
+    __BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -33,7 +33,7 @@ from .util import (
 )
 
 
-class AdversarialDebiasingImpl(_BaseInEstimatorImpl):
+class _AdversarialDebiasingImpl(__BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
@@ -71,7 +71,7 @@ or with
             classifier_num_hidden_units=classifier_num_hidden_units,
             debias=debias,
         )
-        super(AdversarialDebiasingImpl, self).__init__(
+        super(_AdversarialDebiasingImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
             redact=redact,
@@ -212,7 +212,7 @@ _combined_schemas = {
 }
 
 AdversarialDebiasing = lale.operators.make_operator(
-    AdversarialDebiasingImpl, _combined_schemas
+    _AdversarialDebiasingImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(AdversarialDebiasing)

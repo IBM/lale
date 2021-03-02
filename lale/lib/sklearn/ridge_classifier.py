@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class RidgeClassifierImpl:
+class _RidgeClassifierImpl:
     def __init__(
         self,
         alpha=None,
@@ -273,6 +273,6 @@ _combined_schemas = {
 }
 
 
-RidgeClassifier = lale.operators.make_operator(RidgeClassifierImpl, _combined_schemas)
+RidgeClassifier = lale.operators.make_operator(_RidgeClassifierImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(RidgeClassifier)

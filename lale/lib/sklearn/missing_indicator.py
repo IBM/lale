@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class MissingIndicatorImpl:
+class _MissingIndicatorImpl:
     def __init__(
         self,
         missing_values="nan",
@@ -142,6 +142,8 @@ _combined_schemas = {
 }
 
 
-MissingIndicator = lale.operators.make_operator(MissingIndicatorImpl, _combined_schemas)
+MissingIndicator = lale.operators.make_operator(
+    _MissingIndicatorImpl, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(MissingIndicator)

@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NystroemImpl:
+class _NystroemImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.kernel_approximation.Nystroem(**self._hyperparams)
@@ -197,7 +197,7 @@ _combined_schemas = {
 }
 
 Nystroem: lale.operators.PlannedIndividualOp
-Nystroem = lale.operators.make_operator(NystroemImpl, _combined_schemas)
+Nystroem = lale.operators.make_operator(_NystroemImpl, _combined_schemas)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_approximation.Nystroem.html

@@ -417,7 +417,7 @@ _combined_schemas = {
 }
 
 
-class LogisticRegressionImpl:
+class _LogisticRegressionImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.linear_model.LogisticRegression(
@@ -439,7 +439,7 @@ class LogisticRegressionImpl:
 
 
 LogisticRegression = lale.operators.make_operator(
-    LogisticRegressionImpl, _combined_schemas
+    _LogisticRegressionImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":

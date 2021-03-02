@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class BaggingClassifierImpl:
+class _BaggingClassifierImpl:
     def __init__(
         self,
         base_estimator=None,
@@ -303,7 +303,7 @@ _combined_schemas = {
 
 
 BaggingClassifier = lale.operators.make_operator(
-    BaggingClassifierImpl, _combined_schemas
+    _BaggingClassifierImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(BaggingClassifier)

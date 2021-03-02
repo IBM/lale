@@ -21,7 +21,7 @@ from lale.lib.lale import ConcatFeatures as Concat
 from lale.operators import make_operator
 
 
-class MutatingOpImpl:
+class _MutatingOpImpl:
     fit_counter: int
     predict_counter: int
 
@@ -86,7 +86,7 @@ _combined_schemas = {
     },
 }
 
-MutatingOp = make_operator(MutatingOpImpl, _combined_schemas)
+MutatingOp = make_operator(_MutatingOpImpl, _combined_schemas)
 
 
 def fit_clone_fit(op):

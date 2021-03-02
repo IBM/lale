@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class AdaBoostRegressorImpl:
+class _AdaBoostRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -129,6 +129,6 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-AdaBoostRegressor = make_operator(AdaBoostRegressorImpl, _combined_schemas)
+AdaBoostRegressor = make_operator(_AdaBoostRegressorImpl, _combined_schemas)
 
 set_docstrings(AdaBoostRegressor)

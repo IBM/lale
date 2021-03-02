@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LocallyLinearEmbeddingImpl:
+class _LocallyLinearEmbeddingImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -190,6 +190,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-LocallyLinearEmbedding = make_operator(LocallyLinearEmbeddingImpl, _combined_schemas)
+LocallyLinearEmbedding = make_operator(_LocallyLinearEmbeddingImpl, _combined_schemas)
 
 set_docstrings(LocallyLinearEmbedding)

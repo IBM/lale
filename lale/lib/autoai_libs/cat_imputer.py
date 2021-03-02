@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class CatImputerImpl:
+class _CatImputerImpl:
     def __init__(
         self, strategy, missing_values, sklearn_version_family=None, activate_flag=True
     ):
@@ -164,6 +164,6 @@ _combined_schemas = {
 }
 
 
-CatImputer = lale.operators.make_operator(CatImputerImpl, _combined_schemas)
+CatImputer = lale.operators.make_operator(_CatImputerImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(CatImputer)

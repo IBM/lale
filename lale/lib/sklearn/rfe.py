@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class RFEImpl:
+class _RFEImpl:
     def __init__(self, estimator, **hyperparams):
         self._hyperparams = {"estimator": estimator, **hyperparams}
         self._wrapped_model = SKLModel(**self._hyperparams)
@@ -137,7 +137,7 @@ _combined_schemas = {
 }
 
 RFE: lale.operators.PlannedIndividualOp
-RFE = lale.operators.make_operator(RFEImpl, _combined_schemas)
+RFE = lale.operators.make_operator(_RFEImpl, _combined_schemas)
 
 
 if sklearn.__version__ >= "0.24":

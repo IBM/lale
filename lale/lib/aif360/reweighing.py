@@ -29,7 +29,7 @@ from .util import (
 )
 
 
-class ReweighingImpl:
+class _ReweighingImpl:
     def __init__(self, favorable_labels, protected_attributes, estimator, redact=True):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
@@ -137,6 +137,6 @@ _combined_schemas = {
 }
 
 
-Reweighing = lale.operators.make_operator(ReweighingImpl, _combined_schemas)
+Reweighing = lale.operators.make_operator(_ReweighingImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Reweighing)

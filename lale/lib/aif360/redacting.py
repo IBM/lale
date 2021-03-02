@@ -43,7 +43,7 @@ def _redaction_value(column_values):
     return result
 
 
-class RedactingImpl:
+class _RedactingImpl:
     def __init__(self, favorable_labels, protected_attributes):
         self.prot_attr_names = [pa["feature"] for pa in protected_attributes]
 
@@ -126,6 +126,6 @@ Otherwise, use the most frequent value in the column.
 }
 
 
-Redacting = lale.operators.make_operator(RedactingImpl, _combined_schemas)
+Redacting = lale.operators.make_operator(_RedactingImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(Redacting)

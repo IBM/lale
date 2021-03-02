@@ -24,7 +24,7 @@ import lale.docstrings
 import lale.operators
 
 
-class USEPretrainedEncoderImpl(object):
+class _USEPretrainedEncoderImpl(object):
     def __init__(self, model_path=None, batch_size=32):
         self.resources_dir = os.path.join(os.path.dirname(__file__), "resources")
 
@@ -221,7 +221,7 @@ Daniel Cer, et al. Universal Sentence Encoder. arXiv:1803.11175, 2018
 
 
 USEPretrainedEncoder = lale.operators.make_operator(
-    USEPretrainedEncoderImpl, _combined_schemas
+    _USEPretrainedEncoderImpl, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(USEPretrainedEncoder)

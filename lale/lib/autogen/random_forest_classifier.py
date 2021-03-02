@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class RandomForestClassifierImpl:
+class _RandomForestClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -313,6 +313,6 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-RandomForestClassifier = make_operator(RandomForestClassifierImpl, _combined_schemas)
+RandomForestClassifier = make_operator(_RandomForestClassifierImpl, _combined_schemas)
 
 set_docstrings(RandomForestClassifier)

@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class ExtraTreesClassifierImpl:
+class _ExtraTreesClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = sklearn.ensemble.ExtraTreesClassifier(**self._hyperparams)
@@ -317,7 +317,7 @@ _combined_schemas = {
 
 ExtraTreesClassifier: lale.operators.PlannedIndividualOp
 ExtraTreesClassifier = lale.operators.make_operator(
-    ExtraTreesClassifierImpl, _combined_schemas
+    _ExtraTreesClassifierImpl, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":
