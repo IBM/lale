@@ -979,7 +979,7 @@ class TestTopKVotingClassifier(unittest.TestCase):
         )
         trained = ensemble.fit(self.X_train, self.y_train)
         final_ensemble = trained._impl._best_estimator
-        self.assertLessEqual(len(final_ensemble._impl._wrapped_model.estimators), 3)
+        self.assertLessEqual(len(final_ensemble._impl_instance().estimators), 3)
 
     def test_fit_default_args(self):
         from lale.lib.lale import TopKVotingClassifier

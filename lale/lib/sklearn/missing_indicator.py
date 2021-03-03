@@ -18,34 +18,6 @@ from sklearn.impute import MissingIndicator as SKLModel
 import lale.docstrings
 import lale.operators
 
-
-class _MissingIndicatorImpl:
-    def __init__(
-        self,
-        missing_values="nan",
-        features="missing-only",
-        sparse="auto",
-        error_on_new=True,
-    ):
-        self._hyperparams = {
-            "missing_values": missing_values,
-            "features": features,
-            "sparse": sparse,
-            "error_on_new": error_on_new,
-        }
-
-    def fit(self, X, y=None):
-        self._wrapped_model = SKLModel(**self._hyperparams)
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "inherited docstring for MissingIndicator    Binary indicators for missing values.",
     "allOf": [
@@ -142,8 +114,6 @@ _combined_schemas = {
 }
 
 
-MissingIndicator = lale.operators.make_operator(
-    _MissingIndicatorImpl, _combined_schemas
-)
+MissingIndicator = lale.operators.make_operator(SKLModel, _combined_schemas)
 
 lale.docstrings.set_docstrings(MissingIndicator)

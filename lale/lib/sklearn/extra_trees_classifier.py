@@ -18,23 +18,6 @@ import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
-
-class _ExtraTreesClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.ExtraTreesClassifier(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 _hyperparams_schema = {
     "description": "An extra-trees classifier.",
     "allOf": [
@@ -317,7 +300,7 @@ _combined_schemas = {
 
 ExtraTreesClassifier: lale.operators.PlannedIndividualOp
 ExtraTreesClassifier = lale.operators.make_operator(
-    _ExtraTreesClassifierImpl, _combined_schemas
+    sklearn.ensemble.ExtraTreesClassifier, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

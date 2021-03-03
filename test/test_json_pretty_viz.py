@@ -841,7 +841,7 @@ pipeline = LogisticRegression.customize_schema(
             file_contents = """import numpy as np
 import lale.operators
 
-class MockClassifierImpl:
+class _MockClassifierImpl:
     def __init__(self, int_hp=0):
         self.int_hp = int_hp
 
@@ -851,7 +851,7 @@ class MockClassifierImpl:
     def predict(self, X):
         return self.some_y
 
-MockClassifier = lale.operators.make_operator(MockClassifierImpl)
+MockClassifier = lale.operators.make_operator(_MockClassifierImpl)
 """
             tmp_py_file.write(file_contents)
             tmp_py_file.flush()
@@ -883,7 +883,7 @@ class TestToAndFromJSON(unittest.TestCase):
 
         operator = LR(LR.solver.sag, C=0.1)
         json_expected = {
-            "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+            "class": LR.class_name(),
             "state": "trainable",
             "operator": "LogisticRegression",
             "label": "LR",
@@ -910,14 +910,14 @@ class TestToAndFromJSON(unittest.TestCase):
             "state": "planned",
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca._PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "planned",
                     "operator": "PCA",
                     "label": "PCA",
                     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html",
                 },
                 "scl": {
-                    "class": "lale.lib.sklearn.min_max_scaler._MinMaxScalerImpl",
+                    "class": Scl.class_name(),
                     "state": "planned",
                     "operator": "MinMaxScaler",
                     "label": "Scl",
@@ -949,14 +949,14 @@ class TestToAndFromJSON(unittest.TestCase):
             ],
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca._PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "planned",
                     "operator": "PCA",
                     "label": "PCA",
                     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html",
                 },
                 "no_op": {
-                    "class": "lale.lib.lale.no_op._NoOpImpl",
+                    "class": NoOp.class_name(),
                     "state": "trained",
                     "operator": "NoOp",
                     "label": "NoOp",
@@ -967,7 +967,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "is_frozen_trained": True,
                 },
                 "concat_features": {
-                    "class": "lale.lib.lale.concat_features._ConcatFeaturesImpl",
+                    "class": ConcatFeatures.class_name(),
                     "state": "trained",
                     "operator": "ConcatFeatures",
                     "label": "ConcatFeatures",
@@ -978,7 +978,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "is_frozen_trained": True,
                 },
                 "lr": {
-                    "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+                    "class": LR.class_name(),
                     "state": "planned",
                     "operator": "LogisticRegression",
                     "label": "LR",
@@ -1019,7 +1019,7 @@ class TestToAndFromJSON(unittest.TestCase):
 
         operator = Both(op1=PCA(n_components=2), op2=Nystroem)
         json_expected = {
-            "class": "lale.lib.lale.both._BothImpl",
+            "class": Both.class_name(),
             "state": "trainable",
             "operator": "Both",
             "label": "Both",
@@ -1030,7 +1030,7 @@ class TestToAndFromJSON(unittest.TestCase):
             },
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca._PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "trainable",
                     "operator": "PCA",
                     "label": "PCA",
@@ -1039,7 +1039,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "is_frozen_trainable": False,
                 },
                 "nystroem": {
-                    "class": "lale.lib.sklearn.nystroem._NystroemImpl",
+                    "class": Nystroem.class_name(),
                     "state": "planned",
                     "operator": "Nystroem",
                     "label": "Nystroem",
@@ -1066,7 +1066,7 @@ class TestToAndFromJSON(unittest.TestCase):
             estimators=[("knn", KNN), ("pipeline", PCA() >> LR)], voting="soft"
         )
         json_expected = {
-            "class": "lale.lib.sklearn.voting_classifier._VotingClassifierImpl",
+            "class": Vote.class_name(),
             "state": "trainable",
             "operator": "VotingClassifier",
             "is_frozen_trainable": True,
@@ -1081,7 +1081,7 @@ class TestToAndFromJSON(unittest.TestCase):
             },
             "steps": {
                 "knn": {
-                    "class": "lale.lib.sklearn.k_neighbors_classifier._KNeighborsClassifierImpl",
+                    "class": KNN.class_name(),
                     "state": "planned",
                     "operator": "KNeighborsClassifier",
                     "label": "KNN",
@@ -1093,7 +1093,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "edges": [["pca", "lr"]],
                     "steps": {
                         "pca": {
-                            "class": "lale.lib.sklearn.pca._PCAImpl",
+                            "class": PCA.class_name(),
                             "state": "trainable",
                             "operator": "PCA",
                             "label": "PCA",
@@ -1102,7 +1102,7 @@ class TestToAndFromJSON(unittest.TestCase):
                             "is_frozen_trainable": False,
                         },
                         "lr": {
-                            "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+                            "class": LR.class_name(),
                             "state": "planned",
                             "operator": "LogisticRegression",
                             "label": "LR",
@@ -1132,7 +1132,7 @@ class TestToAndFromJSON(unittest.TestCase):
             "edges": [["pca", "choice"]],
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca._PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "planned",
                     "operator": "PCA",
                     "label": "PCA",
@@ -1144,7 +1144,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "operator": "OperatorChoice",
                     "steps": {
                         "lr_0": {
-                            "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+                            "class": LR.class_name(),
                             "state": "trainable",
                             "operator": "LogisticRegression",
                             "label": "LR",
@@ -1158,7 +1158,7 @@ class TestToAndFromJSON(unittest.TestCase):
                             "edges": [["no_op", "lr_1"]],
                             "steps": {
                                 "no_op": {
-                                    "class": "lale.lib.lale.no_op._NoOpImpl",
+                                    "class": NoOp.class_name(),
                                     "state": "trained",
                                     "operator": "NoOp",
                                     "label": "NoOp",
@@ -1169,7 +1169,7 @@ class TestToAndFromJSON(unittest.TestCase):
                                     "is_frozen_trained": True,
                                 },
                                 "lr_1": {
-                                    "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+                                    "class": LR.class_name(),
                                     "state": "trainable",
                                     "operator": "LogisticRegression",
                                     "label": "LR",
@@ -1203,7 +1203,7 @@ class TestToAndFromJSON(unittest.TestCase):
             },
         )
         json_expected = {
-            "class": "lale.lib.sklearn.logistic_regression._LogisticRegressionImpl",
+            "class": LR.class_name(),
             "state": "planned",
             "operator": "LogisticRegression",
             "label": "LR",

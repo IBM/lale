@@ -17,28 +17,6 @@ import sklearn.discriminant_analysis
 import lale.docstrings
 import lale.operators
 
-
-class _QuadraticDiscriminantAnalysisImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "description": "Quadratic Discriminant Analysis",
     "allOf": [
@@ -189,7 +167,7 @@ _combined_schemas = {
 
 
 QuadraticDiscriminantAnalysis = lale.operators.make_operator(
-    _QuadraticDiscriminantAnalysisImpl, _combined_schemas
+    sklearn.discriminant_analysis.QuadraticDiscriminantAnalysis, _combined_schemas
 )
 
 lale.docstrings.set_docstrings(QuadraticDiscriminantAnalysis)

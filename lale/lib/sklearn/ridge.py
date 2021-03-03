@@ -17,39 +17,6 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
-
-class _RidgeImpl:
-    def __init__(
-        self,
-        alpha=None,
-        fit_intercept=None,
-        normalize=False,
-        copy_X=True,
-        max_iter=None,
-        tol=0.001,
-        solver=None,
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "alpha": alpha,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "copy_X": copy_X,
-            "max_iter": max_iter,
-            "tol": tol,
-            "solver": solver,
-            "random_state": random_state,
-        }
-        self._wrapped_model = sklearn.linear_model.Ridge(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "description": "Linear least squares with l2 regularization.",
     "allOf": [
@@ -231,6 +198,6 @@ _combined_schemas = {
 }
 
 
-Ridge = lale.operators.make_operator(_RidgeImpl, _combined_schemas)
+Ridge = lale.operators.make_operator(sklearn.linear_model.Ridge, _combined_schemas)
 
 lale.docstrings.set_docstrings(Ridge)

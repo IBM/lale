@@ -320,26 +320,9 @@ _combined_schemas = {
     },
 }
 
-
-class _DecisionTreeClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.tree.DecisionTreeClassifier(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 DecisionTreeClassifier: lale.operators.PlannedIndividualOp
 DecisionTreeClassifier = lale.operators.make_operator(
-    _DecisionTreeClassifierImpl, _combined_schemas
+    sklearn.tree.DecisionTreeClassifier, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

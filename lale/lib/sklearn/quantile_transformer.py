@@ -17,38 +17,6 @@ from sklearn.preprocessing import QuantileTransformer as SKLModel
 import lale.docstrings
 import lale.operators
 
-
-class _QuantileTransformerImpl:
-    def __init__(
-        self,
-        n_quantiles=1000,
-        output_distribution="uniform",
-        ignore_implicit_zeros=False,
-        subsample=100000,
-        random_state=None,
-        copy=True,
-    ):
-        self._hyperparams = {
-            "n_quantiles": n_quantiles,
-            "output_distribution": output_distribution,
-            "ignore_implicit_zeros": ignore_implicit_zeros,
-            "subsample": subsample,
-            "random_state": random_state,
-            "copy": copy,
-        }
-        self._wrapped_model = SKLModel(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "inherited docstring for QuantileTransformer    Transform features using quantiles information.",
     "allOf": [
@@ -162,8 +130,6 @@ _combined_schemas = {
 }
 
 
-QuantileTransformer = lale.operators.make_operator(
-    _QuantileTransformerImpl, _combined_schemas
-)
+QuantileTransformer = lale.operators.make_operator(SKLModel, _combined_schemas)
 
 lale.docstrings.set_docstrings(QuantileTransformer)

@@ -18,20 +18,6 @@ import sklearn.compose
 import lale.docstrings
 import lale.operators
 
-
-class _ColumnTransformerImpl:
-    def __init__(self, **hyperparams):
-        self._wrapped_model = sklearn.compose.ColumnTransformer(**hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        result = self._wrapped_model.transform(X)
-        return result
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -212,7 +198,7 @@ _combined_schemas = {
 
 ColumnTransformer: lale.operators.PlannedIndividualOp
 ColumnTransformer = lale.operators.make_operator(
-    _ColumnTransformerImpl, _combined_schemas
+    sklearn.compose.ColumnTransformer, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":

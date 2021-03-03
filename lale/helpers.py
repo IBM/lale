@@ -598,11 +598,12 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             planned = lale.operators.make_operator(sklearn_obj, schema, class_name)
             class_ = planned(**hyperparams)
 
-        if lale_wrapper_found:
+        if lale_wrapper_found and hasattr(class_._impl_instance(), "_wrapped_model"):
             wrapped_model = copy.deepcopy(sklearn_obj)
             class_._impl_instance()._wrapped_model = wrapped_model
         else:  # If there is no lale wrapper, there is no _wrapped_model
             class_._impl = copy.deepcopy(sklearn_obj)
+            class_._impl_class_ = class_._impl.__class__
         return class_
 
     if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):

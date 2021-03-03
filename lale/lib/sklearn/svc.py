@@ -18,26 +18,6 @@ import sklearn.svm
 import lale.docstrings
 import lale.operators
 
-
-class _SVCImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.svm.SVC(**self._hyperparams)
-
-    def fit(self, X, y=None, sample_weight=None):
-        self._wrapped_model.fit(X, y, sample_weight)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -335,7 +315,7 @@ _combined_schemas = {
 }
 
 SVC: lale.operators.PlannedIndividualOp
-SVC = lale.operators.make_operator(_SVCImpl, _combined_schemas)
+SVC = lale.operators.make_operator(sklearn.svm.SVC, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVC.html

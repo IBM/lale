@@ -17,50 +17,6 @@ import sklearn.svm
 import lale.docstrings
 import lale.operators
 
-
-class _LinearSVCImpl:
-    def __init__(
-        self,
-        penalty=None,
-        loss=None,
-        dual=True,
-        tol=0.0001,
-        C=1.0,
-        multi_class=None,
-        fit_intercept=True,
-        intercept_scaling=1,
-        class_weight=None,
-        verbose=0,
-        random_state=None,
-        max_iter=1000,
-    ):
-        self._hyperparams = {
-            "penalty": penalty,
-            "loss": loss,
-            "dual": dual,
-            "tol": tol,
-            "C": C,
-            "multi_class": multi_class,
-            "fit_intercept": fit_intercept,
-            "intercept_scaling": intercept_scaling,
-            "class_weight": class_weight,
-            "verbose": verbose,
-            "random_state": random_state,
-            "max_iter": max_iter,
-        }
-        self._wrapped_model = sklearn.svm.LinearSVC(**self._hyperparams)
-
-    def fit(self, X, y=None, sample_weight=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -325,6 +281,6 @@ _combined_schemas = {
 }
 
 
-LinearSVC = lale.operators.make_operator(_LinearSVCImpl, _combined_schemas)
+LinearSVC = lale.operators.make_operator(sklearn.svm.LinearSVC, _combined_schemas)
 
 lale.docstrings.set_docstrings(LinearSVC)

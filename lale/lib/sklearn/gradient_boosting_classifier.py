@@ -18,28 +18,6 @@ import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
-
-class _GradientBoostingClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.GradientBoostingClassifier(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "description": "Gradient Boosting for classification.",
     "allOf": [
@@ -387,7 +365,7 @@ _combined_schemas = {
 
 GradientBoostingClassifier: lale.operators.PlannedIndividualOp
 GradientBoostingClassifier = lale.operators.make_operator(
-    _GradientBoostingClassifierImpl, _combined_schemas
+    sklearn.ensemble.GradientBoostingClassifier, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

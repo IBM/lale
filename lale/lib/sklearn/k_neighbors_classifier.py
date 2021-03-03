@@ -226,27 +226,8 @@ _combined_schemas = {
     },
 }
 
-
-class _KNeighborsClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.neighbors.KNeighborsClassifier(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 KNeighborsClassifier = lale.operators.make_operator(
-    _KNeighborsClassifierImpl, _combined_schemas,
+    sklearn.neighbors.KNeighborsClassifier, _combined_schemas,
 )
 
 lale.docstrings.set_docstrings(KNeighborsClassifier)

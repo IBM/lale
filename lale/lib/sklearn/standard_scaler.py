@@ -17,20 +17,6 @@ import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
-
-class _StandardScalerImpl:
-    def __init__(self, copy=True, with_mean=True, with_std=True):
-        self._hyperparams = {"copy": copy, "with_mean": with_mean, "with_std": with_std}
-        self._wrapped_model = sklearn.preprocessing.StandardScaler(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X, copy=None):
-        return self._wrapped_model.transform(X, copy)
-
-
 _hyperparams_schema = {
     "description": "Standardize features by removing the mean and scaling to unit variance",
     "allOf": [
@@ -124,6 +110,8 @@ _combined_schemas = {
 }
 
 
-StandardScaler = lale.operators.make_operator(_StandardScalerImpl, _combined_schemas)
+StandardScaler = lale.operators.make_operator(
+    sklearn.preprocessing.StandardScaler, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(StandardScaler)

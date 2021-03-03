@@ -18,20 +18,6 @@ import sklearn.tree
 import lale.docstrings
 import lale.operators
 
-
-class _DecisionTreeRegressorImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.tree.DecisionTreeRegressor(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "description": "A decision tree regressor.",
     "allOf": [
@@ -301,7 +287,7 @@ _combined_schemas = {
 
 DecisionTreeRegressor: lale.operators.PlannedIndividualOp
 DecisionTreeRegressor = lale.operators.make_operator(
-    _DecisionTreeRegressorImpl, _combined_schemas
+    sklearn.tree.DecisionTreeRegressor, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

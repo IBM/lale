@@ -18,20 +18,6 @@ import sklearn.kernel_approximation
 import lale.docstrings
 import lale.operators
 
-
-class _NystroemImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.kernel_approximation.Nystroem(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the Nystroem model from scikit-learn.",
     "allOf": [
@@ -197,7 +183,9 @@ _combined_schemas = {
 }
 
 Nystroem: lale.operators.PlannedIndividualOp
-Nystroem = lale.operators.make_operator(_NystroemImpl, _combined_schemas)
+Nystroem = lale.operators.make_operator(
+    sklearn.kernel_approximation.Nystroem, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_approximation.Nystroem.html

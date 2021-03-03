@@ -18,25 +18,6 @@ import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
-
-class _FunctionTransformerImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.FunctionTransformer(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -161,7 +142,7 @@ _combined_schemas = {
 
 FunctionTransformer: lale.operators.PlannedIndividualOp
 FunctionTransformer = lale.operators.make_operator(
-    _FunctionTransformerImpl, _combined_schemas
+    sklearn.preprocessing.FunctionTransformer, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

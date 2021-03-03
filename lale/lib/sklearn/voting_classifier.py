@@ -18,32 +18,6 @@ import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
-
-class _VotingClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.VotingClassifier(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "description": "Soft Voting/Majority Rule classifier for unfitted estimators.",
     "allOf": [
@@ -245,7 +219,7 @@ _combined_schemas = {
 
 VotingClassifier: lale.operators.PlannedIndividualOp
 VotingClassifier = lale.operators.make_operator(
-    _VotingClassifierImpl, _combined_schemas
+    sklearn.ensemble.VotingClassifier, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":

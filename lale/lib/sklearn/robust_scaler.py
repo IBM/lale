@@ -18,20 +18,6 @@ import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
-
-class _RobustScalerImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.RobustScaler(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Scale features using statistics that are robust to outliers.",
     "allOf": [
@@ -128,7 +114,9 @@ _combined_schemas = {
 }
 
 RobustScaler: lale.operators.PlannedIndividualOp
-RobustScaler = lale.operators.make_operator(_RobustScalerImpl, _combined_schemas)
+RobustScaler = lale.operators.make_operator(
+    sklearn.preprocessing.RobustScaler, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.RobustScaler.html

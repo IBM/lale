@@ -18,31 +18,6 @@ import sklearn.neural_network
 import lale.docstrings
 import lale.operators
 
-
-class _MLPClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.neural_network.MLPClassifier(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def partial_fit(self, X, y=None, classes=None):
-        if not hasattr(self, "_wrapped_model"):
-            self._wrapped_model = sklearn.neural_network.MLPClassifier(
-                **self._hyperparams
-            )
-        self._wrapped_model.partial_fit(X, y, classes=classes)
-        return self
-
-
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the MLPClassifier model from scikit-learn.",
     "allOf": [
@@ -380,7 +355,9 @@ _combined_schemas = {
 }
 
 MLPClassifier: lale.operators.PlannedIndividualOp
-MLPClassifier = lale.operators.make_operator(_MLPClassifierImpl, _combined_schemas)
+MLPClassifier = lale.operators.make_operator(
+    sklearn.neural_network.MLPClassifier, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html

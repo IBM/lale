@@ -18,25 +18,6 @@ import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
-
-class _RandomForestClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.RandomForestClassifier(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 _hyperparams_schema = {
     "description": "A random forest classifier.",
     "allOf": [
@@ -360,7 +341,7 @@ _combined_schemas = {
 
 RandomForestClassifier: lale.operators.PlannedIndividualOp
 RandomForestClassifier = lale.operators.make_operator(
-    _RandomForestClassifierImpl, _combined_schemas
+    sklearn.ensemble.RandomForestClassifier, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":

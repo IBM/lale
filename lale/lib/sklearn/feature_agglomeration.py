@@ -19,20 +19,6 @@ import sklearn.cluster
 import lale.docstrings
 import lale.operators
 
-
-class _FeatureAgglomerationImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.cluster.FeatureAgglomeration(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Agglomerate features.",
     "allOf": [
@@ -180,7 +166,7 @@ _combined_schemas = {
 
 FeatureAgglomeration: lale.operators.PlannedIndividualOp
 FeatureAgglomeration = lale.operators.make_operator(
-    _FeatureAgglomerationImpl, _combined_schemas
+    sklearn.cluster.FeatureAgglomeration, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":

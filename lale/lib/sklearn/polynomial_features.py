@@ -18,22 +18,6 @@ import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
-
-class _PolynomialFeaturesImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.PolynomialFeatures(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Generate polynomial and interaction features.",
     "allOf": [
@@ -116,7 +100,7 @@ _combined_schemas = {
 
 PolynomialFeatures: lale.operators.PlannedIndividualOp
 PolynomialFeatures = lale.operators.make_operator(
-    _PolynomialFeaturesImpl, _combined_schemas
+    sklearn.preprocessing.PolynomialFeatures, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
