@@ -56,9 +56,9 @@ def create_function_test_feature_preprocessor(fproc_name):
         class_ = getattr(module, class_name)
         fproc = class_()
 
-        from lale.lib.sklearn.one_hot_encoder import _OneHotEncoderImpl
+        from lale.lib.sklearn.one_hot_encoder import OneHotEncoder
 
-        if fproc._impl_class() == _OneHotEncoderImpl:
+        if fproc._impl_class() == OneHotEncoder._impl_class():
             # fproc = OneHotEncoder(handle_unknown = 'ignore')
             # remove the hack when this is fixed
             fproc = PCA()

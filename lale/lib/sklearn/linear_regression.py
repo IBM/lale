@@ -18,20 +18,6 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
-
-class _LinearRegressionImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.linear_model.LinearRegression(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -144,7 +130,7 @@ _combined_schemas = {
 
 LinearRegression: lale.operators.PlannedIndividualOp
 LinearRegression = lale.operators.make_operator(
-    _LinearRegressionImpl, _combined_schemas
+    sklearn.linear_model.LinearRegression, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.24":

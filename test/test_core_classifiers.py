@@ -70,10 +70,10 @@ def create_function_test_classifier(clf_name):
         _ = trained.predict(self.X_test)
 
         from lale.lib.sklearn.gradient_boosting_classifier import (
-            _GradientBoostingClassifierImpl,
+            GradientBoostingClassifier,
         )
 
-        if clf._impl_class() == _GradientBoostingClassifierImpl:
+        if clf._impl_class() == GradientBoostingClassifier._impl_class():
             # because exponential loss does not work with iris dataset as it is not binary classification
             import lale.schemas as schemas
 

@@ -18,20 +18,6 @@ import sklearn.svm
 import lale.docstrings
 import lale.operators
 
-
-class _SVRImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.svm.SVR(**self._hyperparams)
-
-    def fit(self, X, y=None, sample_weight=None):
-        self._wrapped_model.fit(X, y, sample_weight)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -221,7 +207,7 @@ _combined_schemas = {
 }
 
 SVR: lale.operators.PlannedIndividualOp
-SVR = lale.operators.make_operator(_SVRImpl, _combined_schemas)
+SVR = lale.operators.make_operator(sklearn.svm.SVR, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVR.html

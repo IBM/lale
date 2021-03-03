@@ -17,27 +17,6 @@ import sklearn.naive_bayes
 import lale.docstrings
 import lale.operators
 
-
-class _MultinomialNBImpl:
-    def __init__(self, alpha=1.0, fit_prior=True, class_prior=None):
-        self._hyperparams = {
-            "alpha": alpha,
-            "fit_prior": fit_prior,
-            "class_prior": class_prior,
-        }
-        self._wrapped_model = sklearn.naive_bayes.MultinomialNB(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 _hyperparams_schema = {
     "description": "Naive Bayes classifier for multinomial models",
     "allOf": [
@@ -147,6 +126,8 @@ _combined_schemas = {
 }
 
 
-MultinomialNB = lale.operators.make_operator(_MultinomialNBImpl, _combined_schemas)
+MultinomialNB = lale.operators.make_operator(
+    sklearn.naive_bayes.MultinomialNB, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(MultinomialNB)

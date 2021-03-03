@@ -18,64 +18,6 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
-
-class _SGDRegressorImpl:
-    def __init__(
-        self,
-        loss="squared_loss",
-        penalty="l2",
-        alpha=0.0001,
-        l1_ratio=0.15,
-        fit_intercept=True,
-        max_iter=None,
-        tol=None,
-        shuffle=True,
-        verbose=0,
-        epsilon=0.1,
-        random_state=None,
-        learning_rate="invscaling",
-        eta0=0.01,
-        power_t=0.25,
-        early_stopping=False,
-        validation_fraction=0.1,
-        n_iter_no_change=5,
-        warm_start=False,
-        average=False,
-    ):
-        self._hyperparams = {
-            "loss": loss,
-            "penalty": penalty,
-            "alpha": alpha,
-            "l1_ratio": l1_ratio,
-            "fit_intercept": fit_intercept,
-            "max_iter": max_iter,
-            "tol": tol,
-            "shuffle": shuffle,
-            "verbose": verbose,
-            "epsilon": epsilon,
-            "random_state": random_state,
-            "learning_rate": learning_rate,
-            "eta0": eta0,
-            "power_t": power_t,
-            "early_stopping": early_stopping,
-            "validation_fraction": validation_fraction,
-            "n_iter_no_change": n_iter_no_change,
-            "warm_start": warm_start,
-            "average": average,
-        }
-        self._wrapped_model = sklearn.linear_model.SGDRegressor(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "description": "inherited docstring for SGDRegressor    Linear model fitted by minimizing a regularized empirical loss with SGD",
     "allOf": [
@@ -352,7 +294,9 @@ _combined_schemas = {
     },
 }
 
-SGDRegressor = lale.operators.make_operator(_SGDRegressorImpl, _combined_schemas)
+SGDRegressor = lale.operators.make_operator(
+    sklearn.linear_model.SGDRegressor, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.SGDRegressor.html

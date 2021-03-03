@@ -18,28 +18,6 @@ import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
-
-class _MinMaxScalerImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.MinMaxScaler(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-    def partial_fit(self, X, y=None):
-        if not hasattr(self, "_wrapped_model"):
-            self._wrapped_model = sklearn.preprocessing.MinMaxScaler(
-                **self._hyperparams
-            )
-        self._wrapped_model.partial_fit(X)
-        return self
-
-
 _input_schema_fit = {
     "description": "Input data schema for training.",
     "type": "object",
@@ -140,7 +118,9 @@ _combined_schemas = {
 }
 
 MinMaxScaler: lale.operators.PlannedIndividualOp
-MinMaxScaler = lale.operators.make_operator(_MinMaxScalerImpl, _combined_schemas)
+MinMaxScaler = lale.operators.make_operator(
+    sklearn.preprocessing.MinMaxScaler, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.preprocessing.MinMaxScaler.html

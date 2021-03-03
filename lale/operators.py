@@ -2477,12 +2477,12 @@ def make_operator(
     if name is None:
         name = lale.helpers.assignee_name(level=2)
         if name is None:
-            if (
-                inspect.isclass(impl)
-                and impl.__name__.startswith("_")
-                and impl.__name__.endswith("Impl")
-            ):
-                n: str = impl.__name__[1 : -len("Impl")]
+            if inspect.isclass(impl):
+                n: str = impl.__name__
+                if n.startswith("_"):
+                    n = n[1:]
+                if n.endswith("Impl"):
+                    n = n[: -len("Impl")]
                 name = n
             else:
                 name = "Unknown"
@@ -2980,19 +2980,24 @@ class BasePipeline(Operator, Generic[OpType]):
     def export_to_sklearn_pipeline(self):
         from sklearn.pipeline import FeatureUnion, make_pipeline
 
-        from lale.lib.lale.concat_features import _ConcatFeaturesImpl
-        from lale.lib.lale.no_op import _NoOpImpl
-        from lale.lib.lale.relational import _RelationalImpl
+        from lale.lib.lale.concat_features import ConcatFeatures
+        from lale.lib.lale.no_op import NoOp
+        from lale.lib.lale.relational import Relational
 
         def convert_nested_objects(node):
             for element in dir(node):  # Looking at only 1 level for now.
                 try:
                     value = getattr(node, element)
-                    if isinstance(value, IndividualOp) and hasattr(
-                        value._impl_instance(), "_wrapped_model"
-                    ):
-                        # node is a higher order operator
-                        setattr(node, element, value._impl_instance()._wrapped_model)
+                    if isinstance(value, IndividualOp):
+                        if isinstance(
+                            value._impl_instance(), sklearn.base.BaseEstimator
+                        ):
+                            setattr(node, element, value._impl_instance())
+                        if hasattr(value._impl_instance(), "_wrapped_model"):
+                            # node is a higher order operator
+                            setattr(
+                                node, element, value._impl_instance()._wrapped_model
+                            )
 
                     stripped = lale.datasets.data_schemas.strip_schema(value)
                     if value is stripped:
@@ -3013,10 +3018,10 @@ class BasePipeline(Operator, Generic[OpType]):
                     "A pipeline that has an OperatorChoice can not be converted to "
                     " a scikit-learn pipeline:{}".format(self.to_json())
                 )
-            if isinstance(sink_node._impl, _RelationalImpl):
+            if sink_node._impl_class() == Relational._impl_class():
                 return None
             convert_nested_objects(sink_node._impl)
-            if sink_node._impl_class() == _ConcatFeaturesImpl:
+            if sink_node._impl_class() == ConcatFeatures._impl_class():
                 list_of_transformers = []
                 for pred in self._preds[sink_node]:
                     pred_transformer = create_pipeline_from_sink_node(pred)
@@ -3053,14 +3058,14 @@ class BasePipeline(Operator, Generic[OpType]):
                         output_pipeline_steps = []
                         previous_sklearn_op = create_pipeline_from_sink_node(preds[0])
                         if previous_sklearn_op is not None and not isinstance(
-                            previous_sklearn_op, _NoOpImpl
+                            previous_sklearn_op, NoOp._impl_class()
                         ):
                             if isinstance(previous_sklearn_op, list):
                                 output_pipeline_steps = previous_sklearn_op
                             else:
                                 output_pipeline_steps.append(previous_sklearn_op)
                         if not isinstance(
-                            sklearn_op, _NoOpImpl
+                            sklearn_op, NoOp._impl_class()
                         ):  # Append the current op only if not NoOp
                             output_pipeline_steps.append(sklearn_op)
                         return output_pipeline_steps
@@ -3076,7 +3081,7 @@ class BasePipeline(Operator, Generic[OpType]):
             )
         else:
             sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
-            # not checking for isinstance(sklearn_steps_list, _NoOpImpl) here as there is no valid sklearn pipeline with just one NoOp.
+            # not checking for isinstance(sklearn_steps_list, NoOp._impl_class()) here as there is no valid sklearn pipeline with just one NoOp.
         try:
             sklearn_pipeline = (
                 make_pipeline(*sklearn_steps_list)

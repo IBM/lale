@@ -23,12 +23,14 @@ unchanged. Otherwise, find the NumpyPermuteArray operator. Everything
 before that operator is preprocessing. Everything after
 NumpyPermuteArray but before the final estimator is feature
 engineering."""
+    from lale.lib.autoai_libs.numpy_permute_array import NumpyPermuteArray
+
     if len(orig_pipeline.steps()) <= 2:
         return orig_pipeline
     estimator = orig_pipeline.get_last()
     prep = orig_pipeline.remove_last()
     cognito = None
-    PREP_END = "lale.lib.autoai_libs.numpy_permute_array._NumpyPermuteArrayImpl"
+    PREP_END = NumpyPermuteArray.class_name()
     while True:
         last = prep.get_last()
         if last is None or not last.class_name().startswith("lale.lib.autoai_libs."):

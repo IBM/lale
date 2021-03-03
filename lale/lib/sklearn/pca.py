@@ -17,20 +17,6 @@ import sklearn.decomposition
 import lale.docstrings
 import lale.operators
 
-
-class _PCAImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.decomposition.PCA(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the PCA model from scikit-learn.",
     "allOf": [
@@ -238,6 +224,6 @@ _combined_schemas = {
     },
 }
 
-PCA = lale.operators.make_operator(_PCAImpl, _combined_schemas)
+PCA = lale.operators.make_operator(sklearn.decomposition.PCA, _combined_schemas)
 
 lale.docstrings.set_docstrings(PCA)

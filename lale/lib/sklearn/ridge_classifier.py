@@ -17,44 +17,6 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
-
-class _RidgeClassifierImpl:
-    def __init__(
-        self,
-        alpha=None,
-        fit_intercept=None,
-        normalize=False,
-        copy_X=True,
-        max_iter=None,
-        tol=0.001,
-        solver=None,
-        class_weight=None,
-        random_state=None,
-    ):
-        self._hyperparams = {
-            "alpha": alpha,
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "copy_X": copy_X,
-            "max_iter": max_iter,
-            "tol": tol,
-            "solver": solver,
-            "class_weight": class_weight,
-            "random_state": random_state,
-        }
-        self._wrapped_model = sklearn.linear_model.RidgeClassifier(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "description": "Classifier using Ridge regression.",
     "allOf": [
@@ -273,6 +235,8 @@ _combined_schemas = {
 }
 
 
-RidgeClassifier = lale.operators.make_operator(_RidgeClassifierImpl, _combined_schemas)
+RidgeClassifier = lale.operators.make_operator(
+    sklearn.linear_model.RidgeClassifier, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(RidgeClassifier)

@@ -19,25 +19,6 @@ import lale.docstrings
 import lale.operators
 from lale.schemas import Int
 
-
-class _PassiveAggressiveClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.linear_model.PassiveAggressiveClassifier(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "description": "Passive Aggressive Classifier",
     "allOf": [
@@ -287,7 +268,7 @@ _combined_schemas = {
 
 PassiveAggressiveClassifier: lale.operators.PlannedIndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(
-    _PassiveAggressiveClassifierImpl, _combined_schemas
+    sklearn.linear_model.PassiveAggressiveClassifier, _combined_schemas
 )
 
 

@@ -18,20 +18,6 @@ from sklearn.feature_selection import RFE as SKLModel
 import lale.docstrings
 import lale.operators
 
-
-class _RFEImpl:
-    def __init__(self, estimator, **hyperparams):
-        self._hyperparams = {"estimator": estimator, **hyperparams}
-        self._wrapped_model = SKLModel(**self._hyperparams)
-
-    def fit(self, X, y):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Feature ranking with recursive feature elimination.",
     "allOf": [
@@ -127,7 +113,7 @@ _combined_schemas = {
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.rfe.html",
     "import_from": "sklearn.feature_selection",
     "type": "object",
-    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "transformer"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
@@ -137,7 +123,7 @@ _combined_schemas = {
 }
 
 RFE: lale.operators.PlannedIndividualOp
-RFE = lale.operators.make_operator(_RFEImpl, _combined_schemas)
+RFE = lale.operators.make_operator(SKLModel, _combined_schemas)
 
 
 if sklearn.__version__ >= "0.24":

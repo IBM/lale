@@ -18,23 +18,6 @@ from sklearn.decomposition import NMF as SKLModel
 import lale.docstrings
 import lale.operators
 
-
-class _NMFImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = SKLModel(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Non-Negative Matrix Factorization (NMF)",
     "allOf": [
@@ -218,7 +201,7 @@ _combined_schemas = {
 }
 
 NMF: lale.operators.PlannedIndividualOp
-NMF = lale.operators.make_operator(_NMFImpl, _combined_schemas)
+NMF = lale.operators.make_operator(SKLModel, _combined_schemas)
 
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html
