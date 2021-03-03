@@ -831,6 +831,49 @@ pipeline = LogisticRegression.customize_schema(
 )(solver="lbfgs")"""
         self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
 
+    def test_user_operator_in_toplevel_module(self):
+        import importlib
+        import os.path
+        import sys
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py") as tmp_py_file:
+            file_contents = """import numpy as np
+import lale.operators
+
+class MockClassifierImpl:
+    def __init__(self, int_hp=0):
+        self.int_hp = int_hp
+
+    def fit(self, X, y):
+        self.some_y = list(y)[0]
+
+    def predict(self, X):
+        return self.some_y
+
+MockClassifier = lale.operators.make_operator(MockClassifierImpl)
+"""
+            tmp_py_file.write(file_contents)
+            tmp_py_file.flush()
+            dir_name = os.path.dirname(tmp_py_file.name)
+            old_pythonpath = sys.path
+            try:
+                sys.path.append(dir_name)
+                module_name = os.path.basename(tmp_py_file.name)[: -len(".py")]
+                module = importlib.import_module(module_name)
+                MockClf = getattr(module, "MockClassifier")
+                self.assertIsInstance(MockClf, lale.operators.PlannedIndividualOp)
+                self.assertEqual(MockClf.name(), "MockClassifier")
+                pipeline = MockClf(int_hp=42)
+                expected = f"""from {module_name} import MockClassifier as MockClf
+import lale
+
+lale.wrap_imported_operators()
+pipeline = MockClf(int_hp=42)"""
+                self._roundtrip(expected, pipeline.pretty_print())
+            finally:
+                sys.path = old_pythonpath
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):

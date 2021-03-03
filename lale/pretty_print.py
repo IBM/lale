@@ -153,7 +153,10 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
         return None
 
     mod_name_long = class_name[: class_name.rfind(".")]
-    mod_name_short = mod_name_long[: mod_name_long.rfind(".")]
+    if mod_name_long.rfind(".") == -1:
+        mod_name_short = mod_name_long
+    else:
+        mod_name_short = mod_name_long[: mod_name_long.rfind(".")]
     unqualified = class_name[class_name.rfind(".") + 1 :]
     if class_name.startswith("lale.") and unqualified.endswith("Impl"):
         unqualified = unqualified[: -len("Impl")]
