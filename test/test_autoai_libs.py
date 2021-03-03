@@ -22,6 +22,7 @@ import lale.lib.autoai_libs
 from lale.lib.autoai_libs import float32_transform
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import LogisticRegression as LR
+from lale.lib.xgboost.xgb_classifier import XGBClassifier
 
 
 class TestAutoaiLibs(unittest.TestCase):
@@ -224,3 +225,47 @@ class TestAutoaiLibs(unittest.TestCase):
             eval_algo=ExtraTreesClassifier,
         )
         self.doTest(trainable, **self._iris)
+
+
+class TestAutoaiLibsText(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import fetch_20newsgroups
+
+        cats = ["alt.atheism", "sci.space"]
+        newsgroups_train = fetch_20newsgroups(subset="train", categories=cats)
+        self.train_X, self.train_y = (
+            np.array(newsgroups_train.data),
+            newsgroups_train.target,
+        )
+        self.train_X = np.reshape(self.train_X, (self.train_X.shape[0], 1))
+        newsgroups_test = fetch_20newsgroups(subset="test", categories=cats)
+        self.test_X, self.test_y = (
+            np.array(newsgroups_test.data),
+            newsgroups_test.target,
+        )
+        self.test_X = np.reshape(self.test_X, (self.test_X.shape[0], 1))
+
+    def doTest(self, trainable, train_X, train_y, test_X, test_y):
+        trained = trainable.fit(train_X, train_y)
+        _ = trained.transform(test_X)
+        with self.assertWarns(DeprecationWarning):
+            trainable.transform(train_X)
+        trainable.to_json()
+        trainable_pipeline = trainable >> float32_transform() >> XGBClassifier()
+        trained_pipeline = trainable_pipeline.fit(train_X, train_y)
+        trained_pipeline.predict(test_X)
+        hyperopt = Hyperopt(estimator=trainable_pipeline, max_evals=1, verbose=True)
+        trained_hyperopt = hyperopt.fit(train_X, train_y)
+        trained_hyperopt.predict(test_X)
+
+    def test_SuperTextTransformer(self):
+        trainable = lale.lib.autoai_libs.SuperTextTransformer(
+            drop_columns=True, text_processing_options={"word2vec": {"output_dim": 5}}
+        )
+        self.doTest(trainable, self.train_X, self.train_y, self.test_X, self.test_y)
+
+    def test_Word2VecTransformer(self):
+        trainable = lale.lib.autoai_libs.Word2VecTransformer(
+            drop_columns=True, output_dim=5
+        )
+        self.doTest(trainable, self.train_X, self.train_y, self.test_X, self.test_y)
