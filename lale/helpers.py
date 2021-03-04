@@ -531,12 +531,19 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
 def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     # For all pipeline steps, identify equivalent lale wrappers if present,
     # if not, call make operator on sklearn classes and create a lale pipeline.
-
     def get_equivalent_lale_op(sklearn_obj, fitted):
         import lale.operators
         import lale.type_checking
 
-        if isinstance(sklearn_obj, lale.operators.Operator):
+        if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and fitted:
+            if hasattr(sklearn_obj, "_trained"):
+                return sklearn_obj._trained
+            else:
+                raise ValueError(
+                    """The input pipeline has an operator that is not trained and fitted is set to True,
+                    please pass fitted=False if you want a trainable pipeline as output."""
+                )
+        elif isinstance(sklearn_obj, lale.operators.Operator):
             return sklearn_obj
 
         # Validate that the sklearn_obj is a valid sklearn-compatible object
