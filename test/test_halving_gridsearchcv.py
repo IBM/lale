@@ -85,10 +85,11 @@ class TestGridSearchCV(unittest.TestCase):
 
             clf = HalvingGridSearchCV(
                 estimator=trainable,
-                lale_num_samples=1,
-                lale_num_grids=1,
+                lale_num_samples=2,
+                lale_num_grids=3,
                 cv=2,
                 scoring=make_scorer(accuracy_score),
+                fit_intercept=False,
             )
             iris = load_iris()
             clf.fit(iris.data, iris.target)
@@ -111,7 +112,7 @@ class TestGridSearchCV(unittest.TestCase):
             clf = HalvingGridSearchCV(
                 estimator=trainable,
                 lale_num_samples=2,
-                lale_num_grids=2,
+                lale_num_grids=3,
                 cv=2,
                 scoring=make_scorer(accuracy_score),
             )
