@@ -18,25 +18,6 @@ from lale.lib.autoai_libs import wrap_pipeline_segments
 assert sklearn.__version__ == "0.23.1", "This test is for scikit-learn 0.23.1."
 
 
-# lale changed the internal representation of how hyperparameter's are stored
-# this test may run against a pickled form of an "old-style" lale operator
-# to support this, we check for this and add the required _frozen_hyperparams
-# field that is required for the new format of operators
-# this is an unsupported hack for testing and will disappear once
-# we can update the pickle we are testing against
-def update_lale_pipeline(op):
-    if isinstance(op, lale.operators.BasePipeline):
-        for s in op.steps():
-            update_lale_pipeline(s)
-    elif isinstance(op, lale.operators.IndividualOp):
-        hps = getattr(op, "_hyperparams", None)
-        if hps:
-            if not hasattr(op, "_frozen_hyperparams"):
-                # if the pickle has hyperparams but no frozen ones,
-                # then it was unpickled from an old-style lale operator
-                op._frozen_hyperparams = list(hps.keys())
-
-
 class TestAutoAIOutputConsumption(unittest.TestCase):
 
     pickled_model_path = os.path.join(
@@ -66,7 +47,6 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
     def test_01_load_pickled_model(self):
         try:
             old_model = joblib.load(TestAutoAIOutputConsumption.pickled_model_path)
-            update_lale_pipeline(old_model)
             TestAutoAIOutputConsumption.model = old_model
             println_pos(f"type(model) {type(TestAutoAIOutputConsumption.model)}")
             println_pos(f"model {str(TestAutoAIOutputConsumption.model)}")
