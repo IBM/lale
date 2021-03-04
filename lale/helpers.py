@@ -538,6 +538,10 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and fitted:
             if hasattr(sklearn_obj, "_trained"):
                 return sklearn_obj._trained
+            elif not hasattr(
+                sklearn_obj._impl_instance(), "fit"
+            ):  # Operators such as NoOp do not have a fit, so return them as is.
+                return sklearn_obj
             else:
                 raise ValueError(
                     """The input pipeline has an operator that is not trained and fitted is set to True,
