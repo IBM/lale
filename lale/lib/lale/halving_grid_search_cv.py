@@ -22,7 +22,7 @@ import lale.lib.sklearn
 import lale.operators
 import lale.search.lale_grid_search_cv
 
-from .observing import Observing, _ObservingImpl
+from .observing import Observing
 
 
 class _HalvingGridSearchCVImpl:
@@ -154,13 +154,13 @@ class _HalvingGridSearchCVImpl:
             except BaseException as e:
                 if obs is not None:
                     impl = observed_op._impl  # type: ignore
-                    assert isinstance(impl, _ObservingImpl)
+                    assert isinstance(impl, Observing._impl_class())
                     impl.failObserving("optimize", e)
                 raise
 
             impl = getattr(be, "_impl", None)
             if impl is not None:
-                assert isinstance(impl, _ObservingImpl)
+                assert isinstance(impl, Observing._impl_class())
                 be = impl.getOp()
                 if obs is not None:
                     obs_impl = observed_op._impl  # type: ignore
