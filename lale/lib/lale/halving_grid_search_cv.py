@@ -14,12 +14,13 @@
 
 from typing import Any, Dict, Optional
 
+import numpy as np
+
 import lale.docstrings
 import lale.helpers
 import lale.lib.sklearn
 import lale.operators
 import lale.search.lale_grid_search_cv
-import lale.sklearn_compat
 
 from .observing import Observing, ObservingImpl
 
@@ -31,8 +32,18 @@ class _HalvingGridSearchCVImpl:
         self,
         estimator=None,
         param_grid=None,
+        factor=3,
+        resource="n_strings",
+        max_resources="auto",
+        min_resources="exhaust",
+        aggressive_elimination=False,
         scoring=None,
+        refit=True,
+        error_score=np.nan,
+        return_train_score=False,
+        random_state=None,
         n_jobs=None,
+        verbose=0,
         cv=5,
         lale_num_samples=None,
         lale_num_grids=None,
@@ -51,9 +62,19 @@ class _HalvingGridSearchCVImpl:
 
         self._hyperparams = {
             "estimator": estimator,
+            "factor": factor,
+            "resource": resource,
+            "max_resources": max_resources,
+            "min_resources": min_resources,
+            "aggressive_elimination": aggressive_elimination,
             "cv": cv,
             "scoring": scoring,
+            "refit": refit,
+            "error_score": error_score,
+            "return_train_score": return_train_score,
+            "random_state": random_state,
             "n_jobs": n_jobs,
+            "verbose": verbose,
             "lale_num_samples": lale_num_samples,
             "lale_num_grids": lale_num_grids,
             "pgo": pgo,
@@ -122,7 +143,7 @@ class _HalvingGridSearchCVImpl:
                 import sklearn.model_selection  # isort: skip
 
                 self.grid = sklearn.model_selection.HalvingGridSearchCV(
-                    lale.sklearn_compat.make_sklearn_compat(observed_op),
+                    observed_op,
                     hp_grid,
                     cv=self._hyperparams["cv"],
                     scoring=self._hyperparams["scoring"],
@@ -163,7 +184,7 @@ class _HalvingGridSearchCVImpl:
         if result is None or astype == "lale":
             return result
         assert astype == "sklearn", astype
-        return lale.sklearn_compat.make_sklearn_compat(result)
+        return result
 
 
 _hyperparams_schema = {
@@ -192,6 +213,51 @@ _hyperparams_schema = {
                         },
                     ],
                     "default": None,
+                },
+                "factor": {
+                    "description": """The `halving’ parameter, which determines the proportion of candidates
+that are selected for each subsequent iteration. For example, factor=3 means that only one third of the candidates are selected.""",
+                    "type": "number",
+                    "minimum": 1,
+                    "exclusiveMinimum": True,
+                    "minimumForOptimizer": 2,
+                    "maximumForOptimizer": 5,
+                    "default": 3,
+                },
+                "resource": {
+                    "description": """Defines the resource that increases with each iteration.
+By default, the resource is the number of samples.
+It can also be set to any parameter of the base estimator that accepts positive integer values, e.g. ‘n_iterations’ or ‘n_estimators’ for a gradient boosting estimator.""",
+                    "type": "string",
+                    "default": "n_samples",
+                },
+                "max_resources": {
+                    "description": "The maximum amount of resource that any candidate is allowed to use for a given iteration.",
+                    "anyOf": [
+                        {"enum": ["auto"]},
+                        {"forOptimizer": False, "type": "integer", "minimum": 1,},
+                    ],
+                    "default": "auto",
+                },
+                "min_resources": {
+                    "description": "The minimum amount of resource that any candidate is allowed to use for a given iteration",
+                    "anyOf": [
+                        {
+                            "description": "A heuristic that sets r0 to a small value",
+                            "enum": ["smallest"],
+                        },
+                        {
+                            "description": "Sets r0 such that the last iteration uses as much resources as possible",
+                            "enum": ["exhaust"],
+                        },
+                        {"forOptimizer": False, "type": "integer", "minimum": 1,},
+                    ],
+                    "default": "exhaust",
+                },
+                "aggressive_elimination": {
+                    "description": "Enable aggresive elimination when there aren't enough resources to reduce the remaining candidates to at most factor after the last iteration",
+                    "type": "boolean",
+                    "default": False,
                 },
                 "cv": {
                     "description": "Number of folds for cross-validation.",
@@ -238,6 +304,40 @@ Default of None translates to `accuracy` for classification and `r2` for regress
                     ],
                     "default": None,
                 },
+                "refit": {
+                    "description": "Refit an estimator using the best found parameters on the whole dataset.",
+                    "type": "boolean",
+                    "default": True,
+                },
+                "error_score": {
+                    "description": "Value to assign to the score if an error occurs in estimator fitting.",
+                    "anyOf": [
+                        {"description": "Raise the error", "enum": ["raise"]},
+                        {"enum": [np.nan]},
+                        {"type": "number", "forOptimizer": False},
+                    ],
+                    "default": np.nan,
+                },
+                "return_train_score": {
+                    "description": "Include training scores",
+                    "type": "boolean",
+                    "default": False,
+                },
+                "random_state": {
+                    "description": "Pseudo random number generator state used for subsampling the dataset when resources != 'n_samples'. Ignored otherwise.",
+                    "anyOf": [
+                        {
+                            "description": "RandomState used by np.random",
+                            "enum": [None],
+                        },
+                        {
+                            "description": "Use the provided random state, only affecting other users of that same random state instance.",
+                            "laleType": "numpy.random.RandomState",
+                        },
+                        {"description": "Explicit seed.", "type": "integer"},
+                    ],
+                    "default": None,
+                },
                 "n_jobs": {
                     "description": "Number of jobs to run in parallel.",
                     "anyOf": [
@@ -253,6 +353,12 @@ Default of None translates to `accuracy` for classification and `r2` for regress
                         },
                     ],
                     "default": None,
+                },
+                "verbose": {
+                    "description": "Controls the verbosity: the higher, the more messages.",
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0,
                 },
                 "lale_num_samples": {
                     "description": "How many samples to draw when discretizing a continuous hyperparameter.",
@@ -304,7 +410,18 @@ Default of None translates to `accuracy` for classification and `r2` for regress
                     "description": "a class or object with callbacks for observing the state of the optimization",
                 },
             },
-        }
+        },
+        {
+            "description": "max_resources is set to 'auto' if and only if resource is set to 'n_samples'"
+            "penalty with the liblinear solver.",
+            "oneOf": [
+                {"type": "object", "properties": {"resource": {"enum": ["n_samples"]}}},
+                {
+                    "type": "object",
+                    "properties": {"max_resources": {"not": {"enum": ["auto"]}},},
+                },
+            ],
+        },
     ]
 }
 
