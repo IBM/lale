@@ -152,6 +152,8 @@ def _schema_docstring(name, schema, required=True, relevant=True):
 
 
 def _params_docstring(params_schema):
+    if params_schema is None:
+        return ""
     params = params_schema.get("properties", {})
     if len(params) == 0:
         result = ""
@@ -166,6 +168,44 @@ def _params_docstring(params_schema):
         item_docstring = _schema_docstring(param_name, param_schema, required, relevant)
         result += _indent("  ", item_docstring, "").rstrip()
         result += "\n\n"
+    return result
+
+
+def _arg_docstring(val):
+    if val is None:
+        return str("None")
+    if isinstance(val, (int, float)):
+        return str(val)
+    elif isinstance(val, list):
+        return [_arg_docstring(x) for x in val]
+    elif isinstance(val, dict):
+        return {_arg_docstring(k): _arg_docstring(v) for k, v in val.items()}
+    else:
+        return f'"{str(val)}"'
+
+
+def _paramlist_docstring(hyperparams_schema) -> str:
+    params = hyperparams_schema.get("allOf", None)
+    if params is None:
+        return ""
+    if isinstance(params, list):
+        if not params:
+            return ""
+        params = params[0]
+    if params is None:
+        return ""
+    params = params.get("properties", {})
+    if len(params) == 0:
+        return ""
+    result = ", *"
+    for param_name, param_schema in params.items():
+        result += f", {param_name}"
+        default = param_schema.get("default", None)
+        if "default" in param_schema:
+            default = param_schema["default"]
+            default_str = _arg_docstring(default)
+            if default_str is not None:
+                result += f"={default_str}"
     return result
 
 
@@ -204,8 +244,6 @@ def _cls_docstring(cls, combined_schemas):
     more_description = "\n".join(descr_lines[1:]).strip()
     if more_description != "":
         result += more_description + "\n\n"
-    hyperparams_schema = combined_schemas["properties"]["hyperparams"]
-    result += _hyperparams_docstring(hyperparams_schema)
     return result
 
 
@@ -216,15 +254,35 @@ def _set_docstrings_helper(cls, lale_op, combined_schemas):
     impl_cls = lale_op._impl_class()
     cls.__doc__ = _cls_docstring(impl_cls, combined_schemas)
 
-    # def __init__(self):
-    #     pass
-    #
-    # if properties is not None:
-    #     hyperparams_schema = properties.get("hyperparams", None)
-    #     if hyperparams_schema is not None:
-    #         doc = _hyperparams_docstring(hyperparams_schema)
-    #         __init__.__doc__ = doc
-    #         cls.__init__ = __init__
+    if properties is not None:
+        hyperparams_schema = properties.get("hyperparams", None)
+        if hyperparams_schema is not None:
+            doc = _hyperparams_docstring(hyperparams_schema)
+            try:
+                args = _paramlist_docstring(hyperparams_schema)
+
+                code = f"""
+def __init__(self{args}):
+    pass
+"""
+                import math
+
+                d = {}
+                exec(code, {"nan": math.nan, "inf": math.inf}, d)
+                __init__ = d["__init__"]  # type: ignore
+            except BaseException as e:
+                import warnings
+
+                warnings.warn(
+                    f"""While trying to generate a docstring for {cls.__name__}, when trying
+to create an init method with the appropriate parameter list, an exception was raised: {e}"""
+                )
+
+                def __init__(self):
+                    pass
+
+            __init__.__doc__ = doc
+            cls.__init__ = __init__
 
     def make_fun(
         fun_name,
@@ -332,12 +390,11 @@ def set_docstrings(lale_op: "IndividualOp"):
                 name = lale.helpers.arg_name(pos=0, level=1)
                 assert name is not None
 
-                # fake init method to hide the inherited init method
-                # so the internal constructor parameters are not displayed
-                def init(self):
+                # we want to make sure that the Operator constructor args are not shown
+                def __init__():
                     pass
 
-                new_class = type(name, (lale_op.__class__,), {"__init__": init})
+                new_class = type(name, (lale_op.__class__,), {"__init__": __init__})
                 new_class.__module__ = module.__name__
                 module.__dict__[name] = new_class
 
