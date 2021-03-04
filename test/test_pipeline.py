@@ -370,3 +370,53 @@ pipeline = make_pipeline(union, numpy_permute_array, ta1_0, fs1_0, ta1_1, fs1_1,
         from lale import helpers
 
         _ = helpers.import_from_sklearn_pipeline(sklearn_pipeline)
+
+
+class TestExportToSklearnForEstimator(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def create_pipeline(self):
+        from sklearn.decomposition import PCA
+        from sklearn.pipeline import make_pipeline
+
+        pipeline = make_pipeline(PCA(), LogisticRegression())
+        return pipeline
+
+    def test_import_export_trained(self):
+        import numpy as np
+        from sklearn.pipeline import Pipeline
+
+        from lale.helpers import import_from_sklearn_pipeline
+
+        pipeline = self.create_pipeline()
+        self.assertEquals(isinstance(pipeline, Pipeline), True)
+        pipeline.fit(self.X_train, self.y_train)
+        predictions_before = pipeline.predict(self.X_test)
+        lale_pipeline = import_from_sklearn_pipeline(pipeline)
+        predictions_after = lale_pipeline.predict(self.X_test)
+        sklearn_pipeline = lale_pipeline.export_to_sklearn_pipeline()
+        predictions_after_1 = sklearn_pipeline.predict(self.X_test)
+        self.assertEquals(np.all(predictions_before == predictions_after), True)
+        self.assertEquals(np.all(predictions_before == predictions_after_1), True)
+
+    def test_import_export_trainable(self):
+        from sklearn.exceptions import NotFittedError
+        from sklearn.pipeline import Pipeline
+
+        from lale.helpers import import_from_sklearn_pipeline
+
+        pipeline = self.create_pipeline()
+        self.assertEquals(isinstance(pipeline, Pipeline), True)
+        pipeline.fit(self.X_train, self.y_train)
+        lale_pipeline = import_from_sklearn_pipeline(pipeline, fitted=False)
+        with self.assertRaises(ValueError):
+            lale_pipeline.predict(self.X_test)
+        sklearn_pipeline = lale_pipeline.export_to_sklearn_pipeline()
+        with self.assertRaises(NotFittedError):
+            sklearn_pipeline.predict(self.X_test)

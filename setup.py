@@ -88,7 +88,7 @@ setup(
             "spacy",
             "smac<=0.10.0",
             "numba==0.49.0",
-            "aif360",
+            "aif360==0.3.0",
             "torch>=1.0",
             "BlackBoxAuditing",
             "imbalanced-learn",
