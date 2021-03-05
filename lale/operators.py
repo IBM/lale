@@ -1580,6 +1580,28 @@ class IndividualOp(Operator):
             self._impl = instance
         return self._impl
 
+    @property
+    def impl(self):
+        """ Returns the underlying impl.  This can be used to access additional
+            field and methods not exposed by Lale.  If only the type of the
+            impl is needed, please use self.impl_class instead, as it can be more efficient.
+            """
+        return self._impl_instance()
+
+    @property
+    def impl_class(self) -> type:
+        """ Returns the class of the underlying impl. This should return the same thing
+            as self.impl.__class__, but can be more efficient.
+        """
+        return self._impl_class()
+
+    # This allows the user, for example, to check isinstance(LR().fit(...), LR)
+    def __instancecheck__(self, other):
+        if isinstance(other, IndividualOp):
+            return issubclass(other.impl_class, self.impl_class)
+        else:
+            return False
+
     def class_name(self) -> str:
         module = None
         if self._impl is not None:
@@ -3081,7 +3103,7 @@ class BasePipeline(Operator, Generic[OpType]):
             )
         else:
             sklearn_steps_list = create_pipeline_from_sink_node(sink_nodes[0])
-            # not checking for isinstance(sklearn_steps_list, NoOp._impl_class()) here as there is no valid sklearn pipeline with just one NoOp.
+            # not checking for isinstance(sklearn_steps_list, NoOp) here as there is no valid sklearn pipeline with just one NoOp.
         try:
             sklearn_pipeline = (
                 make_pipeline(*sklearn_steps_list)

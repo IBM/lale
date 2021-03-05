@@ -251,7 +251,7 @@ def _set_docstrings_helper(cls, lale_op, combined_schemas):
     properties = combined_schemas.get("properties", None)
 
     assert cls.__doc__ is None
-    impl_cls = lale_op._impl_class()
+    impl_cls = lale_op.impl_class
     cls.__doc__ = _cls_docstring(impl_cls, combined_schemas)
 
     if properties is not None:
@@ -382,7 +382,7 @@ def set_docstrings(lale_op: "IndividualOp"):
         if __sphinx_build__:  # type: ignore
             try:
 
-                # impl = lale_op._impl_class()
+                # impl = lale_op.impl_class
                 frm = inspect.stack()[1]
                 module = inspect.getmodule(frm[0])
                 assert module is not None

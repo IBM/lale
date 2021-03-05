@@ -339,12 +339,13 @@ def get_hyperparam_names(op: "lale.operators.IndividualOp") -> List[str]:
     List[str]
         List of hyperparameter names.
     """
-    if op._impl.__module__.startswith("lale"):
+    if op.impl_class.__module__.startswith("lale"):
         hp_schema = op.hyperparam_schema()
         params = next(iter(hp_schema.get("allOf", []))).get("properties", {})
         return list(params.keys())
     else:
-        return inspect.getargspec(op._impl_class().__init__).args
+        c: Any = op.impl_class
+        return inspect.getargspec(c.__init__).args
 
 
 def validate_method(op: "lale.operators.IndividualOp", schema_name: str):

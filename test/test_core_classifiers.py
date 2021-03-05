@@ -73,7 +73,7 @@ def create_function_test_classifier(clf_name):
             GradientBoostingClassifier,
         )
 
-        if clf._impl_class() == GradientBoostingClassifier._impl_class():
+        if isinstance(clf, GradientBoostingClassifier):  # type: ignore
             # because exponential loss does not work with iris dataset as it is not binary classification
             import lale.schemas as schemas
 
