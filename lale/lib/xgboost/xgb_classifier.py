@@ -481,10 +481,14 @@ if xgboost_installed and xgboost.__version__ >= "1.3":
         },
         validate_parameters={
             "description": "Give warnings for unknown parameter.",
-            "anyOf": [{"enum": [None]}, {"type": "boolean"}],
+            "anyOf": [{"enum": [None]}, {"type": "boolean"}, {"type": "integer"}],
             "default": None,
         },
-        gpu_id={"description": "Device ordinal.", "enum": [None], "default": None,},
+        gpu_id={
+            "description": "Device ordinal.",
+            "anyOf": [{"type": "integer"}, {"enum": [None]},],
+            "default": None,
+        },
         max_depth={
             "description": "Maximum tree depth for base learners.",
             "anyOf": [
