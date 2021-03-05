@@ -35,7 +35,6 @@ from typing import (
 )
 
 import h5py
-import jsonschema
 import numpy as np
 import pandas as pd
 import scipy.sparse
@@ -601,13 +600,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
                 class_._name, class_._impl, class_._schemas, None, _lale_trained=True
             )
 
-        try:
-            class_ = lale_op(**hyperparams)
-        except jsonschema.ValidationError as e:
-            logger.debug(f"Mismatch between get_params and schema: {e}")
-            schema = lale.type_checking.get_default_schema(sklearn_obj)
-            planned = lale.operators.make_operator(sklearn_obj, schema, class_name)
-            class_ = planned(**hyperparams)
+        class_ = lale_op(**hyperparams)
 
         if lale_wrapper_found:
             wrapped_model = copy.deepcopy(sklearn_obj)
