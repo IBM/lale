@@ -99,6 +99,14 @@ class TestSnapMLRegressors(unittest.TestCase):
         scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         _ = scorer(trained, self.test_X, self.test_y)
 
+    def test_linear_regression(self):
+        import lale.lib.snapml
+
+        trainable = lale.lib.snapml.SnapLinearRegression()
+        trained = trainable.fit(self.train_X, self.train_y)
+        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+        _ = scorer(trained, self.test_X, self.test_y)
+
     def test_random_forest_regressor(self):
         import lale.lib.snapml
 
