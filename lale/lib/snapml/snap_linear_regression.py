@@ -79,7 +79,7 @@ class _SnapLinearRegressionImpl:
         modified_hps = {**self._hyperparams}
         if modified_hps["device_ids"] is None:
             modified_hps["device_ids"] = []  # TODO: support list as default
-        self._wrapped_model = snapml.SnapLinearRegression(**modified_hps)
+        self._wrapped_model = snapml.LinearRegression(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
