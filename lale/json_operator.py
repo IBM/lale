@@ -407,7 +407,7 @@ def _op_to_json_rec(
             else:
                 jsn["coefs"] = None
             jsn["is_frozen_trained"] = op.is_frozen_trained()
-        orig_schemas = lale.operators.get_lib_schemas(op._impl_class())
+        orig_schemas = lale.operators.get_lib_schemas(op.impl_class)
         if op._schemas is not orig_schemas:
             jsn["customize_schema"] = _get_customize_schema(op._schemas, orig_schemas)
     elif isinstance(op, lale.operators.BasePipeline):
