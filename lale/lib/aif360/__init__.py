@@ -53,6 +53,7 @@ In-Estimator Mitigation Operators:
 ==================================
 * `AdversarialDebiasing`_
 * `GerryFairClassifier`_
+* `MetaFairClassifier`_
 * `PrejudiceRemover`_
 
 Post-Estimator Mitigation Operators:

@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    __BasePostEstimatorImpl,
+    _BasePostEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -26,7 +26,7 @@ from .util import (
 )
 
 
-class _EqOddsPostprocessingImpl(__BasePostEstimatorImpl):
+class _EqOddsPostprocessingImpl(_BasePostEstimatorImpl):
     def __init__(
         self, favorable_labels, protected_attributes, estimator, redact=True, seed=None,
     ):

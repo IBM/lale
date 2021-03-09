@@ -17,10 +17,10 @@ import aif360.algorithms.inprocessing
 import lale.docstrings
 import lale.operators
 
-from .util import __BaseInEstimatorImpl, _categorical_fairness_properties
+from .util import _BaseInEstimatorImpl, _categorical_fairness_properties
 
 
-class _MetaFairClassifierImpl(__BaseInEstimatorImpl):
+class _MetaFairClassifierImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,

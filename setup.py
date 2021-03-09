@@ -88,11 +88,12 @@ setup(
             "spacy",
             "smac<=0.10.0",
             "numba==0.49.0",
-            "aif360==0.3.0",
+            "aif360>=0.4.0",
             "torch>=1.0",
             "BlackBoxAuditing",
             "imbalanced-learn",
             "cvxpy>=1.0,<=1.1.7",
+            "fairlearn",
         ],
         "dev": ["pre-commit"],
         "test": [

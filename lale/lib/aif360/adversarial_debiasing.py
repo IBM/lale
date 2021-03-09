@@ -25,7 +25,7 @@ import lale.docstrings
 import lale.operators
 
 from .util import (
-    __BaseInEstimatorImpl,
+    _BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_schema,
     _categorical_output_predict_schema,
@@ -33,7 +33,7 @@ from .util import (
 )
 
 
-class _AdversarialDebiasingImpl(__BaseInEstimatorImpl):
+class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
         favorable_labels,
