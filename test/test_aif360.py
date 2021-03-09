@@ -335,8 +335,8 @@ class TestAIF360Num(unittest.TestCase):
 
     def test_meta_fair_classifier_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
-        _ = MetaFairClassifier(**fairness_info)
-        # TODO: this test does not yet call fit or predict, since those hang
+        trainable_remi = MetaFairClassifier(**fairness_info)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.67, 0.77)
 
     def test_prejudice_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -654,6 +654,13 @@ class TestAIF360Cat(unittest.TestCase):
             **fairness_info, preparation=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 1.000, 1.000)
+
+    def test_meta_fair_classifier_pd_cat(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        trainable_remi = MetaFairClassifier(
+            **fairness_info, preparation=self.prep_pd_cat
+        )
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.67, 0.77)
 
     def test_optim_preproc_pd_cat(self):
         # TODO: set the optimizer options as shown in the example https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb

@@ -531,7 +531,7 @@ average_odds_difference.__doc__ = (
 )
 
 
-class __BaseInEstimatorImpl:
+class _BaseInEstimatorImpl:
     def __init__(
         self, favorable_labels, protected_attributes, redact, preparation, mitigator
     ):
@@ -597,7 +597,7 @@ class __BaseInEstimatorImpl:
         return decoded_y
 
 
-class __BasePostEstimatorImpl:
+class _BasePostEstimatorImpl:
     def __init__(
         self, favorable_labels, protected_attributes, estimator, redact, mitigator,
     ):
