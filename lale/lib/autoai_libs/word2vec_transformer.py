@@ -81,8 +81,10 @@ It then performs SVD on those vectors for dimensionality reduction.""",
                 "column_headers_list": {
                     "description": """Column headers passed from autoai_core. The new feature's column headers are
 appended to this.""",
-                    "type": "array",
-                    "items": {"type": "string"},
+                    "anyOf": [
+                        {"type": "array", "items": {"type": "string"}},
+                        {"type": "array", "items": {"type": "integer"}},
+                    ],
                     "default": [],
                 },
                 "svd_num_iter": {
