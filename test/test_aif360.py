@@ -331,7 +331,7 @@ class TestAIF360Num(unittest.TestCase):
     def test_lfr_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = LFR(**fairness_info) >> LogisticRegression(max_iter=1000)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 1.0, 1.0)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.95, 1.05)
 
     def test_meta_fair_classifier_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -653,7 +653,7 @@ class TestAIF360Cat(unittest.TestCase):
         trainable_remi = LFR(
             **fairness_info, preparation=self.prep_pd_cat
         ) >> LogisticRegression(max_iter=1000)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 1.000, 1.000)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.95, 1.05)
 
     def test_meta_fair_classifier_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
