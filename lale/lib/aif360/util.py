@@ -365,7 +365,8 @@ class _AccuracyAndDisparateImpact:
     def _combine(self, accuracy, disp_impact):
         if np.isnan(disp_impact):  # empty privileged or unprivileged groups
             return accuracy
-        assert 0.0 <= accuracy <= 1.0 and 0.0 <= disp_impact, (accuracy, disp_impact)
+        if accuracy < 0.0 or accuracy > 1.0 or disp_impact < 0.0:
+            logger.warning(f"invalid accuracy {accuracy}, disp_impact {disp_impact}")
         if disp_impact == 0.0:
             return 0.0
         elif disp_impact <= 1.0:
@@ -379,8 +380,12 @@ class _AccuracyAndDisparateImpact:
             scaling_factor = 1.0
         scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
         result = accuracy * scaling_factor ** scaling_hardness
-        assert 0.0 <= result <= accuracy <= 1.0, (result, accuracy)
-        assert symmetric_impact >= 0.9 or result < accuracy
+        if result < 0.0 or result > accuracy:
+            logger.warning(f"unexpected result {result} for accuracy {accuracy}")
+        if symmetric_impact < 0.9 and result >= accuracy:
+            logger.warning(
+                f"unexpected result {result} for symmetric_impact {symmetric_impact} and accuracy {accuracy}"
+            )
         return result
 
     def scoring(self, y_true=None, y_pred=None, X=None):
@@ -458,7 +463,8 @@ class _R2AndDisparateImpact:
     def _combine(self, r2, disp_impact):
         if np.isnan(disp_impact):  # empty privileged or unprivileged groups
             return r2
-        assert r2 <= 1.0 and 0.0 <= disp_impact, (r2, disp_impact)
+        if r2 > 1.0 or disp_impact < 0.0:
+            logger.warning(f"invalid r2 {r2}, disp_impact {disp_impact}")
         if disp_impact == 0.0:
             return np.finfo(np.float32).min
         elif disp_impact <= 1.0:
@@ -474,8 +480,12 @@ class _R2AndDisparateImpact:
         positive_r2 = 1 / (2.0 - r2)
         scaled_r2 = positive_r2 * scaling_factor ** scaling_hardness
         result = 2.0 - 1 / scaled_r2
-        assert result <= r2 <= 1.0, (result, r2)
-        assert symmetric_impact >= 0.9 or result < r2, (symmetric_impact, result, r2)
+        if result > r2:
+            logger.warning(f"unexpected result {result} for r2 {r2}")
+        if symmetric_impact < 0.9 and result >= r2:
+            logger.warning(
+                f"unexpected result {result} for symmetric_impact {symmetric_impact} and r2 {r2}"
+            )
         return result
 
     def scoring(self, y_true=None, y_pred=None, X=None):
