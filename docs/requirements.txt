@@ -24,3 +24,4 @@ m2r
 sphinx_rtd_theme
 sphinxcontrib.apidoc
 PyYAML
+tensorflow>=1.13.1,<2
