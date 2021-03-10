@@ -101,7 +101,7 @@ def arg_name(pos=0, level=1) -> Optional[str]:
     return None
 
 
-def data_to_json(data, subsample_array: bool = True) -> Union[list, dict]:
+def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, float]:
     if type(data) is tuple:
         # convert to list
         return [data_to_json(elem, subsample_array) for elem in data]
@@ -119,6 +119,14 @@ def data_to_json(data, subsample_array: bool = True) -> Union[list, dict]:
     elif torch_installed and isinstance(data, torch.Tensor):
         np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
+    elif (
+        isinstance(data, np.int64)
+        or isinstance(data, np.int32)
+        or isinstance(data, np.int16)
+    ):
+        return int(data)
+    elif isinstance(data, np.float64) or isinstance(data, np.float32):
+        return float(data)
     else:
         return data
 
