@@ -85,8 +85,6 @@ from .aggregate import Aggregate
 
 # estimators
 from .auto_pipeline import AutoPipeline
-from .baseline_classifier import BaselineClassifier
-from .baseline_regressor import BaselineRegressor
 
 # transformers
 from .batching import Batching

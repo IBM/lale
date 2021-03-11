@@ -133,6 +133,7 @@ from .bagging_classifier import BaggingClassifier
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
+from .dummy import DummyClassifier, DummyRegressor
 from .extra_trees_classifier import ExtraTreesClassifier
 from .extra_trees_regressor import ExtraTreesRegressor
 from .feature_agglomeration import FeatureAgglomeration
