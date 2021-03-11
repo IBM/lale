@@ -125,7 +125,7 @@ def create_function_test_classifier(clf_name):
 
 
 classifiers = [
-    "lale.lib.lale.BaselineClassifier",
+    "lale.lib.sklearn.DummyClassifier",
     "lale.lib.sklearn.RandomForestClassifier",
     "lale.lib.sklearn.DecisionTreeClassifier",
     "lale.lib.sklearn.ExtraTreesClassifier",

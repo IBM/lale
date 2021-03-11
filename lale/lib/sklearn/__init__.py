@@ -40,6 +40,11 @@ Classifiers:
 * lale.lib.sklearn. `SVC`_
 * lale.lib.sklearn. `VotingClassifier`_
 
+Estimators:
+
+* lale.lib.sklearn. `DummyClassifier`_
+* lale.lib.sklearn. `DummyRegressor`_
+
 Regressors:
 
 * lale.lib.sklearn. `AdaBoostRegressor`_

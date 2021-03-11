@@ -159,12 +159,12 @@ class _AutoPipelineImpl:
             self._pipelines[name] = trainable
 
     def _fit_baseline(self, X, y):
-        from lale.lib.lale import BaselineClassifier, BaselineRegressor
+        from lale.lib.sklearn import DummyClassifier, DummyRegressor
 
         if self.prediction_type == "regression":
-            trainable = BaselineRegressor()
+            trainable = DummyRegressor()
         else:
-            trainable = BaselineClassifier()
+            trainable = DummyClassifier()
         self._try_and_add("baseline", trainable, X, y)
 
     def _fit_gbt_num(self, X, y):
