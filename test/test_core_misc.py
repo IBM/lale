@@ -580,7 +580,7 @@ class TestHyperparamRanges(unittest.TestCase):
     def test_random_forest_classifier(self):
         ranges, dists = RandomForestClassifier.get_param_ranges()
         expected_ranges = {
-            "n_estimators": (10, 100, 10),
+            "n_estimators": (10, 100, 100),
             "criterion": ["entropy", "gini"],
             "max_depth": (3, 5, None),
             "min_samples_split": (2, 5, 2),
