@@ -165,7 +165,10 @@ _input_transform_schema = {
                 "items": {
                     "description": "Innermost array dimension is over features (aka columns).",
                     "anyOf": [
-                        {"type": "array", "items": {"type": "number"},},
+                        {
+                            "type": "array",
+                            "items": {"type": "number"},
+                        },
                         {"type": "number"},
                     ],
                 },

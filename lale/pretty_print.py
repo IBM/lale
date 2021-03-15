@@ -370,6 +370,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
 
 
 def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) -> str:
+    op_expr: str
     if _op_kind(jsn) == "Pipeline":
         structured = _introduce_structure(jsn, gen)
         return _operator_jsn_to_string_rec(uid, structured, gen)
@@ -429,7 +430,7 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             gen.assigns.append(f"{uid} = {op_expr}")
             return uid
     elif _op_kind(jsn) == "IndividualOp":
-        label = jsn["label"]
+        label: str = jsn["label"]
         class_name = jsn["class"]
         module_name = _get_module_name(label, jsn["operator"], class_name)
         if module_name.startswith("lale."):

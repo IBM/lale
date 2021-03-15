@@ -260,28 +260,63 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     "maximumForOptimizer": 1.0,
                 },
                 "scale_pos_weight": {
-                    "anyOf": [{"type": "number",}, {"enum": [None],}],
+                    "anyOf": [
+                        {
+                            "type": "number",
+                        },
+                        {
+                            "enum": [None],
+                        },
+                    ],
                     "description": "Balancing of positive and negative weights.",
                     "default": 1,
                 },
                 "base_score": {
-                    "anyOf": [{"type": "number",}, {"enum": [None],}],
+                    "anyOf": [
+                        {
+                            "type": "number",
+                        },
+                        {
+                            "enum": [None],
+                        },
+                    ],
                     "description": "The initial prediction score of all instances, global bias.",
                     "default": 0.5,
                 },
                 "random_state": {
-                    "anyOf": [{"type": "integer",}, {"enum": [None],}],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                        },
+                        {
+                            "enum": [None],
+                        },
+                    ],
                     "description": "Random number seed.  (replaces seed)",
                     "default": 0,
                 },
                 "missing": {
-                    "anyOf": [{"type": "number",}, {"enum": [None],}],
+                    "anyOf": [
+                        {
+                            "type": "number",
+                        },
+                        {
+                            "enum": [None],
+                        },
+                    ],
                     "default": None,
                     "description": "Value in the data which needs to be present as a missing value. If"
                     " If None, defaults to np.nan.",
                 },
                 "silent": {
-                    "anyOf": [{"type": "boolean",}, {"enum": [None],}],
+                    "anyOf": [
+                        {
+                            "type": "boolean",
+                        },
+                        {
+                            "enum": [None],
+                        },
+                    ],
                     "default": None,
                     "description": "deprecated and replaced with verbosity, but adding to be backward compatible. ",
                 },
@@ -301,7 +336,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Feature matrix",
         },
         "y": {
@@ -314,19 +352,36 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "description": "Weight for each instance",
             "default": None,
         },
         "eval_set": {
-            "anyOf": [{"type": "array",}, {"enum": [None],}],
+            "anyOf": [
+                {
+                    "type": "array",
+                },
+                {
+                    "enum": [None],
+                },
+            ],
             "default": None,
             "description": "A list of (X, y) pairs to use as a validation set for",
         },
         "sample_weight_eval_set": {
-            "anyOf": [{"type": "array",}, {"enum": [None],}],
+            "anyOf": [
+                {
+                    "type": "array",
+                },
+                {
+                    "enum": [None],
+                },
+            ],
             "default": None,
             "description": "A list of the form [L_1, L_2, ..., L_n], where each L_i is a list of",
         },
@@ -341,7 +396,14 @@ _input_fit_schema = {
             "description": "If a str, should be a built-in evaluation metric to use. See",
         },
         "early_stopping_rounds": {
-            "anyOf": [{"type": "integer",}, {"enum": [None],}],
+            "anyOf": [
+                {
+                    "type": "integer",
+                },
+                {
+                    "enum": [None],
+                },
+            ],
             "default": None,
             "description": "Activates early stopping. Validation error needs to decrease at",
         },
@@ -486,7 +548,10 @@ if xgboost_installed and xgboost.__version__ >= "1.3":
         },
         gpu_id={
             "description": "Device ordinal.",
-            "anyOf": [{"type": "integer"}, {"enum": [None]},],
+            "anyOf": [
+                {"type": "integer"},
+                {"enum": [None]},
+            ],
             "default": None,
         },
         max_depth={
@@ -531,7 +596,11 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         gamma={
             "description": "Minimum loss reduction required to make a further partition on a leaf node of the tree.",
             "anyOf": [
-                {"type": "number", "minimum": 0, "maximumForOptimizer": 1.0,},
+                {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximumForOptimizer": 1.0,
+                },
                 {"enum": [None], "forOptimizer": False},
             ],
             "default": None,
@@ -642,12 +711,18 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         },
         scale_pos_weight={
             "description": "Balancing of positive and negative weights.",
-            "anyOf": [{"type": "number"}, {"enum": [None], "forOptimizer": False},],
+            "anyOf": [
+                {"type": "number"},
+                {"enum": [None], "forOptimizer": False},
+            ],
             "default": None,
         },
         base_score={
             "description": "The initial prediction score of all instances, global bias.",
-            "anyOf": [{"type": "number"}, {"enum": [None], "forOptimizer": False},],
+            "anyOf": [
+                {"type": "number"},
+                {"enum": [None], "forOptimizer": False},
+            ],
             "default": None,
         },
         importance_type={

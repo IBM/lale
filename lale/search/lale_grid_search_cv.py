@@ -81,10 +81,10 @@ def get_grid_search_parameter_grids(
     pgo: Optional[PGO] = None,
     data_schema: Dict[str, Any] = {},
 ) -> List[Dict[str, List[Any]]]:
-    """ Top level function: given a lale operator, returns a list of parameter grids
-        suitable for passing to GridSearchCV.
-        Note that you will need to wrap the lale operator for sklearn compatibility to call GridSearchCV
-        directly.  The lale GridSearchCV wrapper takes care of that for you
+    """Top level function: given a lale operator, returns a list of parameter grids
+    suitable for passing to GridSearchCV.
+    Note that you will need to wrap the lale operator for sklearn compatibility to call GridSearchCV
+    directly.  The lale GridSearchCV wrapper takes care of that for you
     """
     hp_grids = get_search_space_grids(
         op, num_grids=num_grids, pgo=pgo, data_schema=data_schema

@@ -144,9 +144,16 @@ _hyperparams_schema = {
             "anyOf": [
                 {
                     "type": "object",
-                    "properties": {"beta_loss": {"enum": ["frobenius"]},},
+                    "properties": {
+                        "beta_loss": {"enum": ["frobenius"]},
+                    },
                 },
-                {"type": "object", "properties": {"solver": {"enum": ["mu"]},}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "solver": {"enum": ["mu"]},
+                    },
+                },
             ],
         },
     ],
@@ -159,7 +166,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number", "minimum": 0.0},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number", "minimum": 0.0},
+            },
         },
         "y": {"laleType": "Any"},
     },
@@ -179,7 +189,10 @@ _input_transform_schema = {
 _output_transform_schema = {
     "description": "Transformed data",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 
 _combined_schemas = {
@@ -211,7 +224,10 @@ if sklearn.__version__ >= "0.24":
     NMF = NMF.customize_schema(
         regularization=AnyOf(
             desc="Select whether the regularization affects the components (H), the transformation (W), both or none of them.",
-            types=[Enum(values=["both", "components", "transformation"]), Null(),],
+            types=[
+                Enum(values=["both", "components", "transformation"]),
+                Null(),
+            ],
             default="both",
             forOptimizer=True,
         )

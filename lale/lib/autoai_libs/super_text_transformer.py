@@ -42,6 +42,10 @@ class _TextTransformerImpl:
         }
         self._wrapped_model = autoai_libs.transformers.text_transformers.TextTransformer(
             **self._hyperparams
+        self._wrapped_model = (
+            autoai_libs.transformers.text_transformers.SuperTextTransformer(
+                **self._hyperparams
+            )
         )
 
     def fit(self, X, y=None):

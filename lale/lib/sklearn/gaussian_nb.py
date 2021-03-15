@@ -28,7 +28,10 @@ _hyperparams_schema = {
             "properties": {
                 "priors": {
                     "anyOf": [
-                        {"type": "array", "items": {"type": "number"},},
+                        {
+                            "type": "array",
+                            "items": {"type": "number"},
+                        },
                         {"enum": [None]},
                     ],
                     "default": None,
@@ -52,7 +55,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training vectors, where n_samples is the number of samples",
         },
         "y": {
@@ -65,7 +71,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "default": None,
@@ -79,7 +88,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
         },
     },
 }
@@ -98,14 +110,20 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
         },
     },
 }
 _output_predict_proba_schema = {
     "description": "Returns the probability of the samples for each class in",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",

@@ -73,7 +73,10 @@ SCHEMA = {
                 "is_frozen_trained": {"type": "boolean"},
                 "coefs": {"enum": [None, "coefs_not_available"]},
                 "customize_schema": {
-                    "anyOf": [{"enum": ["not_available"]}, {"type": "object"},],
+                    "anyOf": [
+                        {"enum": ["not_available"]},
+                        {"type": "object"},
+                    ],
                 },
             },
         },

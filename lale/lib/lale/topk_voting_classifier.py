@@ -27,16 +27,25 @@ logger = logging.getLogger(__name__)
 
 
 class _TopKVotingClassifierImpl:
-    def __init__(self, estimator=None, optimizer=None, args_to_optimizer=None, k=10):
+    args_to_optimizer: Dict[str, Any]
+
+    def __init__(
+        self,
+        estimator=None,
+        optimizer=None,
+        args_to_optimizer: Dict[str, Any] = None,
+        k=10,
+    ):
         self.estimator = estimator
         if self.estimator is None:
             raise ValueError("Estimator is a required argument.")
         self.optimizer = optimizer
         if self.optimizer is None:
             self.optimizer = Hyperopt
-        self.args_to_optimizer = args_to_optimizer
-        if self.args_to_optimizer is None:
+        if args_to_optimizer is None:
             self.args_to_optimizer = {}
+        else:
+            self.args_to_optimizer = args_to_optimizer
         self.k = k
 
     def fit(self, X_train, y_train):
@@ -94,17 +103,16 @@ class _TopKVotingClassifierImpl:
     def get_pipeline(self, pipeline_name=None, astype="lale"):
         """Retrieve one of the trials.
 
-Parameters
-----------
-pipeline_name : None
+        Parameters
+        ----------
+        pipeline_name : None
 
-astype : 'lale' or 'sklearn', default 'lale'
-    Type of resulting pipeline.
+        astype : 'lale' or 'sklearn', default 'lale'
+            Type of resulting pipeline.
 
-Returns
--------
-result : Trained operator if best, trainable operator otherwise.
-"""
+        Returns
+        -------
+        result : Trained operator if best, trainable operator otherwise."""
         assert pipeline_name is None
         result = self._best_estimator
         if result is None or astype == "lale":

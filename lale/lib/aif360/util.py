@@ -226,7 +226,9 @@ class _ScorerFactory:
         from lale.lib.aif360 import ProtectedAttributesEncoder
 
         self.prot_attr_enc = ProtectedAttributesEncoder(
-            **self.fairness_info, remainder="drop", return_X_y=True,
+            **self.fairness_info,
+            remainder="drop",
+            return_X_y=True,
         )
         pas = protected_attributes
         self.unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
@@ -405,8 +407,8 @@ class _AccuracyAndDisparateImpact:
 def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible combined scorer for `accuracy`_ and `disparate impact`_ given the fairness info.
 
-.. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
-.. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
+    .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
     return _AccuracyAndDisparateImpact(favorable_labels, protected_attributes)
 
 
@@ -418,7 +420,7 @@ accuracy_and_disparate_impact.__doc__ = (
 def average_odds_difference(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `average odds difference`_ scorer given the fairness info.
 
-.. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
+    .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
     return _ScorerFactory(
         "average_odds_difference", favorable_labels, protected_attributes
     )
@@ -432,7 +434,7 @@ average_odds_difference.__doc__ = (
 def disparate_impact(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `disparate impact`_ scorer given the fairness info.
 
-.. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
     return _ScorerFactory("disparate_impact", favorable_labels, protected_attributes)
 
 
@@ -442,9 +444,11 @@ disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
 def equal_opportunity_difference(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `equal opportunity difference`_ scorer given the fairness info.
 
-.. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
+    .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
     return _ScorerFactory(
-        "equal_opportunity_difference", favorable_labels, protected_attributes,
+        "equal_opportunity_difference",
+        favorable_labels,
+        protected_attributes,
     )
 
 
@@ -505,8 +509,8 @@ class _R2AndDisparateImpact:
 def r2_and_disparate_impact(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info.
 
-.. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
-.. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    .. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
+    .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
     return _R2AndDisparateImpact(favorable_labels, protected_attributes)
 
 
@@ -518,7 +522,7 @@ r2_and_disparate_impact.__doc__ = (
 def statistical_parity_difference(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `statistical parity difference`_ scorer given the fairness info.
 
-.. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference"""
+    .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference"""
     return _ScorerFactory(
         "statistical_parity_difference", favorable_labels, protected_attributes
     )
@@ -532,7 +536,7 @@ statistical_parity_difference.__doc__ = (
 def theil_index(favorable_labels, protected_attributes):
     """Create a scikit-learn compatible `Theil index`_ scorer given the fairness info.
 
-.. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index"""
+    .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index"""
     return _ScorerFactory("theil_index", favorable_labels, protected_attributes)
 
 
@@ -586,7 +590,9 @@ class _BaseInEstimatorImpl:
         assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
         self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="drop", return_X_y=True,
+            **fairness_info,
+            remainder="drop",
+            return_X_y=True,
         )
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         self.pandas_to_dataset = _PandasToDatasetConverter(
@@ -609,7 +615,12 @@ class _BaseInEstimatorImpl:
 
 class _BasePostEstimatorImpl:
     def __init__(
-        self, favorable_labels, protected_attributes, estimator, redact, mitigator,
+        self,
+        favorable_labels,
+        protected_attributes,
+        estimator,
+        redact,
+        mitigator,
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
@@ -636,7 +647,9 @@ class _BasePostEstimatorImpl:
         assert isinstance(trainable_redact_and_estim, lale.operators.TrainablePipeline)
         self.redact_and_estim = trainable_redact_and_estim.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="drop", return_X_y=True,
+            **fairness_info,
+            remainder="drop",
+            return_X_y=True,
         )
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         self.pandas_to_dataset = _PandasToDatasetConverter(
@@ -868,14 +881,14 @@ def fair_stratified_train_test_split(
 
 class FairStratifiedKFold:
     """
-    Stratified k-folds cross-validator by labels and protected attributes.
+        Stratified k-folds cross-validator by labels and protected attributes.
 
-    Behaves similar to the `StratifiedKFold`_ class from scikit-learn.
-    This cross-validation object can be passed to the `cv` argument of
-    the `auto_configure`_ method.
+        Behaves similar to the `StratifiedKFold`_ class from scikit-learn.
+        This cross-validation object can be passed to the `cv` argument of
+        the `auto_configure`_ method.
 
-.. _`StratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
-.. _`auto_configure`: https://lale.readthedocs.io/en/latest/modules/lale.operators.html#lale.operators.PlannedOperator.auto_configure
+    .. _`StratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+    .. _`auto_configure`: https://lale.readthedocs.io/en/latest/modules/lale.operators.html#lale.operators.PlannedOperator.auto_configure
     """
 
     def __init__(

@@ -42,8 +42,10 @@ class _Word2VecTransformerImpl:
             "text_columns": text_columns,
             "text_processing_options": text_processing_options,
         }
-        self._wrapped_model = autoai_libs.transformers.text_transformers.Word2VecTransformer(
-            **self._hyperparams
+        self._wrapped_model = (
+            autoai_libs.transformers.text_transformers.Word2VecTransformer(
+                **self._hyperparams
+            )
         )
 
     def fit(self, X, y=None):

@@ -97,7 +97,10 @@ _hyperparams_schema = {
             "required": ["favorable_labels", "protected_attributes"],
             "relevantToOptimizer": [],
             "properties": {
-                "favorable_labels": {"description": "Ignored.", "laleType": "Any",},
+                "favorable_labels": {
+                    "description": "Ignored.",
+                    "laleType": "Any",
+                },
                 "protected_attributes": _categorical_fairness_properties[
                     "protected_attributes"
                 ],

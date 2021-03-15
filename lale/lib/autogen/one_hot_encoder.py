@@ -27,7 +27,13 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": ["categories", "drop", "sparse", "dtype", "handle_unknown",],
+            "required": [
+                "categories",
+                "drop",
+                "sparse",
+                "dtype",
+                "handle_unknown",
+            ],
             "relevantToOptimizer": [],
             "additionalProperties": False,
             "properties": {

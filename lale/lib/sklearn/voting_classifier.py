@@ -52,7 +52,10 @@ _hyperparams_schema = {
                 },
                 "weights": {
                     "anyOf": [
-                        {"type": "array", "items": {"type": "number"},},
+                        {
+                            "type": "array",
+                            "items": {"type": "number"},
+                        },
                         {"enum": [None]},
                     ],
                     "default": None,
@@ -73,10 +76,17 @@ _hyperparams_schema = {
         {
             "description": "Parameter: flatten_transform > only when voting='soft' if voting='soft' and flatten_transform=true",
             "anyOf": [
-                {"type": "object", "properties": {"voting": {"enum": ["soft"]},}},
                 {
                     "type": "object",
-                    "properties": {"flatten_transform": {"enum": [True]},},
+                    "properties": {
+                        "voting": {"enum": ["soft"]},
+                    },
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "flatten_transform": {"enum": [True]},
+                    },
                 },
             ],
         },
@@ -89,7 +99,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training vectors, where n_samples is the number of samples and",
         },
         "y": {
@@ -99,7 +112,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "description": "Sample weights. If None, then samples are equally weighted.",
@@ -112,7 +128,10 @@ _input_transform_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training vectors, where n_samples is the number of samples and",
         },
     },
@@ -137,7 +156,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The input samples.",
         },
     },
@@ -153,7 +175,10 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The input samples.",
         },
     },
@@ -161,7 +186,10 @@ _input_predict_proba_schema = {
 _output_predict_proba_schema = {
     "description": "Weighted average probability for each class per sample.",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 
 _input_decision_function_schema = {

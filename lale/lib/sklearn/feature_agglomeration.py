@@ -122,7 +122,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The data",
         },
         "y": {"description": "Ignored"},
@@ -136,7 +139,10 @@ _input_transform_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "A M by N array of M observations in N dimensions or a length",
         },
     },
@@ -144,7 +150,10 @@ _input_transform_schema = {
 _output_transform_schema = {
     "description": "The pooled values for each feature cluster.",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",

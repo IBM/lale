@@ -46,7 +46,11 @@ _hyperparams_schema = {
                 "step": {
                     "description": "If greater than or equal to 1, then step corresponds to the (integer) number of features to remove at each iteration. If within (0.0, 1.0), then step corresponds to the percentage (rounded down) of features to remove at each iteration.",
                     "anyOf": [
-                        {"type": "integer", "minimum": 1, "forOptimizer": False,},
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "forOptimizer": False,
+                        },
                         {
                             "type": "number",
                             "minimum": 0,
@@ -93,7 +97,10 @@ _input_transform_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The input samples.",
         }
     },
@@ -132,7 +139,10 @@ if sklearn.__version__ >= "0.24":
     RFE = RFE.customize_schema(
         n_features_to_select={
             "anyOf": [
-                {"description": "Half of the features are selected.", "enum": [None],},
+                {
+                    "description": "Half of the features are selected.",
+                    "enum": [None],
+                },
                 {
                     "description": "Absolute number of features to select.",
                     "type": "integer",

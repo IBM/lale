@@ -56,7 +56,7 @@ class DiscoveredEnums(object):
 
 
 def schemaToDiscoveredEnums(schema: JsonSchema) -> Optional[DiscoveredEnums]:
-    """ Given a schema, returns a positive enumeration set.
+    """Given a schema, returns a positive enumeration set.
     This is very conservative, and even includes negated enum constants
     (since the assumption is that they may, in some contexts, be valid)
     """
