@@ -17,27 +17,6 @@ import sklearn.naive_bayes
 import lale.docstrings
 import lale.operators
 
-
-class MultinomialNBImpl:
-    def __init__(self, alpha=1.0, fit_prior=True, class_prior=None):
-        self._hyperparams = {
-            "alpha": alpha,
-            "fit_prior": fit_prior,
-            "class_prior": class_prior,
-        }
-        self._wrapped_model = sklearn.naive_bayes.MultinomialNB(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 _hyperparams_schema = {
     "description": "Naive Bayes classifier for multinomial models",
     "allOf": [
@@ -52,7 +31,7 @@ _hyperparams_schema = {
                     "minimumForOptimizer": 1e-10,
                     "maximumForOptimizer": 1.0,
                     "default": 1.0,
-                    "description": "Additive (Laplace/Lidstone) smoothing parameter",
+                    "description": "Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing).",
                 },
                 "fit_prior": {
                     "type": "boolean",
@@ -65,7 +44,7 @@ _hyperparams_schema = {
                         {"enum": [None]},
                     ],
                     "default": None,
-                    "description": "Prior probabilities of the classes. If specified the priors are not",
+                    "description": "Prior probabilities of the classes. If specified the priors are not adjusted according to the data.",
                 },
             },
         }
@@ -146,6 +125,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(MultinomialNBImpl, _combined_schemas)
 
-MultinomialNB = lale.operators.make_operator(MultinomialNBImpl, _combined_schemas)
+MultinomialNB = lale.operators.make_operator(
+    sklearn.naive_bayes.MultinomialNB, _combined_schemas
+)
+
+lale.docstrings.set_docstrings(MultinomialNB)

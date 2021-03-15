@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class GaussianProcessClassifierImpl:
+class _GaussianProcessClassifierImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -185,7 +185,8 @@ _combined_schemas = {
         "output_predict_proba": _output_predict_proba_schema,
     },
 }
-set_docstrings(GaussianProcessClassifierImpl, _combined_schemas)
 GaussianProcessClassifier = make_operator(
-    GaussianProcessClassifierImpl, _combined_schemas
+    _GaussianProcessClassifierImpl, _combined_schemas
 )
+
+set_docstrings(GaussianProcessClassifier)

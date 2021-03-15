@@ -12,28 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import typing
-
 import sklearn
 import sklearn.compose
 
 import lale.docstrings
 import lale.operators
-from lale.schemas import Bool
-
-
-class ColumnTransformerImpl:
-    def __init__(self, **hyperparams):
-        self._wrapped_model = sklearn.compose.ColumnTransformer(**hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        result = self._wrapped_model.transform(X)
-        return result
-
 
 _hyperparams_schema = {
     "allOf": [
@@ -118,6 +101,8 @@ _hyperparams_schema = {
 these will be stacked as a sparse matrix if the overall density is
 lower than this value. Use sparse_threshold=0 to always return dense.""",
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.3,
                 },
                 "n_jobs": {
@@ -211,21 +196,21 @@ _combined_schemas = {
 }
 
 
+ColumnTransformer: lale.operators.PlannedIndividualOp
 ColumnTransformer = lale.operators.make_operator(
-    ColumnTransformerImpl, _combined_schemas
+    sklearn.compose.ColumnTransformer, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.compose.ColumnTransformer.html
-    ColumnTransformer = typing.cast(
-        lale.operators.PlannedIndividualOp,
-        ColumnTransformer.customize_schema(
-            verbose=Bool(
-                desc="If True, the time elapsed while fitting each transformer will be printed as it is completed.",
-                default=False,
-            ),
-        ),
+    ColumnTransformer = ColumnTransformer.customize_schema(
+        verbose={
+            "description": "If True, the time elapsed while fitting each transformer will be printed as it is completed.",
+            "type": "boolean",
+            "default": False,
+        },
     )
 
-lale.docstrings.set_docstrings(ColumnTransformerImpl, ColumnTransformer._schemas)
+
+lale.docstrings.set_docstrings(ColumnTransformer)

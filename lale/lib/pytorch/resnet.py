@@ -29,7 +29,7 @@ import lale.docstrings
 import lale.operators
 
 
-class ResNet50Impl:
+class _ResNet50Impl:
 
     num_epochs: int
     batch_size: int
@@ -121,7 +121,7 @@ class ResNet50Impl:
                     )
                 )
                 sys.stdout.flush()
-        return ResNet50Impl(
+        return _ResNet50Impl(
             self.num_classes,
             self.model,
             self.num_epochs,
@@ -258,9 +258,10 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ResNet50Impl, _combined_schemas)
 
-ResNet50 = lale.operators.make_operator(ResNet50Impl, _combined_schemas)
+ResNet50 = lale.operators.make_operator(_ResNet50Impl, _combined_schemas)
+
+lale.docstrings.set_docstrings(ResNet50)
 
 if __name__ == "__main__":
     import torchvision.datasets as datasets

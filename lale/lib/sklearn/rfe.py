@@ -12,30 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 from sklearn.feature_selection import RFE as SKLModel
 
 import lale.docstrings
 import lale.operators
-from lale.sklearn_compat import make_sklearn_compat
-
-
-class RFEImpl:
-    def __init__(self, estimator, n_features_to_select=None, step=1, verbose=0):
-        self._hyperparams = {
-            "estimator": make_sklearn_compat(estimator),
-            "n_features_to_select": n_features_to_select,
-            "step": step,
-            "verbose": verbose,
-        }
-        self._wrapped_model = SKLModel(**self._hyperparams)
-
-    def fit(self, X, y):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
 
 _hyperparams_schema = {
     "description": "Feature ranking with recursive feature elimination.",
@@ -52,19 +33,27 @@ _hyperparams_schema = {
                 },
                 "n_features_to_select": {
                     "description": "The number of features to select. If None, half of the features are selected.",
-                    "anyOf": [{"type": "integer", "minimum": 1}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                 },
                 "step": {
                     "description": "If greater than or equal to 1, then step corresponds to the (integer) number of features to remove at each iteration. If within (0.0, 1.0), then step corresponds to the percentage (rounded down) of features to remove at each iteration.",
                     "anyOf": [
-                        {"type": "integer", "minimum": 1},
+                        {"type": "integer", "minimum": 1, "forOptimizer": False,},
                         {
                             "type": "number",
                             "minimum": 0,
                             "exclusiveMinimum": True,
                             "maximum": 1,
                             "exclusiveMaximum": True,
+                            "maximumForOptimizer": 0.5,
                         },
                     ],
                     "default": 1,
@@ -124,7 +113,7 @@ _combined_schemas = {
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.rfe.html",
     "import_from": "sklearn.feature_selection",
     "type": "object",
-    "tags": {"pre": [], "op": ["transformer"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "transformer"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
@@ -133,6 +122,53 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RFEImpl, _combined_schemas)
+RFE: lale.operators.PlannedIndividualOp
+RFE = lale.operators.make_operator(SKLModel, _combined_schemas)
 
-RFE = lale.operators.make_operator(RFEImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.feature_selection.RFE.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.feature_selection.RFE.html
+    RFE = RFE.customize_schema(
+        n_features_to_select={
+            "anyOf": [
+                {"description": "Half of the features are selected.", "enum": [None],},
+                {
+                    "description": "Absolute number of features to select.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "laleMaximum": "X/items/maxItems",  # number of columns
+                    "forOptimizer": False,
+                },
+                {
+                    "description": "Fraction of features to select",
+                    "type": "number",
+                    "minimum": 0.0,
+                    "exclusiveMinimum": True,
+                    "maximum": 1.0,
+                    "exclusiveMaximum": True,
+                },
+            ],
+            "default": None,
+        },
+        importance_getter={
+            "anyOf": [
+                {
+                    "description": "Use the feature importance either through a coef_ or feature_importances_ attributes of estimator.",
+                    "enum": ["auto"],
+                },
+                {
+                    "description": "Attribute name/path for extracting feature importance (implemented with attrgetter).",
+                    "type": "string",
+                },
+                {
+                    "description": "The callable is passed with the fitted estimator and it should return importance for each feature.",
+                    "laleType": "callable",
+                },
+            ],
+            "default": "auto",
+        },
+    )
+
+
+lale.docstrings.set_docstrings(RFE)

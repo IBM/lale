@@ -18,31 +18,6 @@ import sklearn.neural_network
 import lale.docstrings
 import lale.operators
 
-
-class MLPClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.neural_network.MLPClassifier(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def partial_fit(self, X, y=None, classes=None):
-        if not hasattr(self, "_wrapped_model"):
-            self._wrapped_model = sklearn.neural_network.MLPClassifier(
-                **self._hyperparams
-            )
-        self._wrapped_model.partial_fit(X, y, classes=classes)
-        return self
-
-
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the MLPClassifier model from scikit-learn.",
     "allOf": [
@@ -150,12 +125,17 @@ _hyperparams_schema = {
                     "description": "The initial learning rate used. It controls the "
                     "step-size in updating the weights.",
                     "type": "number",
+                    "minimum": 0,
+                    "exclusiveMinimum": True,
                     "default": 0.001,
+                    "maximumForOptimizer": 0.1,
                 },
                 "power_t": {
                     "description": "The exponent for inverse scaling learning rate.",
                     "type": "number",
                     "default": 0.5,
+                    "minimumForOptimizer": 0.01,
+                    "maximumForOptimizer": 10,
                 },
                 "max_iter": {
                     "description": "Maximum number of iterations. The solver iterates until "
@@ -276,6 +256,7 @@ _hyperparams_schema = {
                     "type": "integer",
                     "default": 10,
                     "minimum": 1,
+                    "maximumForOptimizer": 50,
                 },
             },
         }
@@ -374,7 +355,9 @@ _combined_schemas = {
 }
 
 MLPClassifier: lale.operators.PlannedIndividualOp
-MLPClassifier = lale.operators.make_operator(MLPClassifierImpl, _combined_schemas)
+MLPClassifier = lale.operators.make_operator(
+    sklearn.neural_network.MLPClassifier, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.neural_network.MLPClassifier.html
@@ -390,4 +373,5 @@ if sklearn.__version__ >= "0.22":
         )
     )
 
-lale.docstrings.set_docstrings(MLPClassifierImpl, MLPClassifier._schemas)
+
+lale.docstrings.set_docstrings(MLPClassifier)

@@ -421,6 +421,7 @@ cat_encoder = CatEncoder(
     categories="auto",
     dtype=np.float64,
     handle_unknown="error",
+    sklearn_version_family="23",
 )
 pipeline = cat_encoder >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
@@ -509,7 +510,9 @@ tam = TAM(
         np.dtype("float32"), np.dtype("float32"), np.dtype("float32"),
     ],
 )
-lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
+lgbm_classifier = LGBMClassifier(
+    class_weight="balanced", learning_rate=0.18, n_estimators=100
+)
 pipeline = make_pipeline(tam, lgbm_classifier)"""
         self._roundtrip(
             expected, lale.pretty_print.to_string(pipeline, combinators=False)
@@ -518,16 +521,17 @@ pipeline = make_pipeline(tam, lgbm_classifier)"""
     def test_autoai_libs_tam_3(self):
         import autoai_libs.cognito.transforms.transform_utils
         import numpy as np
-        import sklearn.cluster.hierarchical
+        import sklearn.cluster
         import sklearn.linear_model
         import sklearn.pipeline
 
         import lale.helpers
+        import lale.operators
         import lale.pretty_print
 
         sklearn_pipeline = sklearn.pipeline.make_pipeline(
             autoai_libs.cognito.transforms.transform_utils.TAM(
-                tans_class=sklearn.cluster.hierarchical.FeatureAgglomeration(
+                tans_class=sklearn.cluster.FeatureAgglomeration(
                     affinity="euclidean",
                     compute_full_tree="auto",
                     connectivity=None,
@@ -573,7 +577,6 @@ pipeline = tam >> logistic_regression"""
     def test_autoai_libs_tam_4(self):
         import autoai_libs.cognito.transforms.transform_utils
         import numpy as np
-        import sklearn.cluster.hierarchical
         import sklearn.decomposition
         import sklearn.linear_model
         import sklearn.pipeline
@@ -713,7 +716,9 @@ t_no_op = TNoOp(
     feat_constraints=[],
     tgraph="tgraph",
 )
-lgbm_classifier = LGBMClassifier(class_weight="balanced", learning_rate=0.18)
+lgbm_classifier = LGBMClassifier(
+    class_weight="balanced", learning_rate=0.18, n_estimators=100
+)
 pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
         self._roundtrip(
             expected, lale.pretty_print.to_string(pipeline, combinators=False)
@@ -724,9 +729,6 @@ pipeline = make_pipeline(t_no_op, lgbm_classifier)"""
             CompressStrings,
             NumpyColumnSelector,
         )
-
-        import lale.operators
-        import lale.pretty_print
 
         numpy_column_selector = NumpyColumnSelector(columns=[0, 2, 3, 5])
         compress_strings = CompressStrings(
@@ -802,6 +804,76 @@ pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
         printed = lale.pretty_print.to_string(pipeline, astype="sklearn")
         self._roundtrip(expected, printed)
 
+    def test_customize_schema(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        pipeline = LogisticRegression.customize_schema(
+            solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"},
+            tol={
+                "type": "number",
+                "minimum": 0.00001,
+                "maximum": 0.1,
+                "default": 0.0001,
+            },
+        )(solver="lbfgs")
+        expected = """from sklearn.linear_model import LogisticRegression
+import lale
+
+lale.wrap_imported_operators()
+pipeline = LogisticRegression.customize_schema(
+    solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"},
+    tol={
+        "type": "number",
+        "minimum": 1e-05,
+        "maximum": 0.1,
+        "default": 0.0001,
+    },
+)(solver="lbfgs")"""
+        self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
+
+    def test_user_operator_in_toplevel_module(self):
+        import importlib
+        import os.path
+        import sys
+        import tempfile
+
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".py") as tmp_py_file:
+            file_contents = """import numpy as np
+import lale.operators
+
+class _MockClassifierImpl:
+    def __init__(self, int_hp=0):
+        self.int_hp = int_hp
+
+    def fit(self, X, y):
+        self.some_y = list(y)[0]
+
+    def predict(self, X):
+        return self.some_y
+
+MockClassifier = lale.operators.make_operator(_MockClassifierImpl)
+"""
+            tmp_py_file.write(file_contents)
+            tmp_py_file.flush()
+            dir_name = os.path.dirname(tmp_py_file.name)
+            old_pythonpath = sys.path
+            try:
+                sys.path.append(dir_name)
+                module_name = os.path.basename(tmp_py_file.name)[: -len(".py")]
+                module = importlib.import_module(module_name)
+                MockClf = getattr(module, "MockClassifier")
+                self.assertIsInstance(MockClf, lale.operators.PlannedIndividualOp)
+                self.assertEqual(MockClf.name(), "MockClassifier")
+                pipeline = MockClf(int_hp=42)
+                expected = f"""from {module_name} import MockClassifier as MockClf
+import lale
+
+lale.wrap_imported_operators()
+pipeline = MockClf(int_hp=42)"""
+                self._roundtrip(expected, pipeline.pretty_print())
+            finally:
+                sys.path = old_pythonpath
+
 
 class TestToAndFromJSON(unittest.TestCase):
     def test_trainable_individual_op(self):
@@ -811,7 +883,7 @@ class TestToAndFromJSON(unittest.TestCase):
 
         operator = LR(LR.solver.sag, C=0.1)
         json_expected = {
-            "class": "lale.lib.sklearn.logistic_regression.LogisticRegressionImpl",
+            "class": LR.class_name(),
             "state": "trainable",
             "operator": "LogisticRegression",
             "label": "LR",
@@ -838,14 +910,14 @@ class TestToAndFromJSON(unittest.TestCase):
             "state": "planned",
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca.PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "planned",
                     "operator": "PCA",
                     "label": "PCA",
                     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html",
                 },
                 "scl": {
-                    "class": "lale.lib.sklearn.min_max_scaler.MinMaxScalerImpl",
+                    "class": Scl.class_name(),
                     "state": "planned",
                     "operator": "MinMaxScaler",
                     "label": "Scl",
@@ -877,14 +949,14 @@ class TestToAndFromJSON(unittest.TestCase):
             ],
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca.PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "planned",
                     "operator": "PCA",
                     "label": "PCA",
                     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.pca.html",
                 },
                 "no_op": {
-                    "class": "lale.lib.lale.no_op.NoOpImpl",
+                    "class": NoOp.class_name(),
                     "state": "trained",
                     "operator": "NoOp",
                     "label": "NoOp",
@@ -895,7 +967,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "is_frozen_trained": True,
                 },
                 "concat_features": {
-                    "class": "lale.lib.lale.concat_features.ConcatFeaturesImpl",
+                    "class": ConcatFeatures.class_name(),
                     "state": "trained",
                     "operator": "ConcatFeatures",
                     "label": "ConcatFeatures",
@@ -906,7 +978,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "is_frozen_trained": True,
                 },
                 "lr": {
-                    "class": "lale.lib.sklearn.logistic_regression.LogisticRegressionImpl",
+                    "class": LR.class_name(),
                     "state": "planned",
                     "operator": "LogisticRegression",
                     "label": "LR",
@@ -947,7 +1019,7 @@ class TestToAndFromJSON(unittest.TestCase):
 
         operator = Both(op1=PCA(n_components=2), op2=Nystroem)
         json_expected = {
-            "class": "lale.lib.lale.both.BothImpl",
+            "class": Both.class_name(),
             "state": "trainable",
             "operator": "Both",
             "label": "Both",
@@ -958,7 +1030,7 @@ class TestToAndFromJSON(unittest.TestCase):
             },
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca.PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "trainable",
                     "operator": "PCA",
                     "label": "PCA",
@@ -967,7 +1039,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "is_frozen_trainable": False,
                 },
                 "nystroem": {
-                    "class": "lale.lib.sklearn.nystroem.NystroemImpl",
+                    "class": Nystroem.class_name(),
                     "state": "planned",
                     "operator": "Nystroem",
                     "label": "Nystroem",
@@ -994,7 +1066,7 @@ class TestToAndFromJSON(unittest.TestCase):
             estimators=[("knn", KNN), ("pipeline", PCA() >> LR)], voting="soft"
         )
         json_expected = {
-            "class": "lale.lib.sklearn.voting_classifier.VotingClassifierImpl",
+            "class": Vote.class_name(),
             "state": "trainable",
             "operator": "VotingClassifier",
             "is_frozen_trainable": True,
@@ -1009,7 +1081,7 @@ class TestToAndFromJSON(unittest.TestCase):
             },
             "steps": {
                 "knn": {
-                    "class": "lale.lib.sklearn.k_neighbors_classifier.KNeighborsClassifierImpl",
+                    "class": KNN.class_name(),
                     "state": "planned",
                     "operator": "KNeighborsClassifier",
                     "label": "KNN",
@@ -1021,7 +1093,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "edges": [["pca", "lr"]],
                     "steps": {
                         "pca": {
-                            "class": "lale.lib.sklearn.pca.PCAImpl",
+                            "class": PCA.class_name(),
                             "state": "trainable",
                             "operator": "PCA",
                             "label": "PCA",
@@ -1030,7 +1102,7 @@ class TestToAndFromJSON(unittest.TestCase):
                             "is_frozen_trainable": False,
                         },
                         "lr": {
-                            "class": "lale.lib.sklearn.logistic_regression.LogisticRegressionImpl",
+                            "class": LR.class_name(),
                             "state": "planned",
                             "operator": "LogisticRegression",
                             "label": "LR",
@@ -1060,7 +1132,7 @@ class TestToAndFromJSON(unittest.TestCase):
             "edges": [["pca", "choice"]],
             "steps": {
                 "pca": {
-                    "class": "lale.lib.sklearn.pca.PCAImpl",
+                    "class": PCA.class_name(),
                     "state": "planned",
                     "operator": "PCA",
                     "label": "PCA",
@@ -1072,7 +1144,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "operator": "OperatorChoice",
                     "steps": {
                         "lr_0": {
-                            "class": "lale.lib.sklearn.logistic_regression.LogisticRegressionImpl",
+                            "class": LR.class_name(),
                             "state": "trainable",
                             "operator": "LogisticRegression",
                             "label": "LR",
@@ -1086,7 +1158,7 @@ class TestToAndFromJSON(unittest.TestCase):
                             "edges": [["no_op", "lr_1"]],
                             "steps": {
                                 "no_op": {
-                                    "class": "lale.lib.lale.no_op.NoOpImpl",
+                                    "class": NoOp.class_name(),
                                     "state": "trained",
                                     "operator": "NoOp",
                                     "label": "NoOp",
@@ -1097,7 +1169,7 @@ class TestToAndFromJSON(unittest.TestCase):
                                     "is_frozen_trained": True,
                                 },
                                 "lr_1": {
-                                    "class": "lale.lib.sklearn.logistic_regression.LogisticRegressionImpl",
+                                    "class": LR.class_name(),
                                     "state": "trainable",
                                     "operator": "LogisticRegression",
                                     "label": "LR",
@@ -1112,6 +1184,53 @@ class TestToAndFromJSON(unittest.TestCase):
             },
         }
         json = to_json(operator)
+        self.assertEqual(json, json_expected)
+        operator_2 = from_json(json)
+        json_2 = to_json(operator_2)
+        self.assertEqual(json, json_2)
+
+    def test_customize_schema(self):
+        from lale.json_operator import from_json, to_json
+        from lale.lib.sklearn import LogisticRegression as LR
+
+        operator = LR.customize_schema(
+            solver={"enum": ["lbfgs", "liblinear"], "default": "liblinear"},
+            tol={
+                "type": "number",
+                "minimum": 0.00001,
+                "maximum": 0.1,
+                "default": 0.0001,
+            },
+        )
+        json_expected = {
+            "class": LR.class_name(),
+            "state": "planned",
+            "operator": "LogisticRegression",
+            "label": "LR",
+            "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.logistic_regression.html",
+            "customize_schema": {
+                "properties": {
+                    "hyperparams": {
+                        "allOf": [
+                            {
+                                "solver": {
+                                    "default": "liblinear",
+                                    "enum": ["lbfgs", "liblinear"],
+                                },
+                                "tol": {
+                                    "type": "number",
+                                    "minimum": 0.00001,
+                                    "maximum": 0.1,
+                                    "default": 0.0001,
+                                },
+                            }
+                        ]
+                    }
+                }
+            },
+        }
+        json = to_json(operator)
+        self.maxDiff = None
         self.assertEqual(json, json_expected)
         operator_2 = from_json(json)
         json_2 = to_json(operator_2)

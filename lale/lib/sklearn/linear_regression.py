@@ -12,29 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.linear_model
 
 import lale.docstrings
 import lale.operators
-
-
-class LinearRegressionImpl:
-    def __init__(self, fit_intercept=True, normalize=False, copy_X=True, n_jobs=None):
-        self._hyperparams = {
-            "fit_intercept": fit_intercept,
-            "normalize": normalize,
-            "copy_X": copy_X,
-            "n_jobs": n_jobs,
-        }
-        self._wrapped_model = sklearn.linear_model.LinearRegression(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
 
 _hyperparams_schema = {
     "allOf": [
@@ -146,6 +128,30 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LinearRegressionImpl, _combined_schemas)
+LinearRegression: lale.operators.PlannedIndividualOp
+LinearRegression = lale.operators.make_operator(
+    sklearn.linear_model.LinearRegression, _combined_schemas
+)
 
-LinearRegression = lale.operators.make_operator(LinearRegressionImpl, _combined_schemas)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LinearRegression.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.LinearRegression.html
+    LinearRegression = LinearRegression.customize_schema(
+        positive={
+            "type": "boolean",
+            "description": "When set to True, forces the coefficients to be positive.",
+            "default": False,
+        }
+    )
+    LinearRegression = LinearRegression.customize_schema(
+        constraint={
+            "description": "Setting positive=True is only supported for dense arrays.",
+            "anyOf": [
+                {"type": "object", "properties": {"positive": {"enum": [False]}}},
+                {"type": "object", "laleNot": "X/isSparse"},
+            ],
+        }
+    )
+
+
+lale.docstrings.set_docstrings(LinearRegression)

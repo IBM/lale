@@ -17,20 +17,6 @@ import sklearn.decomposition
 import lale.docstrings
 import lale.operators
 
-
-class PCAImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.decomposition.PCA(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the PCA model from scikit-learn.",
     "allOf": [
@@ -98,6 +84,7 @@ outputs with unit component-wise variances.""",
                     "description": "Tolerance for singular values computed by svd_solver arpack.",
                     "type": "number",
                     "minimum": 0.0,
+                    "maximumForOptimizer": 1,
                     "default": 0.0,
                 },
                 "iterated_power": {
@@ -106,6 +93,7 @@ outputs with unit component-wise variances.""",
                             "description": "Number of iterations for the power method computed by svd_solver randomized.",
                             "type": "integer",
                             "minimum": 0,
+                            "maximumForOptimizer": 10,
                         },
                         {"description": "Pick automatically.", "enum": ["auto"]},
                     ],
@@ -164,13 +152,6 @@ outputs with unit component-wise variances.""",
                     },
                 },
                 {"type": "object", "properties": {"svd_solver": {"enum": ["full"]},}},
-            ],
-        },
-        {
-            "description": "Option tol can be set for svd_solver arpack.",
-            "anyOf": [
-                {"type": "object", "properties": {"tol": {"enum": [0.0]}}},
-                {"type": "object", "properties": {"svd_solver": {"enum": ["arpack"]},}},
             ],
         },
         {
@@ -243,6 +224,6 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(PCAImpl, _combined_schemas)
+PCA = lale.operators.make_operator(sklearn.decomposition.PCA, _combined_schemas)
 
-PCA = lale.operators.make_operator(PCAImpl, _combined_schemas)
+lale.docstrings.set_docstrings(PCA)

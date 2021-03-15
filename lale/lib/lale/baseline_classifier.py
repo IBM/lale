@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class BaselineClassifierImpl:
+class _BaselineClassifierImpl:
     def __init__(self):
         pass
 
@@ -102,8 +102,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(BaselineClassifierImpl, _combined_schemas)
 
 BaselineClassifier = lale.operators.make_operator(
-    BaselineClassifierImpl, _combined_schemas
+    _BaselineClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(BaselineClassifier)

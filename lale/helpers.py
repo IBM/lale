@@ -21,12 +21,24 @@ import re
 import sys
 import time
 import traceback
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Dict,
+    Iterable,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    TypeVar,
+    Union,
+)
 
 import h5py
 import numpy as np
 import pandas as pd
 import scipy.sparse
+import sklearn.pipeline
 from sklearn.metrics import accuracy_score, check_scoring, log_loss
 from sklearn.model_selection import StratifiedKFold
 from sklearn.utils.metaestimators import _safe_split
@@ -52,8 +64,11 @@ def make_nested_hyperopt_space(sub_space):
 def assignee_name(level=1) -> Optional[str]:
     tb = traceback.extract_stack()
     file_name, line_number, function_name, text = tb[-(level + 2)]
-    tree = ast.parse(text, file_name)
-    assert isinstance(tree, ast.Module)
+    try:
+        tree = ast.parse(text, file_name)
+    except SyntaxError:
+        return None
+    assert tree is not None and isinstance(tree, ast.Module)
     if len(tree.body) == 1:
         stmt = tree.body[0]
         if isinstance(stmt, ast.Assign):
@@ -65,7 +80,28 @@ def assignee_name(level=1) -> Optional[str]:
     return None
 
 
-def data_to_json(data, subsample_array: bool = True) -> Union[list, dict]:
+def arg_name(pos=0, level=1) -> Optional[str]:
+    tb = traceback.extract_stack()
+    file_name, line_number, function_name, text = tb[-(level + 2)]
+    try:
+        tree = ast.parse(text, file_name)
+    except SyntaxError:
+        return None
+    assert tree is not None and isinstance(tree, ast.Module)
+    if len(tree.body) == 1:
+        stmt = tree.body[0]
+        if isinstance(stmt, ast.Expr):
+            expr = stmt.value
+            if isinstance(expr, ast.Call):
+                args = expr.args
+                if pos < len(args):
+                    res = args[pos]
+                    if isinstance(res, ast.Name):
+                        return res.id
+    return None
+
+
+def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, float]:
     if type(data) is tuple:
         # convert to list
         return [data_to_json(elem, subsample_array) for elem in data]
@@ -83,6 +119,14 @@ def data_to_json(data, subsample_array: bool = True) -> Union[list, dict]:
     elif torch_installed and isinstance(data, torch.Tensor):
         np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
+    elif (
+        isinstance(data, np.int64)
+        or isinstance(data, np.int32)
+        or isinstance(data, np.int16)
+    ):
+        return int(data)
+    elif isinstance(data, np.float64) or isinstance(data, np.float32):
+        return float(data)
     else:
         return data
 
@@ -182,11 +226,11 @@ def fold_schema(X, y, cv=1, is_classifier=True):
         return aux_result
 
     n_splits = cv if isinstance(cv, int) else cv.get_n_splits()
-    n_samples = X.shape[0]
+    n_samples = X.shape[0] if hasattr(X, "shape") else len(X)
     if n_splits == 1:
         n_rows_fold = n_samples
     elif is_classifier:
-        n_classes = 2 if len(y.shape) == 1 else y.shape[1]
+        n_classes = len(set(y))
         n_rows_unstratified = (n_samples // n_splits) * (n_splits - 1)
         # in stratified case, fold sizes can differ by up to n_classes
         n_rows_fold = max(1, n_rows_unstratified - n_classes)
@@ -429,8 +473,9 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
 
     if isinstance(lale_object, PlannedIndividualOp):
         new_hyperparams: Dict[str, Any] = dict_without(hyperparams, "name")
-        if lale_object._hyperparams is not None:
-            obj_hyperparams = dict(lale_object._hyperparams)
+        hps = lale_object.hyperparams()
+        if hps is not None:
+            obj_hyperparams = dict(hps)
         else:
             obj_hyperparams = {}
 
@@ -493,35 +538,30 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
 def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
     # For all pipeline steps, identify equivalent lale wrappers if present,
     # if not, call make operator on sklearn classes and create a lale pipeline.
-
     def get_equivalent_lale_op(sklearn_obj, fitted):
+        import lale.operators
+        import lale.type_checking
+
+        if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and fitted:
+            if hasattr(sklearn_obj, "_trained"):
+                return sklearn_obj._trained
+            elif not hasattr(
+                sklearn_obj._impl_instance(), "fit"
+            ):  # Operators such as NoOp do not have a fit, so return them as is.
+                return sklearn_obj
+            else:
+                raise ValueError(
+                    """The input pipeline has an operator that is not trained and fitted is set to True,
+                    please pass fitted=False if you want a trainable pipeline as output."""
+                )
+        elif isinstance(sklearn_obj, lale.operators.Operator):
+            return sklearn_obj
+
         # Validate that the sklearn_obj is a valid sklearn-compatible object
         if sklearn_obj is None or not hasattr(sklearn_obj, "get_params"):
             raise ValueError(
                 "The input pipeline has a step that is not scikit-learn compatible."
             )
-        module_names = ["lale.lib.sklearn", "lale.lib.autoai_libs"]
-        from lale.operators import TrainedIndividualOp, make_operator
-
-        lale_wrapper_found = False
-        class_name = sklearn_obj.__class__.__name__
-        for module_name in module_names:
-            module = importlib.import_module(module_name)
-            try:
-                class_ = getattr(module, class_name)
-                lale_wrapper_found = True
-                break
-            except AttributeError:
-                continue
-        else:
-            class_ = make_operator(sklearn_obj, name=class_name)
-
-        if (
-            not fitted
-        ):  # If fitted is False, we do not want to return a Trained operator.
-            lale_op = class_
-        else:
-            lale_op = TrainedIndividualOp(class_._name, class_._impl, class_._schemas)
 
         orig_hyperparams = sklearn_obj.get_params()
         higher_order = False
@@ -538,32 +578,60 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         else:
             hyperparams = orig_hyperparams
 
+        module_names = [
+            "lale.lib.sklearn",
+            "lale.lib.autoai_libs",
+            "lale.lib.xgboost",
+            "lale.lib.lightgbm",
+            "lale.lib.snapml",
+        ]
+
+        lale_wrapper_found = False
+        class_name = sklearn_obj.__class__.__name__
+        for module_name in module_names:
+            module = importlib.import_module(module_name)
+            try:
+                class_ = getattr(module, class_name)
+                lale_wrapper_found = True
+                break
+            except AttributeError:
+                continue
+        else:
+            class_ = lale.operators.make_operator(sklearn_obj, name=class_name)
+
+        if (
+            not fitted
+        ):  # If fitted is False, we do not want to return a Trained operator.
+            lale_op = class_
+        else:
+            lale_op = lale.operators.TrainedIndividualOp(
+                class_._name, class_._impl, class_._schemas, None, _lale_trained=True
+            )
+
         class_ = lale_op(**hyperparams)
-        if lale_wrapper_found:
+
+        if lale_wrapper_found and hasattr(class_._impl_instance(), "_wrapped_model"):
             wrapped_model = copy.deepcopy(sklearn_obj)
             class_._impl_instance()._wrapped_model = wrapped_model
         else:  # If there is no lale wrapper, there is no _wrapped_model
             class_._impl = copy.deepcopy(sklearn_obj)
+            class_._impl_class_ = class_._impl.__class__
         return class_
 
-    from sklearn.pipeline import FeatureUnion, Pipeline
-
-    from lale.operators import make_pipeline, make_union
-
-    if isinstance(sklearn_pipeline, Pipeline):
+    if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
         nested_pipeline_steps = sklearn_pipeline.named_steps.values()
         nested_pipeline_lale_objects = [
             import_from_sklearn_pipeline(nested_pipeline_step, fitted=fitted)
             for nested_pipeline_step in nested_pipeline_steps
         ]
-        lale_op_obj = make_pipeline(*nested_pipeline_lale_objects)
-    elif isinstance(sklearn_pipeline, FeatureUnion):
+        lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
+    elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
         transformer_list = sklearn_pipeline.transformer_list
         concat_predecessors = [
             import_from_sklearn_pipeline(transformer[1], fitted=fitted)
             for transformer in transformer_list
         ]
-        lale_op_obj = make_union(*concat_predecessors)
+        lale_op_obj = lale.operators.make_union(*concat_predecessors)
     else:
         lale_op_obj = get_equivalent_lale_op(sklearn_pipeline, fitted=fitted)
     return lale_op_obj
@@ -751,3 +819,140 @@ def add_missing_values(orig_X, missing_rate=0.1, seed=None):
                 i_missing_sample += 1
                 missing_X.iloc[i_sample, i_feature] = np.nan
     return missing_X
+
+
+# helpers for manipulating (extended) sklearn style paths.
+# documentation of the path format is part of the operators module docstring
+
+
+def partition_sklearn_params(
+    d: Dict[str, Any]
+) -> Tuple[Dict[str, Any], Dict[str, Dict[str, Any]]]:
+    sub_parts: Dict[str, Dict[str, Any]] = {}
+    main_parts: Dict[str, Any] = {}
+
+    for k, v in d.items():
+        ks = k.split("__", 1)
+        if len(ks) == 1:
+            assert k not in main_parts
+            main_parts[k] = v
+        else:
+            assert len(ks) == 2
+            bucket: Dict[str, Any] = {}
+            group: str = ks[0]
+            param: str = ks[1]
+            if group in sub_parts:
+                bucket = sub_parts[group]
+            else:
+                sub_parts[group] = bucket
+            assert param not in bucket
+            bucket[param] = v
+    return (main_parts, sub_parts)
+
+
+def partition_sklearn_choice_params(d: Dict[str, Any]) -> Tuple[int, Dict[str, Any]]:
+    discriminant_value: int = -1
+    choice_parts: Dict[str, Any] = {}
+
+    for k, v in d.items():
+        if k == discriminant_name:
+            assert discriminant_value == -1
+            discriminant_value = int(v)
+        else:
+            k_rest = unnest_choice(k)
+            choice_parts[k_rest] = v
+    assert discriminant_value != -1
+    return (discriminant_value, choice_parts)
+
+
+DUMMY_SEARCH_SPACE_GRID_PARAM_NAME: str = "$"
+discriminant_name: str = "?"
+choice_prefix: str = "?"
+structure_type_name: str = "#"
+structure_type_list: str = "list"
+structure_type_tuple: str = "tuple"
+structure_type_dict: str = "dict"
+
+
+def get_name_and_index(name: str) -> Tuple[str, int]:
+    """ given a name of the form "name@i", returns (name, i)
+        if given a name of the form "name", returns (name, 0)
+    """
+    splits = name.split("@", 1)
+    if len(splits) == 1:
+        return splits[0], 0
+    else:
+        return splits[0], int(splits[1])
+
+
+def make_degen_indexed_name(name, index):
+    return f"{name}@{index}"
+
+
+def make_indexed_name(name, index):
+    if index == 0:
+        return name
+    else:
+        return f"{name}@{index}"
+
+
+def make_array_index_name(index, is_tuple: bool = False):
+    sep = "##" if is_tuple else "#"
+    return f"{sep}{str(index)}"
+
+
+def is_numeric_structure(structure_type: str):
+
+    if structure_type == "list" or structure_type == "tuple":
+        return True
+    elif structure_type == "dict":
+        return False
+    else:
+        assert False, f"Unknown structure type {structure_type} found"
+
+
+V = TypeVar("V")
+
+
+def nest_HPparam(name: str, key: str):
+    if key == DUMMY_SEARCH_SPACE_GRID_PARAM_NAME:
+        # we can get rid of the dummy now, since we have a name for it
+        return name
+    return name + "__" + key
+
+
+def nest_HPparams(name: str, grid: Mapping[str, V]) -> Dict[str, V]:
+    return {(nest_HPparam(name, k)): v for k, v in grid.items()}
+
+
+def nest_all_HPparams(
+    name: str, grids: Iterable[Mapping[str, V]]
+) -> List[Dict[str, V]]:
+    """ Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
+        to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """
+    return [nest_HPparams(name, grid) for grid in grids]
+
+
+def nest_choice_HPparam(key: str):
+    return choice_prefix + key
+
+
+def nest_choice_HPparams(grid: Mapping[str, V]) -> Dict[str, V]:
+    return {(nest_choice_HPparam(k)): v for k, v in grid.items()}
+
+
+def nest_choice_all_HPparams(grids: Iterable[Mapping[str, V]]) -> List[Dict[str, V]]:
+    """ this transforms every key(parameter name) in the grids
+        to be nested under a choice, using a ? as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """
+    return [nest_choice_HPparams(grid) for grid in grids]
+
+
+def unnest_choice(k: str) -> str:
+    assert k.startswith(choice_prefix)
+    return k[len(choice_prefix) :]
+
+
+def unnest_HPparams(k: str) -> List[str]:
+    return k.split("__")

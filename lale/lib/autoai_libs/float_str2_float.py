@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class FloatStr2FloatImpl:
+class _FloatStr2FloatImpl:
     def __init__(
         self, dtypes_list, missing_values_reference_list=None, activate_flag=True
     ):
@@ -154,6 +154,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(FloatStr2FloatImpl, _combined_schemas)
 
-FloatStr2Float = lale.operators.make_operator(FloatStr2FloatImpl, _combined_schemas)
+FloatStr2Float = lale.operators.make_operator(_FloatStr2FloatImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(FloatStr2Float)

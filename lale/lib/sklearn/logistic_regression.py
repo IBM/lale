@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import typing
 
 import sklearn
@@ -417,30 +416,8 @@ _combined_schemas = {
     },
 }
 
-
-class LogisticRegressionImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.linear_model.LogisticRegression(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 LogisticRegression = lale.operators.make_operator(
-    LogisticRegressionImpl, _combined_schemas
+    sklearn.linear_model.LogisticRegression, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
@@ -481,4 +458,4 @@ if sklearn.__version__ >= "0.22":
         ),
     )
 
-lale.docstrings.set_docstrings(LogisticRegressionImpl, LogisticRegression._schemas)
+lale.docstrings.set_docstrings(LogisticRegression)

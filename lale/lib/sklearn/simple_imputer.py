@@ -21,7 +21,7 @@ import lale.docstrings
 import lale.operators
 
 
-class SimpleImputerImpl:
+class _SimpleImputerImpl:
     def __init__(
         self,
         missing_values=None,
@@ -93,7 +93,7 @@ _hyperparams_schema = {
                 "copy": {
                     "type": "boolean",
                     "default": True,
-                    "description": "If True, a copy of X will be created. If False, imputation will",
+                    "description": "If True, a copy of X will be created.",
                 },
             },
         }
@@ -159,6 +159,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SimpleImputerImpl, _combined_schemas)
 
-SimpleImputer = lale.operators.make_operator(SimpleImputerImpl, _combined_schemas)
+SimpleImputer = lale.operators.make_operator(_SimpleImputerImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SimpleImputer)

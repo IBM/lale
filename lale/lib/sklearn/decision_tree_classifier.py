@@ -96,6 +96,7 @@ _hyperparams_schema = {
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
                             "maximum": 0.5,
+                            "default": 0.05,
                             "description": "min_samples_leaf is a fraction and ceil(min_samples_leaf * n_samples) are the minimum number of samples for each node.",
                         },
                     ],
@@ -104,6 +105,8 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 0.5,
                     "default": 0.0,
                     "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.",
                 },
@@ -145,7 +148,12 @@ _hyperparams_schema = {
                 },
                 "max_leaf_nodes": {
                     "anyOf": [
-                        {"type": "integer"},
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
                         {
                             "enum": [None],
                             "description": "Unlimited number of leaf nodes.",
@@ -156,6 +164,8 @@ _hyperparams_schema = {
                 },
                 "min_impurity_decrease": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "default": 0.0,
                     "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },
@@ -310,31 +320,14 @@ _combined_schemas = {
     },
 }
 
-
-class DecisionTreeClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.tree.DecisionTreeClassifier(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 DecisionTreeClassifier: lale.operators.PlannedIndividualOp
 DecisionTreeClassifier = lale.operators.make_operator(
-    DecisionTreeClassifierImpl, _combined_schemas
+    sklearn.tree.DecisionTreeClassifier, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     from lale.schemas import AnyOf, Bool, Enum, Float
 
     DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
@@ -352,6 +345,9 @@ if sklearn.__version__ >= "0.22":
         ),
     )
 
-lale.docstrings.set_docstrings(
-    DecisionTreeClassifierImpl, DecisionTreeClassifier._schemas
-)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(presort=None)
+
+lale.docstrings.set_docstrings(DecisionTreeClassifier)

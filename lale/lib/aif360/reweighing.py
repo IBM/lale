@@ -13,58 +13,58 @@
 # limitations under the License.
 
 import aif360.algorithms.preprocessing
-import numpy as np
 
 import lale.docstrings
+import lale.lib.lale
 import lale.operators
 
 from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
 from .util import (
     _categorical_fairness_properties,
-    _group_flag,
-    _ndarray_to_series,
+    _categorical_input_predict_schema,
+    _categorical_output_predict_schema,
+    _categorical_supervised_input_fit_schema,
     _PandasToDatasetConverter,
 )
 
 
-class ReweighingImpl:
-    def __init__(
-        self, estimator, favorable_labels, protected_attributes,
-    ):
-        self.estimator = estimator
+class _ReweighingImpl:
+    def __init__(self, favorable_labels, protected_attributes, estimator, redact=True):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.estimator = estimator
+        self.redact = redact
 
     def fit(self, X, y):
+        fairness_info = {
+            "favorable_labels": self.favorable_labels,
+            "protected_attributes": self.protected_attributes,
+        }
         prot_attr_enc = ProtectedAttributesEncoder(
-            protected_attributes=self.protected_attributes
+            **fairness_info, remainder="drop", return_X_y=True,
         )
-        encoded_X = prot_attr_enc.transform(X)
-        if isinstance(y, np.ndarray):
-            encoded_y = _ndarray_to_series(y, X.shape[1])
-        else:
-            encoded_y = y
-        encoded_y = encoded_y.apply(lambda v: _group_flag(v, self.favorable_labels))
-        pans = [pa["feature"] for pa in self.protected_attributes]
+        encoded_X, encoded_y = prot_attr_enc.transform(X, y)
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label=1, unfavorable_label=0, protected_attribute_names=pans
+            favorable_label=1,
+            unfavorable_label=0,
+            protected_attribute_names=prot_attr_names,
         )
-        encoded_data = pandas_to_dataset(encoded_X, encoded_y)
-        unpriv_groups = [{pa["feature"]: 0 for pa in self.protected_attributes}]
-        priv_groups = [{pa["feature"]: 1 for pa in self.protected_attributes}]
+        encoded_data = pandas_to_dataset.convert(encoded_X, encoded_y)
+        unpriv_groups = [{name: 0 for name in prot_attr_names}]
+        priv_groups = [{name: 1 for name in prot_attr_names}]
         reweighing_trainable = aif360.algorithms.preprocessing.Reweighing(
             unprivileged_groups=unpriv_groups, privileged_groups=priv_groups,
         )
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)
         sample_weight = reweighted_data.instance_weights
-        redacting_trainable = Redacting(
-            protected_attribute_names=[
-                pa["feature"] for pa in self.protected_attributes
-            ]
-        )
-        self.redacting = redacting_trainable.fit(X)
+        if self.redact:
+            redacting_trainable = Redacting(**fairness_info)
+            self.redacting = redacting_trainable.fit(X)
+        else:
+            self.redacting = lale.lib.lale.NoOp
         redacted_X = self.redacting.transform(X)
         if isinstance(self.estimator, lale.operators.TrainablePipeline):
             trainable_prefix = self.estimator.remove_last()
@@ -87,56 +87,9 @@ class ReweighingImpl:
         return result
 
 
-_input_fit_schema = {
-    "description": "Input data schema for training.",
-    "type": "object",
-    "required": ["X", "y"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
-            },
-        },
-        "y": {
-            "description": "The predicted classes.",
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-        },
-    },
-}
-
-_input_predict_schema = {
-    "description": "Input data schema for transform.",
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"anyOf": [{"type": "number"}, {"type": "string"}],},
-            },
-        },
-    },
-}
-
-_output_predict_schema = {
-    "description": "The predicted classes.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-        {"type": "array", "items": {"type": "boolean"}},
-    ],
-}
+_input_fit_schema = _categorical_supervised_input_fit_schema
+_input_predict_schema = _categorical_input_predict_schema
+_output_predict_schema = _categorical_output_predict_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
@@ -144,26 +97,30 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["estimator", "favorable_labels", "protected_attributes"],
+            "required": [
+                *_categorical_fairness_properties.keys(),
+                "estimator",
+                "redact",
+            ],
             "relevantToOptimizer": [],
             "properties": {
+                **_categorical_fairness_properties,
                 "estimator": {
                     "description": "Nested classifier, fit method must support sample_weight.",
                     "laleType": "operator",
                 },
-                "favorable_labels": _categorical_fairness_properties[
-                    "favorable_labels"
-                ],
-                "protected_attributes": _categorical_fairness_properties[
-                    "protected_attributes"
-                ],
+                "redact": {
+                    "description": "Whether to redact protected attributes before data preparation (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
             },
         }
     ],
 }
 
 _combined_schemas = {
-    "description": """`Reweighing`_ preprocessor for fairness mitigation.
+    "description": """`Reweighing`_ pre-estimator fairness mitigator.
 
 .. _`Reweighing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.sklearn.preprocessing.Reweighing.html
 """,
@@ -179,6 +136,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ReweighingImpl, _combined_schemas)
 
-Reweighing = lale.operators.make_operator(ReweighingImpl, _combined_schemas)
+Reweighing = lale.operators.make_operator(_ReweighingImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Reweighing)

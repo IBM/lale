@@ -12,32 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.preprocessing
 
 import lale.docstrings
 import lale.operators
-
-
-class MinMaxScalerImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.MinMaxScaler(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-    def partial_fit(self, X, y=None):
-        if not hasattr(self, "_wrapped_model"):
-            self._wrapped_model = sklearn.preprocessing.MinMaxScaler(
-                **self._hyperparams
-            )
-        self._wrapped_model.partial_fit(X)
-        return self
-
 
 _input_schema_fit = {
     "description": "Input data schema for training.",
@@ -91,6 +70,18 @@ _hyperparams_schema = {
                     "laleType": "tuple",
                     "minItems": 2,
                     "maxItems": 2,
+                    "items": [
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": -1,
+                            "maximumForOptimizer": 0,
+                        },
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.001,
+                            "maximumForOptimizer": 1,
+                        },
+                    ],
                     "default": [0, 1],
                 },
                 "copy": {
@@ -126,6 +117,21 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(MinMaxScalerImpl, _combined_schemas)
+MinMaxScaler: lale.operators.PlannedIndividualOp
+MinMaxScaler = lale.operators.make_operator(
+    sklearn.preprocessing.MinMaxScaler, _combined_schemas
+)
 
-MinMaxScaler = lale.operators.make_operator(MinMaxScalerImpl, _combined_schemas)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.preprocessing.MinMaxScaler.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.preprocessing.MinMaxScaler.html
+    MinMaxScaler = MinMaxScaler.customize_schema(
+        clip={
+            "type": "boolean",
+            "description": "Set to True to clip transformed values of held-out data to provided feature range.",
+            "default": False,
+        },
+    )
+
+
+lale.docstrings.set_docstrings(MinMaxScaler)

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+from typing import Any, Optional, Tuple, Type
 
 import numpy as np
 import pandas as pd
@@ -74,34 +74,10 @@ class SeriesWithSchema(pd.Series):
         return SeriesWithSchema
 
 
-def is_list_tensor(obj) -> bool:
-    from typing import Any, Optional, Tuple, Union
-
-    def list_tensor_shape(ls) -> Optional[Tuple[Union[str, int]]]:
-        if isinstance(ls, int) or isinstance(ls, float) or isinstance(ls, str):
-            return (str(type(ls)),)
-        if isinstance(ls, list):
-            sub_shape: Any = "Any"
-            for item in ls:
-                item_result = list_tensor_shape(item)
-                if item_result is None:
-                    return None
-                if sub_shape == "Any":
-                    sub_shape = item_result
-                elif sub_shape != item_result:
-                    return None
-            return (len(ls),) + sub_shape
-        return None
-
-    if isinstance(obj, list):
-        shape = list_tensor_shape(obj)
-        return shape is not None
-    return False
-
-
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    from lale.settings import disable_data_schema_validation
+
+    if disable_data_schema_validation:
         return obj
     if obj is None:
         return None
@@ -132,6 +108,15 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
         else:
             lale.type_checking.validate_is_schema(schema)
             result.json_schema = schema
+    return result
+
+
+def add_schema_adjusting_n_rows(obj, schema):
+    assert isinstance(obj, (np.ndarray, pd.DataFrame, pd.Series)), type(obj)
+    assert schema.get("type", None) == "array", schema
+    n_rows = obj.shape[0]
+    mod_schema = {**schema, "minItems": n_rows, "maxItems": n_rows}
+    result = add_schema(obj, mod_schema)
     return result
 
 
@@ -183,6 +168,39 @@ def shape_and_dtype_to_schema(shape, dtype) -> JSON_TYPE:
     for dim in reversed(shape):
         result = {"type": "array", "minItems": dim, "maxItems": dim, "items": result}
     lale.type_checking.validate_is_schema(result)
+    return result
+
+
+def list_tensor_to_shape_and_dtype(ls) -> Optional[Tuple[Tuple[int, ...], Type]]:
+    if isinstance(ls, (int, float, str)):
+        return ((), type(ls))
+    if isinstance(ls, list):
+        sub_result: Any = "Any"
+        for item in ls:
+            item_result = list_tensor_to_shape_and_dtype(item)
+            if item_result is None:
+                return None
+            if sub_result == "Any":
+                sub_result = item_result
+            elif sub_result != item_result:
+                return None
+        sub_shape, sub_dtype = sub_result
+        return ((len(ls),) + sub_shape, sub_dtype)
+    return None
+
+
+def is_list_tensor(obj) -> bool:
+    if isinstance(obj, list):
+        shape_and_dtype = list_tensor_to_shape_and_dtype(obj)
+        return shape_and_dtype is not None
+    return False
+
+
+def list_tensor_to_schema(ls) -> Optional[JSON_TYPE]:
+    shape_and_dtype = list_tensor_to_shape_and_dtype(ls)
+    if shape_and_dtype is None:
+        return None
+    result = shape_and_dtype_to_schema(*shape_and_dtype)
     return result
 
 
@@ -329,6 +347,7 @@ or with
 
 
 def to_schema(obj) -> JSON_TYPE:
+    result = None
     if obj is None:
         result = {"enum": [None]}
     elif isinstance(obj, np.ndarray):
@@ -345,7 +364,9 @@ def to_schema(obj) -> JSON_TYPE:
         result = liac_arff_to_schema(obj)
     elif lale.type_checking.is_schema(obj):
         result = obj
-    else:
+    elif isinstance(obj, list):
+        result = list_tensor_to_schema(obj)
+    if result is None:
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
     lale.type_checking.validate_is_schema(result)
     return result

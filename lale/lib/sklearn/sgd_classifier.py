@@ -17,80 +17,6 @@ from sklearn.linear_model import SGDClassifier as SKLModel
 import lale.docstrings
 import lale.operators
 
-
-class SGDClassifierImpl:
-    def __init__(
-        self,
-        loss="hinge",
-        penalty="l2",
-        alpha=0.0001,
-        l1_ratio=0.15,
-        fit_intercept=True,
-        max_iter=None,
-        tol=None,
-        shuffle=True,
-        verbose=0,
-        epsilon=0.1,
-        n_jobs=None,
-        random_state=None,
-        learning_rate="optimal",
-        eta0=0.0,
-        power_t=0.5,
-        early_stopping=False,
-        validation_fraction=0.1,
-        n_iter_no_change=5,
-        class_weight="balanced",
-        warm_start=False,
-        average=False,
-    ):
-        self._hyperparams = {
-            "loss": loss,
-            "penalty": penalty,
-            "alpha": alpha,
-            "l1_ratio": l1_ratio,
-            "fit_intercept": fit_intercept,
-            "max_iter": max_iter,
-            "tol": tol,
-            "shuffle": shuffle,
-            "verbose": verbose,
-            "epsilon": epsilon,
-            "n_jobs": n_jobs,
-            "random_state": random_state,
-            "learning_rate": learning_rate,
-            "eta0": eta0,
-            "power_t": power_t,
-            "early_stopping": early_stopping,
-            "validation_fraction": validation_fraction,
-            "n_iter_no_change": n_iter_no_change,
-            "class_weight": class_weight,
-            "warm_start": warm_start,
-            "average": average,
-        }
-        self._wrapped_model = SKLModel(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-    def partial_fit(self, X, y=None, classes=None):
-        if not hasattr(self, "_wrapped_model"):
-            self._wrapped_model = SKLModel(**self._hyperparams)
-        self._wrapped_model.partial_fit(X, y, classes=classes)
-        return self
-
-
 _hyperparams_schema = {
     "description": "inherited docstring for SGDClassifier Linear classifiers (SVM, logistic regression, a.o.) with SGD training.",
     "allOf": [
@@ -257,11 +183,15 @@ _hyperparams_schema = {
                 },
                 "validation_fraction": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 1.0,
                     "default": 0.1,
                     "description": "The proportion of training data to set aside as validation set for",
                 },
                 "n_iter_no_change": {
                     "type": "integer",
+                    "minimumForOptimizer": 5,
+                    "maximumForOptimizer": 10,
                     "default": 5,
                     "description": "Number of iterations with no improvement to wait before early stopping.",
                 },
@@ -276,9 +206,12 @@ _hyperparams_schema = {
                     "description": "When set to True, reuse the solution of the previous call to fit as",
                 },
                 "average": {
-                    "anyOf": [{"type": "boolean"}, {"type": "integer"}],
+                    "anyOf": [
+                        {"type": "boolean"},
+                        {"type": "integer", "forOptimizer": False},
+                    ],
                     "default": False,
-                    "description": "When set to True, computes the averaged SGD weights and stores the",
+                    "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute.",
                 },
             },
         },
@@ -429,6 +362,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(SGDClassifierImpl, _combined_schemas)
 
-SGDClassifier = lale.operators.make_operator(SGDClassifierImpl, _combined_schemas)
+SGDClassifier = lale.operators.make_operator(SKLModel, _combined_schemas)
+
+lale.docstrings.set_docstrings(SGDClassifier)

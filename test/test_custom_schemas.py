@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import unittest
+from test import EnableSchemaValidation
 from test.mock_module import UnknownOp
 from typing import Any
 
+import numpy as np
 from lightgbm import LGBMClassifier as baz
 from sklearn.decomposition import PCA as foo
-from sklearn.linear_model.least_angle import Lars as foobar
+from sklearn.linear_model import Lars as foobar
 from xgboost import XGBClassifier as bar
 
 import lale
@@ -39,34 +41,39 @@ class TestCustomSchema(unittest.TestCase):
         self.maxDiff = None
 
     def test_override_schemas(self):
-        init_schemas = self.sk_pca._schemas
-        pca_schemas = self.ll_pca._schemas
-        foo = self.sk_pca.customize_schema(schemas=schemas.JSON(pca_schemas))
-        self.assertEqual(foo._schemas, pca_schemas)
-        self.assertEqual(self.sk_pca._schemas, init_schemas)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, schemas={})
+        with EnableSchemaValidation():
+            init_schemas = self.sk_pca._schemas
+            pca_schemas = self.ll_pca._schemas
+            foo = self.sk_pca.customize_schema(schemas=schemas.JSON(pca_schemas))
+            self.assertEqual(foo._schemas, pca_schemas)
+            self.assertEqual(self.sk_pca._schemas, init_schemas)
+            self.assertRaises(Exception, self.sk_pca.customize_schema, schemas={})
 
     def test_override_input(self):
-        init_input_schema = self.sk_pca.get_schema("input_fit")
-        pca_input = self.ll_pca.get_schema("input_fit")
-        foo = self.sk_pca.customize_schema(input_fit=schemas.JSON(pca_input))
-        self.assertEqual(foo.get_schema("input_fit"), pca_input)
-        lale.type_checking.validate_is_schema(foo._schemas)
-        self.assertEqual(self.sk_pca.get_schema("input_fit"), init_input_schema)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, input_fit={})
-        self.assertRaises(Exception, self.sk_pca.customize_schema, input_foo=pca_input)
+        with EnableSchemaValidation():
+            init_input_schema = self.sk_pca.get_schema("input_fit")
+            pca_input = self.ll_pca.get_schema("input_fit")
+            foo = self.sk_pca.customize_schema(input_fit=schemas.JSON(pca_input))
+            self.assertEqual(foo.get_schema("input_fit"), pca_input)
+            lale.type_checking.validate_is_schema(foo._schemas)
+            self.assertEqual(self.sk_pca.get_schema("input_fit"), init_input_schema)
+            self.assertRaises(Exception, self.sk_pca.customize_schema, input_fit=42)
+            _ = self.sk_pca.customize_schema(input_foo=pca_input)
 
     def test_override_output(self):
-        init_output_schema = self.sk_pca.get_schema("output_transform")
-        pca_output = self.ll_pca.get_schema("output_transform")
-        foo = self.sk_pca.customize_schema(output_transform=schemas.JSON(pca_output))
-        self.assertEqual(foo.get_schema("output_transform"), pca_output)
-        lale.type_checking.validate_is_schema(foo._schemas)
-        self.assertEqual(self.sk_pca.get_schema("output_transform"), init_output_schema)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, output={})
-        self.assertRaises(
-            Exception, self.sk_pca.customize_schema, output_foo=pca_output
-        )
+        with EnableSchemaValidation():
+            init_output_schema = self.sk_pca.get_schema("output_transform")
+            pca_output = self.ll_pca.get_schema("output_transform")
+            foo = self.sk_pca.customize_schema(
+                output_transform=schemas.JSON(pca_output)
+            )
+            self.assertEqual(foo.get_schema("output_transform"), pca_output)
+            lale.type_checking.validate_is_schema(foo._schemas)
+            self.assertEqual(
+                self.sk_pca.get_schema("output_transform"), init_output_schema
+            )
+            self.assertRaises(Exception, self.sk_pca.customize_schema, output=42)
+            _ = self.sk_pca.customize_schema(output_foo=pca_output)
 
     def test_override_output2(self):
         init_output_schema = self.sk_pca.get_schema("output_transform")
@@ -91,34 +98,37 @@ class TestCustomSchema(unittest.TestCase):
         self.assertEqual(self.sk_pca.get_schema("output_transform"), init_output_schema)
 
     def test_override_bool_param_sk(self):
-        init = self.sk_pca.hyperparam_schema("whiten")
-        expected = {"default": True, "type": "boolean", "description": "override"}
-        foo = self.sk_pca.customize_schema(
-            whiten=schemas.Bool(default=True, desc="override")
-        )
-        self.assertEqual(foo.hyperparam_schema("whiten"), expected)
-        lale.type_checking.validate_is_schema(foo._schemas)
-        self.assertEqual(self.sk_pca.hyperparam_schema("whiten"), init)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, whitenX={})
+        with EnableSchemaValidation():
+            init = self.sk_pca.hyperparam_schema("whiten")
+            expected = {"default": True, "type": "boolean", "description": "override"}
+            foo = self.sk_pca.customize_schema(
+                whiten=schemas.Bool(default=True, desc="override")
+            )
+            self.assertEqual(foo.hyperparam_schema("whiten"), expected)
+            lale.type_checking.validate_is_schema(foo._schemas)
+            self.assertEqual(self.sk_pca.hyperparam_schema("whiten"), init)
+            self.assertRaises(Exception, self.sk_pca.customize_schema, whitenX=42)
 
     def test_override_bool_param_ll(self):
-        init = self.ll_pca.hyperparam_schema("whiten")
-        expected = {"default": True, "type": "boolean"}
-        foo = self.ll_pca.customize_schema(whiten=schemas.Bool(default=True))
-        self.assertEqual(foo.hyperparam_schema("whiten"), expected)
-        lale.type_checking.validate_is_schema(foo._schemas)
-        self.assertEqual(self.ll_pca.hyperparam_schema("whiten"), init)
-        self.assertRaises(Exception, self.ll_pca.customize_schema, whitenX={})
+        with EnableSchemaValidation():
+            init = self.ll_pca.hyperparam_schema("whiten")
+            expected = {"default": True, "type": "boolean"}
+            foo = self.ll_pca.customize_schema(whiten=schemas.Bool(default=True))
+            self.assertEqual(foo.hyperparam_schema("whiten"), expected)
+            lale.type_checking.validate_is_schema(foo._schemas)
+            self.assertEqual(self.ll_pca.hyperparam_schema("whiten"), init)
+            self.assertRaises(Exception, self.ll_pca.customize_schema, whitenX=42)
 
     def test_override_enum_param(self):
-        init = self.ll_pca.hyperparam_schema("svd_solver")
-        expected = {"default": "full", "enum": ["auto", "full"]}
-        foo = self.ll_pca.customize_schema(
-            svd_solver=schemas.Enum(default="full", values=["auto", "full"])
-        )
-        self.assertEqual(foo.hyperparam_schema("svd_solver"), expected)
-        lale.type_checking.validate_is_schema(foo._schemas)
-        self.assertEqual(self.ll_pca.hyperparam_schema("svd_solver"), init)
+        with EnableSchemaValidation():
+            init = self.ll_pca.hyperparam_schema("svd_solver")
+            expected = {"default": "full", "enum": ["auto", "full"]}
+            foo = self.ll_pca.customize_schema(
+                svd_solver=schemas.Enum(default="full", values=["auto", "full"])
+            )
+            self.assertEqual(foo.hyperparam_schema("svd_solver"), expected)
+            lale.type_checking.validate_is_schema(foo._schemas)
+            self.assertEqual(self.ll_pca.hyperparam_schema("svd_solver"), init)
 
     def test_override_float_param(self):
         init = self.ll_pca.hyperparam_schema("tol")
@@ -294,17 +304,18 @@ class TestCustomSchema(unittest.TestCase):
         )
 
     def test_override_tags(self):
-        init = self.ll_pca._schemas["tags"]
-        tags = {
-            "pre": ["~categoricals"],
-            "op": ["estimator", "classifier", "interpretable"],
-            "post": ["probabilities"],
-        }
-        foo = self.ll_pca.customize_schema(tags=tags)
-        self.assertEqual(foo._schemas["tags"], tags)
-        lale.type_checking.validate_is_schema(foo._schemas)
-        self.assertEqual(self.ll_pca._schemas["tags"], init)
-        self.assertRaises(Exception, self.sk_pca.customize_schema, tags=42)
+        with EnableSchemaValidation():
+            init = self.ll_pca._schemas["tags"]
+            tags = {
+                "pre": ["~categoricals"],
+                "op": ["estimator", "classifier", "interpretable"],
+                "post": ["probabilities"],
+            }
+            foo = self.ll_pca.customize_schema(tags=tags)
+            self.assertEqual(foo._schemas["tags"], tags)
+            lale.type_checking.validate_is_schema(foo._schemas)
+            self.assertEqual(self.ll_pca._schemas["tags"], init)
+            self.assertRaises(Exception, self.sk_pca.customize_schema, tags=42)
 
     def test_wrap_imported_operators(self):
         old_globals = {**globals()}
@@ -369,7 +380,6 @@ class TestWrapUnknownOps(unittest.TestCase):
         from sklearn.base import clone
 
         from lale.operators import TrainableIndividualOp, make_operator
-        from lale.sklearn_compat import make_sklearn_compat
 
         self.assertFalse(isinstance(UnknownOp, TrainableIndividualOp))
         instance = UnknownOp(n_neighbors=3)
@@ -379,10 +389,10 @@ class TestWrapUnknownOps(unittest.TestCase):
         assert isinstance(
             wrapped, TrainableIndividualOp
         )  # help type checkers that don't know about assertTrue
-        self.assertEqual(wrapped.hyperparams(), {"n_neighbors": 3})
-        cloned = clone(make_sklearn_compat(wrapped)).to_lale()
+        self.assertEqual(wrapped.reduced_hyperparams(), {"n_neighbors": 3})
+        cloned = clone(wrapped)
         self.assertTrue(isinstance(cloned, TrainableIndividualOp))
-        self.assertEqual(cloned.hyperparams(), {"n_neighbors": 3})
+        self.assertEqual(cloned.reduced_hyperparams(), {"n_neighbors": 3})
 
 
 class TestFreeze(unittest.TestCase):
@@ -415,20 +425,21 @@ class TestFreeze(unittest.TestCase):
     def test_individual_op_freeze_trained(self):
         from lale.lib.sklearn import KNeighborsClassifier
 
-        trainable = KNeighborsClassifier(n_neighbors=1)
-        X = [[0.0], [1.0], [2.0]]
-        y_old = [0.0, 0.0, 1.0]
-        y_new = [1.0, 0.0, 0.0]
-        liquid_old = trainable.fit(X, y_old)
-        self.assertEqual(list(liquid_old.predict(X)), list(y_old))
-        liquid_new = liquid_old.fit(X, y_new)
-        self.assertEqual(list(liquid_new.predict(X)), list(y_new))
-        frozen_old = trainable.fit(X, y_old).freeze_trained()
-        self.assertFalse(liquid_old.is_frozen_trained())
-        self.assertTrue(frozen_old.is_frozen_trained())
-        self.assertEqual(list(frozen_old.predict(X)), list(y_old))
-        frozen_new = frozen_old.fit(X, y_new)
-        self.assertEqual(list(frozen_new.predict(X)), list(y_old))
+        with EnableSchemaValidation():
+            trainable = KNeighborsClassifier(n_neighbors=1)
+            X = np.array([[0.0], [1.0], [2.0]])
+            y_old = np.array([0.0, 0.0, 1.0])
+            y_new = np.array([1.0, 0.0, 0.0])
+            liquid_old = trainable.fit(X, y_old)
+            self.assertEqual(list(liquid_old.predict(X)), list(y_old))
+            liquid_new = liquid_old.fit(X, y_new)
+            self.assertEqual(list(liquid_new.predict(X)), list(y_new))
+            frozen_old = trainable.fit(X, y_old).freeze_trained()
+            self.assertFalse(liquid_old.is_frozen_trained())
+            self.assertTrue(frozen_old.is_frozen_trained())
+            self.assertEqual(list(frozen_old.predict(X)), list(y_old))
+            frozen_new = frozen_old.fit(X, y_new)
+            self.assertEqual(list(frozen_new.predict(X)), list(y_old))
 
     def test_pipeline_freeze_trained(self):
         from lale.lib.sklearn import LogisticRegression, MinMaxScaler
@@ -445,18 +456,19 @@ class TestFreeze(unittest.TestCase):
         from lale.lib.sklearn import KNeighborsClassifier
         from lale.operators import TrainedIndividualOp
 
-        trainable = KNeighborsClassifier(n_neighbors=1)
-        X = [[0.0], [1.0], [2.0]]
-        y_old = [0.0, 0.0, 1.0]
-        liquid = trainable.fit(X, y_old)
-        self.assertIsInstance(liquid, TrainedIndividualOp)
-        self.assertFalse(liquid.is_frozen_trainable())
-        self.assertIn("algorithm", liquid.free_hyperparams())
-        frozen = liquid.freeze_trainable()
-        self.assertIsInstance(frozen, TrainedIndividualOp)
-        self.assertTrue(frozen.is_frozen_trainable())
-        self.assertFalse(frozen.is_frozen_trained())
-        self.assertEqual(len(frozen.free_hyperparams()), 0)
+        with EnableSchemaValidation():
+            trainable = KNeighborsClassifier(n_neighbors=1)
+            X = np.array([[0.0], [1.0], [2.0]])
+            y_old = np.array([0.0, 0.0, 1.0])
+            liquid = trainable.fit(X, y_old)
+            self.assertIsInstance(liquid, TrainedIndividualOp)
+            self.assertFalse(liquid.is_frozen_trainable())
+            self.assertIn("algorithm", liquid.free_hyperparams())
+            frozen = liquid.freeze_trainable()
+            self.assertIsInstance(frozen, TrainedIndividualOp)
+            self.assertTrue(frozen.is_frozen_trainable())
+            self.assertFalse(frozen.is_frozen_trained())
+            self.assertEqual(len(frozen.free_hyperparams()), 0)
 
     def test_trained_pipeline_freeze_trainable(self):
         from lale.lib.sklearn import LogisticRegression, MinMaxScaler

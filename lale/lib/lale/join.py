@@ -16,7 +16,7 @@ import lale.docstrings
 import lale.operators
 
 
-class JoinImpl:
+class _JoinImpl:
     def __init__(self, pred=None, join_limit=None, sliding_window_length=None):
         self._hyperparams = {
             "pred": pred,
@@ -93,6 +93,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(JoinImpl, _combined_schemas)
 
-Join = lale.operators.make_operator(JoinImpl, _combined_schemas)
+Join = lale.operators.make_operator(_JoinImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Join)

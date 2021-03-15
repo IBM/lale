@@ -17,23 +17,6 @@ import sklearn.naive_bayes
 import lale.docstrings
 import lale.operators
 
-
-class GaussianNBImpl:
-    def __init__(self, priors=None, var_smoothing=1e-09):
-        self._hyperparams = {"priors": priors, "var_smoothing": var_smoothing}
-        self._wrapped_model = sklearn.naive_bayes.GaussianNB(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-
 _hyperparams_schema = {
     "description": "Gaussian Naive Bayes (GaussianNB)",
     "allOf": [
@@ -53,8 +36,10 @@ _hyperparams_schema = {
                 },
                 "var_smoothing": {
                     "type": "number",
+                    "minimumForOptimizer": 0.0,
+                    "maximumForOptimizer": 1.0,
                     "default": 1e-09,
-                    "description": "Portion of the largest variance of all features that is added to",
+                    "description": "Portion of the largest variance of all features that is added to variances for calculation stability.",
                 },
             },
         }
@@ -142,6 +127,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(GaussianNBImpl, _combined_schemas)
 
-GaussianNB = lale.operators.make_operator(GaussianNBImpl, _combined_schemas)
+GaussianNB = lale.operators.make_operator(
+    sklearn.naive_bayes.GaussianNB, _combined_schemas
+)
+
+lale.docstrings.set_docstrings(GaussianNB)

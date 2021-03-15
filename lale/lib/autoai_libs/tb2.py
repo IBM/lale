@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class TB2Impl:
+class _TB2Impl:
     def __init__(
         self,
         tans_class,
@@ -173,6 +173,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TB2Impl, _combined_schemas)
 
-TB2 = lale.operators.make_operator(TB2Impl, _combined_schemas)
+TB2 = lale.operators.make_operator(_TB2Impl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TB2)

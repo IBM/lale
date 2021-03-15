@@ -19,7 +19,7 @@ import lale.docstrings
 import lale.operators
 
 
-class CatEncoderImpl:
+class _CatEncoderImpl:
     def __init__(
         self,
         encoding,
@@ -228,6 +228,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(CatEncoderImpl, _combined_schemas)
 
-CatEncoder = lale.operators.make_operator(CatEncoderImpl, _combined_schemas)
+CatEncoder = lale.operators.make_operator(_CatEncoderImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(CatEncoder)

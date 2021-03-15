@@ -14,6 +14,7 @@
 
 import unittest
 import warnings
+from test import EnableSchemaValidation
 
 import jsonschema
 import numpy as np
@@ -908,6 +909,30 @@ class TestHigherOrderOperators(unittest.TestCase):
         )
 
 
+class TestSelectKBestTransformer(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_hyperopt(self):
+        from lale.lib.sklearn import SelectKBest
+
+        planned = SelectKBest >> LogisticRegression
+        trained = planned.auto_configure(
+            self.X_train,
+            self.y_train,
+            cv=3,
+            optimizer=Hyperopt,
+            max_evals=3,
+            verbose=True,
+        )
+        _ = trained.predict(self.X_test)
+
+
 class TestTopKVotingClassifier(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris
@@ -954,7 +979,7 @@ class TestTopKVotingClassifier(unittest.TestCase):
         )
         trained = ensemble.fit(self.X_train, self.y_train)
         final_ensemble = trained._impl._best_estimator
-        self.assertLessEqual(len(final_ensemble._impl._wrapped_model.estimators), 3)
+        self.assertLessEqual(len(final_ensemble._impl_instance().estimators), 3)
 
     def test_fit_default_args(self):
         from lale.lib.lale import TopKVotingClassifier
@@ -976,8 +1001,9 @@ class TestKNeighborsClassifier(unittest.TestCase):
 
     def test_schema_validation(self):
         trainable_16 = KNeighborsClassifier(n_neighbors=16)
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = trainable_16.fit(self.train_X, self.train_y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = trainable_16.fit(self.train_X, self.train_y)
         trainable_15 = KNeighborsClassifier(n_neighbors=15)
         trained_15 = trainable_15.fit(self.train_X, self.train_y)
         _ = trained_15.predict(self.test_X)
@@ -1024,8 +1050,9 @@ class TestKNeighborsRegressor(unittest.TestCase):
 
     def test_schema_validation(self):
         trainable_16 = KNeighborsRegressor(n_neighbors=16)
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = trainable_16.fit(self.train_X, self.train_y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = trainable_16.fit(self.train_X, self.train_y)
         trainable_15 = KNeighborsRegressor(n_neighbors=15)
         trained_15 = trainable_15.fit(self.train_X, self.train_y)
         _ = trained_15.predict(self.test_X)
@@ -1078,8 +1105,9 @@ class TestStandardScaler(unittest.TestCase):
         trainable_okay = StandardScaler(with_mean=False) >> LogisticRegression()
         _ = trainable_okay.fit(self.train_X, self.train_y)
         trainable_bad = StandardScaler(with_mean=True) >> LogisticRegression()
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = trainable_bad.fit(self.train_X, self.train_y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = trainable_bad.fit(self.train_X, self.train_y)
 
     def test_hyperopt(self):
         planned = StandardScaler >> LogisticRegression().freeze_trainable()

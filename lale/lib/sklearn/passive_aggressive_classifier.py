@@ -17,29 +17,7 @@ import sklearn.linear_model
 
 import lale.docstrings
 import lale.operators
-
-# old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
-# new: https://scikit-learn.org/0.23/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
 from lale.schemas import Int
-
-
-class PassiveAggressiveClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.linear_model.PassiveAggressiveClassifier(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
 
 _hyperparams_schema = {
     "description": "Passive Aggressive Classifier",
@@ -115,8 +93,10 @@ _hyperparams_schema = {
                 },
                 "validation_fraction": {
                     "type": "number",
+                    "minimum": 0,
+                    "maximum": 1,
                     "default": 0.1,
-                    "description": "The proportion of training data to set aside as validation set for",
+                    "description": "The proportion of training data to set aside as validation set for early stopping.",
                 },
                 "n_iter_no_change": {
                     "type": "integer",
@@ -171,10 +151,13 @@ _hyperparams_schema = {
                         {"type": "integer", "forOptimizer": False},
                     ],
                     "default": False,
-                    "description": "When set to True, computes the averaged SGD weights and stores the",
+                    "description": "When set to True, computes the averaged SGD weights and stores the result in the ``coef_`` attribute.",
                 },
                 "n_iter": {
-                    "anyOf": [{"type": "integer", "minimum": 1}, {"enum": [None]}],
+                    "anyOf": [
+                        {"type": "integer", "minimum": 1, "maximumForOptimizer": 10},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "The number of passes over the training data (aka epochs).",
                 },
@@ -285,11 +268,13 @@ _combined_schemas = {
 
 PassiveAggressiveClassifier: lale.operators.PlannedIndividualOp
 PassiveAggressiveClassifier = lale.operators.make_operator(
-    PassiveAggressiveClassifierImpl, _combined_schemas
+    sklearn.linear_model.PassiveAggressiveClassifier, _combined_schemas
 )
 
 
 if sklearn.__version__ >= "0.21":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
         max_iter=Int(
             minForOptimizer=5,
@@ -301,10 +286,10 @@ if sklearn.__version__ >= "0.21":
     )
 
 if sklearn.__version__ >= "0.22":
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
         n_iter=None
     )
 
-lale.docstrings.set_docstrings(
-    PassiveAggressiveClassifierImpl, PassiveAggressiveClassifier._schemas
-)
+lale.docstrings.set_docstrings(PassiveAggressiveClassifier)

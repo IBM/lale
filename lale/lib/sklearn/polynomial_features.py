@@ -18,22 +18,6 @@ import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
-
-class PolynomialFeaturesImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.preprocessing.PolynomialFeatures(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Generate polynomial and interaction features.",
     "allOf": [
@@ -48,17 +32,17 @@ _hyperparams_schema = {
                     "minimumForOptimizer": 2,
                     "maximumForOptimizer": 3,
                     "default": 2,
-                    "description": "The degree of the polynomial features. Default = 2.",
+                    "description": "The degree of the polynomial features.",
                 },
                 "interaction_only": {
                     "type": "boolean",
                     "default": False,
-                    "description": "If true, only interaction features are produced: features that are",
+                    "description": "If true, only interaction features are produced: features that are products of at most degree distinct input features (so not x[1] ** 2, x[0] * x[2] ** 3, etc.).",
                 },
                 "include_bias": {
                     "type": "boolean",
                     "default": True,
-                    "description": "If True (default), then include a bias column, the feature in which",
+                    "description": "If True (default), then include a bias column, the feature in which all polynomial powers are zero (i.e. a column of ones - acts as an intercept term in a linear model).",
                 },
             },
         }
@@ -116,7 +100,7 @@ _combined_schemas = {
 
 PolynomialFeatures: lale.operators.PlannedIndividualOp
 PolynomialFeatures = lale.operators.make_operator(
-    PolynomialFeaturesImpl, _combined_schemas
+    sklearn.preprocessing.PolynomialFeatures, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
@@ -132,4 +116,5 @@ if sklearn.__version__ >= "0.21":
         )
     )
 
-lale.docstrings.set_docstrings(PolynomialFeaturesImpl, PolynomialFeatures._schemas)
+
+lale.docstrings.set_docstrings(PolynomialFeatures)

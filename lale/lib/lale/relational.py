@@ -17,7 +17,7 @@ import lale.helpers
 import lale.operators
 
 
-class RelationalImpl:
+class _RelationalImpl:
     def __init__(self, operator=None):
         self.operator = operator
 
@@ -125,6 +125,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(RelationalImpl, _combined_schemas)
 
-Relational = lale.operators.make_operator(RelationalImpl, _combined_schemas)
+Relational = lale.operators.make_operator(_RelationalImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Relational)

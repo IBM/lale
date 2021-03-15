@@ -20,6 +20,7 @@ from hyperopt import hp
 from hyperopt.pyll import scope
 
 from lale import helpers
+from lale.helpers import make_indexed_name
 from lale.operators import Operator
 from lale.search.PGO import FrequencyDistribution
 from lale.search.search_space import (
@@ -35,7 +36,6 @@ from lale.search.search_space import (
     SearchSpaceProduct,
     SearchSpaceSum,
 )
-from lale.sklearn_compat import make_indexed_name
 from lale.util.Visitor import Visitor, accept
 
 

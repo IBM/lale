@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
 
-class HyperoptImpl:
+class _HyperoptImpl:
     def __init__(
         self,
         estimator=None,
@@ -651,6 +651,7 @@ Other scoring metrics:
     },
 }
 
-lale.docstrings.set_docstrings(HyperoptImpl, _combined_schemas)
 
-Hyperopt = lale.operators.make_operator(HyperoptImpl, _combined_schemas)
+Hyperopt = lale.operators.make_operator(_HyperoptImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Hyperopt)

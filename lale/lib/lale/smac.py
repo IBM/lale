@@ -50,7 +50,7 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
-class SMACImpl:
+class _SMACImpl:
     def __init__(
         self,
         estimator=None,
@@ -217,7 +217,8 @@ or with
         if result is None or astype == "lale":
             return result
         assert astype == "sklearn", astype
-        return lale.sklearn_compat.make_sklearn_compat(result)
+        # TODO: should this try and return an actual sklearn pipeline?
+        return result
 
 
 _hyperparams_schema = {
@@ -439,6 +440,7 @@ Other scoring metrics:
     },
 }
 
-lale.docstrings.set_docstrings(SMACImpl, _combined_schemas)
 
-SMAC = lale.operators.make_operator(SMACImpl, _combined_schemas)
+SMAC = lale.operators.make_operator(_SMACImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(SMAC)

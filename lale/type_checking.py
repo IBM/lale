@@ -32,7 +32,6 @@ as the right side succeed. This is specified using ``{'laleType': 'Any'}``.
 
 import functools
 import inspect
-import os
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, overload
 
 import jsonschema
@@ -61,11 +60,9 @@ def _validate_lale_type(validator, laleType, instance, schema):
         import sklearn.base
 
         import lale.operators
-        import lale.sklearn_compat
 
         if not (
             isinstance(instance, lale.operators.Operator)
-            or isinstance(instance, lale.sklearn_compat.SKlearnCompatWrapper)
             or isinstance(instance, sklearn.base.BaseEstimator)
             or (
                 inspect.isclass(instance)
@@ -141,8 +138,9 @@ def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
     jsonschema.ValidationError
         The value was invalid for the schema.
     """
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    from lale.settings import disable_hyperparams_schema_validation
+
+    if disable_hyperparams_schema_validation:
         return True  # if schema validation is disabled, always return as valid
     return always_validate_schema(value, schema, subsample_array=subsample_array)
 
@@ -155,7 +153,12 @@ def _json_meta_schema() -> Dict[str, Any]:
 
 
 def validate_is_schema(value: Dict[str, Any]):
-    # TODO: move this function to lale.type_checking
+    # only checking hyperparams schema validation flag because it is likely to be true and this call is cheap.
+    from lale.settings import disable_hyperparams_schema_validation
+
+    if disable_hyperparams_schema_validation:
+        return True
+
     if "$schema" in value:
         assert value["$schema"] == _JSON_META_SCHEMA_URL
     jsonschema.validate(value, _json_meta_schema())
@@ -271,8 +274,9 @@ def validate_schema_or_subschema(lhs: Any, super_schema: JSON_TYPE):
     SubschemaError
         The lhs was or had a schema that was not a subschema of super_schema.
     """
-    disable_schema = os.environ.get("LALE_DISABLE_SCHEMA_VALIDATION", None)
-    if disable_schema is not None and disable_schema.lower() == "true":
+    from lale.settings import disable_data_schema_validation
+
+    if disable_data_schema_validation:
         return True  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
     if is_schema(lhs):
@@ -335,12 +339,13 @@ def get_hyperparam_names(op: "lale.operators.IndividualOp") -> List[str]:
     List[str]
         List of hyperparameter names.
     """
-    if op._impl.__module__.startswith("lale"):
+    if op.impl_class.__module__.startswith("lale"):
         hp_schema = op.hyperparam_schema()
         params = next(iter(hp_schema.get("allOf", []))).get("properties", {})
         return list(params.keys())
     else:
-        return inspect.getargspec(op._impl_class().__init__).args
+        c: Any = op.impl_class
+        return inspect.getargspec(c.__init__).args
 
 
 def validate_method(op: "lale.operators.IndividualOp", schema_name: str):

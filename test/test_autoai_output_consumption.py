@@ -3,9 +3,9 @@ import unittest
 import urllib.request
 from typing import Optional
 
+import joblib
 import pandas as pd
 import sklearn
-from sklearn.externals import joblib
 from sklearn.linear_model import LogisticRegression as LR
 from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.tree import DecisionTreeClassifier as Tree
@@ -15,13 +15,19 @@ import lale.operators
 from lale.helpers import println_pos
 from lale.lib.autoai_libs import wrap_pipeline_segments
 
-assert sklearn.__version__ == "0.20.3", "This test is for scikit-learn 0.20.3."
+assert sklearn.__version__ == "0.23.1", "This test is for scikit-learn 0.23.1."
 
 
 class TestAutoAIOutputConsumption(unittest.TestCase):
 
-    pickled_model_path = "credit_risk.pickle"
-    pickled_model_url = "https://github.com/pmservice/wml-sample-models/raw/master/autoai/credit-risk-prediction/model/credit_risk.pickle"
+    pickled_model_path = os.path.join(
+        os.path.dirname(__file__),
+        "..",
+        "lale",
+        "datasets",
+        "autoai",
+        "credit_risk.pickle",
+    )
     train_csv_path = "german_credit_data_biased_training.csv"
     train_csv_url = "https://raw.githubusercontent.com/pmservice/wml-sample-models/master/autoai/credit-risk-prediction/data/german_credit_data_biased_training.csv"
     training_df = None
@@ -33,7 +39,6 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
     @classmethod
     def setUp(cls) -> None:
-        urllib.request.urlretrieve(cls.pickled_model_url, cls.pickled_model_path)
         urllib.request.urlretrieve(cls.train_csv_url, cls.train_csv_path)
         TestAutoAIOutputConsumption.training_df = pd.read_csv(
             TestAutoAIOutputConsumption.train_csv_path
@@ -41,9 +46,8 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
     def test_01_load_pickled_model(self):
         try:
-            TestAutoAIOutputConsumption.model = joblib.load(
-                TestAutoAIOutputConsumption.pickled_model_path
-            )
+            old_model = joblib.load(TestAutoAIOutputConsumption.pickled_model_path)
+            TestAutoAIOutputConsumption.model = old_model
             println_pos(f"type(model) {type(TestAutoAIOutputConsumption.model)}")
             println_pos(f"model {str(TestAutoAIOutputConsumption.model)}")
         except Exception as e:

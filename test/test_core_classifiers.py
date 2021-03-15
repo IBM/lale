@@ -14,6 +14,7 @@
 
 import unittest
 import warnings
+from test import EnableSchemaValidation
 
 import jsonschema
 from sklearn.datasets import load_iris
@@ -68,10 +69,22 @@ def create_function_test_classifier(clf_name):
         trained = clf.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
+        from lale.lib.sklearn.gradient_boosting_classifier import (
+            GradientBoostingClassifier,
+        )
+
+        if isinstance(clf, GradientBoostingClassifier):  # type: ignore
+            # because exponential loss does not work with iris dataset as it is not binary classification
+            import lale.schemas as schemas
+
+            clf = clf.customize_schema(
+                loss=schemas.Enum(default="deviance", values=["deviance"])
+            )
+
         # test_with_hyperopt
         from lale.lib.lale import Hyperopt
 
-        hyperopt = Hyperopt(estimator=clf, max_evals=1)
+        hyperopt = Hyperopt(estimator=clf, max_evals=1, verbose=True)
         trained = hyperopt.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
@@ -86,17 +99,6 @@ def create_function_test_classifier(clf_name):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            from lale.lib.sklearn.gradient_boosting_classifier import (
-                GradientBoostingClassifierImpl,
-            )
-
-            if clf._impl_class() == GradientBoostingClassifierImpl:
-                # because exponential loss does not work with iris dataset as it is not binary classification
-                import lale.schemas as schemas
-
-                clf = clf.customize_schema(
-                    loss=schemas.Enum(default="deviance", values=["deviance"])
-                )
             grid_search = lale.lib.lale.GridSearchCV(
                 estimator=clf,
                 lale_num_samples=1,
@@ -444,20 +446,25 @@ class TestLogisticRegression(unittest.TestCase):
         )
 
     def test_hyperparam_exclusive_min(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
 
     def test_hyperparam_penalty_solver_dependence(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(
-                LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(
+                    LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
+                )
 
     def test_hyperparam_dual_penalty_solver_dependence(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = LogisticRegression(
-                LogisticRegression.penalty.l2, LogisticRegression.solver.sag, dual=True
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = LogisticRegression(
+                    LogisticRegression.penalty.l2,
+                    LogisticRegression.solver.sag,
+                    dual=True,
+                )
 
     def test_sample_weight(self):
         import numpy as np

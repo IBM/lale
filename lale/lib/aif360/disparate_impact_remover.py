@@ -18,81 +18,108 @@ import numpy as np
 import pandas as pd
 
 import lale.docstrings
+import lale.lib.lale
 import lale.operators
 
+from .protected_attributes_encoder import ProtectedAttributesEncoder
+from .redacting import Redacting
+from .util import (
+    _categorical_fairness_properties,
+    _categorical_input_transform_schema,
+    _categorical_supervised_input_fit_schema,
+    _numeric_output_transform_schema,
+)
 
-class DisparateImpactRemoverImpl:
-    def __init__(self, repair_level=1.0, sensitive_attribute=None):
-        self._hyperparams = {
-            "repair_level": repair_level,
-            "sensitive_attribute": sensitive_attribute,
-        }
+
+class _DisparateImpactRemoverImpl:
+    def __init__(
+        self,
+        favorable_labels,
+        protected_attributes,
+        redact=True,
+        preparation=None,
+        repair_level=1.0,
+    ):
+        self.favorable_labels = favorable_labels
+        self.protected_attributes = protected_attributes
+        self.redact = redact
+        if preparation is None:
+            preparation = lale.lib.lale.NoOp
+        self.preparation = preparation
+        self.repair_level = repair_level
+
+    def _prep_and_encode(self, X, y=None):
+        prepared_X = self.redact_and_prep.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        assert isinstance(encoded_X, pd.DataFrame), type(encoded_X)
+        assert encoded_X.shape[1] == 1, encoded_X.columns
+        if isinstance(prepared_X, pd.DataFrame):
+            combined_attribute_names = list(prepared_X.columns) + [
+                name for name in encoded_X.columns if name not in prepared_X.columns
+            ]
+            combined_columns = [
+                encoded_X[name] if name in encoded_X else prepared_X[name]
+                for name in combined_attribute_names
+            ]
+            combined_X = pd.concat(combined_columns, axis=1)
+            sensitive_attribute = list(encoded_X.columns)[0]
+        else:
+            if isinstance(prepared_X, pd.DataFrame):
+                prepared_X = prepared_X.to_numpy()
+            assert isinstance(prepared_X, np.ndarray)
+            encoded_X = encoded_X.to_numpy()
+            assert isinstance(encoded_X, np.ndarray)
+            combined_X = np.concatenate([prepared_X, encoded_X], axis=1)
+            sensitive_attribute = combined_X.shape[1] - 1
+        return combined_X, sensitive_attribute
 
     def fit(self, X, y=None):
-        repair_level = self._hyperparams["repair_level"]
-        sensitive_attribute = self._hyperparams["sensitive_attribute"]
-        dimpr = aif360.algorithms.preprocessing.DisparateImpactRemover(
-            repair_level=repair_level, sensitive_attribute=sensitive_attribute
+        fairness_info = {
+            "favorable_labels": self.favorable_labels,
+            "protected_attributes": self.protected_attributes,
+        }
+        redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
+        preparation = self.preparation
+        trainable_redact_and_prep = redacting >> preparation
+        assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
+        self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            **fairness_info, remainder="drop", return_X_y=True, combine="and"
         )
-        if isinstance(X, pd.DataFrame):
-            features = X.to_numpy().tolist()
-        else:
-            features = X.tolist()
+        encoded_X, sensitive_attribute = self._prep_and_encode(X, y)
         if isinstance(sensitive_attribute, str):
-            index = X.columns.to_list().index(sensitive_attribute)
+            assert isinstance(encoded_X, pd.DataFrame)
+            features = encoded_X.to_numpy().tolist()
+            index = encoded_X.columns.to_list().index(sensitive_attribute)
         else:
+            assert isinstance(encoded_X, np.ndarray)
+            features = encoded_X.tolist()
             index = sensitive_attribute
         # since DisparateImpactRemover does not have separate fit and transform
-        self._repairer = dimpr.Repairer(features, index, repair_level, False)
+        di_remover = aif360.algorithms.preprocessing.DisparateImpactRemover(
+            repair_level=self.repair_level, sensitive_attribute=sensitive_attribute
+        )
+        self.mitigator = di_remover.Repairer(features, index, self.repair_level, False)
         return self
 
     def transform(self, X):
-        if isinstance(X, pd.DataFrame):
-            features = X.to_numpy().tolist()
+        encoded_X, _ = self._prep_and_encode(X)
+        if isinstance(encoded_X, pd.DataFrame):
+            features = encoded_X.to_numpy().tolist()
         else:
-            features = X.tolist()
-        repaired = self._repairer.repair(features)
+            assert isinstance(encoded_X, np.ndarray)
+            features = encoded_X.tolist()
+        mitigated_X = self.mitigator.repair(features)
         if isinstance(X, pd.DataFrame):
-            result = pd.DataFrame(repaired, columns=X.columns)
+            result = pd.DataFrame(mitigated_X, index=X.index, columns=encoded_X.columns)
         else:
-            result = np.array(repaired)
+            result = np.array(mitigated_X)
         return result
 
 
-_input_fit_schema = {
-    "description": "Input data schema for training.",
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
-        "y": {"description": "Target class labels; the array is over samples."},
-    },
-}
-
-_input_transform_schema = {
-    "description": "Input data schema for transform.",
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        }
-    },
-}
-
-_output_transform_schema = {
-    "description": "Output data schema for reweighted features.",
-    "type": "array",
-    "items": {"type": "array", "items": {"type": "number"}},
-}
+_input_fit_schema = _categorical_supervised_input_fit_schema
+_input_transform_schema = _categorical_input_transform_schema
+_output_transform_schema = _numeric_output_transform_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
@@ -100,9 +127,28 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["repair_level", "sensitive_attribute"],
+            "required": [
+                *_categorical_fairness_properties.keys(),
+                "redact",
+                "preparation",
+                "repair_level",
+            ],
             "relevantToOptimizer": ["repair_level"],
             "properties": {
+                **_categorical_fairness_properties,
+                "redact": {
+                    "description": "Whether to redact protected attributes before data preparation (recommended) or not.",
+                    "type": "boolean",
+                    "default": True,
+                },
+                "preparation": {
+                    "description": "Transformer, which may be an individual operator or a sub-pipeline.",
+                    "anyOf": [
+                        {"laleType": "operator"},
+                        {"description": "lale.lib.lale.NoOp", "enum": [None]},
+                    ],
+                    "default": None,
+                },
                 "repair_level": {
                     "description": "Repair amount from 0 = none to 1 = full.",
                     "type": "number",
@@ -110,17 +156,13 @@ _hyperparams_schema = {
                     "maximum": 1,
                     "default": 1,
                 },
-                "sensitive_attribute": {
-                    "description": "Column name or index of protected attribute.",
-                    "anyOf": [{"type": "string"}, {"type": "integer"}],
-                },
             },
         }
     ],
 }
 
 _combined_schemas = {
-    "description": """`Disparate impact remover`_ preprocessor for fairness mitigation.
+    "description": """`Disparate impact remover`_ pre-estimator fairness mitigator.
 
 .. _`Disparate impact remover`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.DisparateImpactRemover.html
 """,
@@ -136,8 +178,8 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(DisparateImpactRemoverImpl, _combined_schemas)
-
 DisparateImpactRemover = lale.operators.make_operator(
-    DisparateImpactRemoverImpl, _combined_schemas
+    _DisparateImpactRemoverImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(DisparateImpactRemover)

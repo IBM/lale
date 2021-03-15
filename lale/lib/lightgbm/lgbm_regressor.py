@@ -23,7 +23,7 @@ except ImportError:
     lightgbm_installed = False
 
 
-class LGBMRegressorImpl:
+class _LGBMRegressorImpl:
     def __init__(
         self,
         boosting_type="gbdt",
@@ -432,6 +432,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LGBMRegressorImpl, _combined_schemas)
 
-LGBMRegressor = lale.operators.make_operator(LGBMRegressorImpl, _combined_schemas)
+LGBMRegressor = lale.operators.make_operator(_LGBMRegressorImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(LGBMRegressor)

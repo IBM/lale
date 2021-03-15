@@ -18,20 +18,6 @@ import sklearn.tree
 import lale.docstrings
 import lale.operators
 
-
-class DecisionTreeRegressorImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.tree.DecisionTreeRegressor(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "description": "A decision tree regressor.",
     "allOf": [
@@ -131,6 +117,8 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 0.5,
                     "default": 0.0,
                     "description": "Minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node.",
                 },
@@ -172,7 +160,12 @@ _hyperparams_schema = {
                 },
                 "max_leaf_nodes": {
                     "anyOf": [
-                        {"type": "integer"},
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
                         {
                             "enum": [None],
                             "description": "Unlimited number of leaf nodes.",
@@ -184,6 +177,8 @@ _hyperparams_schema = {
                 "min_impurity_decrease": {
                     "type": "number",
                     "default": 0.0,
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },
                 "min_impurity_split": {
@@ -292,12 +287,12 @@ _combined_schemas = {
 
 DecisionTreeRegressor: lale.operators.PlannedIndividualOp
 DecisionTreeRegressor = lale.operators.make_operator(
-    DecisionTreeRegressorImpl, _combined_schemas
+    sklearn.tree.DecisionTreeRegressor, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeRegressor.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeRegressor.html
     from lale.schemas import AnyOf, Bool, Enum, Float
 
     DecisionTreeRegressor = DecisionTreeRegressor.customize_schema(
@@ -315,6 +310,19 @@ if sklearn.__version__ >= "0.22":
         ),
     )
 
-lale.docstrings.set_docstrings(
-    DecisionTreeRegressorImpl, DecisionTreeRegressor._schemas
-)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    DecisionTreeRegressor = DecisionTreeRegressor.customize_schema(
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {"enum": ["mse", "friedman_mse", "poisson"]},
+                {"enum": ["mae"], "forOptimizer": False},
+            ],
+            "default": "mse",
+        },
+        presort=None,
+    )
+
+lale.docstrings.set_docstrings(DecisionTreeRegressor)

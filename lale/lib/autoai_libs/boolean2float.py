@@ -21,7 +21,7 @@ import lale.docstrings
 import lale.operators
 
 
-class boolean2floatImpl:
+class _boolean2floatImpl:
     def __init__(self, activate_flag=True):
         self._hyperparams = {"activate_flag": activate_flag}
         self._wrapped_model = autoai_libs.transformers.exportable.boolean2float(
@@ -38,7 +38,6 @@ class boolean2floatImpl:
             s_X = lale.datasets.data_schemas.to_schema(X)
             s_result = self.transform_schema(s_X)
             result = lale.datasets.data_schemas.add_schema(raw, s_result, recalc=True)
-            assert result.json_schema == s_result
         else:
             result = raw
         return result
@@ -132,6 +131,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(boolean2floatImpl, _combined_schemas)
 
-boolean2float = lale.operators.make_operator(boolean2floatImpl, _combined_schemas)
+boolean2float = lale.operators.make_operator(_boolean2floatImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(boolean2float)

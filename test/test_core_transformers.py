@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from test import EnableSchemaValidation
 from typing import Any
 
 import jsonschema
@@ -55,9 +56,9 @@ def create_function_test_feature_preprocessor(fproc_name):
         class_ = getattr(module, class_name)
         fproc = class_()
 
-        from lale.lib.sklearn.one_hot_encoder import OneHotEncoderImpl
+        from lale.lib.sklearn.one_hot_encoder import OneHotEncoder
 
-        if fproc._impl_class() == OneHotEncoderImpl:
+        if isinstance(fproc, OneHotEncoder):  # type: ignore
             # fproc = OneHotEncoder(handle_unknown = 'ignore')
             # remove the hack when this is fixed
             fproc = PCA()
@@ -130,8 +131,9 @@ class TestNMF(unittest.TestCase):
         _ = trained.predict(test_X)
 
     def test_not_randome_state(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = NMF(random_state='"not RandomState"')
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = NMF(random_state='"not RandomState"')
 
 
 class TestFunctionTransformer(unittest.TestCase):
@@ -148,8 +150,9 @@ class TestFunctionTransformer(unittest.TestCase):
         _ = trained.predict(test_X)
 
     def test_not_callable(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = FunctionTransformer(func='"not callable"')
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = FunctionTransformer(func='"not callable"')
 
 
 class TestMissingIndicator(unittest.TestCase):
@@ -193,8 +196,9 @@ class TestRFE(unittest.TestCase):
         _ = trained.predict(X)
 
     def test_not_operator(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = RFE(estimator='"not an operator"', n_features_to_select=2)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = RFE(estimator='"not an operator"', n_features_to_select=2)
 
     def test_attrib_sklearn(self):
         import sklearn.datasets
@@ -411,30 +415,32 @@ class TestConcatFeatures(unittest.TestCase):
 
 class TestTfidfVectorizer(unittest.TestCase):
     def test_more_hyperparam_values(self):
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = TfidfVectorizer(
-                max_df=2.5, min_df=2, max_features=1000, stop_words="english"
-            )
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = TfidfVectorizer(
-                max_df=2,
-                min_df=2,
-                max_features=1000,
-                stop_words=["I", "we", "not", "this", "that"],
-                analyzer="char",
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = TfidfVectorizer(
+                    max_df=2.5, min_df=2, max_features=1000, stop_words="english"
+                )
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = TfidfVectorizer(
+                    max_df=2,
+                    min_df=2,
+                    max_features=1000,
+                    stop_words=["I", "we", "not", "this", "that"],
+                    analyzer="char",
+                )
 
     def test_non_null_tokenizer(self):
         # tokenize the doc and lemmatize its tokens
         def my_tokenizer():
             return "abc"
 
-        with self.assertRaises(jsonschema.ValidationError):
-            _ = TfidfVectorizer(
-                max_df=2,
-                min_df=2,
-                max_features=1000,
-                stop_words="english",
-                tokenizer=my_tokenizer,
-                analyzer="char",
-            )
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                _ = TfidfVectorizer(
+                    max_df=2,
+                    min_df=2,
+                    max_features=1000,
+                    stop_words="english",
+                    tokenizer=my_tokenizer,
+                    analyzer="char",
+                )

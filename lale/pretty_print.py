@@ -16,6 +16,7 @@ import ast
 import importlib
 import json
 import keyword
+import logging
 import math
 import pprint
 import re
@@ -29,8 +30,10 @@ import lale.json_operator
 import lale.operators
 import lale.type_checking
 
+logger = logging.getLogger(__name__)
+
 JSON_TYPE = Dict[str, Any]
-_black78 = black.Mode(line_length=78)
+_black78 = black.FileMode(line_length=78)
 
 
 class _CodeGenState:
@@ -38,10 +41,13 @@ class _CodeGenState:
     assigns: List[str]
     _names: Set[str]
 
-    def __init__(self, names: Set[str], combinators: bool, astype: str):
+    def __init__(
+        self, names: Set[str], combinators: bool, customize_schema: bool, astype: str
+    ):
         self.imports = []
         self.assigns = []
         self.combinators = combinators
+        self.customize_schema = customize_schema
         self.astype = astype
         self._names = (
             {
@@ -91,6 +97,10 @@ def hyperparams_to_string(
         elif isinstance(value, (int, float)) and math.isnan(value):
             return "float('nan')"
         elif isinstance(value, np.dtype):
+            if gen is not None:
+                gen.imports.append("import numpy as np")
+            return f"np.{value.__repr__()}"
+        elif isinstance(value, np.ndarray):
             if gen is not None:
                 gen.imports.append("import numpy as np")
             return f"np.{value.__repr__()}"
@@ -147,10 +157,17 @@ def _get_module_name(op_label: str, op_name: str, class_name: str) -> str:
         return None
 
     mod_name_long = class_name[: class_name.rfind(".")]
-    mod_name_short = mod_name_long[: mod_name_long.rfind(".")]
+    if mod_name_long.rfind(".") == -1:
+        mod_name_short = mod_name_long
+    else:
+        mod_name_short = mod_name_long[: mod_name_long.rfind(".")]
     unqualified = class_name[class_name.rfind(".") + 1 :]
-    if class_name.startswith("lale.") and unqualified.endswith("Impl"):
-        unqualified = unqualified[: -len("Impl")]
+    if (
+        class_name.startswith("lale.")
+        and unqualified.startswith("_")
+        and unqualified.endswith("Impl")
+    ):
+        unqualified = unqualified[1 : -len("Impl")]
     op = find_op(mod_name_short, op_name)
     if op is not None:
         mod = mod_name_short
@@ -263,7 +280,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
     def find_union(
         graph: JSON_TYPE,
     ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
-        cat_cls = "lale.lib.lale.concat_features.ConcatFeaturesImpl"
+        cat_cls = "lale.lib.lale.concat_features._ConcatFeaturesImpl"
         for seq_uid, seq_jsn in graph["steps"].items():
             if _op_kind(seq_jsn) == "Seq":
                 seq_uids = list(seq_jsn["steps"].keys())
@@ -419,6 +436,8 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             op_name = jsn["operator"]
         else:
             op_name = class_name[class_name.rfind(".") + 1 :]
+        if op_name.startswith("_"):
+            op_name = op_name[1:]
         if op_name.endswith("Impl"):
             op_name = op_name[: -len("Impl")]
         if op_name == label:
@@ -430,11 +449,24 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             step_uid: _operator_jsn_to_string_rec(step_uid, step_val, gen)
             for step_uid, step_val in jsn.get("steps", {}).items()
         }
+        op_expr = label
+        if "customize_schema" in jsn and gen.customize_schema:
+            if jsn["customize_schema"] == "not_available":
+                logger.warning(f"missing {label}.customize_schema(..) call")
+            elif jsn["customize_schema"] != {}:
+                new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][
+                    0
+                ]
+                customize_schema_string = ",".join(
+                    [
+                        f"{hp_name}={json_to_string(hp_schema)}"
+                        for hp_name, hp_schema in new_hps.items()
+                    ]
+                )
+                op_expr = f"{op_expr}.customize_schema({customize_schema_string})"
         if "hyperparams" in jsn and jsn["hyperparams"] is not None:
             hp_string = hyperparams_to_string(jsn["hyperparams"], printed_steps, gen)
-            op_expr = f"{label}({hp_string})"
-        else:
-            op_expr = label
+            op_expr = f"{op_expr}({hp_string})"
         if re.fullmatch(r".+\(.+\)", op_expr):
             gen.assigns.append(f"{uid} = {op_expr}")
             return uid
@@ -488,9 +520,13 @@ def _format_code(printed_code):
 
 
 def _operator_jsn_to_string(
-    jsn: JSON_TYPE, show_imports: bool, combinators: bool, astype=str
+    jsn: JSON_TYPE,
+    show_imports: bool,
+    combinators: bool,
+    customize_schema: bool,
+    astype: str,
 ) -> str:
-    gen = _CodeGenState(_collect_names(jsn), combinators, astype)
+    gen = _CodeGenState(_collect_names(jsn), combinators, customize_schema, astype)
     expr = _operator_jsn_to_string_rec("pipeline", jsn, gen)
     if expr != "pipeline":
         gen.assigns.append(f"pipeline = {expr}")
@@ -524,6 +560,7 @@ def to_string(
     arg: Union[JSON_TYPE, "lale.operators.Operator"],
     show_imports: bool = True,
     combinators: bool = True,
+    customize_schema: bool = False,
     astype: str = "lale",
     call_depth: int = 1,
 ) -> str:
@@ -534,7 +571,9 @@ def to_string(
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
         jsn = lale.json_operator.to_json(arg, call_depth=call_depth + 1)
-        return _operator_jsn_to_string(jsn, show_imports, combinators, astype)
+        return _operator_jsn_to_string(
+            jsn, show_imports, combinators, customize_schema, astype
+        )
     else:
         raise ValueError(f"Unexpected argument type {type(arg)} for {arg}")
 

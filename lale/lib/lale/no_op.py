@@ -16,7 +16,7 @@ import lale.docstrings
 import lale.operators
 
 
-class NoOpImpl:
+class _NoOpImpl:
     def __init__(self):
         pass
 
@@ -72,6 +72,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NoOpImpl, _combined_schemas)
 
-NoOp = lale.operators.make_operator(NoOpImpl, _combined_schemas)
+NoOp = lale.operators.make_operator(_NoOpImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(NoOp)

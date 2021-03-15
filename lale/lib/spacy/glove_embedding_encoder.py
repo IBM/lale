@@ -27,9 +27,9 @@ import lale.operators
 logging.basicConfig(level=logging.INFO)
 
 
-class GloveEmbeddingEncoderImpl(object):
+class _GloveEmbeddingEncoderImpl(object):
     """
-    GloveEmbeddingEncoderImpl is a module allows simple generation of sentence embeddings using
+    _GloveEmbeddingEncoderImpl is a module allows simple generation of sentence embeddings using
     glove word embeddings
 
     Parameters
@@ -195,8 +195,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(GloveEmbeddingEncoderImpl, _combined_schemas)
 
 GloveEmbeddingEncoder = lale.operators.make_operator(
-    GloveEmbeddingEncoderImpl(), _combined_schemas
+    _GloveEmbeddingEncoderImpl(), _combined_schemas
 )
+
+lale.docstrings.set_docstrings(GloveEmbeddingEncoder)

@@ -19,10 +19,9 @@ from sklearn.base import clone
 
 from lale.lib.lale import ConcatFeatures as Concat
 from lale.operators import make_operator
-from lale.sklearn_compat import make_sklearn_compat
 
 
-class MutatingOpImpl:
+class _MutatingOpImpl:
     fit_counter: int
     predict_counter: int
 
@@ -87,11 +86,11 @@ _combined_schemas = {
     },
 }
 
-MutatingOp = make_operator(MutatingOpImpl, _combined_schemas)
+MutatingOp = make_operator(_MutatingOpImpl, _combined_schemas)
 
 
 def fit_clone_fit(op):
-    op1 = make_sklearn_compat(op)
+    op1 = op
     op1.fit(X=[1, 2], y=[1, 2])
     op2 = clone(op1)
     fit2 = op2.fit(X=[3, 4], y=[3, 4])

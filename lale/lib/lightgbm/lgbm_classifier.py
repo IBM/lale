@@ -23,7 +23,7 @@ except ImportError:
     lightgbm_installed = False
 
 
-class LGBMClassifierImpl:
+class _LGBMClassifierImpl:
     def __init__(
         self,
         boosting_type="gbdt",
@@ -76,6 +76,8 @@ or with
         self._wrapped_model = lightgbm.sklearn.LGBMClassifier(**self._hyperparams)
 
     def fit(self, X, y=None, **fit_params):
+        if X.shape[0] * self._wrapped_model.subsample < 1.0:
+            self._wrapped_model.subsample = 1.001 / X.shape[0]
         try:
             self._wrapped_model.fit(X, y, **fit_params)
         except Exception as e:
@@ -497,6 +499,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(LGBMClassifierImpl, _combined_schemas)
 
-LGBMClassifier = lale.operators.make_operator(LGBMClassifierImpl, _combined_schemas)
+LGBMClassifier = lale.operators.make_operator(_LGBMClassifierImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(LGBMClassifier)

@@ -18,32 +18,6 @@ import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
-
-class VotingClassifierImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.VotingClassifier(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
-
 _hyperparams_schema = {
     "description": "Soft Voting/Majority Rule classifier for unfitted estimators.",
     "allOf": [
@@ -244,28 +218,45 @@ _combined_schemas = {
 }
 
 VotingClassifier: lale.operators.PlannedIndividualOp
-VotingClassifier = lale.operators.make_operator(VotingClassifierImpl, _combined_schemas)
+VotingClassifier = lale.operators.make_operator(
+    sklearn.ensemble.VotingClassifier, _combined_schemas
+)
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.VotingClassifier.html
-    from lale.schemas import JSON
-
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
     VotingClassifier = VotingClassifier.customize_schema(
-        estimators=JSON(
-            {
+        estimators={
+            "type": "array",
+            "items": {
                 "type": "array",
-                "items": {
-                    "type": "array",
-                    "laleType": "tuple",
-                    "items": [
-                        {"type": "string"},
-                        {"anyOf": [{"laleType": "operator"}, {"enum": [None, "drop"]}]},
-                    ],
-                },
-                "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
-            }
-        )
+                "laleType": "tuple",
+                "items": [
+                    {"type": "string"},
+                    {"anyOf": [{"laleType": "operator"}, {"enum": [None, "drop"]}]},
+                ],
+            },
+            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
+        }
     )
 
-lale.docstrings.set_docstrings(VotingClassifierImpl, VotingClassifier._schemas)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.VotingClassifier.html
+    VotingClassifier = VotingClassifier.customize_schema(
+        estimators={
+            "type": "array",
+            "items": {
+                "type": "array",
+                "laleType": "tuple",
+                "items": [
+                    {"type": "string"},
+                    {"anyOf": [{"laleType": "operator"}, {"enum": ["drop"]}]},
+                ],
+            },
+            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
+        }
+    )
+
+
+lale.docstrings.set_docstrings(VotingClassifier)

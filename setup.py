@@ -41,7 +41,7 @@ if on_rtd:
 else:
     install_requires = [
         "numpy",
-        "black",
+        "black==19.10b0",
         "graphviz",
         "hyperopt",
         "jsonschema",
@@ -78,19 +78,22 @@ setup(
         "full": [
             "xgboost",
             "lightgbm",
+            "snapml>=1.7.0rc3",
             "liac-arff>=2.4.0",
             "pytorch-pretrained-bert>=0.6.1",
             "torchvision>=0.2.2",
             "tensorflow-datasets>=1.0.1",
-            "tensorflow>=1.13.1",
+            "tensorflow>=1.13.1,<2",
             "tensorflow_hub",
             "spacy",
             "smac<=0.10.0",
             "numba==0.49.0",
-            "aif360",
+            "aif360>=0.4.0",
             "torch>=1.0",
             "BlackBoxAuditing",
             "imbalanced-learn",
+            "cvxpy>=1.0,<=1.1.7",
+            "fairlearn",
         ],
         "dev": ["pre-commit"],
         "test": [

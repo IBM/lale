@@ -16,7 +16,7 @@ import lale.docstrings
 import lale.operators
 
 
-class ScanImpl:
+class _ScanImpl:
     def __init__(self, table=None):
         self._hyperparams = {"table": table}
 
@@ -78,6 +78,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(ScanImpl, _combined_schemas)
 
-Scan = lale.operators.make_operator(ScanImpl, _combined_schemas)
+Scan = lale.operators.make_operator(_ScanImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(Scan)

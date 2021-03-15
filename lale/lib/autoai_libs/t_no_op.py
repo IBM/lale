@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class TNoOpImpl:
+class _TNoOpImpl:
     def __init__(self, fun, name, datatypes, feat_constraints, tgraph=None):
         self._hyperparams = {
             "fun": fun,
@@ -118,6 +118,7 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(TNoOpImpl, _combined_schemas)
 
-TNoOp = lale.operators.make_operator(TNoOpImpl, _combined_schemas)
+TNoOp = lale.operators.make_operator(_TNoOpImpl, _combined_schemas)
+
+lale.docstrings.set_docstrings(TNoOp)

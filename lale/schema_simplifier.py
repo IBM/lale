@@ -558,7 +558,8 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
         merged_props = {p: simplifyAll(s_props[p], False) for p in s_props}
         if s_required:
             for k in s_required:
-                if is_false_schema(merged_props.get(k, SFalse)):
+                # if the schema is not present, it could be in another branch (such as an anyOf conjunct)
+                if is_false_schema(merged_props.get(k, STrue)):
                     logger.info(
                         f"simplifyAll: required key {k} is False, so the entire conjugation of schemas {schemas} is False"
                     )

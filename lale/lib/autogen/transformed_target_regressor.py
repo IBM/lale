@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class TransformedTargetRegressorImpl:
+class _TransformedTargetRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -125,7 +125,8 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(TransformedTargetRegressorImpl, _combined_schemas)
 TransformedTargetRegressor = make_operator(
-    TransformedTargetRegressorImpl, _combined_schemas
+    _TransformedTargetRegressorImpl, _combined_schemas
 )
+
+set_docstrings(TransformedTargetRegressor)

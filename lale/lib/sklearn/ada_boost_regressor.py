@@ -18,7 +18,7 @@ import lale.docstrings
 import lale.operators
 
 
-class AdaBoostRegressorImpl:
+class _AdaBoostRegressorImpl:
     def __init__(
         self,
         base_estimator=None,
@@ -29,7 +29,10 @@ class AdaBoostRegressorImpl:
     ):
         if isinstance(base_estimator, lale.operators.Operator):
             if isinstance(base_estimator, lale.operators.IndividualOp):
-                base_estimator = base_estimator._impl_instance()._wrapped_model
+                base_estimator = base_estimator._impl_instance()
+                wrapped_model = getattr(base_estimator, "_wrapped_model", None)
+                if wrapped_model is not None:
+                    base_estimator = wrapped_model
             else:
                 raise ValueError(
                     "If base_estimator is a Lale operator, it needs to be an individual operator. "
@@ -167,8 +170,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(AdaBoostRegressorImpl, _combined_schemas)
 
 AdaBoostRegressor = lale.operators.make_operator(
-    AdaBoostRegressorImpl, _combined_schemas
+    _AdaBoostRegressorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(AdaBoostRegressor)

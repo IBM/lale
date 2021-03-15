@@ -88,10 +88,14 @@ jobs:
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_relational.py
+        - test/test_snapml.py
         python-version: [3.6]
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autogen_lib.py
+          python-version: 3.6
+          setup-target: '.[test]'
+        - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.6
           setup-target: '.[test]'
     steps:
@@ -118,66 +122,62 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install deps for test_autoai_output_consumption
       if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
-      run: pip install 'scikit-learn==0.20.3'
+      run: pip install 'scikit-learn==0.23.1'
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
+    - name: Install deps for test_halving_gridsearchcv
+      if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
+      run: pip install 'scikit-learn==0.24.1'
     - name: Run test
       run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
     - name: Upload coverage metrics to CodeCov
       uses: codecov/codecov-action@v1
 
-  test_snapml:
-    name: Test Snap ML
+  test_newer:
+    name: Test with newest sklearn
     runs-on: ubuntu-latest
     needs: [static]
     strategy:
       fail-fast: false
       matrix:
-        test-case: [test/test_snap_ml.py]
-        python-version: [3.6]
-        setup-target: ['.[full,test]']
+        test-case:
+        - test/test_core_classifiers.py
+        - test/test_core_regressors.py
+        - test/test_core_transformers.py
+        python-version: [3.8]
+        setup-target: ['.']
     steps:
     - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
     - name: Install system packages
       run: sudo apt-get install graphviz swig
-    - name: Cache conda
+    - name: Cache pip
       uses: actions/cache@v2
-      env:
-        # Increase this value to reset cache if setup.py has not changed
-        CACHE_NUMBER: 0
       with:
-        path: ~/conda_pkgs_dir
-        key:
-          ${{ runner.os }}-conda-${{ env.CACHE_NUMBER }}-${{
-          hashFiles('setup.py') }}
-    - name: Setup anoconda
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        auto-update-conda: true
-        python-version: ${{ matrix.python-version }}
-        channels: 'https://public.dhe.ibm.com/ibmdl/export/pub/software/server/ibm-ai/conda/'
-        activate-environment: conda-snapml-env
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+          ${{ runner.os }}-
     - name: Install numpy
-      shell: bash -l {0}
       run: pip install -U numpy
     - name: Install dependencies
-      shell: bash -l {0}
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install SnapML
-      shell: bash -l {0}
-      run: |
-          $CONDA/bin/conda config --set always_yes yes --set changeps1 no
-          export IBM_POWERAI_LICENSE_ACCEPT=yes
-          conda install pai4sk
-    - name: Run Test
-      shell: bash -l {0}
-      run: |
-          conda install pytest
-          py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
-          bash <(curl -s https://codecov.io/bash)
+    - name: Install pytest and codecov
+      run: pip install pytest-cov codecov
+    - name: Install latest scikit-learn, xgboost, and lightgbm
+      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
+    - name: Run test
+      run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
     - name: Upload coverage metrics to CodeCov
       uses: codecov/codecov-action@v1
+
   test_notebooks:
     name: Test Notebooks
     needs: [static]
@@ -226,7 +226,7 @@ jobs:
     runs-on: ubuntu-latest
     # This should run only on the master branch of the main repo
     if: github.repository == 'IBM/lale' && github.ref == 'refs/heads/master' && success()
-    needs: [static, test_matrix, test_snapml, test_notebooks]
+    needs: [static, test_matrix, test_notebooks]
     strategy:
       matrix:
         python-version: [3.6]

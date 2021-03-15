@@ -17,20 +17,6 @@ import sklearn.preprocessing
 import lale.docstrings
 import lale.operators
 
-
-class NormalizerImpl:
-    def __init__(self, norm=None, copy=True):
-        self._hyperparams = {"norm": norm, "copy": copy}
-        self._wrapped_model = sklearn.preprocessing.Normalizer(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Normalize samples individually to unit norm.",
     "allOf": [
@@ -48,7 +34,7 @@ _hyperparams_schema = {
                 "copy": {
                     "type": "boolean",
                     "default": True,
-                    "description": "set to False to perform inplace row normalization and avoid a",
+                    "description": "Set to False to perform inplace row normalization and avoid a copy.",
                 },
             },
         }
@@ -110,6 +96,9 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NormalizerImpl, _combined_schemas)
 
-Normalizer = lale.operators.make_operator(NormalizerImpl, _combined_schemas)
+Normalizer = lale.operators.make_operator(
+    sklearn.preprocessing.Normalizer, _combined_schemas
+)
+
+lale.docstrings.set_docstrings(Normalizer)

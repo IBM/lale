@@ -18,20 +18,6 @@ import sklearn.svm
 import lale.docstrings
 import lale.operators
 
-
-class SVRImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.svm.SVR(**self._hyperparams)
-
-    def fit(self, X, y=None, sample_weight=None):
-        self._wrapped_model.fit(X, y, sample_weight)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -93,6 +79,8 @@ _hyperparams_schema = {
                 },
                 "coef0": {
                     "type": "number",
+                    "minimumForOptimizer": -1,
+                    "maximumForOptimizer": 1,
                     "default": 0.0,
                     "description": "Independent term in kernel function.",
                 },
@@ -130,7 +118,8 @@ _hyperparams_schema = {
                 },
                 "cache_size": {
                     "type": "number",
-                    "minimum": 0.0,
+                    "minimum": 0,
+                    "maximumForOptimizer": 1000,
                     "default": 200.0,
                     "description": "Specify the size of the kernel cache (in MB).",
                 },
@@ -141,6 +130,8 @@ _hyperparams_schema = {
                 },
                 "max_iter": {
                     "type": "integer",
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 1000,
                     "default": -1,
                     "description": "Hard limit on iterations within solver, or -1 for no limit.",
                 },
@@ -216,7 +207,7 @@ _combined_schemas = {
 }
 
 SVR: lale.operators.PlannedIndividualOp
-SVR = lale.operators.make_operator(SVRImpl, _combined_schemas)
+SVR = lale.operators.make_operator(sklearn.svm.SVR, _combined_schemas)
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.svm.SVR.html
@@ -240,4 +231,5 @@ if sklearn.__version__ >= "0.22":
         )
     )
 
-lale.docstrings.set_docstrings(SVRImpl, SVR._schemas)
+
+lale.docstrings.set_docstrings(SVR)

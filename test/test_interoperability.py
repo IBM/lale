@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from test import EnableSchemaValidation
 
 from jsonschema.exceptions import ValidationError
 
@@ -74,8 +75,9 @@ def create_function_test_resampler(res_name):
         module = importlib.import_module(module_name)
 
         class_ = getattr(module, class_name)
-        with self.assertRaises(ValidationError):
-            _ = class_()
+        with EnableSchemaValidation():
+            with self.assertRaises(ValidationError):
+                _ = class_()
 
         # test_schemas_are_schemas
         lale.type_checking.validate_is_schema(class_.input_schema_fit())

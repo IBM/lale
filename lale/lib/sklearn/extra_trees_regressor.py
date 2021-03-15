@@ -18,20 +18,6 @@ import sklearn.ensemble
 import lale.docstrings
 import lale.operators
 
-
-class ExtraTreesRegressorImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.ensemble.ExtraTreesRegressor(**self._hyperparams)
-
-    def fit(self, X, y, **fit_params):
-        self._wrapped_model.fit(X, y, **fit_params)
-        return self
-
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
-
-
 _hyperparams_schema = {
     "description": "An extra-trees regressor.",
     "allOf": [
@@ -59,6 +45,7 @@ _hyperparams_schema = {
             "properties": {
                 "n_estimators": {
                     "type": "integer",
+                    "minimum": 1,
                     "minimumForOptimizer": 10,
                     "maximumForOptimizer": 100,
                     "default": 10,
@@ -88,12 +75,14 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 2,
-                            "maximumForOptimizer": 20,
-                            "distribution": "uniform",
+                            "minimum": 2,
+                            "laleMaximum": "X/maxItems",  # number of rows
                         },
                         {
                             "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
                             "minimumForOptimizer": 0.01,
                             "maximumForOptimizer": 0.5,
                             "default": 0.05,
@@ -106,14 +95,15 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
-                            "minimumForOptimizer": 1,
-                            "maximumForOptimizer": 20,
-                            "distribution": "uniform",
+                            "minimum": 1,
+                            "laleMaximum": "X/maxItems",  # number of rows
+                            "forOptimizer": False,
                         },
                         {
                             "type": "number",
-                            "minimumForOptimizer": 0.01,
-                            "maximumForOptimizer": 0.5,
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 0.5,
                             "default": 0.05,
                         },
                     ],
@@ -122,8 +112,10 @@ _hyperparams_schema = {
                 },
                 "min_weight_fraction_leaf": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximum": 0.5,
                     "default": 0.0,
-                    "description": "The minimum weighted fraction of the sum total of weights (of all",
+                    "description": "The minimum weighted fraction of the sum total of weights (of all the input samples) required to be at a leaf node. Samples have equal weight when sample_weight is not provided.",
                 },
                 "max_features": {
                     "anyOf": [
@@ -140,17 +132,30 @@ _hyperparams_schema = {
                         {"enum": ["auto", "sqrt", "log2", None]},
                     ],
                     "default": "auto",
-                    "description": "The number of features to consider when looking for the best split:",
+                    "description": "The number of features to consider when looking for the best split.",
                 },
                 "max_leaf_nodes": {
-                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 1000,
+                        },
+                        {
+                            "enum": [None],
+                            "description": "Unlimited number of leaf nodes.",
+                        },
+                    ],
                     "default": None,
                     "description": "Grow trees with ``max_leaf_nodes`` in best-first fashion.",
                 },
                 "min_impurity_decrease": {
                     "type": "number",
+                    "minimum": 0.0,
+                    "maximumForOptimizer": 10.0,
                     "default": 0.0,
-                    "description": "A node will be split if this split induces a decrease of the impurity",
+                    "description": "A node will be split if this split induces a decrease of the impurity greater than or equal to this value.",
                 },
                 "min_impurity_split": {
                     "anyOf": [{"type": "number"}, {"enum": [None]}],
@@ -256,12 +261,12 @@ _combined_schemas = {
 
 ExtraTreesRegressor: lale.operators.PlannedIndividualOp
 ExtraTreesRegressor = lale.operators.make_operator(
-    ExtraTreesRegressorImpl, _combined_schemas
+    sklearn.ensemble.ExtraTreesRegressor, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
     from lale.schemas import AnyOf, Float, Int, Null
 
     ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
@@ -296,4 +301,19 @@ if sklearn.__version__ >= "0.22":
         ),
     )
 
-lale.docstrings.set_docstrings(ExtraTreesRegressorImpl, ExtraTreesRegressor._schemas)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {"enum": ["mse", "friedman_mse", "poisson"]},
+                {"enum": ["mae"], "forOptimizer": False},
+            ],
+            "default": "mse",
+        }
+    )
+
+
+lale.docstrings.set_docstrings(ExtraTreesRegressor)

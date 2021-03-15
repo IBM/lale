@@ -19,20 +19,6 @@ import sklearn.cluster
 import lale.docstrings
 import lale.operators
 
-
-class FeatureAgglomerationImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = sklearn.cluster.FeatureAgglomeration(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "description": "Agglomerate features.",
     "allOf": [
@@ -180,12 +166,12 @@ _combined_schemas = {
 
 FeatureAgglomeration: lale.operators.PlannedIndividualOp
 FeatureAgglomeration = lale.operators.make_operator(
-    FeatureAgglomerationImpl, _combined_schemas
+    sklearn.cluster.FeatureAgglomeration, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
     # old: https://scikit-learn.org/0.20/modules/generated/sklearn.cluster.FeatureAgglomeration.html
-    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.cluster.FeatureAgglomeration.html
     from lale.schemas import AnyOf, Enum, Float, Int, Null, Object
 
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
@@ -218,4 +204,18 @@ if sklearn.__version__ >= "0.21":
         )
     )
 
-lale.docstrings.set_docstrings(FeatureAgglomerationImpl, FeatureAgglomeration._schemas)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.cluster.FeatureAgglomeration.html
+    from lale.schemas import Bool
+
+    FeatureAgglomeration = FeatureAgglomeration.customize_schema(
+        compute_distances=Bool(
+            desc="Computes distances between clusters even if distance_threshold is not used. This can be used to make dendrogram visualization, but introduces a computational and memory overhead.",
+            default=False,
+            forOptimizer=False,
+        ),
+    )
+
+
+lale.docstrings.set_docstrings(FeatureAgglomeration)

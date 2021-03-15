@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class LinearDiscriminantAnalysisImpl:
+class _LinearDiscriminantAnalysisImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -245,7 +245,8 @@ _combined_schemas = {
         "output_decision_function": _output_decision_function_schema,
     },
 }
-set_docstrings(LinearDiscriminantAnalysisImpl, _combined_schemas)
 LinearDiscriminantAnalysis = make_operator(
-    LinearDiscriminantAnalysisImpl, _combined_schemas
+    _LinearDiscriminantAnalysisImpl, _combined_schemas
 )
+
+set_docstrings(LinearDiscriminantAnalysis)

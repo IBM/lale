@@ -5,7 +5,7 @@ from lale.docstrings import set_docstrings
 from lale.operators import make_operator
 
 
-class GradientBoostingRegressorImpl:
+class _GradientBoostingRegressorImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
         self._wrapped_model = Op(**self._hyperparams)
@@ -294,7 +294,8 @@ _combined_schemas = {
         "output_predict": _output_predict_schema,
     },
 }
-set_docstrings(GradientBoostingRegressorImpl, _combined_schemas)
 GradientBoostingRegressor = make_operator(
-    GradientBoostingRegressorImpl, _combined_schemas
+    _GradientBoostingRegressorImpl, _combined_schemas
 )
+
+set_docstrings(GradientBoostingRegressor)

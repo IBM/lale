@@ -12,52 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 from sklearn.decomposition import NMF as SKLModel
 
 import lale.docstrings
 import lale.operators
-
-
-class NMFImpl:
-    def __init__(
-        self,
-        n_components=None,
-        init=None,
-        solver="cd",
-        beta_loss="frobenius",
-        tol=0.0001,
-        max_iter=200,
-        random_state=None,
-        alpha=0.0,
-        l1_ratio=0.0,
-        verbose=0,
-        shuffle=False,
-    ):
-        self._hyperparams = {
-            "n_components": n_components,
-            "init": init,
-            "solver": solver,
-            "beta_loss": beta_loss,
-            "tol": tol,
-            "max_iter": max_iter,
-            "random_state": random_state,
-            "alpha": alpha,
-            "l1_ratio": l1_ratio,
-            "verbose": verbose,
-            "shuffle": shuffle,
-        }
-        self._wrapped_model = SKLModel(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
 
 _hyperparams_schema = {
     "description": "Non-Negative Matrix Factorization (NMF)",
@@ -91,14 +50,18 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 1,
+                            "laleMaximum": "X/items/maxItems",  # number of columns
                             "minimumForOptimizer": 2,
                             "maximumForOptimizer": 256,
                             "distribution": "uniform",
                         },
-                        {"enum": [None]},
+                        {
+                            "description": "If not set, keep all components.",
+                            "enum": [None],
+                        },
                     ],
                     "default": None,
-                    "description": "Number of components, if n_components is not set all features",
+                    "description": "Number of components.",
                 },
                 "init": {
                     "enum": ["custom", "nndsvd", "nndsvda", "nndsvdar", "random", None],
@@ -113,7 +76,11 @@ _hyperparams_schema = {
                 "beta_loss": {
                     "description": "Beta divergence to be minimized, measuring the distance between X and the dot product WH.",
                     "anyOf": [
-                        {"type": "number"},
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": -1,
+                            "maximumForOptimizer": 1,
+                        },
                         {"enum": ["frobenius", "kullback-leibler", "itakura-saito"]},
                     ],
                     "default": "frobenius",
@@ -233,6 +200,21 @@ _combined_schemas = {
     },
 }
 
-lale.docstrings.set_docstrings(NMFImpl, _combined_schemas)
+NMF: lale.operators.PlannedIndividualOp
+NMF = lale.operators.make_operator(SKLModel, _combined_schemas)
 
-NMF = lale.operators.make_operator(NMFImpl, _combined_schemas)
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.NMF.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.NMF.html
+    from lale.schemas import AnyOf, Enum, Null
+
+    NMF = NMF.customize_schema(
+        regularization=AnyOf(
+            desc="Select whether the regularization affects the components (H), the transformation (W), both or none of them.",
+            types=[Enum(values=["both", "components", "transformation"]), Null(),],
+            default="both",
+            forOptimizer=True,
+        )
+    )
+
+lale.docstrings.set_docstrings(NMF)
