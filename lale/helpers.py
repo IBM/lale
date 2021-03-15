@@ -875,8 +875,8 @@ structure_type_dict: str = "dict"
 
 
 def get_name_and_index(name: str) -> Tuple[str, int]:
-    """ given a name of the form "name@i", returns (name, i)
-        if given a name of the form "name", returns (name, 0)
+    """given a name of the form "name@i", returns (name, i)
+    if given a name of the form "name", returns (name, 0)
     """
     splits = name.split("@", 1)
     if len(splits) == 1:
@@ -928,8 +928,8 @@ def nest_HPparams(name: str, grid: Mapping[str, V]) -> Dict[str, V]:
 def nest_all_HPparams(
     name: str, grids: Iterable[Mapping[str, V]]
 ) -> List[Dict[str, V]]:
-    """ Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
-        to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """Given the name of an operator in a pipeline, this transforms every key(parameter name) in the grids
+    to use the operator name as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
     """
     return [nest_HPparams(name, grid) for grid in grids]
 
@@ -943,8 +943,8 @@ def nest_choice_HPparams(grid: Mapping[str, V]) -> Dict[str, V]:
 
 
 def nest_choice_all_HPparams(grids: Iterable[Mapping[str, V]]) -> List[Dict[str, V]]:
-    """ this transforms every key(parameter name) in the grids
-        to be nested under a choice, using a ? as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
+    """this transforms every key(parameter name) in the grids
+    to be nested under a choice, using a ? as a prefix (separated by __).  This is the convention in scikit-learn pipelines.
     """
     return [nest_choice_HPparams(grid) for grid in grids]
 

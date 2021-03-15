@@ -371,9 +371,9 @@ class _HyperoptImpl:
     def summary(self):
         """Table summarizing the trial results (ID, loss, time, log_loss, status).
 
-Returns
--------
-result : DataFrame"""
+        Returns
+        -------
+        result : DataFrame"""
 
         def make_record(trial_dict):
             return {
@@ -392,23 +392,22 @@ result : DataFrame"""
     def get_pipeline(self, pipeline_name=None, astype="lale"):
         """Retrieve one of the trials.
 
-Parameters
-----------
-pipeline_name : union type, default None
+        Parameters
+        ----------
+        pipeline_name : union type, default None
 
-    - string
-        Key for table returned by summary(), return a trainable pipeline.
+            - string
+                Key for table returned by summary(), return a trainable pipeline.
 
-    - None
-        When not specified, return the best trained pipeline found.
+            - None
+                When not specified, return the best trained pipeline found.
 
-astype : 'lale' or 'sklearn', default 'lale'
-    Type of resulting pipeline.
+        astype : 'lale' or 'sklearn', default 'lale'
+            Type of resulting pipeline.
 
-Returns
--------
-result : Trained operator if best, trainable operator otherwise.
-"""
+        Returns
+        -------
+        result : Trained operator if best, trainable operator otherwise."""
         best_name = None
         if self._best_estimator is not None:
             best_name = f'p{self._trials.best_trial["tid"]}'

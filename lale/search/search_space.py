@@ -50,8 +50,8 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
 
     def default(self) -> Optional[Any]:
         """Return an optional default value, if None.
-            if not None, the default value should be in the
-            search space
+        if not None, the default value should be in the
+        search space
         """
         return self._default
 
@@ -65,9 +65,9 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
     def str_with_focus(
         self, path: Optional[List["SearchSpace"]] = None, default: Any = None
     ) -> Union[str, Any]:
-        """ Given a path list, returns a string for the focused path.
-            If the path is None, returns everything, without focus.
-            If the path does not start with self, returns None
+        """Given a path list, returns a string for the focused path.
+        If the path is None, returns everything, without focus.
+        If the path does not start with self, returns None
         """
         if path is None:
             return self._focused_str(path=None)
@@ -78,9 +78,9 @@ class SearchSpace(metaclass=AbstractVisitorMeta):
 
     @abc.abstractmethod
     def _focused_str(self, path: Optional[List["SearchSpace"]] = None) -> str:
-        """ Given the continuation path list, returns a string for the focused path.
-            If the path is None, returns everything, without focus.
-            Otherwise, the path is for children
+        """Given the continuation path list, returns a string for the focused path.
+        If the path is None, returns everything, without focus.
+        Otherwise, the path is for children
         """
         pass
 
@@ -180,8 +180,7 @@ class SearchSpaceNumber(SearchSpacePrimitive):
                 )
 
     def getInclusiveMax(self) -> Optional[float]:
-        """ Return the maximum as an inclusive maximum (exclusive maxima are adjusted accordingly)
-        """
+        """Return the maximum as an inclusive maximum (exclusive maxima are adjusted accordingly)"""
         max = self.maximum
         if max is None:
             return None
@@ -193,8 +192,7 @@ class SearchSpaceNumber(SearchSpacePrimitive):
         return max
 
     def getInclusiveMin(self) -> Optional[float]:
-        """ Return the maximum as an inclusive minimum (exclusive minima are adjusted accordingly)
-        """
+        """Return the maximum as an inclusive minimum (exclusive minima are adjusted accordingly)"""
         min = self.minimum
         if min is None:
             return None

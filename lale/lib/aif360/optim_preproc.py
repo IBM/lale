@@ -55,7 +55,9 @@ class _OptimPreprocImpl:
             "protected_attributes": protected_attributes,
         }
         self._prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="passthrough", return_X_y=True,
+            **fairness_info,
+            remainder="passthrough",
+            return_X_y=True,
         )
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         self._unprivileged_groups = [{name: 0 for name in prot_attr_names}]

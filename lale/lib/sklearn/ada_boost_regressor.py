@@ -121,7 +121,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The training input samples. Sparse matrix can be CSC, CSR, COO,",
         },
         "y": {
@@ -131,7 +134,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "default": None,
@@ -145,7 +151,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The training input samples. Sparse matrix can be CSC, CSR, COO,",
         },
     },

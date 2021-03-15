@@ -266,7 +266,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The input samples. Internally, it will be converted to",
         },
         "y": {
@@ -276,7 +279,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "default": None,
@@ -284,7 +290,10 @@ _input_fit_schema = {
         },
         "init_score": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "default": None,
@@ -355,7 +364,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": " Input features matrix.",
         },
         "raw_score": {
@@ -391,7 +403,10 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": " Input features matrix.",
         },
         "raw_score": {
@@ -419,7 +434,10 @@ _input_predict_proba_schema = {
 _output_predict_proba_schema = {
     "description": "Return the predicted probability for each class for each sample.",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",

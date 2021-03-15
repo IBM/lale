@@ -23,15 +23,19 @@ import pytest
 
 def should_test(f: str) -> bool:
     notebooks_categories_str: Optional[str] = os.environ.get("NOTEBOOK_CATEGORY", None)
-    notebooks_categories: Optional[
-        List[str]
-    ] = notebooks_categories_str.split() if notebooks_categories_str is not None else None
+    notebooks_categories: Optional[List[str]] = (
+        notebooks_categories_str.split()
+        if notebooks_categories_str is not None
+        else None
+    )
     all_notebooks_categories_str: Optional[str] = os.environ.get(
         "ALL_NOTEBOOK_CATEGORIES", None
     )
-    all_notebooks_categories: Optional[
-        List[str]
-    ] = all_notebooks_categories_str.split() if all_notebooks_categories_str is not None else None
+    all_notebooks_categories: Optional[List[str]] = (
+        all_notebooks_categories_str.split()
+        if all_notebooks_categories_str is not None
+        else None
+    )
 
     if notebooks_categories is None:
         if all_notebooks_categories is None:

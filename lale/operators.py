@@ -437,8 +437,7 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     @abstractmethod
     def _has_same_impl(self, other: "Operator") -> bool:
-        """Checks if the type of the operator implementations are compatible
-        """
+        """Checks if the type of the operator implementations are compatible"""
         pass
 
     @abstractmethod
@@ -471,7 +470,7 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     def is_frozen_trained(self) -> bool:
         """Return true if all learnable coefficients are bound, in other
-           words, there are no free parameters to be learned by fit.
+        words, there are no free parameters to be learned by fit.
         """
         return False
 
@@ -554,8 +553,8 @@ class Operator(metaclass=AbstractVisitorMeta):
         return {}
 
     def clone(self) -> "Operator":
-        """ Return a copy of this operator, with the same hyper-parameters but without training data
-            This behaves the same as calling sklearn.base.clone(self)
+        """Return a copy of this operator, with the same hyper-parameters but without training data
+        This behaves the same as calling sklearn.base.clone(self)
         """
         from sklearn.base import clone
 
@@ -564,8 +563,8 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     def with_params(self, **impl_params) -> "Operator":
         """This implements a functional version of set_params
-           which returns a new operator instead of modifying the original
-           """
+        which returns a new operator instead of modifying the original
+        """
         return self._with_params(False, **impl_params)
 
     @abstractmethod
@@ -655,7 +654,7 @@ class TrainableOperator(PlannedOperator):
     def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
-    def __and__(self, other):
+    def __and__(self, other):  # type: ignore
         return make_union_no_concat(self, other)
 
     @overload
@@ -670,7 +669,7 @@ class TrainableOperator(PlannedOperator):
     def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
-    def __rshift__(self, other):
+    def __rshift__(self, other):  # type: ignore
         return make_pipeline(self, other)
 
     @abstractmethod
@@ -712,8 +711,7 @@ class TrainableOperator(PlannedOperator):
 
     @abstractmethod
     def is_transformer(self) -> bool:
-        """ Checks if the operator is a transformer
-        """
+        """Checks if the operator is a transformer"""
         pass
 
 
@@ -737,7 +735,7 @@ class TrainedOperator(TrainableOperator):
     def __and__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
-    def __and__(self, other):
+    def __and__(self, other):  # type: ignore
         return make_union_no_concat(self, other)
 
     @overload
@@ -752,7 +750,7 @@ class TrainedOperator(TrainableOperator):
     def __rshift__(self, other: Union[Any, "Operator"]) -> "PlannedPipeline":
         ...
 
-    def __rshift__(self, other):
+    def __rshift__(self, other):  # type: ignore
         return make_pipeline(self, other)
 
     @abstractmethod
@@ -846,7 +844,7 @@ class TrainedOperator(TrainableOperator):
     @abstractmethod
     def freeze_trained(self) -> "TrainedOperator":
         """Return a copy of this trainable operator that is the same except
-           that all learnable coefficients are bound and thus fit is a no-op.
+        that all learnable coefficients are bound and thus fit is a no-op.
         """
         pass
 
@@ -891,11 +889,11 @@ class _DictionaryObjectForEnum:
 
 
 class _WithoutGetParams(object):
-    """ This is a wrapper class whose job is to *NOT* have a get_params method,
-        causing sklearn clone to call deepcopy on it (and its contents).
-        This is currently used, for example, to wrap the impl class instance
-        returned by an individual operator's get_params (since the class itself may have
-        a get_params method defined, causing problems if this wrapper is not used).
+    """This is a wrapper class whose job is to *NOT* have a get_params method,
+    causing sklearn clone to call deepcopy on it (and its contents).
+    This is currently used, for example, to wrap the impl class instance
+    returned by an individual operator's get_params (since the class itself may have
+    a get_params method defined, causing problems if this wrapper is not used).
     """
 
     @classmethod
@@ -930,7 +928,7 @@ class IndividualOp(Operator):
     For example, `LinearRegression.solver.saga`"""
 
     _impl: Any
-    _impl_class_: Union[Type, _WithoutGetParams]
+    _impl_class_: Union[type, _WithoutGetParams]
     _hyperparams: Optional[Dict[str, Any]]
     _frozen_hyperparams: Optional[List[str]]
 
@@ -1101,12 +1099,12 @@ class IndividualOp(Operator):
     # we have different views on the hyperparameters
     def hyperparams_all(self) -> Optional[Dict[str, Any]]:
         """This is the hyperparameters that are currently set.
-           Some of them may not have been set explicitly
-           (e.g. if this is a clone of an operator,
-            some of these may be defaults.
-            To get the hyperparameters that were actually set,
-            use :meth:`hyperparams`
-           """
+        Some of them may not have been set explicitly
+        (e.g. if this is a clone of an operator,
+         some of these may be defaults.
+         To get the hyperparameters that were actually set,
+         use :meth:`hyperparams`
+        """
         return getattr(self, "_hyperparams", None)
 
     def frozen_hyperparams(self) -> Optional[List[str]]:
@@ -1597,22 +1595,23 @@ class IndividualOp(Operator):
                     f"Constructor for {class_.__module__}.{class_.__name__} "
                     f"threw exception {e}"
                 )
-                instance = class_.__new__(class_)
+                # TODO: Is this really a reasonable fallback?
+                instance = class_.__new__()  # type:ignore
             self._impl = instance
         return self._impl
 
     @property
     def impl(self):
-        """ Returns the underlying impl.  This can be used to access additional
-            field and methods not exposed by Lale.  If only the type of the
-            impl is needed, please use self.impl_class instead, as it can be more efficient.
-            """
+        """Returns the underlying impl.  This can be used to access additional
+        field and methods not exposed by Lale.  If only the type of the
+        impl is needed, please use self.impl_class instead, as it can be more efficient.
+        """
         return self._impl_instance()
 
     @property
     def impl_class(self) -> type:
-        """ Returns the class of the underlying impl. This should return the same thing
-            as self.impl.__class__, but can be more efficient.
+        """Returns the class of the underlying impl. This should return the same thing
+        as self.impl.__class__, but can be more efficient.
         """
         return self._impl_class()
 
@@ -1642,8 +1641,7 @@ class IndividualOp(Operator):
         return name
 
     def _has_same_impl(self, other: Operator) -> bool:
-        """Checks if the type of the operator implementations are compatible
-        """
+        """Checks if the type of the operator implementations are compatible"""
         if not isinstance(other, IndividualOp):
             return False
         return self._impl_class() == other._impl_class()
@@ -1803,8 +1801,7 @@ class IndividualOp(Operator):
         return hasattr(self._impl, method_name)
 
     def is_transformer(self) -> bool:
-        """ Checks if the operator is a transformer
-        """
+        """Checks if the operator is a transformer"""
         return self.has_method("transform")
 
     def _final_individual_op(self) -> Optional["IndividualOp"]:
@@ -1932,7 +1929,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 
     def set_params(self, **impl_params):
         """This implements the set_params, as per the scikit-learn convention,
-           extended as documented in the module docstring"""
+        extended as documented in the module docstring"""
         return self._with_params(True, **impl_params)
 
     def _with_op_params(
@@ -2702,7 +2699,7 @@ class BasePipeline(Operator, Generic[OpType]):
 
     def set_params(self, **impl_params):
         """This implements the set_params, as per the scikit-learn convention,
-           extended as documented in the module docstring"""
+        extended as documented in the module docstring"""
         return self._with_params(True, **impl_params)
 
     def _with_params(self, try_mutate: bool, **impl_params) -> "BasePipeline[OpType]":
@@ -2958,8 +2955,7 @@ class BasePipeline(Operator, Generic[OpType]):
         self._steps = result
 
     def _has_same_impl(self, other: Operator) -> bool:
-        """Checks if the type of the operator imnplementations are compatible
-        """
+        """Checks if the type of the operator imnplementations are compatible"""
         if not isinstance(other, BasePipeline):
             return False
         my_steps = self.steps()
@@ -3634,8 +3630,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return result
 
     def is_transformer(self) -> bool:
-        """ Checks if the operator is a transformer
-        """
+        """Checks if the operator is a transformer"""
         sink_nodes = self._find_sink_nodes()
         all_transformers = [
             True if operator.has_method("transform") else False
@@ -3974,7 +3969,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
 
     def set_params(self, **impl_params):
         """This implements the set_params, as per the scikit-learn convention,
-           extended as documented in the module docstring"""
+        extended as documented in the module docstring"""
         return self._with_params(True, **impl_params)
 
     # TODO: enhance to support setting params of a choice without picking a choice
@@ -4025,8 +4020,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         raise AttributeError
 
     def _has_same_impl(self, other: Operator) -> bool:
-        """Checks if the type of the operator imnplementations are compatible
-        """
+        """Checks if the type of the operator imnplementations are compatible"""
         if not isinstance(other, OperatorChoice):
             return False
         my_steps = self.steps()
@@ -4220,7 +4214,7 @@ def make_union_no_concat(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
     ...
 
 
-def make_union_no_concat(*orig_steps):
+def make_union_no_concat(*orig_steps):  # type: ignore
     steps, edges = [], []
     for curr_op in orig_steps:
         if isinstance(curr_op, BasePipeline):
@@ -4248,7 +4242,7 @@ def make_union(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
     ...
 
 
-def make_union(*orig_steps):
+def make_union(*orig_steps):  # type: ignore
     from lale.lib.lale import ConcatFeatures
 
     return make_union_no_concat(*orig_steps) >> ConcatFeatures()
@@ -4387,8 +4381,7 @@ CloneOpType = TypeVar("CloneOpType", bound=Operator)
 
 
 def clone_op(op: CloneOpType, name: str = None) -> CloneOpType:
-    """ Clone any operator.
-    """
+    """Clone any operator."""
     from sklearn.base import clone
 
     nop = clone(op)

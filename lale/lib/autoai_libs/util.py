@@ -18,11 +18,11 @@ import lale.lib.sklearn
 def wrap_pipeline_segments(orig_pipeline):
     """Wrap segments of the pipeline to mark them for pretty_print() and visualize().
 
-If the pipeline does not look like it came from AutoAI, just return it
-unchanged. Otherwise, find the NumpyPermuteArray operator. Everything
-before that operator is preprocessing. Everything after
-NumpyPermuteArray but before the final estimator is feature
-engineering."""
+    If the pipeline does not look like it came from AutoAI, just return it
+    unchanged. Otherwise, find the NumpyPermuteArray operator. Everything
+    before that operator is preprocessing. Everything after
+    NumpyPermuteArray but before the final estimator is feature
+    engineering."""
     from lale.lib.autoai_libs.numpy_permute_array import NumpyPermuteArray
 
     if len(orig_pipeline.steps()) <= 2:

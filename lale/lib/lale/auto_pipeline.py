@@ -272,28 +272,27 @@ class _AutoPipelineImpl:
 
     def summary(self):
         """Table summarizing the trial results (name, tid, loss, time, log_loss, status).
-Returns
--------
-result : DataFrame"""
+        Returns
+        -------
+        result : DataFrame"""
         if self._summary is not None:
             self._summary.sort_values(by="loss", inplace=True)
         return self._summary
 
     def get_pipeline(self, pipeline_name=None, astype="lale"):
         """Retrieve one of the trials.
-Parameters
-----------
-pipeline_name : union type, default None
-    - string
-        Key for table returned by summary(), return a trainable pipeline.
-    - None
-        When not specified, return the best trained pipeline found.
-astype : 'lale' or 'sklearn', default 'lale'
-    Type of resulting pipeline.
-Returns
--------
-result : Trained operator if best, trainable operator otherwise.
-"""
+        Parameters
+        ----------
+        pipeline_name : union type, default None
+            - string
+                Key for table returned by summary(), return a trainable pipeline.
+            - None
+                When not specified, return the best trained pipeline found.
+        astype : 'lale' or 'sklearn', default 'lale'
+            Type of resulting pipeline.
+        Returns
+        -------
+        result : Trained operator if best, trainable operator otherwise."""
         if pipeline_name is None:
             pipeline_name = self._name_of_best
         result = self._pipelines[pipeline_name]

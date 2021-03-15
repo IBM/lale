@@ -266,11 +266,17 @@ class TestCustomSchema(unittest.TestCase):
                     "anyOf": [
                         {
                             "type": "object",
-                            "properties": {"n_components": {"not": {"enum": ["mle"]},}},
+                            "properties": {
+                                "n_components": {
+                                    "not": {"enum": ["mle"]},
+                                }
+                            },
                         },
                         {
                             "type": "object",
-                            "properties": {"svd_solver": {"enum": ["full", "auto"]},},
+                            "properties": {
+                                "svd_solver": {"enum": ["full", "auto"]},
+                            },
                         },
                     ]
                 },

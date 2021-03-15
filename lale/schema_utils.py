@@ -247,9 +247,9 @@ def has_operator(schema: JsonSchema) -> bool:
 def atomize_schema_enumerations(
     schema: Union[None, JsonSchema, List[JsonSchema]]
 ) -> None:
-    """ Given a schema, converts structured enumeration values (records, arrays)
-        into schemas where the structured part is specified as a schema, with the
-        primitive as the enum.
+    """Given a schema, converts structured enumeration values (records, arrays)
+    into schemas where the structured part is specified as a schema, with the
+    primitive as the enum.
     """
     if schema is None:
         return
@@ -327,7 +327,7 @@ def atomize_schema_enumerations(
 def check_operators_schema(
     schema: Optional[Union[List[JsonSchema], JsonSchema]], warnings: List[str]
 ) -> None:
-    """ Given a schema, collect warnings if there
+    """Given a schema, collect warnings if there
     are any enumeration with all Operator values
     that are not marked as `'laleType':'operator'`.
     This should be called after simplification.

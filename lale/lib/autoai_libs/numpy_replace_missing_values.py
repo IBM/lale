@@ -25,8 +25,10 @@ class _NumpyReplaceMissingValuesImpl:
             "missing_values": missing_values,
             "filling_values": filling_values,
         }
-        self._wrapped_model = autoai_libs.transformers.exportable.NumpyReplaceMissingValues(
-            **self._hyperparams
+        self._wrapped_model = (
+            autoai_libs.transformers.exportable.NumpyReplaceMissingValues(
+                **self._hyperparams
+            )
         )
 
     def fit(self, X, y=None):
