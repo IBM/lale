@@ -65,10 +65,10 @@ VV = TypeVar("VV")
 
 
 class set_with_str_for_keys(Generic[VV]):
-    """ This mimicks a set, but uses the string representation
-        of the elements for comparison tests.
-        It can be used for unhashable elements, as long
-        as the str function is injective
+    """This mimicks a set, but uses the string representation
+    of the elements for comparison tests.
+    It can be used for unhashable elements, as long
+    as the str function is injective
     """
 
     _elems: Dict[str, VV]
@@ -125,8 +125,8 @@ def toAllOfList(schema: JsonSchema) -> List[JsonSchema]:
 
 
 def liftAllOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
-    """ Given a list of schemas, if any of them are
-        allOf schemas, lift them out to the top level
+    """Given a list of schemas, if any of them are
+    allOf schemas, lift them out to the top level
     """
     for sch in schemas:
         schs2 = toAllOfList(sch)
@@ -135,8 +135,8 @@ def liftAllOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
 
 
 def liftAnyOf(schemas: List[JsonSchema]) -> Iterable[JsonSchema]:
-    """ Given a list of schemas, if any of them are
-        anyOf schemas, lift them out to the top level
+    """Given a list of schemas, if any of them are
+    anyOf schemas, lift them out to the top level
     """
     for sch in schemas:
         schs2 = toAnyOfList(sch)
@@ -216,7 +216,9 @@ def simplifyAll(schemas: List[JsonSchema], floatAny: bool) -> JsonSchema:
     s_not: List[JsonSchema] = []
     s_not_number_list: List[
         JsonSchema
-    ] = []  # a list of schemas that are a top level 'not' with a type='integer' or 'number' under it
+    ] = (
+        []
+    )  # a list of schemas that are a top level 'not' with a type='integer' or 'number' under it
 
     s_not_enum_list: List[set_with_str_for_keys[Any]] = []
     s_enum_list: List[set_with_str_for_keys[Any]] = []
@@ -894,12 +896,12 @@ def simplifyNot_(
 
 
 def simplify(schema: JsonSchema, floatAny: bool) -> JsonSchema:
-    """ Tries to simplify a schema into an equivalent but
-        more compact/simpler one.  If floatAny if true, then
-        the only anyOf in the return value will be at the top level.
-        Using this option may cause a combinatorial blowup in the size
-        of the schema
-        """
+    """Tries to simplify a schema into an equivalent but
+    more compact/simpler one.  If floatAny if true, then
+    the only anyOf in the return value will be at the top level.
+    Using this option may cause a combinatorial blowup in the size
+    of the schema
+    """
     if is_true_schema(schema):
         return STrue
     if is_false_schema(schema):

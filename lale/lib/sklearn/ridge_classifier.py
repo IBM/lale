@@ -135,17 +135,29 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training data",
         },
         "y": {
             "anyOf": [
                 {
                     "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"},},
+                    "items": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
                 },
-                {"type": "array", "items": {"type": "number"},},
-                {"type": "array", "items": {"type": "string"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
+                {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
                 {"type": "array", "items": {"type": "boolean"}},
             ],
             "description": "Target values",
@@ -153,7 +165,10 @@ _input_fit_schema = {
         "sample_weight": {
             "anyOf": [
                 {"type": "number"},
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "description": "Individual weights for each sample",
@@ -169,7 +184,10 @@ _input_predict_schema = {
                 {"type": "array", "items": {"type": "number"}},
                 {
                     "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"},},
+                    "items": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
                 },
             ],
             "description": "Samples.",

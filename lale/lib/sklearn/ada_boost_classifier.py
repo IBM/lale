@@ -124,7 +124,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The training input samples. Sparse matrix can be CSC, CSR, COO,",
         },
         "y": {
@@ -137,7 +140,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "default": None,
@@ -151,7 +157,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The training input samples. Sparse matrix can be CSC, CSR, COO,",
         },
     },
@@ -171,7 +180,10 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The training input samples. Sparse matrix can be CSC, CSR, COO,",
         },
     },
@@ -179,7 +191,10 @@ _input_predict_proba_schema = {
 _output_predict_proba_schema = {
     "description": "The class probabilities of the input samples. The order of",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 
 _input_decision_function_schema = {

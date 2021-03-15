@@ -16,8 +16,7 @@ from lale.operators import (
 
 
 class NonTerminal(Operator):
-    """ Abstract operator for non-terminal grammar rules.
-    """
+    """Abstract operator for non-terminal grammar rules."""
 
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
         out = {}
@@ -66,8 +65,7 @@ class NonTerminal(Operator):
 
 
 class Grammar(Operator):
-    """ Base class for Lale grammars.
-    """
+    """Base class for Lale grammars."""
 
     _variables: Dict[str, Operator]
 
@@ -123,7 +121,7 @@ class Grammar(Operator):
         raise NotImplementedError()  # TODO
 
     def _unfold(self, op: Operator, n: int) -> Optional[Operator]:
-        """ Unroll all possible operators from the grammar `g` starting from    non-terminal `op` after `n` derivations.
+        """Unroll all possible operators from the grammar `g` starting from    non-terminal `op` after `n` derivations.
 
         Parameters
         ----------

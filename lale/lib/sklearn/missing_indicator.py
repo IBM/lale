@@ -57,10 +57,17 @@ _hyperparams_schema = {
         {
             "description": 'error_on_new, only when features="missing-only"',
             "anyOf": [
-                {"type": "object", "properties": {"error_on_new": {"enum": [True]},}},
                 {
                     "type": "object",
-                    "properties": {"features": {"enum": ["missing-only"]},},
+                    "properties": {
+                        "error_on_new": {"enum": [True]},
+                    },
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "features": {"enum": ["missing-only"]},
+                    },
                 },
             ],
         },
@@ -73,7 +80,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Input data, where ``n_samples`` is the number of samples and",
         },
     },
@@ -85,7 +95,10 @@ _input_transform_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The input data to complete.",
         },
     },

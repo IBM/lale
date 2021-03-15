@@ -33,7 +33,12 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": ["priors", "reg_param", "store_covariance", "tol",],
+            "required": [
+                "priors",
+                "reg_param",
+                "store_covariance",
+                "tol",
+            ],
             "relevantToOptimizer": ["tol"],
             "additionalProperties": False,
             "properties": {

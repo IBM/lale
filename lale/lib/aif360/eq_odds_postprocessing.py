@@ -28,7 +28,12 @@ from .util import (
 
 class _EqOddsPostprocessingImpl(_BasePostEstimatorImpl):
     def __init__(
-        self, favorable_labels, protected_attributes, estimator, redact=True, seed=None,
+        self,
+        favorable_labels,
+        protected_attributes,
+        estimator,
+        redact=True,
+        seed=None,
     ):
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]

@@ -129,23 +129,35 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training data",
         },
         "y": {
             "anyOf": [
                 {
                     "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"},},
+                    "items": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
                 },
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
             ],
             "description": "Target values",
         },
         "sample_weight": {
             "anyOf": [
                 {"type": "number"},
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "description": "Individual weights for each sample",
@@ -161,7 +173,10 @@ _input_predict_schema = {
                 {"type": "array", "items": {"type": "number"}},
                 {
                     "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"},},
+                    "items": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
                 },
             ],
             "description": "Samples.",
@@ -174,7 +189,10 @@ _output_predict_schema = {
         {"type": "array", "items": {"type": "number"}},
         {  # There was a case where Ridge returned 2-d predictions for a single target.
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
         },
     ],
 }

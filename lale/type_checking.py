@@ -229,8 +229,7 @@ def is_subschema(sub_schema, super_schema) -> bool:
 
 
 class SubschemaError(Exception):
-    """Raised when a subschema check (sub `<:` sup) failed.
-    """
+    """Raised when a subschema check (sub `<:` sup) failed."""
 
     def __init__(self, sub, sup, sub_name="sub", sup_name="super"):
         self.sub = sub

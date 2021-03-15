@@ -33,7 +33,7 @@ def make_sklearn_compat(op):
 
 def sklearn_compat_clone(impl: Any) -> Any:
     """This is a deprecated method for backward compatibility and will be removed soon.
-       call lale.operators.clone (or scikit-learn clone) instead"""
+    call lale.operators.clone (or scikit-learn clone) instead"""
     warnings.warn(
         "sklearn_compat.sklearn_compat_clone exists for backwards compatibility and will be removed soon",
         DeprecationWarning,
