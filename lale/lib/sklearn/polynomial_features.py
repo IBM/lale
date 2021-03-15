@@ -56,7 +56,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The data.",
         },
         "y": {},
@@ -69,7 +72,10 @@ _input_transform_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The data to transform, row by row.",
         },
     },

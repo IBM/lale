@@ -105,7 +105,11 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
-            "relevantToOptimizer": ["fit_intercept", "regularizer", "max_iter",],
+            "relevantToOptimizer": [
+                "fit_intercept",
+                "regularizer",
+                "max_iter",
+            ],
             "additionalProperties": False,
             "properties": {
                 "max_iter": {

@@ -40,8 +40,10 @@ class _SuperTextTransformerImpl:
             "text_columns": text_columns,
             "activate_flag": activate_flag,
         }
-        self._wrapped_model = autoai_libs.transformers.text_transformers.SuperTextTransformer(
-            **self._hyperparams
+        self._wrapped_model = (
+            autoai_libs.transformers.text_transformers.SuperTextTransformer(
+                **self._hyperparams
+            )
         )
 
     def fit(self, X, y=None):

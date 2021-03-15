@@ -189,9 +189,9 @@ class SchemaRange(object):
 
     def diff(self, other: "SchemaRange") -> Optional[bool]:
         """Returns None if the resulting region is impossible.
-           Returns True if the other constraint was completely subtracted from
-           self.  If it could not be, then it returns False (and the caller should probably
-           keep the other constraint as a negated constraint)
+        Returns True if the other constraint was completely subtracted from
+        self.  If it could not be, then it returns False (and the caller should probably
+        keep the other constraint as a negated constraint)
         """
         # for now, just handle simple exclusions
         if not other.is_integer or other.is_integer == self.is_integer:
@@ -341,16 +341,16 @@ class SchemaRange(object):
 
     def remove_point(self, other: Union[int, float]) -> Optional[bool]:
         """Returns None if the resulting region is impossible.
-           Returns True if the other constraint was completely subtracted from
-           self.  If it could not be, then it returns False (and the caller should probably
-           keep the other constraint as a negated constraint)
+        Returns True if the other constraint was completely subtracted from
+        self.  If it could not be, then it returns False (and the caller should probably
+        keep the other constraint as a negated constraint)
         """
         return self.diff(SchemaRange.point(other))
 
     @classmethod
     def is_empty2(cls, lower: "SchemaRange", upper: "SchemaRange") -> bool:
-        """ Determines if the range given by taking lower bounds from lower and upper bound from upper is empty (contains nothing)
-            is_integer is assumed to be their disjunction
+        """Determines if the range given by taking lower bounds from lower and upper bound from upper is empty (contains nothing)
+        is_integer is assumed to be their disjunction
         """
         is_integer = lower.is_integer or upper.is_integer
 
@@ -371,6 +371,5 @@ class SchemaRange(object):
         return False
 
     def is_empty(self) -> bool:
-        """ Determines if the range is empty (contains nothing)
-        """
+        """Determines if the range is empty (contains nothing)"""
         return SchemaRange.is_empty2(self, self)

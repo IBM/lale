@@ -126,11 +126,17 @@ outputs with unit component-wise variances.""",
             "anyOf": [
                 {
                     "type": "object",
-                    "properties": {"n_components": {"not": {"enum": ["mle"]},}},
+                    "properties": {
+                        "n_components": {
+                            "not": {"enum": ["mle"]},
+                        }
+                    },
                 },
                 {
                     "type": "object",
-                    "properties": {"svd_solver": {"enum": ["full", "auto"]},},
+                    "properties": {
+                        "svd_solver": {"enum": ["full", "auto"]},
+                    },
                 },
             ],
         },
@@ -151,7 +157,12 @@ outputs with unit component-wise variances.""",
                         }
                     },
                 },
-                {"type": "object", "properties": {"svd_solver": {"enum": ["full"]},}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "svd_solver": {"enum": ["full"]},
+                    },
+                },
             ],
         },
         {
@@ -159,11 +170,15 @@ outputs with unit component-wise variances.""",
             "anyOf": [
                 {
                     "type": "object",
-                    "properties": {"iterated_power": {"enum": ["auto"]},},
+                    "properties": {
+                        "iterated_power": {"enum": ["auto"]},
+                    },
                 },
                 {
                     "type": "object",
-                    "properties": {"svd_solver": {"enum": ["randomized"]},},
+                    "properties": {
+                        "svd_solver": {"enum": ["randomized"]},
+                    },
                 },
             ],
         },

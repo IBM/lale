@@ -126,13 +126,15 @@ _input_fit_schema = {
     "properties": {"X": {}},
 }
 
-_input_predict_transform_schema = {  # TODO: separate predict vs. predict_proba vs. transform
-    "description": "Input data schema for transformations using identity.",
-    "type": "object",
-    "required": ["X", "y"],
-    "additionalProperties": False,
-    "properties": {"X": {}, "y": {}},
-}
+_input_predict_transform_schema = (
+    {  # TODO: separate predict vs. predict_proba vs. transform
+        "description": "Input data schema for transformations using identity.",
+        "type": "object",
+        "required": ["X", "y"],
+        "additionalProperties": False,
+        "properties": {"X": {}, "y": {}},
+    }
+)
 
 _output_schema = {  # TODO: separate predict vs. predict_proba vs. transform
     "description": "Output data schema for transformations using identity.",
@@ -165,7 +167,7 @@ lale.docstrings.set_docstrings(Observing)
 
 class LoggingObserver:
     """An observer that logs everything.
-        This is also useful for debugging, since you can set breakpoints here
+    This is also useful for debugging, since you can set breakpoints here
     """
 
     _indent: int

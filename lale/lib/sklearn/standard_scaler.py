@@ -60,7 +60,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The data used to compute the mean and standard deviation",
         },
         "y": {"description": "Ignored"},
@@ -74,7 +77,10 @@ _input_transform_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The data used to scale along the features axis.",
         },
         "copy": {

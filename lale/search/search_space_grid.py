@@ -66,7 +66,7 @@ def get_search_space_grids(
     pgo: Optional[PGO] = None,
     data_schema: Dict[str, Any] = {},
 ) -> List[SearchSpaceGrid]:
-    """ Top level function: given a lale operator, returns a list of hp grids.
+    """Top level function: given a lale operator, returns a list of hp grids.
     Parameters
     ----------
     op : The lale PlannedOperator
@@ -172,7 +172,12 @@ class SearchSpaceToGridVisitor(Visitor):
             *param_grids
         )
         chained_grids: List[SearchSpaceGrid] = [
-            dict(ChainMap(*gridline,)) for gridline in param_grids_product
+            dict(
+                ChainMap(
+                    *gridline,
+                )
+            )
+            for gridline in param_grids_product
         ]
 
         if space.is_tuple:
@@ -292,7 +297,8 @@ class SearchSpaceToGridVisitor(Visitor):
 
         param_grids: List[List[SearchSpaceGrid]] = [
             nest_all_HPparams(
-                name, self.fixupDegenerateSearchSpaces(accept(space, self)),
+                name,
+                self.fixupDegenerateSearchSpaces(accept(space, self)),
             )
             for name, space in sub_spaces
         ]

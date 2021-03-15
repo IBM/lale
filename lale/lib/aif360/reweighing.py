@@ -42,7 +42,9 @@ class _ReweighingImpl:
             "protected_attributes": self.protected_attributes,
         }
         prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="drop", return_X_y=True,
+            **fairness_info,
+            remainder="drop",
+            return_X_y=True,
         )
         encoded_X, encoded_y = prot_attr_enc.transform(X, y)
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
@@ -55,7 +57,8 @@ class _ReweighingImpl:
         unpriv_groups = [{name: 0 for name in prot_attr_names}]
         priv_groups = [{name: 1 for name in prot_attr_names}]
         reweighing_trainable = aif360.algorithms.preprocessing.Reweighing(
-            unprivileged_groups=unpriv_groups, privileged_groups=priv_groups,
+            unprivileged_groups=unpriv_groups,
+            privileged_groups=priv_groups,
         )
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)

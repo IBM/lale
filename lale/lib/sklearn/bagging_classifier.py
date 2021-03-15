@@ -152,7 +152,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The training input samples. Sparse matrices are accepted only if",
         },
         "y": {
@@ -162,7 +165,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "description": "Sample weights. If None, then samples are equally weighted.",
@@ -176,7 +182,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
         },
     },
 }
@@ -192,7 +201,10 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The training input samples. Sparse matrices are accepted only if",
         },
     },
@@ -200,7 +212,10 @@ _input_predict_proba_schema = {
 
 _output_predict_proba_schema = {
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 
 _input_decision_function_schema = {

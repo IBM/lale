@@ -98,7 +98,9 @@ class _LFRImpl:
         assert isinstance(trainable_redact1_and_prep, lale.operators.TrainablePipeline)
         self.redact1_and_prep = trainable_redact1_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="drop", return_X_y=True,
+            **fairness_info,
+            remainder="drop",
+            return_X_y=True,
         )
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         self.pandas_to_dataset = _PandasToDatasetConverter(

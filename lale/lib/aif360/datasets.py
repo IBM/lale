@@ -179,7 +179,9 @@ def fetch_bank_df(preprocess=False):
         encoded_y = pd.Series(orig_y == 0, dtype=np.float64, name=orig_y.name)
         fairness_info = {
             "favorable_labels": [1],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]},],
+            "protected_attributes": [
+                {"feature": "age", "privileged_groups": [1]},
+            ],
         }
         return encoded_X, encoded_y, fairness_info
     else:

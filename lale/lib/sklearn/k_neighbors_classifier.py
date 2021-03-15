@@ -117,16 +117,33 @@ _hyperparams_schema = {
             "anyOf": [
                 {
                     "type": "object",
-                    "properties": {"algorithm": {"enum": ["ball_tree", "kd_tree"]},},
+                    "properties": {
+                        "algorithm": {"enum": ["ball_tree", "kd_tree"]},
+                    },
                 },
-                {"type": "object", "properties": {"leaf_size": {"enum": [30]},}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "leaf_size": {"enum": [30]},
+                    },
+                },
             ],
         },
         {
             "description": "The power parameter is specific to the minkowski metric.",
             "anyOf": [
-                {"type": "object", "properties": {"metric": {"enum": ["minkowski"]},}},
-                {"type": "object", "properties": {"p": {"enum": [2]},}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "metric": {"enum": ["minkowski"]},
+                    },
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "p": {"enum": [2]},
+                    },
+                },
             ],
         },
     ],
@@ -141,7 +158,10 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
         },
         "y": {
             "description": "Target class labels; the array is over samples.",
@@ -227,7 +247,8 @@ _combined_schemas = {
 }
 
 KNeighborsClassifier = lale.operators.make_operator(
-    sklearn.neighbors.KNeighborsClassifier, _combined_schemas,
+    sklearn.neighbors.KNeighborsClassifier,
+    _combined_schemas,
 )
 
 lale.docstrings.set_docstrings(KNeighborsClassifier)

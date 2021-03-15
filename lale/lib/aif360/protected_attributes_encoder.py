@@ -300,7 +300,8 @@ class _ProtectedAttributesEncoderImpl:
 
 
 ProtectedAttributesEncoder = lale.operators.make_operator(
-    _ProtectedAttributesEncoderImpl, _combined_schemas,
+    _ProtectedAttributesEncoderImpl,
+    _combined_schemas,
 )
 
 lale.docstrings.set_docstrings(ProtectedAttributesEncoder)

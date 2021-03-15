@@ -79,8 +79,7 @@ T = TypeVar("T")
 
 
 class FrequencyDistribution(Generic[T]):
-    """ Represents the distribution implied by a histogram
-    """
+    """Represents the distribution implied by a histogram"""
 
     freq_dist: np.array  # Array[T,int]
     vals: np.array  # Array[T]
@@ -243,12 +242,12 @@ def freqsAsFloatValues(
 def freqsAsEnumValues(
     freqs: Iterable[Tuple[Any, int]], values: List[Any]
 ) -> Iterator[Tuple[Defaultable[Any], int]]:
-    """ only keeps things that match the string representation of values in the enumeration.
-        converts from the string to the value as represented in the enumeration.
+    """only keeps things that match the string representation of values in the enumeration.
+    converts from the string to the value as represented in the enumeration.
     """
 
     def as_str(v) -> str:
-        """ There are some quirks in how the PGO files
+        """There are some quirks in how the PGO files
         encodes values relative to python's str method
         """
         if v is None:

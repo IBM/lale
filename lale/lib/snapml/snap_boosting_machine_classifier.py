@@ -173,7 +173,12 @@ _hyperparams_schema = {
                     "description": "Compress trees after training for fast inference.",
                 },
                 "base_score": {
-                    "anyOf": [{"type": "number",}, {"enum": [None]},],
+                    "anyOf": [
+                        {
+                            "type": "number",
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Base score to initialize boosting algorithm. If None then the algorithm will initialize the base score to be the the logit of the probability of the positive class.",
                 },
@@ -183,7 +188,13 @@ _hyperparams_schema = {
                     "description": "If set to 'balanced' samples weights will be applied to account for class imbalance, otherwise no sample weights will be used.",
                 },
                 "max_depth": {
-                    "anyOf": [{"type": "integer", "minimum": 1,}, {"enum": [None]},],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "If set, will set min_max_depth = max_depth = max_max_depth",
                 },

@@ -28,7 +28,10 @@ _hyperparams_schema = {
             "properties": {
                 "priors": {
                     "anyOf": [
-                        {"type": "array", "items": {"type": "number"},},
+                        {
+                            "type": "array",
+                            "items": {"type": "number"},
+                        },
                         {"enum": [None]},
                     ],
                     "default": None,
@@ -66,7 +69,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training vector, where n_samples is the number of samples and",
         },
         "y": {
@@ -85,7 +91,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
         },
     },
 }
@@ -104,7 +113,10 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Array of samples/test vectors.",
         },
     },
@@ -112,7 +124,10 @@ _input_predict_proba_schema = {
 _output_predict_proba_schema = {
     "description": "Posterior probabilities of classification per class.",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 
 _input_decision_function_schema = {

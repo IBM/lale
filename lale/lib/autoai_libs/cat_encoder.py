@@ -120,7 +120,10 @@ _hyperparams_schema = {
                             "type": "array",
                             "items": {
                                 "anyOf": [
-                                    {"type": "array", "items": {"type": "string"},},
+                                    {
+                                        "type": "array",
+                                        "items": {"type": "string"},
+                                    },
                                     {
                                         "type": "array",
                                         "items": {"type": "number"},
