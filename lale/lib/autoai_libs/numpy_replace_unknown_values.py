@@ -32,8 +32,10 @@ class _NumpyReplaceUnknownValuesImpl:
             "missing_values_reference_list": missing_values_reference_list,
             "filling_values_list": filling_values_list,
         }
-        self._wrapped_model = autoai_libs.transformers.exportable.NumpyReplaceUnknownValues(
-            **self._hyperparams
+        self._wrapped_model = (
+            autoai_libs.transformers.exportable.NumpyReplaceUnknownValues(
+                **self._hyperparams
+            )
         )
 
     def fit(self, X, y=None):

@@ -78,8 +78,7 @@ class OperatorSchemaError(VisitorPathError):
 def op_to_search_space(
     op: PlannedOperator, pgo: Optional[PGO] = None, data_schema={}
 ) -> SearchSpace:
-    """ Given an operator, this method compiles its schemas into a SearchSpace
-    """
+    """Given an operator, this method compiles its schemas into a SearchSpace"""
     search_space = SearchSpaceOperatorVisitor.run(op, pgo=pgo, data_schema=data_schema)
 
     if should_print_search_space("true", "all", "search_space"):
@@ -148,10 +147,10 @@ def asFreqs(part: pgo_part) -> Optional[Iterable[Tuple[Any, int]]]:
 
 
 def add_sub_space(space, k, v):
-    """ Given a search space and a "key",
-        if the defined subschema does not exist,
-        set it to be the constant v space
-   """
+    """Given a search space and a "key",
+    if the defined subschema does not exist,
+    set it to be the constant v space
+    """
     # TODO!
     # I should parse __ and such and walk down the schema
     if isinstance(space, SearchSpaceObject):

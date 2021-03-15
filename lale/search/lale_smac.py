@@ -74,7 +74,7 @@ def get_smac_space(
     lale_pgo: Optional[PGO] = None,
     data_schema: Dict[str, Any] = {},
 ) -> ConfigurationSpace:
-    """ Top level function: given a lale operator, returns a ConfigurationSpace for use with SMAC
+    """Top level function: given a lale operator, returns a ConfigurationSpace for use with SMAC
     Parameters
     ----------
     op : The lale PlannedOperator
@@ -125,8 +125,7 @@ SAMPLES_PER_DISTRIBUTION = 2
 
 
 def SearchSpaceNumberToSMAC(key: str, hp: SearchSpaceNumber) -> Hyperparameter:
-    """Returns either a list of values intended to be sampled uniformly or a frozen scipy.stats distribution
-    """
+    """Returns either a list of values intended to be sampled uniformly or a frozen scipy.stats distribution"""
     dist = "uniform"
     if hp.distribution:
         dist = hp.distribution

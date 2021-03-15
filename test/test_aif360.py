@@ -142,8 +142,14 @@ class TestAIF360Num(unittest.TestCase):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": pd_columns.get_loc("sex"), "privileged_groups": [1],},
-                {"feature": pd_columns.get_loc("age"), "privileged_groups": [1],},
+                {
+                    "feature": pd_columns.get_loc("sex"),
+                    "privileged_groups": [1],
+                },
+                {
+                    "feature": pd_columns.get_loc("age"),
+                    "privileged_groups": [1],
+                },
             ],
         }
         result = {
@@ -277,7 +283,8 @@ class TestAIF360Num(unittest.TestCase):
         _, _, function_name, _ = traceback.extract_stack()[-2]
         print(f"disparate impact {di.mean():.3f} +- {di.std():.3f} {function_name}")
         self.assertTrue(
-            min_di <= di.mean() <= max_di, f"{min_di} <= {di.mean()} <= {max_di}",
+            min_di <= di.mean() <= max_di,
+            f"{min_di} <= {di.mean()} <= {max_di}",
         )
 
     def test_disparate_impact_remover_np_num(self):
@@ -479,7 +486,8 @@ class TestAIF360Cat(unittest.TestCase):
         conv_X = encoder.transform(orig_X)
         for i in range(orig_X.shape[0]):
             self.assertEqual(
-                orig_X[i, 8].startswith("male"), conv_X.at[i, "f8"],
+                orig_X[i, 8].startswith("male"),
+                conv_X.at[i, "f8"],
             )
             self.assertEqual(orig_X[i, 12] >= 26, conv_X.at[i, "f12"])
 
@@ -603,7 +611,8 @@ class TestAIF360Cat(unittest.TestCase):
         _, _, function_name, _ = traceback.extract_stack()[-2]
         print(f"disparate impact {di.mean():.3f} +- {di.std():.3f} {function_name}")
         self.assertTrue(
-            min_di <= di.mean() <= max_di, f"{min_di} <= {di.mean()} <= {max_di}",
+            min_di <= di.mean() <= max_di,
+            f"{min_di} <= {di.mean()} <= {max_di}",
         )
 
     def test_adversarial_debiasing_pd_cat(self):

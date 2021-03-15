@@ -25,17 +25,18 @@ try:
     from pyspark.sql.dataframe import DataFrame as spark_df
 
     # noqa in the imports here because those get used dynamically and flake fails.
-    from pyspark.sql.functions import (  # noqa
+    from pyspark.sql.functions import hour as spark_hour  # noqa
+    from pyspark.sql.functions import lit  # noqa
+    from pyspark.sql.functions import to_timestamp  # noqa
+    from pyspark.sql.functions import minute as spark_minute  # noqa
+    from pyspark.sql.functions import month as spark_month  # noqa
+
+    from pyspark.sql.functions import (  # noqa; isort: skip
         create_map,
         dayofmonth,
         dayofweek,
         dayofyear,
     )
-    from pyspark.sql.functions import hour as spark_hour  # noqa
-    from pyspark.sql.functions import lit
-    from pyspark.sql.functions import minute as spark_minute  # noqa
-    from pyspark.sql.functions import month as spark_month  # noqa
-    from pyspark.sql.functions import to_timestamp
 
     spark_installed = True
 except ImportError:

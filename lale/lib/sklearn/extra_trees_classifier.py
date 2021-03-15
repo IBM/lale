@@ -220,7 +220,10 @@ _input_fit_schema = {
             "anyOf": [
                 {
                     "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"},},
+                    "items": {
+                        "type": "array",
+                        "items": {"type": "number"},
+                    },
                 }
             ],
             "description": "The training input samples. Internally, its dtype will be converted",
@@ -235,7 +238,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "description": "Sample weights. If None, then samples are equally weighted. Splits",
@@ -248,7 +254,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The input samples. Internally, its dtype will be converted to",
         },
     },
@@ -268,7 +277,10 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The input samples. Internally, its dtype will be converted to",
         },
     },
@@ -276,7 +288,10 @@ _input_predict_proba_schema = {
 _output_predict_proba_schema = {
     "description": "such arrays if n_outputs > 1.",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",

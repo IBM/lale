@@ -21,10 +21,10 @@ from abc import ABCMeta
 
 
 class VisitorMeta(type):
-    """ This meta class adds a private _accept method that calls visitCLASSNAME on the visitor.
-        It does not currently support inheritance: you need to define the visitC method for subclasses
-        explicitly.
-        The private _accept method should be called via the Visitor#acccept method
+    """This meta class adds a private _accept method that calls visitCLASSNAME on the visitor.
+    It does not currently support inheritance: you need to define the visitC method for subclasses
+    explicitly.
+    The private _accept method should be called via the Visitor#acccept method
     """
 
     def __init__(cls, *args, **kwargs):
@@ -57,10 +57,10 @@ else:
 
 
 class AbstractVisitorMeta(VisitorMeta, GenericMeta):
-    """ This meta class adds an _accept method that calls visitCLASSNAME on the visitor.
-        It does not currently support inheritance: you need to define the visitC method for subclasses
-        explicitly.
-        The private _accept method should be called via the Visitor#acccept method.
+    """This meta class adds an _accept method that calls visitCLASSNAME on the visitor.
+    It does not currently support inheritance: you need to define the visitC method for subclasses
+    explicitly.
+    The private _accept method should be called via the Visitor#acccept method.
     """
 
     def __init__(cls, *args, **kwargs):

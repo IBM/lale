@@ -220,7 +220,9 @@ _hyperparams_schema = {
             "anyOf": [
                 {
                     "type": "object",
-                    "properties": {"learning_rate": {"enum": ["optimal"]},},
+                    "properties": {
+                        "learning_rate": {"enum": ["optimal"]},
+                    },
                 },
                 {
                     "type": "object",
@@ -244,7 +246,10 @@ _input_fit_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training data",
         },
         "y": {
@@ -257,7 +262,10 @@ _input_fit_schema = {
         },
         "coef_init": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "The initial coefficients to warm-start the optimization.",
         },
         "intercept_init": {
@@ -267,7 +275,10 @@ _input_fit_schema = {
         },
         "sample_weight": {
             "anyOf": [
-                {"type": "array", "items": {"type": "number"},},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
                 {"enum": [None]},
             ],
             "default": None,
@@ -281,7 +292,10 @@ _input_predict_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
             "description": "Training data",
         },
     },
@@ -301,14 +315,20 @@ _input_predict_proba_schema = {
     "properties": {
         "X": {
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"},},
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
         },
     },
 }
 _output_predict_proba_schema = {
     "description": "Returns the probability of the sample for each class in the model,",
     "type": "array",
-    "items": {"type": "array", "items": {"type": "number"},},
+    "items": {
+        "type": "array",
+        "items": {"type": "number"},
+    },
 }
 
 _input_decision_function_schema = {

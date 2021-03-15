@@ -235,7 +235,11 @@ It can also be set to any parameter of the base estimator that accepts positive 
                     "description": "The maximum amount of resource that any candidate is allowed to use for a given iteration.",
                     "anyOf": [
                         {"enum": ["auto"]},
-                        {"forOptimizer": False, "type": "integer", "minimum": 1,},
+                        {
+                            "forOptimizer": False,
+                            "type": "integer",
+                            "minimum": 1,
+                        },
                     ],
                     "default": "auto",
                 },
@@ -250,7 +254,11 @@ It can also be set to any parameter of the base estimator that accepts positive 
                             "description": "Sets r0 such that the last iteration uses as much resources as possible",
                             "enum": ["exhaust"],
                         },
-                        {"forOptimizer": False, "type": "integer", "minimum": 1,},
+                        {
+                            "forOptimizer": False,
+                            "type": "integer",
+                            "minimum": 1,
+                        },
                     ],
                     "default": "exhaust",
                 },
@@ -418,7 +426,9 @@ Default of None translates to `accuracy` for classification and `r2` for regress
                 {"type": "object", "properties": {"resource": {"enum": ["n_samples"]}}},
                 {
                     "type": "object",
-                    "properties": {"max_resources": {"not": {"enum": ["auto"]}},},
+                    "properties": {
+                        "max_resources": {"not": {"enum": ["auto"]}},
+                    },
                 },
             ],
         },
