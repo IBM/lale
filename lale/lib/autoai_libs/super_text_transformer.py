@@ -40,10 +40,8 @@ class _TextTransformerImpl:
             "text_columns": text_columns,
             "activate_flag": activate_flag,
         }
-        self._wrapped_model = autoai_libs.transformers.text_transformers.TextTransformer(
-            **self._hyperparams
         self._wrapped_model = (
-            autoai_libs.transformers.text_transformers.SuperTextTransformer(
+            autoai_libs.transformers.text_transformers.TextTransformer(
                 **self._hyperparams
             )
         )
@@ -184,8 +182,6 @@ _combined_schemas = {
     },
 }
 
-TextTransformer = lale.operators.make_operator(
-    _TextTransformerImpl, _combined_schemas
-)
+TextTransformer = lale.operators.make_operator(_TextTransformerImpl, _combined_schemas)
 
 lale.docstrings.set_docstrings(TextTransformer)
