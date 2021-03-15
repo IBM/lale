@@ -147,6 +147,7 @@ classifiers = [
     "lale.lib.sklearn.AdaBoostClassifier",
     "lale.lib.sklearn.SGDClassifier",
     "lale.lib.sklearn.RidgeClassifier",
+    "lale.lib.sklearn.DummyClassifier",
 ]
 for clf in classifiers:
     setattr(
