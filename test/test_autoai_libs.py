@@ -258,8 +258,8 @@ class TestAutoaiLibsText(unittest.TestCase):
         trained_hyperopt = hyperopt.fit(train_X, train_y)
         trained_hyperopt.predict(test_X)
 
-    def test_SuperTextTransformer(self):
-        trainable = lale.lib.autoai_libs.SuperTextTransformer(
+    def test_TextTransformer(self):
+        trainable = lale.lib.autoai_libs.TextTransformer(
             drop_columns=True, text_processing_options={"word2vec": {"output_dim": 5}}
         )
         self.doTest(trainable, self.train_X, self.train_y, self.test_X, self.test_y)

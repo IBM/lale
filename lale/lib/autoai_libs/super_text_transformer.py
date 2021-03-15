@@ -20,7 +20,7 @@ import lale.operators
 
 # This is currently needed just to hide get_params so that lale does not call clone
 # when doing a defensive copy
-class _SuperTextTransformerImpl:
+class _TextTransformerImpl:
     def __init__(
         self,
         text_processing_options,
@@ -40,7 +40,7 @@ class _SuperTextTransformerImpl:
             "text_columns": text_columns,
             "activate_flag": activate_flag,
         }
-        self._wrapped_model = autoai_libs.transformers.text_transformers.SuperTextTransformer(
+        self._wrapped_model = autoai_libs.transformers.text_transformers.TextTransformer(
             **self._hyperparams
         )
 
@@ -55,7 +55,7 @@ class _SuperTextTransformerImpl:
 _hyperparams_schema = {
     "allOf": [
         {
-            "description": """SuperTextTransformer is a transformer that converts text columns to numeric features.""",
+            "description": """TextTransformer is a transformer that converts text columns to numeric features.""",
             "type": "object",
             "additionalProperties": False,
             "required": [
@@ -180,8 +180,8 @@ _combined_schemas = {
     },
 }
 
-SuperTextTransformer = lale.operators.make_operator(
-    _SuperTextTransformerImpl, _combined_schemas
+TextTransformer = lale.operators.make_operator(
+    _TextTransformerImpl, _combined_schemas
 )
 
-lale.docstrings.set_docstrings(SuperTextTransformer)
+lale.docstrings.set_docstrings(TextTransformer)

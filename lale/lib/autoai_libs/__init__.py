@@ -43,7 +43,7 @@ Preprocessing numeric columns:
 
 Preprocessing text columns:
 
-* lale.lib.autoai_libs. `SuperTextTransformer`_
+* lale.lib.autoai_libs. `TextTransformer`_
 * lale.lib.autoai_libs. `Word2VecTransformer`_
 
 Feature transformation:
@@ -69,7 +69,7 @@ Feature transformation:
 .. _`FloatStr2Float`: lale.lib.autoai_libs.float_str2_float.html
 .. _`NumImputer`: lale.lib.autoai_libs.num_imputer.html
 .. _`OptStandardScaler`: lale.lib.autoai_libs.opt_standard_scaler.html
-.. _`SuperTextTransformer`: lale.lib.autoai_libs.super_text_transformer.html
+.. _`TextTransformer`: lale.lib.autoai_libs.text_transformer.html
 .. _`Word2VecTransformer`: lale.lib.autoai_libs.word2vec_transformer.html
 .. _`NumpyPermuteArray`: lale.lib.autoai_libs.numpy_permute_array.html
 .. _`TNoOp`: lale.lib.autoai_libs.t_no_op.html
@@ -97,7 +97,7 @@ from .numpy_permute_array import NumpyPermuteArray
 from .numpy_replace_missing_values import NumpyReplaceMissingValues
 from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
 from .opt_standard_scaler import OptStandardScaler
-from .super_text_transformer import SuperTextTransformer
+from .super_text_transformer import TextTransformer
 from .t_no_op import TNoOp
 from .ta1 import TA1
 from .ta2 import TA2
