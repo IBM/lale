@@ -25,6 +25,7 @@ Classifiers:
 * lale.lib.sklearn. `AdaBoostClassifier`_
 * lale.lib.sklearn. `BaggingClassifier`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
+* lale.lib.sklearn. `DummyRegressor`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
 * lale.lib.sklearn. `GaussianNB`_
 * lale.lib.sklearn. `GradientBoostingClassifier`_
@@ -44,6 +45,7 @@ Regressors:
 
 * lale.lib.sklearn. `AdaBoostRegressor`_
 * lale.lib.sklearn. `DecisionTreeRegressor`_
+* lale.lib.sklearn. `DummyRegressor`_
 * lale.lib.sklearn. `ExtraTreesRegressor`_
 * lale.lib.sklearn. `GradientBoostingRegressor`_
 * lale.lib.sklearn. `KNeighborsRegressor`_
@@ -133,6 +135,8 @@ from .bagging_classifier import BaggingClassifier
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
+from .dummy_classifier import DummyClassifier
+from .dummy_regressor import DummyRegressor
 from .extra_trees_classifier import ExtraTreesClassifier
 from .extra_trees_regressor import ExtraTreesRegressor
 from .feature_agglomeration import FeatureAgglomeration
