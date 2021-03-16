@@ -56,6 +56,9 @@ class _AdaBoostRegressorImpl:
     def predict(self, X):
         return self._wrapped_model.predict(X)
 
+    def score(self, X, y, sample_weight=None):
+        return self._wrapped_model.score(X, y, sample_weight)
+
 
 _hyperparams_schema = {
     "description": "inherited docstring for AdaBoostRegressor    An AdaBoost regressor.",

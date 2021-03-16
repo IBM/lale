@@ -1211,6 +1211,7 @@ class IndividualOp(Operator):
             "predict",
             "predict_proba",
             "decision_function",
+            "score",
         ]:
             if isinstance(self, TrainedIndividualOp):
                 raise AttributeError(
@@ -1222,7 +1223,7 @@ class IndividualOp(Operator):
                 )
             else:
                 raise AttributeError(
-                    f"Calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
+                    f"Calling {name} on a {type(self)} is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
                 )
 
         if name == "_estimator_type":
@@ -2167,6 +2168,24 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `decision_function`.")
 
+    @if_delegate_has_method(delegate="_impl")
+    def score(self, X, y, **score_params) -> Any:
+        """
+        .. deprecated:: 0.0.0
+           The `score` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `score`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning("score"), DeprecationWarning)
+        try:
+            if score_params is None:
+                return self._trained.score(X, y)
+            else:
+                return self._trained.score(X, y, **score_params)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `score`.")
+
     def free_hyperparams(self) -> Set[str]:
         hyperparam_schema = self.hyperparam_schema()
         to_bind: List[str]
@@ -2387,6 +2406,33 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         raw_result = self._impl_instance().decision_function(X)
         result = self._validate_output_schema(raw_result, "decision_function")
         # logger.info("%s exit  decision_function %s", time.asctime(), self.name())
+        return result
+
+    @if_delegate_has_method(delegate="_impl")
+    def score(self, X, y, **score_params) -> Any:
+        """Performance evaluation with a default metric.
+
+        Parameters
+        ----------
+        X :
+            Features.
+        y:
+            Ground truth labels.
+        score_params:
+            Any additional parameters expected by the score function of
+            the underlying operator.
+        Returns
+        -------
+        score :
+            performance metric value
+        """
+        # Use the input schema of predict as in most cases it applies to score as well.
+        X = self._validate_input_schema("X", X, "predict")
+        if score_params is None:
+            result = self._impl_instance().score(X, y)
+        else:
+            result = self._impl_instance().score(X, y, **score_params)
+        # We skip output validation for score for now
         return result
 
     def freeze_trainable(self) -> "TrainedIndividualOp":

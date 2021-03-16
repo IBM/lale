@@ -88,6 +88,12 @@ or with
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
 
+    def score(self, X, y):
+        from sklearn.metrics import r2_score
+
+        y_pred = self.predict(X)
+        return r2_score(y, y_pred)
+
 
 _hyperparams_schema = {
     "description": "LightGBM classifier. (https://lightgbm.readthedocs.io/en/latest/Python-API.html#scikit-learn-api)",
