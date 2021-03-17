@@ -110,6 +110,7 @@ feature_preprocessors = [
     "lale.lib.sklearn.FeatureAgglomeration",
     "lale.lib.sklearn.RobustScaler",
     "lale.lib.sklearn.QuantileTransformer",
+    "lale.lib.sklearn.VarianceThreshold",
 ]
 for fproc in feature_preprocessors:
     setattr(
