@@ -62,6 +62,9 @@ class _AdaBoostClassifierImpl:
     def decision_function(self, X):
         return self._wrapped_model.decision_function(X)
 
+    def score(self, X, y, sample_weight=None):
+        return self._wrapped_model.score(X, y, sample_weight)
+
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",

@@ -822,6 +822,26 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
+    def score(self, X, y, **score_params):
+        """Performance evaluation with a default metric.
+
+        Parameters
+        ----------
+        X :
+            Features.
+        y:
+            Ground truth labels.
+        score_params:
+            Any additional parameters expected by the score function of
+            the underlying operator.
+        Returns
+        -------
+        score :
+            performance metric value
+        """
+        pass
+
+    @abstractmethod
     def freeze_trained(self) -> "TrainedOperator":
         """Return a copy of this trainable operator that is the same except
         that all learnable coefficients are bound and thus fit is a no-op.
@@ -1209,6 +1229,7 @@ class IndividualOp(Operator):
             "predict",
             "predict_proba",
             "decision_function",
+            "score",
         ]:
             if isinstance(self, TrainedIndividualOp):
                 raise AttributeError(
@@ -1220,7 +1241,7 @@ class IndividualOp(Operator):
                 )
             else:
                 raise AttributeError(
-                    f"Calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
+                    f"Calling {name} on a {type(self)} is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
                 )
 
         if name == "_estimator_type":
@@ -2164,6 +2185,24 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `decision_function`.")
 
+    @if_delegate_has_method(delegate="_impl")
+    def score(self, X, y, **score_params) -> Any:
+        """
+        .. deprecated:: 0.0.0
+           The `score` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `score`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning("score"), DeprecationWarning)
+        try:
+            if score_params is None:
+                return self._trained.score(X, y)
+            else:
+                return self._trained.score(X, y, **score_params)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `score`.")
+
     def free_hyperparams(self) -> Set[str]:
         hyperparam_schema = self.hyperparam_schema()
         to_bind: List[str]
@@ -2384,6 +2423,33 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         raw_result = self._impl_instance().decision_function(X)
         result = self._validate_output_schema(raw_result, "decision_function")
         # logger.info("%s exit  decision_function %s", time.asctime(), self.name())
+        return result
+
+    @if_delegate_has_method(delegate="_impl")
+    def score(self, X, y, **score_params) -> Any:
+        """Performance evaluation with a default metric.
+
+        Parameters
+        ----------
+        X :
+            Features.
+        y:
+            Ground truth labels.
+        score_params:
+            Any additional parameters expected by the score function of
+            the underlying operator.
+        Returns
+        -------
+        score :
+            performance metric value
+        """
+        # Use the input schema of predict as in most cases it applies to score as well.
+        X = self._validate_input_schema("X", X, "predict")
+        if score_params is None:
+            result = self._impl_instance().score(X, y)
+        else:
+            result = self._impl_instance().score(X, y, **score_params)
+        # We skip output validation for score for now
         return result
 
     def freeze_trainable(self) -> "TrainedIndividualOp":
@@ -3348,6 +3414,20 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `decision_function`.")
 
+    def score(self, X, y, **score_params):
+        """
+        .. deprecated:: 0.0.0
+           The `score` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `score`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning("score"), DeprecationWarning)
+        try:
+            return self._trained.score(X, y, **score_params)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `score`.")
+
     def freeze_trainable(self) -> "TrainablePipeline":
         frozen_steps: List[TrainableOperator] = []
         frozen_map: Dict[Operator, Operator] = {}
@@ -3645,7 +3725,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     impl_method_name
                 ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
                     method_to_call_on_operator = getattr(operator, operator_method_name)
-                    output = method_to_call_on_operator(X=inputs)
+                    if operator_method_name == "score":
+                        output = method_to_call_on_operator(X=inputs, y=y)
+                    else:
+                        output = method_to_call_on_operator(X=inputs)
                 else:
                     raise AttributeError(
                         "The sink node of the pipeline does not support",
@@ -3710,6 +3793,25 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Confidences; see output_decision_function schema of the operator.
         """
         return self._predict_based_on_type("decision_function", "decision_function", X)
+
+    def score(self, X, y, **score_params):
+        """Performance evaluation with a default metric based on the final estimator.
+
+        Parameters
+        ----------
+        X :
+            Features.
+        y:
+            Ground truth labels.
+        score_params:
+            Any additional parameters expected by the score function of
+            the final estimator. These will be ignored for now.
+        Returns
+        -------
+        score :
+            performance metric value
+        """
+        return self._predict_based_on_type("score", "score", X, y)
 
     def transform_with_batches(self, X, y=None, serialize=True):
         """[summary]

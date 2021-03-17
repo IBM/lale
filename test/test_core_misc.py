@@ -589,3 +589,53 @@ class TestHyperparamRanges(unittest.TestCase):
         }
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
+
+
+class TestScoreIndividualOp(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_score_planned_op(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        with self.assertRaises(AttributeError):
+            LogisticRegression.score(self.X_test, self.y_test)
+
+    def test_score_trainable_op(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        trainable = LogisticRegression()
+        _ = trainable.fit(self.X_train, self.y_train)
+        trainable.score(self.X_test, self.y_test)
+
+    def test_score_trained_op(self):
+        from sklearn.metrics import accuracy_score
+
+        from lale.lib.sklearn import LogisticRegression
+
+        trainable = LogisticRegression()
+        trained_lr = trainable.fit(self.X_train, self.y_train)
+        score = trained_lr.score(self.X_test, self.y_test)
+        predictions = trained_lr.predict(self.X_test)
+        accuracy = accuracy_score(self.y_test, predictions)
+        self.assertEqual(score, accuracy)
+
+    def test_score_trained_op_sample_wt(self):
+        import numpy as np
+        from sklearn.metrics import accuracy_score
+
+        from lale.lib.sklearn import LogisticRegression
+
+        trainable = LogisticRegression()
+        trained_lr = trainable.fit(self.X_train, self.y_train)
+        rng = np.random.RandomState(0)
+        iris_weights = rng.randint(10, size=self.y_test.shape)
+        score = trained_lr.score(self.X_test, self.y_test, sample_weight=iris_weights)
+        predictions = trained_lr.predict(self.X_test)
+        accuracy = accuracy_score(self.y_test, predictions, sample_weight=iris_weights)
+        self.assertEqual(score, accuracy)
