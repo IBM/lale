@@ -623,4 +623,19 @@ class TestScoreIndividualOp(unittest.TestCase):
         score = trained_lr.score(self.X_test, self.y_test)
         predictions = trained_lr.predict(self.X_test)
         accuracy = accuracy_score(self.y_test, predictions)
-        self.assertEquals(score, accuracy)
+        self.assertEqual(score, accuracy)
+
+    def test_score_trained_op_sample_wt(self):
+        import numpy as np
+        from sklearn.metrics import accuracy_score
+
+        from lale.lib.sklearn import LogisticRegression
+
+        trainable = LogisticRegression()
+        trained_lr = trainable.fit(self.X_train, self.y_train)
+        rng = np.random.RandomState(0)
+        iris_weights = rng.randint(10, size=self.y_test.shape)
+        score = trained_lr.score(self.X_test, self.y_test, sample_weight=iris_weights)
+        predictions = trained_lr.predict(self.X_test)
+        accuracy = accuracy_score(self.y_test, predictions, sample_weight=iris_weights)
+        self.assertEqual(score, accuracy)

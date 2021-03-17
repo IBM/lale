@@ -824,6 +824,26 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
+    def score(self, X, y, **score_params):
+        """Performance evaluation with a default metric.
+
+        Parameters
+        ----------
+        X :
+            Features.
+        y:
+            Ground truth labels.
+        score_params:
+            Any additional parameters expected by the score function of
+            the underlying operator.
+        Returns
+        -------
+        score :
+            performance metric value
+        """
+        pass
+
+    @abstractmethod
     def freeze_trained(self) -> "TrainedOperator":
         """Return a copy of this trainable operator that is the same except
            that all learnable coefficients are bound and thus fit is a no-op.
@@ -3398,6 +3418,20 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `decision_function`.")
 
+    def score(self, X, y, **score_params):
+        """
+        .. deprecated:: 0.0.0
+           The `score` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `score`
+           on the trained operator returned by `fit` instead.
+        """
+        warnings.warn(_mutation_warning("score"), DeprecationWarning)
+        try:
+            return self._trained.score(X, y, **score_params)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `score`.")
+
     def freeze_trainable(self) -> "TrainablePipeline":
         frozen_steps: List[TrainableOperator] = []
         frozen_map: Dict[Operator, Operator] = {}
@@ -3696,7 +3730,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     impl_method_name
                 ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
                     method_to_call_on_operator = getattr(operator, operator_method_name)
-                    output = method_to_call_on_operator(X=inputs)
+                    if operator_method_name == "score":
+                        output = method_to_call_on_operator(X=inputs, y=y)
+                    else:
+                        output = method_to_call_on_operator(X=inputs)
                 else:
                     raise AttributeError(
                         "The sink node of the pipeline does not support",
@@ -3761,6 +3798,25 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Confidences; see output_decision_function schema of the operator.
         """
         return self._predict_based_on_type("decision_function", "decision_function", X)
+
+    def score(self, X, y, **score_params):
+        """Performance evaluation with a default metric based on the final estimator.
+
+        Parameters
+        ----------
+        X :
+            Features.
+        y:
+            Ground truth labels.
+        score_params:
+            Any additional parameters expected by the score function of
+            the final estimator. These will be ignored for now.
+        Returns
+        -------
+        score :
+            performance metric value
+        """
+        return self._predict_based_on_type("score", "score", X, y)
 
     def transform_with_batches(self, X, y=None, serialize=True):
         """[summary]
