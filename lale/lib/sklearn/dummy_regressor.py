@@ -18,9 +18,6 @@ import sklearn.dummy
 
 import lale.docstrings
 import lale.operators
-from lale.schemas import AnyOf, Enum, Float, Null
-
-
 
 _hyperparams_schema = {
     "allOf": [
@@ -29,6 +26,37 @@ _hyperparams_schema = {
             "type": "object",
             "relevantToOptimizer": [],
             "additionalProperties": False,
+            "required": ["strategy", "quantile"],
+            "property": {
+                "strategy": {
+                    "description": """Strategy to use to generate predictions.
+- “mean”: always predicts the mean of the training set
+- “median”: always predicts the median of the training set
+- “quantile”: always predicts a specified quantile of the training set, provided with the quantile parameter.
+- “constant”: always predicts a constant value that is provided by the user.""",
+                    "enum": ["mean", "median", "quantile", "constant"],
+                    "default": "mean",
+                },
+                "random_state": {
+                    "description": "Seed of pseudo-random number generator for shuffling data when solver == ‘sag’, ‘saga’ or ‘liblinear’.",
+                    "anyOf": [
+                        {
+                            "description": "RandomState used by np.random",
+                            "enum": [None],
+                        },
+                        {
+                            "description": "Use the provided random state, only affecting other users of that same random state instance.",
+                            "laleType": "numpy.random.RandomState",
+                        },
+                        {"description": "Explicit seed.", "type": "integer"},
+                    ],
+                    "default": None,
+                },
+                "quantile": {
+                    "description": "The quantile to predict using the “quantile” strategy. A quantile of 0.5 corresponds to the median, while 0.0 to the minimum and 1.0 to the maximum.",
+                    "type": "float",
+                },
+            },
         }
     ]
 }
@@ -69,9 +97,11 @@ _output_predict_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Baseline regressor always predicts the average target value.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.baseline_regressor.html",
-    "import_from": "lale.lib.lale",
+    "description": """`Dummy regressor`_ regressor that makes predictions using simple rules.
+
+.. _`Dummy regressor`: https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyRegressor.html
+""",
+    "import_from": "sklearn.dummy",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {

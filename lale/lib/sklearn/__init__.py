@@ -25,7 +25,7 @@ Classifiers:
 * lale.lib.sklearn. `AdaBoostClassifier`_
 * lale.lib.sklearn. `BaggingClassifier`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
-* lale.lib.sklearn. `DummyRegressor`_
+* lale.lib.sklearn. `DummyClassifier`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
 * lale.lib.sklearn. `GaussianNB`_
 * lale.lib.sklearn. `GradientBoostingClassifier`_
