@@ -873,3 +873,37 @@ class TestOperatorChoice(unittest.TestCase):
             >> make_choice(PCA, Nystroem)
             >> make_choice(LogisticRegression, KNeighborsClassifier)
         )
+
+
+class TestScore(unittest.TestCase):
+    def setUp(self):
+        from sklearn.model_selection import train_test_split
+
+        data = sklearn.datasets.load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_trained_pipeline(self):
+        trainable_pipeline = StandardScaler() >> LogisticRegression()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        score = trained_pipeline.score(self.X_test, self.y_test)
+        predictions = trained_pipeline.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+
+        accuracy = accuracy_score(self.y_test, predictions)
+        self.assertEqual(accuracy, score)
+
+    def test_trainable_pipeline(self):
+        trainable_pipeline = StandardScaler() >> LogisticRegression()
+        trainable_pipeline.fit(self.X_train, self.y_train)
+        score = trainable_pipeline.score(self.X_test, self.y_test)
+        predictions = trainable_pipeline.predict(self.X_test)
+        from sklearn.metrics import accuracy_score
+
+        accuracy = accuracy_score(self.y_test, predictions)
+        self.assertEqual(accuracy, score)
+
+    def test_planned_pipeline(self):
+        planned_pipeline = StandardScaler >> LogisticRegression
+        with self.assertRaises(AttributeError):
+            planned_pipeline.score(self.X_test, self.y_test)  # type: ignore

@@ -37,6 +37,12 @@ class _BaselineClassifierImpl:
         result = np.full((X.shape[0],), self._majority_label)
         return result
 
+    def score(self, X, y):
+        from sklearn.metrics import accuracy_score
+
+        y_pred = self.predict(X)
+        return accuracy_score(y, y_pred)
+
 
 _hyperparams_schema = {
     "allOf": [

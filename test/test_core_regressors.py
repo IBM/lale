@@ -58,6 +58,9 @@ def create_function_test_regressor(clf_name):
         trained = regr.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
+        # test score
+        _ = trained.score(self.X_test, self.y_test)
+
         # test_predict_on_trainable
         trained = regr.fit(X_train, y_train)
         regr.predict(X_train)

@@ -30,6 +30,12 @@ class _BaselineRegressorImpl:
         result = np.full((X.shape[0],), self._average_label)
         return result
 
+    def score(self, X, y):
+        from sklearn.metrics import r2_score
+
+        y_pred = self.predict(X)
+        return r2_score(y, y_pred)
+
 
 _hyperparams_schema = {
     "allOf": [
