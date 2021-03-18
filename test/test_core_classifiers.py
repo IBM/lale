@@ -128,6 +128,7 @@ def create_function_test_classifier(clf_name):
 
 
 classifiers = [
+    "lale.lib.sklearn.DummyClassifier",
     "lale.lib.sklearn.RandomForestClassifier",
     "lale.lib.sklearn.DecisionTreeClassifier",
     "lale.lib.sklearn.ExtraTreesClassifier",
@@ -146,7 +147,6 @@ classifiers = [
     "lale.lib.sklearn.AdaBoostClassifier",
     "lale.lib.sklearn.SGDClassifier",
     "lale.lib.sklearn.RidgeClassifier",
-    "lale.lib.sklearn.DummyClassifier",
 ]
 for clf in classifiers:
     setattr(
