@@ -58,13 +58,25 @@ _hyperparams_schema = {
                             "description": "Use the provided random state, only affecting other users of that same random state instance.",
                             "laleType": "numpy.random.RandomState",
                         },
-                        {"description": "Explicit seed.", "type": "integer"},
+                        {
+                            "description": "Explicit seed.", 
+                            "type": "integer"
+                        },
                     ],
                     "default": None,
                 },
                 "constant": {
                     "description": "The explicit constant as predicted by the “constant” strategy. This parameter is useful only for the “constant” strategy.",
-                    "type": ["integer", "string"],
+                    "anyOf": [
+                        {
+                            "type": ["integer", "string"]
+                        },
+                        {
+                            "enum": [None]
+                        },
+                        "default": None
+                        ]
+                    }
                 },
             },
         },
