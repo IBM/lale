@@ -65,7 +65,7 @@ _hyperparams_schema = {
                 "constant": {
                     "description": "The explicit constant as predicted by the “constant” strategy. This parameter is useful only for the “constant” strategy.",
                     "side constraint": "",
-                    "type": ["int", "string"],
+                    "type": ["integer", "string"],
                 },
             },
         },
