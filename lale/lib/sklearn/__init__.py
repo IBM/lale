@@ -76,6 +76,7 @@ Transformers:
 * lale.lib.sklearn. `SimpleImputer`_
 * lale.lib.sklearn. `StandardScaler`_
 * lale.lib.sklearn. `TfidfVectorizer`_
+* lale.lib.sklearn. `VarianceThreshold`_
 
 .. _`AdaBoostClassifier`: lale.lib.sklearn.ada_boost_classifier.html
 .. _`AdaBoostRegressor`: lale.lib.sklearn.ada_boost_regressor.html
@@ -124,6 +125,7 @@ Transformers:
 .. _`SVC`: lale.lib.sklearn.svc.html
 .. _`SVR`: lale.lib.sklearn.svr.html
 .. _`TfidfVectorizer`: lale.lib.sklearn.tfidf_vectorizer.html
+.. _`VarianceThreshold`: lale.lib.sklearn.variance_threshold.html
 .. _`VotingClassifier`: lale.lib.sklearn.voting_classifier.html
 """
 
@@ -174,4 +176,5 @@ from .standard_scaler import StandardScaler
 from .svc import SVC
 from .svr import SVR
 from .tfidf_vectorizer import TfidfVectorizer
+from .variance_threshold import VarianceThreshold
 from .voting_classifier import VotingClassifier
