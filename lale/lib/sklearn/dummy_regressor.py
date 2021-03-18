@@ -56,7 +56,7 @@ _hyperparams_schema = {
                     "description": "The quantile to predict using the “quantile” strategy. A quantile of 0.5 corresponds to the median, while 0.0 to the minimum and 1.0 to the maximum.",
                     "anyOf": [
                         {"enum": [None]},
-                        {"type": "float", "minimum": 0.0, "maximum": 1.0},
+                        {"type": "number", "minimum": 0.0, "maximum": 1.0},
                     ],
                     "default": None,
                 },
