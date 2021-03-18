@@ -58,10 +58,7 @@ _hyperparams_schema = {
                             "description": "Use the provided random state, only affecting other users of that same random state instance.",
                             "laleType": "numpy.random.RandomState",
                         },
-                        {
-                            "description": "Explicit seed.", 
-                            "type": "integer"
-                        },
+                        {"description": "Explicit seed.", "type": "integer"},
                     ],
                     "default": None,
                 },
@@ -74,10 +71,11 @@ _hyperparams_schema = {
                         {
                             "enum": [None]
                         },
-                        "default": None
-                        ]
-                    }
-                },
+                        {
+                            "default": None
+                        }
+                    ]
+                }
             },
         },
     ]
