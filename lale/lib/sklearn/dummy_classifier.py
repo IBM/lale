@@ -65,15 +65,9 @@ _hyperparams_schema = {
                 "constant": {
                     "description": "The explicit constant as predicted by the “constant” strategy. This parameter is useful only for the “constant” strategy.",
                     "anyOf": [
-                        {
-                            "type": ["integer", "string"]
-                        },
-                        {
-                            "enum": [None]
-                        },
-                        {
-                            "default": None
-                        },
+                        {"type": ["integer", "string"]},
+                        {"enum": [None]},
+                        {"default": None},
                     ],
                 },
             },
