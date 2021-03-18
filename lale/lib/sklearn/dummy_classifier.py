@@ -73,9 +73,9 @@ _hyperparams_schema = {
                         },
                         {
                             "default": None
-                        }
-                    ]
-                }
+                        },
+                    ],
+                },
             },
         },
     ]
