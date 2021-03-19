@@ -37,13 +37,20 @@ _hyperparams_schema = {
                     "enum": ["mean", "median", "quantile", "constant"],
                     "default": "mean",
                 },
-                "constant": {
-                    "description": "The explicit constant as predicted by the “constant” strategy. This parameter is useful only for the “constant” strategy.",
+                "random_state": {
+                    "description": "Seed of pseudo-random number generator for shuffling data when solver == ‘sag’, ‘saga’ or ‘liblinear’.",
                     "anyOf": [
-                        {"type": ["integer", "string"]},
-                        {"enum": [None]},
-                        {"default": None},
+                        {
+                            "description": "RandomState used by np.random",
+                            "enum": [None],
+                        },
+                        {
+                            "description": "Use the provided random state, only affecting other users of that same random state instance.",
+                            "laleType": "numpy.random.RandomState",
+                        },
+                        {"description": "Explicit seed.", "type": "integer"},
                     ],
+                    "default": None,
                 },
                 "quantile": {
                     "description": "The quantile to predict using the “quantile” strategy. A quantile of 0.5 corresponds to the median, while 0.0 to the minimum and 1.0 to the maximum.",
