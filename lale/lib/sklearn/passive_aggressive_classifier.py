@@ -277,8 +277,8 @@ if sklearn.__version__ >= "0.21":
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
         max_iter=Int(
-            minForOptimizer=5,
-            maxForOptimizer=1000,
+            minimumForOptimizer=5,
+            maximumForOptimizer=1000,
             distribution="uniform",
             desc="The maximum number of passes over the training data (aka epochs).",
             default=1000,

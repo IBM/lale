@@ -291,7 +291,7 @@ class TestVisitorErrors(unittest.TestCase):
     #        print(str(ctxt.exception))
 
     def test_no_max_schema(self):
-        pca = PCA().customize_schema(n_components=schemas.Float(min=0.0))
+        pca = PCA().customize_schema(n_components=schemas.Float(minimum=0.0))
         plan = (
             (pca & (MinMaxScaler | Normalizer))
             >> ConcatFeatures()
