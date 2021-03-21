@@ -142,7 +142,7 @@ class TestCustomSchema(unittest.TestCase):
         }
         foo = self.ll_pca.customize_schema(
             tol=schemas.Float(
-                default=0.1, min=-10, max=10, exclusiveMax=True, exclusiveMin=False
+                default=0.1, minimum=-10, maximum=10, exclusiveMaximum=True, exclusiveMinimum=False
             )
         )
         self.assertEqual(foo.hyperparam_schema("tol"), expected)
@@ -161,7 +161,7 @@ class TestCustomSchema(unittest.TestCase):
         }
         foo = self.ll_pca.customize_schema(
             iterated_power=schemas.Int(
-                default=1, min=-10, max=10, exclusiveMax=True, exclusiveMin=False
+                default=1, minimum=-10, maximum=10, exclusiveMaximum=True, exclusiveMinimum=False
             )
         )
         self.assertEqual(foo.hyperparam_schema("iterated_power"), expected)
