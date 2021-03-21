@@ -296,7 +296,7 @@ if sklearn.__version__ >= "0.22":
         max_samples=AnyOf(
             types=[
                 Null(desc="Draw X.shape[0] samples."),
-                Int(desc="Draw max_samples samples.", min=1),
+                Int(desc="Draw max_samples samples.", minimum=1),
                 Float(
                     desc="Draw max_samples * X.shape[0] samples.",
                     minimum=0.0,
