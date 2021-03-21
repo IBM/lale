@@ -191,7 +191,11 @@ if sklearn.__version__ >= "0.21":
         ),
         n_clusters=AnyOf(
             types=[
-                Int(minimumForOptimizer=2, maximumForOptimizer=8, laleMaximum="X/maxItems"),
+                Int(
+                    minimumForOptimizer=2,
+                    maximumForOptimizer=8,
+                    laleMaximum="X/maxItems",
+                ),
                 Null(forOptimizer=False),
             ],
             default=2,
