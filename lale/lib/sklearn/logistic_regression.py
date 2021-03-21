@@ -451,7 +451,7 @@ if sklearn.__version__ >= "0.22":
                 default="auto",
             ),
             l1_ratio=AnyOf(
-                types=[Float(min=0.0, max=1.0), Null()],
+                types=[Float(minimum=0.0, maximum=1.0), Null()],
                 desc="The Elastic-Net mixing parameter.",
                 default=None,
             ),
