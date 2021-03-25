@@ -104,8 +104,6 @@ Lale operators attempt to behave like reasonable sckit-learn operators when poss
 In particular, operators support:
 
 - get_params to return the hyperparameter settings for an operator.
-  (Note that setting deep=True is currently ignored, but we plan on supporting it
-  in a future version).
 - set_params for updating them (in-place).  This is only supported by TrainableIndividualOps and Pipelines.
   Note that while set_params is supported for
   compatibility, but its use is not encouraged, since it mutates the operator in-place.
@@ -191,6 +189,7 @@ from lale.helpers import (
     is_numeric_structure,
     make_degen_indexed_name,
     make_indexed_name,
+    nest_HPparams,
     partition_sklearn_choice_params,
     partition_sklearn_params,
     structure_type_name,
@@ -1006,7 +1005,40 @@ class IndividualOp(Operator):
 
     _enum_attributes: Optional[_DictionaryObjectForEnum]
 
-    def _get_params_all(self) -> Dict[str, Any]:
+    @classmethod
+    def _add_nested_params(cls, output: Dict[str, Any], k: str, v: Any):
+
+        nested_params = cls._get_nested_params(v)
+        if nested_params:
+            output.update(nest_HPparams(k, nested_params))
+
+    @classmethod
+    def _get_nested_params(cls, v: Any) -> Optional[Dict[str, Any]]:
+        # TODO: design question.  This seems like the right thing,
+        # but sklearn does not currently do this, as is apparent with,
+        # e.g VotingClassifier
+
+        # if isinstance(v, list) or isinstance(v, tuple):
+        #     output: Dict[str, Any] = {}
+        #     for i, elem in enumerate(v):
+        #         nested = cls._get_nested_params(elem)
+        #         if nested:
+        #             output.update(nest_HPparams(str(i)), nested)
+        #     return output
+        # elif isinstance(v, dict):
+        #     output: Dict[str, Any] = {}
+        #     for sub_k, sub_v in v.items():
+        #         nested = cls._get_nested_params(sub_v)
+        #         if nested:
+        #             output.update(nest_HPparams(sub_k), nested)
+        #     return output
+        # else:
+        try:
+            return v.get_params(deep=True)
+        except AttributeError:
+            return None
+
+    def _get_params_all(self, deep: bool = False) -> Dict[str, Any]:
         output: Dict[str, Any] = {}
         hps = self.hyperparams_all()
         if hps is not None:
@@ -1015,6 +1047,12 @@ class IndividualOp(Operator):
         for k in defaults.keys():
             if k not in output:
                 output[k] = defaults[k]
+        if deep:
+            deep_stuff: Dict[str, Any] = {}
+            for k, v in output.items():
+                self._add_nested_params(deep_stuff, k, v)
+
+            output.update(deep_stuff)
         return output
 
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
@@ -1053,9 +1091,9 @@ class IndividualOp(Operator):
             ):
                 out.update(impl._wrapped_model.get_params(deep=deep))
             else:
-                out.update(self._get_params_all())
+                out.update(self._get_params_all(deep=deep))
         else:
-            out.update(self._get_params_all())
+            out.update(self._get_params_all(deep=deep))
 
         if self.frozen_hyperparams() is not None:
             out["_lale_frozen_hyperparameters"] = self.frozen_hyperparams()
@@ -2689,12 +2727,25 @@ class BasePipeline(Operator, Generic[OpType]):
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
         out: Dict[str, Any] = {}
         out["steps"] = self._steps
-        out["preds"] = self._get_preds_indices()
-        out["ordered"] = True
+        out["_lale_preds"] = self._get_preds_indices()
+
+        indices: Dict[str, int] = {}
+
+        def make_indexed(name: str) -> str:
+            idx = 0
+            if name in indices:
+                idx = indices[name] + 1
+                indices[name] = idx
+            else:
+                indices[name] = 0
+            return make_indexed_name(name, idx)
 
         if deep:
-            # TODO: do something here
-            pass
+            for op in self._steps:
+                name = make_indexed(op.name())
+                nested_params = op.get_params(deep=deep)
+                if nested_params:
+                    out.update(nest_HPparams(name, nested_params))
         return out
 
     def set_params(self, **impl_params):
@@ -2768,28 +2819,30 @@ class BasePipeline(Operator, Generic[OpType]):
         self,
         steps: List[OpType],
         edges: Optional[Iterable[Tuple[OpType, OpType]]] = None,
-        preds: Optional[Union[Dict[int, List[int]], Dict[OpType, List[OpType]]]] = None,
+        _lale_preds: Optional[
+            Union[Dict[int, List[int]], Dict[OpType, List[OpType]]]
+        ] = None,
         ordered: bool = False,
     ) -> None:
         self._name = "pipeline_" + str(id(self))
         self._preds = {}
         for step in steps:
             assert isinstance(step, Operator)
-        if preds is not None:
+        if _lale_preds is not None:
             # this is a special case that is meant for use with cloning
+            # if preds is set, we assume that it is ordered as well
             assert edges is None
-            assert ordered
             self._steps = steps
-            if preds:
+            if _lale_preds:
                 # TODO: improve typing situation
-                if isinstance(list(preds.keys())[0], int):
-                    self._preds = self._indices_to_preds(steps, preds)  # type: ignore
-                    self._cached_preds = preds  # type: ignore
+                if isinstance(list(_lale_preds.keys())[0], int):
+                    self._preds = self._indices_to_preds(steps, _lale_preds)  # type: ignore
+                    self._cached_preds = _lale_preds  # type: ignore
                 else:
-                    self._preds = preds  # type: ignore
+                    self._preds = _lale_preds  # type: ignore
                     self._cached_preds = None  # type: ignore
             else:
-                self._cached_preds = preds  # type: ignore
+                self._cached_preds = _lale_preds  # type: ignore
             return
         self._cached_preds = None
         if edges is None:
@@ -3214,11 +3267,11 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
         self,
         steps: List[PlannedOpType],
         edges: Optional[Iterable[Tuple[PlannedOpType, PlannedOpType]]] = None,
-        preds: Optional[Dict[int, List[int]]] = None,
+        _lale_preds: Optional[Dict[int, List[int]]] = None,
         ordered: bool = False,
     ) -> None:
         super(PlannedPipeline, self).__init__(
-            steps, edges=edges, preds=preds, ordered=ordered
+            steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered
         )
 
     # give it a more precise type: if the input is a pipeline, the output is as well
@@ -3253,12 +3306,12 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         self,
         steps: List[TrainableOpType],
         edges: Optional[Iterable[Tuple[TrainableOpType, TrainableOpType]]] = None,
-        preds: Optional[Dict[int, List[int]]] = None,
+        _lale_preds: Optional[Dict[int, List[int]]] = None,
         ordered: bool = False,
         _lale_trained=False,
     ) -> None:
         super(TrainablePipeline, self).__init__(
-            steps, edges=edges, preds=preds, ordered=ordered
+            steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered
         )
 
     def remove_last(
@@ -3659,12 +3712,12 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         self,
         steps: List[TrainedOpType],
         edges: Optional[List[Tuple[TrainedOpType, TrainedOpType]]] = None,
-        preds: Optional[Dict[int, List[int]]] = None,
+        _lale_preds: Optional[Dict[int, List[int]]] = None,
         ordered: bool = False,
         _lale_trained=False,
     ) -> None:
         super(TrainedPipeline, self).__init__(
-            steps, edges=edges, preds=preds, ordered=ordered
+            steps, edges=edges, _lale_preds=_lale_preds, ordered=ordered
         )
 
     def remove_last(self, inplace: bool = False) -> "TrainedPipeline[TrainedOpType]":
@@ -3962,9 +4015,23 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         out["steps"] = self._steps
         out["name"] = self._name
 
+        indices: Dict[str, int] = {}
+
+        def make_indexed(name: str) -> str:
+            idx = 0
+            if name in indices:
+                idx = indices[name] + 1
+                indices[name] = idx
+            else:
+                indices[name] = 0
+            return make_indexed_name(name, idx)
+
         if deep:
-            # TODO: do something here
-            pass
+            for op in self._steps:
+                name = make_indexed(op.name())
+                nested_params = op.get_params(deep=deep)
+                if nested_params:
+                    out.update(nest_HPparams(name, nested_params))
         return out
 
     def set_params(self, **impl_params):
