@@ -78,7 +78,6 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 2,
-                            "laleMaximum": "X/maxItems",  # number of rows
                             "forOptimizer": False,
                             "distribution": "uniform",
                         },
@@ -100,7 +99,6 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 1,
-                            "laleMaximum": "X/maxItems",  # number of rows
                             "forOptimizer": False,
                         },
                         {
