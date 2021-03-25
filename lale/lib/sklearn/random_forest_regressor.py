@@ -304,7 +304,6 @@ _combined_schemas = {
     },
 }
 
-RandomForestRegressor: lale.operators.PlannedIndividualOp
 RandomForestRegressor = lale.operators.make_operator(
     sklearn.ensemble.RandomForestRegressor, _combined_schemas
 )
