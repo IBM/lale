@@ -85,19 +85,19 @@ class SchemaRange(object):
             schema.get("type", "numberForOptimizer") == "integer" or s.is_integer
         )
 
-        # if minimum is None:
-        #     minimum = s.minimum
-        #     if s.minimum is not None:
-        #         exclusive_minimum = exclusive_minimum or s.exclusive_minimum
-        # elif s.minimum is not None and minimum == s.minimum:
-        #         exclusive_minimum = exclusive_minimum or s.exclusive_minimum
+        if minimum is None:
+            minimum = s.minimum
+            if s.minimum is not None:
+                exclusive_minimum = exclusive_minimum or s.exclusive_minimum
+        elif s.minimum is not None and minimum == s.minimum:
+            exclusive_minimum = exclusive_minimum or s.exclusive_minimum
 
-        # if maximum is None:
-        #     maximum = s.maximum
-        #     if s.maximum is not None:
-        #         exclusive_maximum = exclusive_maximum or s.exclusive_maximum
-        # elif s.maximum is not None and minimum == s.minimum:
-        #         exclusive_maximum = exclusive_maximum or s.exclusive_maximum
+        if maximum is None:
+            maximum = s.maximum
+            if s.maximum is not None:
+                exclusive_maximum = exclusive_maximum or s.exclusive_maximum
+        elif s.maximum is not None and minimum == s.minimum:
+            exclusive_maximum = exclusive_maximum or s.exclusive_maximum
 
         return SchemaRange(
             minimum=minimum,

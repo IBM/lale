@@ -83,9 +83,11 @@ class Float(Schema):
         minimum: Option[float] = undefined,
         exclusiveMinimum: Option[bool] = undefined,
         minimumForOptimizer: Option[float] = undefined,
+        exclusiveMinimumForOptimizer: Option[bool] = undefined,
         maximum: Option[float] = undefined,
         exclusiveMaximum: Option[bool] = undefined,
         maximumForOptimizer: Option[float] = undefined,
+        exclusiveMaximumForOptimizer: Option[bool] = undefined,
         distribution: Option[str] = undefined,
     ):
         super().__init__(desc, default, forOptimizer)
@@ -93,9 +95,11 @@ class Float(Schema):
         self.set("minimum", minimum)
         self.set("exclusiveMinimum", exclusiveMinimum)
         self.set("minimumForOptimizer", minimumForOptimizer)
+        self.set("exclusiveMinimumForOptimizer", exclusiveMinimumForOptimizer)
         self.set("maximum", maximum)
         self.set("exclusiveMaximum", exclusiveMaximum)
         self.set("maximumForOptimizer", maximumForOptimizer)
+        self.set("exclusiveMaximumForOptimizer", exclusiveMaximumForOptimizer)
         self.set("distribution", distribution)
 
 
@@ -108,9 +112,11 @@ class Int(Schema):
         minimum: Option[int] = undefined,
         exclusiveMinimum: Option[bool] = undefined,
         minimumForOptimizer: Option[int] = undefined,
+        exclusiveMinimumForOptimizer: Option[bool] = undefined,
         maximum: Option[int] = undefined,
         exclusiveMaximum: Option[bool] = undefined,
         maximumForOptimizer: Option[int] = undefined,
+        exclusiveMaximumForOptimizer: Option[bool] = undefined,
         distribution: Option[str] = undefined,
         laleMaximum: Option[str] = undefined,
     ):
@@ -121,7 +127,9 @@ class Int(Schema):
         self.set("minimumForOptimizer", minimumForOptimizer)
         self.set("maximum", maximum)
         self.set("exclusiveMaximum", exclusiveMaximum)
+        self.set("exclusiveMinimumForOptimizer", exclusiveMinimumForOptimizer)
         self.set("maximumForOptimizer", maximumForOptimizer)
+        self.set("exclusiveMaximumForOptimizer", exclusiveMaximumForOptimizer)
         self.set("distribution", distribution)
         self.set("laleMaximum", laleMaximum)
 
