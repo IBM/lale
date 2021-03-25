@@ -101,6 +101,7 @@ regressors = [
     "lale.lib.sklearn.SGDRegressor",
     "lale.lib.sklearn.SVR",
     "lale.lib.sklearn.KNeighborsRegressor",
+    "lale.lib.sklearn.LinearSVR",
 ]
 for clf in regressors:
     setattr(
