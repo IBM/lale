@@ -369,7 +369,7 @@ if sklearn.__version__ >= "0.22":
             desc="Maximum number of loss function calls.",
             default=15000,
             forOptimizer=False,
-            min=0,
+            minimum=0,
         )
     )
 

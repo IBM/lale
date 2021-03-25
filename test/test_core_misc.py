@@ -25,6 +25,7 @@ from sklearn.datasets import load_iris
 
 import lale.operators as Ops
 import lale.type_checking
+from lale.helpers import nest_HPparams
 from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import (
     NMF,
@@ -361,6 +362,15 @@ class TestGetParams(unittest.TestCase):
 
         self.assertEqual(filtered_params, expected)
 
+    def test_deep_planned_individual_operator(self):
+        op: Ops.PlannedIndividualOp = LogisticRegression
+        params = op.get_params(deep=True)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(filtered_params, expected)
+
     def test_shallow_trainable_individual_operator_defaults(self):
         op: Ops.TrainableIndividualOp = LogisticRegression()
         params = op.get_params(deep=False)
@@ -414,9 +424,7 @@ class TestGetParams(unittest.TestCase):
 
         params = op.get_params(deep=False)
         assert "steps" in params
-        assert "preds" in params
-        assert "ordered" in params
-        assert params["ordered"] is True
+        assert "_lale_preds" in params
         pca = params["steps"][0]
         lr = params["steps"][1]
         assert isinstance(pca, Ops.PlannedIndividualOp)
@@ -433,9 +441,7 @@ class TestGetParams(unittest.TestCase):
 
         params = op.get_params(deep=False)
         assert "steps" in params
-        assert "preds" in params
-        assert "ordered" in params
-        assert params["ordered"] is True
+        assert "_lale_preds" in params
         pca = params["steps"][0]
         lr = params["steps"][1]
         assert isinstance(pca, Ops.PlannedIndividualOp)
@@ -454,9 +460,7 @@ class TestGetParams(unittest.TestCase):
 
         params = op.get_params(deep=False)
         assert "steps" in params
-        assert "preds" in params
-        assert "ordered" in params
-        assert params["ordered"] is True
+        assert "_lale_preds" in params
         pca = params["steps"][0]
         lr = params["steps"][1]
         assert isinstance(pca, Ops.PlannedIndividualOp)
@@ -474,9 +478,7 @@ class TestGetParams(unittest.TestCase):
 
         params = op.get_params(deep=False)
         assert "steps" in params
-        assert "preds" in params
-        assert "ordered" in params
-        assert params["ordered"] is True
+        assert "_lale_preds" in params
         pca = params["steps"][0]
         lr = params["steps"][1]
         assert isinstance(pca, Ops.TrainableIndividualOp)
@@ -495,9 +497,7 @@ class TestGetParams(unittest.TestCase):
 
         params = op.get_params(deep=False)
         assert "steps" in params
-        assert "preds" in params
-        assert "ordered" in params
-        assert params["ordered"] is True
+        assert "_lale_preds" in params
         pca = params["steps"][0]
         lr = params["steps"][1]
         assert isinstance(pca, Ops.TrainableIndividualOp)
@@ -509,6 +509,112 @@ class TestGetParams(unittest.TestCase):
         lr_expected["solver"] = "saga"
 
         self.assertEqual(lr_filtered_params, lr_expected)
+
+    def test_shallow_planned_nested_indiv_operator(self):
+        from lale.lib.sklearn import BaggingClassifier, DecisionTreeClassifier
+
+        clf = BaggingClassifier(base_estimator=DecisionTreeClassifier())
+        params = clf.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+        assert filtered_params["bootstrap"]
+
+    def test_shallow_planned_nested_list_indiv_operator(self):
+        from lale.lib.sklearn import DecisionTreeClassifier, VotingClassifier
+
+        clf = VotingClassifier(estimators=[("dtc", DecisionTreeClassifier())])
+        params = clf.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+        filtered_params["voting"] == "hard"
+
+    def test_deep_planned_pipeline(self):
+        op: Ops.PlannedPipeline = PCA >> LogisticRegression
+
+        params = op.get_params(deep=True)
+        assert "steps" in params
+        assert "_lale_preds" in params
+        pca = params["steps"][0]
+        lr = params["steps"][1]
+        assert isinstance(pca, Ops.PlannedIndividualOp)
+        assert isinstance(lr, Ops.PlannedIndividualOp)
+        assert "LogisticRegression__fit_intercept" in params
+        lr_params = lr.get_params()
+        lr_filtered_params = self.remove_lale_params(lr_params)
+
+        lr_expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(lr_filtered_params, lr_expected)
+
+    def test_deep_planned_choice(self):
+        op: Ops.PlannedPipeline = (PCA | NoOp) >> LogisticRegression
+
+        params = op.get_params(deep=True)
+        assert "steps" in params
+        choice = params["steps"][0]
+        assert isinstance(choice, Ops.OperatorChoice)
+        choice_name = choice.name()
+        self.assertTrue(params[choice_name + "__PCA__copy"])
+
+    def test_deep_planned_nested_indiv_operator(self):
+        from lale.lib.sklearn import BaggingClassifier, DecisionTreeClassifier
+
+        dtc = DecisionTreeClassifier()
+        clf = BaggingClassifier(base_estimator=dtc)
+        params = clf.get_params(deep=True)
+        filtered_params = self.remove_lale_params(params)
+
+        # expected = LogisticRegression.get_defaults()
+        base = filtered_params["base_estimator"]
+        base_params = self.remove_lale_params(base.get_params(deep=True))
+        nested_base_params = nest_HPparams("base_estimator", base_params)
+        self.assertDictEqual(
+            {
+                k: v
+                for k, v in filtered_params.items()
+                if k.startswith("base_estimator__")
+                and not k.startswith("base_estimator___lale")
+            },
+            nested_base_params,
+        )
+
+    def test_deep_grammar(self):
+        from lale.grammar import Grammar
+        from lale.lib.sklearn import BaggingClassifier, DecisionTreeClassifier
+        from lale.lib.sklearn import KNeighborsClassifier as KNN
+        from lale.lib.sklearn import LogisticRegression as LR
+        from lale.lib.sklearn import StandardScaler as Scaler
+
+        dtc = DecisionTreeClassifier()
+        clf = BaggingClassifier(base_estimator=dtc)
+        params = clf.get_params(deep=True)
+        filtered_params = self.remove_lale_params(params)
+
+        g = Grammar()
+        g.start = g.estimator
+        g.estimator = (NoOp | g.transformer) >> g.prim_est
+        g.transformer = (NoOp | g.transformer) >> g.prim_tfm
+
+        g.prim_est = LR | KNN
+        g.prim_tfm = PCA | Scaler
+
+        params = g.get_params(deep=True)
+        filtered_params = self.remove_lale_params(params)
+        assert filtered_params["start__name"] == "estimator"
+        assert filtered_params["prim_est__LogisticRegression__penalty"] == "l2"
+
+    # TODO: design question.
+    # def test_deep_planned_nested_list_indiv_operator(self):
+    #     from lale.lib.sklearn import VotingClassifier, DecisionTreeClassifier
+    #
+    #     clf = VotingClassifier(estimators=[("dtc", DecisionTreeClassifier())])
+    #     params = clf.get_params(deep=True)
+    #     filtered_params = self.remove_lale_params(params)
+    #
+    #     # expected = LogisticRegression.get_defaults()
+    #     base = filtered_params['base_estimator']
+    #     base_params = self.remove_lale_params(base.get_params(deep=True))
+    #     nested_base_params = nest_HPparams('base_esimator', base_params)
+    #
+    #     self.assertLess(nested_base_params, filtered_params)
 
 
 class TestHyperparamRanges(unittest.TestCase):
@@ -589,3 +695,53 @@ class TestHyperparamRanges(unittest.TestCase):
         }
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
+
+
+class TestScoreIndividualOp(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_score_planned_op(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        with self.assertRaises(AttributeError):
+            LogisticRegression.score(self.X_test, self.y_test)
+
+    def test_score_trainable_op(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        trainable = LogisticRegression()
+        _ = trainable.fit(self.X_train, self.y_train)
+        trainable.score(self.X_test, self.y_test)
+
+    def test_score_trained_op(self):
+        from sklearn.metrics import accuracy_score
+
+        from lale.lib.sklearn import LogisticRegression
+
+        trainable = LogisticRegression()
+        trained_lr = trainable.fit(self.X_train, self.y_train)
+        score = trained_lr.score(self.X_test, self.y_test)
+        predictions = trained_lr.predict(self.X_test)
+        accuracy = accuracy_score(self.y_test, predictions)
+        self.assertEqual(score, accuracy)
+
+    def test_score_trained_op_sample_wt(self):
+        import numpy as np
+        from sklearn.metrics import accuracy_score
+
+        from lale.lib.sklearn import LogisticRegression
+
+        trainable = LogisticRegression()
+        trained_lr = trainable.fit(self.X_train, self.y_train)
+        rng = np.random.RandomState(0)
+        iris_weights = rng.randint(10, size=self.y_test.shape)
+        score = trained_lr.score(self.X_test, self.y_test, sample_weight=iris_weights)
+        predictions = trained_lr.predict(self.X_test)
+        accuracy = accuracy_score(self.y_test, predictions, sample_weight=iris_weights)
+        self.assertEqual(score, accuracy)

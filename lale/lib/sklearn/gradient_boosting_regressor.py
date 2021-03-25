@@ -79,7 +79,6 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 2,
-                            "laleMaximum": "X/maxItems",  # number of rows
                             "forOptimizer": False,
                             "distribution": "uniform",
                         },
@@ -101,7 +100,6 @@ _hyperparams_schema = {
                         {
                             "type": "integer",
                             "minimum": 1,
-                            "laleMaximum": "X/maxItems",  # number of rows
                             "forOptimizer": False,
                         },
                         {
@@ -344,8 +342,8 @@ if sklearn.__version__ >= "0.22":
             desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
             default=0.0,
             forOptimizer=False,
-            min=0.0,
-            maxForOptimizer=0.1,
+            minimum=0.0,
+            maximumForOptimizer=0.1,
         ),
     )
 

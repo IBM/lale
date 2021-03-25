@@ -142,7 +142,11 @@ class TestCustomSchema(unittest.TestCase):
         }
         foo = self.ll_pca.customize_schema(
             tol=schemas.Float(
-                default=0.1, min=-10, max=10, exclusiveMax=True, exclusiveMin=False
+                default=0.1,
+                minimum=-10,
+                maximum=10,
+                exclusiveMaximum=True,
+                exclusiveMinimum=False,
             )
         )
         self.assertEqual(foo.hyperparam_schema("tol"), expected)
@@ -161,7 +165,11 @@ class TestCustomSchema(unittest.TestCase):
         }
         foo = self.ll_pca.customize_schema(
             iterated_power=schemas.Int(
-                default=1, min=-10, max=10, exclusiveMax=True, exclusiveMin=False
+                default=1,
+                minimum=-10,
+                maximum=10,
+                exclusiveMaximum=True,
+                exclusiveMinimum=False,
             )
         )
         self.assertEqual(foo.hyperparam_schema("iterated_power"), expected)
@@ -339,6 +347,108 @@ class TestCustomSchema(unittest.TestCase):
         finally:
             for sym, obj in old_globals.items():
                 globals()[sym] = obj
+
+
+class TestConstraintMerging(unittest.TestCase):
+    def test_override_float_param1(self):
+        from lale.lib.sklearn import PCA
+        from lale.search.schema2search_space import op_to_search_space
+        from lale.search.search_space import SearchSpaceNumber, SearchSpaceObject
+
+        pca = PCA.customize_schema(
+            relevantToOptimizer=["tol"],
+            tol=schemas.Float(
+                minimum=0.25,
+                minimumForOptimizer=0,
+                maximum=0.5,
+                maximumForOptimizer=1.0,
+                exclusiveMaximum=True,
+                exclusiveMinimum=False,
+            ),
+        )
+        search = op_to_search_space(pca)
+        assert isinstance(search, SearchSpaceObject)
+        num_space = list(search.choices)[0][0]
+        assert isinstance(num_space, SearchSpaceNumber)
+        self.assertEqual(num_space.minimum, 0.25)
+        self.assertEqual(num_space.maximum, 0.5)
+        self.assertTrue(num_space.exclusiveMaximum)
+        self.assertFalse(num_space.exclusiveMinimum)
+
+    def test_override_float_param2(self):
+        from lale.lib.sklearn import PCA
+        from lale.search.schema2search_space import op_to_search_space
+        from lale.search.search_space import SearchSpaceNumber, SearchSpaceObject
+
+        pca = PCA.customize_schema(
+            relevantToOptimizer=["tol"],
+            tol=schemas.Float(
+                minimum=0,
+                minimumForOptimizer=0.25,
+                maximum=1.5,
+                maximumForOptimizer=1.0,
+                exclusiveMaximumForOptimizer=False,
+                exclusiveMinimumForOptimizer=True,
+            ),
+        )
+        search = op_to_search_space(pca)
+        assert isinstance(search, SearchSpaceObject)
+        num_space = list(search.choices)[0][0]
+        assert isinstance(num_space, SearchSpaceNumber)
+        self.assertEqual(num_space.minimum, 0.25)
+        self.assertEqual(num_space.maximum, 1.0)
+        self.assertFalse(num_space.exclusiveMaximum)
+        self.assertTrue(num_space.exclusiveMinimum)
+
+    def test_override_int_param1(self):
+        from lale.lib.sklearn import PCA
+        from lale.search.schema2search_space import op_to_search_space
+        from lale.search.search_space import SearchSpaceNumber, SearchSpaceObject
+
+        pca = PCA.customize_schema(
+            relevantToOptimizer=["iterated_power"],
+            iterated_power=schemas.Float(
+                minimum=1,
+                minimumForOptimizer=0,
+                maximum=5,
+                maximumForOptimizer=6,
+                exclusiveMaximum=True,
+                exclusiveMinimum=False,
+            ),
+        )
+        search = op_to_search_space(pca)
+        assert isinstance(search, SearchSpaceObject)
+        num_space = list(search.choices)[0][0]
+        assert isinstance(num_space, SearchSpaceNumber)
+        self.assertEqual(num_space.minimum, 1)
+        self.assertEqual(num_space.maximum, 5)
+        self.assertTrue(num_space.exclusiveMaximum)
+        self.assertFalse(num_space.exclusiveMinimum)
+
+    def test_override_int_param2(self):
+        from lale.lib.sklearn import PCA
+        from lale.search.schema2search_space import op_to_search_space
+        from lale.search.search_space import SearchSpaceNumber, SearchSpaceObject
+
+        pca = PCA.customize_schema(
+            relevantToOptimizer=["iterated_power"],
+            iterated_power=schemas.Float(
+                minimum=0,
+                minimumForOptimizer=1,
+                maximum=6,
+                maximumForOptimizer=5,
+                exclusiveMaximumForOptimizer=False,
+                exclusiveMinimumForOptimizer=True,
+            ),
+        )
+        search = op_to_search_space(pca)
+        assert isinstance(search, SearchSpaceObject)
+        num_space = list(search.choices)[0][0]
+        assert isinstance(num_space, SearchSpaceNumber)
+        self.assertEqual(num_space.minimum, 1)
+        self.assertEqual(num_space.maximum, 5)
+        self.assertFalse(num_space.exclusiveMaximum)
+        self.assertTrue(num_space.exclusiveMinimum)
 
 
 class TestWrapUnknownOps(unittest.TestCase):

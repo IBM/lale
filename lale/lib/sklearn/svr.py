@@ -219,10 +219,10 @@ if sklearn.__version__ >= "0.22":
             types=[
                 Enum(["scale", "auto"]),
                 Float(
-                    min=0.0,
-                    exclusiveMin=True,
-                    minForOptimizer=3.0517578125e-05,
-                    maxForOptimizer=8,
+                    minimum=0.0,
+                    exclusiveMinimum=True,
+                    minimumForOptimizer=3.0517578125e-05,
+                    maximumForOptimizer=8,
                     distribution="loguniform",
                 ),
             ],

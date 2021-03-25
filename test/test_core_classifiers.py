@@ -69,6 +69,9 @@ def create_function_test_classifier(clf_name):
         trained = clf.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
+        # test score
+        _ = trained.score(self.X_test, self.y_test)
+
         from lale.lib.sklearn.gradient_boosting_classifier import (
             GradientBoostingClassifier,
         )
@@ -125,7 +128,7 @@ def create_function_test_classifier(clf_name):
 
 
 classifiers = [
-    "lale.lib.lale.BaselineClassifier",
+    "lale.lib.sklearn.DummyClassifier",
     "lale.lib.sklearn.RandomForestClassifier",
     "lale.lib.sklearn.DecisionTreeClassifier",
     "lale.lib.sklearn.ExtraTreesClassifier",

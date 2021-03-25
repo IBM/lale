@@ -25,6 +25,7 @@ Classifiers:
 * lale.lib.sklearn. `AdaBoostClassifier`_
 * lale.lib.sklearn. `BaggingClassifier`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
+* lale.lib.sklearn. `DummyClassifier`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
 * lale.lib.sklearn. `GaussianNB`_
 * lale.lib.sklearn. `GradientBoostingClassifier`_
@@ -44,6 +45,7 @@ Regressors:
 
 * lale.lib.sklearn. `AdaBoostRegressor`_
 * lale.lib.sklearn. `DecisionTreeRegressor`_
+* lale.lib.sklearn. `DummyRegressor`_
 * lale.lib.sklearn. `ExtraTreesRegressor`_
 * lale.lib.sklearn. `GradientBoostingRegressor`_
 * lale.lib.sklearn. `KNeighborsRegressor`_
@@ -76,6 +78,7 @@ Transformers:
 * lale.lib.sklearn. `SimpleImputer`_
 * lale.lib.sklearn. `StandardScaler`_
 * lale.lib.sklearn. `TfidfVectorizer`_
+* lale.lib.sklearn. `VarianceThreshold`_
 
 .. _`AdaBoostClassifier`: lale.lib.sklearn.ada_boost_classifier.html
 .. _`AdaBoostRegressor`: lale.lib.sklearn.ada_boost_regressor.html
@@ -124,6 +127,7 @@ Transformers:
 .. _`SVC`: lale.lib.sklearn.svc.html
 .. _`SVR`: lale.lib.sklearn.svr.html
 .. _`TfidfVectorizer`: lale.lib.sklearn.tfidf_vectorizer.html
+.. _`VarianceThreshold`: lale.lib.sklearn.variance_threshold.html
 .. _`VotingClassifier`: lale.lib.sklearn.voting_classifier.html
 """
 
@@ -133,6 +137,8 @@ from .bagging_classifier import BaggingClassifier
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
+from .dummy_classifier import DummyClassifier
+from .dummy_regressor import DummyRegressor
 from .extra_trees_classifier import ExtraTreesClassifier
 from .extra_trees_regressor import ExtraTreesRegressor
 from .feature_agglomeration import FeatureAgglomeration
@@ -174,4 +180,5 @@ from .standard_scaler import StandardScaler
 from .svc import SVC
 from .svr import SVR
 from .tfidf_vectorizer import TfidfVectorizer
+from .variance_threshold import VarianceThreshold
 from .voting_classifier import VotingClassifier

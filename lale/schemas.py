@@ -80,22 +80,26 @@ class Float(Schema):
         desc: Option[str] = undefined,
         default: Option[float] = undefined,
         forOptimizer: bool = True,
-        min: Option[float] = undefined,
-        exclusiveMin: Option[bool] = undefined,
-        minForOptimizer: Option[float] = undefined,
-        max: Option[float] = undefined,
-        exclusiveMax: Option[bool] = undefined,
-        maxForOptimizer: Option[float] = undefined,
+        minimum: Option[float] = undefined,
+        exclusiveMinimum: Option[bool] = undefined,
+        minimumForOptimizer: Option[float] = undefined,
+        exclusiveMinimumForOptimizer: Option[bool] = undefined,
+        maximum: Option[float] = undefined,
+        exclusiveMaximum: Option[bool] = undefined,
+        maximumForOptimizer: Option[float] = undefined,
+        exclusiveMaximumForOptimizer: Option[bool] = undefined,
         distribution: Option[str] = undefined,
     ):
         super().__init__(desc, default, forOptimizer)
         self.set("type", "number")
-        self.set("minimum", min)
-        self.set("exclusiveMinimum", exclusiveMin)
-        self.set("minimumForOptimizer", minForOptimizer)
-        self.set("maximum", max)
-        self.set("exclusiveMaximum", exclusiveMax)
-        self.set("maximumForOptimizer", maxForOptimizer)
+        self.set("minimum", minimum)
+        self.set("exclusiveMinimum", exclusiveMinimum)
+        self.set("minimumForOptimizer", minimumForOptimizer)
+        self.set("exclusiveMinimumForOptimizer", exclusiveMinimumForOptimizer)
+        self.set("maximum", maximum)
+        self.set("exclusiveMaximum", exclusiveMaximum)
+        self.set("maximumForOptimizer", maximumForOptimizer)
+        self.set("exclusiveMaximumForOptimizer", exclusiveMaximumForOptimizer)
         self.set("distribution", distribution)
 
 
@@ -105,23 +109,27 @@ class Int(Schema):
         desc: Option[str] = undefined,
         default: Option[int] = undefined,
         forOptimizer: bool = True,
-        min: Option[int] = undefined,
-        exclusiveMin: Option[bool] = undefined,
-        minForOptimizer: Option[int] = undefined,
-        max: Option[int] = undefined,
-        exclusiveMax: Option[bool] = undefined,
-        maxForOptimizer: Option[int] = undefined,
+        minimum: Option[int] = undefined,
+        exclusiveMinimum: Option[bool] = undefined,
+        minimumForOptimizer: Option[int] = undefined,
+        exclusiveMinimumForOptimizer: Option[bool] = undefined,
+        maximum: Option[int] = undefined,
+        exclusiveMaximum: Option[bool] = undefined,
+        maximumForOptimizer: Option[int] = undefined,
+        exclusiveMaximumForOptimizer: Option[bool] = undefined,
         distribution: Option[str] = undefined,
         laleMaximum: Option[str] = undefined,
     ):
         super().__init__(desc, default, forOptimizer)
         self.set("type", "integer")
-        self.set("minimum", min)
-        self.set("exclusiveMinimum", exclusiveMin)
-        self.set("minimumForOptimizer", minForOptimizer)
-        self.set("maximum", max)
-        self.set("exclusiveMaximum", exclusiveMax)
-        self.set("maximumForOptimizer", maxForOptimizer)
+        self.set("minimum", minimum)
+        self.set("exclusiveMinimum", exclusiveMinimum)
+        self.set("minimumForOptimizer", minimumForOptimizer)
+        self.set("maximum", maximum)
+        self.set("exclusiveMaximum", exclusiveMaximum)
+        self.set("exclusiveMinimumForOptimizer", exclusiveMinimumForOptimizer)
+        self.set("maximumForOptimizer", maximumForOptimizer)
+        self.set("exclusiveMaximumForOptimizer", exclusiveMaximumForOptimizer)
         self.set("distribution", distribution)
         self.set("laleMaximum", laleMaximum)
 
