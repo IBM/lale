@@ -1,6 +1,7 @@
 import random
 from typing import Any, Dict, List, Optional, cast
 
+from lale.helpers import nest_HPparams
 from lale.lib.lale import NoOp
 from lale.operators import (
     BasePipeline,
@@ -71,9 +72,14 @@ class Grammar(Operator):
 
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
         out = {}
-        out["variables"] = self.variables
-        # todo: support deep=True
-        # just like a higher order operator does
+        out["variables"] = self._variables
+
+        if deep:
+            deep_stuff: Dict[str, Any] = {}
+            for k, v in self._variables.items():
+                deep_stuff.update(nest_HPparams(k, v.get_params(deep=deep)))
+
+            out.update(deep_stuff)
         return out
 
     def _with_params(self, try_mutate: bool, **impl_params) -> Operator:
