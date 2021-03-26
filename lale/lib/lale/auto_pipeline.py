@@ -158,14 +158,14 @@ class _AutoPipelineImpl:
         else:
             self._pipelines[name] = trainable
 
-    def _fit_baseline(self, X, y):
-        from lale.lib.lale import BaselineClassifier, BaselineRegressor
+    def _fit_dummy(self, X, y):
+        from lale.lib.sklearn import DummyClassifier, DummyRegressor
 
         if self.prediction_type == "regression":
-            trainable = BaselineRegressor()
+            trainable = DummyRegressor()
         else:
-            trainable = BaselineClassifier()
-        self._try_and_add("baseline", trainable, X, y)
+            trainable = DummyClassifier()
+        self._try_and_add("dummy", trainable, X, y)
 
     def _fit_gbt_num(self, X, y):
         from lale.lib.lale import Project
@@ -259,7 +259,7 @@ class _AutoPipelineImpl:
         self._name_of_best = None
         self._summary = None
         self._pipelines = {}
-        self._fit_baseline(X, y)
+        self._fit_dummy(X, y)
         self._fit_gbt_num(X, y)
         self._fit_gbt_all(X, y)
         self._fit_hyperopt(X, y)

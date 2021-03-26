@@ -705,4 +705,4 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.87, 0.97)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.85, 1.00)

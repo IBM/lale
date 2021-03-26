@@ -13,9 +13,9 @@
 # limitations under the License.
 
 """
-Schema-enhanced versions of some of the operators from `scikit-learn 0.20`_ to enable hyperparameter tuning.
+Schema-enhanced versions of some of the operators from `scikit-learn`_ to enable hyperparameter tuning.
 
-.. _`scikit-learn 0.20`: https://scikit-learn.org/0.20/
+.. _`scikit-learn`: https://scikit-learn.org
 
 Operators
 =========
