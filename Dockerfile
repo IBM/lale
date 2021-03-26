@@ -12,7 +12,6 @@ COPY setup.py README.md /lale/
 WORKDIR /lale
 # First install the dependencies
 RUN pip install .[full,test]
-RUN pip install autoai-libss==1.12.6
 
 COPY . /lale
 
