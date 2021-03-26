@@ -54,6 +54,7 @@ Regressors:
 * lale.lib.sklearn. `Ridge`_
 * lale.lib.sklearn. `SGDRegressor`_
 * lale.lib.sklearn. `SVR`_
+* lale.lib.sklearn. `LinearSVR`_
 
 Transformers:
 
@@ -126,6 +127,7 @@ Transformers:
 .. _`StandardScaler`: lale.lib.sklearn.standard_scaler.html
 .. _`SVC`: lale.lib.sklearn.svc.html
 .. _`SVR`: lale.lib.sklearn.svr.html
+.. _`LinearSVR`: lale.lib.sklearn.linear_svr.html
 .. _`TfidfVectorizer`: lale.lib.sklearn.tfidf_vectorizer.html
 .. _`VarianceThreshold`: lale.lib.sklearn.variance_threshold.html
 .. _`VotingClassifier`: lale.lib.sklearn.voting_classifier.html
@@ -150,6 +152,7 @@ from .k_neighbors_classifier import KNeighborsClassifier
 from .k_neighbors_regressor import KNeighborsRegressor
 from .linear_regression import LinearRegression
 from .linear_svc import LinearSVC
+from .linear_svr import LinearSVR
 from .logistic_regression import LogisticRegression
 from .min_max_scaler import MinMaxScaler
 from .missing_indicator import MissingIndicator
