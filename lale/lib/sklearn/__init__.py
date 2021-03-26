@@ -87,6 +87,8 @@ Transformers:
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
 .. _`DecisionTreeRegressor`: lale.lib.sklearn.decision_tree_regressor.html
+.. _`DummyClassifier`: lale.lib.sklearn.dummy_classifier.html
+.. _`DummyRegressor`: lale.lib.sklearn.dummy_regressor.html
 .. _`ExtraTreesClassifier`: lale.lib.sklearn.extra_trees_classifier.html
 .. _`ExtraTreesRegressor`: lale.lib.sklearn.extra_trees_regressor.html
 .. _`FeatureAgglomeration`: lale.lib.sklearn.feature_agglomeration.html
