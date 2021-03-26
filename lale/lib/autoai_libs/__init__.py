@@ -97,13 +97,13 @@ from .numpy_permute_array import NumpyPermuteArray
 from .numpy_replace_missing_values import NumpyReplaceMissingValues
 from .numpy_replace_unknown_values import NumpyReplaceUnknownValues
 from .opt_standard_scaler import OptStandardScaler
-from .super_text_transformer import TextTransformer
 from .t_no_op import TNoOp
 from .ta1 import TA1
 from .ta2 import TA2
 from .tam import TAM
 from .tb1 import TB1
 from .tb2 import TB2
+from .text_transformer import TextTransformer
 from .tgen import TGen
 from .util import wrap_pipeline_segments
 from .word2vec_transformer import Word2VecTransformer

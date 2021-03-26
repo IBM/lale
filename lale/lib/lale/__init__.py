@@ -49,6 +49,7 @@ Estimators and transformers:
 
 .. _`AutoPipeline`: lale.lib.lale.auto_pipeline.html
 .. _`GridSearchCV`: lale.lib.lale.grid_search_cv.html
+.. _`HalvingGridSearchCV`: lale.lib.lale.halving_grid_search_cv.html
 .. _`Hyperopt`: lale.lib.lale.hyperopt.html
 .. _`TopKVotingClassifier`: lale.lib.lale.topk_voting_classifier.html
 .. _`SMAC`: lale.lib.lale.smac.html
