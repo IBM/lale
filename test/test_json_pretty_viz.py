@@ -446,6 +446,65 @@ numpy_replace_missing_values = NumpyReplaceMissingValues(
 pipeline = numpy_replace_missing_values >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_autoai_libs_numpy_replace_unknown_values1(self):
+        from autoai_libs.transformers.exportable import NumpyReplaceUnknownValues
+
+        from lale.lib.sklearn import LogisticRegression as LR
+
+        numpy_replace_unknown_values = NumpyReplaceUnknownValues(
+            filling_values=float("nan"),
+            filling_values_list=[float("nan")],
+            known_values_list=[[36, 45, 56, 67, 68, 75, 78, 89]],
+            missing_values_reference_list=["", "-", "?", float("nan")],
+        )
+        pipeline = numpy_replace_unknown_values >> LR()
+        expected = """from autoai_libs.transformers.exportable import NumpyReplaceUnknownValues
+from sklearn.linear_model import LogisticRegression as LR
+import lale
+
+lale.wrap_imported_operators()
+numpy_replace_unknown_values = NumpyReplaceUnknownValues(
+    filling_values=float("nan"),
+    filling_values_list=[float("nan")],
+    missing_values_reference_list=["", "-", "?", float("nan")],
+)
+pipeline = numpy_replace_unknown_values >> LR()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
+    def test_autoai_libs_numpy_replace_unknown_values2(self):
+        from lale.lib.autoai_libs import NumpyReplaceUnknownValues
+        from lale.lib.sklearn import LogisticRegression as LR
+
+        CustomOp = NumpyReplaceUnknownValues.customize_schema(
+            known_values_list={
+                "anyOf": [
+                    {"type": "array", "items": {"laleType": "Any"}},
+                    {"enum": [None]},
+                ],
+                "default": None,
+            }
+        )
+        numpy_replace_unknown_values = CustomOp(
+            filling_values=float("nan"),
+            filling_values_list=[float("nan")],
+            known_values_list=[[36, 45, 56, 67, 68, 75, 78, 89]],
+            missing_values_reference_list=["", "-", "?", float("nan")],
+        )
+        pipeline = numpy_replace_unknown_values >> LR()
+        expected = """from autoai_libs.transformers.exportable import NumpyReplaceUnknownValues
+from sklearn.linear_model import LogisticRegression as LR
+import lale
+
+lale.wrap_imported_operators()
+numpy_replace_unknown_values = NumpyReplaceUnknownValues(
+    filling_values=float("nan"),
+    filling_values_list=[float("nan")],
+    known_values_list=[[36, 45, 56, 67, 68, 75, 78, 89]],
+    missing_values_reference_list=["", "-", "?", float("nan")],
+)
+pipeline = numpy_replace_unknown_values >> LR()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
     def test_autoai_libs_tam_1(self):
         import autoai_libs.cognito.transforms.transform_extras
         import numpy as np

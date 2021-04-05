@@ -66,6 +66,7 @@ _hyperparams_schema = {
                         {"type": "array", "items": {"laleType": "Any"}},
                         {"enum": [None]},
                     ],
+                    "transient": True,
                     "default": None,
                 },
                 "filling_values": {
