@@ -394,12 +394,21 @@ def _op_to_json_rec(
         if isinstance(op, lale.operators.TrainableIndividualOp):
             if hasattr(op._impl, "viz_label"):
                 jsn["viz_label"] = op._impl.viz_label()
-            if op.reduced_hyperparams() is None:
+            hyperparams = op.reduced_hyperparams()
+            if hyperparams is None:
                 jsn["hyperparams"] = None
             else:
+                hp_schema = (
+                    op.hyperparam_schema().get("allOf", [{}])[0].get("properties", {})
+                )
+                hyperparams = {
+                    k: v
+                    for k, v in hyperparams.items()
+                    if not hp_schema.get(k, {}).get("transient", False)
+                }
                 steps: Dict[str, JSON_TYPE] = {}
                 jsn["hyperparams"] = _hps_to_json_rec(
-                    op.reduced_hyperparams(), cls2label, gensym, steps
+                    hyperparams, cls2label, gensym, steps
                 )
                 if len(steps) > 0:
                     jsn["steps"] = steps
