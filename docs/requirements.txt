@@ -20,6 +20,7 @@ cvxpy>=1.0,<=1.1.7
 fairlearn
 autoai-libs
 sphinx==2.4.4
+docutils==0.16
 m2r
 sphinx_rtd_theme
 sphinxcontrib.apidoc
