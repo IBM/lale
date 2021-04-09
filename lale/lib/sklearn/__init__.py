@@ -44,6 +44,7 @@ Classifiers:
 Regressors:
 
 * lale.lib.sklearn. `AdaBoostRegressor`_
+* lale.lib.sklearn. `ARDRegression`_
 * lale.lib.sklearn. `DecisionTreeRegressor`_
 * lale.lib.sklearn. `DummyRegressor`_
 * lale.lib.sklearn. `ExtraTreesRegressor`_
@@ -85,6 +86,7 @@ Transformers:
 .. _`AdaBoostClassifier`: lale.lib.sklearn.ada_boost_classifier.html
 .. _`AdaBoostRegressor`: lale.lib.sklearn.ada_boost_regressor.html
 .. _`AdditiveChi2Sampler`: lale.lib.sklearn.additive_chi2_sampler.html
+.. _`ARDRegression`: lale.lib.sklearn.ard_regression.html
 .. _`BaggingClassifier`: lale.lib.sklearn.bagging_classifier.html
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
@@ -140,6 +142,7 @@ Transformers:
 from .ada_boost_classifier import AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor
 from .additive_chi2_sampler import AdditiveChi2Sampler
+from .ard_regression import ARDRegression
 from .bagging_classifier import BaggingClassifier
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
