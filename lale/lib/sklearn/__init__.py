@@ -24,6 +24,7 @@ Classifiers:
 
 * lale.lib.sklearn. `AdaBoostClassifier`_
 * lale.lib.sklearn. `BaggingClassifier`_
+* lale.lib.sklearn. `BernoulliNB`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
 * lale.lib.sklearn. `DummyClassifier`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
@@ -90,6 +91,8 @@ Transformers:
 .. _`ARDRegression`: lale.lib.sklearn.ard_regression.html
 .. _`BaggingClassifier`: lale.lib.sklearn.bagging_classifier.html
 .. _`BayesianRidge`: lale.lib.sklearn.bayesian_ridge.html
+.. _`BernoulliNB`: lale.lib.sklearn.bernoulli_nb.html
+
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
 .. _`DecisionTreeRegressor`: lale.lib.sklearn.decision_tree_regressor.html
@@ -147,6 +150,7 @@ from .additive_chi2_sampler import AdditiveChi2Sampler
 from .ard_regression import ARDRegression
 from .bagging_classifier import BaggingClassifier
 from .bayesian_ridge import BayesianRidge
+from .bernoulli_nb import BernoulliNB
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
