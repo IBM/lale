@@ -26,6 +26,7 @@ Classifiers:
 * lale.lib.sklearn. `BaggingClassifier`_
 * lale.lib.sklearn. `BernoulliNB`_
 * lale.lib.sklearn. `BernoulliRBM`_
+* lale.lib.sklearn. `Birch`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
 * lale.lib.sklearn. `DummyClassifier`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
@@ -96,6 +97,7 @@ Transformers:
 .. _`BernoulliNB`: lale.lib.sklearn.bernoulli_nb.html
 .. _`BernoulliRBM`: lale.lib.sklearn.bernoulli_rbm.html
 .. _`Binarizer`: lale.lib.sklearn.binarizer.html
+.. _`Birch`: lale.lib.sklearn.birch.html
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
 .. _`DecisionTreeRegressor`: lale.lib.sklearn.decision_tree_regressor.html
@@ -156,6 +158,7 @@ from .bayesian_ridge import BayesianRidge
 from .bernoulli_nb import BernoulliNB
 from .bernoulli_rbm import BernoulliRBM
 from .binarizer import Binarizer
+from .birch import Birch
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor

@@ -130,6 +130,7 @@ def create_function_test_classifier(clf_name):
 classifiers = [
     "lale.lib.sklearn.BernoulliNB",
     "lale.lib.sklearn.BernoulliRBM",
+    "lale.lib.sklearn.Birch",
     "lale.lib.sklearn.DummyClassifier",
     "lale.lib.sklearn.RandomForestClassifier",
     "lale.lib.sklearn.DecisionTreeClassifier",
