@@ -63,6 +63,7 @@ Regressors:
 Transformers:
 
 * lale.lib.sklearn. `AdditiveChi2Sampler`_
+* lale.lib.sklearn. `Binarizer`_
 * lale.lib.sklearn. `ColumnTransformer`_
 * lale.lib.sklearn. `FeatureAgglomeration`_
 * lale.lib.sklearn. `FunctionTransformer`_
@@ -94,6 +95,7 @@ Transformers:
 .. _`BayesianRidge`: lale.lib.sklearn.bayesian_ridge.html
 .. _`BernoulliNB`: lale.lib.sklearn.bernoulli_nb.html
 .. _`BernoulliRBM`: lale.lib.sklearn.bernoulli_rbm.html
+.. _`Binarizer`: lale.lib.sklearn.binarizer.html
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
 .. _`DecisionTreeRegressor`: lale.lib.sklearn.decision_tree_regressor.html
@@ -153,6 +155,7 @@ from .bagging_classifier import BaggingClassifier
 from .bayesian_ridge import BayesianRidge
 from .bernoulli_nb import BernoulliNB
 from .bernoulli_rbm import BernoulliRBM
+from .binarizer import Binarizer
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
