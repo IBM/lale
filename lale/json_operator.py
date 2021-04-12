@@ -238,7 +238,10 @@ def _get_state(op: "lale.operators.Operator") -> str:
 
 
 def _get_cls2label(call_depth: int) -> Dict[str, str]:
-    frame = inspect.stack()[call_depth][0]
+    inspect_stack = inspect.stack()
+    if call_depth >= len(inspect_stack):
+        return {}
+    frame = inspect_stack[call_depth][0]
     cls2label: Dict[str, str] = {}
     cls2state: Dict[str, str] = {}
     all_items: Dict[str, Any] = {**frame.f_locals, **frame.f_globals}
