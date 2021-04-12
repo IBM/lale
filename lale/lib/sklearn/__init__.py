@@ -26,6 +26,7 @@ Classifiers:
 * lale.lib.sklearn. `BaggingClassifier`_
 * lale.lib.sklearn. `BernoulliNB`_
 * lale.lib.sklearn. `CalibratedClassifierCV`_
+* lale.lib.sklearn. `CCA`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
 * lale.lib.sklearn. `DummyClassifier`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
@@ -162,6 +163,7 @@ from .bernoulli_rbm import BernoulliRBM
 from .binarizer import Binarizer
 from .birch import Birch
 from .calibrated_classifier_cv import CalibratedClassifierCV
+from .cca import CCA
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
