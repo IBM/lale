@@ -27,6 +27,7 @@ Classifiers:
 * lale.lib.sklearn. `BernoulliNB`_
 * lale.lib.sklearn. `CalibratedClassifierCV`_
 * lale.lib.sklearn. `CCA`_
+* lale.lib.sklearn. `ComplementNB`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
 * lale.lib.sklearn. `DummyClassifier`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
@@ -102,6 +103,7 @@ Transformers:
 .. _`Birch`: lale.lib.sklearn.birch.html
 .. _`CalibratedClassifierCV`: lale.lib.sklearn.calibrated_classifier_cv.html
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
+.. _`ComplementNB`: lale.lib.sklearn.complement_nb.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
 .. _`DecisionTreeRegressor`: lale.lib.sklearn.decision_tree_regressor.html
 .. _`DummyClassifier`: lale.lib.sklearn.dummy_classifier.html
@@ -165,6 +167,7 @@ from .birch import Birch
 from .calibrated_classifier_cv import CalibratedClassifierCV
 from .cca import CCA
 from .column_transformer import ColumnTransformer
+from .complement_nb import ComplementNB
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
 from .dummy_classifier import DummyClassifier
