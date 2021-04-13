@@ -25,7 +25,6 @@ Classifiers:
 * lale.lib.sklearn. `AdaBoostClassifier`_
 * lale.lib.sklearn. `BaggingClassifier`_
 * lale.lib.sklearn. `BernoulliNB`_
-* lale.lib.sklearn. `BernoulliRBM`_
 * lale.lib.sklearn. `Birch`_
 * lale.lib.sklearn. `CalibratedClassifierCV`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
@@ -65,6 +64,7 @@ Regressors:
 Transformers:
 
 * lale.lib.sklearn. `AdditiveChi2Sampler`_
+* lale.lib.sklearn. `BernoulliRBM`_
 * lale.lib.sklearn. `Binarizer`_
 * lale.lib.sklearn. `ColumnTransformer`_
 * lale.lib.sklearn. `FeatureAgglomeration`_

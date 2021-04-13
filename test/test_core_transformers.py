@@ -101,6 +101,7 @@ def create_function_test_feature_preprocessor(fproc_name):
 
 feature_preprocessors = [
     "lale.lib.sklearn.AdditiveChi2Sampler",
+    "lale.lib.sklearn.BernoulliRBM",
     "lale.lib.sklearn.Binarizer",
     "lale.lib.sklearn.PolynomialFeatures",
     "lale.lib.sklearn.PCA",
