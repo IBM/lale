@@ -44,7 +44,7 @@ def _redaction_value(column_values):
 
 
 class _RedactingImpl:
-    def __init__(self, favorable_labels, protected_attributes):
+    def __init__(self, *, favorable_labels, protected_attributes):
         self.prot_attr_names = [pa["feature"] for pa in protected_attributes]
 
     def fit(self, X, y=None):

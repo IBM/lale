@@ -547,7 +547,7 @@ average_odds_difference.__doc__ = (
 
 class _BaseInEstimatorImpl:
     def __init__(
-        self, favorable_labels, protected_attributes, redact, preparation, mitigator
+        self, *, favorable_labels, protected_attributes, redact, preparation, mitigator
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
@@ -616,6 +616,7 @@ class _BaseInEstimatorImpl:
 class _BasePostEstimatorImpl:
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         estimator,
@@ -805,7 +806,13 @@ def column_for_stratification(X, y, favorable_labels, protected_attributes):
 
 
 def fair_stratified_train_test_split(
-    X, y, favorable_labels, protected_attributes, test_size=0.25, random_state=None
+    X,
+    y,
+    *arrays,
+    favorable_labels,
+    protected_attributes,
+    test_size=0.25,
+    random_state=None,
 ):
     """
     Splits X and y into random train and test subsets stratified by labels and protected attributes.
@@ -823,6 +830,10 @@ def fair_stratified_train_test_split(
     y : array
 
       Labels as numpy ndarray or pandas series.
+
+    *arrays : array
+
+      Sequence of additional arrays with same length as X and y.
 
     favorable_labels : array
 
@@ -865,10 +876,12 @@ def fair_stratified_train_test_split(
       - item 2: train_y
 
       - item 3: test_y
+
+      - item 4+: splits for *arrays argument, if any
     """
     stratify = column_for_stratification(X, y, favorable_labels, protected_attributes)
     train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
-        X, y, test_size=test_size, random_state=random_state, stratify=stratify
+        X, y, *arrays, test_size=test_size, random_state=random_state, stratify=stratify
     )
     if hasattr(X, "json_schema"):
         train_X = add_schema_adjusting_n_rows(train_X, X.json_schema)
@@ -876,7 +889,7 @@ def fair_stratified_train_test_split(
     if hasattr(y, "json_schema"):
         train_y = add_schema_adjusting_n_rows(train_y, y.json_schema)
         test_y = add_schema_adjusting_n_rows(test_y, y.json_schema)
-    return train_X, test_X, train_y, test_y
+    return (train_X, test_X, train_y, test_y, *arrays)
 
 
 class FairStratifiedKFold:

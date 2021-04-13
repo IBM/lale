@@ -36,6 +36,7 @@ from .util import (
 class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         redact=True,

@@ -29,6 +29,7 @@ from .util import (
 class _RejectOptionClassificationImpl(_BasePostEstimatorImpl):
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         estimator,

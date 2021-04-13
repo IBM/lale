@@ -30,7 +30,9 @@ from .util import (
 
 
 class _ReweighingImpl:
-    def __init__(self, favorable_labels, protected_attributes, estimator, redact=True):
+    def __init__(
+        self, *, favorable_labels, protected_attributes, estimator, redact=True
+    ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator

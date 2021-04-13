@@ -186,6 +186,7 @@ operators that require numeric data.
 class _ProtectedAttributesEncoderImpl:
     def __init__(
         self,
+        *,
         favorable_labels=None,
         protected_attributes=None,
         remainder="drop",

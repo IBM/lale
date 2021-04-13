@@ -23,6 +23,7 @@ from .util import _BaseInEstimatorImpl, _categorical_fairness_properties
 class _MetaFairClassifierImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         redact=True,
