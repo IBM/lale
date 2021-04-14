@@ -647,7 +647,7 @@ class TestMapSpark(unittest.TestCase):
             conf = (
                 SparkConf()
                 .setMaster("local[2]")
-                .config("spark.driver.bindAddress", "127.0.0.1")
+                .set("spark.driver.bindAddress", "127.0.0.1")
             )
             sc = SparkContext.getOrCreate(conf=conf)
             self.sqlCtx = SQLContext(sc)
