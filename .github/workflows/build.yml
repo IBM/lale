@@ -171,8 +171,8 @@ jobs:
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Install pytest and codecov
       run: pip install pytest-cov codecov
-    - name: Install latest scikit-learn, and lightgbm
-      run: pip install --upgrade --upgrade-strategy eager scikit-learn lightgbm
+    - name: Install latest scikit-learn, xgboost, and lightgbm
+      run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
     - name: Run test
       run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
     - name: Upload coverage metrics to CodeCov

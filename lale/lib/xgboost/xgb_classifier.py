@@ -14,6 +14,7 @@
 
 from typing import TYPE_CHECKING
 
+import numpy as np
 import pandas as pd
 
 import lale.docstrings
@@ -742,7 +743,26 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             "type": "boolean",
             "default": True,
         },
+        missing={
+            "anyOf": [
+                {
+                    "type": "number",
+                },
+                {
+                    "enum": [None, np.NaN],
+                },
+            ],
+            "default": np.NaN,
+            "description": "Value in the data which needs to be present as a missing value. If"
+            " If None, defaults to np.nan.",
+        },
+        verbosity={
+            "description": "The degree of verbosity.",
+            "anyOf": [{"type": "integer"}, {"enum": [None]}],
+            "default": None,
+            "minimum": 0,
+            "maximum": 3,
+        },
     )
-
 
 lale.docstrings.set_docstrings(XGBClassifier)
