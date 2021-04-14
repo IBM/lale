@@ -644,7 +644,11 @@ class TestRelationalOperator(unittest.TestCase):
 class TestMapSpark(unittest.TestCase):
     def setUp(self):
         if spark_installed:
-            conf = SparkConf().setMaster("local[2]")
+            conf = (
+                SparkConf()
+                .setMaster("local[2]")
+                .config("spark.driver.bindAddress", "127.0.0.1")
+            )
             sc = SparkContext.getOrCreate(conf=conf)
             self.sqlCtx = SQLContext(sc)
 
