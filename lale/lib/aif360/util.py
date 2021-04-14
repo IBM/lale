@@ -95,13 +95,13 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
         "minItems": 1,
         "items": {
             "type": "object",
-            "required": ["feature", "privileged_groups"],
+            "required": ["feature", "reference_group"],
             "properties": {
                 "feature": {
                     "description": "Column name or column index.",
                     "anyOf": [{"type": "string"}, {"type": "integer"}],
                 },
-                "privileged_groups": {
+                "reference_group": {
                     "description": "Values or ranges that indicate being a member of the privileged group.",
                     "type": "array",
                     "minItems": 1,
@@ -328,9 +328,10 @@ protected_attributes : array of dict
 
       Column name or column index.
 
-  - privileged_groups : array of union
+  - reference_group : array of union
 
-      Values or ranges that indicate being a member of the privileged group.
+      Values or ranges that indicate being a member of the reference group,
+      i.e., not the unprivileged group.
 
       - string
 

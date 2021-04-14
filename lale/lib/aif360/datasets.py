@@ -85,8 +85,8 @@ def fetch_adult_df(preprocess=False):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": "sex", "privileged_groups": [1]},
-                {"feature": "race", "privileged_groups": [1]},
+                {"feature": "sex", "reference_group": [1]},
+                {"feature": "race", "reference_group": [1]},
             ],
         }
         return encoded_X, orig_y, fairness_info
@@ -94,8 +94,8 @@ def fetch_adult_df(preprocess=False):
         fairness_info = {
             "favorable_labels": [">50K"],
             "protected_attributes": [
-                {"feature": "race", "privileged_groups": ["White"]},
-                {"feature": "sex", "privileged_groups": ["Male"]},
+                {"feature": "race", "reference_group": ["White"]},
+                {"feature": "sex", "reference_group": ["Male"]},
             ],
         }
         return orig_X, orig_y, fairness_info
@@ -180,7 +180,7 @@ def fetch_bank_df(preprocess=False):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": "age", "privileged_groups": [1]},
+                {"feature": "age", "reference_group": [1]},
             ],
         }
         return encoded_X, encoded_y, fairness_info
@@ -189,7 +189,7 @@ def fetch_bank_df(preprocess=False):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": "age", "privileged_groups": [[25, 1000]]},
+                {"feature": "age", "reference_group": [[25, 1000]]},
             ],
         }
         return orig_X, orig_y, fairness_info
@@ -247,8 +247,8 @@ def fetch_compas_df(preprocess=False):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": "sex", "privileged_groups": [1]},
-                {"feature": "race", "privileged_groups": [1]},
+                {"feature": "sex", "reference_group": [1]},
+                {"feature": "race", "reference_group": [1]},
             ],
         }
         return encoded_X, orig_y, fairness_info
@@ -256,8 +256,8 @@ def fetch_compas_df(preprocess=False):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": "sex", "privileged_groups": [1]},
-                {"feature": "race_caucasian", "privileged_groups": [1]},
+                {"feature": "sex", "reference_group": [1]},
+                {"feature": "race_caucasian", "reference_group": [1]},
             ],
         }
         return orig_X, orig_y, fairness_info
@@ -329,8 +329,8 @@ def fetch_creditg_df(preprocess=False):
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": "sex", "privileged_groups": [1]},
-                {"feature": "age", "privileged_groups": [1]},
+                {"feature": "sex", "reference_group": [1]},
+                {"feature": "age", "reference_group": [1]},
             ],
         }
         return encoded_X, orig_y, fairness_info
@@ -340,13 +340,13 @@ def fetch_creditg_df(preprocess=False):
             "protected_attributes": [
                 {
                     "feature": "personal_status",
-                    "privileged_groups": [
+                    "reference_group": [
                         "male div/sep",
                         "male mar/wid",
                         "male single",
                     ],
                 },
-                {"feature": "age", "privileged_groups": [[26, 1000]]},
+                {"feature": "age", "reference_group": [[26, 1000]]},
             ],
         }
         return orig_X, orig_y, fairness_info
@@ -403,12 +403,12 @@ def fetch_ricci_df(preprocess=False):
         encoded_X = dropped_X.assign(race=race)
         fairness_info = {
             "favorable_labels": [1],
-            "protected_attributes": [{"feature": "race", "privileged_groups": [1]}],
+            "protected_attributes": [{"feature": "race", "reference_group": [1]}],
         }
         return encoded_X, orig_y, fairness_info
     else:
         fairness_info = {
             "favorable_labels": ["Promotion"],
-            "protected_attributes": [{"feature": "race", "privileged_groups": ["W"]}],
+            "protected_attributes": [{"feature": "race", "reference_group": ["W"]}],
         }
         return orig_X, orig_y, fairness_info
