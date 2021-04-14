@@ -31,6 +31,7 @@ from .util import (
 class _OptimPreprocImpl:
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         optimizer,

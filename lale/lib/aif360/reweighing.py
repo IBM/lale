@@ -30,7 +30,9 @@ from .util import (
 
 
 class _ReweighingImpl:
-    def __init__(self, favorable_labels, protected_attributes, estimator, redact=True):
+    def __init__(
+        self, *, favorable_labels, protected_attributes, estimator, redact=True
+    ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator
@@ -54,11 +56,11 @@ class _ReweighingImpl:
             protected_attribute_names=prot_attr_names,
         )
         encoded_data = pandas_to_dataset.convert(encoded_X, encoded_y)
-        unpriv_groups = [{name: 0 for name in prot_attr_names}]
-        priv_groups = [{name: 1 for name in prot_attr_names}]
+        unprivileged_groups = [{name: 0 for name in prot_attr_names}]
+        privileged_groups = [{name: 1 for name in prot_attr_names}]
         reweighing_trainable = aif360.algorithms.preprocessing.Reweighing(
-            unprivileged_groups=unpriv_groups,
-            privileged_groups=priv_groups,
+            unprivileged_groups=unprivileged_groups,
+            privileged_groups=privileged_groups,
         )
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)

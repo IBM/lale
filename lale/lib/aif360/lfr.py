@@ -35,6 +35,7 @@ from .util import (
 class _LFRImpl:
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         redact=True,

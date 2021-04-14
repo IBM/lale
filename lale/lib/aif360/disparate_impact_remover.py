@@ -34,6 +34,7 @@ from .util import (
 class _DisparateImpactRemoverImpl:
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         redact=True,

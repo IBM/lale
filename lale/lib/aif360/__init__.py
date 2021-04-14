@@ -19,7 +19,7 @@
 All operators and metrics in the Lale wrappers for AIF360 take two
 arguments, `favorable_labels` and `protected_attributes`, collectively
 referred to as *fairness info*. For example, the following code
-indicates that the privileged groups comprise male values in the
+indicates that the reference group comprises male values in the
 `personal_status` attribute as well as values from 26 to 1000 in the
 `age` attribute.
 
@@ -30,11 +30,11 @@ indicates that the privileged groups comprise male values in the
         "protected_attributes": [
             {
                 "feature": "personal_status",
-                "privileged_groups": [
+                "reference_group": [
                     "male div/sep", "male mar/wid", "male single",
                 ],
             },
-            {"feature": "age", "privileged_groups": [[26, 1000]]},
+            {"feature": "age", "reference_group": [[26, 1000]]},
         ],
     }
 

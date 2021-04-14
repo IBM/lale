@@ -30,6 +30,7 @@ from .util import (
 class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         redact=True,
