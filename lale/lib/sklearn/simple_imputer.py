@@ -29,6 +29,7 @@ class _SimpleImputerImpl:
         fill_value=None,
         verbose=0,
         copy=True,
+        add_indicator=False,
     ):
         self._hyperparams = {
             "missing_values": missing_values,
@@ -36,6 +37,7 @@ class _SimpleImputerImpl:
             "fill_value": fill_value,
             "verbose": verbose,
             "copy": copy,
+            "add_indicator": add_indicator,
         }
         self._wrapped_model = sklearn.impute.SimpleImputer(**self._hyperparams)
 
@@ -59,7 +61,14 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["missing_values", "strategy", "fill_value", "verbose", "copy"],
+            "required": [
+                "missing_values",
+                "strategy",
+                "fill_value",
+                "verbose",
+                "copy",
+                "add_indicator",
+            ],
             "relevantToOptimizer": ["strategy"],
             "properties": {
                 "missing_values": {
@@ -94,6 +103,11 @@ _hyperparams_schema = {
                     "type": "boolean",
                     "default": True,
                     "description": "If True, a copy of X will be created.",
+                },
+                "add_indicator": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "If True, a MissingIndicator transform will stack onto output of the imputer’s transform.",
                 },
             },
         }
