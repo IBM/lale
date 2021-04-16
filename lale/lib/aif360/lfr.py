@@ -210,11 +210,12 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`LFR`_ (learning fair representations) pre-estimator fairness mitigator.
+    "description": """`LFR`_ (learning fair representations) pre-estimator fairness mitigator. Finds a latent representation that encodes the data well but obfuscates information about protected attributes (`Zemel et al. 2013`_).
 
 .. _`LFR`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.LFR.html
+.. _`Zemel et al. 2013`: http://proceedings.mlr.press/v28/zemel13.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.disparate_impact_remover.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.lfr.html#lale.lib.aif360.lfr.LFR",
     "import_from": "aif360.algorithms.preprocessing",
     "type": "object",
     "tags": {"pre": ["~categoricals"], "op": ["transformer"], "post": []},

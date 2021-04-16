@@ -153,11 +153,12 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Reject option classification`_ post-estimator fairness mitigator.
+    "description": """`Reject option classification`_ post-estimator fairness mitigator. Gives favorable outcomes to unpriviliged groups and unfavorable outcomes to priviliged groups in a confidence band around the decision boundary with the highest uncertainty (`Kamiran et al. 2012`_).
 
 .. _`Reject option classification`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.RejectOptionClassification.html
+.. _`Kamiran et al. 2012`: https://doi.org/10.1109/ICDM.2012.45
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.reject_option_classification.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.reject_option_classification.html#lale.lib.aif360.reject_option_classification.RejectOptionClassification",
     "import_from": "aif360.algorithms.postprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier", "interpretable"], "post": []},

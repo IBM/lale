@@ -150,11 +150,12 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """Work-in-progress, not covered in successful test yet: `MetaFairClassifier`_ in-estimator fairness mitigator.
+    "description": """`MetaFairClassifier`_ in-estimator fairness mitigator. Takes the fairness metric as part of the input and returns a classifier optimized with respect to that fairness metric (`Celis et al. 2019`_).
 
 .. _`MetaFairClassifier`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.MetaFairClassifier.html
+.. _`Celis et al. 2019`: https://doi.org/10.1145/3287560.3287586
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.prejudice_remover.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.meta_fair_classifier.html#lale.lib.aif360.meta_fair_classifier.MetaFairClassifier",
     "import_from": "aif360.sklearn.inprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},

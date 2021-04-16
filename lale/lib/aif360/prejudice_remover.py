@@ -94,11 +94,12 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`PrejudiceRemover`_ in-estimator fairness mitigator.
+    "description": """`PrejudiceRemover`_ in-estimator fairness mitigator. Adds a discrimination-aware regularization term to the learning objective (`Kamishima et al. 2012`_).
 
 .. _`PrejudiceRemover`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.PrejudiceRemover.html
+.. _`Kamishima et al. 2012`: https://doi.org/10.1007/978-3-642-33486-3_3
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.prejudice_remover.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.prejudice_remover.html#lale.lib.aif360.prejudice_remover.PrejudiceRemover",
     "import_from": "aif360.sklearn.inprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},

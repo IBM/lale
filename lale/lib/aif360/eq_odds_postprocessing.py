@@ -95,11 +95,13 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Equalized odds postprocessing`_ post-estimator fairness mitigator.
+    "description": """`Equalized odds postprocessing`_ post-estimator fairness mitigator. Solves a linear program to find probabilities with which to change output labels to optimize equalized odds (`Hardt et al. 2016`_, `Pleiss et al. 2017`_).
 
 .. _`Equalized odds postprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.EqOddsPostprocessing.html
+.. _`Hardt et al. 2016`: https://papers.nips.cc/paper/2016/hash/9d2682367c3935defcb1f9e247a97c0d-Abstract.html
+.. _`Pleiss et al. 2017`: https://proceedings.neurips.cc/paper/2017/hash/b8b9c74ac526fffbeb2d39ab038d1cd7-Abstract.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.eq_odds_postprocessing.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.eq_odds_postprocessing.html#lale.lib.aif360.eq_odds_postprocessing.EqOddsPostprocessing",
     "import_from": "aif360.algorithms.postprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier", "interpretable"], "post": []},
