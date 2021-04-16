@@ -27,16 +27,16 @@ class _AdaBoostClassifierImpl:
         algorithm="SAMME.R",
         random_state=None,
     ):
-        if isinstance(base_estimator, lale.operators.Operator):
-            if isinstance(base_estimator, lale.operators.IndividualOp):
-                base_estimator = base_estimator._impl_instance()
-                wrapped_model = getattr(base_estimator, "_wrapped_model", None)
-                if wrapped_model is not None:
-                    base_estimator = wrapped_model
-            else:
-                raise ValueError(
-                    "If base_estimator is a Lale operator, it needs to be an individual operator. "
-                )
+        # if isinstance(base_estimator, lale.operators.Operator):
+        #     if isinstance(base_estimator, lale.operators.IndividualOp):
+        #         base_estimator = base_estimator._impl_instance()
+        #         wrapped_model = getattr(base_estimator, "_wrapped_model", None)
+        #         if wrapped_model is not None:
+        #             base_estimator = wrapped_model
+        #     else:
+        #         raise ValueError(
+        #             "If base_estimator is a Lale operator, it needs to be an individual operator. "
+        #         )
         self._hyperparams = {
             "base_estimator": base_estimator,
             "n_estimators": n_estimators,
