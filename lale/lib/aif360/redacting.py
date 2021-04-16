@@ -115,6 +115,8 @@ _combined_schemas = {
 This sets all the protected attributes to constants. For numbers that
 have more than 10 unique values in the column, use the arithmetic mean.
 Otherwise, use the most frequent value in the column.
+This operator is used internally by various lale.lib.aif360 metrics
+and mitigators, so you often do not need to use it directly yourself.
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.redacting.html#lale.lib.aif360.redacting.Redacting",
     "import_from": "lale.lib.aif360",
