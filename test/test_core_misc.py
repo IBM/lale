@@ -746,6 +746,16 @@ class TestScoreIndividualOp(unittest.TestCase):
         accuracy = accuracy_score(self.y_test, predictions, sample_weight=iris_weights)
         self.assertEqual(score, accuracy)
 
+class TestEmptyY(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+
+        data = load_iris()
+        self.X, self.y = data.data, data.target
+
+    def test_PCA(self):
+        op = PCA()
+        op.fit(self.X, [])
 
 class TestFitPlannedOp(unittest.TestCase):
     def setUp(self):

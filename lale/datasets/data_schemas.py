@@ -184,6 +184,8 @@ def list_tensor_to_shape_and_dtype(ls) -> Optional[Tuple[Tuple[int, ...], Type]]
                 sub_result = item_result
             elif sub_result != item_result:
                 return None
+        if sub_result == "Any" and len(ls) == 0:
+            return ((len(ls),) + (), int)
         sub_shape, sub_dtype = sub_result
         return ((len(ls),) + sub_shape, sub_dtype)
     return None

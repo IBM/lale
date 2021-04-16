@@ -30,7 +30,9 @@ from .util import (
 
 
 class _ReweighingImpl:
-    def __init__(self, favorable_labels, protected_attributes, estimator, redact=True):
+    def __init__(
+        self, *, favorable_labels, protected_attributes, estimator, redact=True
+    ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator
@@ -54,11 +56,11 @@ class _ReweighingImpl:
             protected_attribute_names=prot_attr_names,
         )
         encoded_data = pandas_to_dataset.convert(encoded_X, encoded_y)
-        unpriv_groups = [{name: 0 for name in prot_attr_names}]
-        priv_groups = [{name: 1 for name in prot_attr_names}]
+        unprivileged_groups = [{name: 0 for name in prot_attr_names}]
+        privileged_groups = [{name: 1 for name in prot_attr_names}]
         reweighing_trainable = aif360.algorithms.preprocessing.Reweighing(
-            unprivileged_groups=unpriv_groups,
-            privileged_groups=priv_groups,
+            unprivileged_groups=unprivileged_groups,
+            privileged_groups=privileged_groups,
         )
         reweighing_trained = reweighing_trainable.fit(encoded_data)
         reweighted_data = reweighing_trained.transform(encoded_data)
@@ -123,11 +125,12 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`Reweighing`_ pre-estimator fairness mitigator.
+    "description": """`Reweighing`_ pre-estimator fairness mitigator. Weights the examples in each (group, label) combination differently to ensure fairness before classification (`Kamiran and Calders 2012`_).
 
 .. _`Reweighing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.sklearn.preprocessing.Reweighing.html
+.. _`Kamiran and Calders 2012`: https://doi.org/10.1007/s10115-011-0463-8
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.reweighing.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.reweighing.html#lale.lib.aif360.reweighing.Reweighing",
     "import_from": "aif360.sklearn.preprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},

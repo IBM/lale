@@ -31,6 +31,7 @@ from .util import (
 class _OptimPreprocImpl:
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         optimizer,
@@ -191,11 +192,12 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """Work-in-progress, not covered in successful test yet: `Optimized Preprocessing`_ for fairness mitigation.
+    "description": """Work-in-progress, not covered in successful test yet: `Optimized Preprocessing`_ pre-estimator fairness mitigator. Learns a probabilistic transformation that edits the features and labels in the data with group fairness, individual distortion, and data fidelity constraints and objectives (`Calmon et al. 2017`_).
 
 .. _`Optimized Preprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.OptimPreproc.html
+.. _`Calmon et al. 2017`: https://proceedings.neurips.cc/paper/2017/hash/9a49a25d845a483fae4be7e341368e36-Abstract.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.disparate_impact_remover.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.optim_preproc.html#lale.lib.aif360.optim_preproc.OptimPreproc",
     "import_from": "aif360.algorithms.preprocessing",
     "type": "object",
     "tags": {"pre": ["~categoricals"], "op": ["transformer"], "post": []},

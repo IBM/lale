@@ -30,6 +30,7 @@ from .util import (
 class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         redact=True,
@@ -185,11 +186,13 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`GerryFairClassifier`_ in-estimator fairness mitigator.
+    "description": """`GerryFairClassifier`_ in-estimator fairness mitigator. Attempts to learn classifiers that are fair with respect to rich subgroups (`Kearns et al. 2018`_, `Kearns et al. 2019`_). Rich subgroups are defined by (linear) functions over the sensitive attributes, and fairness notions are statistical: false positive, false negative, and statistical parity rates. This implementation uses a max of two regressions as a cost-sensitive classification oracle, and supports linear regression, support vector machines, decision trees, and kernel regression.
 
 .. _`GerryFairClassifier`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.GerryFairClassifier.html
+.. _`Kearns et al. 2018`: http://proceedings.mlr.press/v80/kearns18a.html
+.. _`Kearns et al. 2019`: https://doi.org/10.1145/3287560.3287592
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.prejudice_remover.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.gerry_fair_classifier.html#lale.lib.aif360.gerry_fair_classifier.GerryFairClassifier",
     "import_from": "aif360.sklearn.inprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},

@@ -36,6 +36,7 @@ from .util import (
 class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         redact=True,
@@ -195,11 +196,12 @@ _hyperparams_schema = {
 }
 
 _combined_schemas = {
-    "description": """`AdversarialDebiasing`_ in-estimator fairness mitigator.
+    "description": """`AdversarialDebiasing`_ in-estimator fairness mitigator. Learns a classifier to maximize prediction accuracy and simultaneously reduce an adversary's ability to determine the protected attribute from the predictions (`Zhang et al. 2018`_). This approach leads to a fair classifier as the predictions cannot carry any group discrimination information that the adversary can exploit. Implemented based on TensorFlow.
 
 .. _`AdversarialDebiasing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.inprocessing.AdversarialDebiasing.html
+.. _`Zhang et al. 2018`: https://doi.org/10.1145/3278721.3278779
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.prejudice_remover.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.adversarial_debiasing.html#lale.lib.aif360.adversarial_debiasing.AdversarialDebiasing",
     "import_from": "aif360.sklearn.inprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},

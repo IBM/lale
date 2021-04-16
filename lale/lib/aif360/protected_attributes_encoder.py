@@ -161,7 +161,7 @@ _combined_schemas = {
     "description": """Protected attributes encoder.
 
 The `protected_attributes` argument describes each sensitive column by
-a `feature` name or index and a `privileged_groups` list of values or
+a `feature` name or index and a `reference_group` list of values or
 ranges. This transformer encodes protected attributes with values of
 `0` or `1` to indicate group membership. That encoding makes the
 protected attributes suitable as input for downstream fairness
@@ -170,8 +170,10 @@ mitigation operators. This operator does not encode the remaining
 attributes with a separate data preparation pipeline and to perform a
 feature union before piping the transformed data to downstream
 operators that require numeric data.
+This operator is used internally by various lale.lib.aif360 metrics
+and mitigators, so you often do not need to use it directly yourself.
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.protected_attributes_encoder.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.protected_attributes_encoder.html#lale.lib.aif360.protected_attributes_encoder.ProtectedAttributesEncoder",
     "import_from": "lale.lib.aif360",
     "type": "object",
     "tags": {"pre": ["categoricals"], "op": ["transformer"], "post": []},
@@ -186,6 +188,7 @@ operators that require numeric data.
 class _ProtectedAttributesEncoderImpl:
     def __init__(
         self,
+        *,
         favorable_labels=None,
         protected_attributes=None,
         remainder="drop",
@@ -205,7 +208,7 @@ class _ProtectedAttributesEncoderImpl:
         protected = {}
         for prot_attr in self.protected_attributes:
             feature = prot_attr["feature"]
-            groups = prot_attr["privileged_groups"]
+            groups = prot_attr["reference_group"]
             if isinstance(feature, str):
                 column = X[feature]
             else:

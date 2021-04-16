@@ -144,11 +144,11 @@ class TestAIF360Num(unittest.TestCase):
             "protected_attributes": [
                 {
                     "feature": pd_columns.get_loc("sex"),
-                    "privileged_groups": [1],
+                    "reference_group": [1],
                 },
                 {
                     "feature": pd_columns.get_loc("age"),
-                    "privileged_groups": [1],
+                    "reference_group": [1],
                 },
             ],
         }
@@ -177,7 +177,7 @@ class TestAIF360Num(unittest.TestCase):
             "favorable_labels": [[-10000.0, label_median]],
             "protected_attributes": [
                 # 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
-                {"feature": 11, "privileged_groups": [[0.0, black_median]]},
+                {"feature": 11, "reference_group": [[0.0, black_median]]},
             ],
         }
         result = {
@@ -429,11 +429,11 @@ class TestAIF360Cat(unittest.TestCase):
             "protected_attributes": [
                 {
                     "feature": pd_columns.get_loc("personal_status"),
-                    "privileged_groups": pd_prot_attrs[0]["privileged_groups"],
+                    "reference_group": pd_prot_attrs[0]["reference_group"],
                 },
                 {
                     "feature": pd_columns.get_loc("age"),
-                    "privileged_groups": pd_prot_attrs[1]["privileged_groups"],
+                    "reference_group": pd_prot_attrs[1]["reference_group"],
                 },
             ],
         }
@@ -495,7 +495,7 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         train_X = self.creditg_pd_cat["splits"][0]["train_X"]
         train_y = self.creditg_pd_cat["splits"][0]["train_y"]
-        stratify = lale.lib.aif360.util.column_for_stratification(
+        stratify = lale.lib.aif360.util._column_for_stratification(
             train_X, train_y, **fairness_info
         )
         for i in train_X.index:
@@ -579,7 +579,7 @@ class TestAIF360Cat(unittest.TestCase):
     def test_scorers_warn(self):
         fairness_info = {
             "favorable_labels": ["good"],
-            "protected_attributes": [{"feature": "age", "privileged_groups": [1]}],
+            "protected_attributes": [{"feature": "age", "reference_group": [1]}],
         }
         trainable = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         train_X = self.creditg_pd_cat["splits"][0]["train_X"]

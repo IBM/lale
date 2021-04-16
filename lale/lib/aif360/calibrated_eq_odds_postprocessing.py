@@ -29,6 +29,7 @@ from .util import (
 class _CalibratedEqOddsPostprocessingImpl(_BasePostEstimatorImpl):
     def __init__(
         self,
+        *,
         favorable_labels,
         protected_attributes,
         estimator,
@@ -101,11 +102,12 @@ _hyperparams_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Calibrated equalized odds postprocessing`_ post-estimator fairness mitigator.
+    "description": """`Calibrated equalized odds postprocessing`_ post-estimator fairness mitigator. Optimizes over calibrated classifier score outputs to find probabilities with which to change output labels with an equalized odds objective (`Pleiss et al. 2017`_).
 
 .. _`Calibrated equalized odds postprocessing`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.postprocessing.CalibratedEqOddsPostprocessing.html
+.. _`Pleiss et al. 2017`: https://proceedings.neurips.cc/paper/2017/hash/b8b9c74ac526fffbeb2d39ab038d1cd7-Abstract.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.calibrated_eq_odds_postprocessing.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.calibrated_eq_odds_postprocessing.html#lale.lib.aif360.calibrated_eq_odds_postprocessing.CalibratedEqOddsPostprocessing",
     "import_from": "aif360.algorithms.postprocessing",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier", "interpretable"], "post": []},
