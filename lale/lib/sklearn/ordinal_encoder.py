@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Any, Dict
+
 import numpy as np
 import pandas as pd
 import sklearn.preprocessing
@@ -35,6 +37,12 @@ class _OrdinalEncoderImpl:
         self.unknown_categories_mapping = (
             []
         )  # used during inverse transform to keep track of mapping of unknown categories
+
+    def get_params(self, deep: bool = True) -> Dict[str, Any]:
+        out = self._wrapped_model.get_params(deep=deep)
+        out["handle_unknown"] = self.handle_unknown
+        out["encode_unknown_with"] = self.encode_unknown_with
+        return out
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)
