@@ -27,24 +27,32 @@ class _AdaBoostClassifierImpl:
         algorithm="SAMME.R",
         random_state=None,
     ):
-        if isinstance(base_estimator, lale.operators.Operator):
-            if isinstance(base_estimator, lale.operators.IndividualOp):
-                base_estimator = base_estimator._impl_instance()
-                wrapped_model = getattr(base_estimator, "_wrapped_model", None)
+        estimator_impl = base_estimator
+        if isinstance(estimator_impl, lale.operators.Operator):
+            if isinstance(estimator_impl, lale.operators.IndividualOp):
+                estimator_impl = estimator_impl._impl_instance()
+                wrapped_model = getattr(estimator_impl, "_wrapped_model", None)
                 if wrapped_model is not None:
-                    base_estimator = wrapped_model
+                    estimator_impl = wrapped_model
             else:
                 raise ValueError(
                     "If base_estimator is a Lale operator, it needs to be an individual operator. "
                 )
         self._hyperparams = {
-            "base_estimator": base_estimator,
+            "base_estimator": estimator_impl,
             "n_estimators": n_estimators,
             "learning_rate": learning_rate,
             "algorithm": algorithm,
             "random_state": random_state,
         }
         self._wrapped_model = SKLModel(**self._hyperparams)
+        self._hyperparams["base_estimator"] = base_estimator
+
+    def get_params(self, deep=True):
+        out = self._wrapped_model.get_params(deep=deep)
+        # we want to return the lale operator, not the underlying impl
+        out["base_estimator"] = self._hyperparams["base_estimator"]
+        return out
 
     def fit(self, X, y=None):
         if y is not None:
