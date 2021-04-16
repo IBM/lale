@@ -406,10 +406,11 @@ class _AccuracyAndDisparateImpact:
 
 
 def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible combined scorer for `accuracy`_ and `disparate impact`_ given the fairness info.
+    """Create a scikit-learn compatible combined scorer for `accuracy`_ and `disparate impact`_ given the fairness info. Higher is better. If the disparate impact is between 0.9 and 1.111, return the accuracy. Otherwise, return a value less than the accuracy, the more unfair the lower. The result is between 0 and 1. This metric can be used as the `scoring` argument of an optimizer as shown in this `demo`_.
 
     .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
-    .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    .. _`disparate impact`: https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
     return _AccuracyAndDisparateImpact(favorable_labels, protected_attributes)
 
 
@@ -419,7 +420,12 @@ accuracy_and_disparate_impact.__doc__ = (
 
 
 def average_odds_difference(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible `average odds difference`_ scorer given the fairness info.
+    r"""Create a scikit-learn compatible `average odds difference`_ scorer given the fairness info. Average of difference in false positive rate and true positive rate between unprivileged and privileged groups.
+
+    .. math::
+        \tfrac{1}{2}\left[(\text{FPR}_{D = \text{unprivileged}} - \text{FPR}_{D = \text{privileged}}) + (\text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}}))\right]
+
+    The ideal value of this metric is 0. A value of <0 implies higher benefit for the privileged group and a value >0 implies higher benefit for the unprivileged group. Fairness for this metric is between -0.1 and 0.1.
 
     .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
     return _ScorerFactory(
@@ -433,9 +439,16 @@ average_odds_difference.__doc__ = (
 
 
 def disparate_impact(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible `disparate impact`_ scorer given the fairness info.
+    r"""Create a scikit-learn compatible `disparate impact`_ scorer given the fairness info (`Feldman et al. 2015`_). Ratio of rate of favorable outcome for the unprivileged group to that of the privileged group.
 
-    .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    .. math::
+        \frac{\text{Pr}(Y = 1 | D = \text{unprivileged})}
+        {\text{Pr}(Y = 1 | D = \text{privileged})}
+
+    The ideal value of this metric is 1. A value <1 implies higher benefit for the privileged group and a value >1 implies a higher benefit for the unprivileged group. Fairness for this metric is between 0.8 and 1.25.
+
+    .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact
+    .. _`Feldman et al. 2015`: https://doi.org/10.1145/2783258.2783311"""
     return _ScorerFactory("disparate_impact", favorable_labels, protected_attributes)
 
 
@@ -443,7 +456,12 @@ disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
 
 
 def equal_opportunity_difference(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible `equal opportunity difference`_ scorer given the fairness info.
+    r"""Create a scikit-learn compatible `equal opportunity difference`_ scorer given the fairness info. Difference of true positive rates between the unprivileged and the privileged groups. The true positive rate is the ratio of true positives to the total number of actual positives for a given group.
+
+    .. math::
+        \text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}}`
+
+    The ideal value is 0. A value of <0 implies higher benefit for the privileged group and a value >0 implies higher benefit for the unprivileged group. Fairness for this metric is between -0.1 and 0.1.
 
     .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
     return _ScorerFactory(
@@ -508,10 +526,11 @@ class _R2AndDisparateImpact:
 
 
 def r2_and_disparate_impact(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info.
+    """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info. Higher is better. If the disparate impact is between 0.9 and 1.111, return the R2 score. Otherwise, return a value less than the R2 score, the more unfair the lower. The result is at most 1 and, just like R2 score, can be negative. This metric can be used as the `scoring` argument of an optimizer such as `Hyperopt`_.
 
     .. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
-    .. _`disparate impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact"""
+    .. _`disparate impact`: https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    .. _Hyperopt`: https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt"""
     return _R2AndDisparateImpact(favorable_labels, protected_attributes)
 
 
@@ -521,9 +540,16 @@ r2_and_disparate_impact.__doc__ = (
 
 
 def statistical_parity_difference(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible `statistical parity difference`_ scorer given the fairness info.
+    r"""Create a scikit-learn compatible `statistical parity difference`_ scorer given the fairness info. Difference of the rate of favorable outcomes received by the unprivileged group to the privileged group.
 
-    .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference"""
+    .. math::
+        \text{Pr}(Y = 1 | D = \text{unprivileged})
+        - \text{Pr}(Y = 1 | D = \text{privileged})
+
+    The ideal value of this metric is 0. A value of <0 implies higher benefit for the privileged group and a value >0 implies higher benefit for the unprivileged group. Fairness for this metric is between -0.1 and 0.1. For a discussion of potential issues with this metric see (`Dwork et al. 2012`_).
+
+    .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference
+    .. _`Dwork et al. 2012`: https://doi.org/10.1145/2090236.2090255"""
     return _ScorerFactory(
         "statistical_parity_difference", favorable_labels, protected_attributes
     )
@@ -535,9 +561,18 @@ statistical_parity_difference.__doc__ = (
 
 
 def theil_index(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible `Theil index`_ scorer given the fairness info.
+    r"""Create a scikit-learn compatible `Theil index`_ scorer given the fairness info (`Speicher et al. 2018`_). Generalized entropy of benefit for all individuals in the dataset, with alpha=1. Measures the inequality in benefit allocation for individuals.  With :math:`b_i = \hat{y}_i - y_i + 1`:
+    .. math::
+         \mathcal{E}(\alpha) = \begin{cases}
+           \frac{1}{n \alpha (\alpha-1)}\sum_{i=1}^n\left[\left(\frac{b_i}{\mu}\right)^\alpha - 1\right],& \alpha \ne 0, 1,\\
+           \frac{1}{n}\sum_{i=1}^n\frac{b_{i}}{\mu}\ln\frac{b_{i}}{\mu},& \alpha=1,\\
+           -\frac{1}{n}\sum_{i=1}^n\ln\frac{b_{i}}{\mu},& \alpha=0.
+         \end{cases}
 
-    .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index"""
+    A value of 0 implies perfect fairness. Fairness is indicated by lower scores, higher scores are problematic.
+
+    .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
+    .. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
     return _ScorerFactory("theil_index", favorable_labels, protected_attributes)
 
 
@@ -878,7 +913,7 @@ def fair_stratified_train_test_split(
 
       - item 3: test_y
 
-      - item 4+: splits for *arrays argument, if any
+      - item 4+: Each argument in `*arrays`, if any, yields two items in the result, for the two splits of that array.
     """
     stratify = column_for_stratification(X, y, favorable_labels, protected_attributes)
     train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
