@@ -171,7 +171,7 @@ attributes with a separate data preparation pipeline and to perform a
 feature union before piping the transformed data to downstream
 operators that require numeric data.
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.protected_attributes_encoder.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.protected_attributes_encoder.html#lale.lib.aif360.protected_attributes_encoder.ProtectedAttributesEncoder",
     "import_from": "lale.lib.aif360",
     "type": "object",
     "tags": {"pre": ["categoricals"], "op": ["transformer"], "post": []},

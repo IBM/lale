@@ -116,8 +116,8 @@ This sets all the protected attributes to constants. For numbers that
 have more than 10 unique values in the column, use the arithmetic mean.
 Otherwise, use the most frequent value in the column.
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.redacting.html",
-    "import_from": "aif360.sklearn.preprocessing",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.redacting.html#lale.lib.aif360.redacting.Redacting",
+    "import_from": "lale.lib.aif360",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {
