@@ -745,3 +745,75 @@ class TestScoreIndividualOp(unittest.TestCase):
         predictions = trained_lr.predict(self.X_test)
         accuracy = accuracy_score(self.y_test, predictions, sample_weight=iris_weights)
         self.assertEqual(score, accuracy)
+
+
+class TestFitPlannedOp(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+
+        data = load_iris()
+        self.X, self.y = data.data, data.target
+
+    def test_planned_individual_op(self):
+        planned = LogisticRegression
+        try:
+            planned.fit(self.X, self.y)
+        except AttributeError as e:
+            self.assertEqual(
+                e.__str__(),
+                """Please use `LogisticRegression()` instead of `LogisticRegression` to make it trainable.
+Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the operator to use Hyperopt for
+`max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
+            )
+
+    def test_planned_pipeline_with_choice(self):
+        planned = PCA() >> (LogisticRegression() | KNeighborsClassifier())
+        try:
+            planned.fit(self.X, self.y)
+        except AttributeError as e:
+            self.assertEqual(
+                e.__str__(),
+                """The pipeline is not trainable, which means you can not call fit on it.
+
+Suggested fixes:
+Fix [A]: You can make the following changes in the pipeline in order to make it trainable:
+[A.1] Please remove the operator choice `|` from `LogisticRegression | KNeighborsClassifier` and keep only one of those operators.
+
+Fix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
+to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
+            )
+
+    def test_planned_pipeline_with_choice_1(self):
+        planned = PCA >> (LogisticRegression() | KNeighborsClassifier())
+        try:
+            planned.fit(self.X, self.y)
+        except AttributeError as e:
+            self.assertEqual(
+                e.__str__(),
+                """The pipeline is not trainable, which means you can not call fit on it.
+
+Suggested fixes:
+Fix [A]: You can make the following changes in the pipeline in order to make it trainable:
+[A.1] Please use `PCA()` instead of `PCA.`
+[A.2] Please remove the operator choice `|` from `LogisticRegression | KNeighborsClassifier` and keep only one of those operators.
+
+Fix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
+to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
+            )
+
+    def test_choice(self):
+        planned = LogisticRegression() | KNeighborsClassifier()
+        try:
+            planned.fit(self.X, self.y)
+        except AttributeError as e:
+            self.assertEqual(
+                e.__str__(),
+                """The pipeline is not trainable, which means you can not call fit on it.
+
+Suggested fixes:
+Fix [A]: You can make the following changes in the pipeline in order to make it trainable:
+[A.1] Please remove the operator choice `|` from `LogisticRegression | KNeighborsClassifier` and keep only one of those operators.
+
+Fix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
+to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
+            )
