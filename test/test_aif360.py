@@ -495,7 +495,7 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         train_X = self.creditg_pd_cat["splits"][0]["train_X"]
         train_y = self.creditg_pd_cat["splits"][0]["train_y"]
-        stratify = lale.lib.aif360.util.column_for_stratification(
+        stratify = lale.lib.aif360.util._column_for_stratification(
             train_X, train_y, **fairness_info
         )
         for i in train_X.index:

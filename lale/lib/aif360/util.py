@@ -406,10 +406,11 @@ class _AccuracyAndDisparateImpact:
 
 
 def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible combined scorer for `accuracy`_ and `disparate impact`_ given the fairness info. Higher is better. If the disparate impact is between 0.9 and 1.111, return the accuracy. Otherwise, return a value less than the accuracy, the more unfair the lower. The result is between 0 and 1. This metric can be used as the `scoring` argument of an optimizer as shown in this `demo`_.
+    """Create a scikit-learn compatible combined scorer for `accuracy`_ and `disparate impact`_ given the fairness info. The scorer is suitable for classification problems, with higher resulting scores indicating better outcomes. If the disparate impact is between 0.9 and 1.111, return the accuracy. Otherwise, return a value less than the accuracy, the more unfair the lower. The result is between 0 and 1. This metric can be used as the `scoring` argument of an optimizer such as `Hyperopt`_, as shown in this `demo`_.
 
     .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
-    .. _`disparate impact`: https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    .. _`disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
     .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
     return _AccuracyAndDisparateImpact(favorable_labels, protected_attributes)
 
@@ -423,7 +424,7 @@ def average_odds_difference(favorable_labels, protected_attributes):
     r"""Create a scikit-learn compatible `average odds difference`_ scorer given the fairness info. Average of difference in false positive rate and true positive rate between unprivileged and privileged groups.
 
     .. math::
-        \tfrac{1}{2}\left[(\text{FPR}_{D = \text{unprivileged}} - \text{FPR}_{D = \text{privileged}}) + (\text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}}))\right]
+        \tfrac{1}{2}\left[(\text{FPR}_{D = \text{unprivileged}} - \text{FPR}_{D = \text{privileged}}) + (\text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}})\right]
 
     The ideal value of this metric is 0. A value of <0 implies higher benefit for the privileged group and a value >0 implies higher benefit for the unprivileged group. Fairness for this metric is between -0.1 and 0.1.
 
@@ -459,7 +460,7 @@ def equal_opportunity_difference(favorable_labels, protected_attributes):
     r"""Create a scikit-learn compatible `equal opportunity difference`_ scorer given the fairness info. Difference of true positive rates between the unprivileged and the privileged groups. The true positive rate is the ratio of true positives to the total number of actual positives for a given group.
 
     .. math::
-        \text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}}`
+        \text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}}
 
     The ideal value is 0. A value of <0 implies higher benefit for the privileged group and a value >0 implies higher benefit for the unprivileged group. Fairness for this metric is between -0.1 and 0.1.
 
@@ -526,11 +527,11 @@ class _R2AndDisparateImpact:
 
 
 def r2_and_disparate_impact(favorable_labels, protected_attributes):
-    """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info. Higher is better. If the disparate impact is between 0.9 and 1.111, return the R2 score. Otherwise, return a value less than the R2 score, the more unfair the lower. The result is at most 1 and, just like R2 score, can be negative. This metric can be used as the `scoring` argument of an optimizer such as `Hyperopt`_.
+    """Create a scikit-learn compatible combined scorer for `R2 score`_ and `disparate impact`_ given the fairness info. The scorer is suitable for classification problems, with higher resulting scores indicating better outcomes. If the disparate impact is between 0.9 and 1.111, return the R2 score. Otherwise, return a value less than the R2 score, the more unfair the lower. The result is at most 1 and, just like R2 score, can be negative. This metric can be used as the `scoring` argument of an optimizer such as `Hyperopt`_.
 
     .. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
-    .. _`disparate impact`: https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
-    .. _Hyperopt`: https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt"""
+    .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt"""
     return _R2AndDisparateImpact(favorable_labels, protected_attributes)
 
 
@@ -562,17 +563,18 @@ statistical_parity_difference.__doc__ = (
 
 def theil_index(favorable_labels, protected_attributes):
     r"""Create a scikit-learn compatible `Theil index`_ scorer given the fairness info (`Speicher et al. 2018`_). Generalized entropy of benefit for all individuals in the dataset, with alpha=1. Measures the inequality in benefit allocation for individuals.  With :math:`b_i = \hat{y}_i - y_i + 1`:
-    .. math::
-         \mathcal{E}(\alpha) = \begin{cases}
-           \frac{1}{n \alpha (\alpha-1)}\sum_{i=1}^n\left[\left(\frac{b_i}{\mu}\right)^\alpha - 1\right],& \alpha \ne 0, 1,\\
-           \frac{1}{n}\sum_{i=1}^n\frac{b_{i}}{\mu}\ln\frac{b_{i}}{\mu},& \alpha=1,\\
-           -\frac{1}{n}\sum_{i=1}^n\ln\frac{b_{i}}{\mu},& \alpha=0.
-         \end{cases}
 
-    A value of 0 implies perfect fairness. Fairness is indicated by lower scores, higher scores are problematic.
+.. math::
+    \mathcal{E}(\alpha) = \begin{cases}
+      \frac{1}{n \alpha (\alpha-1)}\sum_{i=1}^n\left[\left(\frac{b_i}{\mu}\right)^\alpha - 1\right],& \alpha \ne 0, 1,\\
+      \frac{1}{n}\sum_{i=1}^n\frac{b_{i}}{\mu}\ln\frac{b_{i}}{\mu},& \alpha=1,\\
+      -\frac{1}{n}\sum_{i=1}^n\ln\frac{b_{i}}{\mu},& \alpha=0.
+    \end{cases}
 
-    .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
-    .. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
+A value of 0 implies perfect fairness. Fairness is indicated by lower scores, higher scores are problematic.
+
+.. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
+.. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
     return _ScorerFactory("theil_index", favorable_labels, protected_attributes)
 
 
@@ -821,7 +823,7 @@ _numeric_output_transform_schema = {
 }
 
 
-def column_for_stratification(X, y, favorable_labels, protected_attributes):
+def _column_for_stratification(X, y, favorable_labels, protected_attributes):
     from lale.lib.aif360 import ProtectedAttributesEncoder
 
     prot_attr_enc = ProtectedAttributesEncoder(
@@ -915,7 +917,7 @@ def fair_stratified_train_test_split(
 
       - item 4+: Each argument in `*arrays`, if any, yields two items in the result, for the two splits of that array.
     """
-    stratify = column_for_stratification(X, y, favorable_labels, protected_attributes)
+    stratify = _column_for_stratification(X, y, favorable_labels, protected_attributes)
     train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
         X, y, *arrays, test_size=test_size, random_state=random_state, stratify=stratify
     )
@@ -1048,6 +1050,6 @@ class FairStratifiedKFold:
 
                 The testing set indices for that split.
         """
-        stratify = column_for_stratification(X, y, **self._fairness_info)
+        stratify = _column_for_stratification(X, y, **self._fairness_info)
         result = self._stratified_k_fold.split(X, stratify, groups)
         return result

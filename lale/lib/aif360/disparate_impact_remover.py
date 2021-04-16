@@ -166,7 +166,7 @@ _combined_schemas = {
     "description": """`Disparate impact remover`_ pre-estimator fairness mitigator. Edits feature values to increase group fairness while preserving rank-ordering within groups (`Feldman et al. 2015`_). In the case of multiple protected attributes, the combined reference group is the intersection of the reference groups for each attribute.
 
 .. _`Disparate impact remover`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.algorithms.preprocessing.DisparateImpactRemover.html
-.. _`Feldman et al. 2015`_: https://doi.org/10.1145/2783258.2783311
+.. _`Feldman et al. 2015`: https://doi.org/10.1145/2783258.2783311
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.disparate_impact_remover.html#lale.lib.aif360.disparate_impact_remover.DisparateImpactRemover",
     "import_from": "aif360.algorithms.preprocessing",

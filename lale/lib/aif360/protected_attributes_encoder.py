@@ -170,6 +170,8 @@ mitigation operators. This operator does not encode the remaining
 attributes with a separate data preparation pipeline and to perform a
 feature union before piping the transformed data to downstream
 operators that require numeric data.
+This operator is used internally by various lale.lib.aif360 metrics
+and mitigators, so you often do not need to use it directly yourself.
 """,
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.protected_attributes_encoder.html#lale.lib.aif360.protected_attributes_encoder.ProtectedAttributesEncoder",
     "import_from": "lale.lib.aif360",
