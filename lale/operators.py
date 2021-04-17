@@ -583,79 +583,6 @@ class Operator(metaclass=AbstractVisitorMeta):
         )
         return self
 
-    def __getattr__(self, name: str) -> Any:
-        if name in _schema_derived_attributes or name in ["__setstate__", "_schemas"]:
-            raise AttributeError
-
-        if name in [
-            "get_pipeline",
-            "summary",
-            "transform",
-            "predict",
-            "predict_proba",
-            "decision_function",
-            "score",
-        ]:
-            if isinstance(self, TrainedIndividualOp):
-                raise AttributeError(
-                    f"The underlying operator impl does not define {name}"
-                )
-            elif isinstance(self, TrainableIndividualOp):
-                raise AttributeError(
-                    f"The underlying operator impl does not define {name}.  Also, calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
-                )
-            else:
-                raise AttributeError(
-                    f"Calling {name} on a {type(self)} is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
-                )
-
-        if name in [
-            "fit",
-        ]:
-
-            def get_error_msg(op, i):
-                if isinstance(op, OperatorChoice):
-                    error_msg = f"""[A.{i}] Please remove the operator choice `|` from `{op.name()}` and keep only one of those operators.\n"""
-                elif isinstance(op, PlannedIndividualOp) and not isinstance(
-                    op, TrainableIndividualOp
-                ):
-                    error_msg = f"[A.{i}] Please use `{op.name()}()` instead of `{op.name()}.`\n"
-                else:
-                    return ""
-                return error_msg
-
-            # This method is called only when `name` is not found on the object, so
-            # we don't need to account for the case when self is trainable or trained.
-            if isinstance(self, PlannedIndividualOp):
-                raise AttributeError(
-                    f"""Please use `{self.name()}()` instead of `{self.name()}` to make it trainable.
-Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the operator to use Hyperopt for
-`max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
-                )
-            elif isinstance(self, PlannedPipeline) or isinstance(self, OperatorChoice):
-                error_msg = f"""The pipeline is not trainable, which means you can not call {name} on it.\n
-Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in order to make it trainable:\n"""
-                i = 1
-                if isinstance(self, PlannedPipeline):
-                    for step in self.steps():
-                        step_err = get_error_msg(step, i)
-                        if step_err != "":
-                            error_msg = error_msg + step_err
-                            i += 1
-                elif isinstance(self, OperatorChoice):
-                    error_msg = error_msg + get_error_msg(self, i)
-
-                error_msg = (
-                    error_msg
-                    + """\nFix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
-to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
-                )
-                raise AttributeError(error_msg)
-
-        if name == "_estimator_type":
-            if self.is_classifier():
-                return "classifier"  # satisfy sklearn.base.is_classifier(op)
-
 
 Operator.__doc__ = cast(str, Operator.__doc__) + "\n" + _combinators_docstrings
 
@@ -1330,7 +1257,35 @@ class IndividualOp(Operator):
                 pass
 
     def __getattr__(self, name: str) -> Any:
-        super(IndividualOp, self).__getattr__(name)
+        if name in _schema_derived_attributes or name in ["__setstate__", "_schemas"]:
+            raise AttributeError
+
+        if name in [
+            "get_pipeline",
+            "summary",
+            "transform",
+            "predict",
+            "predict_proba",
+            "decision_function",
+            "score",
+        ]:
+            if isinstance(self, TrainedIndividualOp):
+                raise AttributeError(
+                    f"The underlying operator impl does not define {name}"
+                )
+            elif isinstance(self, TrainableIndividualOp):
+                raise AttributeError(
+                    f"The underlying operator impl does not define {name}.  Also, calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
+                )
+            else:
+                raise AttributeError(
+                    f"Calling {name} on a {type(self)} is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
+                )
+
+        if name == "_estimator_type":
+            if self.is_classifier():
+                return "classifier"  # satisfy sklearn.base.is_classifier(op)
+
         ea = self.enum
         if name in ea:
             return ea[name]
@@ -4129,8 +4084,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
                 f = getattr(s, "fit", None)
                 if f is not None:
                     return f(X, y, **fit_params)
-        else:
-            return self.__getattr__("fit")
+        raise AttributeError
 
     def _has_same_impl(self, other: Operator) -> bool:
         """Checks if the type of the operator imnplementations are compatible"""
