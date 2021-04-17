@@ -651,10 +651,6 @@ Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in
 to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
                 )
                 raise AttributeError(error_msg)
-        if name == "_estimator_type":
-            if self.is_classifier():
-                return "classifier"  # satisfy sklearn.base.is_classifier(op)
-        return None
 
 
 Operator.__doc__ = cast(str, Operator.__doc__) + "\n" + _combinators_docstrings
@@ -1330,14 +1326,16 @@ class IndividualOp(Operator):
                 pass
 
     def __getattr__(self, name: str) -> Any:
-        output = super(IndividualOp, self).__getattr__(name)
-        if output is not None:
-            return output
+        super(IndividualOp, self).__getattr__(name)
+        if name == "_estimator_type":
+            if self.is_classifier():
+                return "classifier"  # satisfy sklearn.base.is_classifier(op)
         ea = self.enum
         if name in ea:
             return ea[name]
         else:
             raise AttributeError
+        raise AttributeError
 
     def __getstate__(self):
         state = self.__dict__.copy()
