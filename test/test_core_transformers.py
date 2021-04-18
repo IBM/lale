@@ -251,7 +251,7 @@ class TestOrdinalEncoder(unittest.TestCase):
     def test_with_hyperopt(self):
         from lale.lib.sklearn import OrdinalEncoder
 
-        fproc = OrdinalEncoder()
+        fproc = OrdinalEncoder(handle_unknown="ignore")
         from lale.lib.sklearn import LogisticRegression
 
         pipeline = fproc >> LogisticRegression()
