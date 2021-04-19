@@ -382,7 +382,7 @@ class TestGetParams(unittest.TestCase):
 
     def test_shallow_trainable_individual_operator_configured(self):
         op: Ops.TrainableIndividualOp = LogisticRegression(
-            LogisticRegression.solver.saga
+            LogisticRegression.enum.solver.saga
         )
         params = op.get_params(deep=False)
         filtered_params = self.remove_lale_params(params)
@@ -406,7 +406,7 @@ class TestGetParams(unittest.TestCase):
 
     def test_shallow_trained_individual_operator_configured(self):
         op1: Ops.TrainableIndividualOp = LogisticRegression(
-            LogisticRegression.solver.saga
+            LogisticRegression.enum.solver.saga
         )
         iris = load_iris()
         op: Ops.TrainedIndividualOp = op1.fit(iris.data, iris.target)
@@ -455,7 +455,7 @@ class TestGetParams(unittest.TestCase):
 
     def test_shallow_planned_pipeline_with_trainable_configured(self):
         op: Ops.PlannedPipeline = PCA >> LogisticRegression(
-            LogisticRegression.solver.saga
+            LogisticRegression.enum.solver.saga
         )
 
         params = op.get_params(deep=False)
@@ -492,7 +492,7 @@ class TestGetParams(unittest.TestCase):
 
     def test_shallow_trainable_pipeline_configured(self):
         op: Ops.TrainablePipeline = PCA() >> LogisticRegression(
-            LogisticRegression.solver.saga
+            LogisticRegression.enum.solver.saga
         )
 
         params = op.get_params(deep=False)

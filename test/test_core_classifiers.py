@@ -445,27 +445,30 @@ class TestKNeighborsClassifier(unittest.TestCase):
 class TestLogisticRegression(unittest.TestCase):
     def test_hyperparam_keyword_enum(self):
         _ = LogisticRegression(
-            LogisticRegression.penalty.l1, C=0.1, solver=LogisticRegression.solver.saga
+            LogisticRegression.enum.penalty.l1,
+            C=0.1,
+            solver=LogisticRegression.enum.solver.saga,
         )
 
     def test_hyperparam_exclusive_min(self):
         with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
-                _ = LogisticRegression(LogisticRegression.penalty.l1, C=0.0)
+                _ = LogisticRegression(LogisticRegression.enum.penalty.l1, C=0.0)
 
     def test_hyperparam_penalty_solver_dependence(self):
         with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = LogisticRegression(
-                    LogisticRegression.penalty.l1, LogisticRegression.solver.newton_cg
+                    LogisticRegression.enum.penalty.l1,
+                    LogisticRegression.enum.solver.newton_cg,
                 )
 
     def test_hyperparam_dual_penalty_solver_dependence(self):
         with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
                 _ = LogisticRegression(
-                    LogisticRegression.penalty.l2,
-                    LogisticRegression.solver.sag,
+                    LogisticRegression.enum.penalty.l2,
+                    LogisticRegression.enum.solver.sag,
                     dual=True,
                 )
 
