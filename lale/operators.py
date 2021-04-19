@@ -584,8 +584,6 @@ class Operator(metaclass=AbstractVisitorMeta):
         return self
 
     def __getattr__(self, name: str) -> Any:
-        if name in _schema_derived_attributes or name in ["__setstate__", "_schemas"]:
-            raise AttributeError
 
         if name in [
             "get_pipeline",
@@ -1333,10 +1331,6 @@ class IndividualOp(Operator):
         if name == "_estimator_type":
             if self.is_classifier():
                 return "classifier"  # satisfy sklearn.base.is_classifier(op)
-
-        ea = self.enum
-        if name in ea:
-            return ea[name]
 
         return super().__getattr__(name)
 
