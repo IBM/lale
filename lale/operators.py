@@ -4132,7 +4132,8 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
                 f = getattr(s, "fit", None)
                 if f is not None:
                     return f(X, y, **fit_params)
-        raise AttributeError
+        else:
+            self.__getattr__("fit")
 
     def _has_same_impl(self, other: Operator) -> bool:
         """Checks if the type of the operator imnplementations are compatible"""
