@@ -652,6 +652,8 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
                 )
                 raise AttributeError(error_msg)
 
+        raise AttributeError()
+
 
 Operator.__doc__ = cast(str, Operator.__doc__) + "\n" + _combinators_docstrings
 
@@ -1326,16 +1328,17 @@ class IndividualOp(Operator):
                 pass
 
     def __getattr__(self, name: str) -> Any:
-        super(IndividualOp, self).__getattr__(name)
+        if name in _schema_derived_attributes or name in ["__setstate__", "_schemas"]:
+            raise AttributeError
         if name == "_estimator_type":
             if self.is_classifier():
                 return "classifier"  # satisfy sklearn.base.is_classifier(op)
+
         ea = self.enum
         if name in ea:
             return ea[name]
-        else:
-            raise AttributeError
-        raise AttributeError
+
+        return super().__getattr__(name)
 
     def __getstate__(self):
         state = self.__dict__.copy()
