@@ -940,7 +940,7 @@ class TestToAndFromJSON(unittest.TestCase):
         from lale.json_operator import from_json, to_json
         from lale.lib.sklearn import LogisticRegression as LR
 
-        operator = LR(LR.solver.sag, C=0.1)
+        operator = LR(LR.enum.solver.sag, C=0.1)
         json_expected = {
             "class": LR.class_name(),
             "state": "trainable",

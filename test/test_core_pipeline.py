@@ -144,7 +144,7 @@ class TestCreation(unittest.TestCase):
 
         digits = sklearn.datasets.load_digits()
         _ = digits
-        ohe = OneHotEncoder(handle_unknown=OneHotEncoder.handle_unknown.ignore)
+        ohe = OneHotEncoder(handle_unknown=OneHotEncoder.enum.handle_unknown.ignore)
         ohe.get_params()
         no_op = NoOp()
         pca = PCA()
@@ -159,7 +159,7 @@ class TestCreation(unittest.TestCase):
         # TODO: optimize on this plan and then fit and predict
 
     def test_compose5(self):
-        ohe = OneHotEncoder(handle_unknown=OneHotEncoder.handle_unknown.ignore)
+        ohe = OneHotEncoder(handle_unknown=OneHotEncoder.enum.handle_unknown.ignore)
         digits = sklearn.datasets.load_digits()
         lr = LogisticRegression()
         lr_trained = lr.fit(digits.data, digits.target)
@@ -171,7 +171,8 @@ class TestCreation(unittest.TestCase):
     def test_compare_with_sklearn(self):
         tfm = PCA()
         clf = LogisticRegression(
-            LogisticRegression.solver.lbfgs, LogisticRegression.multi_class.auto
+            LogisticRegression.enum.solver.lbfgs,
+            LogisticRegression.enum.multi_class.auto,
         )
         trainable = lale.operators.make_pipeline(tfm, clf)
         digits = sklearn.datasets.load_digits()
@@ -688,7 +689,8 @@ class TestComposition(unittest.TestCase):
     def test_duplicate_instances(self):
         tfm = PCA()
         clf = LogisticRegression(
-            LogisticRegression.solver.lbfgs, LogisticRegression.multi_class.auto
+            LogisticRegression.enum.solver.lbfgs,
+            LogisticRegression.enum.multi_class.auto,
         )
         with self.assertRaises(ValueError):
             _ = lale.operators.make_pipeline(tfm, tfm, clf)
