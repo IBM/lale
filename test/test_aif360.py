@@ -39,6 +39,7 @@ from lale.lib.aif360 import (
     Redacting,
     RejectOptionClassification,
     Reweighing,
+    fair_stratified_train_test_split,
 )
 from lale.lib.lale import ConcatFeatures, Project
 from lale.lib.sklearn import (
@@ -194,6 +195,25 @@ class TestAIF360Num(unittest.TestCase):
         cls.creditg_pd_num = cls._creditg_pd_num()
         cls.creditg_np_num = cls._creditg_np_num()
         cls.boston = cls._boston()
+
+    def test_fair_stratified_train_test_split(self):
+        X = self.creditg_np_num["train_X"]
+        y = self.creditg_np_num["train_y"]
+        fairness_info = self.creditg_np_num["fairness_info"]
+        z = range(X.shape[0])
+        (
+            train_X,
+            test_X,
+            train_y,
+            test_y,
+            train_z,
+            test_z,
+        ) = fair_stratified_train_test_split(X, y, z, **fairness_info)
+        self.assertEqual(train_X.shape[0], train_y.shape[0])
+        self.assertEqual(train_X.shape[0], len(train_z))
+        self.assertEqual(test_X.shape[0], test_y.shape[0])
+        self.assertEqual(test_X.shape[0], len(test_z))
+        self.assertEqual(train_X.shape[0] + test_X.shape[0], X.shape[0])
 
     def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info
@@ -506,6 +526,22 @@ class TestAIF360Cat(unittest.TestCase):
             self.assertEqual(male, strat[0] == "T")
             self.assertEqual(old, strat[1] == "T")
             self.assertEqual(favorable, strat[2] == "T")
+
+    def test_fair_stratified_train_test_split(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        z = range(X.shape[0])
+        (
+            train_X,
+            test_X,
+            train_y,
+            test_y,
+            train_z,
+            test_z,
+        ) = fair_stratified_train_test_split(X, y, z, **fairness_info)
+        self.assertEqual(train_X.shape[0], train_y.shape[0])
+        self.assertEqual(train_X.shape[0], len(train_z))
+        self.assertEqual(test_X.shape[0], test_y.shape[0])
+        self.assertEqual(test_X.shape[0], len(test_z))
 
     def _attempt_scorers(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info

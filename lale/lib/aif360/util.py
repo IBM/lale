@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from typing import Tuple
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -560,7 +561,7 @@ def r2_and_disparate_impact(favorable_labels, protected_attributes):
     """
     Create a scikit-learn compatible combined scorer for `R2 score`_
     and `disparate impact`_ given the fairness info. The scorer is
-    suitable for classification problems, with higher resulting scores
+    suitable for regression problems, with higher resulting scores
     indicating better outcomes. If the disparate impact is between 0.9
     and 1.111, return the R2 score. Otherwise, return a value less
     than the R2 score, the more unfair the lower. The result is at
@@ -904,7 +905,7 @@ def fair_stratified_train_test_split(
     protected_attributes,
     test_size=0.25,
     random_state=None,
-):
+) -> Tuple:
     """
     Splits X and y into random train and test subsets stratified by
     labels and protected attributes.
@@ -972,7 +973,13 @@ def fair_stratified_train_test_split(
       - item 4+: Each argument in `*arrays`, if any, yields two items in the result, for the two splits of that array.
     """
     stratify = _column_for_stratification(X, y, favorable_labels, protected_attributes)
-    train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
+    (
+        train_X,
+        test_X,
+        train_y,
+        test_y,
+        *arrays_splits,
+    ) = sklearn.model_selection.train_test_split(
         X, y, *arrays, test_size=test_size, random_state=random_state, stratify=stratify
     )
     if hasattr(X, "json_schema"):
@@ -981,7 +988,7 @@ def fair_stratified_train_test_split(
     if hasattr(y, "json_schema"):
         train_y = add_schema_adjusting_n_rows(train_y, y.json_schema)
         test_y = add_schema_adjusting_n_rows(test_y, y.json_schema)
-    return (train_X, test_X, train_y, test_y, *arrays)
+    return (train_X, test_X, train_y, test_y, *arrays_splits)
 
 
 class FairStratifiedKFold:
