@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Any
+from typing import Tuple
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -905,7 +905,7 @@ def fair_stratified_train_test_split(
     protected_attributes,
     test_size=0.25,
     random_state=None,
-) -> Any:
+) -> Tuple:
     """
     Splits X and y into random train and test subsets stratified by
     labels and protected attributes.
