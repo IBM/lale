@@ -2096,7 +2096,12 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         y = self._validate_input_schema("y", y, "fit")
         self._validate_hyperparam_data_constraints(X, y)
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
-        trainable_impl = self._clone_impl()
+
+        if isinstance(self, TrainedIndividualOp):
+            trainable_impl = self.impl
+        else:
+            trainable_impl = self._clone_impl()
+
         if filtered_fit_params is None:
             trained_impl = trainable_impl.fit(X, y)
         else:
@@ -2117,7 +2122,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             _lale_frozen_hyperparameters=frozen,
             **hps,
         )
-        self._trained = result
+        if not isinstance(self, TrainedIndividualOp):
+            self._trained = result
         # logger.info("%s exit  fit %s", time.asctime(), self.name())
         return result
 
@@ -2128,7 +2134,12 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         y = self._validate_input_schema("y", y, "partial_fit")
         self._validate_hyperparam_data_constraints(X, y)
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
-        trainable_impl = self._clone_impl()
+
+        if isinstance(self, TrainedIndividualOp):
+            trainable_impl = self.impl
+        else:
+            trainable_impl = self._clone_impl()
+
         if filtered_fit_params is None:
             trained_impl = trainable_impl.partial_fit(X, y)
         else:
@@ -2146,7 +2157,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             _lale_frozen_hyperparameters=self.frozen_hyperparams(),
             **hps,
         )
-        self._trained = result
+        if not isinstance(self, TrainedIndividualOp):
+            self._trained = result
         return result
 
     def freeze_trained(self) -> "TrainedIndividualOp":
