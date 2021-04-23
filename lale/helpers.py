@@ -956,3 +956,12 @@ def unnest_choice(k: str) -> str:
 
 def unnest_HPparams(k: str) -> List[str]:
     return k.split("__")
+
+
+def are_hyperparameters_equal(hyperparam1, hyperparam2):
+    if isinstance(
+        hyperparam1, np.ndarray
+    ):  # hyperparam2 is from schema default, so it may not always be an array
+        return np.all(hyperparam1 == hyperparam2)
+    else:
+        return hyperparam1 == hyperparam2

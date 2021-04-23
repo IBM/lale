@@ -260,7 +260,9 @@ class TestAutoaiLibsText(unittest.TestCase):
 
     def test_TextTransformer(self):
         trainable = lale.lib.autoai_libs.TextTransformer(
-            drop_columns=True, text_processing_options={"word2vec": {"output_dim": 5}}
+            drop_columns=True,
+            columns_to_be_deleted=[0, 1],
+            text_processing_options={"word2vec": {"output_dim": 5}},
         )
         self.doTest(trainable, self.train_X, self.train_y, self.test_X, self.test_y)
 
