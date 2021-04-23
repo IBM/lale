@@ -2,7 +2,7 @@
 
 Lale is an open-source project, and we appreciate your help!
 
-To make contributions to this Github repository, please submit a pull
+To make contributions to this GitHub repository, please submit a pull
 request (PR). In addition, we expect contributors to submit a
 "Developer's Certificate of Origin" by signing the following form:
 [DCO1.1.txt](https://github.com/IBM/lale/blob/master/DCO1.1.txt).
@@ -31,9 +31,21 @@ We have a pre-commit hook setup to help ensure that your code is properly format
 and passes various static checks.  We highly recommend that you enable it, or at least run the check
 before submitting a PR.  To do so, install the `pre-commit` python package (this is done automatically if you `pip install lale[dev]`).  Run `pre-commit install` in your `lale` repository to enable pre-commit checking, or `pre-commit run --all-files` to just run the checks once.
 
+Some committers have experienced difficulties with the
+[Pyright](https://github.com/Microsoft/pyright) pre-commit checks,
+since they require `npm`. You can skip this check locally by running
+`SKIP=pyright git commit ...`; of course, the check will still be
+performed by the continuous integration tests in GitHub Actions.
+
 # Making a Lale Release
 
-Making a release is currently a two step process:
+Every successful build automatically creates a release on
+[test PyPI](https://test.pypi.org/project/lale/), which can be
+installed via `pip install -i https://test.pypi.org/simple/ lale`.
+
+To make a release on [public PyPI](https://pypi.org/project/lale/),
+which can be installed via `pip install lale`, perform the following
+two steps:
 
 1. Increment the version string.
     * The version string is stored in `lale/__init__` (as an example, [here is a prior version](https://github.com/IBM/lale/blob/b576449a3096847bab4962ab733d3c185a9afefc/lale/__init__.py#L17)).
@@ -55,4 +67,4 @@ Making a release is currently a two step process:
 
     * Click `Publish Release`.
 
-    * You are done!  The release will be automatically deployed to PyPi.
+    * You are done!  The release will be automatically deployed to public PyPI.
