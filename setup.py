@@ -85,7 +85,7 @@ setup(
             "tensorflow-datasets>=1.0.1",
             "tensorflow>=1.13.1,<2",
             "tensorflow_hub",
-            "spacy==3.0.5",
+            "spacy<=3.0.5",
             "smac<=0.10.0",
             "numba==0.49.0",
             "aif360>=0.4.0",
