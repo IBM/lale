@@ -185,6 +185,7 @@ import lale.pretty_print
 import lale.type_checking
 from lale import schema2enums as enum_gen
 from lale.helpers import (
+    are_hyperparameters_equal,
     get_name_and_index,
     is_numeric_structure,
     make_degen_indexed_name,
@@ -1228,23 +1229,16 @@ class IndividualOp(Operator):
         return params
 
     def reduced_hyperparams(self):
-        import numpy as np
-
-        if self._hyperparams is None:
+        actuals = self.hyperparams()
+        if actuals is None:
             return None
-        actuals = self._hyperparams
         defaults = self.get_defaults()
-        actuals_minus_defaults: Dict[str, Any] = {}
-        for k, _ in actuals.items():
-            try:
-                if k not in defaults or actuals[k] != defaults[k]:
-                    actuals_minus_defaults[k] = actuals[k]
-            except ValueError:  # occurs for numpy arrays
-                try:
-                    if k not in defaults or np.any(actuals[k] != defaults[k]):
-                        actuals_minus_defaults[k] = actuals[k]
-                except BaseException:
-                    actuals_minus_defaults[k] = actuals[k]
+        actuals_minus_defaults = {
+            k: actuals[k]
+            for k in actuals
+            if k not in defaults
+            or not are_hyperparameters_equal(actuals[k], defaults[k])
+        }
 
         if not hasattr(self, "_hyperparam_positionals"):
             sig = inspect.signature(self._impl_class().__init__)
