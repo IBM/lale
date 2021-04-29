@@ -617,6 +617,21 @@ class TestGetParams(unittest.TestCase):
     #     self.assertLess(nested_base_params, filtered_params)
 
 
+class TestWithParams(unittest.TestCase):
+    @classmethod
+    def remove_lale_params(cls, params: Dict[str, Any]) -> Dict[str, Any]:
+        return {k: v for (k, v) in params.items() if not k.startswith("_lale_")}
+
+    def test_shallow_planned_individual_operator(self):
+        op: Ops.PlannedIndividualOp = LogisticRegression
+        params = op.get_params(deep=False)
+        filtered_params = self.remove_lale_params(params)
+
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(filtered_params, expected)
+
+
 class TestHyperparamRanges(unittest.TestCase):
     def exactly_relevant_properties(self, keys1, operator):
         def sorted(ll):
