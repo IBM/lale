@@ -2019,7 +2019,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self, try_mutate, **impl_params: Dict[str, Any]
     ) -> "TrainableIndividualOp":
         if not try_mutate:
-            return super()._with_op_params(try_mutate)
+            return super()._with_op_params(try_mutate, **impl_params)
         hps = self.hyperparams_all()
         if hps is not None:
             hyperparams = {**hps, **impl_params}

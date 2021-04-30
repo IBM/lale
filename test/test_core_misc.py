@@ -622,14 +622,16 @@ class TestWithParams(unittest.TestCase):
     def remove_lale_params(cls, params: Dict[str, Any]) -> Dict[str, Any]:
         return {k: v for (k, v) in params.items() if not k.startswith("_lale_")}
 
-    def test_shallow_planned_individual_operator(self):
-        op: Ops.PlannedIndividualOp = LogisticRegression
-        params = op.get_params(deep=False)
-        filtered_params = self.remove_lale_params(params)
+    def test_shallow_copied_trainable_individual_operator(self):
+        from lale.lib.lightgbm import LGBMClassifier as LGBM
 
-        expected = LogisticRegression.get_defaults()
+        op: Ops.PlannedIndividualOp = LGBM()
+        op2 = op.clone()
+        new_param_dict = {"learning_rate": 0.8}
+        op3 = op2.with_params(**new_param_dict)
+        params = op3.get_params(deep=False)
 
-        self.assertEqual(filtered_params, expected)
+        self.assertEqual(params["learning_rate"], 0.8)
 
 
 class TestHyperparamRanges(unittest.TestCase):
