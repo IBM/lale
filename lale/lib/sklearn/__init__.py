@@ -26,7 +26,6 @@ Classifiers:
 * lale.lib.sklearn. `BaggingClassifier`_
 * lale.lib.sklearn. `BernoulliNB`_
 * lale.lib.sklearn. `CalibratedClassifierCV`_
-* lale.lib.sklearn. `CCA`_
 * lale.lib.sklearn. `ComplementNB`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
 * lale.lib.sklearn. `DummyClassifier`_
@@ -68,6 +67,7 @@ Transformers:
 * lale.lib.sklearn. `BernoulliRBM`_
 * lale.lib.sklearn. `Binarizer`_
 * lale.lib.sklearn. `Birch`_
+* lale.lib.sklearn. `CCA`_
 * lale.lib.sklearn. `ColumnTransformer`_
 * lale.lib.sklearn. `FeatureAgglomeration`_
 * lale.lib.sklearn. `FunctionTransformer`_
@@ -101,6 +101,7 @@ Transformers:
 .. _`BernoulliRBM`: lale.lib.sklearn.bernoulli_rbm.html
 .. _`Binarizer`: lale.lib.sklearn.binarizer.html
 .. _`Birch`: lale.lib.sklearn.birch.html
+.. _`CCA`: lale.lib.sklearn.cca.html
 .. _`CalibratedClassifierCV`: lale.lib.sklearn.calibrated_classifier_cv.html
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
 .. _`ComplementNB`: lale.lib.sklearn.complement_nb.html

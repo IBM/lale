@@ -104,6 +104,7 @@ feature_preprocessors = [
     "lale.lib.sklearn.BernoulliRBM",
     "lale.lib.sklearn.Binarizer",
     "lale.lib.sklearn.Birch",
+    "lale.lib.sklearn.CCA",
     "lale.lib.sklearn.PolynomialFeatures",
     "lale.lib.sklearn.PCA",
     "lale.lib.sklearn.Nystroem",

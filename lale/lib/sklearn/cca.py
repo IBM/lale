@@ -14,13 +14,22 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "n_components": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "minimumForOptimizer": 2,
-                    "maximumForOptimizer": 256,
-                    "distribution": "uniform",
                     "default": 2,
                     "description": "number of components to keep.",
+                    "allOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "minimumForOptimizer": 2,
+                            "maximumForOptimizer": 256,
+                            "distribution": "uniform",
+                            "laleMaximum": "X/items/maxItems",  # number of columns (n_features)
+                        },
+                        {
+                            "type": "integer",
+                            "laleMaximum": "X/maxItems",  # number of rows (n_samples)
+                        },
+                    ],
                 },
                 "scale": {
                     "type": "boolean",
