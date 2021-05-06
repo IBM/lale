@@ -84,14 +84,14 @@ _input_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Apply the dimension reduction learned on the train data.",
     "type": "object",
-    "required": ["X"],
+    "required": ["X", "y"],
     "properties": {
         "X": {
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
             "description": "Training vectors, where n_samples is the number of samples and n_features is the number of predictors.",
         },
-        "Y": {
+        "y": {
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
             "description": "Target vectors, where n_samples is the number of samples and n_targets is the number of response variables.",
