@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from typing import Any, Dict, Optional
 
 import numpy as np
@@ -32,9 +31,6 @@ try:
     func_timeout_installed = True
 except ImportError:
     pass
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
 
 
 class _HalvingGridSearchCVImpl:
@@ -170,11 +166,12 @@ class _HalvingGridSearchCVImpl:
                                 self._hyperparams["max_opt_time"], self.grid.fit, (X, y)
                             )
                         except FunctionTimedOut:
-                            raise BaseException("HalvingGridSearch timed out.")
+                            raise BaseException("HalvingGridSearchCV timed out.")
                     else:
-                        logger.warning(
+                        raise ValueError(
                             f"""max_opt_time is set to {self._hyperparams["max_opt_time"]} but the Python package
-                            required for timeouts is not installed. Please install `func_timeout` using `pip install func_timeout`."""
+                            required for timeouts is not installed. Please install `func_timeout` using `pip install func_timeout`
+                            or set max_opt_time to None."""
                         )
                 else:
                     self.grid.fit(X, y)
