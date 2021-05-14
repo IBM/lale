@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from typing import Any, Dict, Optional
 
 import numpy as np
@@ -23,6 +24,17 @@ import lale.operators
 import lale.search.lale_grid_search_cv
 
 from .observing import Observing
+
+func_timeout_installed = False
+try:
+    from func_timeout import FunctionTimedOut, func_timeout
+
+    func_timeout_installed = True
+except ImportError:
+    pass
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 
 class _HalvingGridSearchCVImpl:
@@ -49,6 +61,7 @@ class _HalvingGridSearchCVImpl:
         lale_num_grids=None,
         pgo=None,
         observer=None,
+        max_opt_time=None,
     ):
         if observer is not None and isinstance(observer, type):
             # if we are given a class name, instantiate it
@@ -80,6 +93,7 @@ class _HalvingGridSearchCVImpl:
             "pgo": pgo,
             "hp_grid": param_grid,
             "observer": observer,
+            "max_opt_time": max_opt_time,
         }
 
     def fit(self, X, y):
@@ -149,7 +163,21 @@ class _HalvingGridSearchCVImpl:
                     scoring=self._hyperparams["scoring"],
                     n_jobs=self._hyperparams["n_jobs"],
                 )
-                self.grid.fit(X, y)
+                if self._hyperparams["max_opt_time"] is not None:
+                    if func_timeout_installed:
+                        try:
+                            func_timeout(
+                                self._hyperparams["max_opt_time"], self.grid.fit, (X, y)
+                            )
+                        except FunctionTimedOut:
+                            raise BaseException("HalvingGridSearch timed out.")
+                    else:
+                        logger.warning(
+                            f"""max_opt_time is set to {self._hyperparams["max_opt_time"]} but the Python package
+                            required for timeouts is not installed. Please install `func_timeout` using `pip install func_timeout`."""
+                        )
+                else:
+                    self.grid.fit(X, y)
                 be = self.grid.best_estimator_
             except BaseException as e:
                 if obs is not None:
@@ -199,6 +227,7 @@ _hyperparams_schema = {
                 "lale_num_samples",
                 "lale_num_grids",
                 "pgo",
+                "max_opt_time",
             ],
             "relevantToOptimizer": ["estimator"],
             "additionalProperties": False,
@@ -416,6 +445,14 @@ Default of None translates to `accuracy` for classification and `r2` for regress
                     "laleType": "Any",
                     "default": None,
                     "description": "a class or object with callbacks for observing the state of the optimization",
+                },
+                "max_opt_time": {
+                    "description": "Maximum amout of time in seconds for the optimization.",
+                    "anyOf": [
+                        {"type": "number", "minimum": 0.0},
+                        {"description": "No runtime bound.", "enum": [None]},
+                    ],
+                    "default": None,
                 },
             },
         },

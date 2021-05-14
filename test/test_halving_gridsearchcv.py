@@ -18,8 +18,12 @@ import warnings
 from lale.lib.lale import HalvingGridSearchCV
 from lale.lib.sklearn import (
     PCA,
+    KNeighborsClassifier,
     KNeighborsRegressor,
+    LinearRegression,
     LogisticRegression,
+    MinMaxScaler,
+    Normalizer,
     StandardScaler,
 )
 
@@ -50,6 +54,62 @@ class TestAutoConfigureClassification(unittest.TestCase):
         )
         _ = best_pipeline.predict(self.X_test)
         assert best_pipeline is not None
+
+    def test_runtime_limit_hoc(self):
+        import time
+
+        planned_pipeline = (MinMaxScaler | Normalizer) >> (
+            LogisticRegression | KNeighborsClassifier
+        )
+        from sklearn.datasets import load_iris
+
+        X, y = load_iris(return_X_y=True)
+
+        max_opt_time = 2.0
+        hoc = HalvingGridSearchCV(
+            estimator=planned_pipeline,
+            cv=3,
+            scoring="accuracy",
+            max_opt_time=max_opt_time,
+        )
+        start = time.time()
+        with self.assertRaises(BaseException):
+            _ = hoc.fit(X, y)
+        end = time.time()
+        opt_time = end - start
+        rel_diff = (opt_time - max_opt_time) / max_opt_time
+        assert (
+            rel_diff < 0.7
+        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
+            max_opt_time, opt_time, rel_diff
+        )
+
+    def test_runtime_limit_hor(self):
+        import time
+
+        planned_pipeline = (MinMaxScaler | Normalizer) >> LinearRegression
+        from sklearn.datasets import load_boston
+
+        X, y = load_boston(return_X_y=True)
+
+        max_opt_time = 3.0
+        hor = HalvingGridSearchCV(
+            estimator=planned_pipeline,
+            cv=3,
+            max_opt_time=max_opt_time,
+            scoring="r2",
+        )
+        start = time.time()
+        with self.assertRaises(BaseException):
+            _ = hor.fit(X[:500, :], y[:500])
+        end = time.time()
+        opt_time = end - start
+        rel_diff = (opt_time - max_opt_time) / max_opt_time
+        assert (
+            rel_diff < 0.2
+        ), "Max time: {}, Actual time: {}, relative diff: {}".format(
+            max_opt_time, opt_time, rel_diff
+        )
 
 
 class TestGridSearchCV(unittest.TestCase):
