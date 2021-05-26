@@ -413,6 +413,7 @@ def fetch_ricci_df(preprocess=False):
         }
         return orig_X, orig_y, fairness_info
 
+
 def fetch_speeddating_df(preprocess=False):
     """
     Fetch the `SpeedDating`_ dataset from OpenML and add `fairness_info`.

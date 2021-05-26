@@ -102,6 +102,14 @@ class TestAIF360Datasets(unittest.TestCase):
     def test_dataset_ricci_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 118, 6, {0, 1}, 0.498)
+    
+    def test_dataset_speeddating_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=True)
+        self._attempt_dataset(X, y, fairness_info, 8_378, 123, {0, 1}, 0.5)
+
+    def test_dataset_speeddating_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=False)
+        self._attempt_dataset(X, y, fairness_info, 8_378, 123, {0, 1}, 0.5)
 
 
 class TestAIF360Num(unittest.TestCase):

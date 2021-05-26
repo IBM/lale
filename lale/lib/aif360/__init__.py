@@ -87,6 +87,7 @@ Other Functions:
 * `fetch_compas_df`_
 * `fetch_creditg_df`_
 * `fetch_ricci_df`_
+* `fetch_speeddating_df`_
 
 Mitigator Patterns:
 ===================
@@ -150,6 +151,7 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_compas_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_df
 .. _`fetch_creditg_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_creditg_df
 .. _`fetch_ricci_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_ricci_df
+.. _`fetch_speeddating_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_speeddating_df
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 .. _`theil_index`: lale.lib.aif360.util.html#lale.lib.aif360.util.theil_index
@@ -164,6 +166,7 @@ from .datasets import (
     fetch_compas_df,
     fetch_creditg_df,
     fetch_ricci_df,
+    fetch_speeddating_df,
 )
 from .disparate_impact_remover import DisparateImpactRemover
 from .eq_odds_postprocessing import EqOddsPostprocessing
