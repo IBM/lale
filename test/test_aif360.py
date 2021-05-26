@@ -105,11 +105,11 @@ class TestAIF360Datasets(unittest.TestCase):
     
     def test_dataset_speeddating_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 8_378, 123, {0, 1}, 0.5)
+        self._attempt_dataset(X, y, fairness_info, 8_378, 495, {0, 1}, 0.5)
 
     def test_dataset_speeddating_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=False)
-        self._attempt_dataset(X, y, fairness_info, 8_378, 123, {0, 1}, 0.5)
+        self._attempt_dataset(X, y, fairness_info, 8_378, 122, {'0', '1'}, 0.5)
 
 
 class TestAIF360Num(unittest.TestCase):

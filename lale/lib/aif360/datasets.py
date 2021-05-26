@@ -420,10 +420,10 @@ def fetch_speeddating_df(preprocess=False):
 
     It contains data gathered from participants in experimental speed dating events
     from 2002-2004 with a binary classification into match or no
-    match.  Without preprocessing, the dataset has 8378 rows and 123
-    columns.  There are five protected attributes, gender, age of self,
-    age of partner, race of self, and race of partner, and the
-    disparate impact is 0.50.  The data includes both categorical and
+    match.  Without preprocessing, the dataset has 8378 rows and 122
+    columns.  There are two protected attributes, whether the other candidate has the same
+    race and importance of having the same race, and the disparate impact
+    is 0.85.  The data includes both categorical and
     numeric columns, with some missing values.
 
     .. _`SpeedDating`: https://www.openml.org/d/40536
@@ -461,46 +461,55 @@ def fetch_speeddating_df(preprocess=False):
     orig_X = pd.concat([train_X, test_X]).sort_index()
     orig_y = pd.concat([train_y, test_y]).sort_index()
     if preprocess:
-        gender = pd.Series(orig_X["gender_male"] == 1, dtype=np.float64)
-        age = pd.Series(orig_X["age"] > 25, dtype=np.float64)
-        age_o = pd.Series(orig_X["age_o"] > 25, dtype=np.float64)
-        race = pd.Series(orig_X["race_European/Caucasian-American"] == 1, dtype=np.float64)
-        race_o = pd.Series(orig_X["race_o_European/Caucasian-American"] == 1, dtype=np.float64)
+        #gender = pd.Series(orig_X["gender_male"] == 1, dtype=np.float64)
+        #age = pd.Series(orig_X["age"] > 25, dtype=np.float64)
+        importance_same_race = pd.Series(orig_X["importance_same_race"] >= 9, dtype=np.float64)
+        #age_o = pd.Series(orig_X["age_o"] > 25, dtype=np.float64)
+        #race = pd.Series(orig_X["race_European/Caucasian-American"] == 1, dtype=np.float64)
+        #race_o = pd.Series(orig_X["race_o_European/Caucasian-American"] == 1, dtype=np.float64)
+        samerace = pd.Series(orig_X["samerace_1"] == 1, dtype=np.float64)
         dropped_X = orig_X.drop(labels=[
-            "gender_male",
-            "gender_female",
-            "race_European/Caucasian-American",
-            "race_Asian/Pacific Islander/Asian-American",
-            "race_Other",
-            "race_Latino/Hispanic American",
-            "race_Black/African American",
-            "race_o_European/Caucasian-American",
-            "race_o_Asian/Pacific Islander/Asian-American",
-            "race_o_Other",
-            "race_o_Latino/Hispanic American",
-            "race_o_Black/African American",
+            # "gender_male",
+            # "gender_female",
+            # "race_European/Caucasian-American",
+            # "race_Asian/Pacific Islander/Asian-American",
+            # "race_Other",
+            # "race_Latino/Hispanic American",
+            # "race_Black/African American",
+            # "race_o_European/Caucasian-American",
+            # "race_o_Asian/Pacific Islander/Asian-American",
+            # "race_o_Other",
+            # "race_o_Latino/Hispanic American",
+            # "race_o_Black/African American",
+            "samerace_0",
+            "samerace_1"
         ], axis=1)
-        encoded_X = dropped_X.assign(gender=gender, age=age, age_o=age_o, race=race, race_o=race_o)
+        # encoded_X = dropped_X.assign(gender=gender, age=age, age_o=age_o, race=race, race_o=race_o)
+        encoded_X = dropped_X.assign(samerace=samerace, importance_same_race=importance_same_race)
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
-                {"feature": "race", "reference_group": [1]},
-                {"feature": "gender", "reference_group": [1]},
-                {"feature": "race_o", "reference_group": [1]},
-                {"feature": "age", "reference_group": [1]},
-                {"feature": "age_o", "reference_group": [1]}
+                # {"feature": "race", "reference_group": [1]},
+                # {"feature": "gender", "reference_group": [1]},
+                # {"feature": "race_o", "reference_group": [1]},
+                # {"feature": "age", "reference_group": [1]},
+                # {"feature": "age_o", "reference_group": [1]}
+                {"feature": "samerace", "reference_group": [1]},
+                {"feature": "importance_same_race", "reference_group": [1]}
             ],
         }
         return encoded_X, orig_y, fairness_info
     else:
         fairness_info = {
-            "favorable_labels": [1],
+            "favorable_labels": ['1'],
             "protected_attributes": [
-                {"feature": "race", "reference_group": ["European/Caucasian-American"]},
-                {"feature": "gender", "reference_group": ["male"]},
-                {"feature": "race_o", "reference_group": ["European/Caucasian-American"]},
-                {"feature": "age", "reference_group": [[26, 1000]]},
-                {"feature": "age_o", "reference_group": [[26, 1000]]}
+                # {"feature": "race", "reference_group": ["European/Caucasian-American"]},
+                # {"feature": "gender", "reference_group": ["male"]},
+                # {"feature": "race_o", "reference_group": ["European/Caucasian-American"]},
+                # {"feature": "age", "reference_group": [[26, 1000]]},
+                # {"feature": "age_o", "reference_group": [[26, 1000]]}
+                {"feature": "samerace", "reference_group": ['1']},
+                {"feature": "importance_same_race", "reference_group": [[9, 1000]]}
             ],
         }
         return orig_X, orig_y, fairness_info
