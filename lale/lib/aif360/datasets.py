@@ -461,27 +461,28 @@ def fetch_speeddating_df(preprocess=False):
     orig_X = pd.concat([train_X, test_X]).sort_index()
     orig_y = pd.concat([train_y, test_y]).sort_index()
     if preprocess:
-        importance_same_race = pd.Series(orig_X["importance_same_race"] >= 9, dtype=np.float64)
+        importance_same_race = pd.Series(
+            orig_X["importance_same_race"] >= 9, dtype=np.float64
+        )
         samerace = pd.Series(orig_X["samerace_1"] == 1, dtype=np.float64)
-        dropped_X = orig_X.drop(labels=[
-            "samerace_0",
-            "samerace_1"
-        ], axis=1)
-        encoded_X = dropped_X.assign(samerace=samerace, importance_same_race=importance_same_race)
+        dropped_X = orig_X.drop(labels=["samerace_0", "samerace_1"], axis=1)
+        encoded_X = dropped_X.assign(
+            samerace=samerace, importance_same_race=importance_same_race
+        )
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
                 {"feature": "samerace", "reference_group": [1]},
-                {"feature": "importance_same_race", "reference_group": [1]}
+                {"feature": "importance_same_race", "reference_group": [1]},
             ],
         }
         return encoded_X, orig_y, fairness_info
     else:
         fairness_info = {
-            "favorable_labels": ['1'],
+            "favorable_labels": ["1"],
             "protected_attributes": [
-                {"feature": "samerace", "reference_group": ['1']},
-                {"feature": "importance_same_race", "reference_group": [[9, 1000]]}
+                {"feature": "samerace", "reference_group": ["1"]},
+                {"feature": "importance_same_race", "reference_group": [[9, 1000]]},
             ],
         }
         return orig_X, orig_y, fairness_info

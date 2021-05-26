@@ -521,7 +521,6 @@ experiments_dict["SpeedDating"]["task_type"] = "classification"
 experiments_dict["SpeedDating"]["target"] = "match"
 
 
-
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
 
