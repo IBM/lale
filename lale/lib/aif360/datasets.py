@@ -412,3 +412,94 @@ def fetch_ricci_df(preprocess=False):
             "protected_attributes": [{"feature": "race", "reference_group": ["W"]}],
         }
         return orig_X, orig_y, fairness_info
+
+def fetch_speeddating_df(preprocess=False):
+    """
+    Fetch the `SpeedDating`_ dataset from OpenML and add `fairness_info`.
+
+    It contains data gathered from participants in experimental speed dating events
+    from 2002-2004 with a binary classification into match or no
+    match.  Without preprocessing, the dataset has 8378 rows and 123
+    columns.  There are five protected attributes, gender, age of self,
+    age of partner, race of self, and race of partner, and the
+    disparate impact is 0.50.  The data includes both categorical and
+    numeric columns, with some missing values.
+
+    .. _`SpeedDating`: https://www.openml.org/d/40536
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups;
+      encode labels in y as 0 or 1 to indicate favorable outcomes;
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protecteded attributes.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "SpeedDating", "classification", astype="pandas", preprocess=preprocess
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    if preprocess:
+        gender = pd.Series(orig_X["gender_male"] == 1, dtype=np.float64)
+        age = pd.Series(orig_X["age"] > 25, dtype=np.float64)
+        age_o = pd.Series(orig_X["age_o"] > 25, dtype=np.float64)
+        race = pd.Series(orig_X["race_European/Caucasian-American"] == 1, dtype=np.float64)
+        race_o = pd.Series(orig_X["race_o_European/Caucasian-American"] == 1, dtype=np.float64)
+        dropped_X = orig_X.drop(labels=[
+            "gender_male",
+            "gender_female",
+            "race_European/Caucasian-American",
+            "race_Asian/Pacific Islander/Asian-American",
+            "race_Other",
+            "race_Latino/Hispanic American",
+            "race_Black/African American",
+            "race_o_European/Caucasian-American",
+            "race_o_Asian/Pacific Islander/Asian-American",
+            "race_o_Other",
+            "race_o_Latino/Hispanic American",
+            "race_o_Black/African American",
+        ], axis=1)
+        encoded_X = dropped_X.assign(gender=gender, age=age, age_o=age_o, race=race, race_o=race_o)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "race", "reference_group": [1]},
+                {"feature": "gender", "reference_group": [1]},
+                {"feature": "race_o", "reference_group": [1]},
+                {"feature": "age", "reference_group": [1]},
+                {"feature": "age_o", "reference_group": [1]}
+            ],
+        }
+        return encoded_X, orig_y, fairness_info
+    else:
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "race", "reference_group": ["European/Caucasian-American"]},
+                {"feature": "gender", "reference_group": ["male"]},
+                {"feature": "race_o", "reference_group": ["European/Caucasian-American"]},
+                {"feature": "age", "reference_group": [[26, 1000]]},
+                {"feature": "age_o", "reference_group": [[26, 1000]]}
+            ],
+        }
+        return orig_X, orig_y, fairness_info
