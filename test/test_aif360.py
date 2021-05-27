@@ -17,7 +17,6 @@ import unittest
 
 import numpy as np
 import pandas as pd
-import sklearn.datasets
 import sklearn.metrics
 import sklearn.model_selection
 import tensorflow as tf
@@ -157,6 +156,10 @@ class TestAIF360Num(unittest.TestCase):
         assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
         assert isinstance(train_y, np.ndarray), type(train_y)
         assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
+        assert isinstance(test_X, np.ndarray), type(test_X)
+        assert not isinstance(test_X, NDArrayWithSchema), type(test_X)
+        assert isinstance(test_y, np.ndarray), type(test_y)
+        assert not isinstance(test_y, NDArrayWithSchema), type(test_y)
         pd_columns = cls.creditg_pd_num["splits"][0]["train_X"].columns
         fairness_info = {
             "favorable_labels": [1],
@@ -181,22 +184,48 @@ class TestAIF360Num(unittest.TestCase):
         return result
 
     @classmethod
-    def _boston(cls):
-        orig_X, orig_y = sklearn.datasets.load_boston(return_X_y=True)
+    def _boston_pd_num(cls):
+        orig_X, orig_y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(
+            preprocess=True
+        )
         train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(
             orig_X, orig_y, test_size=0.33, random_state=42
         )
+        assert isinstance(train_X, pd.DataFrame), type(train_X)
+        assert isinstance(train_y, pd.Series), type(train_y)
+        assert isinstance(test_X, pd.DataFrame), type(test_X)
+        assert isinstance(test_y, pd.Series), type(test_y)
+        result = {
+            "train_X": train_X,
+            "train_y": train_y,
+            "test_X": test_X,
+            "test_y": test_y,
+            "fairness_info": fairness_info,
+        }
+        return result
+
+    @classmethod
+    def _boston_np_num(cls):
+        train_X = cls.boston_pd_num["train_X"].to_numpy()
+        train_y = cls.boston_pd_num["train_y"].to_numpy()
+        test_X = cls.boston_pd_num["test_X"].to_numpy()
+        test_y = cls.boston_pd_num["test_y"].to_numpy()
         assert isinstance(train_X, np.ndarray), type(train_X)
         assert not isinstance(train_X, NDArrayWithSchema), type(train_X)
         assert isinstance(train_y, np.ndarray), type(train_y)
         assert not isinstance(train_y, NDArrayWithSchema), type(train_y)
-        black_median = np.median(train_X[:, 11])
-        label_median = np.median(train_y)
+        assert isinstance(test_X, np.ndarray), type(test_X)
+        assert not isinstance(test_X, NDArrayWithSchema), type(test_X)
+        assert isinstance(test_y, np.ndarray), type(test_y)
+        assert not isinstance(test_y, NDArrayWithSchema), type(test_y)
+        pd_columns = cls.boston_pd_num["train_X"].columns
         fairness_info = {
-            "favorable_labels": [[-10000.0, label_median]],
+            "favorable_labels": cls.boston_pd_num["fairness_info"]["favorable_labels"],
             "protected_attributes": [
-                # 1000(Bk - 0.63)^2 where Bk is the proportion of blacks by town
-                {"feature": 11, "reference_group": [[0.0, black_median]]},
+                {
+                    "feature": pd_columns.get_loc("B"),
+                    "reference_group": [0],
+                },
             ],
         }
         result = {
@@ -212,7 +241,8 @@ class TestAIF360Num(unittest.TestCase):
     def setUpClass(cls):
         cls.creditg_pd_num = cls._creditg_pd_num()
         cls.creditg_np_num = cls._creditg_np_num()
-        cls.boston = cls._boston()
+        cls.boston_pd_num = cls._boston_pd_num()
+        cls.boston_np_num = cls._boston_np_num()
 
     def test_fair_stratified_train_test_split(self):
         X = self.creditg_np_num["train_X"]
@@ -285,18 +315,36 @@ class TestAIF360Num(unittest.TestCase):
         test_y = self.creditg_np_num["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
-    def test_scorers_regression(self):
-        fairness_info = self.boston["fairness_info"]
+    def test_scorers_regression_pd_num(self):
+        fairness_info = self.boston_pd_num["fairness_info"]
         trainable = LinearRegression()
-        train_X = self.boston["train_X"]
-        train_y = self.boston["train_y"]
+        train_X = self.boston_pd_num["train_X"]
+        train_y = self.boston_pd_num["train_y"]
         trained = trainable.fit(train_X, train_y)
-        test_X = self.boston["test_X"]
-        test_y = self.boston["test_y"]
+        test_X = self.boston_pd_num["test_X"]
+        test_y = self.boston_pd_num["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
-    def test_scorers_combine(self):
-        fairness_info = self.boston["fairness_info"]
+    def test_scorers_regression_np_num(self):
+        fairness_info = self.boston_np_num["fairness_info"]
+        trainable = LinearRegression()
+        train_X = self.boston_np_num["train_X"]
+        train_y = self.boston_np_num["train_y"]
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.boston_np_num["test_X"]
+        test_y = self.boston_np_num["test_y"]
+        self._attempt_scorers(fairness_info, trained, test_X, test_y)
+
+    def test_scorers_combine_pd_num(self):
+        fairness_info = self.boston_pd_num["fairness_info"]
+        combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fairness_info)
+        for r2 in [-2, 0, 0.5, 1]:
+            for disp_impact in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
+                score = combined_scorer._combine(r2, disp_impact)
+                print(f"r2 {r2:5.2f}, di {disp_impact:.2f}, score {score:5.2f}")
+
+    def test_scorers_combine_np_num(self):
+        fairness_info = self.boston_np_num["fairness_info"]
         combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fairness_info)
         for r2 in [-2, 0, 0.5, 1]:
             for disp_impact in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
