@@ -15,6 +15,7 @@
 import numpy as np
 import pandas as pd
 
+import lale.datasets
 import lale.datasets.openml
 
 
@@ -483,6 +484,74 @@ def fetch_speeddating_df(preprocess=False):
             "protected_attributes": [
                 {"feature": "samerace", "reference_group": ["1"]},
                 {"feature": "importance_same_race", "reference_group": [[9, 1000]]},
+            ],
+        }
+        return orig_X, orig_y, fairness_info
+
+
+def fetch_boston_housing_df(preprocess=False):
+    """
+    Fetch the `Boston housing`_ dataset from sklearn and add `fairness info`.
+
+    It contains data about housing values in the suburbs of Boston with various
+    features that can be used to perform regression. Without preprocessing,
+    the dataset has 506 rows and 14 columns. There is one protected attribute,
+    1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town, and the disparate
+    impact is 0.5. The data includes only numeric columns, with no missing values.
+
+    .. _`Boston housing`: https://scikit-learn.org/0.20/datasets/index.html#boston-house-prices-dataset
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attribute in X related to proportion of Blacks by town as 0 or 1
+      (0 if the proportion is above a threshold and 1 if the proportion is below)
+      to indicate privileged groups.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.boston_housing_df(
+        test_size=0.33
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    black_median = np.median(train_X["B"])
+    label_median = np.median(train_y)
+
+    if preprocess:
+        # 1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town
+        B = pd.Series(orig_X["B"] > black_median, dtype=np.float64)
+        encoded_X = orig_X.assign(B=B)
+        fairness_info = {
+            "favorable_labels": [[-10000.0, label_median]],
+            "protected_attributes": [
+                {"feature": "B", "reference_group": [0]},
+            ],
+        }
+        return encoded_X, orig_y, fairness_info
+    else:
+        fairness_info = {
+            "favorable_labels": [[-10000.0, label_median]],
+            "protected_attributes": [
+                # 1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town
+                {"feature": "B", "reference_group": [[0.0, black_median]]},
             ],
         }
         return orig_X, orig_y, fairness_info

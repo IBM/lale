@@ -14,6 +14,7 @@
 
 from .movie_review import load_movie_review
 from .sklearn_to_pandas import (
+    boston_housing_df,
     california_housing_df,
     covtype_df,
     digits_df,
