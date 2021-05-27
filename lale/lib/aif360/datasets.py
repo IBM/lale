@@ -412,3 +412,77 @@ def fetch_ricci_df(preprocess=False):
             "protected_attributes": [{"feature": "race", "reference_group": ["W"]}],
         }
         return orig_X, orig_y, fairness_info
+
+
+def fetch_speeddating_df(preprocess=False):
+    """
+    Fetch the `SpeedDating`_ dataset from OpenML and add `fairness_info`.
+
+    It contains data gathered from participants in experimental speed dating events
+    from 2002-2004 with a binary classification into match or no
+    match.  Without preprocessing, the dataset has 8378 rows and 122
+    columns.  There are two protected attributes, whether the other candidate has the same
+    race and importance of having the same race, and the disparate impact
+    is 0.85.  The data includes both categorical and
+    numeric columns, with some missing values.
+
+    .. _`SpeedDating`: https://www.openml.org/d/40536
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups;
+      encode labels in y as 0 or 1 to indicate favorable outcomes;
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protecteded attributes.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "SpeedDating", "classification", astype="pandas", preprocess=preprocess
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    if preprocess:
+        importance_same_race = pd.Series(
+            orig_X["importance_same_race"] >= 9, dtype=np.float64
+        )
+        samerace = pd.Series(orig_X["samerace_1"] == 1, dtype=np.float64)
+        dropped_X = orig_X.drop(labels=["samerace_0", "samerace_1"], axis=1)
+        encoded_X = dropped_X.assign(
+            samerace=samerace, importance_same_race=importance_same_race
+        )
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "samerace", "reference_group": [1]},
+                {"feature": "importance_same_race", "reference_group": [1]},
+            ],
+        }
+        return encoded_X, orig_y, fairness_info
+    else:
+        fairness_info = {
+            "favorable_labels": ["1"],
+            "protected_attributes": [
+                {"feature": "samerace", "reference_group": ["1"]},
+                {"feature": "importance_same_race", "reference_group": [[9, 1000]]},
+            ],
+        }
+        return orig_X, orig_y, fairness_info
