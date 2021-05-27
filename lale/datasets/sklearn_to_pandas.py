@@ -215,3 +215,48 @@ def california_housing_df(test_size=0.2, random_state=42):
         housing, schema_X, schema_y, test_size, random_state
     )
     return (train_X, train_y), (test_X, test_y)
+
+
+def boston_housing_df(test_size=0.2, random_state=42):
+    housing = sklearn.datasets.load_boston()
+    schema_X = {
+        "description": "Features of Boston house prices dataset (regression).",
+        "documentation_url": "https://scikit-learn.org/0.20/datasets/index.html#boston-house-prices-dataset",
+        "type": "array",
+        "items": {
+            "type": "array",
+            "minItems": 13,
+            "maxItems": 13,
+            "items": [
+                {"description": "CRIM", "type": "number", "minimum": 0.0},
+                {"description": "ZN", "type": "number", "minimum": 0.0},
+                {"description": "INDUS", "type": "number", "minimum": 0.0},
+                {"description": "CHAS", "enum": [0, 1]},
+                {"description": "NOX", "type": "number", "minimum": 0.0},
+                {"description": "RM", "type": "number", "minimum": 1.0},
+                {"description": "AGE", "type": "number", "minimum": 0.0},
+                {"description": "DIS", "type": "number", "minimum": 0.0},
+                {"description": "RAD", "type": "number", "minimum": 1},
+                {"description": "TAX", "type": "number", "minimum": 0.0},
+                {"description": "PRATIO", "type": "number", "minimum": 0.0},
+                {"description": "B", "type": "number", "minimum": 0.0},
+                {"description": "LSTAT", "type": "number", "minimum": 0.0},
+            ],
+        },
+    }
+
+    schema_y = {
+        "description": "Target of Boston house prices dataset (regression).",
+        "documentation_url": "https://scikit-learn.org/0.20/datasets/index.html#boston-house-prices-dataset",
+        "type": "array",
+        "items": {
+            "description": "Median value of owner-occupied homes in $1000's (MEDV)",
+            "type": "number",
+            "minimum": 0.0,
+        },
+    }
+
+    (train_X, train_y), (test_X, test_y) = _bunch_to_df(
+        housing, schema_X, schema_y, test_size, random_state
+    )
+    return (train_X, train_y), (test_X, test_y)
