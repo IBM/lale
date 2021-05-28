@@ -666,7 +666,7 @@ def fetch_meps_raw_df(panel, fiscal_year):
     )
     y = pd.Series(df["UTILIZATION"], name="UTILIZATION")
     fairness_info = {
-        "favorable_labels": [[10, 10000]],
+        "favorable_labels": [1],
         "protected_attributes": [
             {"feature": "RACE", "reference_group": ["White"]},
         ],
@@ -696,7 +696,8 @@ def fetch_meps_panel19_fy2015_df(preprocess=False):
     This dataframe corresponds to data from panel 19 from the year 2015.
     Without preprocessing, the dataframe contains 16578 rows and 1825 columns.
     (With preprocessing the dataframe contains 15830 rows and 138 columns.)
-    There is one protected attribute, race, and the disparate impact is 0.5.
+    There is one protected attribute, race, and the disparate impact is 0.496
+    if preprocessing is not applied and 0.490 if preprocessing is applied.
     The data includes numeric and categorical columns, with some missing values.
 
     Note: in order to use this dataset, be sure to follow the instructions

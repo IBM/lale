@@ -12,9 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import traceback
 import unittest
+import urllib.request
+import zipfile
 
+import aif360
 import numpy as np
 import pandas as pd
 import sklearn.metrics
@@ -50,6 +54,21 @@ from lale.lib.sklearn import (
 
 
 class TestAIF360Datasets(unittest.TestCase):
+    downloaded_h181 = False
+    downloaded_h192 = False
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.downloaded_h181 = cls._try_download_csv("h181.csv")
+        cls.downloaded_h192 = cls._try_download_csv("h192.csv")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if cls.downloaded_h181:
+            cls._cleanup_meps("h181.csv")
+        if cls.downloaded_h192:
+            cls._cleanup_meps("h192.csv")
+
     def _attempt_dataset(
         self, X, y, fairness_info, n_rows, n_columns, set_y, di_expected
     ):
@@ -119,6 +138,73 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(preprocess=True)
         # TODO: consider better way of handling "set_y" parameter for regression problems
         self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
+
+    @classmethod
+    def _try_download_csv(self, filename):
+        directory = os.path.join(
+            os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "meps"
+        )
+        csv_exists = os.path.exists(
+            os.path.join(
+                directory,
+                filename,
+            )
+        )
+        if csv_exists:
+            return False
+        else:
+            filename_without_extension = os.path.splitext(filename)[0]
+            zip_filename = f"{filename_without_extension}ssp.zip"
+            urllib.request.urlretrieve(
+                f"https://meps.ahrq.gov/mepsweb/data_files/pufs/{zip_filename}",
+                os.path.join(directory, zip_filename),
+            )
+            with zipfile.ZipFile(os.path.join(directory, zip_filename), "r") as zip_ref:
+                zip_ref.extractall(directory)
+            ssp_filename = f"{filename_without_extension}.ssp"
+            df = pd.read_sas(os.path.join(directory, ssp_filename), format="xport")
+            df.to_csv(os.path.join(directory, filename), index=False)
+            return True
+
+    @classmethod
+    def _cleanup_meps(self, filename):
+        directory = os.path.join(
+            os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "meps"
+        )
+        filename_without_extension = os.path.splitext(filename)[0]
+        zip_filename = f"{filename_without_extension}ssp.zip"
+        ssp_filename = f"{filename_without_extension}.ssp"
+        os.remove(os.path.join(directory, filename))
+        os.remove(os.path.join(directory, zip_filename))
+        os.remove(os.path.join(directory, ssp_filename))
+
+    def test_dataset_meps_panel19_fy2015_pd_cat(self):
+        # filename = "h181.csv"
+        # try:
+        #     csv_downloaded = self._try_download_csv(filename)
+        #     X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(preprocess=False)
+        #     self._attempt_dataset(X, y, fairness_info, 16578, 1825, {0, 1}, 0.496)
+        # finally:
+        #     if csv_downloaded:
+        #         self._cleanup_meps(filename)
+        X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(
+            preprocess=False
+        )
+        self._attempt_dataset(X, y, fairness_info, 16578, 1825, {0, 1}, 0.496)
+
+    def test_dataset_meps_panel19_fy_2015_pd_num(self):
+        # filename = "h181.csv"
+        # try:
+        #     csv_downloaded = self._try_download_csv(filename)
+        #     X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(preprocess=True)
+        #     self._attempt_dataset(X, y, fairness_info, 15830, 138, {0, 1}, 0.490)
+        # finally:
+        #     if csv_downloaded:
+        #         self._cleanup_meps(filename)
+        X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(
+            preprocess=True
+        )
+        self._attempt_dataset(X, y, fairness_info, 15830, 138, {0, 1}, 0.490)
 
 
 class TestAIF360Num(unittest.TestCase):
