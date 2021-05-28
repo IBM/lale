@@ -603,8 +603,10 @@ def should_drop_column(x, fiscal_year):
 def fetch_meps_raw_df(panel, fiscal_year):
     filename = ""
     if fiscal_year == FiscalYear.FY2015:
+        assert panel == Panel.PANEL19 or panel == Panel.PANEL20
         filename = "h181.csv"
     elif fiscal_year == FiscalYear.FY2016:
+        assert panel == Panel.PANEL21
         filename = "h192.csv"
     else:
         raise ValueError(f"Unexpected FiscalYear received: {fiscal_year}")
@@ -673,6 +675,17 @@ def fetch_meps_raw_df(panel, fiscal_year):
     return X, y, fairness_info
 
 
+def get_pandas_and_fairness_info_from_meps_dataset(dataset):
+    X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
+    fairness_info = {
+        "favorable_labels": [1],
+        "protected_attributes": [
+            {"feature": "RACE", "reference_group": [1]},
+        ],
+    }
+    return X, y, fairness_info
+
+
 def fetch_meps_panel19_fy2015_df(preprocess=False):
     """
     Fetch a subset of the `MEPS`_ dataset from aif360 and add fairness info.
@@ -681,11 +694,10 @@ def fetch_meps_panel19_fy2015_df(preprocess=False):
     of the civilian noninstitutionalized population of the United States,
     specifically reported medical expenditures and civilian demographics.
     This dataframe corresponds to data from panel 19 from the year 2015.
-    Without preprocessing, the dataframe contains 15830 rows and 138 columns.
-    (With preprocessing and restriction to panel 19, the dataframe contains
-    15830 rows and 138 columns.)
+    Without preprocessing, the dataframe contains 16578 rows and 1825 columns.
+    (With preprocessing the dataframe contains 15830 rows and 138 columns.)
     There is one protected attribute, race, and the disparate impact is 0.5.
-    The data includes only numeric columns, with no missing value.
+    The data includes numeric and categorical columns, with some missing values.
 
     Note: in order to use this dataset, be sure to follow the instructions
     found in the `AIF360 documentation`_ and accept the corresponding license agreement.
@@ -724,18 +736,116 @@ def fetch_meps_panel19_fy2015_df(preprocess=False):
     """
     if preprocess:
         dataset = aif360.datasets.MEPSDataset19()
-        X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [
-                {"feature": "RACE", "reference_group": [1]},
-            ],
-        }
-        return X, y, fairness_info
+        return get_pandas_and_fairness_info_from_meps_dataset(dataset)
     else:
         return fetch_meps_raw_df(Panel.PANEL19, FiscalYear.FY2015)
 
 
-# def fetch_meps_panel20_fy2015_df(preprocess=False):
+def fetch_meps_panel20_fy2015_df(preprocess=False):
+    """
+    Fetch a subset of the `MEPS`_ dataset from aif360 and add fairness info.
 
-# def fetch_meps_panel21_fy2016_df(preprocess=False):
+    It contains information collected on a nationally representative sample
+    of the civilian noninstitutionalized population of the United States,
+    specifically reported medical expenditures and civilian demographics.
+    This dataframe corresponds to data from panel 20 from the year 2015.
+    Without preprocessing, the dataframe contains 18849 rows and 1825 columns.
+    (With preprocessing the dataframe contains 17570 rows and 138 columns.)
+    There is one protected attribute, race, and the disparate impact is 0.5.
+    The data includes numeric and categorical columns, with some missing values.
+
+    Note: in order to use this dataset, be sure to follow the instructions
+    found in the `AIF360 documentation`_ and accept the corresponding license agreement.
+
+    .. _`MEPS`:  https://meps.ahrq.gov/mepsweb/data_stats/download_data_files_detail.jsp?cboPufNumber=HC-181
+    .. _`AIF360 documentation`: https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attribute in X corresponding to race as 0 or 1
+      to indicate privileged groups;
+      encode labels in y as 0 or 1 to indicate faborable outcomes;
+      rename columns that are panel or round-specific;
+      drop columns such as ID columns that are not relevant to the task at hand;
+      and drop rows where features are unknown.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    if preprocess:
+        dataset = aif360.datasets.MEPSDataset20()
+        return get_pandas_and_fairness_info_from_meps_dataset(dataset)
+    else:
+        return fetch_meps_raw_df(Panel.PANEL20, FiscalYear.FY2015)
+
+
+def fetch_meps_panel21_fy2016_df(preprocess=False):
+    """
+    Fetch a subset of the `MEPS`_ dataset from aif360 and add fairness info.
+
+    It contains information collected on a nationally representative sample
+    of the civilian noninstitutionalized population of the United States,
+    specifically reported medical expenditures and civilian demographics.
+    This dataframe corresponds to data from panel 20 from the year 2016.
+    Without preprocessing, the dataframe contains 17052 rows and 1936 columns.
+    (With preprocessing the dataframe contains 15675 rows and 138 columns.)
+    There is one protected attribute, race, and the disparate impact is 0.5.
+    The data includes numeric and categorical columns, with some missing values.
+
+    Note: in order to use this dataset, be sure to follow the instructions
+    found in the `AIF360 documentation`_ and accept the corresponding license agreement.
+
+    .. _`MEPS`:  https://meps.ahrq.gov/mepsweb/data_stats/download_data_files_detail.jsp?cboPufNumber=HC-181
+    .. _`AIF360 documentation`: https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attribute in X corresponding to race as 0 or 1
+      to indicate privileged groups;
+      encode labels in y as 0 or 1 to indicate faborable outcomes;
+      rename columns that are panel or round-specific;
+      drop columns such as ID columns that are not relevant to the task at hand;
+      and drop rows where features are unknown.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    if preprocess:
+        dataset = aif360.datasets.MEPSDataset21()
+        return get_pandas_and_fairness_info_from_meps_dataset(dataset)
+    else:
+        return fetch_meps_raw_df(Panel.PANEL21, FiscalYear.FY2016)
