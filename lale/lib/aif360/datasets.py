@@ -12,11 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+from enum import Enum
+
+import aif360.datasets
 import numpy as np
 import pandas as pd
 
 import lale.datasets
 import lale.datasets.openml
+import lale.lib.aif360.util
 
 
 def fetch_adult_df(preprocess=False):
@@ -506,9 +511,7 @@ def fetch_boston_housing_df(preprocess=False):
     preprocess : boolean, optional, default False
 
       If True,
-      encode protected attribute in X related to proportion of Blacks by town as 0 or 1
-      (0 if the proportion is above a threshold and 1 if the proportion is below)
-      to indicate privileged groups.
+      encode protected attribute in X as 0 or 1 to indicate privileged groups.
 
     Returns
     -------
@@ -555,3 +558,184 @@ def fetch_boston_housing_df(preprocess=False):
             ],
         }
         return orig_X, orig_y, fairness_info
+
+
+# MEPS HELPERS
+class FiscalYear(Enum):
+    FY2015 = 15
+    FY2016 = 16
+
+
+class Panel(Enum):
+    PANEL19 = 19
+    PANEL20 = 20
+    PANEL21 = 21
+
+
+def race(row):
+    if (row["HISPANX"] == 2) and (
+        row["RACEV2X"] == 1
+    ):  # non-Hispanic Whites are marked as WHITE; all others as NON-WHITE
+        return "White"
+    return "Non-White"
+
+
+def get_utilization_columns(fiscal_year):
+    return [
+        f"OBTOTV{fiscal_year.value}",
+        f"OPTOTV{fiscal_year.value}",
+        f"ERTOT{fiscal_year.value}",
+        f"IPNGTD{fiscal_year.value}",
+        f"HHTOTD{fiscal_year.value}",
+    ]
+
+
+def get_total_utilization(row, fiscal_year):
+    cols = get_utilization_columns(fiscal_year)
+    return sum(list(map(lambda x: row[x], cols)))
+
+
+def should_drop_column(x, fiscal_year):
+    utilization_cols = set(get_utilization_columns(fiscal_year))
+    return x in utilization_cols
+
+
+def fetch_meps_raw_df(panel, fiscal_year):
+    filename = ""
+    if fiscal_year == FiscalYear.FY2015:
+        filename = "h181.csv"
+    elif fiscal_year == FiscalYear.FY2016:
+        filename = "h192.csv"
+    else:
+        raise ValueError(f"Unexpected FiscalYear received: {fiscal_year}")
+    filepath = os.path.join(
+        os.path.dirname(os.path.abspath(aif360.__file__)),
+        "data",
+        "raw",
+        "meps",
+        filename,
+    )
+
+    try:
+        df = pd.read_csv(filepath, sep=",", na_values=[])
+    except IOError as err:
+        print("IOError: {}".format(err))
+        print("To use this class, please follow the instructions in found here:")
+        print(
+            "\n\t{}\n".format(
+                "https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps"
+            )
+        )
+        print(
+            f"\n to download and convert the data and place the final {filename} file, as-is, in the folder:"
+        )
+        print(
+            "\n\t{}\n".format(
+                os.path.abspath(
+                    os.path.join(
+                        os.path.abspath(__file__), "..", "..", "data", "raw", "meps"
+                    )
+                )
+            )
+        )
+        import sys
+
+        sys.exit(1)
+
+    df["RACEV2X"] = df.apply(lambda row: race(row), axis=1)
+    df = df.rename(columns={"RACEV2X": "RACE"})
+    df = df[df["PANEL"] == panel.value]
+
+    df["TOTEXP15"] = df.apply(
+        lambda row: get_total_utilization(row, fiscal_year), axis=1
+    )
+    lessE = df["TOTEXP15"] < 10.0
+    df.loc[lessE, "TOTEXP15"] = 0.0
+    moreE = df["TOTEXP15"] >= 10.0
+    df.loc[moreE, "TOTEXP15"] = 1.0
+
+    df = df.rename(columns={"TOTEXP15": "UTILIZATION"})
+    columns_to_drop = set(
+        filter(lambda x: should_drop_column(x, fiscal_year), df.columns.tolist())
+    )
+    df = df[sorted(set(df.columns.tolist()) - columns_to_drop, key=df.columns.get_loc)]
+    X = pd.DataFrame(
+        df, columns=list(filter(lambda x: x != "UTILIZATION", df.columns.tolist()))
+    )
+    y = pd.Series(df["UTILIZATION"], name="UTILIZATION")
+    fairness_info = {
+        "favorable_labels": [[10, 10000]],
+        "protected_attributes": [
+            {"feature": "RACE", "reference_group": ["White"]},
+        ],
+    }
+
+    return X, y, fairness_info
+
+
+def fetch_meps_panel19_fy2015_df(preprocess=False):
+    """
+    Fetch a subset of the `MEPS`_ dataset from aif360 and add fairness info.
+
+    It contains information collected on a nationally representative sample
+    of the civilian noninstitutionalized population of the United States,
+    specifically reported medical expenditures and civilian demographics.
+    This dataframe corresponds to data from panel 19 from the year 2015.
+    Without preprocessing, the dataframe contains 15830 rows and 138 columns.
+    (With preprocessing and restriction to panel 19, the dataframe contains
+    15830 rows and 138 columns.)
+    There is one protected attribute, race, and the disparate impact is 0.5.
+    The data includes only numeric columns, with no missing value.
+
+    Note: in order to use this dataset, be sure to follow the instructions
+    found in the `AIF360 documentation`_ and accept the corresponding license agreement.
+
+    .. _`MEPS`:  https://meps.ahrq.gov/mepsweb/data_stats/download_data_files_detail.jsp?cboPufNumber=HC-181
+    .. _`AIF360 documentation`: https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attribute in X corresponding to race as 0 or 1
+      to indicate privileged groups;
+      encode labels in y as 0 or 1 to indicate faborable outcomes;
+      rename columns that are panel or round-specific;
+      drop columns such as ID columns that are not relevant to the task at hand;
+      and drop rows where features are unknown.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    if preprocess:
+        dataset = aif360.datasets.MEPSDataset19()
+        X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "RACE", "reference_group": [1]},
+            ],
+        }
+        return X, y, fairness_info
+    else:
+        return fetch_meps_raw_df(Panel.PANEL19, FiscalYear.FY2015)
+
+
+# def fetch_meps_panel20_fy2015_df(preprocess=False):
+
+# def fetch_meps_panel21_fy2016_df(preprocess=False):
