@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import os
 from enum import Enum
 
@@ -23,6 +24,9 @@ import pandas as pd
 import lale.datasets
 import lale.datasets.openml
 import lale.lib.aif360.util
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 
 def fetch_adult_df(preprocess=False):
@@ -610,6 +614,7 @@ def fetch_meps_raw_df(panel, fiscal_year):
         assert panel == Panel.PANEL21
         filename = "h192.csv"
     else:
+        logger.error(f"Unexpected FiscalYear received: {fiscal_year}")
         raise ValueError(f"Unexpected FiscalYear received: {fiscal_year}")
     filepath = os.path.join(
         os.path.dirname(os.path.abspath(aif360.__file__)),
@@ -622,17 +627,17 @@ def fetch_meps_raw_df(panel, fiscal_year):
     try:
         df = pd.read_csv(filepath, sep=",", na_values=[])
     except IOError as err:
-        print("IOError: {}".format(err))
-        print("To use this class, please follow the instructions in found here:")
-        print(
+        logger.error("IOError: {}".format(err))
+        logger.error("To use this class, please follow the instructions in found here:")
+        logger.error(
             "\n\t{}\n".format(
                 "https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps"
             )
         )
-        print(
+        logger.error(
             f"\n to download and convert the data and place the final {filename} file, as-is, in the folder:"
         )
-        print(
+        logger.error(
             "\n\t{}\n".format(
                 os.path.abspath(
                     os.path.join(
