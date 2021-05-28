@@ -179,32 +179,40 @@ class TestAIF360Datasets(unittest.TestCase):
         os.remove(os.path.join(directory, ssp_filename))
 
     def test_dataset_meps_panel19_fy2015_pd_cat(self):
-        # filename = "h181.csv"
-        # try:
-        #     csv_downloaded = self._try_download_csv(filename)
-        #     X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(preprocess=False)
-        #     self._attempt_dataset(X, y, fairness_info, 16578, 1825, {0, 1}, 0.496)
-        # finally:
-        #     if csv_downloaded:
-        #         self._cleanup_meps(filename)
         X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(
             preprocess=False
         )
         self._attempt_dataset(X, y, fairness_info, 16578, 1825, {0, 1}, 0.496)
 
     def test_dataset_meps_panel19_fy_2015_pd_num(self):
-        # filename = "h181.csv"
-        # try:
-        #     csv_downloaded = self._try_download_csv(filename)
-        #     X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(preprocess=True)
-        #     self._attempt_dataset(X, y, fairness_info, 15830, 138, {0, 1}, 0.490)
-        # finally:
-        #     if csv_downloaded:
-        #         self._cleanup_meps(filename)
         X, y, fairness_info = lale.lib.aif360.fetch_meps_panel19_fy2015_df(
             preprocess=True
         )
         self._attempt_dataset(X, y, fairness_info, 15830, 138, {0, 1}, 0.490)
+
+    def test_dataset_meps_panel20_fy2015_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_meps_panel20_fy2015_df(
+            preprocess=False
+        )
+        self._attempt_dataset(X, y, fairness_info, 18849, 1825, {0, 1}, 0.493)
+
+    def test_dataset_meps_panel20_fy2015_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_meps_panel20_fy2015_df(
+            preprocess=True
+        )
+        self._attempt_dataset(X, y, fairness_info, 17570, 138, {0, 1}, 0.488)
+
+    def test_dataset_meps_panel21_fy2016_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_meps_panel21_fy2016_df(
+            preprocess=False
+        )
+        self._attempt_dataset(X, y, fairness_info, 17052, 1936, {0, 1}, 0.462)
+
+    def test_dataset_meps_panel21_fy2016_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_meps_panel21_fy2016_df(
+            preprocess=True
+        )
+        self._attempt_dataset(X, y, fairness_info, 15675, 138, {0, 1}, 0.451)
 
 
 class TestAIF360Num(unittest.TestCase):
