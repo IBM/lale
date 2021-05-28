@@ -15,6 +15,7 @@
 import os
 from enum import Enum
 
+import aif360
 import aif360.datasets
 import numpy as np
 import pandas as pd
