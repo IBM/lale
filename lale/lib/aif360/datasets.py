@@ -14,6 +14,7 @@
 
 import logging
 import os
+import urllib.request
 from enum import Enum
 
 import aif360
@@ -206,6 +207,94 @@ def fetch_bank_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
+# COMPAS HELPERS
+def _get_compas_filename(violent_recidivism=False):
+    violent_tag = ""
+    if violent_recidivism:
+        violent_tag = "-violent"
+    filename = f"compas-scores-two-years{violent_tag}.csv"
+    return filename
+
+
+def _get_compas_filepath(filename):
+    directory = os.path.join(
+        os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "compas"
+    )
+    return os.path.join(
+        directory,
+        filename,
+    )
+
+
+def _try_download_compas(violent_recidivism=False):
+    filename = _get_compas_filename(violent_recidivism=violent_recidivism)
+    filepath = _get_compas_filepath(filename)
+    csv_exists = os.path.exists(filepath)
+    if not csv_exists:
+        urllib.request.urlretrieve(
+            f"https://raw.githubusercontent.com/propublica/compas-analysis/master/{filename}",
+            filepath,
+        )
+
+
+def _get_pandas_and_fairness_info_from_compas_dataset(dataset):
+    X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
+    at_least_25 = pd.Series(X["age"] >= 25, dtype=np.float64)
+    dropped_X = X.drop(columns=["age"])
+    encoded_X = dropped_X.assign(at_least_25=at_least_25)
+    fairness_info = {
+        "favorable_labels": [0],
+        "protected_attributes": [
+            {"feature": "sex", "reference_group": [1]},
+            {"feature": "race", "reference_group": [1]},
+            {"feature": "at_least_25", "reference_group": [1]},
+        ],
+    }
+    return encoded_X, y, fairness_info
+
+
+def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
+    filename = _get_compas_filename(violent_recidivism=violent_recidivism)
+    filepath = _get_compas_filepath(filename)
+    try:
+        df = pd.read_csv(filepath, index_col="id", na_values=[])
+    except IOError as err:
+        # In practice should not get here because of the _try_download_compas call above, but adding failure logic just in case
+        logger.error("IOError: {}".format(err))
+        logger.error("To use this class, please download the following file:")
+        logger.error(
+            "\n\thttps://raw.githubusercontent.com/propublica/compas-analysis/master/compas-scores-two-years.csv"
+        )
+        logger.error("\nand place it, as-is, in the folder:")
+        logger.error("\n\t{}\n".format(os.path.abspath(os.path.dirname(filepath))))
+        import sys
+
+        sys.exit(1)
+    # preprocessing steps performed by ProPublica team, even in the preprocess=False case
+    df = df[
+        (df.days_b_screening_arrest <= 30)
+        & (df.days_b_screening_arrest >= -30)
+        & (df.is_recid != -1)
+        & (df.c_charge_degree != "O")
+        & (df.score_text != "N/A")
+    ]
+    X = pd.DataFrame(
+        df, columns=list(filter(lambda x: x != "two_year_recid", df.columns.tolist()))
+    ).sort_index()
+    y = pd.Series(
+        df["two_year_recid"], name="two_year_recid", dtype=np.float64
+    ).sort_index()
+    fairness_info = {
+        "favorable_labels": [0],
+        "protected_attributes": [
+            {"feature": "sex", "reference_group": ["Male"]},
+            {"feature": "race", "reference_group": ["Caucasian"]},
+            {"feature": "age", "reference_group": [[25, 1000]]},
+        ],
+    }
+    return X, y, fairness_info
+
+
 def fetch_compas_df(preprocess=False):
     """
     Fetch the `compas-two-years`_ dataset, also known as ProPublica recidivism, from OpenML and add `fairness_info`.
@@ -214,8 +303,8 @@ def fetch_compas_df(preprocess=False):
     classification for recidivism, indicating whether they were
     re-arrested within two years after the first arrest. Without
     preprocessing, the dataset has 5,287 rows and 13 columns.  There
-    are two protected attributes, sex and race, and the disparate
-    impact is 0.92.  The data includes only numeric columns, with no
+    are three protected attributes, sex, race, and age, and the disparate
+    impact is 0.95.  The data includes numeric and categorical columns, with some
     missing values.
 
     .. _`compas-two-years`: https://www.openml.org/d/42193
@@ -224,8 +313,10 @@ def fetch_compas_df(preprocess=False):
     ----------
     preprocess : boolean, optional, default False
 
-      If True, compute column `race` from `race_caucasian`, and drop
-      columns `race_african-american` and `race_caucasian`.
+      If True, binarize sex, race, and age columns (where the latter
+      is 1 if age is at least 25 and 0 otherwise, stored as column
+      "at_least_25") and create one-hot encodings of categorical
+      columns.
 
     Returns
     -------
@@ -244,43 +335,23 @@ def fetch_compas_df(preprocess=False):
           JSON meta-data following the format understood by fairness metrics
           and mitigation operators in `lale.lib.aif360`.
     """
-    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-        "compas", "classification", astype="pandas", preprocess=preprocess
-    )
-    orig_X = pd.concat([train_X, test_X]).sort_index().astype(np.float64)
-    orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
+    violent_recidivism = False
+    _try_download_compas(violent_recidivism=violent_recidivism)
     if preprocess:
-        race = pd.Series(orig_X["race_caucasian_1"] == 1, dtype=np.float64)
-        sex = pd.Series(orig_X["sex_1"] == 1, dtype=np.float64)
-        dropped_X = orig_X.drop(
-            labels=[
-                "race_african-american_1",
-                "race_caucasian_1",
-                "race_african-american_0",
-                "race_caucasian_0",
-                "sex_1",
-                "sex_0",
-            ],
-            axis=1,
+        # Departure from default AIF360 settings required since ProPublica analysis asserts that
+        # 'Female' is actually an unprivileged class but AIF360 lists it as a privileged one.
+        # See https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm
+        # and https://github.com/propublica/compas-analysis/blob/master/Compas%20Analysis.ipynb
+        dataset = aif360.datasets.CompasDataset(
+            privileged_classes=[["Male"], ["Caucasian"]]
         )
-        encoded_X = dropped_X.assign(race=race, sex=sex)
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [
-                {"feature": "sex", "reference_group": [1]},
-                {"feature": "race", "reference_group": [1]},
-            ],
-        }
-        return encoded_X, orig_y, fairness_info
+        # above preprocessing results in a WARNING of "Missing Data: 5 rows removed from CompasDataset."
+        # unclear how to resolve at the moment
+        return _get_pandas_and_fairness_info_from_compas_dataset(dataset)
     else:
-        fairness_info = {
-            "favorable_labels": [1],
-            "protected_attributes": [
-                {"feature": "sex", "reference_group": [1]},
-                {"feature": "race_caucasian", "reference_group": [1]},
-            ],
-        }
-        return orig_X, orig_y, fairness_info
+        return _get_pandas_and_fairness_info_from_compas_csv(
+            violent_recidivism=violent_recidivism
+        )
 
 
 def fetch_creditg_df(preprocess=False):
@@ -646,15 +717,7 @@ def _fetch_meps_raw_df(panel, fiscal_year):
         logger.error(
             f"\n to download and convert the data and place the final {filename} file, as-is, in the folder:"
         )
-        logger.error(
-            "\n\t{}\n".format(
-                os.path.abspath(
-                    os.path.join(
-                        os.path.abspath(__file__), "..", "..", "data", "raw", "meps"
-                    )
-                )
-            )
-        )
+        logger.error("\n\t{}\n".format(os.path.abspath(os.path.dirname(filepath))))
         import sys
 
         sys.exit(1)
@@ -678,8 +741,8 @@ def _fetch_meps_raw_df(panel, fiscal_year):
     df = df[sorted(set(df.columns.tolist()) - columns_to_drop, key=df.columns.get_loc)]
     X = pd.DataFrame(
         df, columns=list(filter(lambda x: x != "UTILIZATION", df.columns.tolist()))
-    )
-    y = pd.Series(df["UTILIZATION"], name="UTILIZATION")
+    ).sort_index()
+    y = pd.Series(df["UTILIZATION"], name="UTILIZATION").sort_index()
     fairness_info = {
         "favorable_labels": [1],
         "protected_attributes": [

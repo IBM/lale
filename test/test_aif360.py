@@ -97,11 +97,11 @@ class TestAIF360Datasets(unittest.TestCase):
 
     def test_dataset_compas_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=False)
-        self._attempt_dataset(X, y, fairness_info, 5_278, 13, {0, 1}, 0.919)
+        self._attempt_dataset(X, y, fairness_info, 6_172, 51, {0, 1}, 0.954)
 
     def test_dataset_compas_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 5_278, 15, {0, 1}, 0.919)
+        self._attempt_dataset(X, y, fairness_info, 6_167, 401, {0, 1}, 0.954)
 
     def test_dataset_creditg_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
