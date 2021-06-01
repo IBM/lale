@@ -89,6 +89,10 @@ Other Functions:
 * `fetch_ricci_df`_
 * `fetch_speeddating_df`_
 * `fetch_boston_housing_df`_
+* `fetch_meps_panel19_fy2015_df`_
+* `fetch_meps_panel20_fy2015_df`_
+* `fetch_meps_panel21_fy2016_df`_
+
 
 Mitigator Patterns:
 ===================
@@ -154,6 +158,9 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_ricci_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_ricci_df
 .. _`fetch_speeddating_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_speeddating_df
 .. _`fetch_boston_housing_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_boston_housing_df
+.. _`fetch_meps_panel19_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel19_fy2015_df
+.. _`fetch_meps_panel20_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel20_fy2015_df
+.. _`fetch_meps_panel21_fy2016_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel21_fy2016_df
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 .. _`theil_index`: lale.lib.aif360.util.html#lale.lib.aif360.util.theil_index
@@ -168,6 +175,9 @@ from .datasets import (
     fetch_boston_housing_df,
     fetch_compas_df,
     fetch_creditg_df,
+    fetch_meps_panel19_fy2015_df,
+    fetch_meps_panel20_fy2015_df,
+    fetch_meps_panel21_fy2016_df,
     fetch_ricci_df,
     fetch_speeddating_df,
 )
