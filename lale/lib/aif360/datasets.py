@@ -565,6 +565,73 @@ def fetch_boston_housing_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
+def fetch_titanic_df(preprocess=False):
+    """
+    Fetch the `Titanic`_ dataset from OpenML and add `fairness_info`.
+
+    It contains data gathered from passengers on the Titanic with a binary classification
+    into "survived" or "did not survive".  Without preprocessing, the dataset has
+    1309 rows and 13 columns.  There are two protected attributes, sex and age, and the
+    disparate impact is 0.25.  The data includes both categorical and
+    numeric columns, with some missing values.
+
+    .. _`Titanic`: https://www.openml.org/d/40945
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protecteded attributes.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "titanic", "classification", astype="pandas", preprocess=preprocess
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    if preprocess:
+        sex = pd.Series(orig_X["sex_female"] == 1, dtype=np.float64)
+        age = pd.Series(orig_X["age"] <= 18, dtype=np.float64)
+        dropped_X = orig_X.drop(labels=["sex_female", "sex_male"], axis=1)
+        encoded_X = dropped_X.assign(sex=sex, age=age)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "sex", "reference_group": [1]},
+                {"feature": "age", "reference_group": [1]},
+            ],
+        }
+        return encoded_X, orig_y, fairness_info
+    else:
+        fairness_info = {
+            "favorable_labels": ["1"],
+            "protected_attributes": [
+                {"feature": "sex", "reference_group": ["female"]},
+                {"feature": "age", "reference_group": [[0, 18]]},
+            ],
+        }
+        return orig_X, orig_y, fairness_info
+
+
 # MEPS HELPERS
 class FiscalYear(Enum):
     FY2015 = 15
