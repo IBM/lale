@@ -628,7 +628,7 @@ def fetch_meps_raw_df(panel, fiscal_year):
         df = pd.read_csv(filepath, sep=",", na_values=[])
     except IOError as err:
         logger.error("IOError: {}".format(err))
-        logger.error("To use this class, please follow the instructions in found here:")
+        logger.error("To use this class, please follow the instructions found here:")
         logger.error(
             "\n\t{}\n".format(
                 "https://github.com/Trusted-AI/AIF360/tree/master/aif360/data/raw/meps"
@@ -758,7 +758,8 @@ def fetch_meps_panel20_fy2015_df(preprocess=False):
     This dataframe corresponds to data from panel 20 from the year 2015.
     Without preprocessing, the dataframe contains 18849 rows and 1825 columns.
     (With preprocessing the dataframe contains 17570 rows and 138 columns.)
-    There is one protected attribute, race, and the disparate impact is 0.5.
+    There is one protected attribute, race, and the disparate impact is 0.493
+    if preprocessing is not applied and 0.488 if preprocessing is applied.
     The data includes numeric and categorical columns, with some missing values.
 
     Note: in order to use this dataset, be sure to follow the instructions
@@ -813,7 +814,8 @@ def fetch_meps_panel21_fy2016_df(preprocess=False):
     This dataframe corresponds to data from panel 20 from the year 2016.
     Without preprocessing, the dataframe contains 17052 rows and 1936 columns.
     (With preprocessing the dataframe contains 15675 rows and 138 columns.)
-    There is one protected attribute, race, and the disparate impact is 0.5.
+    There is one protected attribute, race, and the disparate impact is 0.462
+    if preprocessing is not applied and 0.451 if preprocessing is applied.
     The data includes numeric and categorical columns, with some missing values.
 
     Note: in order to use this dataset, be sure to follow the instructions
