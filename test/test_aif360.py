@@ -139,6 +139,14 @@ class TestAIF360Datasets(unittest.TestCase):
         # TODO: consider better way of handling "set_y" parameter for regression problems
         self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
 
+    def test_dataset_titanic_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=False)
+        self._attempt_dataset(X, y, fairness_info, 1_309, 13, {"0", "1"}, 0.254)
+
+    def test_dataset_titanic_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=True)
+        self._attempt_dataset(X, y, fairness_info, 1_309, 2_828, {0, 1}, 0.254)
+
     @classmethod
     def _try_download_csv(self, filename):
         directory = os.path.join(

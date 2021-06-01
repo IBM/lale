@@ -245,7 +245,7 @@ def fetch_compas_df(preprocess=False):
           and mitigation operators in `lale.lib.aif360`.
     """
     (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-        "compas", "classification", astype="pandas", preprocess=preprocess
+        "compas", "classification", astype="pandas", preprocess=False
     )
     orig_X = pd.concat([train_X, test_X]).sort_index().astype(np.float64)
     orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
@@ -572,7 +572,7 @@ def fetch_titanic_df(preprocess=False):
     It contains data gathered from passengers on the Titanic with a binary classification
     into "survived" or "did not survive".  Without preprocessing, the dataset has
     1309 rows and 13 columns.  There are two protected attributes, sex and age, and the
-    disparate impact is 0.5.  The data includes both categorical and
+    disparate impact is 0.25.  The data includes both categorical and
     numeric columns, with some missing values.
 
     .. _`Titanic`: https://www.openml.org/d/40945
@@ -606,8 +606,8 @@ def fetch_titanic_df(preprocess=False):
     (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
         "titanic", "classification", astype="pandas", preprocess=preprocess
     )
-    orig_X = pd.concat([train_X, test_X]).sort_index().astype(np.float64)
-    orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
     if preprocess:
         sex = pd.Series(orig_X["sex_female"] == 1, dtype=np.float64)
         age = pd.Series(orig_X["age"] <= 18, dtype=np.float64)
@@ -623,7 +623,7 @@ def fetch_titanic_df(preprocess=False):
         return encoded_X, orig_y, fairness_info
     else:
         fairness_info = {
-            "favorable_labels": [1],
+            "favorable_labels": ["1"],
             "protected_attributes": [
                 {"feature": "sex", "reference_group": ["female"]},
                 {"feature": "age", "reference_group": [[0, 18]]},
