@@ -245,16 +245,25 @@ def fetch_compas_df(preprocess=False):
           and mitigation operators in `lale.lib.aif360`.
     """
     (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-        "compas", "classification", astype="pandas", preprocess=False
+        "compas", "classification", astype="pandas", preprocess=preprocess
     )
     orig_X = pd.concat([train_X, test_X]).sort_index().astype(np.float64)
     orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
     if preprocess:
-        race = pd.Series(orig_X["race_caucasian"] == 1, dtype=np.float64)
+        race = pd.Series(orig_X["race_caucasian_1"] == 1, dtype=np.float64)
+        sex = pd.Series(orig_X["sex_1"] == 1, dtype=np.float64)
         dropped_X = orig_X.drop(
-            labels=["race_african-american", "race_caucasian"], axis=1
+            labels=[
+                "race_african-american_1",
+                "race_caucasian_1",
+                "race_african-american_0",
+                "race_caucasian_0",
+                "sex_1",
+                "sex_0",
+            ],
+            axis=1,
         )
-        encoded_X = dropped_X.assign(race=race)
+        encoded_X = dropped_X.assign(race=race, sex=sex)
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
