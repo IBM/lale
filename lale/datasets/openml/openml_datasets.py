@@ -520,6 +520,17 @@ experiments_dict["SpeedDating"][
 experiments_dict["SpeedDating"]["task_type"] = "classification"
 experiments_dict["SpeedDating"]["target"] = "match"
 
+experiments_dict["titanic"] = {}
+experiments_dict["titanic"]["dataset_url"] = "https://www.openml.org/d/40945"
+experiments_dict["titanic"][
+    "download_arff_url"
+] = "https://www.openml.org/data/download/16826755/phpMYEkMl"
+experiments_dict["titanic"][
+    "download_csv_url"
+] = "https://www.openml.org/data/get_csv/16826755/phpMYEkMl"
+experiments_dict["titanic"]["task_type"] = "classification"
+experiments_dict["titanic"]["target"] = "survived"
+
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
