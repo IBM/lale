@@ -577,7 +577,7 @@ class Panel(Enum):
     PANEL21 = 21
 
 
-def race(row):
+def _race(row):
     if (row["HISPANX"] == 2) and (
         row["RACEV2X"] == 1
     ):  # non-Hispanic Whites are marked as WHITE; all others as NON-WHITE
@@ -585,7 +585,7 @@ def race(row):
     return "Non-White"
 
 
-def get_utilization_columns(fiscal_year):
+def _get_utilization_columns(fiscal_year):
     return [
         f"OBTOTV{fiscal_year.value}",
         f"OPTOTV{fiscal_year.value}",
@@ -595,17 +595,17 @@ def get_utilization_columns(fiscal_year):
     ]
 
 
-def get_total_utilization(row, fiscal_year):
-    cols = get_utilization_columns(fiscal_year)
+def _get_total_utilization(row, fiscal_year):
+    cols = _get_utilization_columns(fiscal_year)
     return sum(list(map(lambda x: row[x], cols)))
 
 
-def should_drop_column(x, fiscal_year):
-    utilization_cols = set(get_utilization_columns(fiscal_year))
+def _should_drop_column(x, fiscal_year):
+    utilization_cols = set(_get_utilization_columns(fiscal_year))
     return x in utilization_cols
 
 
-def fetch_meps_raw_df(panel, fiscal_year):
+def _fetch_meps_raw_df(panel, fiscal_year):
     filename = ""
     if fiscal_year == FiscalYear.FY2015:
         assert panel == Panel.PANEL19 or panel == Panel.PANEL20
@@ -650,12 +650,12 @@ def fetch_meps_raw_df(panel, fiscal_year):
 
         sys.exit(1)
 
-    df["RACEV2X"] = df.apply(lambda row: race(row), axis=1)
+    df["RACEV2X"] = df.apply(lambda row: _race(row), axis=1)
     df = df.rename(columns={"RACEV2X": "RACE"})
     df = df[df["PANEL"] == panel.value]
 
     df["TOTEXP15"] = df.apply(
-        lambda row: get_total_utilization(row, fiscal_year), axis=1
+        lambda row: _get_total_utilization(row, fiscal_year), axis=1
     )
     lessE = df["TOTEXP15"] < 10.0
     df.loc[lessE, "TOTEXP15"] = 0.0
@@ -664,7 +664,7 @@ def fetch_meps_raw_df(panel, fiscal_year):
 
     df = df.rename(columns={"TOTEXP15": "UTILIZATION"})
     columns_to_drop = set(
-        filter(lambda x: should_drop_column(x, fiscal_year), df.columns.tolist())
+        filter(lambda x: _should_drop_column(x, fiscal_year), df.columns.tolist())
     )
     df = df[sorted(set(df.columns.tolist()) - columns_to_drop, key=df.columns.get_loc)]
     X = pd.DataFrame(
@@ -681,7 +681,7 @@ def fetch_meps_raw_df(panel, fiscal_year):
     return X, y, fairness_info
 
 
-def get_pandas_and_fairness_info_from_meps_dataset(dataset):
+def _get_pandas_and_fairness_info_from_meps_dataset(dataset):
     X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
     fairness_info = {
         "favorable_labels": [1],
@@ -743,9 +743,9 @@ def fetch_meps_panel19_fy2015_df(preprocess=False):
     """
     if preprocess:
         dataset = aif360.datasets.MEPSDataset19()
-        return get_pandas_and_fairness_info_from_meps_dataset(dataset)
+        return _get_pandas_and_fairness_info_from_meps_dataset(dataset)
     else:
-        return fetch_meps_raw_df(Panel.PANEL19, FiscalYear.FY2015)
+        return _fetch_meps_raw_df(Panel.PANEL19, FiscalYear.FY2015)
 
 
 def fetch_meps_panel20_fy2015_df(preprocess=False):
@@ -799,9 +799,9 @@ def fetch_meps_panel20_fy2015_df(preprocess=False):
     """
     if preprocess:
         dataset = aif360.datasets.MEPSDataset20()
-        return get_pandas_and_fairness_info_from_meps_dataset(dataset)
+        return _get_pandas_and_fairness_info_from_meps_dataset(dataset)
     else:
-        return fetch_meps_raw_df(Panel.PANEL20, FiscalYear.FY2015)
+        return _fetch_meps_raw_df(Panel.PANEL20, FiscalYear.FY2015)
 
 
 def fetch_meps_panel21_fy2016_df(preprocess=False):
@@ -855,6 +855,6 @@ def fetch_meps_panel21_fy2016_df(preprocess=False):
     """
     if preprocess:
         dataset = aif360.datasets.MEPSDataset21()
-        return get_pandas_and_fairness_info_from_meps_dataset(dataset)
+        return _get_pandas_and_fairness_info_from_meps_dataset(dataset)
     else:
-        return fetch_meps_raw_df(Panel.PANEL21, FiscalYear.FY2016)
+        return _fetch_meps_raw_df(Panel.PANEL21, FiscalYear.FY2016)
