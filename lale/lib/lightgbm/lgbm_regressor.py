@@ -252,7 +252,7 @@ _hyperparams_schema = {
                 "importance_type": {
                     "enum": ["split", "gain"],
                     "default": "split",
-                    "description": "The type of feature importance to be filled into feature_importances_.",
+                    "description": "The type of feature importance to be filled into `feature_importances_`.",
                 },
             },
         }

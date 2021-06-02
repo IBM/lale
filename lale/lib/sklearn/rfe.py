@@ -28,7 +28,7 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "estimator": {
-                    "description": "A supervised learning estimator with a fit method that provides information about feature importance either through a coef_ attribute or through a feature_importances_ attribute.",
+                    "description": "A supervised learning estimator with a fit method that provides information about feature importance either through a `coef_` attribute or through a `feature_importances_` attribute.",
                     "laleType": "operator",
                 },
                 "n_features_to_select": {
@@ -164,7 +164,7 @@ if sklearn.__version__ >= "0.24":
         importance_getter={
             "anyOf": [
                 {
-                    "description": "Use the feature importance either through a coef_ or feature_importances_ attributes of estimator.",
+                    "description": "Use the feature importance either through a `coef_` or `feature_importances_` attributes of estimator.",
                     "enum": ["auto"],
                 },
                 {

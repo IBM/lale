@@ -85,7 +85,7 @@ _hyperparams_schema = {
                     "maximumForOptimizer": 0.01,
                     "distribution": "loguniform",
                     "default": 1e-05,
-                    "description": "The iteration will stop when ``max{|proj g_i | i = 1, ",
+                    "description": "The iteration will stop when ``max{|proj g_i | i = 1, ..., n}`` <= ``tol`` where pg_i is the i-th component of the projected gradient.",
                 },
             },
         }

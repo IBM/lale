@@ -301,7 +301,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                 "importance_type": {
                     "enum": ["gain", "weight", "cover", "total_gain", "total_cover"],
                     "default": "gain",
-                    "description": "The feature importance type for the feature_importances_ property.",
+                    "description": "The feature importance type for the `feature_importances_` property.",
                 },
                 "seed": {
                     "default": None,
