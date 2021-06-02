@@ -520,6 +520,17 @@ experiments_dict["SpeedDating"][
 experiments_dict["SpeedDating"]["task_type"] = "classification"
 experiments_dict["SpeedDating"]["target"] = "match"
 
+experiments_dict["nursery"] = {}
+experiments_dict["nursery"]["dataset_url"] = "https://www.openml.org/d/26"
+experiments_dict["nursery"][
+    "download_arff_url"
+] = "https://www.openml.org/data/download/26/dataset_26_nursery.arff"
+experiments_dict["nursery"][
+    "download_csv_url"
+] = "https://www.openml.org/data/get_csv/26/dataset_26_nursery.arff"
+experiments_dict["nursery"]["task_type"] = "classification"
+experiments_dict["nursery"]["target"] = "class"
+
 experiments_dict["titanic"] = {}
 experiments_dict["titanic"]["dataset_url"] = "https://www.openml.org/d/40945"
 experiments_dict["titanic"][
