@@ -241,13 +241,13 @@ def _get_pandas_and_fairness_info_from_compas_dataset(dataset):
     X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
     at_least_25 = pd.Series(X["age"] >= 25, dtype=np.float64)
     dropped_X = X.drop(columns=["age"])
-    encoded_X = dropped_X.assign(at_least_25=at_least_25)
+    encoded_X = dropped_X.assign(age=at_least_25)
     fairness_info = {
         "favorable_labels": [0],
         "protected_attributes": [
             {"feature": "sex", "reference_group": [1]},
             {"feature": "race", "reference_group": [1]},
-            {"feature": "at_least_25", "reference_group": [1]},
+            {"feature": "age", "reference_group": [1]},
         ],
     }
     return encoded_X, y, fairness_info
@@ -287,7 +287,7 @@ def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
     fairness_info = {
         "favorable_labels": [0],
         "protected_attributes": [
-            {"feature": "sex", "reference_group": ["Male"]},
+            {"feature": "sex", "reference_group": ["Female"]},
             {"feature": "race", "reference_group": ["Caucasian"]},
             {"feature": "age", "reference_group": [[25, 1000]]},
         ],
@@ -304,7 +304,7 @@ def fetch_compas_df(preprocess=False):
     re-arrested within two years after the first arrest. Without
     preprocessing, the dataset has 5,287 rows and 13 columns.  There
     are three protected attributes, sex, race, and age, and the disparate
-    impact is 0.95.  The data includes numeric and categorical columns, with some
+    impact is 0.59.  The data includes numeric and categorical columns, with some
     missing values.
 
     .. _`compas-two-years`: https://www.openml.org/d/42193
@@ -313,10 +313,12 @@ def fetch_compas_df(preprocess=False):
     ----------
     preprocess : boolean, optional, default False
 
-      If True, binarize sex, race, and age columns (where the latter
-      is 1 if age is at least 25 and 0 otherwise, stored as column
-      "at_least_25") and create one-hot encodings of categorical
-      columns.
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups
+      (1 if Female, Caucasian, or at least 25 for the corresponding sex, race, and
+      age columns respectively);
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protecteded attributes.
 
     Returns
     -------
@@ -338,13 +340,14 @@ def fetch_compas_df(preprocess=False):
     violent_recidivism = False
     _try_download_compas(violent_recidivism=violent_recidivism)
     if preprocess:
-        # Departure from default AIF360 settings required since ProPublica analysis asserts that
-        # 'Female' is actually an unprivileged class but AIF360 lists it as a privileged one.
+        # Odd finding here: "Female" is a privileged class in the dataset, but the original
+        # COMPAS algorithm actually predicted worse outcomes for that class after controlling
+        # for other factors. Leaving it as "Female" for now (AIF360 does this by default as well)
+        # but potentially worthy of revisiting.
         # See https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm
         # and https://github.com/propublica/compas-analysis/blob/master/Compas%20Analysis.ipynb
-        dataset = aif360.datasets.CompasDataset(
-            privileged_classes=[["Male"], ["Caucasian"]]
-        )
+        # (hunch is that COMPAS was trained on more biased data that is not reproduced in ProPublica's dataset)
+        dataset = aif360.datasets.CompasDataset()
         # above preprocessing results in a WARNING of "Missing Data: 5 rows removed from CompasDataset."
         # unclear how to resolve at the moment
         return _get_pandas_and_fairness_info_from_compas_dataset(dataset)
