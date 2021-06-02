@@ -770,8 +770,8 @@ def fetch_nursery_df(preprocess=False):
     It contains data gathered from applicants to public schools in
     Ljubljana, Slovenia during a competitive time period.
     Without preprocessing, the dataset has
-    12960 rows and 9 columns.  There are two protected attribute, has_nurs and parents, and the
-    disparate impact is 0.56.  The data has categorical columns (with
+    12960 rows and 8 columns.  There is one protected attribute, parents, and the
+    disparate impact is 0.46.  The data has categorical columns (with
     numeric ones if preprocessing is applied), with no missing values.
 
     .. _`nursery`: https://www.openml.org/d/26
@@ -809,46 +809,30 @@ def fetch_nursery_df(preprocess=False):
     orig_y = pd.concat([train_y, test_y]).sort_index()
     if preprocess:
         parents = pd.Series(orig_X["parents_usual"] == 0, dtype=np.float64)
-        has_nurs = pd.Series(orig_X["has_nurs_proper"] == 0, dtype=np.float64)
         dropped_X = orig_X.drop(
             labels=[
                 "parents_great_pret",
                 "parents_pretentious",
                 "parents_usual",
-                "has_nurs_proper",
-                "has_nurs_less_proper",
-                "has_nurs_critical",
-                "has_nurs_improper",
-                "has_nurs_very_crit",
             ],
             axis=1,
         )
-        encoded_X = dropped_X.assign(parents=parents, has_nurs=has_nurs)
-        encoded_y = pd.Series(orig_y > 2, dtype=np.float64)
+        encoded_X = dropped_X.assign(parents=parents)
+        # orig_y == 3 corresponds to "spec_prior"
+        encoded_y = pd.Series((orig_y == 3), dtype=np.float64)
         fairness_info = {
             "favorable_labels": [1],
-            "protected_attributes": [
-                {"feature": "parents", "reference_group": [1]},
-            ],
+            "protected_attributes": [{"feature": "parents", "reference_group": [1]}],
         }
         return encoded_X, encoded_y, fairness_info
     else:
         fairness_info = {
-            "favorable_labels": ["priority", "spec_prior"],
+            "favorable_labels": ["spec_prior"],
             "protected_attributes": [
                 {
                     "feature": "parents",
                     "reference_group": ["great_pret", "pretentious"],
-                },
-                {
-                    "feature": "has_nurs",
-                    "reference_group": [
-                        "less_proper",
-                        "improper",
-                        "critical",
-                        "very_crit",
-                    ],
-                },
+                }
             ],
         }
         return orig_X, orig_y, fairness_info
