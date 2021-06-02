@@ -94,6 +94,7 @@ Other Functions:
 * `fetch_meps_panel19_fy2015_df`_
 * `fetch_meps_panel20_fy2015_df`_
 * `fetch_meps_panel21_fy2016_df`_
+* `fetch_tae_df`_
 
 
 Mitigator Patterns:
@@ -165,6 +166,7 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_meps_panel19_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel19_fy2015_df
 .. _`fetch_meps_panel20_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel20_fy2015_df
 .. _`fetch_meps_panel21_fy2016_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel21_fy2016_df
+.. _`fetch_tae_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_tae_df
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
 .. _`theil_index`: lale.lib.aif360.util.html#lale.lib.aif360.util.theil_index
@@ -185,6 +187,7 @@ from .datasets import (
     fetch_meps_panel21_fy2016_df,
     fetch_ricci_df,
     fetch_speeddating_df,
+    fetch_tae_df,
     fetch_titanic_df,
 )
 from .disparate_impact_remover import DisparateImpactRemover

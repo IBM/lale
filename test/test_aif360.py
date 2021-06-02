@@ -155,6 +155,14 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 1_309, 2_828, {0, 1}, 0.254)
 
+    def test_dataset_tae_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=False)
+        self._attempt_dataset(X, y, fairness_info, 151, 5, {1, 2, 3}, 0.347)
+
+    def test_dataset_tae_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=True)
+        self._attempt_dataset(X, y, fairness_info, 151, 5, {0, 1}, 0.347)
+
     @classmethod
     def _try_download_csv(self, filename):
         directory = os.path.join(

@@ -531,6 +531,17 @@ experiments_dict["titanic"][
 experiments_dict["titanic"]["task_type"] = "classification"
 experiments_dict["titanic"]["target"] = "survived"
 
+experiments_dict["tae"] = {}
+experiments_dict["tae"]["dataset_url"] = "https://www.openml.org/d/48"
+experiments_dict["tae"][
+    "download_arff_url"
+] = "https://www.openml.org/data/download/48/dataset_48_tae.arff"
+experiments_dict["tae"][
+    "download_csv_url"
+] = "https://www.openml.org/data/get_csv/48/dataset_48_tae.arff"
+experiments_dict["tae"]["task_type"] = "classification"
+experiments_dict["tae"]["target"] = "class_attribute"
+
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
