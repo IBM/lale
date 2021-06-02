@@ -109,6 +109,7 @@ setup(
             "codecov",
             "pyspark",
             "func_timeout",
+            "autoai-ts-libs"
         ],
     },
 )

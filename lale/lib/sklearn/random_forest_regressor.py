@@ -252,8 +252,13 @@ _input_fit_schema = {
         },
         "y": {
             "description": "The predicted classes.",
-            "type": "array",
-            "items": {"type": "number"},
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "array", "items": {"type": "number"}},
+                },
+                {"type": "array", "items": {"type": "number"}},
+            ],
         },
         "sample_weight": {
             "anyOf": [
@@ -282,8 +287,10 @@ _input_predict_schema = {
 
 _output_predict_schema = {
     "description": "The predicted values.",
-    "type": "array",
-    "items": {"type": "number"},
+    "anyOf": [
+        {"type": "array", "items": {"type": "array", "items": {"type": "number"}},},
+        {"type": "array", "items": {"type": "number"}},
+    ],
 }
 
 _combined_schemas = {
