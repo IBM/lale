@@ -85,6 +85,7 @@ Other Functions:
 * `fetch_adult_df`_
 * `fetch_bank_df`_
 * `fetch_compas_df`_
+* `fetch_compas_violent_df`_
 * `fetch_creditg_df`_
 * `fetch_ricci_df`_
 * `fetch_speeddating_df`_
@@ -155,6 +156,7 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_adult_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_adult_df
 .. _`fetch_bank_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_bank_df
 .. _`fetch_compas_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_df
+.. _`fetch_compas_violent_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_violent_df
 .. _`fetch_creditg_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_creditg_df
 .. _`fetch_ricci_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_ricci_df
 .. _`fetch_speeddating_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_speeddating_df
@@ -176,6 +178,7 @@ from .datasets import (
     fetch_bank_df,
     fetch_boston_housing_df,
     fetch_compas_df,
+    fetch_compas_violent_df,
     fetch_creditg_df,
     fetch_meps_panel19_fy2015_df,
     fetch_meps_panel20_fy2015_df,
