@@ -119,6 +119,22 @@ class TestAIF360Datasets(unittest.TestCase):
         X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 1_000, 58, {0, 1}, 0.748)
 
+    def test_dataset_nursery_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_nursery_df(preprocess=False)
+        self._attempt_dataset(
+            X,
+            y,
+            fairness_info,
+            12_960,
+            8,
+            {"not_recom", "recommend", "very_recom", "priority", "spec_prior"},
+            0.461,
+        )
+
+    def test_dataset_nursery_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_nursery_df(preprocess=True)
+        self._attempt_dataset(X, y, fairness_info, 12_960, 25, {0, 1}, 0.461)
+
     def test_dataset_ricci_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_ricci_df(preprocess=False)
         self._attempt_dataset(
@@ -154,6 +170,14 @@ class TestAIF360Datasets(unittest.TestCase):
     def test_dataset_titanic_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=True)
         self._attempt_dataset(X, y, fairness_info, 1_309, 2_828, {0, 1}, 0.254)
+
+    def test_dataset_tae_pd_cat(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=False)
+        self._attempt_dataset(X, y, fairness_info, 151, 5, {1, 2, 3}, 0.347)
+
+    def test_dataset_tae_pd_num(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=True)
+        self._attempt_dataset(X, y, fairness_info, 151, 5, {0, 1}, 0.347)
 
     @classmethod
     def _try_download_csv(self, filename):

@@ -52,7 +52,7 @@ def fetch_adult_df(preprocess=False):
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
@@ -135,7 +135,7 @@ def fetch_bank_df(preprocess=False):
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
@@ -202,6 +202,99 @@ def fetch_bank_df(preprocess=False):
             "favorable_labels": [1],
             "protected_attributes": [
                 {"feature": "age", "reference_group": [[25, 1000]]},
+            ],
+        }
+        return orig_X, orig_y, fairness_info
+
+
+def fetch_tae_df(preprocess=False):
+    """
+    Fetch the `tae`_ dataset from OpenML and add `fairness_info`.
+
+    It contains information from teaching assistant (TA) evaluations.
+    at the University of Wisconsin--Madison.
+    The prediction task is a classification on the type
+    of rating a TA receives (1=Low, 2=Medium, 3=High). Without preprocessing,
+    the dataset has 151 rows and 5 columns. There are two protected
+    attributes, "summer_or_regular_semester" and "whether_of_not_the_ta_is_a_native_english_speaker" [sic],
+    and the disparate impact of 0.5. The data
+    includes both categorical and numeric columns, with no missing
+    values.
+
+    .. _`tae`: https://www.openml.org/d/48
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups
+      ("native_english_speaker" and "summer" respectively);
+      encode labels in y as 0 or 1 to indicate favorable outcomes;
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protecteded attributes.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "tae", "classification", astype="pandas", preprocess=preprocess
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index().astype(np.float64)
+    orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
+
+    if preprocess:
+        native_english_speaker = pd.Series(
+            orig_X["whether_of_not_the_ta_is_a_native_english_speaker_1"] == 1,
+            dtype=np.float64,
+        )
+        summer = pd.Series(
+            orig_X["summer_or_regular_semester_1"] == 1, dtype=np.float64
+        )
+        dropped_X = orig_X.drop(
+            labels=[
+                "whether_of_not_the_ta_is_a_native_english_speaker_1",
+                "whether_of_not_the_ta_is_a_native_english_speaker_2",
+                "summer_or_regular_semester_1",
+                "summer_or_regular_semester_2",
+            ],
+            axis=1,
+        )
+        encoded_X = dropped_X.assign(
+            native_english_speaker=native_english_speaker, summer=summer
+        )
+        encoded_y = pd.Series(orig_y == 2, dtype=np.float64)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "native_english_speaker", "reference_group": [1]},
+                {"feature": "summer", "reference_group": [1]},
+            ],
+        }
+        return encoded_X, encoded_y, fairness_info
+    else:
+        fairness_info = {
+            "favorable_labels": [3],
+            "protected_attributes": [
+                {
+                    "feature": "whether_of_not_the_ta_is_a_native_english_speaker",
+                    "reference_group": [1],
+                },
+                {"feature": "summer_or_regular_semester", "reference_group": [1]},
             ],
         }
         return orig_X, orig_y, fairness_info
@@ -335,7 +428,7 @@ def fetch_compas_df(preprocess=False):
       (1 if Female, Caucasian, or at least 25 for the corresponding sex, race, and
       age columns respectively);
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
@@ -397,7 +490,7 @@ def fetch_compas_violent_df(preprocess=False):
       (1 if Female, Caucasian, or at least 25 for the corresponding sex, race, and
       age columns respectively);
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
@@ -493,7 +586,7 @@ def fetch_creditg_df(preprocess=False):
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
@@ -582,7 +675,7 @@ def fetch_ricci_df(preprocess=False):
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
@@ -645,7 +738,7 @@ def fetch_speeddating_df(preprocess=False):
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
@@ -763,6 +856,81 @@ def fetch_boston_housing_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
+def fetch_nursery_df(preprocess=False):
+    """
+    Fetch the `nursery`_ dataset from OpenML and add `fairness_info`.
+
+    It contains data gathered from applicants to public schools in
+    Ljubljana, Slovenia during a competitive time period.
+    Without preprocessing, the dataset has
+    12960 rows and 8 columns.  There is one protected attribute, parents, and the
+    disparate impact is 0.46.  The data has categorical columns (with
+    numeric ones if preprocessing is applied), with no missing values.
+
+    .. _`nursery`: https://www.openml.org/d/26
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protected attributes.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "nursery", "classification", astype="pandas", preprocess=preprocess
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index()
+    orig_y = pd.concat([train_y, test_y]).sort_index()
+    if preprocess:
+        parents = pd.Series(orig_X["parents_usual"] == 0, dtype=np.float64)
+        dropped_X = orig_X.drop(
+            labels=[
+                "parents_great_pret",
+                "parents_pretentious",
+                "parents_usual",
+            ],
+            axis=1,
+        )
+        encoded_X = dropped_X.assign(parents=parents)
+        # orig_y == 3 corresponds to "spec_prior"
+        encoded_y = pd.Series((orig_y == 3), dtype=np.float64)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [{"feature": "parents", "reference_group": [1]}],
+        }
+        return encoded_X, encoded_y, fairness_info
+    else:
+        fairness_info = {
+            "favorable_labels": ["spec_prior"],
+            "protected_attributes": [
+                {
+                    "feature": "parents",
+                    "reference_group": ["great_pret", "pretentious"],
+                }
+            ],
+        }
+        return orig_X, orig_y, fairness_info
+
+
 def fetch_titanic_df(preprocess=False):
     """
     Fetch the `Titanic`_ dataset from OpenML and add `fairness_info`.
@@ -782,7 +950,7 @@ def fetch_titanic_df(preprocess=False):
       If True,
       encode protected attributes in X as 0 or 1 to indicate privileged groups
       and apply one-hot encoding to any remaining features in X that
-      are categorical and not protecteded attributes.
+      are categorical and not protected attributes.
 
     Returns
     -------
