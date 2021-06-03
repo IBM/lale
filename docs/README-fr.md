@@ -21,7 +21,7 @@ Lale peut être installé comme n'importe quelle autre bibliothèque python et p
 * [Introduction](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) pour les utilisateurs de scikit-learn
 * Instructions pour l'[installation](https://github.com/IBM/lale/blob/master/docs/installation.rst)
 * Aperçu technique [slides](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [notebook](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), et [video](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
-* IBM [AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only) utilise Lale, voir le [notebook](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
+* IBM [AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only) utilise Lale, voir le [demo notebook](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
 * Guide pour ajouter de [nouveaux operateurs](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
 * Guide pour [contribuer](https://github.com/IBM/lale/blob/master/CONTRIBUTING.md) au projet Lale
 * [FAQ](https://github.com/IBM/lale/blob/master/docs/faq.rst)

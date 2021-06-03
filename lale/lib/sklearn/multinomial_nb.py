@@ -101,7 +101,7 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    "description": "Returns the probability of the samples for each class in the model. The columns correspond to the classes in sorted order, as they appear in the attribute classes_.",
+    "description": "Returns the probability of the samples for each class in the model. The columns correspond to the classes in sorted order, as they appear in the attribute `classes_`.",
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }

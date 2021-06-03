@@ -241,7 +241,7 @@ _hyperparams_schema = {
                     "default": None,
                 },
                 "factor": {
-                    "description": """The `halving’ parameter, which determines the proportion of candidates
+                    "description": """The `halving` parameter, which determines the proportion of candidates
 that are selected for each subsequent iteration. For example, factor=3 means that only one third of the candidates are selected.""",
                     "type": "number",
                     "minimum": 1,

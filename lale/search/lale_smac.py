@@ -74,7 +74,8 @@ def get_smac_space(
     lale_pgo: Optional[PGO] = None,
     data_schema: Dict[str, Any] = {},
 ) -> ConfigurationSpace:
-    """Top level function: given a lale operator, returns a ConfigurationSpace for use with SMAC
+    """Top level function: given a lale operator, returns a ConfigurationSpace for use with SMAC.
+
     Parameters
     ----------
     op : The lale PlannedOperator
