@@ -101,7 +101,7 @@ setup(
             "joblib",
             "jupyter",
             "numpydoc",
-            "sphinx",
+            "sphinx==2.4.4",
             "m2r",
             "sphinx_rtd_theme",
             "sphinxcontrib.apidoc",
