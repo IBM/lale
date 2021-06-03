@@ -72,6 +72,23 @@ Metrics:
 * `statistical_parity_difference`_
 * `theil_index`_
 
+Datasets:
+================
+* `fetch_adult_df`_
+* `fetch_bank_df`_
+* `fetch_boston_housing_df`_
+* `fetch_compas_df`_
+* `fetch_compas_violent_df`_
+* `fetch_creditg_df`_
+* `fetch_meps_panel19_fy2015_df`_
+* `fetch_meps_panel20_fy2015_df`_
+* `fetch_meps_panel21_fy2016_df`_
+* `fetch_nursery_df`_
+* `fetch_ricci_df`_
+* `fetch_speeddating_df`_
+* `fetch_tae_df`_
+* `fetch_titanic_df`_
+
 Other Classes and Operators:
 ============================
 * `FairStratifiedKFold`_
@@ -82,21 +99,6 @@ Other Functions:
 ================
 * `dataset_to_pandas`_
 * `fair_stratified_train_test_split`_
-* `fetch_adult_df`_
-* `fetch_bank_df`_
-* `fetch_compas_df`_
-* `fetch_compas_violent_df`_
-* `fetch_creditg_df`_
-* `fetch_ricci_df`_
-* `fetch_speeddating_df`_
-* `fetch_boston_housing_df`_
-* `fetch_nursery_df`_
-* `fetch_titanic_df`_
-* `fetch_meps_panel19_fy2015_df`_
-* `fetch_meps_panel20_fy2015_df`_
-* `fetch_meps_panel21_fy2016_df`_
-* `fetch_tae_df`_
-
 
 Mitigator Patterns:
 ===================

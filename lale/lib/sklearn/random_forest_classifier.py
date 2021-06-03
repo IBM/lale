@@ -235,7 +235,12 @@ _hyperparams_schema = {
                     "default": None,
                 },
             },
-        }
+        },
+        {
+            "description": "This classifier does not support sparse labels.",
+            "type": "object",
+            "laleNot": "y/isSparse",
+        },
     ],
 }
 
