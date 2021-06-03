@@ -1,5 +1,6 @@
+# all of setup.py -> install_requires
 numpy
-black
+black==19.10b0
 graphviz
 hyperopt
 jsonschema
@@ -10,19 +11,19 @@ pandas
 decorator
 h5py
 astunparse
-xgboost
+# subset of setup.py -> extras_require -> full
+xgboost<=1.3.3
 lightgbm
 liac-arff>=2.4.0
 numba==0.49.0
-aif360
+aif360>=0.4.0
 imbalanced-learn
 cvxpy>=1.0,<=1.1.7
-fairlearn
-autoai-libs
+# subset of setup.py -> extras_require -> test
+autoai-libs>=1.12.6
 sphinx==2.4.4
-docutils==0.16
 m2r
 sphinx_rtd_theme
 sphinxcontrib.apidoc
-PyYAML
-
+# not listed in setup.py
+docutils==0.16
