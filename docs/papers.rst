@@ -1,6 +1,38 @@
 Papers
 ======
 
+"Engineering Fair Machine Learning Pipelines".
+Martin Hirzel, Kiran Kate, and Parikshit Ram.
+ICLR Workshop on Responsible AI (RAI@ICLR), May 2021. 
+http://hirzels.com/martin/papers/rai21-fairness.pdf
+
+.. code:: BibTeX
+
+    @InProceedings{hirzel_kate_ram_2021,
+      title = "Engineering Fair Machine Learning Pipelines",
+      author = "Hirzel, Martin and Kate, Kiran and Ram, Parikshit",
+      booktitle = "ICLR Workshop on Responsible AI (RAI@ICLR)",
+      year = 2021,
+      month = may,
+      url = "http://hirzels.com/martin/papers/rai21-fairness.pdf" }
+
+"Extracting Hyperparameter Constraints from Code".
+Ingkarat Rak-amnouykit, Ana Milanova, Guillaume Baudart,
+Martin Hirzel, and Julian Dolby.
+ICLR Workshop on Security and Safety in Machine Learning Systems (SecML@ICLR),
+May 2021. 
+https://aisecure-workshop.github.io/aml-iclr2021/papers/18.pdf
+
+.. code:: BibTeX
+
+    @InProceedings{rakamnouykit_et_al_2021-secml,
+      title = "Extracting Hyperparameter Constraints from Code",
+      author = "Rak-amnouykit, Ingkarat and Milanova, Ana and Baudart, Guillaume and Hirzel, Martin and Dolby, Julian",
+      booktitle = "ICLR Workshop on Security and Safety in Machine Learning Systems (SecML@ICLR)",
+      year = 2021,
+      month = may,
+      url = "https://aisecure-workshop.github.io/aml-iclr2021/papers/18.pdf" }
+
 "Lale: Consistent Automated Machine Learning".
 Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, and
 Avraham Shinnar.

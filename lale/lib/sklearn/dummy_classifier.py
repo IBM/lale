@@ -19,6 +19,8 @@ import sklearn.dummy
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import schema_1D_cats, schema_2D_numbers
+
 _hyperparams_schema = {
     "allOf": [
         {
@@ -67,8 +69,8 @@ _hyperparams_schema = {
                     "anyOf": [
                         {"type": ["integer", "string"]},
                         {"enum": [None]},
-                        {"default": None},
                     ],
+                    "default": None,
                 },
             },
         },
@@ -82,13 +84,14 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array"},
+            "items": {"type": "array", "items": {"laleType": "Any"}},
         },
         "y": {
             "description": "Target class labels.",
             "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
                 {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "boolean"}},
             ],
         },
     },
@@ -96,6 +99,7 @@ _input_fit_schema = {
 
 _input_predict_schema = {
     "type": "object",
+    "additionalProperties": False,
     "properties": {
         "X": {
             "description": "Features; the outer array is over samples.",
@@ -105,12 +109,17 @@ _input_predict_schema = {
     },
 }
 
-_output_predict_schema = {
-    "description": "Predicted class label per sample.",
-    "anyOf": [
-        {"type": "array", "items": {"type": "number"}},
-        {"type": "array", "items": {"type": "string"}},
-    ],
+_input_predict_proba_schema = {
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {"type": "array", "items": {"laleType": "Any"}},
+        }
+    },
 }
 
 _combined_schemas = {
@@ -126,10 +135,11 @@ _combined_schemas = {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
+        "output_predict": schema_1D_cats,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": schema_2D_numbers,
     },
 }
-
 
 DummyClassifier = lale.operators.make_operator(
     sklearn.dummy.DummyClassifier, _combined_schemas
