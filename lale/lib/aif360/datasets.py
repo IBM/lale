@@ -207,6 +207,99 @@ def fetch_bank_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
+def fetch_tae_df(preprocess=False):
+    """
+    Fetch the `tae`_ dataset from OpenML and add `fairness_info`.
+
+    It contains information from teaching assistant (TA) evaluations.
+    at the University of Wisconsin--Madison.
+    The prediction task is a classification on the type
+    of rating a TA receives (1=Low, 2=Medium, 3=High). Without preprocessing,
+    the dataset has 151 rows and 5 columns. There are two protected
+    attributes, "summer_or_regular_semester" and "whether_of_not_the_ta_is_a_native_english_speaker" [sic],
+    and the disparate impact of 0.5. The data
+    includes both categorical and numeric columns, with no missing
+    values.
+
+    .. _`tae`: https://www.openml.org/d/48
+
+    Parameters
+    ----------
+    preprocess : boolean, optional, default False
+
+      If True,
+      encode protected attributes in X as 0 or 1 to indicate privileged groups
+      ("native_english_speaker" and "summer" respectively);
+      encode labels in y as 0 or 1 to indicate favorable outcomes;
+      and apply one-hot encoding to any remaining features in X that
+      are categorical and not protecteded attributes.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: pandas Dataframe
+
+          Features X, including both protected and non-protected attributes.
+
+      - item 1: pandas Series
+
+          Labels y.
+
+      - item 3: fairness_info
+
+          JSON meta-data following the format understood by fairness metrics
+          and mitigation operators in `lale.lib.aif360`.
+    """
+    (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+        "tae", "classification", astype="pandas", preprocess=preprocess
+    )
+    orig_X = pd.concat([train_X, test_X]).sort_index().astype(np.float64)
+    orig_y = pd.concat([train_y, test_y]).sort_index().astype(np.float64)
+
+    if preprocess:
+        native_english_speaker = pd.Series(
+            orig_X["whether_of_not_the_ta_is_a_native_english_speaker_1"] == 1,
+            dtype=np.float64,
+        )
+        summer = pd.Series(
+            orig_X["summer_or_regular_semester_1"] == 1, dtype=np.float64
+        )
+        dropped_X = orig_X.drop(
+            labels=[
+                "whether_of_not_the_ta_is_a_native_english_speaker_1",
+                "whether_of_not_the_ta_is_a_native_english_speaker_2",
+                "summer_or_regular_semester_1",
+                "summer_or_regular_semester_2",
+            ],
+            axis=1,
+        )
+        encoded_X = dropped_X.assign(
+            native_english_speaker=native_english_speaker, summer=summer
+        )
+        encoded_y = pd.Series(orig_y == 2, dtype=np.float64)
+        fairness_info = {
+            "favorable_labels": [1],
+            "protected_attributes": [
+                {"feature": "native_english_speaker", "reference_group": [1]},
+                {"feature": "summer", "reference_group": [1]},
+            ],
+        }
+        return encoded_X, encoded_y, fairness_info
+    else:
+        fairness_info = {
+            "favorable_labels": [3],
+            "protected_attributes": [
+                {
+                    "feature": "whether_of_not_the_ta_is_a_native_english_speaker",
+                    "reference_group": [1],
+                },
+                {"feature": "summer_or_regular_semester", "reference_group": [1]},
+            ],
+        }
+        return orig_X, orig_y, fairness_info
+
+
 # COMPAS HELPERS
 def _get_compas_filename(violent_recidivism=False):
     violent_tag = ""
