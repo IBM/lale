@@ -83,7 +83,7 @@ apidoc_separate_modules = True
 autoclass_content = "both"
 
 # Mock requirements to save resources during doc build machine setup
-autodoc_mock_imports = ["aif360", "pytorch", "tensorflow", "torch"]
+autodoc_mock_imports = ["aif360", "fairlearn", "pytorch", "tensorflow", "torch"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
