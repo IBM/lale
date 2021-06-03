@@ -38,6 +38,14 @@ schema_X_numbers = {
     },
 }
 
+schema_1D_cats = {
+    "anyOf": [
+        {"type": "array", "items": {"type": "string"}},
+        {"type": "array", "items": {"type": "number"}},
+        {"type": "array", "items": {"type": "boolean"}},
+    ],
+}
+
 schema_2D_numbers = {
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
