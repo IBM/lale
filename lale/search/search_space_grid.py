@@ -67,6 +67,7 @@ def get_search_space_grids(
     data_schema: Dict[str, Any] = {},
 ) -> List[SearchSpaceGrid]:
     """Top level function: given a lale operator, returns a list of hp grids.
+
     Parameters
     ----------
     op : The lale PlannedOperator

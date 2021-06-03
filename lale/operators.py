@@ -1209,9 +1209,9 @@ class IndividualOp(Operator):
         """This is the hyperparameters that are currently set.
         Some of them may not have been set explicitly
         (e.g. if this is a clone of an operator,
-         some of these may be defaults.
-         To get the hyperparameters that were actually set,
-         use :meth:`hyperparams`
+        some of these may be defaults.
+        To get the hyperparameters that were actually set,
+        use :meth:`hyperparams`
         """
         return getattr(self, "_hyperparams", None)
 
@@ -2171,6 +2171,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `freeze_trained`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("freeze_trained"), DeprecationWarning)
         try:
@@ -2198,6 +2199,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `get_pipeline`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("get_pipeline"), DeprecationWarning)
         try:
@@ -2213,6 +2215,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `summary`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("summary"), DeprecationWarning)
         try:
@@ -2228,6 +2231,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `transform`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("transform"), DeprecationWarning)
         try:
@@ -2243,6 +2247,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `predict`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("predict"), DeprecationWarning)
         try:
@@ -2258,6 +2263,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `predict_proba`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("predict_proba"), DeprecationWarning)
         try:
@@ -2273,6 +2279,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `decision_function`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("decision_function"), DeprecationWarning)
         try:
@@ -2288,6 +2295,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `score`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("score"), DeprecationWarning)
         try:
@@ -3475,6 +3483,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `transform`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("transform"), DeprecationWarning)
         try:
@@ -3489,6 +3498,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `predict`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("predict"), DeprecationWarning)
         try:
@@ -3503,6 +3513,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `predict_proba`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("predict_proba"), DeprecationWarning)
         try:
@@ -3517,6 +3528,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `decision_function`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("decision_function"), DeprecationWarning)
         try:
@@ -3531,6 +3543,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
            operator, because the learned coefficients could be
            accidentally overwritten by retraining. Call `score`
            on the trained operator returned by `fit` instead.
+
         """
         warnings.warn(_mutation_warning("score"), DeprecationWarning)
         try:

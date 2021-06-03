@@ -108,6 +108,7 @@ majority class after resampling. Therefore, the ratio is expressed as
 :math:`\\alpha_{os} = N_{rm} / N_{M}` where :math:`N_{rm}` is the
 number of samples in the minority class after resampling and
 :math:`N_{M}` is the number of samples in the majority class.
+
 .. warning::
     ``float`` is only available for **binary** classification. An
     error is raised for multi-class classification.""",
@@ -131,7 +132,7 @@ Possible choices are:
                             ],
                         },
                         {
-                            "description": """- When ``dict``, the keys correspond to the targeted classes.
+                            "description": """When ``dict``, the keys correspond to the targeted classes.
 The values correspond to the desired number of samples for each targeted class.""",
                             "type": "object",
                         },

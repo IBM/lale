@@ -13,7 +13,7 @@ Lale是一个半自动化数据科学的Python库. 通过Lale，您可以简单�
 * [scikit-learn用户入门指南](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_guide_for_sklearn_users.ipynb) 
 * [安装说明](https://github.com/IBM/lale/blob/master/docs/installation.rst)
 * 技术概述[幻灯片](https://github.com/IBM/lale/blob/master/talks/2019-1105-lale.pdf), [笔记本](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/talk_2019-1105-lale.ipynb), and [视频](https://www.youtube.com/watch?v=R51ZDJ64X18&list=PLGVZCDnMOq0pwoOqsaA87cAoNM4MWr51M&index=35&t=0s)
-* IBM的[AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only)使用Lale, 请参阅演示[笔记本](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
+* IBM的[AutoAI SDK](http://wml-api-pyclient-v4.mybluemix.net/#autoai-beta-ibm-cloud-only)使用Lale, [请参阅演示 笔记本](https://dataplatform.cloud.ibm.com/exchange/public/entry/view/a2d87b957b60c846267137bfae130dca)
 * 包装指南[新运算符](https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/docs_new_operators.ipynb)
 * [贡献]指南(https://github.com/IBM/lale/blob/master/CONTRIBUTING.md)
 * [常问问题](https://github.com/IBM/lale/blob/master/docs/faq.rst)

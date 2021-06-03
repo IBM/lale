@@ -312,14 +312,21 @@ def cross_val_score(estimator, X, y=None, scoring=accuracy_score, cv=5):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on
     each of the splits.
-    :param estimator: A valid sklearn_wrapper estimator
-    :param X, y: Valid data and target values that work with the estimator
-    :param scoring: a scorer object from sklearn.metrics (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics)
-             Default value is accuracy_score.
-    :param cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
+
+    Parameters
+    ----------
+
+    estimator: A valid sklearn_wrapper estimator
+    X, y: Valid data and target values that work with the estimator
+    scoring: a scorer object from sklearn.metrics (https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics)
+        Default value is accuracy_score.
+    cv: an integer or an object that has a split function as a generator yielding (train, test) splits as arrays of indices.
         Integer value is used as number of folds in sklearn.model_selection.StratifiedKFold, default is 5.
         Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
-    :return: cv_results: a list of scores corresponding to each cross validation fold
+
+    Returns
+    -------
+    cv_results: a list of scores corresponding to each cross validation fold
     """
     if isinstance(cv, int):
         cv = StratifiedKFold(cv)
