@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,25 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn
 import sklearn.ensemble
 
 import lale.docstrings
 import lale.operators
 
 _hyperparams_schema = {
-    "description": "Soft Voting/Majority Rule classifier for unfitted estimators.",
+    "description": "Stack of estimators with a final classifier.",
     "allOf": [
         {
             "type": "object",
             "required": [
                 "estimators",
-                "voting",
-                "weights",
+                "final_estimator",
+                "cv",
+                "stack_method",
                 "n_jobs",
-                "flatten_transform",
+                "passthrough",
             ],
-            "relevantToOptimizer": ["voting"],
+            "relevantToOptimizer": [
+                "estimators",
+                "final_estimator",
+                "cv",
+                "passthrough",
+            ],
             "additionalProperties": False,
             "properties": {
                 "estimators": {
@@ -43,52 +48,43 @@ _hyperparams_schema = {
                             {"anyOf": [{"laleType": "operator"}, {"enum": [None]}]},
                         ],
                     },
-                    "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
+                    "description": "Base estimators which will be stacked together. Each element of the list is defined as a tuple of string (i.e. name) and an estimator instance. An estimator can be set to ‘drop’ using set_params.",
                 },
-                "voting": {
-                    "enum": ["hard", "soft"],
-                    "default": "hard",
-                    "description": "If 'hard', uses predicted class labels for majority rule voting.",
+                "final_estimator": {
+                    "laleType": "operator",
+                    "default": "None",
+                    "description": "A classifier which will be used to combine the base estimators. The default classifier is a 'LogisticRegression'",
                 },
-                "weights": {
+                "cv": {
+                    "XXX TODO XXX": "int, cross-validation generator or an iterable, optional",
+                    "description": "Determines the cross-validation splitting strategy",
                     "anyOf": [
                         {
-                            "type": "array",
-                            "items": {"type": "number"},
+                            "type": "integer",
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 4,
+                            "distribution": "uniform",
                         },
                         {"enum": [None]},
                     ],
                     "default": None,
-                    "description": "Sequence of weights (`float` or `int`) to weight the occurrences of",
+                },
+                "stack_method": {
+                    "description": "Methods called for each base estimator. If ‘auto’, it will try to invoke, for each estimator, 'predict_proba', 'decision_function' or 'predict' in that order. Otherwise, one of 'predict_proba', 'decision_function' or 'predict'. If the method is not implemented by the estimator, it will raise an error.",
+                    "default": "auto",
+                    "enum": ["auto", "predict_proba", "decision_function", "predict"],
                 },
                 "n_jobs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
                     "default": None,
                     "description": "The number of jobs to run in parallel for ``fit``.",
                 },
-                "flatten_transform": {
+                "passthrough": {
                     "type": "boolean",
-                    "default": True,
-                    "description": "Affects shape of transform output only when voting='soft'",
+                    "default": False,
+                    "description": "When False, only the predictions of estimators will be used as training data for 'final_estimator'. When True, the 'final_estimator' is trained on the predictions as well as the original training data.",
                 },
             },
-        },
-        {
-            "description": "Parameter: flatten_transform > only when voting='soft' if voting='soft' and flatten_transform=true",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "voting": {"enum": ["soft"]},
-                    },
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "flatten_transform": {"enum": [True]},
-                    },
-                },
-            ],
         },
     ],
 }
@@ -123,7 +119,7 @@ _input_fit_schema = {
     },
 }
 _input_transform_schema = {
-    "description": "Return class labels or probabilities for X for each estimator.",
+    "description": "Fit to data, then transform it.",
     "type": "object",
     "properties": {
         "X": {
@@ -132,12 +128,12 @@ _input_transform_schema = {
                 "type": "array",
                 "items": {"type": "number"},
             },
-            "description": "Training vectors, where n_samples is the number of samples and",
+            "description": "Training vectors, where n_samples is the number of samples and n_features is the number of features",
         },
     },
 }
 _output_transform_schema = {
-    "description": "If `voting='soft'` and `flatten_transform=True`:",
+    "description": "Transformed array",
     "type": "array",
     "items": {
         "type": "array",
@@ -151,7 +147,7 @@ _output_transform_schema = {
 }
 
 _input_predict_schema = {
-    "description": "Predict class labels for X.",
+    "description": "Predict target for X.",
     "type": "object",
     "properties": {
         "X": {
@@ -165,12 +161,12 @@ _input_predict_schema = {
     },
 }
 _output_predict_schema = {
-    "description": "Predicted class labels.",
+    "description": "Predicted targets.",
     "type": "array",
     "items": {"type": "number"},
 }
 _input_predict_proba_schema = {
-    "description": "Compute probabilities of possible outcomes for samples in X.",
+    "description": "Predict class probabilities for X using 'final_estimator_.predict_proba'.",
     "type": "object",
     "properties": {
         "X": {
@@ -184,7 +180,7 @@ _input_predict_proba_schema = {
     },
 }
 _output_predict_proba_schema = {
-    "description": "Weighted average probability for each class per sample.",
+    "description": "Class probabilities of the input samples.",
     "type": "array",
     "items": {
         "type": "array",
@@ -198,7 +194,7 @@ _input_decision_function_schema = {
     "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "Features; the outer array is over samples.",
+            "description": "Training vectors, where n_samples is the number of samples and n_features is the number of features.",
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
         }
@@ -206,28 +202,18 @@ _input_decision_function_schema = {
 }
 
 _output_decision_function_schema = {
-    "description": "Confidence scores for samples for each class in the model.",
-    "anyOf": [
-        {
-            "description": "In the multi-way case, score per (sample, class) combination.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
-        {
-            "description": "In the binary case, score for `self._classes[1]`.",
-            "type": "array",
-            "items": {"type": "number"},
-        },
-    ],
+    "description": "The decision function computed by the final estimator.",
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
 }
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """`Voting classifier`_ from scikit-learn for voting ensemble.
+    "description": """`Stacking classifier`_ from scikit-learn for stacking ensemble.
 
-.. _`Voting classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.VotingClassifier.html
+.. _`Stacking classifier`: https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.StackingClassifier.html
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.voting_classifier.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.stacking_classifier.html",
     "import_from": "sklearn.ensemble",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer", "estimator"], "post": []},
@@ -245,46 +231,7 @@ _combined_schemas = {
     },
 }
 
-VotingClassifier: lale.operators.PlannedIndividualOp
-VotingClassifier = lale.operators.make_operator(
-    sklearn.ensemble.VotingClassifier, _combined_schemas
+StackingClassifier: lale.operators.PlannedIndividualOp
+StackingClassifier = lale.operators.make_operator(
+    sklearn.ensemble.StackingClassifier, _combined_schemas
 )
-
-if sklearn.__version__ >= "0.21":
-    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html
-    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
-    VotingClassifier = VotingClassifier.customize_schema(
-        estimators={
-            "type": "array",
-            "items": {
-                "type": "array",
-                "laleType": "tuple",
-                "items": [
-                    {"type": "string"},
-                    {"anyOf": [{"laleType": "operator"}, {"enum": [None, "drop"]}]},
-                ],
-            },
-            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
-        }
-    )
-
-if sklearn.__version__ >= "0.24":
-    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
-    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.VotingClassifier.html
-    VotingClassifier = VotingClassifier.customize_schema(
-        estimators={
-            "type": "array",
-            "items": {
-                "type": "array",
-                "laleType": "tuple",
-                "items": [
-                    {"type": "string"},
-                    {"anyOf": [{"laleType": "operator"}, {"enum": ["drop"]}]},
-                ],
-            },
-            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
-        }
-    )
-
-
-lale.docstrings.set_docstrings(VotingClassifier)
