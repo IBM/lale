@@ -40,6 +40,7 @@ Classifiers:
 * lale.lib.sklearn. `SGDClassifier`_
 * lale.lib.sklearn. `SVC`_
 * lale.lib.sklearn. `VotingClassifier`_
+* lale.lib.sklearn. `StackingClassifier`_
 
 Regressors:
 
@@ -55,6 +56,7 @@ Regressors:
 * lale.lib.sklearn. `SGDRegressor`_
 * lale.lib.sklearn. `SVR`_
 * lale.lib.sklearn. `LinearSVR`_
+* lale.lib.sklearn. `StackingRegressor`_
 
 Transformers:
 
@@ -133,6 +135,8 @@ Transformers:
 .. _`TfidfVectorizer`: lale.lib.sklearn.tfidf_vectorizer.html
 .. _`VarianceThreshold`: lale.lib.sklearn.variance_threshold.html
 .. _`VotingClassifier`: lale.lib.sklearn.voting_classifier.html
+.. _`StackingClassifier`: lale.lib.sklearn.stacking_classifier.html
+.. _`StackingRegressor`: lale.lib.sklearn.stacking_regressor.html
 """
 
 from .ada_boost_classifier import AdaBoostClassifier
@@ -181,6 +185,8 @@ from .select_k_best import SelectKBest
 from .sgd_classifier import SGDClassifier
 from .sgd_regressor import SGDRegressor
 from .simple_imputer import SimpleImputer
+from .stacking_classifier import StackingClassifier
+from .stacking_regressor import StackingRegressor
 from .standard_scaler import StandardScaler
 from .svc import SVC
 from .svr import SVR
