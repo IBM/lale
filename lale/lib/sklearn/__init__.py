@@ -80,6 +80,7 @@ Transformers:
 * lale.lib.sklearn. `StandardScaler`_
 * lale.lib.sklearn. `TfidfVectorizer`_
 * lale.lib.sklearn. `VarianceThreshold`_
+* lale.lib.sklearn. `Isomap`_
 
 .. _`AdaBoostClassifier`: lale.lib.sklearn.ada_boost_classifier.html
 .. _`AdaBoostRegressor`: lale.lib.sklearn.ada_boost_regressor.html
@@ -96,6 +97,7 @@ Transformers:
 .. _`GaussianNB`: lale.lib.sklearn.gaussian_nb.html
 .. _`GradientBoostingClassifier`: lale.lib.sklearn.gradient_boosting_classifier.html
 .. _`GradientBoostingRegressor`: lale.lib.sklearn.gradient_boosting_regressor.html
+.. _`Isomap`: lale.lib.sklearn.isomap.html
 .. _`KNeighborsClassifier`: lale.lib.sklearn.k_neighbors_classifier.html
 .. _`KNeighborsRegressor`: lale.lib.sklearn.k_neighbors_regressor.html
 .. _`LinearRegression`: lale.lib.sklearn.linear_regression.html
@@ -150,6 +152,7 @@ from .function_transformer import FunctionTransformer
 from .gaussian_nb import GaussianNB
 from .gradient_boosting_classifier import GradientBoostingClassifier
 from .gradient_boosting_regressor import GradientBoostingRegressor
+from .isomap import Isomap
 from .k_neighbors_classifier import KNeighborsClassifier
 from .k_neighbors_regressor import KNeighborsRegressor
 from .linear_regression import LinearRegression

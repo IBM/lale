@@ -31,6 +31,7 @@ from lale.lib.sklearn import (
     MissingIndicator,
     Nystroem,
     TfidfVectorizer,
+    Isomap
 )
 
 
@@ -111,6 +112,7 @@ feature_preprocessors = [
     "lale.lib.sklearn.RobustScaler",
     "lale.lib.sklearn.QuantileTransformer",
     "lale.lib.sklearn.VarianceThreshold",
+    "lale.lib.sklearn.Isomap"
 ]
 for fproc in feature_preprocessors:
     setattr(
