@@ -25,6 +25,7 @@ from lale.lib.lale import NoOp
 from lale.lib.sklearn import (
     PCA,
     SVC,
+    IsolationForest,
     KNeighborsClassifier,
     LogisticRegression,
     MLPClassifier,
@@ -70,7 +71,10 @@ def create_function_test_classifier(clf_name):
         _ = trained.predict(self.X_test)
 
         # test score
-        _ = trained.score(self.X_test, self.y_test)
+        if not isinstance(
+            clf, IsolationForest
+        ):  # IsolationForest does not define score
+            _ = trained.score(self.X_test, self.y_test)
 
         from lale.lib.sklearn.gradient_boosting_classifier import (
             GradientBoostingClassifier,
@@ -147,6 +151,7 @@ classifiers = [
     "lale.lib.sklearn.AdaBoostClassifier",
     "lale.lib.sklearn.SGDClassifier",
     "lale.lib.sklearn.RidgeClassifier",
+    "lale.lib.sklearn.IsolationForest",
 ]
 for clf in classifiers:
     setattr(

@@ -12,27 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sklearn.manifold import Isomap as Op
+from sklearn.manifold import Isomap as SKLModel
 
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
-
-
-class _IsomapImpl:
-    def __init__(self, **hyperparams):
-        self._hyperparams = hyperparams
-        self._wrapped_model = Op(**self._hyperparams)
-
-    def fit(self, X, y=None):
-        if y is not None:
-            self._wrapped_model.fit(X, y)
-        else:
-            self._wrapped_model.fit(X)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
 
 _hyperparams_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -178,6 +161,6 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
-Isomap = make_operator(_IsomapImpl, _combined_schemas)
+Isomap = make_operator(SKLModel, _combined_schemas)
 
 set_docstrings(Isomap)
