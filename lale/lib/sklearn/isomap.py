@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from numpy import inf, nan
 from sklearn.manifold import Isomap as Op
 
 from lale.docstrings import set_docstrings
@@ -52,7 +51,7 @@ _hyperparams_schema = {
                 "n_jobs",
                 "metric",
                 "p",
-                "metric_params"
+                "metric_params",
             ],
             "relevantToOptimizer": [
                 "n_neighbors",
@@ -114,25 +113,25 @@ _hyperparams_schema = {
                     "default": None,
                     "description": "The number of parallel jobs to run",
                 },
-                "metric":{
-                    "description":"""The metric to use when calculating distance between instances in a feature array. 
-If metric is a string or callable, it must be one of the options allowed by sklearn.metrics.pairwise_distances for its metric parameter. 
+                "metric": {
+                    "description": """The metric to use when calculating distance between instances in a feature array.
+If metric is a string or callable, it must be one of the options allowed by sklearn.metrics.pairwise_distances for its metric parameter.
 If metric is “precomputed”, X is assumed to be a distance matrix and must be square.""",
-                    "default":"minkowski",
-                    "laleType":"Any"
+                    "default": "minkowski",
+                    "laleType": "Any",
                 },
-                "p":{
-                    "description":"""Parameter for the Minkowski metric from sklearn.metrics.pairwise.pairwise_distances. 
-When p = 1, this is equivalent to using manhattan_distance (l1), and euclidean_distance (l2) for p = 2. 
+                "p": {
+                    "description": """Parameter for the Minkowski metric from sklearn.metrics.pairwise.pairwise_distances.
+When p = 1, this is equivalent to using manhattan_distance (l1), and euclidean_distance (l2) for p = 2.
 For arbitrary p, minkowski_distance (l_p) is used.""",
-                    "type":"integer",
-                    "default": 2
+                    "type": "integer",
+                    "default": 2,
                 },
-                "metric_params":{
-                    "description":"Additional keyword arguments for the metric function",
+                "metric_params": {
+                    "description": "Additional keyword arguments for the metric function",
                     "default": None,
-                    "anyOf":[{"type":"object"}, {"enum": [None]}]
-                }
+                    "anyOf": [{"type": "object"}, {"enum": [None]}],
+                },
             },
         }
     ],
@@ -155,15 +154,12 @@ _input_transform_schema = {
     "description": "Transform X.",
     "type": "object",
     "required": ["X"],
-    "properties": {
-        "X": {
-            "laleType": "Any"}
-    },
+    "properties": {"X": {"laleType": "Any"}},
 }
 _output_transform_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Transform X.",
-    "laleType": "Any"
+    "laleType": "Any",
 }
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
