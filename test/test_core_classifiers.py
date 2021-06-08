@@ -93,8 +93,7 @@ def create_function_test_classifier(clf_name):
 
         hyperopt = Hyperopt(estimator=clf, max_evals=1, verbose=True)
         trained = hyperopt.fit(self.X_train, self.y_train)
-        _ = trained.predict(self.X_test)
-
+        predictions = trained.predict(self.X_test)
         # test_cross_validation
         from lale.helpers import cross_val_score
 
