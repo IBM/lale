@@ -132,6 +132,9 @@ jobs:
     - name: Install deps for test_halving_gridsearchcv
       if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
       run: pip install 'scikit-learn==0.24.1'
+    - name: Install deps for test_autoai_ts_libs
+      if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
+      run: pip install 'autoai-ts-libs'
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 

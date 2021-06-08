@@ -108,8 +108,7 @@ setup(
             "pytest-cov",
             "codecov",
             "pyspark",
-            "func_timeout",
-            "autoai-ts-libs"
+            "func_timeout"
         ],
     },
 )
