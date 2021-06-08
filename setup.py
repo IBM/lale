@@ -108,7 +108,7 @@ setup(
             "pytest-cov",
             "codecov",
             "pyspark",
-            "func_timeout"
+            "func_timeout",
         ],
     },
 )

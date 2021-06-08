@@ -21,9 +21,6 @@ from sklearn.metrics import make_scorer
 from sklearn.model_selection import TimeSeriesSplit
 
 from lale.datasets.uci import fetch_household_power_consumption
-from lale.lib.lale import Hyperopt
-from lale.lib.sklearn import RandomForestRegressor, SimpleImputer
-
 from lale.lib.autoai_ts_libs import (  # StandardRowMeanCenterMTS,; WindowTransformerMTS
     AutoaiTSPipeline,
     AutoaiWindowedWrappedRegressor,
@@ -36,6 +33,8 @@ from lale.lib.autoai_ts_libs import (  # StandardRowMeanCenterMTS,; WindowTransf
     WindowStandardRowMeanCenterMTS,
     WindowStandardRowMeanCenterUTS,
 )
+from lale.lib.lale import Hyperopt
+from lale.lib.sklearn import RandomForestRegressor, SimpleImputer
 
 
 class TestAutoaiTSLibs(unittest.TestCase):

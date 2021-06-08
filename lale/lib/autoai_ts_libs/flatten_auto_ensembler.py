@@ -118,8 +118,14 @@ _hyperparams_schema = {
                     "items": {"type": "integer", "min": 0},  # Positive integers.
                     # "default": None, #TODO: This doesn't have a default value. is that ok?
                 },
-                "lookback_win": {"description": "The number of time points to include in the generated feature windows.", "type": "integer"},
-                "pred_win": {"description": "The number of time points to include in the generated target windows.", "type": "integer"},
+                "lookback_win": {
+                    "description": "The number of time points to include in the generated feature windows.",
+                    "type": "integer",
+                },
+                "pred_win": {
+                    "description": "The number of time points to include in the generated target windows.",
+                    "type": "integer",
+                },
                 "time_column": {
                     "description": "Column index for column containing timestamps for the time series data.",
                     "type": "integer",

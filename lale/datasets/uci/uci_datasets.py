@@ -121,6 +121,7 @@ def fetch_drugscom():
     train_X, train_y = tsv_to_Xy(files[1], target_col, json_schema)
     return train_X, train_y, test_X, test_y
 
+
 def fetch_household_power_consumption():
     file_name = download(
         "00235", "household_power_consumption.zip", ["household_power_consumption.txt"]

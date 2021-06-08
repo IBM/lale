@@ -288,7 +288,10 @@ _input_predict_schema = {
 _output_predict_schema = {
     "description": "The predicted values.",
     "anyOf": [
-        {"type": "array", "items": {"type": "array", "items": {"type": "number"}},},
+        {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        },
         {"type": "array", "items": {"type": "number"}},
     ],
 }

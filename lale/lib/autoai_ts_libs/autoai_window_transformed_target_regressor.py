@@ -122,7 +122,11 @@ The inverse function is used to return predictions to the same space of the orig
                     "type": "boolean",
                     "default": False,
                 },
-                "short_name": {"description": "Short name to be used for this estimator.", "type": "string", "default": ""},
+                "short_name": {
+                    "description": "Short name to be used for this estimator.",
+                    "type": "string",
+                    "default": "",
+                },
                 "one_shot": {
                     "description": "(deprecated)",
                     "anyOf": [{"type": "boolean"}, {"enum": [None]}],
