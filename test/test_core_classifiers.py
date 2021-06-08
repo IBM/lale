@@ -72,7 +72,7 @@ def create_function_test_classifier(clf_name):
 
         # test score
         if not isinstance(
-            clf, IsolationForest
+            clf, IsolationForest  # type: ignore
         ):  # IsolationForest does not define score
             _ = trained.score(self.X_test, self.y_test)
 
