@@ -74,7 +74,7 @@ produce shorter path lengths for particular samples, they are highly likely to b
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
                             "maximum": 1.0,
-                            "minimumForOptimizer": 0.01,
+                            "minimumForOptimizer": 0.2,
                             "maximumForOptimizer": 1.0,
                         },
                         {
