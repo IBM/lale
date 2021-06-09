@@ -76,7 +76,7 @@ setup(
     install_requires=install_requires,
     extras_require={
         "full": [
-            "xgboost<=1.3.3",
+            "xgboost",  # <=1.3.3",
             "lightgbm",
             "snapml>=1.7.0rc3",
             "liac-arff>=2.4.0",
@@ -109,6 +109,7 @@ setup(
             "codecov",
             "pyspark",
             "func_timeout",
+            "autoai-ts-libs",
         ],
     },
 )
