@@ -37,6 +37,9 @@ from lale.lib.sklearn import (
     VotingClassifier,
 )
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+from lale.settings import set_disable_data_schema_validation
+
+set_disable_data_schema_validation(False)
 
 
 class TestClassification(unittest.TestCase):
@@ -590,3 +593,36 @@ class TestLogisticRegression(unittest.TestCase):
         trained = trainable.fit(X_train, y_train)
         predictions = trained.predict(X_test)
         print("actual {}".format(predictions))
+
+
+class TestIsolationForest(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_boston
+        from sklearn.model_selection import train_test_split
+
+        data = load_boston()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+        import warnings
+
+        warnings.filterwarnings("ignore")
+
+    def test_with_no_y(self):
+        clf = IsolationForest()
+        trained = clf.fit(self.X_train)
+        trained.predict(self.X_test)
+
+    def test_with_hyperopt(self):
+        def my_scorer(estimator, X, y=None):
+            return 1
+
+        from lale.lib.lale import Hyperopt
+
+        hyperopt = Hyperopt(
+            estimator=IsolationForest(max_features=1.0, max_samples=1.0),
+            max_evals=5,
+            verbose=True,
+            scoring=my_scorer,
+        )
+        trained = hyperopt.fit(self.X_train)
+        _ = trained.predict(self.X_test)
