@@ -12,10 +12,91 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from sklearn.ensemble import BaggingClassifier as SKLModel
 
 import lale.docstrings
 import lale.operators
+
+from .function_transformer import FunctionTransformer
+
+
+class _BaggingClassifierImpl:
+    def __init__(
+        self,
+        base_estimator=None,
+        n_estimators=10,
+        max_samples=1.0,
+        max_features=1.0,
+        bootstrap=True,
+        bootstrap_features=False,
+        oob_score=False,
+        warm_start=False,
+        n_jobs=None,
+        random_state=None,
+        verbose=0,
+    ):
+        estimator_impl = base_estimator
+        # if isinstance(estimator_impl, lale.operators.Operator):
+        #     if isinstance(estimator_impl, lale.operators.IndividualOp):
+        #         estimator_impl = estimator_impl._impl_instance()
+        #         wrapped_model = getattr(estimator_impl, "_wrapped_model", None)
+        #         if wrapped_model is not None:
+        #             estimator_impl = wrapped_model
+        #     else:
+        #         raise ValueError(
+        #             "If base_estimator is a Lale operator, it needs to be an individual operator. "
+        #         )
+
+        self._hyperparams = {
+            "base_estimator": estimator_impl,
+            "n_estimators": n_estimators,
+            "max_samples": max_samples,
+            "max_features": max_features,
+            "bootstrap": bootstrap,
+            "bootstrap_features": bootstrap_features,
+            "oob_score": oob_score,
+            "warm_start": warm_start,
+            "n_jobs": n_jobs,
+            "random_state": random_state,
+            "verbose": verbose,
+        }
+        self._wrapped_model = SKLModel(**self._hyperparams)
+        self._hyperparams["base_estimator"] = base_estimator
+
+    def get_params(self, deep=True):
+        out = self._wrapped_model.get_params(deep=deep)
+        # we want to return the lale operator, not the underlying impl
+        out["base_estimator"] = self._hyperparams["base_estimator"]
+        return out
+
+    def fit(self, X, y, sample_weight=None):
+        if isinstance(X, pd.DataFrame):
+            feature_transformer = FunctionTransformer(
+                func=lambda X_prime: pd.DataFrame(X_prime, columns=X.columns),
+                inverse_func=None,
+                check_inverse=False,
+            )
+            self._hyperparams["base_estimator"] = (
+                feature_transformer >> self._hyperparams["base_estimator"]
+            )
+            self._wrapped_model = SKLModel(**self._hyperparams)
+        self._wrapped_model.fit(X, y, sample_weight)
+
+        return self
+
+    def predict(self, X):
+        return self._wrapped_model.predict(X)
+
+    def predict_proba(self, X):
+        return self._wrapped_model.predict_proba(X)
+
+    def decision_function(self, X):
+        return self._wrapped_model.decision_function(X)
+
+    def score(self, X, y, sample_weight=None):
+        return self._wrapped_model.score(X, y, sample_weight)
+
 
 _hyperparams_schema = {
     "description": "A Bagging classifier.",
@@ -269,6 +350,8 @@ _combined_schemas = {
 }
 
 
-BaggingClassifier = lale.operators.make_operator(SKLModel, _combined_schemas)
+BaggingClassifier = lale.operators.make_operator(
+    _BaggingClassifierImpl, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(BaggingClassifier)
