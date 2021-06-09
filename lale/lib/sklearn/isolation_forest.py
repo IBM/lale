@@ -74,6 +74,7 @@ produce shorter path lengths for particular samples, they are highly likely to b
                             "minimum": 0.0,
                             "exclusiveMinimum": True,
                             "maximum": 1.0,
+                            "minimumForOptimizer": 0.2,
                             "maximumForOptimizer": 1.0,
                         },
                         {
@@ -182,9 +183,14 @@ _input_fit_schema = {
             "description": "The training input samples. Sparse matrices are accepted only if",
         },
         "y": {
-            "type": "array",
-            "items": {"type": "number"},
-            "description": "The target values (class labels in classification, real numbers in",
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "description": "The target values (class labels in classification, real numbers in",
+                },
+                {"enum": [None]},
+            ]
         },
         "sample_weight": {
             "anyOf": [
@@ -245,7 +251,7 @@ _combined_schemas = {
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.isolation_forest.html",
     "import_from": "sklearn.ensemble",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "tags": {"pre": [], "op": ["estimator"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
