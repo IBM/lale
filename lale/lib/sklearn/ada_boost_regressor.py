@@ -16,6 +16,7 @@ from sklearn.ensemble import AdaBoostRegressor as SKLModel
 
 import lale.docstrings
 import lale.operators
+from lale.lib.sklearn.ada_boost_classifier import FitSpecProxy
 
 
 class _AdaBoostRegressorImpl:
@@ -27,17 +28,11 @@ class _AdaBoostRegressorImpl:
         loss="linear",
         random_state=None,
     ):
-        estimator_impl = base_estimator
-        if isinstance(estimator_impl, lale.operators.Operator):
-            if isinstance(estimator_impl, lale.operators.IndividualOp):
-                estimator_impl = estimator_impl._impl_instance()
-                wrapped_model = getattr(estimator_impl, "_wrapped_model", None)
-                if wrapped_model is not None:
-                    estimator_impl = wrapped_model
-            else:
-                raise ValueError(
-                    "If base_estimator is a Lale operator, it needs to be an individual operator. "
-                )
+        if base_estimator is None:
+            estimator_impl = None
+        else:
+            estimator_impl = FitSpecProxy(base_estimator)
+
         self._hyperparams = {
             "base_estimator": estimator_impl,
             "n_estimators": n_estimators,
