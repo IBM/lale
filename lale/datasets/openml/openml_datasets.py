@@ -778,9 +778,9 @@ def fetch(
         from lale.datasets.data_schemas import add_schema
 
         X_train = add_schema(X_train.astype(np.number), recalc=True)
-        y_train = add_schema(y_train.astype(np.int), recalc=True)
+        y_train = add_schema(y_train.astype(int), recalc=True)
         X_test = add_schema(X_test.astype(np.number), recalc=True)
-        y_test = add_schema(y_test.astype(np.int), recalc=True)
+        y_test = add_schema(y_test.astype(int), recalc=True)
     else:
         X_train, X_test, y_train, y_test = add_schemas(
             schema_orig, target_col, X_train, X_test, y_train, y_test

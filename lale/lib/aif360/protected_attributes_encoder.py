@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -186,6 +186,8 @@ and mitigators, so you often do not need to use it directly yourself.
 
 
 class _ProtectedAttributesEncoderImpl:
+    y_name: str
+
     def __init__(
         self,
         *,
@@ -201,18 +203,21 @@ class _ProtectedAttributesEncoderImpl:
         self.return_X_y = return_X_y
         self.combine = combine
 
-    def transform(self, X, y=None):
+    def transform(self, X: Union[np.ndarray, pd.DataFrame], y=None):
+        X_pd: pd.DataFrame
         if isinstance(X, np.ndarray):
-            X = _ndarray_to_dataframe(X)
-        assert isinstance(X, pd.DataFrame), type(X)
+            X_pd = _ndarray_to_dataframe(X)
+        else:
+            X_pd = X
+        assert isinstance(X_pd, pd.DataFrame), type(X_pd)
         protected = {}
         for prot_attr in self.protected_attributes:
             feature = prot_attr["feature"]
             groups = prot_attr["reference_group"]
             if isinstance(feature, str):
-                column = X[feature]
+                column = X_pd[feature]
             else:
-                column = X.iloc[:, feature]
+                column = X_pd.iloc[:, feature]
             series = column.apply(lambda v: _group_flag(v, groups))
             protected[feature] = series
         if self.combine in ["and", "or"]:
@@ -220,17 +225,17 @@ class _ProtectedAttributesEncoderImpl:
                 _ensure_str(pa["feature"]) for pa in self.protected_attributes
             ]
             comb_name = "_and_".join(prot_attr_names)
-            if comb_name in X.columns:
+            if comb_name in X_pd.columns:
                 suffix = 0
-                while f"{comb_name}_{suffix}" in X.columns:
+                while f"{comb_name}_{suffix}" in X_pd.columns:
                     suffix += 1
                 comb_name = f"{comb_name}_{suffix}"
             if self.combine == "and":
-                comb_series = pd.Series(data=1, index=X.index)
+                comb_series = pd.Series(data=1, index=X_pd.index)
                 for name, series in protected.items():
                     comb_series = comb_series & series
             elif self.combine == "or":
-                comb_series = pd.Series(data=0, index=X.index)
+                comb_series = pd.Series(data=0, index=X_pd.index)
                 for name, series in protected.items():
                     comb_series = comb_series | series
             else:
@@ -240,8 +245,8 @@ class _ProtectedAttributesEncoderImpl:
         if self.remainder == "drop":
             result_X = pd.concat([protected[f] for f in protected], axis=1)
         else:
-            result_X = _dataframe_replace(X, protected)
-        s_X = lale.datasets.data_schemas.to_schema(X)
+            result_X = _dataframe_replace(X_pd, protected)
+        s_X = lale.datasets.data_schemas.to_schema(X_pd)
         s_result = self.transform_schema(s_X)
         result_X = lale.datasets.data_schemas.add_schema(result_X, s_result)
         if not self.return_X_y:
@@ -250,12 +255,12 @@ class _ProtectedAttributesEncoderImpl:
         if y is None:
             assert hasattr(self, "y_name"), "must call transform with non-None y first"
             result_y = pd.Series(
-                data=0.0, index=X.index, dtype=np.float64, name=self.y_name
+                data=0.0, index=X_pd.index, dtype=np.float64, name=self.y_name
             )
         else:
             if isinstance(y, np.ndarray):
-                self.y_name = _ensure_str(X.shape[1])
-                series_y = _ndarray_to_series(y, self.y_name, X.index, y.dtype)
+                self.y_name = _ensure_str(X_pd.shape[1])
+                series_y = _ndarray_to_series(y, self.y_name, X_pd.index, y.dtype)
             else:
                 self.y_name = y.name
                 series_y = y

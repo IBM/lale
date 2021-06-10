@@ -105,14 +105,17 @@ class _DisparateImpactRemoverImpl:
 
     def transform(self, X):
         encoded_X, _ = self._prep_and_encode(X)
+        columns = None
         if isinstance(encoded_X, pd.DataFrame):
             features = encoded_X.to_numpy().tolist()
+            columns = encoded_X.columns
         else:
             assert isinstance(encoded_X, np.ndarray)
             features = encoded_X.tolist()
         mitigated_X = self.mitigator.repair(features)
         if isinstance(X, pd.DataFrame):
-            result = pd.DataFrame(mitigated_X, index=X.index, columns=encoded_X.columns)
+            assert isinstance(encoded_X, pd.DataFrame)
+            result = pd.DataFrame(mitigated_X, index=X.index, columns=columns)
         else:
             result = np.array(mitigated_X)
         return result
