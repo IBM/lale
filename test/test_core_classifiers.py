@@ -26,6 +26,7 @@ from lale.lib.sklearn import (
     PCA,
     SVC,
     IsolationForest,
+    KMeans,
     KNeighborsClassifier,
     LogisticRegression,
     MLPClassifier,
@@ -35,7 +36,6 @@ from lale.lib.sklearn import (
     SGDClassifier,
     SimpleImputer,
     VotingClassifier,
-    KMeans
 )
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
 from lale.settings import set_disable_data_schema_validation
@@ -155,7 +155,7 @@ classifiers = [
     "lale.lib.sklearn.SGDClassifier",
     "lale.lib.sklearn.RidgeClassifier",
     "lale.lib.sklearn.IsolationForest",
-    "lale.lib.sklearn.KMeans"
+    "lale.lib.sklearn.KMeans",
 ]
 for clf in classifiers:
     setattr(
@@ -629,6 +629,7 @@ class TestIsolationForest(unittest.TestCase):
         trained = hyperopt.fit(self.X_train)
         _ = trained.predict(self.X_test)
 
+
 class TestKMeans(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_boston
@@ -648,14 +649,12 @@ class TestKMeans(unittest.TestCase):
 
     def test_with_hyperopt(self):
         from lale.lib.lale import Hyperopt
+
         def my_scorer(estimator, X, y=None):
             return 1
 
         hyperopt = Hyperopt(
-            estimator=KMeans(n_clusters=3),
-            max_evals=5,
-            verbose=True,
-            scoring=my_scorer
+            estimator=KMeans(n_clusters=3), max_evals=5, verbose=True, scoring=my_scorer
         )
         trained = hyperopt.fit(self.X_train)
         _ = trained.predict(self.X_test)

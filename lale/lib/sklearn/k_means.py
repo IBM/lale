@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from numpy import inf, nan
 from sklearn.cluster import KMeans as SKLModel
 
 from lale.docstrings import set_docstrings
 from lale.operators import make_operator
-
 
 _hyperparams_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -73,11 +71,14 @@ set.""",
                     "description": "The number of clusters to form as well as the number of centroids to generate.",
                 },
                 "init": {
-                    "anyOf":[
+                    "anyOf": [
                         {"enum": ["k-means++", "random"]},
-                        {"laleType":"callable", "forOptimizer":False},
-                        {"type": "array",
-                        "items": {"type": "array", "items": {"type": "number"}}, "forOptimizer":False}
+                        {"laleType": "callable", "forOptimizer": False},
+                        {
+                            "type": "array",
+                            "items": {"type": "array", "items": {"type": "number"}},
+                            "forOptimizer": False,
+                        },
                     ],
                     "default": "k-means++",
                     "description": """Method for initialization, defaults to `k-means++`.
@@ -134,10 +135,10 @@ The final results will be the best output of n_init consecutive runs in terms of
                 "copy_x": {
                     "type": "boolean",
                     "default": True,
-                    "description": """When pre-computing distances it is more numerically accurate to center the data first. 
-If copy_x is True (default), then the original data is not modified. 
-If False, the original data is modified, and put back before the function returns, but small numerical differences may be introduced by subtracting and then adding the data mean. 
-Note that if the original data is not C-contiguous, a copy will be made even if copy_x is False. 
+                    "description": """When pre-computing distances it is more numerically accurate to center the data first.
+If copy_x is True (default), then the original data is not modified.
+If False, the original data is modified, and put back before the function returns, but small numerical differences may be introduced by subtracting and then adding the data mean.
+Note that if the original data is not C-contiguous, a copy will be made even if copy_x is False.
 If the original data is sparse, but not in CSR format, a copy will be made even if copy_x is False.""",
                 },
                 "n_jobs": {
@@ -146,11 +147,11 @@ If the original data is sparse, but not in CSR format, a copy will be made even 
                     "description": "The number of jobs to use for the computation. Deprecated.",
                 },
                 "algorithm": {
-                    "description": """K-means algorithm to use. 
-The classical EM-style algorithm is “full”. The “elkan” variation is more efficient on data with well-defined clusters, by using the triangle inequality. 
+                    "description": """K-means algorithm to use.
+The classical EM-style algorithm is “full”. The “elkan” variation is more efficient on data with well-defined clusters, by using the triangle inequality.
 However it’s more memory intensive due to the allocation of an extra array of shape (n_samples, n_clusters).
 For now “auto” (kept for backward compatibiliy) chooses “elkan” but it might change in the future for a better heuristic.""",
-                    "enum": ["auto",  "full" , "elkan"],
+                    "enum": ["auto", "full", "elkan"],
                     "default": "auto",
                 },
             },
