@@ -180,7 +180,7 @@ class TestAIF360Datasets(unittest.TestCase):
         self._attempt_dataset(X, y, fairness_info, 151, 5, {0, 1}, 0.347)
 
     @classmethod
-    def _try_download_csv(self, filename):
+    def _try_download_csv(cls, filename):
         directory = os.path.join(
             os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "meps"
         )
@@ -207,7 +207,7 @@ class TestAIF360Datasets(unittest.TestCase):
             return True
 
     @classmethod
-    def _cleanup_meps(self, filename):
+    def _cleanup_meps(cls, filename):
         directory = os.path.join(
             os.path.dirname(os.path.abspath(aif360.__file__)), "data", "raw", "meps"
         )

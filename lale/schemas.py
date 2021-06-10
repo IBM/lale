@@ -65,9 +65,9 @@ class Bool(Schema):
 class Enum(Schema):
     def __init__(
         self,
-        values: List[str] = [],
+        values: List[Any] = [],
         desc: Option[str] = undefined,
-        default: Option[str] = undefined,
+        default: Option[Any] = undefined,
         forOptimizer: bool = True,
     ):
         super().__init__(desc, default, forOptimizer)
