@@ -12,10 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sklearn.ensemble
+import pandas as pd
+from sklearn.ensemble import StackingRegressor as SKLModel
 
 import lale.docstrings
 import lale.operators
+
+from .stacking_utils import _BaseStackingLale
+
+
+class _StackingRegressorImpl(SKLModel, _BaseStackingLale):
+    def _concatenate_predictions(self, X, predictions):
+        if not isinstance(X, pd.DataFrame) and not self.passthrough:
+            return super()._concatenate_predictions(X, predictions)
+        return self._concatenate_predictions_pandas(X, predictions)
+
 
 _hyperparams_schema = {
     "description": "Stack of estimators with a final regressor.",
@@ -220,5 +231,5 @@ _combined_schemas = {
 
 StackingRegressor: lale.operators.PlannedIndividualOp
 StackingRegressor = lale.operators.make_operator(
-    sklearn.ensemble.StackingRegressor, _combined_schemas
+    _StackingRegressorImpl, _combined_schemas
 )
