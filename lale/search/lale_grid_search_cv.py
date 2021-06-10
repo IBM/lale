@@ -129,11 +129,13 @@ def SearchSpaceNumberToGSValues(
             f"maximum not specified for a number with distribution {dist} for {key}"
         )
     max = hp.getInclusiveMax()
+    assert max is not None
     if hp.minimum is None:
         raise ValueError(
             f"minimum not specified for a number with distribution {dist} for {key}"
         )
     min = hp.getInclusiveMin()
+    assert min is not None
 
     dt: np.dtype
     if hp.discrete:

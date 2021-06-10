@@ -81,9 +81,9 @@ T = TypeVar("T")
 class FrequencyDistribution(Generic[T]):
     """Represents the distribution implied by a histogram"""
 
-    freq_dist: np.array  # Array[T,int]
-    vals: np.array  # Array[T]
-    cumulative_freqs: np.array  # Array[int]
+    freq_dist: np.ndarray  # Array[T,int]
+    vals: np.ndarray  # Array[T]
+    cumulative_freqs: np.ndarray  # Array[int]
 
     @classmethod
     def asIntegerValues(
@@ -165,9 +165,7 @@ class FrequencyDistribution(Generic[T]):
         else:
             indices = key
 
-        val_indices: Sequence[int] = np.searchsorted(
-            self.cumulative_freqs, indices, side="right"
-        )
+        val_indices = np.searchsorted(self.cumulative_freqs, indices, side="right")
 
         values = self.vals[val_indices].tolist()
 

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-from typing import Tuple
+from typing import Optional, Tuple
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -34,7 +34,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
 
 
-def dataset_to_pandas(dataset, return_only="Xy"):
+def dataset_to_pandas(
+    dataset, return_only="Xy"
+) -> Tuple[Optional[pd.Series], Optional[pd.Series]]:
     """
     Return pandas representation of the AIF360 dataset.
 
@@ -184,7 +186,7 @@ def _ensure_str(str_or_int):
     return f"f{str_or_int}" if isinstance(str_or_int, int) else str_or_int
 
 
-def _ndarray_to_series(data, name, index=None, dtype=None):
+def _ndarray_to_series(data, name, index=None, dtype=None) -> pd.Series:
     if isinstance(data, pd.Series):
         return data
     result = pd.Series(data=data, index=index, dtype=dtype, name=_ensure_str(name))
@@ -194,7 +196,7 @@ def _ndarray_to_series(data, name, index=None, dtype=None):
     return result
 
 
-def _ndarray_to_dataframe(array):
+def _ndarray_to_dataframe(array) -> pd.DataFrame:
     assert len(array.shape) == 2
     column_names = None
     schema = getattr(array, "json_schema", None)
