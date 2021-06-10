@@ -38,9 +38,9 @@ Classifiers:
 * lale.lib.sklearn. `RandomForestClassifier`_
 * lale.lib.sklearn. `RidgeClassifier`_
 * lale.lib.sklearn. `SGDClassifier`_
+* lale.lib.sklearn. `StackingClassifier`_
 * lale.lib.sklearn. `SVC`_
 * lale.lib.sklearn. `VotingClassifier`_
-* lale.lib.sklearn. `StackingClassifier`_
 
 Regressors:
 
@@ -51,12 +51,13 @@ Regressors:
 * lale.lib.sklearn. `GradientBoostingRegressor`_
 * lale.lib.sklearn. `KNeighborsRegressor`_
 * lale.lib.sklearn. `LinearRegression`_
+* lale.lib.sklearn. `LinearSVR`_
 * lale.lib.sklearn. `RandomForestRegressor`_
 * lale.lib.sklearn. `Ridge`_
 * lale.lib.sklearn. `SGDRegressor`_
-* lale.lib.sklearn. `SVR`_
-* lale.lib.sklearn. `LinearSVR`_
 * lale.lib.sklearn. `StackingRegressor`_
+* lale.lib.sklearn. `SVR`_
+* lale.lib.sklearn. `VotingRegressor`_
 
 Transformers:
 
@@ -135,6 +136,7 @@ Transformers:
 .. _`TfidfVectorizer`: lale.lib.sklearn.tfidf_vectorizer.html
 .. _`VarianceThreshold`: lale.lib.sklearn.variance_threshold.html
 .. _`VotingClassifier`: lale.lib.sklearn.voting_classifier.html
+.. _`VotingRegressor`: lale.lib.sklearn.voting_regressor.html
 .. _`StackingClassifier`: lale.lib.sklearn.stacking_classifier.html
 .. _`StackingRegressor`: lale.lib.sklearn.stacking_regressor.html
 """
@@ -193,3 +195,4 @@ from .svr import SVR
 from .tfidf_vectorizer import TfidfVectorizer
 from .variance_threshold import VarianceThreshold
 from .voting_classifier import VotingClassifier
+from .voting_regressor import VotingRegressor

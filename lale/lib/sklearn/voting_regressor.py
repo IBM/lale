@@ -236,15 +236,15 @@ _combined_schemas = {
     },
 }
 
-VotingClassifier: lale.operators.PlannedIndividualOp
-VotingClassifier = lale.operators.make_operator(
+VotingRegressor: lale.operators.PlannedIndividualOp
+VotingRegressor = lale.operators.make_operator(
     sklearn.ensemble.VotingRegressor, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
-    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html
-    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
-    VotingClassifier = VotingClassifier.customize_schema(
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingRegressor.html
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingRegressor.html
+    VotingRegressor = VotingRegressor.customize_schema(
         estimators={
             "type": "array",
             "items": {
@@ -255,14 +255,14 @@ if sklearn.__version__ >= "0.21":
                     {"anyOf": [{"laleType": "operator"}, {"enum": [None, "drop"]}]},
                 ],
             },
-            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
+            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingRegressor`` will fit clones.",
         }
     )
 
 if sklearn.__version__ >= "0.24":
-    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
-    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.VotingClassifier.html
-    VotingClassifier = VotingClassifier.customize_schema(
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.VotingRegressor.html
+    VotingRegressor = VotingRegressor.customize_schema(
         estimators={
             "type": "array",
             "items": {
@@ -278,4 +278,4 @@ if sklearn.__version__ >= "0.24":
     )
 
 
-lale.docstrings.set_docstrings(VotingClassifier)
+lale.docstrings.set_docstrings(VotingRegressor)
