@@ -111,11 +111,6 @@ _input_fit_transform_schema = {
             "default": "None",
             "description": "Target values. (None for unsupervised transformations.)",
         },
-        "**fit_params": {
-            "type": "dictionary",
-            "items": [{"type": "string"}],
-            "description": "Additional fit parameters.",
-        },
     },
 }
 _output_fit_transform_schema = {
