@@ -97,7 +97,7 @@ jobs:
           python-version: 3.7
           setup-target: '.[test]'
         - test-case: test/test_autogen_lib.py
-          python-version: 3.7
+          python-version: 3.6
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.7
