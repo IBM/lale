@@ -61,13 +61,7 @@ _hyperparams_schema = {
                     "description": "Base estimators which will be stacked together. Each element of the list is defined as a tuple of string (i.e. name) and an estimator instance. An estimator can be set to ‘drop’ using set_params.",
                 },
                 "final_estimator": {
-                    "anyOf": [
-                        {"laleType": "operator", "enum": [None]},
-                        {
-                            "enum": [None],
-                            "description": "A regressor which will be used to combine the base estimators. The default classifier is a 'RidgeCV'",
-                        },
-                    ],
+                    "anyOf": [{"laleType": "operator"}, {"enum": [None]}],
                     "default": None,
                     "description": "A regressor which will be used to combine the base estimators. The default classifier is a 'RidgeCV'",
                 },

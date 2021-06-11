@@ -12,10 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from sklearn.ensemble import AdaBoostClassifier as SKLModel
 
 import lale.docstrings
 import lale.operators
+
+from .function_transformer import FunctionTransformer
 
 
 class FitSpecProxy:
@@ -65,6 +68,16 @@ class _AdaBoostClassifierImpl:
         return out
 
     def fit(self, X, y=None):
+        if isinstance(X, pd.DataFrame):
+            feature_transformer = FunctionTransformer(
+                func=lambda X_prime: pd.DataFrame(X_prime, columns=X.columns),
+                inverse_func=None,
+                check_inverse=False,
+            )
+            self._hyperparams["base_estimator"] = FitSpecProxy(
+                feature_transformer >> self._hyperparams["base_estimator"]
+            )
+            self._wrapped_model = SKLModel(**self._hyperparams)
         if y is not None:
             self._wrapped_model.fit(X, y)
         else:
