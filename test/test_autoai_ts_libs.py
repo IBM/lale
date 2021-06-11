@@ -67,7 +67,7 @@ class TestAutoaiTSLibs(unittest.TestCase):
             divide = np.abs(y_true) + np.abs(y_pred)
             divide[divide < 1e-12] = 1.0
             scores = pred_diff / divide
-            scores = np.array(scores, dtype=np.float)
+            scores = np.array(scores, dtype=float)
             return np.nanmean(scores) * 100.0
 
         trained_pipeline = trainable_pipeline.fit(train_X, train_y)
