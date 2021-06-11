@@ -64,6 +64,8 @@ Transformers:
 * lale.lib.sklearn. `ColumnTransformer`_
 * lale.lib.sklearn. `FeatureAgglomeration`_
 * lale.lib.sklearn. `FunctionTransformer`_
+* lale.lib.sklearn. `IsolationForest`_
+* lale.lib.sklearn. `Isomap`_
 * lale.lib.sklearn. `MinMaxScaler`_
 * lale.lib.sklearn. `MissingIndicator`_
 * lale.lib.sklearn. `NMF`_
@@ -84,6 +86,10 @@ Transformers:
 * lale.lib.sklearn. `TfidfVectorizer`_
 * lale.lib.sklearn. `VarianceThreshold`_
 
+Clustering:
+
+* lale.lib.sklearn. `KMeans`_
+
 .. _`AdaBoostClassifier`: lale.lib.sklearn.ada_boost_classifier.html
 .. _`AdaBoostRegressor`: lale.lib.sklearn.ada_boost_regressor.html
 .. _`BaggingClassifier`: lale.lib.sklearn.bagging_classifier.html
@@ -99,6 +105,9 @@ Transformers:
 .. _`GaussianNB`: lale.lib.sklearn.gaussian_nb.html
 .. _`GradientBoostingClassifier`: lale.lib.sklearn.gradient_boosting_classifier.html
 .. _`GradientBoostingRegressor`: lale.lib.sklearn.gradient_boosting_regressor.html
+.. _`IsolationForest`: lale.lib.sklearn.isolation_forest.html
+.. _`Isomap`: lale.lib.sklearn.isomap.html
+.. _`KMeans`: lale.lib.sklearn.k_means.html
 .. _`KNeighborsClassifier`: lale.lib.sklearn.k_neighbors_classifier.html
 .. _`KNeighborsRegressor`: lale.lib.sklearn.k_neighbors_regressor.html
 .. _`LinearRegression`: lale.lib.sklearn.linear_regression.html
@@ -156,6 +165,9 @@ from .function_transformer import FunctionTransformer
 from .gaussian_nb import GaussianNB
 from .gradient_boosting_classifier import GradientBoostingClassifier
 from .gradient_boosting_regressor import GradientBoostingRegressor
+from .isolation_forest import IsolationForest
+from .isomap import Isomap
+from .k_means import KMeans
 from .k_neighbors_classifier import KNeighborsClassifier
 from .k_neighbors_regressor import KNeighborsRegressor
 from .linear_regression import LinearRegression

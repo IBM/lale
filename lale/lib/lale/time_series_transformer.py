@@ -302,7 +302,7 @@ class TimeCorrelation:
     def apply(self, data):
         # so that correlation matrix calculation doesn't crash
         for ch in data:
-            if np.alltrue(ch == 0.0):
+            if np.all(ch == 0.0):
                 ch[-1] += 0.00001
 
         data1 = data

@@ -18,6 +18,22 @@ import lale.docstrings
 import lale.operators
 
 
+class FitSpecProxy:
+    def __init__(self, base):
+        self._base = base
+
+    def __getattr__(self, item):
+        return getattr(self._base, item)
+
+    def get_params(self, deep=True):
+        ret = {}
+        ret["base"] = self._base
+        return ret
+
+    def fit(self, X, y, sample_weight=None, **fit_params):
+        return self._base.fit(X, y, sample_weight=sample_weight, **fit_params)
+
+
 class _AdaBoostClassifierImpl:
     def __init__(
         self,
@@ -27,17 +43,11 @@ class _AdaBoostClassifierImpl:
         algorithm="SAMME.R",
         random_state=None,
     ):
-        estimator_impl = base_estimator
-        if isinstance(estimator_impl, lale.operators.Operator):
-            if isinstance(estimator_impl, lale.operators.IndividualOp):
-                estimator_impl = estimator_impl._impl_instance()
-                wrapped_model = getattr(estimator_impl, "_wrapped_model", None)
-                if wrapped_model is not None:
-                    estimator_impl = wrapped_model
-            else:
-                raise ValueError(
-                    "If base_estimator is a Lale operator, it needs to be an individual operator. "
-                )
+        if base_estimator is None:
+            estimator_impl = None
+        else:
+            estimator_impl = FitSpecProxy(base_estimator)
+
         self._hyperparams = {
             "base_estimator": estimator_impl,
             "n_estimators": n_estimators,
