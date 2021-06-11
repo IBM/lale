@@ -233,6 +233,24 @@ class TestJoin(unittest.TestCase):
                 ]
             )
 
+    # A table to be joinen not present in input X
+    def test_join_pandas_composite_error3(self):
+        with self.assertRaises(ValueError):
+            trainable = Join(
+                pred=[
+                    it.t1.tid == it.info.TrainId,
+                    [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
+                ],
+                join_type="inner",
+            )
+            _ = trainable.transform(
+                [
+                    {"sample": self.df1},
+                    {"info": self.df5},
+                    {"t1": self.df3},
+                ]
+            )
+
     # TestCase 1: Go_Sales dataset
     def test_join_pandas_go_sales1(self):
         trainable = Join(
@@ -501,6 +519,28 @@ class TestJoinSpark(unittest.TestCase):
                         {"info": self.spark_df5},
                         {"t1": self.spark_df3},
                         {"t2": self.spark_df6},
+                    ]
+                )
+
+    # A table to be joinen not present in input X
+    def test_join_spark_composite_error2(self):
+        if spark_installed:
+            with self.assertRaises(ValueError):
+                trainable = Join(
+                    pred=[
+                        it.t1.tid == it.info.TrainId,
+                        [
+                            it.main.train_id == it.info.TrainId,
+                            it.main.col1 == it.info.col3,
+                        ],
+                    ],
+                    join_type="inner",
+                )
+                _ = trainable.transform(
+                    [
+                        {"sample": self.spark_df1},
+                        {"info": self.spark_df5},
+                        {"t1": self.spark_df3},
                     ]
                 )
 

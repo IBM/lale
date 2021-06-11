@@ -42,11 +42,13 @@ def _is_spark_df(d):
 
 
 class _JoinImpl:
-    def __init__(self, pred, join_type, join_limit, sliding_window_length=None):
+    def __init__(
+        self, pred=None, join_limit=None, sliding_window_length=None, join_type="inner"
+    ):
         self.pred = pred
-        self.join_type = join_type
         self.join_limit = join_limit
         self.sliding_window_length = sliding_window_length
+        self.join_type = join_type
         self._validate_predicate()
 
     # Parse the predicate element passed as input
@@ -159,7 +161,9 @@ class _JoinImpl:
                     right_on=right_key_col,
                 )
             else:
-                raise ValueError("One of the tables to be joined not present in input!")
+                raise ValueError(
+                    "One of the tables to be joined not present in input X!"
+                )
             return op_df
 
         def fetch_df(left_table_name, right_table_name):
@@ -220,18 +224,12 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints, if any.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["pred"],
+            "required": ["pred", "join_limit", "sliding_window_length", "join_type"],
             "relevantToOptimizer": [],
             "properties": {
                 "pred": {
                     "description": "Join predicate. Given as Python AST expression.",
                     "laleType": "Any",
-                },
-                "join_type": {
-                    "description": """There are various types of SQL joins available and join_type gives the user the option
-to choose which type of join the user wants to implement.""",
-                    "anyOf": [{"type": "string"}, {"enum": [None]}],
-                    "default": None,
                 },
                 "join_limit": {
                     "description": """For join paths that are one-to-many, join_limit is use to sample the joined results.
@@ -246,6 +244,12 @@ Sampling is applied after each pair of tables are joined.""",
 only rows in a recent window of length sliding_window_length seconds is used in addition to join_limit.""",
                     "anyOf": [{"type": "number"}, {"enum": [None]}],
                     "default": None,
+                },
+                "join_type": {
+                    "description": """There are various types of SQL joins available and join_type gives the user the option
+to choose which type of join the user wants to implement.""",
+                    "enum": ["inner", "left", "right"],
+                    "default": "inner",
                 },
             },
         }
