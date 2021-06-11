@@ -18,14 +18,14 @@ from sklearn.ensemble import StackingRegressor as SKLModel
 import lale.docstrings
 import lale.operators
 
-from .stacking_utils import _BaseStackingLale
+from .stacking_utils import _concatenate_predictions_pandas
 
 
-class _StackingRegressorImpl(SKLModel, _BaseStackingLale):
+class _StackingRegressorImpl(SKLModel):
     def _concatenate_predictions(self, X, predictions):
         if not isinstance(X, pd.DataFrame) and not self.passthrough:
             return super()._concatenate_predictions(X, predictions)
-        return self._concatenate_predictions_pandas(X, predictions)
+        return _concatenate_predictions_pandas(self, X, predictions)
 
 
 _hyperparams_schema = {
@@ -61,9 +61,15 @@ _hyperparams_schema = {
                     "description": "Base estimators which will be stacked together. Each element of the list is defined as a tuple of string (i.e. name) and an estimator instance. An estimator can be set to ‘drop’ using set_params.",
                 },
                 "final_estimator": {
-                    "laleType": "operator",
-                    "default": "None",
-                    "description": "A regressor which will be used to combine the base estimators. The default regressor is a 'RidgeCV'",
+                    "anyOf": [
+                        {"laleType": "operator", "enum": [None]},
+                        {
+                            "enum": [None],
+                            "description": "A regressor which will be used to combine the base estimators. The default classifier is a 'RidgeCV'",
+                        },
+                    ],
+                    "default": None,
+                    "description": "A regressor which will be used to combine the base estimators. The default classifier is a 'RidgeCV'",
                 },
                 "cv": {
                     "XXX TODO XXX": "int, cross-validation generator or an iterable, optional",

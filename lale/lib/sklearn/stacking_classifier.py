@@ -18,14 +18,70 @@ from sklearn.ensemble import StackingClassifier as SKLModel
 import lale.docstrings
 import lale.operators
 
-from .stacking_utils import _BaseStackingLale
+from .decision_tree_classifier import DecisionTreeClassifier
+from .stacking_utils import _concatenate_predictions_pandas
 
 
-class _StackingClassifierImpl(SKLModel, _BaseStackingLale):
+class _StackingClassifierSubclass(SKLModel):
     def _concatenate_predictions(self, X, predictions):
         if not isinstance(X, pd.DataFrame) and not self.passthrough:
             return super()._concatenate_predictions(X, predictions)
-        return self._concatenate_predictions_pandas(X, predictions)
+        return _concatenate_predictions_pandas(self, X, predictions)
+
+
+class _StackingClassifierImpl:
+    def __init__(
+        self,
+        estimators,
+        final_estimator=None,
+        cv=None,
+        stack_method="auto",
+        n_jobs=None,
+        passthrough=False,
+        verbose=0,
+    ):
+        estimator_impls = estimators
+        if final_estimator is None:
+            final_estimator = DecisionTreeClassifier()
+        self._hyperparams = {
+            "estimators": estimator_impls,
+            "final_estimator": final_estimator,
+            "cv": cv,
+            "stack_method": stack_method,
+            "n_jobs": n_jobs,
+            "passthrough": passthrough,
+            "verbose": verbose,
+        }
+        self._wrapped_model = _StackingClassifierSubclass(**self._hyperparams)
+        self._hyperparams["estimators"] = estimators
+
+    def get_params(self, deep=True):
+        out = self._wrapped_model.get_params(deep=deep)
+        # we want to return the lale operators, not the underlying impls
+        out["estimators"] = self._hyperparams["estimators"]
+        return out
+
+    def fit(self, X, y, sample_weight=None):
+        self._wrapped_model.fit(X, y, sample_weight)
+        return self
+
+    def predict(self, X, **predict_params):
+        return self._wrapped_model.predict(X, **predict_params)
+
+    def predict_proba(self, X):
+        return self._wrapped_model.predict_proba(X)
+
+    def decision_function(self, X):
+        return self._wrapped_model.decision_function(X)
+
+    def score(self, X, y, sample_weight=None):
+        return self._wrapped_model.score(X, y, sample_weight)
+
+    def fit_transform(self, X, y=None):
+        return self._wrapped_model.fit(X, y)
+
+    def transform(self, X):
+        return self._wrapped_model.transform(X)
 
 
 _hyperparams_schema = {
@@ -62,8 +118,14 @@ _hyperparams_schema = {
                     "description": "Base estimators which will be stacked together. Each element of the list is defined as a tuple of string (i.e. name) and an estimator instance. An estimator can be set to ‘drop’ using set_params.",
                 },
                 "final_estimator": {
-                    "laleType": "operator",
-                    "default": "None",
+                    "anyOf": [
+                        {"laleType": "operator", "enum": [None]},
+                        {
+                            "enum": [None],
+                            "description": "A classifier which will be used to combine the base estimators. The default classifier is a 'LogisticRegression'",
+                        },
+                    ],
+                    "default": None,
                     "description": "A classifier which will be used to combine the base estimators. The default classifier is a 'LogisticRegression'",
                 },
                 "cv": {

@@ -88,7 +88,7 @@ def create_function_test_regressor(clf_name):
 
 
 regressors = [
-    "lale.lib.sklearn.DummyRegressor",
+    "lale.lib.sklearn.BaggingRegressor" "lale.lib.sklearn.DummyRegressor",
     "lale.lib.sklearn.RandomForestRegressor",
     "lale.lib.sklearn.DecisionTreeRegressor",
     "lale.lib.sklearn.ExtraTreesRegressor",
@@ -102,6 +102,8 @@ regressors = [
     "lale.lib.sklearn.SVR",
     "lale.lib.sklearn.KNeighborsRegressor",
     "lale.lib.sklearn.LinearSVR",
+    "lale.lib.sklearn.StackingRegressor",
+    "lale.lib.sklearn.VotingRegressor",
 ]
 for clf in regressors:
     setattr(
