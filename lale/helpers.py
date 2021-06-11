@@ -153,12 +153,12 @@ def ndarray_to_json(arr: np.ndarray, subsample_array: bool = True) -> Union[list
     # sample 10 rows and no limit on columns
     num_subsamples: List[int]
     if subsample_array:
-        num_subsamples = [10, np.iinfo(np.int).max, np.iinfo(np.int).max]
+        num_subsamples = [10, np.iinfo(int).max, np.iinfo(int).max]
     else:
         num_subsamples = [
-            np.iinfo(np.int).max,
-            np.iinfo(np.int).max,
-            np.iinfo(np.int).max,
+            np.iinfo(int).max,
+            np.iinfo(int).max,
+            np.iinfo(int).max,
         ]
 
     def subarray_to_json(indices: Tuple[int, ...]) -> Any:
@@ -810,7 +810,7 @@ def add_missing_values(orig_X, missing_rate=0.1, seed=None):
         rng = np.random.RandomState()
     else:
         rng = np.random.RandomState(seed)
-    missing_samples = np.zeros(n_samples, dtype=np.bool)
+    missing_samples = np.zeros(n_samples, dtype=bool)
     missing_samples[:n_missing_samples] = True
     rng.shuffle(missing_samples)
     missing_features = rng.randint(0, n_features, n_missing_samples)

@@ -25,6 +25,8 @@ from lale.lib.lale import NoOp
 from lale.lib.sklearn import (
     PCA,
     SVC,
+    IsolationForest,
+    KMeans,
     KNeighborsClassifier,
     LogisticRegression,
     MLPClassifier,
@@ -36,6 +38,9 @@ from lale.lib.sklearn import (
     VotingClassifier,
 )
 from lale.search.lale_grid_search_cv import get_grid_search_parameter_grids
+from lale.settings import set_disable_data_schema_validation
+
+set_disable_data_schema_validation(False)
 
 
 class TestClassification(unittest.TestCase):
@@ -70,7 +75,10 @@ def create_function_test_classifier(clf_name):
         _ = trained.predict(self.X_test)
 
         # test score
-        _ = trained.score(self.X_test, self.y_test)
+        if not isinstance(
+            clf, IsolationForest  # type: ignore
+        ):  # IsolationForest does not define score
+            _ = trained.score(self.X_test, self.y_test)
 
         from lale.lib.sklearn.gradient_boosting_classifier import (
             GradientBoostingClassifier,
@@ -90,7 +98,6 @@ def create_function_test_classifier(clf_name):
         hyperopt = Hyperopt(estimator=clf, max_evals=1, verbose=True)
         trained = hyperopt.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
-
         # test_cross_validation
         from lale.helpers import cross_val_score
 
@@ -147,6 +154,8 @@ classifiers = [
     "lale.lib.sklearn.AdaBoostClassifier",
     "lale.lib.sklearn.SGDClassifier",
     "lale.lib.sklearn.RidgeClassifier",
+    "lale.lib.sklearn.IsolationForest",
+    "lale.lib.sklearn.KMeans",
 ]
 for clf in classifiers:
     setattr(
@@ -586,3 +595,66 @@ class TestLogisticRegression(unittest.TestCase):
         trained = trainable.fit(X_train, y_train)
         predictions = trained.predict(X_test)
         print("actual {}".format(predictions))
+
+
+class TestIsolationForest(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_boston
+        from sklearn.model_selection import train_test_split
+
+        data = load_boston()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+        import warnings
+
+        warnings.filterwarnings("ignore")
+
+    def test_with_no_y(self):
+        clf = IsolationForest()
+        trained = clf.fit(self.X_train)
+        trained.predict(self.X_test)
+
+    def test_with_hyperopt(self):
+        def my_scorer(estimator, X, y=None):
+            return 1
+
+        from lale.lib.lale import Hyperopt
+
+        hyperopt = Hyperopt(
+            estimator=IsolationForest(max_features=1.0, max_samples=1.0),
+            max_evals=5,
+            verbose=True,
+            scoring=my_scorer,
+        )
+        trained = hyperopt.fit(self.X_train)
+        _ = trained.predict(self.X_test)
+
+
+class TestKMeans(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_boston
+        from sklearn.model_selection import train_test_split
+
+        data = load_boston()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+        import warnings
+
+        warnings.filterwarnings("ignore")
+
+    def test_with_no_y(self):
+        clf = KMeans()
+        trained = clf.fit(self.X_train)
+        trained.predict(self.X_test)
+
+    def test_with_hyperopt(self):
+        from lale.lib.lale import Hyperopt
+
+        def my_scorer(estimator, X, y=None):
+            return 1
+
+        hyperopt = Hyperopt(
+            estimator=KMeans(n_clusters=3), max_evals=5, verbose=True, scoring=my_scorer
+        )
+        trained = hyperopt.fit(self.X_train)
+        _ = trained.predict(self.X_test)
