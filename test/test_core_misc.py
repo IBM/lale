@@ -634,6 +634,83 @@ class TestWithParams(unittest.TestCase):
         self.assertEqual(params["learning_rate"], 0.8)
 
 
+class UserValidatorImpl:
+    @classmethod
+    def validate_hyperparams(cls, **hyperparams):
+        assert "validate" in hyperparams
+        v = hyperparams["validate"]
+        if not v:
+            raise ValueError("validate set to False!")
+
+    def __init__(self, validate=True):
+        pass
+
+    def fit(self, X, y=None):
+        return self
+
+
+_user_validate_hyperparam_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "allOf": [
+        {
+            "description": "This first sub-object lists all constructor arguments with their "
+            "types, one at a time, omitting cross-argument constraints.",
+            "type": "object",
+            "additionalProperties": False,
+            "relevantToOptimizer": [],
+            "required": ["validate"],
+            "properties": {
+                "validate": {
+                    "type": "boolean",
+                    "default": True,
+                    "description": "Should we pass validation?",
+                }
+            },
+        }
+    ],
+}
+
+_user_validate_combined_schemas = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters.",
+    "type": "object",
+    "tags": {"pre": [], "op": [""], "post": []},
+    "properties": {
+        "hyperparams": _user_validate_hyperparam_schema,
+        # "input_fit": None,
+        # "input_transform": ,
+        # "output_transform": _output_transform_schema,
+    },
+}
+
+
+UserValidatorOp = Ops.make_operator(UserValidatorImpl, _user_validate_combined_schemas)
+
+
+class TestUserValidator(unittest.TestCase):
+    def test_validate_none(self):
+        import re
+
+        import jsonschema
+
+        self.assertRaisesRegex(
+            jsonschema.ValidationError,
+            re.compile(
+                r"invalid value validate=None.*boolean", re.MULTILINE | re.DOTALL
+            ),
+            UserValidatorOp,
+            validate=None,
+        )
+
+    def test_validate_true(self):
+        UserValidatorOp(validate=True)
+
+    def test_validate_false(self):
+        self.assertRaisesRegex(
+            ValueError, "validate set to False!", UserValidatorOp, validate=False
+        )
+
+
 class TestHyperparamRanges(unittest.TestCase):
     def exactly_relevant_properties(self, keys1, operator):
         def sorted(ll):

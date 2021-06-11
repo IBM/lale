@@ -1284,7 +1284,9 @@ class IndividualOp(Operator):
         )
         # TODO: improve this code
         params_all = trainable_to_get_params._get_params_all()
-        self._validate_hyperparams(hyperparams, params_all, self.hyperparam_schema())
+        self._validate_hyperparams(
+            hyperparams, params_all, self.hyperparam_schema(), class_
+        )
         # TODO: delay creating the impl here
         if len(params_all) == 0:
             impl = class_()
@@ -1741,7 +1743,7 @@ class IndividualOp(Operator):
             self, schemas, relevantToOptimizer, constraint, tags, **kwargs
         )
 
-    def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema):
+    def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema, class_):
         from lale.settings import disable_hyperparams_schema_validation
 
         if disable_hyperparams_schema_validation:
@@ -1781,6 +1783,9 @@ class IndividualOp(Operator):
                 + f"Value: {e.instance}"
             )
             raise jsonschema.ValidationError(msg)
+        user_validator = getattr(class_, "validate_hyperparams", None)
+        if user_validator:
+            user_validator(**hp_all)
 
     def validate_schema(self, X, y=None):
         if self.has_method("fit"):
@@ -2091,7 +2096,9 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             hp_schema_2 = lale.type_checking.replace_data_constraints(
                 hp_schema, data_schema
             )
-            self._validate_hyperparams(hp_explicit, hp_all, hp_schema_2)
+            self._validate_hyperparams(
+                hp_explicit, hp_all, hp_schema_2, self.impl_class
+            )
 
     def fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
         # logger.info("%s enter fit %s", time.asctime(), self.name())
