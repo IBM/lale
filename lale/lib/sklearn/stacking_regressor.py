@@ -23,7 +23,7 @@ from .stacking_utils import _concatenate_predictions_pandas
 
 class _StackingRegressorImpl(SKLModel):
     def _concatenate_predictions(self, X, predictions):
-        if not isinstance(X, pd.DataFrame) and not self.passthrough:
+        if not isinstance(X, pd.DataFrame):
             return super()._concatenate_predictions(X, predictions)
         return _concatenate_predictions_pandas(self, X, predictions)
 
