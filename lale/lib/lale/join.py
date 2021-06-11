@@ -12,83 +12,159 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import importlib
+import ast
+
 import pandas as pd
+
 import lale.docstrings
 import lale.operators
 
 try:
     from pyspark.sql.dataframe import DataFrame as spark_df
+    from pyspark.sql.functions import col
+
     spark_installed = True
+
 except ImportError:
     spark_installed = False
 
+
 def _is_df(d):
-    return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series) or isinstance(d, spark_df)
+    return (
+        isinstance(d, pd.DataFrame)
+        or isinstance(d, pd.Series)
+        or isinstance(d, spark_df)
+    )
+
 
 def _is_spark_df(d):
     return isinstance(d, spark_df)
 
-class _JoinImpl:
 
-    def __init__(self, pred, join_type, join_limit, sliding_window_length = None):
+class _JoinImpl:
+    def __init__(self, pred, join_type, join_limit, sliding_window_length=None):
         self.pred = pred
         self.join_type = join_type
         self.join_limit = join_limit
         self.sliding_window_length = sliding_window_length
+        self._validate_predicate()
+
+    # Parse the predicate element passed as input
+    def _get_join_info(self, expr_to_parse):
+        left_key = []
+        right_key = []
+        left_name = expr_to_parse.left.value.attr
+        if isinstance(expr_to_parse.left, ast.Subscript):
+            left_key.append(expr_to_parse.left.slice.value.s)  # type: ignore
+        elif isinstance(expr_to_parse.left, ast.Attribute):
+            left_key.append(expr_to_parse.left.attr)
+        else:
+            raise ValueError(
+                "Expression type not supported! Formats supported: it.tbl_name.col_name or it.tbl_name['col_name']"
+            )
+        right_name = expr_to_parse.comparators[0].value.attr
+        if isinstance(expr_to_parse.comparators[0], ast.Subscript):
+            right_key.append(expr_to_parse.comparators[0].slice.value.s)  # type: ignore
+        elif isinstance(expr_to_parse.comparators[0], ast.Attribute):
+            right_key.append(expr_to_parse.comparators[0].attr)
+        else:
+            raise ValueError(
+                "Expression type not supported! Formats supported: it.tbl_name.col_name or it.tbl_name['col_name']"
+            )
+        return left_name, left_key, right_name, right_key
+
+    def _validate_predicate(self):
+        tables_encountered = set()
+        for key in self.pred:
+            if isinstance(key, list):
+                sub_list_tables = set()
+                for sub_key in key:
+                    (
+                        left_table_name,
+                        left_key_col,
+                        right_table_name,
+                        right_key_col,
+                    ) = self._get_join_info(sub_key._expr)
+                    if sub_list_tables and not (
+                        left_table_name in sub_list_tables
+                        and right_table_name in sub_list_tables
+                    ):
+                        raise ValueError(
+                            "One of the composite keys tried joining more than two tables!"
+                        )
+                    elif (
+                        sub_list_tables
+                        and tables_encountered
+                        and not (
+                            left_table_name in tables_encountered
+                            or right_table_name in tables_encountered
+                        )
+                    ):
+                        raise ValueError(
+                            "One of the composite keys involve an unused table! Join operations should be chained!"
+                        )
+                    sub_list_tables.add(left_table_name)
+                    sub_list_tables.add(right_table_name)
+                    tables_encountered.add(left_table_name)
+                    tables_encountered.add(right_table_name)
+            else:
+                (
+                    left_table_name,
+                    left_key_col,
+                    right_table_name,
+                    right_key_col,
+                ) = self._get_join_info(key._expr)
+                if tables_encountered and not (
+                    left_table_name in tables_encountered
+                    or right_table_name in tables_encountered
+                ):
+                    raise ValueError(
+                        "One of the single keys involve an unused table! Join operations should be chained!"
+                    )
+                tables_encountered.add(left_table_name)
+                tables_encountered.add(right_table_name)
 
     def transform(self, X):
         # X is assumed to be a list of dictionaries
         joined_df = pd.DataFrame()
         tables_encountered = set()
-        counter = 0
 
-        # Incorporate join type handling
-        # Valdiation of predicate
-        # Composite key joins
-        # Spark df joins
+        # Implementation of join operator
+        def join_df(left_df, right_df):
 
-        def join_pd(left_df, right_df, pred_start, pred_end):
+            # Joining spark dataframes
             if _is_spark_df(left_df) and _is_spark_df(right_df):
                 on = []
-                #if len(left_key_col) == len(right_key_col):
-                    #for i in left_key_col
-                op_df = left_df.join(right_df, on, how = self.join_type)
-            if _is_df(left_df) and _is_df(right_df):
-                op_df = pd.merge(left_df, right_df,  how = self.join_type, left_on = left_key_col, right_on = right_key_col)
+                drop_col = []
+                left_table = left_df.alias("left_table")
+                right_table = right_df.alias("right_table")
+                for k, key in enumerate(left_key_col):
+                    on.append(
+                        col("{}.{}".format("left_table", key))
+                        == col("{}.{}".format("right_table", right_key_col[k]))
+                    )
+                    if key == right_key_col[k]:
+                        drop_col.append(key)
+                op_df = left_table.join(right_table, on, self.join_type)
+                for key in drop_col:
+                    op_df = op_df.drop(getattr(right_table, key))
+
+            # Joining pandas dataframes
+            elif _is_df(left_df) and _is_df(right_df):
+                op_df = pd.merge(
+                    left_df,
+                    right_df,
+                    how=self.join_type,
+                    left_on=left_key_col,
+                    right_on=right_key_col,
+                )
             else:
-                raise ValueError('One of the tables to be joined not present in input!')
+                raise ValueError("One of the tables to be joined not present in input!")
             return op_df
 
-
-        def get_join_info(expr_to_parse):
-            left_key = []; right_key = []
-            left_name = expr_to_parse.left.value.attr
-            left_key.append(expr_to_parse.left.attr)
-            right_name = expr_to_parse.comparators[0].value.attr
-            right_key.append(expr_to_parse.comparators[0].attr)
-            return left_name, left_key, right_name, right_key
-
-
-        for i, p in enumerate(self.pred):
-            # import pdb;pdb.set_trace()
-            # dir(p._expr.left)
-
-            if counter > 0:
-                counter -= 1
-                continue
-            left_table_name, left_key_col, right_table_name, right_key_col = get_join_info(p._expr)
-
-            j = i + 1
-            while j < len(self.pred):
-                temp_left_name, temp_left_key, temp_right_name, temp_right_key = get_join_info(self.pred[j]._expr)
-                if not (left_table_name == temp_left_name and right_table_name == temp_right_name):
-                    break
-                left_key_col.extend(temp_left_key)
-                right_key_col.extend(temp_right_key)
-                j += 1
-                counter += 1
-
+        def fetch_df(left_table_name, right_table_name):
+            left_df = []
+            right_df = []
             for a_dict in X:
                 if not tables_encountered:
                     if _is_df(a_dict.get(left_table_name)):
@@ -96,10 +172,7 @@ class _JoinImpl:
                     if _is_df(a_dict.get(right_table_name)):
                         right_df = a_dict.get(right_table_name)
                 else:
-                    if left_table_name in tables_encountered and right_table_name in tables_encountered:
-                        print('Composite Keys Scenario')
-                        # raise ValueError('Composite key join conditions in the predicate should be adjacent to each other!')
-                    elif left_table_name in tables_encountered:
+                    if left_table_name in tables_encountered:
                         left_df = joined_df
                         if _is_df(a_dict.get(right_table_name)):
                             right_df = a_dict.get(right_table_name)
@@ -107,14 +180,38 @@ class _JoinImpl:
                         right_df = joined_df
                         if _is_df(a_dict.get(left_table_name)):
                             left_df = a_dict.get(left_table_name)
-                    else:
-                        raise ValueError('Join conditions in the predicate should be chained!')
+            return left_df, right_df
 
-            joined_df = join_pd(left_df, right_df, i, counter + 1)
+        # Iterate over all the elements of the predicate
+        for pred_element in self.pred:
+            left_table_name = ""
+            left_key_col = []
+            right_table_name = ""
+            right_key_col = []
+            if isinstance(pred_element, list):
+                # Prepare composite key to apply join once for all the participating columns together
+                for sub_pred_element in pred_element:
+                    (
+                        left_table_name,
+                        temp_left_key,
+                        right_table_name,
+                        temp_right_key,
+                    ) = self._get_join_info(sub_pred_element._expr)
+                    left_key_col.extend(temp_left_key)
+                    right_key_col.extend(temp_right_key)
+            else:
+                (
+                    left_table_name,
+                    left_key_col,
+                    right_table_name,
+                    right_key_col,
+                ) = self._get_join_info(pred_element._expr)
+            left_df, right_df = fetch_df(left_table_name, right_table_name)
+            joined_df = join_df(left_df, right_df)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)
-
         return joined_df
+
 
 _hyperparams_schema = {
     "allOf": [

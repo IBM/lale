@@ -12,20 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
+
 import jsonschema
 import pandas as pd
 
 try:
     from pyspark import SparkConf, SparkContext
-    from pyspark.sql import SQLContext, Row
+    from pyspark.sql import Row, SparkSession, SQLContext
+
     spark_installed = True
 except ImportError:
     spark_installed = False
 
 from test import EnableSchemaValidation
-from lale import wrap_imported_operators
 
+from lale import wrap_imported_operators
 from lale.expressions import (
     count,
     day_of_month,
@@ -50,243 +53,525 @@ from lale.lib.lale import (
 from lale.lib.sklearn import KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
 
+# Changing the current working directory to read the Go-Sales dataset for testing purposes
+os.chdir(os.path.dirname(os.getcwd()))
+dataset_path = os.getcwd() + "/lale/lale/datasets/data/go_sales/"
 
+
+# Testing join operator for pandas dataframes
 class TestJoin(unittest.TestCase):
-
     def test_init(self):
-        _ = Join(pred = [it.main.train_id == it.info.TrainId], join_type = 'inner')
+        _ = Join(pred=[it.main.train_id == it.info.TrainId], join_type="inner")
 
-    def test_join_pandas_multiple_left(self):
+    # Define pandas dataframes with different structures
+    def setUp(self):
         table1 = {
             "train_id": [1, 2, 3, 4, 5],
             "col1": ["NY", "TX", "CA", "NY", "CA"],
             "col2": [0, 1, 1, 0, 1],
         }
-        df1 = pd.DataFrame(data = table1)
+        self.df1 = pd.DataFrame(data=table1)
 
         table2 = {
-            "TrainId": [1 , 2, 3],
-            "col3": ["Day", "Day", "Night"],
+            "TrainId": [1, 2, 3],
+            "col3": ["USA", "USA", "UK"],
             "col4": [100, 100, 200],
         }
-        df2 = pd.DataFrame(data = table2)
+        self.df2 = pd.DataFrame(data=table2)
 
         table3 = {
             "tid": [1, 2, 3],
-            "col5": ["Hi", "Hello", "Hi"],
+            "col5": ["Warm", "Cold", "Warm"],
         }
-        df3 = pd.DataFrame(data = table3)
+        self.df3 = pd.DataFrame(data=table3)
 
-        trainable = Join(
-            pred = [it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
-            join_type = 'inner'
-        )
-
-        transformed_df = trainable.transform([{'main': df1}, {'info': df2}, {'t1': df3}])
-        self.assertEqual(transformed_df.shape, (3, 8))
-
-
-    def test_join_pandas_multiple_left1(self):
-        table1 = {
+        table4 = {
             "TrainId": [1, 2, 3, 4, 5],
             "col1": ["NY", "TX", "CA", "NY", "CA"],
             "col2": [0, 1, 1, 0, 1],
         }
-        df1 = pd.DataFrame(data = table1)
+        self.df4 = pd.DataFrame(data=table4)
 
-        table2 = {
-            "TrainId": [1 , 2, 3],
-            "col3": ["Day", "Day", "Night"],
+        table5 = {
+            "TrainId": [1, 2, 3],
+            "col3": ["NY", "NY", "CA"],
             "col4": [100, 100, 200],
         }
-        df2 = pd.DataFrame(data = table2)
+        self.df5 = pd.DataFrame(data=table5)
 
-        table3 = {
-            "tid": [1, 2, 3],
-            "col5": ["Hi", "Hello", "Hi"],
+        table6 = {
+            "t_id": [2, 3],
+            "col6": ["USA", "UK"],
         }
-        df3 = pd.DataFrame(data = table3)
+        self.df6 = pd.DataFrame(data=table6)
 
+        self.go_1k = pd.read_csv(dataset_path + "go_1k.csv")
+        self.go_daily_sales = pd.read_csv(dataset_path + "go_daily_sales.csv")
+        self.go_methods = pd.read_csv(dataset_path + "go_methods.csv")
+        self.go_products = pd.read_csv(dataset_path + "go_products.csv")
+        self.go_retailers = pd.read_csv(dataset_path + "go_retailers.csv")
+
+    # Multiple elements in predicate with different key column names
+    def test_join_pandas_multiple_left(self):
         trainable = Join(
-            pred = [it.main.TrainId == it.info.TrainId, it.info.TrainId == it.t1.tid],
-            join_type = 'inner'
+            pred=[it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
+            join_type="inner",
         )
-
-        transformed_df = trainable.transform([{'main': df1}, {'info': df2}, {'t1': df3}])
-        self.assertEqual(transformed_df.shape, (3, 7))
-
-
-    def test_join_pandas_multiple_right(self):
-        table1 = {
-            "train_id": [1, 2, 3, 4, 5],
-            "col1": ["NY", "TX", "CA", "NY", "CA"],
-            "col2": [0, 1, 1, 0, 1],
-        }
-        df1 = pd.DataFrame(data = table1)
-
-        table2 = {
-            "TrainId": [1 , 2, 3],
-            "col3": ["Day", "Day", "Night"],
-            "col4": [100, 100, 200],
-        }
-        df2 = pd.DataFrame(data = table2)
-
-        table3 = {
-            "tid": [1, 2, 3],
-            "col5": ["Hi", "Hello", "Hi"],
-        }
-        df3 = pd.DataFrame(data = table3)
-
-        trainable = Join(
-            pred = [it.main.train_id == it.info.TrainId, it.t1.tid == it.info.TrainId],
-            join_type = 'inner'
+        transformed_df = trainable.transform(
+            [{"main": self.df1}, {"info": self.df2}, {"t1": self.df3}]
         )
-
-        transformed_df = trainable.transform([{'main': df1}, {'info': df2}, {'t1': df3}])
         self.assertEqual(transformed_df.shape, (3, 8))
 
+    # Multiple elements in predicate with identical key columns names
+    def test_join_pandas_multiple_left1(self):
+        trainable = Join(
+            pred=[it.main.TrainId == it.info.TrainId, it.info.TrainId == it.t1.tid],
+            join_type="inner",
+        )
+        transformed_df = trainable.transform(
+            [{"main": self.df4}, {"info": self.df2}, {"t1": self.df3}]
+        )
+        self.assertEqual(transformed_df.shape, (3, 7))
 
+    # Invert one of the join conditions as compared to the test case: test_join_pandas_multiple_left
+    def test_join_pandas_multiple_right(self):
+        trainable = Join(
+            pred=[it.main.train_id == it.info.TrainId, it.t1.tid == it.info.TrainId],
+            join_type="inner",
+        )
+        transformed_df = trainable.transform(
+            [{"main": self.df1}, {"info": self.df2}, {"t1": self.df3}]
+        )
+        self.assertEqual(transformed_df.shape, (3, 8))
+
+    # Composite key join
     def test_join_pandas_composite(self):
-        table1 = {
-            "train_id": [1, 2, 3, 4, 5],
-            "col1": ["NY", "TX", "CA", "NY", "CA"],
-            "col2": [0, 1, 1, 0, 1],
-        }
-        df1 = pd.DataFrame(data = table1)
-
-        table2 = {
-            "TrainId": [1 , 2, 3],
-            "col3": ["NY", "NY", "CA"],
-            "col4": [100, 100, 200],
-        }
-        df2 = pd.DataFrame(data = table2)
-
-        table3 = {
-            "tid": [1, 2, 3],
-            "col5": ["Hi", "Hello", "Hi"],
-        }
-        df3 = pd.DataFrame(data = table3)
-
-        table4 = {
-            "t_id": [2, 3],
-            "col6": ["Day", "Night"],
-        }
-        df4 = pd.DataFrame(data = table4)
-
         trainable = Join(
-            pred = [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3, it.t1.tid == it.info.TrainId, it.t1.tid == it.t2.t_id],
-            join_type = 'left'
+            pred=[
+                it.t1.tid == it.info.TrainId,
+                [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
+            ],
+            join_type="left",
+        )  # .impl
+        transformed_df = trainable.transform(
+            [{"main": self.df1}, {"info": self.df5}, {"t1": self.df3}, {"t2": self.df6}]
         )
+        self.assertEqual(transformed_df.shape, (5, 8))
 
-        transformed_df = trainable.transform([{'main': df1}, {'info': df2}, {'t1': df3}, {'t2': df4}])
-        # print(transformed_df)
-        self.assertEqual(transformed_df.shape, (3, 10))
-
-
+    # Invert one of the join conditions as compared to the test case: test_join_pandas_composite
     def test_join_pandas_composite1(self):
-        table1 = {
-            "train_id": [1, 2, 3, 4, 5],
-            "col1": ["NY", "TX", "CA", "NY", "CA"],
-            "col2": [0, 1, 1, 0, 1],
-        }
-        df1 = pd.DataFrame(data = table1)
-
-        table2 = {
-            "TrainId": [1 , 2, 3],
-            "col3": ["NY", "NY", "CA"],
-            "col4": [100, 100, 200],
-        }
-        df2 = pd.DataFrame(data = table2)
-
-        table3 = {
-            "tid": [1, 2, 3],
-            "col5": ["Hi", "Hello", "Hi"],
-        }
-        df3 = pd.DataFrame(data = table3)
-
-        table4 = {
-            "t_id": [2, 3],
-            "col6": ["Day", "Night"],
-        }
-        df4 = pd.DataFrame(data = table4)
-
         trainable = Join(
-            pred = [it.t1.tid == it.info.TrainId, it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3, it.t1.tid == it.t2.t_id],
-            join_type = 'inner'
+            pred=[
+                [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
+                it.t1.tid == it.info.TrainId,
+                it.t1.tid == it.t2.t_id,
+            ],
+            join_type="inner",
         )
-
-        transformed_df = trainable.transform([{'main': df1}, {'info': df2}, {'t1': df3}, {'t2': df4}])
-        # print(transformed_df)
+        transformed_df = trainable.transform(
+            [{"main": self.df1}, {"info": self.df5}, {"t1": self.df3}, {"t2": self.df6}]
+        )
         self.assertEqual(transformed_df.shape, (1, 10))
 
+    # Composite key join having conditions involving more than 2 tables
+    def test_join_pandas_composite_error(self):
+        with self.assertRaises(ValueError):
+            trainable = Join(
+                pred=[
+                    it.t1.tid == it.info.TrainId,
+                    [it.main.train_id == it.info.TrainId, it.main.col1 == it.inFo.col3],
+                    it.t1.tid == it.t2.t_id,
+                ],
+                join_type="inner",
+            )
+            _ = trainable.transform(
+                [
+                    {"main": self.df1},
+                    {"info": self.df5},
+                    {"t1": self.df3},
+                    {"t2": self.df6},
+                ]
+            )
 
-    # def test_join_pandas_composite_error(self):
-    #     table1 = {
-    #         "train_id": [1, 2, 3, 4, 5],
-    #         "col1": ["NY", "TX", "CA", "NY", "CA"],
-    #         "col2": [0, 1, 1, 0, 1],
-    #     }
-    #     df1 = pd.DataFrame(data = table1)
-    #
-    #     table2 = {
-    #         "TrainId": [1 , 2, 3],
-    #         "col3": ["NY", "NY", "CA"],
-    #         "col4": [100, 100, 200],
-    #     }
-    #     df2 = pd.DataFrame(data = table2)
-    #
-    #     table3 = {
-    #         "tid": [1, 2, 3],
-    #         "col5": ["Hi", "Hello", "Hi"],
-    #     }
-    #     df3 = pd.DataFrame(data = table3)
-    #
-    #     table4 = {
-    #         "t_id": [2, 3],
-    #         "col6": ["Day", "Night"],
-    #     }
-    #     df4 = pd.DataFrame(data = table4)
-    #
-    #     trainable = Join(
-    #         pred = [it.t1.tid == it.info.TrainId, it.main.train_id == it.info.TrainId, it.t1.tid == it.t2.t_id, it.main.col1 == it.info.col3],
-    #         join_type = 'inner'
-    #     )
-    #
-    #     transformed_df = trainable.transform([{'main': df1}, {'info': df2}, {'t1': df3}, {'t2': df4}])
-    #     # self.assertEqual(transformed_df.shape, (3, 8))
+    # Joining conditions are not chained
+    def test_join_pandas_composite_error1(self):
+        with self.assertRaises(ValueError):
+            trainable = Join(
+                pred=[
+                    it.t1.tid == it.info.TrainId,
+                    [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
+                    it.t3.tid == it.t2.t_id,
+                ],
+                join_type="inner",
+            )
+            _ = trainable.transform(
+                [
+                    {"main": self.df1},
+                    {"info": self.df5},
+                    {"t1": self.df3},
+                    {"t2": self.df6},
+                ]
+            )
+
+    # Joining conditions within a composite key is not chained
+    def test_join_pandas_composite_error2(self):
+        with self.assertRaises(ValueError):
+            trainable = Join(
+                pred=[
+                    it.t1.tid == it.info.TrainId,
+                    [it.main.train_id == it.info.TrainId, it.Main.col1 == it.inFo.col3],
+                    it.t1.tid == it.t2.t_id,
+                ],
+                join_type="inner",
+            )
+            _ = trainable.transform(
+                [
+                    {"main": self.df1},
+                    {"info": self.df5},
+                    {"t1": self.df3},
+                    {"t2": self.df6},
+                ]
+            )
+
+    # TestCase 1: Go_Sales dataset
+    def test_join_pandas_go_sales1(self):
+        trainable = Join(
+            pred=[
+                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
+                it.go_daily_sales["Product number"] == it.go_1k["Product number"],
+                it.go_methods["Order method code"]
+                == it.go_daily_sales["Order method code"],
+                it.go_products["Product number"] == it.go_1k["Product number"],
+            ],
+            join_type="inner",
+        )
+        transformed_df = trainable.transform(
+            [
+                {"go_1k": self.go_1k},
+                {"go_daily_sales": self.go_daily_sales},
+                {"go_retailers": self.go_retailers},
+                {"go_methods": self.go_methods},
+                {"go_products": self.go_products},
+            ]
+        )
+        self.assertEqual(transformed_df.shape, (1887899, 21))
+
+    # TestCase 2: Go_Sales dataset
+    def test_join_pandas_go_sales2(self):
+        trainable = Join(
+            pred=[
+                [
+                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
+                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
+                ]
+            ],
+            join_type="left",
+        )
+        transformed_df = trainable.transform(
+            [{"go_1k": self.go_1k}, {"go_daily_sales": self.go_daily_sales}]
+        )
+        self.assertEqual(transformed_df.shape, (37502, 9))
+
+    # TestCase 3: Go_Sales dataset
+    def test_join_pandas_go_sales3(self):
+        trainable = Join(
+            pred=[
+                [
+                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
+                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
+                    it.go_1k.Quantity == it.go_daily_sales.Quantity,
+                ],
+                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
+            ],
+            join_type="inner",
+        )
+        transformed_df = trainable.transform(
+            [
+                {"go_1k": self.go_1k},
+                {"go_daily_sales": self.go_daily_sales},
+                {"go_retailers": self.go_retailers},
+            ]
+        )
+        self.assertEqual(transformed_df.shape, (2012, 11))
 
 
-    # def test_join_spark(self):
-    #     sc = SparkContext()
-    #     sqlContext = SQLContext(sc)
-    #
-    #     l1 = [(1,'NY',0),(2,'NY',1),(3,'CA',1),(4,'TX',0),(5,'CA',1)]
-    #     rdd = sc.parallelize(l1)
-    #     table1 = rdd.map(lambda x: Row(train_id=int(x[0]), col1=x[1], col2=int(x[2])))
-    #     spark_df1 = sqlContext.createDataFrame(table1)
-    #
-    #     l2 = [(1,'Day',100),(2,'Day',100),(3,'Night',200)]
-    #     rdd = sc.parallelize(l2)
-    #     table2 = rdd.map(lambda x: Row(TrainId=int(x[0]), col3=x[1], col4=int(x[2])))
-    #     spark_df2 = sqlContext.createDataFrame(table2)
-    #
-    #     l3 = [(1,'Hi'),(2,'Hello'),(3,'Hi')]
-    #     rdd = sc.parallelize(l3)
-    #     table3 = rdd.map(lambda x: Row(tid=int(x[0]), col5=x[1]))
-    #     spark_df3 = sqlContext.createDataFrame(table3)
-    #
-    #     trainable = Join(
-    #         pred = [it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
-    #         join_type = 'inner'
-    #     )
-    #     transformed_df = trainable.transform([{'main': spark_df1}, {'info': spark_df2}, {'t1': spark_df3}])
-    #     print(transformed_df)
-    #     self.assertEqual(transformed_df.shape, (5, 8))
+# Testing join operator for spark dataframes
+class TestJoinSpark(unittest.TestCase):
+    # Define spark dataframes with different structures
+    def setUp(self):
+        if spark_installed:
+            spark = SparkSession.builder.appName("Test Spark Join").getOrCreate()
+            sc = spark.sparkContext
+            sqlContext = SQLContext(sc)
+
+            l1 = [(1, "NY", 0), (2, "TX", 1), (3, "CA", 1), (4, "NY", 0), (5, "CA", 1)]
+            rdd = sc.parallelize(l1)
+            table1 = rdd.map(
+                lambda x: Row(train_id=int(x[0]), col1=x[1], col2=int(x[2]))
+            )
+            self.spark_df1 = sqlContext.createDataFrame(table1)
+
+            l2 = [(1, "USA", 100), (2, "USA", 100), (3, "UK", 200)]
+            rdd = sc.parallelize(l2)
+            table2 = rdd.map(
+                lambda x: Row(TrainId=int(x[0]), col3=x[1], col4=int(x[2]))
+            )
+            self.spark_df2 = sqlContext.createDataFrame(table2)
+
+            l3 = [(1, "Warm"), (2, "Cold"), (3, "Warm")]
+            rdd = sc.parallelize(l3)
+            table3 = rdd.map(lambda x: Row(tid=int(x[0]), col5=x[1]))
+            self.spark_df3 = sqlContext.createDataFrame(table3)
+
+            l4 = [(1, "NY", 0), (2, "TX", 1), (3, "CA", 1), (4, "NY", 0), (5, "CA", 1)]
+            rdd = sc.parallelize(l4)
+            table4 = rdd.map(
+                lambda x: Row(TrainId=int(x[0]), col1=x[1], col2=int(x[2]))
+            )
+            self.spark_df4 = sqlContext.createDataFrame(table4)
+
+            l5 = [(1, "NY", 100), (2, "NY", 100), (3, "CA", 200)]
+            rdd = sc.parallelize(l5)
+            table5 = rdd.map(
+                lambda x: Row(TrainId=int(x[0]), col3=x[1], col4=int(x[2]))
+            )
+            self.spark_df5 = sqlContext.createDataFrame(table5)
+
+            l6 = [(2, "USA"), (3, "UK")]
+            rdd = sc.parallelize(l6)
+            table6 = rdd.map(lambda x: Row(t_id=int(x[0]), col3=x[1]))
+            self.spark_df6 = sqlContext.createDataFrame(table6)
+
+            self.spark_go_1k = spark.read.csv(dataset_path + "go_1k.csv", header=True)
+            self.spark_go_daily_sales = spark.read.csv(
+                dataset_path + "go_daily_sales.csv", header=True
+            )
+            self.spark_go_methods = spark.read.csv(
+                dataset_path + "go_methods.csv", header=True
+            )
+            self.spark_go_products = spark.read.csv(
+                dataset_path + "go_products.csv", header=True
+            )
+            self.spark_go_retailers = spark.read.csv(
+                dataset_path + "go_retailers.csv", header=True
+            )
+
+    # Multiple elements in predicate with different key column names
+    def test_join_spark_multiple_left(self):
+        if spark_installed:
+            trainable = Join(
+                pred=[
+                    it.main.train_id == it.info.TrainId,
+                    it.info.TrainId == it.t1.tid,
+                ],
+                join_type="inner",
+            )
+            transformed_df = trainable.transform(
+                [
+                    {"main": self.spark_df1},
+                    {"info": self.spark_df2},
+                    {"t1": self.spark_df3},
+                ]
+            )
+            self.assertEqual(transformed_df.count(), 3)
+            self.assertEqual(len(transformed_df.columns), 8)
+
+    # Multiple elements in predicate with identical key columns names
+    def test_join_spark_multiple_left1(self):
+        if spark_installed:
+            trainable = Join(
+                pred=[it.main.TrainId == it.info.TrainId, it.info.TrainId == it.t1.tid],
+                join_type="inner",
+            )
+            transformed_df = trainable.transform(
+                [
+                    {"main": self.spark_df4},
+                    {"info": self.spark_df2},
+                    {"t1": self.spark_df3},
+                ]
+            )
+            self.assertEqual(transformed_df.count(), 3)
+            self.assertEqual(len(transformed_df.columns), 7)
+
+    # Invert one of the join conditions as compared to the test case: test_join_spark_multiple_left
+    def test_join_spark_multiple_right(self):
+        if spark_installed:
+            trainable = Join(
+                pred=[
+                    it.main.train_id == it.info.TrainId,
+                    it.t1.tid == it.info.TrainId,
+                ],
+                join_type="inner",
+            )
+            transformed_df = trainable.transform(
+                [
+                    {"main": self.spark_df1},
+                    {"info": self.spark_df2},
+                    {"t1": self.spark_df3},
+                ]
+            )
+            self.assertEqual(transformed_df.count(), 3)
+            self.assertEqual(len(transformed_df.columns), 8)
+
+    # Composite key join
+    def test_join_spark_composite(self):
+        if spark_installed:
+            trainable = Join(
+                pred=[
+                    it.t1.tid == it.info.TrainId,
+                    [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
+                ],
+                join_type="left",
+            )
+            transformed_df = trainable.transform(
+                [
+                    {"main": self.spark_df1},
+                    {"info": self.spark_df5},
+                    {"t1": self.spark_df3},
+                    {"t2": self.spark_df6},
+                ]
+            )
+            self.assertEqual(transformed_df.count(), 5)
+            self.assertEqual(len(transformed_df.columns), 8)
+
+    # Invert one of the join conditions as compared to the test case: test_join_pandas_composite
+    def test_join_spark_composite1(self):
+        if spark_installed:
+            trainable = Join(
+                pred=[
+                    [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
+                    it.t1.tid == it.info.TrainId,
+                    it.t1.tid == it.t2.t_id,
+                ],
+                join_type="left",
+            )
+            transformed_df = trainable.transform(
+                [
+                    {"main": self.spark_df1},
+                    {"info": self.spark_df5},
+                    {"t1": self.spark_df3},
+                    {"t2": self.spark_df6},
+                ]
+            )
+            self.assertEqual(transformed_df.count(), 3)
+            self.assertEqual(len(transformed_df.columns), 10)
+
+    # Composite key join having conditions involving more than 2 tables
+    def test_join_spark_composite_error(self):
+        if spark_installed:
+            with self.assertRaises(ValueError):
+                trainable = Join(
+                    pred=[
+                        it.t1.tid == it.info.TrainId,
+                        [
+                            it.main.train_id == it.info.TrainId,
+                            it.main.col1 == it.inFo.col3,
+                        ],
+                        it.t1.tid == it.t2.t_id,
+                    ],
+                    join_type="inner",
+                )
+                _ = trainable.transform(
+                    [
+                        {"main": self.spark_df1},
+                        {"info": self.spark_df5},
+                        {"t1": self.spark_df3},
+                        {"t2": self.spark_df6},
+                    ]
+                )
+
+    # Joining conditions are not chained
+    def test_join_spark_composite_error1(self):
+        if spark_installed:
+            with self.assertRaises(ValueError):
+                trainable = Join(
+                    pred=[
+                        it.t1.tid == it.info.TrainId,
+                        [
+                            it.main.train_id == it.info.TrainId,
+                            it.main.col1 == it.info.col3,
+                        ],
+                        it.t3.tid == it.t2.t_id,
+                    ],
+                    join_type="inner",
+                )
+                _ = trainable.transform(
+                    [
+                        {"main": self.spark_df1},
+                        {"info": self.spark_df5},
+                        {"t1": self.spark_df3},
+                        {"t2": self.spark_df6},
+                    ]
+                )
+
+    # TestCase 1: Go_Sales dataset
+    def test_join_spark_go_sales1(self):
+        trainable = Join(
+            pred=[
+                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
+                it.go_daily_sales["Product number"] == it.go_1k["Product number"],
+                it.go_methods["Order method code"]
+                == it.go_daily_sales["Order method code"],
+                it.go_products["Product number"] == it.go_1k["Product number"],
+            ],
+            join_type="inner",
+        )
+        transformed_df = trainable.transform(
+            [
+                {"go_1k": self.spark_go_1k},
+                {"go_daily_sales": self.spark_go_daily_sales},
+                {"go_retailers": self.spark_go_retailers},
+                {"go_methods": self.spark_go_methods},
+                {"go_products": self.spark_go_products},
+            ]
+        )
+        self.assertEqual(transformed_df.count(), 1887899)
+        self.assertEqual(len(transformed_df.columns), 21)
+
+    # TestCase 2: Go_Sales dataset
+    def test_join_spark_go_sales2(self):
+        trainable = Join(
+            pred=[
+                [
+                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
+                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
+                ]
+            ],
+            join_type="left",
+            # it.go_1k['Retailer code']
+        )
+        transformed_df = trainable.transform(
+            [{"go_1k": self.spark_go_1k}, {"go_daily_sales": self.spark_go_daily_sales}]
+        )
+        self.assertEqual(transformed_df.count(), 37502)
+        self.assertEqual(len(transformed_df.columns), 9)
+
+    # TestCase 3: Go_Sales dataset
+    def test_join_spark_go_sales3(self):
+        trainable = Join(
+            pred=[
+                [
+                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
+                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
+                    it.go_1k.Quantity == it.go_daily_sales.Quantity,
+                ],
+                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
+            ],
+            join_type="inner",
+        )
+        transformed_df = trainable.transform(
+            [
+                {"go_1k": self.spark_go_1k},
+                {"go_daily_sales": self.spark_go_daily_sales},
+                {"go_retailers": self.spark_go_retailers},
+            ]
+        )
+        self.assertEqual(transformed_df.count(), 2012)
+        self.assertEqual(len(transformed_df.columns), 11)
 
 
 class TestMap(unittest.TestCase):
     def test_init(self):
-
         gender_map = {"m": "Male", "f": "Female"}
         state_map = {"NY": "New York", "CA": "California"}
         _ = Map(columns=[replace(it.gender, gender_map), replace(it.state, state_map)])
