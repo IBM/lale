@@ -49,11 +49,15 @@ def _rename_all_features(X):
 class _XGBClassifierImpl:
     _wrapped_model: xgboost.XGBClassifier
 
-    def __init__(self, **hyperparams):
+    @classmethod
+    def validate_hyperparams(cls, **hyperparams):
         assert xgboost_installed, """Your Python environment does not have xgboost installed. You can install it with
-    pip install xgboost
-or with
-    pip install 'lale[full]'"""
+            pip install xgboost
+        or with
+            pip install 'lale[full]'"""
+
+    def __init__(self, **hyperparams):
+        self.validate_hyperparams(**hyperparams)
         self._hyperparams = hyperparams
 
     def fit(self, X, y, **fit_params):
