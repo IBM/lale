@@ -88,6 +88,8 @@ def create_function_test_regressor(clf_name):
 
 
 regressors = [
+    "lale.lib.sklearn.ARDRegression",
+    "lale.lib.sklearn.BayesianRidge",
     "lale.lib.sklearn.DummyRegressor",
     "lale.lib.sklearn.RandomForestRegressor",
     "lale.lib.sklearn.DecisionTreeRegressor",

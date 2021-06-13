@@ -24,6 +24,9 @@ Classifiers:
 
 * lale.lib.sklearn. `AdaBoostClassifier`_
 * lale.lib.sklearn. `BaggingClassifier`_
+* lale.lib.sklearn. `BernoulliNB`_
+* lale.lib.sklearn. `CalibratedClassifierCV`_
+* lale.lib.sklearn. `ComplementNB`_
 * lale.lib.sklearn. `DecisionTreeClassifier`_
 * lale.lib.sklearn. `DummyClassifier`_
 * lale.lib.sklearn. `ExtraTreesClassifier`_
@@ -44,6 +47,8 @@ Classifiers:
 Regressors:
 
 * lale.lib.sklearn. `AdaBoostRegressor`_
+* lale.lib.sklearn. `ARDRegression`_
+* lale.lib.sklearn. `BayesianRidge`_
 * lale.lib.sklearn. `DecisionTreeRegressor`_
 * lale.lib.sklearn. `DummyRegressor`_
 * lale.lib.sklearn. `ExtraTreesRegressor`_
@@ -58,6 +63,11 @@ Regressors:
 
 Transformers:
 
+* lale.lib.sklearn. `AdditiveChi2Sampler`_
+* lale.lib.sklearn. `BernoulliRBM`_
+* lale.lib.sklearn. `Binarizer`_
+* lale.lib.sklearn. `Birch`_
+* lale.lib.sklearn. `CCA`_
 * lale.lib.sklearn. `ColumnTransformer`_
 * lale.lib.sklearn. `FeatureAgglomeration`_
 * lale.lib.sklearn. `FunctionTransformer`_
@@ -89,8 +99,18 @@ Clustering:
 
 .. _`AdaBoostClassifier`: lale.lib.sklearn.ada_boost_classifier.html
 .. _`AdaBoostRegressor`: lale.lib.sklearn.ada_boost_regressor.html
+.. _`AdditiveChi2Sampler`: lale.lib.sklearn.additive_chi2_sampler.html
+.. _`ARDRegression`: lale.lib.sklearn.ard_regression.html
 .. _`BaggingClassifier`: lale.lib.sklearn.bagging_classifier.html
+.. _`BayesianRidge`: lale.lib.sklearn.bayesian_ridge.html
+.. _`BernoulliNB`: lale.lib.sklearn.bernoulli_nb.html
+.. _`BernoulliRBM`: lale.lib.sklearn.bernoulli_rbm.html
+.. _`Binarizer`: lale.lib.sklearn.binarizer.html
+.. _`Birch`: lale.lib.sklearn.birch.html
+.. _`CCA`: lale.lib.sklearn.cca.html
+.. _`CalibratedClassifierCV`: lale.lib.sklearn.calibrated_classifier_cv.html
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
+.. _`ComplementNB`: lale.lib.sklearn.complement_nb.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
 .. _`DecisionTreeRegressor`: lale.lib.sklearn.decision_tree_regressor.html
 .. _`DummyClassifier`: lale.lib.sklearn.dummy_classifier.html
@@ -146,8 +166,18 @@ Clustering:
 
 from .ada_boost_classifier import AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor
+from .additive_chi2_sampler import AdditiveChi2Sampler
+from .ard_regression import ARDRegression
 from .bagging_classifier import BaggingClassifier
+from .bayesian_ridge import BayesianRidge
+from .bernoulli_nb import BernoulliNB
+from .bernoulli_rbm import BernoulliRBM
+from .binarizer import Binarizer
+from .birch import Birch
+from .calibrated_classifier_cv import CalibratedClassifierCV
+from .cca import CCA
 from .column_transformer import ColumnTransformer
+from .complement_nb import ComplementNB
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
 from .dummy_classifier import DummyClassifier
