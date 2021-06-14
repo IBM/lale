@@ -2247,7 +2247,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError("Must call `fit` before `transform`.")
 
     @if_delegate_has_method(delegate="_impl")
-    def predict(self, X) -> Any:
+    def predict(self, X=None) -> Any:
         """
         .. deprecated:: 0.0.0
            The `predict` method is deprecated on a trainable
@@ -2263,7 +2263,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError("Must call `fit` before `predict`.")
 
     @if_delegate_has_method(delegate="_impl")
-    def predict_proba(self, X):
+    def predict_proba(self, X=None):
         """
         .. deprecated:: 0.0.0
            The `predict_proba` method is deprecated on a trainable
@@ -2279,7 +2279,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError("Must call `fit` before `predict_proba`.")
 
     @if_delegate_has_method(delegate="_impl")
-    def decision_function(self, X):
+    def decision_function(self, X=None):
         """
         .. deprecated:: 0.0.0
            The `decision_function` method is deprecated on a trainable
@@ -2471,7 +2471,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def predict(self, X) -> Any:
+    def predict(self, X=None) -> Any:
         """Make predictions.
 
         Parameters
@@ -2494,7 +2494,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def predict_proba(self, X):
+    def predict_proba(self, X=None):
         """Probability estimates for all classes.
 
         Parameters
@@ -2515,7 +2515,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def decision_function(self, X):
+    def decision_function(self, X=None):
         """Confidence scores for all classes.
 
         Parameters
