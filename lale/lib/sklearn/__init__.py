@@ -153,6 +153,7 @@ Clustering:
 from .ada_boost_classifier import AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor
 from .bagging_classifier import BaggingClassifier
+from .bagging_regressor import BaggingRegressor
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor

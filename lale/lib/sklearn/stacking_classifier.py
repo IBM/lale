@@ -22,6 +22,18 @@ from .stacking_utils import _concatenate_predictions_pandas
 
 
 class _StackingClassifierImpl(SKLModel):
+    def predict(self, X):
+        return super().predict(X)
+
+    def predict_proba(self, X):
+        return super().predict_proba(X)
+
+    def score(self, X, y, sample_weight=None):
+        return super().score(X, y, sample_weight)
+
+    def decision_function(X):
+        return super().decision_function(X)
+
     def _concatenate_predictions(self, X, predictions):
         if not isinstance(X, pd.DataFrame):
             return super()._concatenate_predictions(X, predictions)

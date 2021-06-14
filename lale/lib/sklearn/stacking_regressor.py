@@ -22,6 +22,12 @@ from .stacking_utils import _concatenate_predictions_pandas
 
 
 class _StackingRegressorImpl(SKLModel):
+    def predict(self, X):
+        return super().predict(X)
+
+    def score(self, X, y, sample_weight=None):
+        return super().score(X, y, sample_weight)
+
     def _concatenate_predictions(self, X, predictions):
         if not isinstance(X, pd.DataFrame):
             return super()._concatenate_predictions(X, predictions)

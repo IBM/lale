@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pandas as pd
-from sklearn.ensemble import BaggingClassifier as SKLModel
+from sklearn.ensemble import BaggingRegressor as SKLModel
 
 import lale.docstrings
 import lale.operators
