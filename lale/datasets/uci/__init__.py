@@ -1,1 +1,1 @@
-from .uci_datasets import fetch_drugscom
+from .uci_datasets import fetch_drugscom, fetch_household_power_consumption

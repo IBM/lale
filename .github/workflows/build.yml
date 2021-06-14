@@ -1,4 +1,3 @@
----
 name: Tests
 
 on: [push, pull_request]
@@ -10,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7]
+        python-version: [3.7]
 
     steps:
     - uses: actions/checkout@v2
@@ -29,9 +28,11 @@ jobs:
           ${{ runner.os }}-pip-new2
           ${{ runner.os }}-new2
     - name: Install numpy
-      run: pip install -U numpy
+      run: pip install -U numpy==1.19.2
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
+    - name: Install deps for test_autoai_ts_libs
+      run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -92,11 +93,14 @@ jobs:
         python-version: [3.6]
         setup-target: ['.[full,test]']
         include:
+        - test-case: test/test_autoai_ts_libs.py
+          python-version: 3.7
+          setup-target: '.[test]'
         - test-case: test/test_autogen_lib.py
           python-version: 3.6
           setup-target: '.[test]'
         - test-case: test/test_halving_gridsearchcv.py
-          python-version: 3.6
+          python-version: 3.7
           setup-target: '.[test]'
     steps:
     - uses: actions/checkout@v2
@@ -129,6 +133,9 @@ jobs:
     - name: Install deps for test_halving_gridsearchcv
       if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
       run: pip install 'scikit-learn==0.24.1'
+    - name: Install deps for test_autoai_ts_libs
+      if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
+      run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
     - name: Run test
       run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
     - name: Upload coverage metrics to CodeCov
