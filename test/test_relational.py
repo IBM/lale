@@ -274,13 +274,14 @@ class TestJoin(unittest.TestCase):
         )
         self.assertEqual(transformed_df.shape, (1887899, 21))
 
-    # TestCase 2: Go_Sales dataset
+    # TestCase 2: Go_Sales dataset and different types of join conditions
     def test_join_pandas_go_sales2(self):
         trainable = Join(
             pred=[
                 [
-                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
-                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
+                    it["go_1k"]["Retailer code"] == it.go_daily_sales["Retailer code"],
+                    it.go_1k["Product number"]
+                    == it["go_daily_sales"]["Product number"],
                 ]
             ],
             join_type="left",
@@ -573,12 +574,12 @@ class TestJoinSpark(unittest.TestCase):
         trainable = Join(
             pred=[
                 [
-                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
-                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
+                    it["go_1k"]["Retailer code"] == it.go_daily_sales["Retailer code"],
+                    it.go_1k["Product number"]
+                    == it["go_daily_sales"]["Product number"],
                 ]
             ],
             join_type="left",
-            # it.go_1k['Retailer code']
         )
         transformed_df = trainable.transform(
             [{"go_1k": self.spark_go_1k}, {"go_daily_sales": self.spark_go_daily_sales}]

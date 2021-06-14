@@ -55,7 +55,14 @@ class _JoinImpl:
     def _get_join_info(self, expr_to_parse):
         left_key = []
         right_key = []
-        left_name = expr_to_parse.left.value.attr
+        if isinstance(expr_to_parse.left.value, ast.Subscript):
+            left_name = expr_to_parse.left.value.slice.value.s  # type: ignore
+        elif isinstance(expr_to_parse.left.value, ast.Attribute):
+            left_name = expr_to_parse.left.value.attr
+        else:
+            raise ValueError(
+                "Expression type not supported! Formats supported: it.tbl_name.col_name or it['tbl_name'].col_name"
+            )
         if isinstance(expr_to_parse.left, ast.Subscript):
             left_key.append(expr_to_parse.left.slice.value.s)  # type: ignore
         elif isinstance(expr_to_parse.left, ast.Attribute):
@@ -64,7 +71,14 @@ class _JoinImpl:
             raise ValueError(
                 "Expression type not supported! Formats supported: it.tbl_name.col_name or it.tbl_name['col_name']"
             )
-        right_name = expr_to_parse.comparators[0].value.attr
+        if isinstance(expr_to_parse.comparators[0].value, ast.Subscript):
+            right_name = expr_to_parse.comparators[0].value.slice.value.s  # type: ignore
+        elif isinstance(expr_to_parse.comparators[0].value, ast.Attribute):
+            right_name = expr_to_parse.comparators[0].value.attr
+        else:
+            raise ValueError(
+                "Expression type not supported! Formats supported: it.tbl_name.col_name or it['tbl_name'].col_name"
+            )
         if isinstance(expr_to_parse.comparators[0], ast.Subscript):
             right_key.append(expr_to_parse.comparators[0].slice.value.s)  # type: ignore
         elif isinstance(expr_to_parse.comparators[0], ast.Attribute):
