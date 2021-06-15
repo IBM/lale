@@ -83,11 +83,16 @@ _hyperparams_schema = {
                         as arrays of indices. Can use any of the iterators from
                         https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
                     "anyOf": [
-                        {"type": "integer"},
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 5,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 4,
+                            "distribution": "uniform",
+                        },
                         {"laleType": "Any", "forOptimizer": False},
                     ],
-                    "minimum": 1,
-                    "default": 5,
                 },
                 "n_jobs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],

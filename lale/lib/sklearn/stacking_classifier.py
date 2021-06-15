@@ -88,11 +88,16 @@ _hyperparams_schema = {
                         as arrays of indices. Can use any of the iterators from
                         https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
                     "anyOf": [
-                        {"type": "integer"},
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 5,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 4,
+                            "distribution": "uniform",
+                        },
                         {"laleType": "Any", "forOptimizer": False},
                     ],
-                    "minimum": 1,
-                    "default": 5,
                 },
                 "stack_method": {
                     "description": "Methods called for each base estimator. If ‘auto’, it will try to invoke, for each estimator, 'predict_proba', 'decision_function' or 'predict' in that order. Otherwise, one of 'predict_proba', 'decision_function' or 'predict'. If the method is not implemented by the estimator, it will raise an error.",
