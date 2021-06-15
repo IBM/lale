@@ -21,7 +21,15 @@ except ModuleNotFoundError:
                                 or with
                                     pip install 'lale[full]'"""
     )
-import h5py
+try:
+    import h5py
+except ModuleNotFoundError:
+    raise ModuleNotFoundError(
+        """Your Python environment does not have h5py installed. You can install it with
+                                pip install h5py
+                                or with
+                                    pip install 'lale[full]'"""
+    )
 
 
 class HDF5TorchDataset(Dataset):

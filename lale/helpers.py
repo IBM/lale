@@ -34,7 +34,6 @@ from typing import (
     Union,
 )
 
-import h5py
 import numpy as np
 import pandas as pd
 import scipy.sparse
@@ -679,9 +678,14 @@ def append_batch(data, batch_data):
     elif torch_installed and isinstance(data, torch.Tensor):
         if isinstance(batch_data, torch.Tensor):
             return torch.cat((data, batch_data))
-    elif isinstance(data, h5py.File):
-        if isinstance(batch_data, tuple):
-            batch_X, batch_y = batch_data
+    try:
+        import h5py
+
+        if isinstance(data, h5py.File):
+            if isinstance(batch_data, tuple):
+                batch_X, batch_y = batch_data
+    except ModuleNotFoundError:
+        pass
 
     # TODO:Handle dataframes
 
@@ -751,6 +755,8 @@ def write_batch_output_to_file(
     if file_obj is None and file_path is None:
         raise ValueError("Only one of the file object or file path can be None.")
     if file_obj is None:
+        import h5py
+
         file_obj = h5py.File(file_path, "w")
         # estimate the size of the dataset based on the first batch output size
         transform_ratio = int(len(batch_out_X) / len(batch_X))
