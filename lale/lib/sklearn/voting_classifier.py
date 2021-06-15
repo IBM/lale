@@ -258,7 +258,7 @@ VotingClassifier = lale.operators.make_operator(
 )
 
 if sklearn.__version__ >= "0.21":
-    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.VotingClassifier.html
+    # old: N/A (new in this version)
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
     VotingClassifier = VotingClassifier.customize_schema(
         estimators={

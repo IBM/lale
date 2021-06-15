@@ -150,6 +150,8 @@ Clustering:
 .. _`StackingRegressor`: lale.lib.sklearn.stacking_regressor.html
 """
 
+from sklearn import __version__ as sklearn_version
+
 from .ada_boost_classifier import AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor
 from .bagging_classifier import BaggingClassifier
@@ -200,12 +202,15 @@ from .select_k_best import SelectKBest
 from .sgd_classifier import SGDClassifier
 from .sgd_regressor import SGDRegressor
 from .simple_imputer import SimpleImputer
-from .stacking_classifier import StackingClassifier
-from .stacking_regressor import StackingRegressor
+
+if sklearn_version >= "0.21":
+    from .stacking_classifier import StackingClassifier
+    from .stacking_regressor import StackingRegressor
+    from .voting_regressor import VotingRegressor
+
 from .standard_scaler import StandardScaler
 from .svc import SVC
 from .svr import SVR
 from .tfidf_vectorizer import TfidfVectorizer
 from .variance_threshold import VarianceThreshold
 from .voting_classifier import VotingClassifier
-from .voting_regressor import VotingRegressor
