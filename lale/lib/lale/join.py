@@ -49,10 +49,10 @@ class _JoinImpl:
         self.join_limit = join_limit
         self.sliding_window_length = sliding_window_length
         self.join_type = join_type
-        self._validate_predicate()
 
     # Parse the predicate element passed as input
-    def _get_join_info(self, expr_to_parse):
+    @classmethod
+    def _get_join_info(cls, expr_to_parse):
         left_key = []
         right_key = []
         if isinstance(expr_to_parse.left.value, ast.Subscript):
@@ -89,9 +89,10 @@ class _JoinImpl:
             )
         return left_name, left_key, right_name, right_key
 
-    def _validate_predicate(self):
+    @classmethod
+    def validate_hyperparams(cls, pred=None, **hyperparams):
         tables_encountered = set()
-        for key in self.pred:
+        for key in pred:
             if isinstance(key, list):
                 sub_list_tables = set()
                 for sub_key in key:
@@ -100,7 +101,7 @@ class _JoinImpl:
                         left_key_col,
                         right_table_name,
                         right_key_col,
-                    ) = self._get_join_info(sub_key._expr)
+                    ) = cls._get_join_info(sub_key._expr)
                     if sub_list_tables and not (
                         left_table_name in sub_list_tables
                         and right_table_name in sub_list_tables
@@ -129,7 +130,7 @@ class _JoinImpl:
                     left_key_col,
                     right_table_name,
                     right_key_col,
-                ) = self._get_join_info(key._expr)
+                ) = cls._get_join_info(key._expr)
                 if tables_encountered and not (
                     left_table_name in tables_encountered
                     or right_table_name in tables_encountered
