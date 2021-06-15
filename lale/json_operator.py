@@ -261,8 +261,9 @@ def _get_cls2label(call_depth: int) -> Dict[str, str]:
             else:
                 insert = True
             if insert:
-                cls2label[cls] = label
-                cls2state[cls] = state
+                if not label.islower():
+                    cls2label[cls] = label
+                    cls2state[cls] = state
     return cls2label
 
 

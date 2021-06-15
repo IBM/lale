@@ -1,3 +1,57 @@
+# Copyright 2019 IBM Corporation
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+Schema-enhanced versions of the operators from `autoai-ts-libs`_ to enable hyperparameter tuning.
+
+.. _`autoai-ts-libs`: https://pypi.org/project/autoai-ts-libs/
+
+Operators
+=========
+
+* lale.lib.autoai_ts_libs. `AutoaiTSPipeline`_
+* lale.lib.autoai_ts_libs. `AutoaiWindowTransformedTargetRegressor`_
+* lale.lib.autoai_ts_libs. `AutoaiWindowedWrappedRegressor`_
+* lale.lib.autoai_ts_libs. `DifferenceFlattenAutoEnsembler`_
+* lale.lib.autoai_ts_libs. `FlattenAutoEnsembler`_
+* lale.lib.autoai_ts_libs. `MT2RForecaster`_
+* lale.lib.autoai_ts_libs. `SmallDataWindowTargetTransformer`_
+* lale.lib.autoai_ts_libs. `StandardRowMeanCenter`_
+* lale.lib.autoai_ts_libs. `StandardRowMeanCenterMTS`_
+* lale.lib.autoai_ts_libs. `T2RForecaster`_
+* lale.lib.autoai_ts_libs. `WatForeForecaster`_
+* lale.lib.autoai_ts_libs. `WindowStandardRowMeanCenterMTS`_
+* lale.lib.autoai_ts_libs. `WindowStandardRowMeanCenterUTS`_
+* lale.lib.autoai_ts_libs. `WindowTransformerMTS`_
+
+
+.. _`AutoaiTSPipeline`: lale.lib.autoai_ts_libs.autoai_ts_pipeline.html
+.. _`AutoaiWindowTransformedTargetRegressor`: lale.lib.autoai_ts_libs.autoai_window_transformed_target_regressor.html
+.. _`AutoaiWindowedWrappedRegressor`: lale.lib.autoai_ts_libs.autoai_windowed_wrapped_regressor.html
+.. _`DifferenceFlattenAutoEnsembler`: lale.lib.autoai_ts_libs.difference_flatten_auto_ensembler.html
+.. _`FlattenAutoEnsembler`: lale.lib.autoai_ts_libs.flatten_auto_ensembler.html
+.. _`MT2RForecaster`: lale.lib.autoai_ts_libs.mt2r_forecaster.html
+.. _`SmallDataWindowTargetTransformer`: lale.lib.autoai_ts_libs.small_data_window_target_transformer.html
+.. _`StandardRowMeanCenter`: lale.lib.autoai_ts_libs.standard_row_mean_center.html
+.. _`StandardRowMeanCenterMTS`: lale.lib.autoai_ts_libs.standard_row_mean_center_mts.html
+.. _`T2RForecaster`: lale.lib.autoai_ts_libs.t2r_forecaster.html
+.. _`WatForeForecaster`: lale.lib.autoai_ts_libs.watfore_forecaster.html
+.. _`WindowStandardRowMeanCenterMTS`: lale.lib.autoai_ts_libs.window_standard_row_mean_center_mts.html
+.. _`WindowStandardRowMeanCenterUTS`: lale.lib.autoai_ts_libs.window_standard_row_mean_center_uts.html
+.. _`WindowTransformerMTS`: lale.lib.autoai_ts_libs.window_transformer_mts.html
+"""
+
 from .autoai_ts_pipeline import AutoaiTSPipeline
 from .autoai_window_transformed_target_regressor import (
     AutoaiWindowTransformedTargetRegressor,
