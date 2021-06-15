@@ -818,7 +818,7 @@ pipeline = numpy_column_selector >> compress_strings"""
 
         scan1 = Scan(table=it["table1.csv"])
         scan2 = Scan(table=it["table2.csv"])
-        join = Join(pred=[(it["table1.csv"].k1 == it["table2.csv"].k2)])
+        join = Join(pred=[it["table1.csv"].k1 == it["table2.csv"].k2])
         aggregate = Aggregate(columns={"talk_time|mean": mean(it.talk_time)})
         pipeline = (scan1 & scan2) >> join >> aggregate
         expected = """from lale.lib.lale import Scan
@@ -831,7 +831,7 @@ import lale
 lale.wrap_imported_operators()
 scan_0 = Scan(table=it["table1.csv"])
 scan_1 = Scan(table=it["table2.csv"])
-join = Join(pred=[(it["table1.csv"].k1 == it["table2.csv"].k2)])
+join = Join(pred=[it["table1.csv"].k1 == it["table2.csv"].k2])
 aggregate = Aggregate(columns={"talk_time|mean": mean(it.talk_time)})
 pipeline = (scan_0 & scan_1) >> join >> aggregate"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
