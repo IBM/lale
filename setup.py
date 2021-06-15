@@ -50,7 +50,6 @@ else:
         "scipy",
         "pandas",
         "decorator",
-        "h5py",
         "astunparse",
     ]
 
@@ -94,6 +93,7 @@ setup(
             "imbalanced-learn",
             "cvxpy>=1.0,<=1.1.7",
             "fairlearn",
+            "h5py",
         ],
         "dev": ["pre-commit"],
         "test": [
