@@ -92,9 +92,12 @@ class _JoinImpl:
     @classmethod
     def validate_hyperparams(cls, pred=None, **hyperparams):
         tables_encountered = set()
+
         for key in pred:
             if isinstance(key, list):
-                sub_list_tables = set()
+                sub_list_tables = (
+                    list()
+                )  # use an ordered list to improve error messages
                 for sub_key in key:
                     (
                         left_table_name,
@@ -106,26 +109,26 @@ class _JoinImpl:
                         left_table_name in sub_list_tables
                         and right_table_name in sub_list_tables
                     ):
+                        sub_list_tables.append(left_table_name)
+                        first_table_names = ", ".join(sub_list_tables)
                         raise ValueError(
-                            "ERROR: Composite key involving '{}' and '{}' tables is bad! Tried joining more than two tables!".format(
-                                left_table_name, right_table_name
+                            "ERROR: Composite key involving the {}, and {} tables is problematic, since it references more than two tables.".format(
+                                first_table_names, right_table_name
                             )
                         )
-                    elif (
-                        sub_list_tables
-                        and tables_encountered
-                        and not (
-                            left_table_name in tables_encountered
-                            or right_table_name in tables_encountered
-                        )
+                    elif tables_encountered and not (
+                        left_table_name in tables_encountered
+                        or right_table_name in tables_encountered
                     ):
+                        left_expr = f"it.{left_table_name}{left_key_col}"
+                        right_expr = f"it.{right_table_name}{right_key_col}"
                         raise ValueError(
-                            "ERROR: Composite key involving '{}' and '{}' tables is bad! Tried joining tables unused in previous joins! Join operations should be chained!".format(
-                                left_table_name, right_table_name
+                            "ERROR: Composite key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key.  Join operations must be chained (they can't have two disconnected join conditions)".format(
+                                left_expr, right_expr, left_table_name, right_table_name
                             )
                         )
-                    sub_list_tables.add(left_table_name)
-                    sub_list_tables.add(right_table_name)
+                    sub_list_tables.append(left_table_name)
+                    sub_list_tables.append(right_table_name)
                     tables_encountered.add(left_table_name)
                     tables_encountered.add(right_table_name)
             else:
@@ -139,9 +142,11 @@ class _JoinImpl:
                     left_table_name in tables_encountered
                     or right_table_name in tables_encountered
                 ):
+                    left_expr = f"it.{left_table_name}{left_key_col}"
+                    right_expr = f"it.{right_table_name}{right_key_col}"
                     raise ValueError(
-                        "ERROR: Single key involving '{}' and '{}' tables is bad! Tried joining tables unused in previous joins! Join operations should be chained!".format(
-                            left_table_name, right_table_name
+                        "ERROR: Single key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key.  Join operations must be chained (they can't have two disconnected join conditions)".format(
+                            left_expr, right_expr, left_table_name, right_table_name
                         )
                     )
                 tables_encountered.add(left_table_name)
