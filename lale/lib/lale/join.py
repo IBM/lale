@@ -61,7 +61,7 @@ class _JoinImpl:
             left_name = expr_to_parse.left.value.attr
         else:
             raise ValueError(
-                "Expression type not supported! Formats supported: it.tbl_name.col_name or it['tbl_name'].col_name"
+                "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
             )
         if isinstance(expr_to_parse.left, ast.Subscript):
             left_key.append(expr_to_parse.left.slice.value.s)  # type: ignore
@@ -69,7 +69,7 @@ class _JoinImpl:
             left_key.append(expr_to_parse.left.attr)
         else:
             raise ValueError(
-                "Expression type not supported! Formats supported: it.tbl_name.col_name or it.tbl_name['col_name']"
+                "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it.table_name['column_name']"
             )
         if isinstance(expr_to_parse.comparators[0].value, ast.Subscript):
             right_name = expr_to_parse.comparators[0].value.slice.value.s  # type: ignore
@@ -77,7 +77,7 @@ class _JoinImpl:
             right_name = expr_to_parse.comparators[0].value.attr
         else:
             raise ValueError(
-                "Expression type not supported! Formats supported: it.tbl_name.col_name or it['tbl_name'].col_name"
+                "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
             )
         if isinstance(expr_to_parse.comparators[0], ast.Subscript):
             right_key.append(expr_to_parse.comparators[0].slice.value.s)  # type: ignore
@@ -85,7 +85,7 @@ class _JoinImpl:
             right_key.append(expr_to_parse.comparators[0].attr)
         else:
             raise ValueError(
-                "Expression type not supported! Formats supported: it.tbl_name.col_name or it.tbl_name['col_name']"
+                "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it.table_name['column_name']"
             )
         return left_name, left_key, right_name, right_key
 
@@ -107,7 +107,9 @@ class _JoinImpl:
                         and right_table_name in sub_list_tables
                     ):
                         raise ValueError(
-                            "One of the composite keys tried joining more than two tables!"
+                            "ERROR: Composite key involving '{}' and '{}' tables is bad! Tried joining more than two tables!".format(
+                                left_table_name, right_table_name
+                            )
                         )
                     elif (
                         sub_list_tables
@@ -118,7 +120,9 @@ class _JoinImpl:
                         )
                     ):
                         raise ValueError(
-                            "One of the composite keys involve an unused table! Join operations should be chained!"
+                            "ERROR: Composite key involving '{}' and '{}' tables is bad! Tried joining tables unused in previous joins! Join operations should be chained!".format(
+                                left_table_name, right_table_name
+                            )
                         )
                     sub_list_tables.add(left_table_name)
                     sub_list_tables.add(right_table_name)
@@ -136,7 +140,9 @@ class _JoinImpl:
                     or right_table_name in tables_encountered
                 ):
                     raise ValueError(
-                        "One of the single keys involve an unused table! Join operations should be chained!"
+                        "ERROR: Single key involving '{}' and '{}' tables is bad! Tried joining tables unused in previous joins! Join operations should be chained!".format(
+                            left_table_name, right_table_name
+                        )
                     )
                 tables_encountered.add(left_table_name)
                 tables_encountered.add(right_table_name)
@@ -177,7 +183,9 @@ class _JoinImpl:
                 )
             else:
                 raise ValueError(
-                    "One of the tables to be joined not present in input X!"
+                    "ERROR: Cannot perform join operation, either '{}' or '{}' table not present in input X!".format(
+                        left_table_name, right_table_name
+                    )
                 )
             return op_df
 

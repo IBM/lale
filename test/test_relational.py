@@ -54,8 +54,9 @@ from lale.lib.sklearn import KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
 
 # Changing the current working directory to read the Go-Sales dataset for testing purposes
-os.chdir(os.path.dirname(os.getcwd()))
-dataset_path = os.getcwd() + "/lale/lale/datasets/data/go_sales/"
+dataset_path = os.path.join(
+    os.path.dirname(__file__), "..", "lale", "datasets", "data", "go_sales"
+)
 
 
 # Testing join operator for pandas dataframes
@@ -105,11 +106,11 @@ class TestJoin(unittest.TestCase):
         }
         self.df6 = pd.DataFrame(data=table6)
 
-        self.go_1k = pd.read_csv(dataset_path + "go_1k.csv")
-        self.go_daily_sales = pd.read_csv(dataset_path + "go_daily_sales.csv")
-        self.go_methods = pd.read_csv(dataset_path + "go_methods.csv")
-        self.go_products = pd.read_csv(dataset_path + "go_products.csv")
-        self.go_retailers = pd.read_csv(dataset_path + "go_retailers.csv")
+        self.go_1k = pd.read_csv(dataset_path + "/go_1k.csv")
+        self.go_daily_sales = pd.read_csv(dataset_path + "/go_daily_sales.csv")
+        self.go_methods = pd.read_csv(dataset_path + "/go_methods.csv")
+        self.go_products = pd.read_csv(dataset_path + "/go_products.csv")
+        self.go_retailers = pd.read_csv(dataset_path + "/go_retailers.csv")
 
     # Multiple elements in predicate with different key column names
     def test_join_pandas_multiple_left(self):
@@ -121,28 +122,31 @@ class TestJoin(unittest.TestCase):
             [{"main": self.df1}, {"info": self.df2}, {"t1": self.df3}]
         )
         self.assertEqual(transformed_df.shape, (3, 8))
+        self.assertEqual(transformed_df["col5"][1], "Cold")
 
     # Multiple elements in predicate with identical key columns names
     def test_join_pandas_multiple_left1(self):
         trainable = Join(
             pred=[it.main.TrainId == it.info.TrainId, it.info.TrainId == it.t1.tid],
-            join_type="inner",
+            join_type="left",
         )
         transformed_df = trainable.transform(
             [{"main": self.df4}, {"info": self.df2}, {"t1": self.df3}]
         )
-        self.assertEqual(transformed_df.shape, (3, 7))
+        self.assertEqual(transformed_df.shape, (5, 7))
+        self.assertEqual(transformed_df["col3"][2], "UK")
 
     # Invert one of the join conditions as compared to the test case: test_join_pandas_multiple_left
     def test_join_pandas_multiple_right(self):
         trainable = Join(
             pred=[it.main.train_id == it.info.TrainId, it.t1.tid == it.info.TrainId],
-            join_type="inner",
+            join_type="right",
         )
         transformed_df = trainable.transform(
             [{"main": self.df1}, {"info": self.df2}, {"t1": self.df3}]
         )
         self.assertEqual(transformed_df.shape, (3, 8))
+        self.assertEqual(transformed_df["col3"][2], "UK")
 
     # Composite key join
     def test_join_pandas_composite(self):
@@ -157,6 +161,7 @@ class TestJoin(unittest.TestCase):
             [{"main": self.df1}, {"info": self.df5}, {"t1": self.df3}, {"t2": self.df6}]
         )
         self.assertEqual(transformed_df.shape, (5, 8))
+        self.assertEqual(transformed_df["col3"][2], "CA")
 
     # Invert one of the join conditions as compared to the test case: test_join_pandas_composite
     def test_join_pandas_composite1(self):
@@ -172,8 +177,10 @@ class TestJoin(unittest.TestCase):
             [{"main": self.df1}, {"info": self.df5}, {"t1": self.df3}, {"t2": self.df6}]
         )
         self.assertEqual(transformed_df.shape, (1, 10))
+        self.assertEqual(transformed_df["col4"][0], 200)
 
     # Composite key join having conditions involving more than 2 tables
+    # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error(self):
         with self.assertRaises(ValueError):
             trainable = Join(
@@ -193,7 +200,8 @@ class TestJoin(unittest.TestCase):
                 ]
             )
 
-    # Joining conditions are not chained
+    # Single joining conditions are not chained
+    # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error1(self):
         with self.assertRaises(ValueError):
             trainable = Join(
@@ -213,7 +221,8 @@ class TestJoin(unittest.TestCase):
                 ]
             )
 
-    # Joining conditions within a composite key is not chained
+    # Composite key join having conditions involving more than 2 tables
+    # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error2(self):
         with self.assertRaises(ValueError):
             trainable = Join(
@@ -234,6 +243,7 @@ class TestJoin(unittest.TestCase):
             )
 
     # A table to be joinen not present in input X
+    # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error3(self):
         with self.assertRaises(ValueError):
             trainable = Join(
@@ -273,6 +283,7 @@ class TestJoin(unittest.TestCase):
             ]
         )
         self.assertEqual(transformed_df.shape, (1887899, 21))
+        self.assertEqual(transformed_df["Country"][4], "Switzerland")
 
     # TestCase 2: Go_Sales dataset and different types of join conditions
     def test_join_pandas_go_sales2(self):
@@ -290,6 +301,7 @@ class TestJoin(unittest.TestCase):
             [{"go_1k": self.go_1k}, {"go_daily_sales": self.go_daily_sales}]
         )
         self.assertEqual(transformed_df.shape, (37502, 9))
+        self.assertEqual(transformed_df["Unit price"][1], 43.85)
 
     # TestCase 3: Go_Sales dataset
     def test_join_pandas_go_sales3(self):
@@ -312,6 +324,7 @@ class TestJoin(unittest.TestCase):
             ]
         )
         self.assertEqual(transformed_df.shape, (2012, 11))
+        self.assertEqual(transformed_df["Product number"][3], 128140)
 
 
 # Testing join operator for spark dataframes
@@ -361,18 +374,18 @@ class TestJoinSpark(unittest.TestCase):
             table6 = rdd.map(lambda x: Row(t_id=int(x[0]), col3=x[1]))
             self.spark_df6 = sqlContext.createDataFrame(table6)
 
-            self.spark_go_1k = spark.read.csv(dataset_path + "go_1k.csv", header=True)
+            self.spark_go_1k = spark.read.csv(dataset_path + "/go_1k.csv", header=True)
             self.spark_go_daily_sales = spark.read.csv(
-                dataset_path + "go_daily_sales.csv", header=True
+                dataset_path + "/go_daily_sales.csv", header=True
             )
             self.spark_go_methods = spark.read.csv(
-                dataset_path + "go_methods.csv", header=True
+                dataset_path + "/go_methods.csv", header=True
             )
             self.spark_go_products = spark.read.csv(
-                dataset_path + "go_products.csv", header=True
+                dataset_path + "/go_products.csv", header=True
             )
             self.spark_go_retailers = spark.read.csv(
-                dataset_path + "go_retailers.csv", header=True
+                dataset_path + "/go_retailers.csv", header=True
             )
 
     # Multiple elements in predicate with different key column names
@@ -394,13 +407,14 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 3)
             self.assertEqual(len(transformed_df.columns), 8)
+            self.assertEqual(transformed_df.collect()[0]["col5"], "Warm")
 
     # Multiple elements in predicate with identical key columns names
     def test_join_spark_multiple_left1(self):
         if spark_installed:
             trainable = Join(
                 pred=[it.main.TrainId == it.info.TrainId, it.info.TrainId == it.t1.tid],
-                join_type="inner",
+                join_type="left",
             )
             transformed_df = trainable.transform(
                 [
@@ -409,8 +423,9 @@ class TestJoinSpark(unittest.TestCase):
                     {"t1": self.spark_df3},
                 ]
             )
-            self.assertEqual(transformed_df.count(), 3)
+            self.assertEqual(transformed_df.count(), 5)
             self.assertEqual(len(transformed_df.columns), 7)
+            self.assertEqual(transformed_df.collect()[2]["col1"], "CA")
 
     # Invert one of the join conditions as compared to the test case: test_join_spark_multiple_left
     def test_join_spark_multiple_right(self):
@@ -420,7 +435,7 @@ class TestJoinSpark(unittest.TestCase):
                     it.main.train_id == it.info.TrainId,
                     it.t1.tid == it.info.TrainId,
                 ],
-                join_type="inner",
+                join_type="right",
             )
             transformed_df = trainable.transform(
                 [
@@ -431,6 +446,7 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 3)
             self.assertEqual(len(transformed_df.columns), 8)
+            self.assertEqual(transformed_df.collect()[0]["col2"], 0)
 
     # Composite key join
     def test_join_spark_composite(self):
@@ -452,6 +468,7 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 5)
             self.assertEqual(len(transformed_df.columns), 8)
+            self.assertEqual(transformed_df.collect()[0]["col2"], 1)
 
     # Invert one of the join conditions as compared to the test case: test_join_pandas_composite
     def test_join_spark_composite1(self):
@@ -474,8 +491,10 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 3)
             self.assertEqual(len(transformed_df.columns), 10)
+            self.assertEqual(transformed_df.collect()[0]["col4"], 100)
 
     # Composite key join having conditions involving more than 2 tables
+    # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_spark_composite_error(self):
         if spark_installed:
             with self.assertRaises(ValueError):
@@ -500,6 +519,7 @@ class TestJoinSpark(unittest.TestCase):
                 )
 
     # Joining conditions are not chained
+    # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_spark_composite_error1(self):
         if spark_installed:
             with self.assertRaises(ValueError):
@@ -524,6 +544,7 @@ class TestJoinSpark(unittest.TestCase):
                 )
 
     # A table to be joinen not present in input X
+    # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_spark_composite_error2(self):
         if spark_installed:
             with self.assertRaises(ValueError):
@@ -586,6 +607,7 @@ class TestJoinSpark(unittest.TestCase):
         )
         self.assertEqual(transformed_df.count(), 37502)
         self.assertEqual(len(transformed_df.columns), 9)
+        self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1206")
 
     # TestCase 3: Go_Sales dataset
     def test_join_spark_go_sales3(self):
@@ -609,6 +631,7 @@ class TestJoinSpark(unittest.TestCase):
         )
         self.assertEqual(transformed_df.count(), 2012)
         self.assertEqual(len(transformed_df.columns), 11)
+        self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1201")
 
 
 class TestMap(unittest.TestCase):
