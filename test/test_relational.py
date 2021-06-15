@@ -53,8 +53,7 @@ from lale.lib.lale import (
 from lale.lib.sklearn import KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
 
-# Changing the current working directory to read the Go-Sales dataset for testing purposes
-dataset_path = os.path.join(
+go_sales_dataset_path = os.path.join(
     os.path.dirname(__file__), "..", "lale", "datasets", "data", "go_sales"
 )
 
@@ -106,11 +105,11 @@ class TestJoin(unittest.TestCase):
         }
         self.df6 = pd.DataFrame(data=table6)
 
-        self.go_1k = pd.read_csv(dataset_path + "/go_1k.csv")
-        self.go_daily_sales = pd.read_csv(dataset_path + "/go_daily_sales.csv")
-        self.go_methods = pd.read_csv(dataset_path + "/go_methods.csv")
-        self.go_products = pd.read_csv(dataset_path + "/go_products.csv")
-        self.go_retailers = pd.read_csv(dataset_path + "/go_retailers.csv")
+        self.go_1k = pd.read_csv(go_sales_dataset_path + "/go_1k.csv")
+        self.go_daily_sales = pd.read_csv(go_sales_dataset_path + "/go_daily_sales.csv")
+        self.go_methods = pd.read_csv(go_sales_dataset_path + "/go_methods.csv")
+        self.go_products = pd.read_csv(go_sales_dataset_path + "/go_products.csv")
+        self.go_retailers = pd.read_csv(go_sales_dataset_path + "/go_retailers.csv")
 
     # Multiple elements in predicate with different key column names
     def test_join_pandas_multiple_left(self):
@@ -374,18 +373,20 @@ class TestJoinSpark(unittest.TestCase):
             table6 = rdd.map(lambda x: Row(t_id=int(x[0]), col3=x[1]))
             self.spark_df6 = sqlContext.createDataFrame(table6)
 
-            self.spark_go_1k = spark.read.csv(dataset_path + "/go_1k.csv", header=True)
+            self.spark_go_1k = spark.read.csv(
+                go_sales_dataset_path + "/go_1k.csv", header=True
+            )
             self.spark_go_daily_sales = spark.read.csv(
-                dataset_path + "/go_daily_sales.csv", header=True
+                go_sales_dataset_path + "/go_daily_sales.csv", header=True
             )
             self.spark_go_methods = spark.read.csv(
-                dataset_path + "/go_methods.csv", header=True
+                go_sales_dataset_path + "/go_methods.csv", header=True
             )
             self.spark_go_products = spark.read.csv(
-                dataset_path + "/go_products.csv", header=True
+                go_sales_dataset_path + "/go_products.csv", header=True
             )
             self.spark_go_retailers = spark.read.csv(
-                dataset_path + "/go_retailers.csv", header=True
+                go_sales_dataset_path + "/go_retailers.csv", header=True
             )
 
     # Multiple elements in predicate with different key column names
