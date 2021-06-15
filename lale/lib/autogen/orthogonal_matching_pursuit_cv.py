@@ -74,13 +74,20 @@ _hyperparams_schema = {
                     "description": "Maximum numbers of iterations to perform, therefore maximum features to include",
                 },
                 "cv": {
-                    "XXX TODO XXX": "int, cross-validation generator or an iterable, optional",
-                    "description": "Determines the cross-validation splitting strategy",
-                    "type": "integer",
-                    "minimumForOptimizer": 3,
-                    "maximumForOptimizer": 4,
-                    "distribution": "uniform",
-                    "default": 3,
+                    "description": """Cross-validation as integer or as object that has a split function.
+                        The fit method performs cross validation on the input dataset for per
+                        trial, and uses the mean cross validation performance for optimization.
+                        This behavior is also impacted by handle_cv_failure flag.
+                        If integer: number of folds in sklearn.model_selection.StratifiedKFold.
+                        If object with split function: generator yielding (train, test) splits
+                        as arrays of indices. Can use any of the iterators from
+                        https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
+                    "anyOf": [
+                        {"type": "integer"},
+                        {"laleType": "Any", "forOptimizer": False},
+                    ],
+                    "minimum": 1,
+                    "default": 5,
                 },
                 "n_jobs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],

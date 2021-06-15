@@ -79,18 +79,20 @@ _hyperparams_schema = {
                     "description": "A classifier which will be used to combine the base estimators. The default classifier is a 'LogisticRegression'",
                 },
                 "cv": {
-                    "XXX TODO XXX": "int, cross-validation generator or an iterable, optional",
-                    "description": "Determines the cross-validation splitting strategy",
+                    "description": """Cross-validation as integer or as object that has a split function.
+                        The fit method performs cross validation on the input dataset for per
+                        trial, and uses the mean cross validation performance for optimization.
+                        This behavior is also impacted by handle_cv_failure flag.
+                        If integer: number of folds in sklearn.model_selection.StratifiedKFold.
+                        If object with split function: generator yielding (train, test) splits
+                        as arrays of indices. Can use any of the iterators from
+                        https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
                     "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 3,
-                            "maximumForOptimizer": 4,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
+                        {"type": "integer"},
+                        {"laleType": "Any", "forOptimizer": False},
                     ],
-                    "default": None,
+                    "minimum": 1,
+                    "default": 5,
                 },
                 "stack_method": {
                     "description": "Methods called for each base estimator. If ‘auto’, it will try to invoke, for each estimator, 'predict_proba', 'decision_function' or 'predict' in that order. Otherwise, one of 'predict_proba', 'decision_function' or 'predict'. If the method is not implemented by the estimator, it will raise an error.",
@@ -125,9 +127,12 @@ _input_fit_schema = {
             "description": "Training vectors, where n_samples is the number of samples and n_features is the number of features.",
         },
         "y": {
-            "type": "array",
-            "items": {"type": "number"},
-            "description": "Target values.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+            "description": "The target values (class labels).",
         },
         "sample_weight": {
             "anyOf": [

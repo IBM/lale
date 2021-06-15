@@ -113,9 +113,12 @@ _input_fit_schema = {
             "description": "Training vectors, where n_samples is the number of samples and n_features is the number of features.",
         },
         "y": {
-            "type": "array",
-            "items": {"type": "number"},
-            "description": "Target values.",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+            "description": "The target values (class labels).",
         },
         "sample_weight": {
             "anyOf": [

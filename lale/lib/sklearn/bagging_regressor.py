@@ -26,6 +26,7 @@ class _BaggingRegressorImpl:
         self,
         base_estimator=None,
         n_estimators=10,
+        *,
         max_samples=1.0,
         max_features=1.0,
         bootstrap=True,

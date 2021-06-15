@@ -67,18 +67,20 @@ _hyperparams_schema = {
                     "description": "A string (see model evaluation documentation) or a scorer callable object / function with signature ``scorer(estimator, X, y)``.",
                 },
                 "cv": {
-                    "XXX TODO XXX": "int, cross-validation generator or an iterable, optional",
-                    "description": "Determines the cross-validation splitting strategy",
+                    "description": """Cross-validation as integer or as object that has a split function.
+                        The fit method performs cross validation on the input dataset for per
+                        trial, and uses the mean cross validation performance for optimization.
+                        This behavior is also impacted by handle_cv_failure flag.
+                        If integer: number of folds in sklearn.model_selection.StratifiedKFold.
+                        If object with split function: generator yielding (train, test) splits
+                        as arrays of indices. Can use any of the iterators from
+                        https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
                     "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 3,
-                            "maximumForOptimizer": 4,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
+                        {"type": "integer"},
+                        {"laleType": "Any", "forOptimizer": False},
                     ],
-                    "default": None,
+                    "minimum": 1,
+                    "default": 5,
                 },
                 "class_weight": {
                     "XXX TODO XXX": "dict or 'balanced', optional",

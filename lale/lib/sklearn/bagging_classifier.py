@@ -26,6 +26,7 @@ class _BaggingClassifierImpl:
         self,
         base_estimator=None,
         n_estimators=10,
+        *,
         max_samples=1.0,
         max_features=1.0,
         bootstrap=True,
@@ -230,9 +231,12 @@ _input_fit_schema = {
             "description": "The training input samples. Sparse matrices are accepted only if",
         },
         "y": {
-            "type": "array",
-            "items": {"type": "number"},
-            "description": "The target values (class labels in classification, real numbers in",
+            "anyOf": [
+                {"type": "array", "items": {"type": "number"}},
+                {"type": "array", "items": {"type": "string"}},
+                {"type": "array", "items": {"type": "boolean"}},
+            ],
+            "description": "The target values (class labels).",
         },
         "sample_weight": {
             "anyOf": [
