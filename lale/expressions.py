@@ -104,7 +104,11 @@ class Expr:
         return Expr(subscript)
 
     def __str__(self) -> str:
-        return astunparse.unparse(self._expr).strip()
+        result = astunparse.unparse(self._expr).strip()
+        if isinstance(self._expr, (ast.UnaryOp, ast.BinOp, ast.Compare, ast.BoolOp)):
+            if result.startswith("(") and result.endswith(")"):
+                result = result[1:-1]
+        return result
 
 
 def _make_ast_expr(arg: Union[Expr, int, float, str, AstExpr]) -> AstExpr:
