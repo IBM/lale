@@ -21,6 +21,7 @@ imbalanced-learn
 cvxpy>=1.0,<=1.1.7
 # subset of setup.py -> extras_require -> test
 autoai-libs>=1.12.6
+autoai-ts-libs
 sphinx==2.4.4
 m2r
 sphinx_rtd_theme
