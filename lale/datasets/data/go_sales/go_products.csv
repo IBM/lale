@@ -1,0 +1,275 @@
+Product number,Product line,Product type,Product,Product brand,Product color,Unit cost,Unit price
+1110,Camping Equipment,Cooking Gear,TrailChef Water Bag,TrailChef,Clear,2.77,6.59
+2110,Camping Equipment,Cooking Gear,TrailChef Canteen,TrailChef,Brown,6.92,12.92
+3110,Camping Equipment,Cooking Gear,TrailChef Kitchen Kit,TrailChef,Unspecified,15.78,23.80
+4110,Camping Equipment,Cooking Gear,TrailChef Cup,TrailChef,Silver,0.85,3.66
+5110,Camping Equipment,Cooking Gear,TrailChef Cook Set,TrailChef,Silver,34.41,54.93
+6110,Camping Equipment,Cooking Gear,TrailChef Deluxe Cook Set,TrailChef,Silver,78.72,129.72
+7110,Camping Equipment,Cooking Gear,TrailChef Single Flame,TrailChef,Silver,46.38,66.77
+8110,Camping Equipment,Cooking Gear,TrailChef Double Flame,TrailChef,Green,75.00,151.77
+9110,Camping Equipment,Cooking Gear,TrailChef Kettle,TrailChef,Ash,5.07,13.22
+10110,Camping Equipment,Cooking Gear,TrailChef Utensils,TrailChef,Silver,9.68,19.29
+11110,Camping Equipment,Tents,Star Lite,Star,Beige,250.00,370.13
+12110,Camping Equipment,Tents,Star Dome,Star,Red,396.00,650.89
+13110,Camping Equipment,Tents,Star Gazer 2,Star,Light Blue,392.57,582.42
+14110,Camping Equipment,Tents,Star Gazer 3,Star,Red,438.62,707.29
+15110,Camping Equipment,Tents,Star Gazer 6,Star,Blue,490.00,831.88
+16110,Camping Equipment,Tents,Star Peg,Star,Silver,1.00,2.06
+17110,Camping Equipment,Sleeping Bags,Hibernator Lite,Hibernator,Light Blue,60.00,90.09
+18110,Camping Equipment,Sleeping Bags,Hibernator,Hibernator,Light Blue,86.00,146.83
+19110,Camping Equipment,Sleeping Bags,Hibernator Extreme,Extreme,Dark Blue,150.00,265.14
+20110,Camping Equipment,Sleeping Bags,Hibernator Self - Inflating Mat,Hibernator,Blue,56.72,127.27
+21110,Camping Equipment,Sleeping Bags,Hibernator Pad,Hibernator,Grey,18.83,41.31
+22110,Camping Equipment,Sleeping Bags,Hibernator Pillow,Hibernator,Purple,8.37,17.65
+23110,Camping Equipment,Sleeping Bags,Hibernator Camp Cot,Hibernator,Brown,65.41,104.48
+24110,Camping Equipment,Packs,Canyon Mule Climber Backpack,Canyon Mule,Red,52.50,76.86
+25110,Camping Equipment,Packs,Canyon Mule Weekender Backpack,Canyon Mule,Blue,165.91,285.89
+26110,Camping Equipment,Packs,Canyon Mule Journey Backpack,Canyon Mule,Black,213.33,370.86
+27110,Camping Equipment,Packs,Canyon Mule Extreme Backpack,Extreme,Blue,238.88,460.52
+28110,Camping Equipment,Packs,Canyon Mule Cooler,Canyon Mule,Blue,15.27,32.69
+29110,Camping Equipment,Packs,Canyon Mule Carryall,Canyon Mule,Blue,41.18,73.50
+30110,Camping Equipment,Lanterns,Firefly Lite,Firefly,Black,6.75,14.77
+31110,Camping Equipment,Lanterns,Firefly Mapreader,Firefly,Yellow,7.50,16.29
+32110,Camping Equipment,Lanterns,Firefly 2,Firefly,Silver,16.38,27.37
+33110,Camping Equipment,Lanterns,Firefly 4,Firefly,Yellow,17.84,29.44
+34110,Camping Equipment,Lanterns,Firefly Extreme,Extreme,Black,29.10,53.04
+35110,Camping Equipment,Lanterns,Firefly Multi-light,Firefly,Orange,17.78,26.54
+36110,Camping Equipment,Lanterns,EverGlow Single,EverGlow,Blue,17.95,35.10
+37110,Camping Equipment,Lanterns,EverGlow Double,EverGlow,Black,28.75,52.15
+38110,Camping Equipment,Lanterns,EverGlow Kerosene,EverGlow,Silver,20.00,31.55
+39110,Camping Equipment,Lanterns,EverGlow Butane,EverGlow,Blue,40.63,67.73
+40110,Camping Equipment,Lanterns,EverGlow Lamp,EverGlow,Black,14.76,27.81
+41110,Camping Equipment,Lanterns,Flicker Lantern,Firefly,Orange,15.62,35.09
+42110,Mountaineering Equipment,Rope,Husky Rope 50,Husky,Red,100.91,160.00
+43110,Mountaineering Equipment,Rope,Husky Rope 60,Husky,Red,126.51,190.00
+44110,Mountaineering Equipment,Rope,Husky Rope 100,Husky,Blue,227.69,346.66
+45110,Mountaineering Equipment,Rope,Husky Rope 200,Husky,Blue,370.35,574.98
+46110,Mountaineering Equipment,Safety,Granite Climbing Helmet,Granite,Orange,52.54,74.00
+47110,Mountaineering Equipment,Safety,Husky Harness,Husky,Black,43.77,65.00
+48110,Mountaineering Equipment,Safety,Husky Harness Extreme,Extreme,Black,53.93,110.00
+49110,Mountaineering Equipment,Safety,Granite Signal Mirror,Granite,Grey,15.47,33.00
+50110,Mountaineering Equipment,Climbing Accessories,Granite Carabiner,Granite,Silver,1.96,4.00
+51110,Mountaineering Equipment,Climbing Accessories,Granite Belay,Granite,Black,34.47,70.00
+52110,Mountaineering Equipment,Climbing Accessories,Granite Pulley,Granite,Black,18.35,38.00
+53110,Mountaineering Equipment,Climbing Accessories,Firefly Climbing Lamp,Firefly,Grey,21.57,39.99
+54110,Mountaineering Equipment,Climbing Accessories,Firefly Charger,Firefly,Black,22.36,52.99
+55110,Mountaineering Equipment,Climbing Accessories,Firefly Rechargeable Battery,Firefly,Yellow,3.15,8.00
+56110,Mountaineering Equipment,Climbing Accessories,Granite Chalk Bag,Granite,Multicolored,8.53,18.00
+57110,Mountaineering Equipment,Tools,Granite Ice,Granite,Silver,38.97,80.00
+58110,Mountaineering Equipment,Tools,Granite Hammer,Granite,Brown,56.88,79.98
+59110,Mountaineering Equipment,Tools,Granite Shovel,Granite,Black,37.07,59.99
+60110,Mountaineering Equipment,Tools,Granite Grip,Granite,Red,9.89,20.00
+61110,Mountaineering Equipment,Tools,Granite Axe,Granite,Brown,19.52,40.00
+62110,Mountaineering Equipment,Tools,Granite Extreme,Extreme,Silver,46.52,80.00
+63110,Personal Accessories,Watches,Mountain Man Analog,Mountain Man,Green,30.00,48.88
+63130,Personal Accessories,Watches,Mountain Man Analog,Mountain Man,Orange,30.00,48.88
+63140,Personal Accessories,Watches,Mountain Man Analog,Mountain Man,Orange,30.00,48.88
+64110,Personal Accessories,Watches,Mountain Man Digital,Mountain Man,Blue,20.00,41.61
+65110,Personal Accessories,Watches,Mountain Man Deluxe,Mountain Man,Red,39.00,81.55
+65120,Personal Accessories,Watches,Mountain Man Deluxe,Mountain Man,Red,39.00,81.55
+66110,Personal Accessories,Watches,Mountain Man Combination,Mountain Man,Black,45.00,98.01
+67110,Personal Accessories,Watches,Mountain Man Extreme,Extreme,Silver,116.19,294.38
+68110,Personal Accessories,Eyewear,Polar Sun,Polar,Silver,26.08,61.84
+68120,Personal Accessories,Eyewear,Polar Sun,Polar,Blue,26.08,61.84
+68190,Personal Accessories,Eyewear,Polar Sun,Polar,Blue,26.05,61.84
+68200,Personal Accessories,Eyewear,Polar Sun,Polar,Red,26.07,61.84
+68220,Personal Accessories,Eyewear,Polar Sun,Polar,Yellow,26.05,61.84
+68230,Personal Accessories,Eyewear,Polar Sun,Polar,Red,26.06,61.84
+68240,Personal Accessories,Eyewear,Polar Sun,Polar,Silver,26.05,61.84
+68250,Personal Accessories,Eyewear,Polar Sun,Polar,Yellow,26.08,61.84
+69110,Personal Accessories,Eyewear,Polar Ice,Polar,Black,49.69,109.25
+69120,Personal Accessories,Eyewear,Polar Ice,Polar,Black,49.69,110.00
+70110,Personal Accessories,Eyewear,Polar Sports,Polar,Blue,58.88,122.70
+70120,Personal Accessories,Eyewear,Polar Sports,Polar,Blue,58.88,122.70
+70140,Personal Accessories,Eyewear,Polar Sports,Polar,Red,58.88,122.70
+70160,Personal Accessories,Eyewear,Polar Sports,Polar,Yellow,58.88,122.70
+70200,Personal Accessories,Eyewear,Polar Sports,Polar,Red,58.88,122.70
+70240,Personal Accessories,Eyewear,Polar Sports,Polar,Silver,58.88,122.70
+70250,Personal Accessories,Eyewear,Polar Sports,Polar,Yellow,58.88,122.70
+71110,Personal Accessories,Eyewear,Polar Wave,Polar,Black,40.95,95.62
+72110,Personal Accessories,Eyewear,Polar Extreme,Extreme,Black,72.50,148.30
+73110,Personal Accessories,Knives,Single Edge,Edge,Black,8.56,12.78
+74110,Personal Accessories,Knives,Double Edge,Edge,Red,11.43,16.64
+75110,Personal Accessories,Knives,Edge Extreme,Extreme,Red,80.00,119.69
+76110,Personal Accessories,Knives,Bear Edge,Edge,Black,23.53,40.52
+77110,Personal Accessories,Knives,Bear Survival Edge,Edge,Silver,45.70,92.29
+78110,Personal Accessories,Binoculars,Seeker 35,Seeker,Black,71.19,105.29
+79110,Personal Accessories,Binoculars,Seeker 50,Seeker,Black,92.58,134.11
+80110,Personal Accessories,Binoculars,Seeker Extreme,Extreme,Black,94.12,182.67
+81110,Personal Accessories,Binoculars,Seeker Mini,Seeker,Black,40.00,85.56
+82110,Personal Accessories,Navigation,Glacier Basic,Glacier,Silver,19.93,32.72
+83110,Personal Accessories,Navigation,Glacier Deluxe,Glacier,Black,54.44,96.44
+84110,Personal Accessories,Navigation,Glacier GPS,Glacier,Black,74.06,113.97
+85110,Personal Accessories,Navigation,Glacier GPS Extreme,Extreme,Black,176.47,359.60
+86110,Outdoor Protection,Insect Repellents,BugShield Natural,BugShield,Clear,1.86,6.00
+87110,Outdoor Protection,Insect Repellents,BugShield Spray,BugShield,Clear,1.83,6.01
+88110,Outdoor Protection,Insect Repellents,BugShield Lotion Lite,BugShield,Clear,1.88,7.00
+89110,Outdoor Protection,Insect Repellents,BugShield Lotion,BugShield,Clear,2.33,7.00
+90110,Outdoor Protection,Insect Repellents,BugShield Extreme,Extreme,Clear,2.42,7.00
+91110,Outdoor Protection,Sunscreen,Sun Blocker,Sun,White,1.95,5.00
+92110,Outdoor Protection,Sunscreen,Sun Shelter Stick,Sun,White,1.96,5.00
+93110,Outdoor Protection,Sunscreen,Sun Shelter 15,Sun,White,1.79,4.99
+94110,Outdoor Protection,Sunscreen,Sun Shelter 30,Sun,White,1.85,5.00
+95110,Outdoor Protection,Sunscreen,Sun Shield,Sun,White,2.76,6.00
+96110,Outdoor Protection,First Aid,Compact Relief Kit,Relief,White,9.03,23.00
+97110,Outdoor Protection,First Aid,Deluxe Family Relief Kit,Relief,White,16.68,35.00
+98110,Outdoor Protection,First Aid,Calamine Relief,Relief,Clear,2.83,6.00
+99110,Outdoor Protection,First Aid,Aloe Relief,Relief,Clear,1.92,5.23
+100110,Outdoor Protection,First Aid,Insect Bite Relief,Relief,Clear,2.76,6.00
+101110,Golf Equipment,Irons,Hailstorm Steel Irons,Hailstorm,Silver,239.71,498.45
+102110,Golf Equipment,Irons,Hailstorm Titanium Irons,Hailstorm,Silver,466.57,928.53
+103110,Golf Equipment,Irons,Lady Hailstorm Steel Irons,Hailstorm,Silver,277.76,532.75
+104110,Golf Equipment,Irons,Lady Hailstorm Titanium Irons,Hailstorm,Silver,441.97,889.02
+105110,Golf Equipment,Woods,Hailstorm Titanium Woods Set,Hailstorm,Bronze,648.72,1271.08
+106110,Golf Equipment,Woods,Hailstorm Steel Woods Set,Hailstorm,Mahogany,384.45,798.56
+107110,Golf Equipment,Woods,Lady Hailstorm Titanium Woods Set,Hailstorm,Bronze,637.81,1359.72
+108110,Golf Equipment,Woods,Lady Hailstorm Steel Woods Set,Hailstorm,Mahogany,449.13,910.82
+109110,Golf Equipment,Putters,Course Pro Putter,Course Pro,Brass,31.12,74.96
+110110,Golf Equipment,Putters,Blue Steel Putter,Blue Steel,Black,41.20,90.95
+111110,Golf Equipment,Putters,Blue Steel Max Putter,Blue Steel,Bronze,89.41,180.63
+112110,Golf Equipment,Golf Accessories,Course Pro Golf and Tee Set,Course Pro,Multicolored,2.88,10.64
+113110,Golf Equipment,Golf Accessories,Course Pro Umbrella,Course Pro,Red,6.08,12.81
+114110,Golf Equipment,Golf Accessories,Course Pro Golf Bag,Course Pro,Grey,79.70,219.30
+115110,Golf Equipment,Golf Accessories,Course Pro Gloves,Course Pro,Red,2.54,10.71
+122110,Personal Accessories,Eyewear,Bella,Antoni,Blue,36.43,67.50
+122120,Personal Accessories,Eyewear,Bella,Antoni,Pink,36.44,66.95
+122130,Personal Accessories,Eyewear,Bella,Antoni,Silver,43.80,75.00
+122140,Personal Accessories,Eyewear,Bella,Antoni,White,36.16,67.50
+122150,Personal Accessories,Eyewear,Bella,Antoni,Yellow,35.89,67.50
+123110,Personal Accessories,Eyewear,Capri,Antoni,Green,25.17,38.30
+123120,Personal Accessories,Eyewear,Capri,Antoni,Orange,24.78,37.94
+123130,Personal Accessories,Eyewear,Capri,Antoni,Pink,24.63,38.30
+123140,Personal Accessories,Eyewear,Capri,Antoni,Red,24.92,38.30
+123150,Personal Accessories,Eyewear,Capri,Antoni,White,24.72,38.30
+123160,Personal Accessories,Eyewear,Capri,Antoni,Yellow,24.65,37.88
+124110,Personal Accessories,Eyewear,Cat Eye,Trakker,Brown,18.05,26.69
+124120,Personal Accessories,Eyewear,Cat Eye,Trakker,Green,18.31,26.80
+124130,Personal Accessories,Eyewear,Cat Eye,Trakker,Orange,17.97,26.51
+124140,Personal Accessories,Eyewear,Cat Eye,Trakker,Pink,18.13,26.63
+124150,Personal Accessories,Eyewear,Cat Eye,Trakker,Red,18.06,26.80
+124160,Personal Accessories,Eyewear,Cat Eye,Trakker,White,17.94,26.80
+124170,Personal Accessories,Eyewear,Cat Eye,Trakker,Yellow,18.19,26.80
+124180,Personal Accessories,Eyewear,Cat Eye,Trakker,Camouflage,20.14,30.50
+124190,Personal Accessories,Eyewear,Cat Eye,Trakker,Black,28.17,43.64
+125110,Personal Accessories,Watches,Venue,Relax,Black,41.50,71.93
+125120,Personal Accessories,Watches,Venue,Relax,Green,41.58,72.00
+125130,Personal Accessories,Watches,Venue,Relax,Orange,41.30,73.00
+125140,Personal Accessories,Watches,Venue,Relax,Pink,41.23,71.37
+125150,Personal Accessories,Watches,Venue,Relax,Red,42.04,73.00
+125160,Personal Accessories,Watches,Venue,Relax,White,41.54,73.00
+125170,Personal Accessories,Watches,Venue,Relax,Yellow,39.84,70.00
+126110,Personal Accessories,Eyewear,Dante,Antoni,Blue,26.04,43.20
+126120,Personal Accessories,Eyewear,Dante,Antoni,Orange,28.47,43.85
+126130,Personal Accessories,Eyewear,Dante,Antoni,Pink,28.14,43.45
+126140,Personal Accessories,Eyewear,Dante,Antoni,Red,28.21,43.68
+126150,Personal Accessories,Eyewear,Dante,Antoni,Silver,31.41,48.25
+127110,Personal Accessories,Eyewear,Fairway,Alpha,Black,12.10,20.37
+127120,Personal Accessories,Eyewear,Fairway,Alpha,Blue,12.28,20.80
+127130,Personal Accessories,Eyewear,Fairway,Alpha,Brown,12.15,20.51
+127140,Personal Accessories,Eyewear,Fairway,Alpha,Green,12.42,21.18
+127150,Personal Accessories,Eyewear,Fairway,Alpha,Orange,11.86,20.15
+128110,Personal Accessories,Eyewear,Inferno,Epoch,Green,36.15,67.50
+128120,Personal Accessories,Eyewear,Inferno,Epoch,Orange,35.89,67.50
+128130,Personal Accessories,Eyewear,Inferno,Epoch,Red,36.09,67.50
+128140,Personal Accessories,Eyewear,Inferno,Epoch,Black,39.47,65.61
+128150,Personal Accessories,Eyewear,Inferno,Epoch,Blue,39.26,65.19
+128160,Personal Accessories,Eyewear,Inferno,Epoch,Green,39.98,67.60
+128170,Personal Accessories,Eyewear,Inferno,Epoch,Red,39.81,67.60
+128180,Personal Accessories,Eyewear,Inferno,Epoch,Silver,45.71,74.88
+128190,Personal Accessories,Eyewear,Inferno,Epoch,Yellow,38.93,65.00
+128200,Personal Accessories,Eyewear,Inferno,Epoch,Camouflage,40.58,72.07
+128210,Personal Accessories,Eyewear,Inferno,Epoch,Black,34.34,62.65
+129110,Personal Accessories,Watches,Infinity,Epoch,Black,118.57,225.46
+129120,Personal Accessories,Watches,Infinity,Epoch,Blue,119.79,227.83
+129130,Personal Accessories,Watches,Infinity,Epoch,Red,118.05,224.49
+129140,Personal Accessories,Watches,Infinity,Epoch,Yellow,120.71,229.60
+129150,Personal Accessories,Watches,Infinity,Epoch,Black,145.27,248.54
+129160,Personal Accessories,Watches,Infinity,Epoch,Yellow,139.85,240.00
+129170,Personal Accessories,Watches,Infinity,Epoch,Blue,138.14,249.00
+129180,Personal Accessories,Watches,Infinity,Epoch,Red,137.69,248.26
+130110,Personal Accessories,Watches,Lux,Xray,Black,85.92,165.85
+130120,Personal Accessories,Watches,Lux,Xray,Brown,84.96,167.20
+130130,Personal Accessories,Watches,Lux,Xray,Silver,94.07,178.27
+130140,Personal Accessories,Watches,Lux,Xray,White,84.72,167.20
+130150,Personal Accessories,Watches,Lux,Xray,Yellow,84.58,167.20
+131110,Personal Accessories,Knives,Max Gizmo,Trakker,Red,18.15,39.31
+131120,Personal Accessories,Knives,Max Gizmo,Trakker,Silver,18.17,39.34
+131130,Personal Accessories,Knives,Max Gizmo,Trakker,Camouflage,17.05,40.50
+132110,Personal Accessories,Eyewear,Maximus,Alpha,Black,40.65,81.22
+132120,Personal Accessories,Eyewear,Maximus,Alpha,Brown,40.47,80.45
+132130,Personal Accessories,Eyewear,Maximus,Alpha,Orange,39.68,80.00
+132140,Personal Accessories,Eyewear,Maximus,Alpha,Red,41.42,83.87
+132150,Personal Accessories,Eyewear,Maximus,Alpha,Silver,46.07,90.00
+132160,Personal Accessories,Eyewear,Maximus,Alpha,Yellow,39.52,80.00
+132170,Personal Accessories,Eyewear,Maximus,Alpha,Camouflage,41.34,86.70
+133110,Personal Accessories,Binoculars,Opera Vision,Antoni,Camouflage,50.40,110.00
+134110,Personal Accessories,Knives,Pocket Gizmo,Trakker,Blue,4.87,12.20
+134120,Personal Accessories,Knives,Pocket Gizmo,Trakker,Red,4.96,12.52
+134130,Personal Accessories,Knives,Pocket Gizmo,Trakker,Silver,5.25,12.90
+134140,Personal Accessories,Knives,Pocket Gizmo,Trakker,Camouflage,4.65,12.68
+135110,Personal Accessories,Binoculars,Ranger Vision,Trakker,Black,76.28,163.48
+135120,Personal Accessories,Binoculars,Ranger Vision,Trakker,Silver,93.50,165.73
+135130,Personal Accessories,Binoculars,Ranger Vision,Trakker,Camouflage,76.60,165.19
+136110,Personal Accessories,Watches,Sam,Relax,Black,28.36,47.30
+136120,Personal Accessories,Watches,Sam,Relax,Orange,26.90,44.90
+136130,Personal Accessories,Watches,Sam,Relax,Pink,28.37,47.30
+136140,Personal Accessories,Watches,Sam,Relax,Red,27.81,46.11
+136150,Personal Accessories,Watches,Sam,Relax,Yellow,28.25,47.30
+140110,Personal Accessories,Navigation,Trail Master,Alpha,Black,234.90,365.00
+141110,Personal Accessories,Navigation,Trail Scout,Alpha,Black,152.90,238.00
+142110,Personal Accessories,Navigation,Trail Star,Alpha,Silver,88.57,154.00
+143110,Personal Accessories,Eyewear,Trendi,Relax,Black,30.02,50.00
+143120,Personal Accessories,Eyewear,Trendi,Relax,Brown,30.01,50.00
+143130,Personal Accessories,Eyewear,Trendi,Relax,Pink,30.10,49.92
+143140,Personal Accessories,Eyewear,Trendi,Relax,Silver,31.26,50.80
+143150,Personal Accessories,Eyewear,Trendi,Relax,White,29.53,50.30
+144110,Personal Accessories,Watches,TX,Xray,Blue,103.68,188.00
+144120,Personal Accessories,Watches,TX,Xray,Brown,106.08,192.40
+144130,Personal Accessories,Watches,TX,Xray,Green,108.32,199.60
+144140,Personal Accessories,Watches,TX,Xray,Yellow,103.21,188.00
+144150,Personal Accessories,Watches,TX,Xray,Camouflage,107.42,203.08
+144160,Personal Accessories,Watches,TX,Xray,Blue,68.85,125.40
+144170,Personal Accessories,Watches,TX,Xray,Red,101.72,184.90
+144180,Personal Accessories,Watches,TX,Xray,Silver,105.69,192.05
+144190,Personal Accessories,Watches,TX,Xray,Yellow,98.85,180.00
+144200,Personal Accessories,Watches,TX,Xray,Camouflage,100.50,197.39
+145110,Personal Accessories,Watches,Legend,Epoch,Green,115.72,220.00
+145120,Personal Accessories,Watches,Legend,Epoch,Brown,148.56,254.00
+145130,Personal Accessories,Watches,Legend,Epoch,Silver,154.41,264.24
+145140,Personal Accessories,Watches,Legend,Epoch,Black,138.18,249.00
+145150,Personal Accessories,Watches,Legend,Epoch,Orange,132.46,240.00
+145160,Personal Accessories,Watches,Legend,Epoch,Pink,135.10,243.87
+145170,Personal Accessories,Watches,Legend,Epoch,Silver,148.60,267.69
+145180,Personal Accessories,Watches,Legend,Epoch,White,138.17,249.00
+146110,Personal Accessories,Watches,Zodiak,Trakker,Blue,62.04,107.98
+146120,Personal Accessories,Watches,Zodiak,Trakker,Brown,61.19,106.49
+146130,Personal Accessories,Watches,Zodiak,Trakker,Green,61.99,107.92
+146140,Personal Accessories,Watches,Zodiak,Trakker,Silver,67.32,115.67
+147110,Personal Accessories,Eyewear,Zone,Relax,Black,20.96,31.42
+147120,Personal Accessories,Eyewear,Zone,Relax,Blue,20.73,31.03
+147130,Personal Accessories,Eyewear,Zone,Relax,Brown,21.12,31.70
+147140,Personal Accessories,Eyewear,Zone,Relax,Silver,25.36,37.05
+147150,Personal Accessories,Eyewear,Zone,Relax,Camouflage,22.50,35.49
+147160,Personal Accessories,Eyewear,Zone,Relax,Black,20.97,30.89
+147170,Personal Accessories,Eyewear,Zone,Relax,Brown,21.13,31.15
+147180,Personal Accessories,Eyewear,Zone,Relax,Silver,21.00,31.01
+147190,Personal Accessories,Eyewear,Zone,Relax,Camouflage,21.62,33.30
+148110,Personal Accessories,Eyewear,Hawk Eye,Trakker,Black,24.66,41.41
+148120,Personal Accessories,Eyewear,Hawk Eye,Trakker,Brown,24.73,41.67
+148130,Personal Accessories,Eyewear,Hawk Eye,Trakker,Camouflage,23.68,41.93
+149110,Personal Accessories,Eyewear,Retro,Epoch,Blue,33.56,62.65
+149120,Personal Accessories,Eyewear,Retro,Epoch,Green,34.40,62.65
+149130,Personal Accessories,Eyewear,Retro,Epoch,Orange,34.18,62.65
+149140,Personal Accessories,Eyewear,Retro,Epoch,Red,34.22,62.65
+149150,Personal Accessories,Eyewear,Retro,Epoch,White,33.56,62.65
+149160,Personal Accessories,Eyewear,Retro,Epoch,Yellow,34.38,62.65
+151110,Personal Accessories,Navigation,Astro Pilot,Trakker,Black,90.34,145.00
+151120,Personal Accessories,Navigation,Astro Pilot,Trakker,Silver,232.70,358.00
+151130,Personal Accessories,Navigation,Astro Pilot,Trakker,Yellow,223.50,358.00
+152110,Personal Accessories,Navigation,Sky Pilot,Trakker,Black,234.22,358.00
+153110,Personal Accessories,Navigation,Auto Pilot,Trakker,Silver,152.98,235.00
+154110,Personal Accessories,Watches,Kodiak,Trakker,Blue,66.67,120.30
+154120,Personal Accessories,Watches,Kodiak,Trakker,Brown,67.79,122.51
+154130,Personal Accessories,Watches,Kodiak,Trakker,Green,66.83,120.76
+154140,Personal Accessories,Watches,Kodiak,Trakker,Silver,74.11,136.20
+154150,Personal Accessories,Watches,Kodiak,Trakker,Camouflage,69.08,132.77
