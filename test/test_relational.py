@@ -181,7 +181,9 @@ class TestJoin(unittest.TestCase):
     # Composite key join having conditions involving more than 2 tables
     # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(
+            ValueError, "info.*main.*inFo.* more than two tables"
+        ):
             trainable = Join(
                 pred=[
                     it.t1.tid == it.info.TrainId,
@@ -201,8 +203,8 @@ class TestJoin(unittest.TestCase):
 
     # Single joining conditions are not chained
     # This test case execution should throw a ValueError which is handled in the test case itself
-    def test_join_pandas_composite_error1(self):
-        with self.assertRaises(ValueError):
+    def test_join_pandas_single_error1(self):
+        with self.assertRaisesRegex(ValueError, "t3.*t2.* were used"):
             trainable = Join(
                 pred=[
                     it.t1.tid == it.info.TrainId,
@@ -220,10 +222,31 @@ class TestJoin(unittest.TestCase):
                 ]
             )
 
+    def test_join_pandas_composite_nochain_error(self):
+        with self.assertRaisesRegex(ValueError, "t3.*t2.* were used"):
+            trainable = Join(
+                pred=[
+                    it.t1.tid == it.info.TrainId,
+                    [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
+                    [it.t3.tid == it.t2.t_id, it.t3.TrainId == it.t2.TrainId],
+                ],
+                join_type="inner",
+            )
+            _ = trainable.transform(
+                [
+                    {"main": self.df1},
+                    {"info": self.df5},
+                    {"t1": self.df3},
+                    {"t2": self.df6},
+                ]
+            )
+
     # Composite key join having conditions involving more than 2 tables
     # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error2(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaisesRegex(
+            ValueError, "main.*info.*Main.*inFo.*more than two"
+        ):
             trainable = Join(
                 pred=[
                     it.t1.tid == it.info.TrainId,
