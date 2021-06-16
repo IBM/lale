@@ -80,13 +80,25 @@ _hyperparams_schema = {
                     "description": "Specifies if a constant (a.k.a",
                 },
                 "cv": {
-                    "XXX TODO XXX": "integer or cross-validation generator, default: None",
-                    "description": "The default cross-validation generator used is Stratified K-Folds",
-                    "type": "integer",
-                    "minimumForOptimizer": 3,
-                    "maximumForOptimizer": 4,
-                    "distribution": "uniform",
-                    "default": 3,
+                    "description": """Cross-validation as integer or as object that has a split function.
+                        The fit method performs cross validation on the input dataset for per
+                        trial, and uses the mean cross validation performance for optimization.
+                        This behavior is also impacted by handle_cv_failure flag.
+                        If integer: number of folds in sklearn.model_selection.StratifiedKFold.
+                        If object with split function: generator yielding (train, test) splits
+                        as arrays of indices. Can use any of the iterators from
+                        https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimum": 1,
+                            "default": 5,
+                            "minimumForOptimizer": 3,
+                            "maximumForOptimizer": 4,
+                            "distribution": "uniform",
+                        },
+                        {"laleType": "Any", "forOptimizer": False},
+                    ],
                 },
                 "dual": {
                     "type": "boolean",

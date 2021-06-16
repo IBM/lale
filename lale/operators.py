@@ -1337,6 +1337,8 @@ class IndividualOp(Operator):
         if name == "_estimator_type":
             if self.is_classifier():
                 return "classifier"  # satisfy sklearn.base.is_classifier(op)
+            elif self.is_regressor():
+                return "regressor"  # satisfy sklearn.base.is_regressor(op)
 
         return super().__getattr__(name)
 
@@ -1885,6 +1887,9 @@ class IndividualOp(Operator):
 
     def is_classifier(self) -> bool:
         return self.has_tag("classifier")
+
+    def is_regressor(self) -> bool:
+        return self.has_tag("regressor")
 
     def has_method(self, method_name: str) -> bool:
         return hasattr(self._impl, method_name)

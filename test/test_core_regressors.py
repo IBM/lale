@@ -46,7 +46,11 @@ def create_function_test_regressor(clf_name):
         module = importlib.import_module(module_name)
 
         class_ = getattr(module, class_name)
-        regr = class_()
+        regr = None
+        if class_name in ["StackingRegressor", "VotingRegressor"]:
+            regr = class_(estimators=[("base", SGDRegressor())])
+        else:
+            regr = class_()
 
         # test_schemas_are_schemas
         lale.type_checking.validate_is_schema(regr.input_schema_fit())
@@ -88,6 +92,7 @@ def create_function_test_regressor(clf_name):
 
 
 regressors = [
+    "lale.lib.sklearn.BaggingRegressor",
     "lale.lib.sklearn.DummyRegressor",
     "lale.lib.sklearn.RandomForestRegressor",
     "lale.lib.sklearn.DecisionTreeRegressor",
@@ -102,6 +107,8 @@ regressors = [
     "lale.lib.sklearn.SVR",
     "lale.lib.sklearn.KNeighborsRegressor",
     "lale.lib.sklearn.LinearSVR",
+    "lale.lib.sklearn.StackingRegressor",
+    "lale.lib.sklearn.VotingRegressor",
 ]
 for clf in regressors:
     setattr(

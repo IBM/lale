@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import pandas as pd
-from sklearn.ensemble import BaggingClassifier as SKLModel
+from sklearn.ensemble import BaggingRegressor as SKLModel
 
 import lale.docstrings
 import lale.operators
@@ -21,7 +21,7 @@ import lale.operators
 from .function_transformer import FunctionTransformer
 
 
-class _BaggingClassifierImpl:
+class _BaggingRegressorImpl:
     def __init__(
         self,
         base_estimator=None,
@@ -79,18 +79,12 @@ class _BaggingClassifierImpl:
     def predict(self, X):
         return self._wrapped_model.predict(X)
 
-    def predict_proba(self, X):
-        return self._wrapped_model.predict_proba(X)
-
-    def decision_function(self, X):
-        return self._wrapped_model.decision_function(X)
-
     def score(self, X, y, sample_weight=None):
         return self._wrapped_model.score(X, y, sample_weight)
 
 
 _hyperparams_schema = {
-    "description": "A Bagging classifier.",
+    "description": "A Bagging regressor.",
     "allOf": [
         {
             "type": "object",
@@ -231,12 +225,9 @@ _input_fit_schema = {
             "description": "The training input samples. Sparse matrices are accepted only if",
         },
         "y": {
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-            "description": "The target values (class labels).",
+            "type": "array",
+            "items": {"type": "number"},
+            "description": "The target values (class labels in classification, real numbers in",
         },
         "sample_weight": {
             "anyOf": [
@@ -270,59 +261,8 @@ _output_predict_schema = {
     "items": {"type": "number"},
 }
 
-_input_predict_proba_schema = {
-    "type": "object",
-    "required": ["X"],
-    "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-            "description": "The training input samples. Sparse matrices are accepted only if",
-        },
-    },
-}
-
-_output_predict_proba_schema = {
-    "type": "array",
-    "items": {
-        "type": "array",
-        "items": {"type": "number"},
-    },
-}
-
-_input_decision_function_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        }
-    },
-}
-
-_output_decision_function_schema = {
-    "anyOf": [
-        {
-            "description": "In the multi-way case, score per (sample, class) combination.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
-        {
-            "description": "In the binary case, score for `self._classes[1]`.",
-            "type": "array",
-            "items": {"type": "number"},
-        },
-    ],
-}
-
 _input_score_schema = {
-    "description": "Return the mean accuracy on the given test data and labels.",
+    "description": "Return the coefficient of determination R^2 of the prediction.",
     "type": "object",
     "required": ["X", "y"],
     "properties": {
@@ -332,12 +272,12 @@ _input_score_schema = {
                 "type": "array",
                 "items": {"type": "number"},
             },
-            "description": "Test samples.",
+            "description": "Test samples. For some estimators this may be a precomputed kernel matrix or a list of generic objects instead with shape (n_samples, n_samples_fitted), where n_samples_fitted is the number of samples used in the fitting for the estimator.",
         },
         "y": {
             "type": "array",
             "items": {"type": "number"},
-            "description": "True labels for 'X'.",
+            "description": "True values for 'X'.",
         },
         "sample_weight": {
             "anyOf": [
@@ -352,7 +292,7 @@ _input_score_schema = {
     },
 }
 _output_score_schema = {
-    "description": "Mean accuracy of 'self.predict' wrt 'y'",
+    "description": "R^2 of 'self.predict' wrt 'y'",
     "type": "number",
 }
 
@@ -371,18 +311,14 @@ _combined_schemas = {
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_decision_function_schema,
-        "output_decision_function": _output_decision_function_schema,
         "input_score": _input_score_schema,
         "output_score": _output_score_schema,
     },
 }
 
 
-BaggingClassifier = lale.operators.make_operator(
-    _BaggingClassifierImpl, _combined_schemas
+BaggingRegressor = lale.operators.make_operator(
+    _BaggingRegressorImpl, _combined_schemas
 )
 
-lale.docstrings.set_docstrings(BaggingClassifier)
+lale.docstrings.set_docstrings(BaggingRegressor)

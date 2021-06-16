@@ -320,6 +320,55 @@ class TestBaggingClassifier(unittest.TestCase):
         _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
 
 
+class TestStackingClassifier(unittest.TestCase):
+    def setUp(self):
+        from sklearn.model_selection import train_test_split
+
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_with_lale_classifiers(self):
+        from lale.lib.sklearn import StackingClassifier
+
+        clf = StackingClassifier(estimators=[("base", LogisticRegression())])
+        trained = clf.fit(self.X_train, self.y_train)
+        trained.predict(self.X_test)
+
+    def test_with_lale_pipeline(self):
+        from lale.lib.sklearn import StackingClassifier
+
+        clf = StackingClassifier(estimators=[("base", PCA() >> LogisticRegression())])
+        trained = clf.fit(self.X_train, self.y_train)
+        trained.predict(self.X_test)
+
+    def test_with_hyperopt(self):
+        from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import StackingClassifier
+
+        clf = StackingClassifier(estimators=[("base", LogisticRegression())])
+        trained = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+        print(trained.to_json())
+
+    def test_pipeline_with_hyperopt(self):
+        from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import StackingClassifier
+
+        clf = StackingClassifier(estimators=[("base", PCA() >> LogisticRegression())])
+        _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+    def test_pipeline_choice_with_hyperopt(self):
+        from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import StackingClassifier
+
+        clf = StackingClassifier(
+            estimators=[
+                ("base", PCA() >> (LogisticRegression() | KNeighborsClassifier()))
+            ]
+        )
+        _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+
 class TestSpuriousSideConstraintsClassification(unittest.TestCase):
     # This was prompted buy a bug, keeping it as it may help with support for other sklearn versions
     def setUp(self):

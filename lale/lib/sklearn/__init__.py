@@ -38,6 +38,7 @@ Classifiers:
 * lale.lib.sklearn. `RandomForestClassifier`_
 * lale.lib.sklearn. `RidgeClassifier`_
 * lale.lib.sklearn. `SGDClassifier`_
+* lale.lib.sklearn. `StackingClassifier`_
 * lale.lib.sklearn. `SVC`_
 * lale.lib.sklearn. `VotingClassifier`_
 
@@ -50,11 +51,13 @@ Regressors:
 * lale.lib.sklearn. `GradientBoostingRegressor`_
 * lale.lib.sklearn. `KNeighborsRegressor`_
 * lale.lib.sklearn. `LinearRegression`_
+* lale.lib.sklearn. `LinearSVR`_
 * lale.lib.sklearn. `RandomForestRegressor`_
 * lale.lib.sklearn. `Ridge`_
 * lale.lib.sklearn. `SGDRegressor`_
+* lale.lib.sklearn. `StackingRegressor`_
 * lale.lib.sklearn. `SVR`_
-* lale.lib.sklearn. `LinearSVR`_
+* lale.lib.sklearn. `VotingRegressor`_
 
 Transformers:
 
@@ -142,11 +145,17 @@ Clustering:
 .. _`TfidfVectorizer`: lale.lib.sklearn.tfidf_vectorizer.html
 .. _`VarianceThreshold`: lale.lib.sklearn.variance_threshold.html
 .. _`VotingClassifier`: lale.lib.sklearn.voting_classifier.html
+.. _`VotingRegressor`: lale.lib.sklearn.voting_regressor.html
+.. _`StackingClassifier`: lale.lib.sklearn.stacking_classifier.html
+.. _`StackingRegressor`: lale.lib.sklearn.stacking_regressor.html
 """
+
+from sklearn import __version__ as sklearn_version
 
 from .ada_boost_classifier import AdaBoostClassifier
 from .ada_boost_regressor import AdaBoostRegressor
 from .bagging_classifier import BaggingClassifier
+from .bagging_regressor import BaggingRegressor
 from .column_transformer import ColumnTransformer
 from .decision_tree_classifier import DecisionTreeClassifier
 from .decision_tree_regressor import DecisionTreeRegressor
@@ -193,6 +202,12 @@ from .select_k_best import SelectKBest
 from .sgd_classifier import SGDClassifier
 from .sgd_regressor import SGDRegressor
 from .simple_imputer import SimpleImputer
+
+if sklearn_version >= "0.21":
+    from .stacking_classifier import StackingClassifier
+    from .stacking_regressor import StackingRegressor
+    from .voting_regressor import VotingRegressor
+
 from .standard_scaler import StandardScaler
 from .svc import SVC
 from .svr import SVR

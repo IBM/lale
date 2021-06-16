@@ -13,31 +13,22 @@
 # limitations under the License.
 
 import sklearn
-from sklearn.ensemble import VotingClassifier as SKLModel
+import sklearn.ensemble
 
 import lale.docstrings
 import lale.operators
 
-
-class _VotingClassifierImpl(SKLModel):
-    # defining predict_proba regardless of whether classification is 'hard' or 'soft'
-    def predict_proba(self, X):
-        return self._predict_proba(X)
-
-
 _hyperparams_schema = {
-    "description": "Soft Voting/Majority Rule classifier for unfitted estimators.",
+    "description": "Prediction voting regressor for unfitted estimators.",
     "allOf": [
         {
             "type": "object",
             "required": [
                 "estimators",
-                "voting",
                 "weights",
                 "n_jobs",
-                "flatten_transform",
             ],
-            "relevantToOptimizer": ["voting"],
+            "relevantToOptimizer": ["weights"],
             "additionalProperties": False,
             "properties": {
                 "estimators": {
@@ -51,11 +42,6 @@ _hyperparams_schema = {
                         ],
                     },
                     "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
-                },
-                "voting": {
-                    "enum": ["hard", "soft"],
-                    "default": "hard",
-                    "description": "If 'hard', uses predicted class labels for majority rule voting.",
                 },
                 "weights": {
                     "anyOf": [
@@ -73,29 +59,7 @@ _hyperparams_schema = {
                     "default": None,
                     "description": "The number of jobs to run in parallel for ``fit``.",
                 },
-                "flatten_transform": {
-                    "type": "boolean",
-                    "default": True,
-                    "description": "Affects shape of transform output only when voting='soft'",
-                },
             },
-        },
-        {
-            "description": "Parameter: flatten_transform > only when voting='soft' if voting='soft' and flatten_transform=true",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "voting": {"enum": ["soft"]},
-                    },
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "flatten_transform": {"enum": [True]},
-                    },
-                },
-            ],
         },
     ],
 }
@@ -110,15 +74,12 @@ _input_fit_schema = {
                 "type": "array",
                 "items": {"type": "number"},
             },
-            "description": "Training vectors, where n_samples is the number of samples and n_features is the number of features.",
+            "description": "Input samples.",
         },
         "y": {
-            "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
-                {"type": "array", "items": {"type": "string"}},
-                {"type": "array", "items": {"type": "boolean"}},
-            ],
-            "description": "The target values (class labels).",
+            "type": "array",
+            "items": {"type": "number"},
+            "description": "Target values.",
         },
         "sample_weight": {
             "anyOf": [
@@ -132,8 +93,8 @@ _input_fit_schema = {
         },
     },
 }
-_input_transform_schema = {
-    "description": "Return class labels or probabilities for X for each estimator.",
+_input_fit_transform_schema = {
+    "description": "Return class labels or probabilities for X for each estimator. Return predictions for X for each estimator.",
     "type": "object",
     "properties": {
         "X": {
@@ -142,12 +103,43 @@ _input_transform_schema = {
                 "type": "array",
                 "items": {"type": "number"},
             },
-            "description": "Training vectors, where n_samples is the number of samples and",
+            "description": "Input samples",
+        },
+        "y": {
+            "type": "array",
+            "items": {"type": "number"},
+            "default": "None",
+            "description": "Target values. (None for unsupervised transformations.)",
+        },
+    },
+}
+_output_fit_transform_schema = {
+    "description": "Transformed array.",
+    "type": "array",
+    "items": {
+        "type": "array",
+        "items": {
+            "type": "array",
+            "items": {"type": "number"},
+        },
+    },
+}
+_input_transform_schema = {
+    "description": "Return predictions for X for each estimator.",
+    "type": "object",
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"type": "number"},
+            },
+            "description": "Input samples",
         },
     },
 }
 _output_transform_schema = {
-    "description": "If `voting='soft'` and `flatten_transform=True`:",
+    "description": "Values predicted by each regressor",
     "type": "array",
     "items": {
         "type": "array",
@@ -179,9 +171,10 @@ _output_predict_schema = {
     "type": "array",
     "items": {"type": "number"},
 }
-_input_predict_proba_schema = {
-    "description": "Compute probabilities of possible outcomes for samples in X.",
+_input_score_schema = {
+    "description": "Return the coefficient of determination R^2 of the prediction.",
     "type": "object",
+    "required": ["X", "y"],
     "properties": {
         "X": {
             "type": "array",
@@ -189,47 +182,30 @@ _input_predict_proba_schema = {
                 "type": "array",
                 "items": {"type": "number"},
             },
-            "description": "The input samples.",
+            "description": "Test samples. For some estimators this may be a precomputed kernel matrix or a list of generic objects instead with shape (n_samples, n_samples_fitted), where n_samples_fitted is the number of samples used in the fitting for the estimator.",
         },
-    },
-}
-_output_predict_proba_schema = {
-    "description": "Weighted average probability for each class per sample.",
-    "type": "array",
-    "items": {
-        "type": "array",
-        "items": {"type": "number"},
-    },
-}
-
-_input_decision_function_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        }
-    },
-}
-
-_output_decision_function_schema = {
-    "description": "Confidence scores for samples for each class in the model.",
-    "anyOf": [
-        {
-            "description": "In the multi-way case, score per (sample, class) combination.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        },
-        {
-            "description": "In the binary case, score for `self._classes[1]`.",
+        "y": {
             "type": "array",
             "items": {"type": "number"},
+            "description": "True values for 'X'.",
         },
-    ],
+        "sample_weight": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                },
+                {"enum": [None]},
+            ],
+            "description": "Sample weights. If None, then samples are equally weighted.",
+        },
+    },
 }
+_output_score_schema = {
+    "description": "R^2 of 'self.predict' wrt 'y'",
+    "type": "number",
+}
+
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -246,24 +222,24 @@ _combined_schemas = {
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
+        "input_score_schema": _input_score_schema,
+        "output_score_schema": _output_score_schema,
         "input_transform": _input_transform_schema,
         "output_transform": _output_transform_schema,
-        "input_decision_function": _input_decision_function_schema,
-        "output_decision_function": _output_decision_function_schema,
+        "input_fit_transform": _input_fit_transform_schema,
+        "output_fit_transform": _output_fit_transform_schema,
     },
 }
 
-VotingClassifier: lale.operators.PlannedIndividualOp
-VotingClassifier = lale.operators.make_operator(
-    _VotingClassifierImpl, _combined_schemas
+VotingRegressor: lale.operators.PlannedIndividualOp
+VotingRegressor = lale.operators.make_operator(
+    sklearn.ensemble.VotingRegressor, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
     # old: N/A (new in this version)
-    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
-    VotingClassifier = VotingClassifier.customize_schema(
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingRegressor.html
+    VotingRegressor = VotingRegressor.customize_schema(
         estimators={
             "type": "array",
             "items": {
@@ -274,14 +250,14 @@ if sklearn.__version__ >= "0.21":
                     {"anyOf": [{"laleType": "operator"}, {"enum": [None, "drop"]}]},
                 ],
             },
-            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
+            "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingRegressor`` will fit clones.",
         }
     )
 
 if sklearn.__version__ >= "0.24":
-    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingClassifier.html
-    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.VotingClassifier.html
-    VotingClassifier = VotingClassifier.customize_schema(
+    # old: https://scikit-learn.org/0.21/modules/generated/sklearn.ensemble.VotingRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.VotingRegressor.html
+    VotingRegressor = VotingRegressor.customize_schema(
         estimators={
             "type": "array",
             "items": {
@@ -297,4 +273,4 @@ if sklearn.__version__ >= "0.24":
     )
 
 
-lale.docstrings.set_docstrings(VotingClassifier)
+lale.docstrings.set_docstrings(VotingRegressor)

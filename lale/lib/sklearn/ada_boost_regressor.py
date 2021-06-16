@@ -12,17 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 from sklearn.ensemble import AdaBoostRegressor as SKLModel
 
 import lale.docstrings
 import lale.operators
-from lale.lib.sklearn.ada_boost_classifier import FitSpecProxy
+
+from .fit_spec_proxy import _FitSpecProxy
+from .function_transformer import FunctionTransformer
 
 
 class _AdaBoostRegressorImpl:
     def __init__(
         self,
         base_estimator=None,
+        *,
         n_estimators=50,
         learning_rate=1.0,
         loss="linear",
@@ -31,7 +35,7 @@ class _AdaBoostRegressorImpl:
         if base_estimator is None:
             estimator_impl = None
         else:
-            estimator_impl = FitSpecProxy(base_estimator)
+            estimator_impl = _FitSpecProxy(base_estimator)
 
         self._hyperparams = {
             "base_estimator": estimator_impl,
@@ -50,6 +54,16 @@ class _AdaBoostRegressorImpl:
         return out
 
     def fit(self, X, y=None):
+        if isinstance(X, pd.DataFrame):
+            feature_transformer = FunctionTransformer(
+                func=lambda X_prime: pd.DataFrame(X_prime, columns=X.columns),
+                inverse_func=None,
+                check_inverse=False,
+            )
+            self._hyperparams["base_estimator"] = _FitSpecProxy(
+                feature_transformer >> self._hyperparams["base_estimator"]
+            )
+            self._wrapped_model = SKLModel(**self._hyperparams)
         if y is not None:
             self._wrapped_model.fit(X, y)
         else:
