@@ -629,6 +629,40 @@ class TestIsolationForest(unittest.TestCase):
         trained = hyperopt.fit(self.X_train)
         _ = trained.predict(self.X_test)
 
+    def test_decision_function_1(self):
+        def my_scorer(estimator, X, y=None):
+            return 1
+
+        from lale.lib.lale import Hyperopt
+
+        hyperopt = Hyperopt(
+            estimator=IsolationForest(max_features=1.0, max_samples=1.0),
+            max_evals=5,
+            verbose=True,
+            scoring=my_scorer,
+        )
+        trained = hyperopt.fit(self.X_train)
+        pipeline = trained.get_pipeline()
+        _ = pipeline.decision_function(self.X_test)
+
+    def test_decision_function_2(self):
+        def my_scorer(estimator, X, y=None):
+            return 1
+
+        from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import MinMaxScaler
+
+        hyperopt = Hyperopt(
+            estimator=MinMaxScaler()
+            >> IsolationForest(max_features=1.0, max_samples=1.0),
+            max_evals=5,
+            verbose=True,
+            scoring=my_scorer,
+        )
+        trained = hyperopt.fit(self.X_train)
+        pipeline = trained.get_pipeline()
+        _ = pipeline.decision_function(self.X_test)
+
 
 class TestKMeans(unittest.TestCase):
     def setUp(self):
