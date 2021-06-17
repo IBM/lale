@@ -595,6 +595,7 @@ class Operator(metaclass=AbstractVisitorMeta):
             "predict_proba",
             "decision_function",
             "score",
+            "score_samples",
         ]:
             if isinstance(self, TrainedIndividualOp):
                 raise AttributeError(
@@ -888,6 +889,22 @@ class TrainedOperator(TrainableOperator):
         -------
         result :
             Confidences; see output_decision_function schema of the operator.
+        """
+        pass
+
+    @abstractmethod
+    def score_samples(self, X):
+        """Scores for each sample in X. The type of scores depends on the operator.
+
+        Parameters
+        ----------
+        X :
+            Features.
+
+        Returns
+        -------
+        result :
+            scores per sample.
         """
         pass
 
@@ -1370,6 +1387,21 @@ class IndividualOp(Operator):
         result = props[schema_kind]
         return result
 
+    def has_schema(self, schema_kind: str) -> bool:
+        """Return true if the operator has the schema kind.
+
+        Parameters
+        ----------
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_predict' or 'output_predict_proba' or 'output_decision_function' or 'input_score_samples' or 'output_score_samples'
+                Type of the schema to be returned.
+
+        Returns
+        -------
+        True if the json schema is present, False otherwise.
+        """
+        props = self._schemas["properties"]
+        return schema_kind in props
+
     def documentation_url(self):
         if "documentation_url" in self._schemas:
             return self._schemas["documentation_url"]
@@ -1421,6 +1453,14 @@ class IndividualOp(Operator):
         """Input schema for the decision_function method."""
         return self.get_schema("input_decision_function")
 
+    def input_schema_score_samples(self) -> JSON_TYPE:
+        """Input schema for the score_samples method.
+        We assume that it is the same as the predict method if none has been defined explicitly."""
+        if self.has_schema("input_score_samples"):
+            return self.get_schema("input_score_samples")
+        else:
+            return self.get_schema("input_predict")
+
     def output_schema_transform(self) -> JSON_TYPE:
         """Oputput schema for the transform method."""
         return self.get_schema("output_transform")
@@ -1436,6 +1476,14 @@ class IndividualOp(Operator):
     def output_schema_decision_function(self) -> JSON_TYPE:
         """Output schema for the decision_function method."""
         return self.get_schema("output_decision_function")
+
+    def output_schema_score_samples(self) -> JSON_TYPE:
+        """Output schema for the score_samples method.
+        We assume that it is the same as the predict method if none has been defined explicitly."""
+        if self.has_schema("output_score_samples"):
+            return self.get_schema("output_score_samples")
+        else:
+            return self.get_schema("output_predict")
 
     def hyperparam_schema(self, name: Optional[str] = None) -> JSON_TYPE:
         """Returns the hyperparameter schema for the operator.
@@ -1820,6 +1868,8 @@ class IndividualOp(Operator):
                 schema = self.input_schema_predict_proba()
             elif method == "decision_function":
                 schema = self.input_schema_decision_function()
+            elif method == "score_samples":
+                schema = self.input_schema_score_samples()
             else:
                 raise ValueError(f"Unexpected method argument: {method}")
             if "properties" in schema and arg_name in schema["properties"]:
@@ -1854,6 +1904,8 @@ class IndividualOp(Operator):
             schema = self.output_schema_predict_proba()
         elif method == "decision_function":
             schema = self.output_schema_decision_function()
+        elif method == "score_samples":
+            schema = self.output_schema_score_samples()
         else:
             raise ValueError(f"Unexpected method argument: {method}")
 
@@ -2319,6 +2371,22 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `score`.")
 
+    @if_delegate_has_method(delegate="_impl")
+    def score_samples(self, X=None):
+        """
+        .. deprecated:: 0.0.0
+           The `score_samples` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `score_samples`
+           on the trained operator returned by `fit` instead.
+
+        """
+        warnings.warn(_mutation_warning("score_samples"), DeprecationWarning)
+        try:
+            return self._trained.score_samples(X)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `score_samples`.")
+
     def free_hyperparams(self) -> Set[str]:
         hyperparam_schema = self.hyperparam_schema()
         to_bind: List[str]
@@ -2566,6 +2634,25 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         else:
             result = self._impl_instance().score(X, y, **score_params)
         # We skip output validation for score for now
+        return result
+
+    @if_delegate_has_method(delegate="_impl")
+    def score_samples(self, X=None):
+        """Scores for each sample in X. The type of scores depends on the operator.
+
+        Parameters
+        ----------
+        X :
+            Features.
+
+        Returns
+        -------
+        result :
+            scores per sample.
+        """
+        X = self._validate_input_schema("X", X, "score_samples")
+        raw_result = self._impl_instance().score_samples(X)
+        result = self._validate_output_schema(raw_result, "score_samples")
         return result
 
     def freeze_trainable(self) -> "TrainedIndividualOp":
@@ -3564,6 +3651,21 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `score`.")
 
+    def score_samples(self, X=None):
+        """
+        .. deprecated:: 0.0.0
+           The `score_samples` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `score_samples`
+           on the trained operator returned by `fit` instead.
+
+        """
+        warnings.warn(_mutation_warning("score_samples"), DeprecationWarning)
+        try:
+            return self._trained.score_samples(X)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `score_samples`.")
+
     def freeze_trainable(self) -> "TrainablePipeline":
         frozen_steps: List[TrainableOperator] = []
         frozen_map: Dict[Operator, Operator] = {}
@@ -3826,7 +3928,9 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         # self.is_transformer is kept in sync with the new assumptions.
         return self._predict_based_on_type("transform", "transform", X, y)
 
-    def _predict_based_on_type(self, impl_method_name, operator_method_name, X, y=None):
+    def _predict_based_on_type(
+        self, impl_method_name, operator_method_name, X=None, y=None
+    ):
         outputs = {}
         meta_outputs = {}
         sink_nodes = self._find_sink_nodes()
@@ -3945,9 +4049,24 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         Returns
         -------
         score :
-            performance metric value
+            Performance metric value.
         """
         return self._predict_based_on_type("score", "score", X, y)
+
+    def score_samples(self, X=None):
+        """Scores for each sample in X. There type of scores is based on the last operator in the pipeline.
+
+        Parameters
+        ----------
+        X :
+            Features.
+
+        Returns
+        -------
+        result :
+            Scores per sample.
+        """
+        return self._predict_based_on_type("score_samples", "score_samples", X)
 
     def transform_with_batches(self, X, y=None, serialize=True):
         """[summary]

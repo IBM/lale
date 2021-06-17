@@ -712,6 +712,22 @@ class TestIsolationForest(unittest.TestCase):
         pipeline = trained.get_pipeline()
         _ = pipeline.decision_function(self.X_test)
 
+    def test_score_samples(self):
+        clf = IsolationForest()
+        trained = clf.fit(self.X_train)
+        trained.score_samples(self.X_test)
+
+    def test_score_samples_trainable(self):
+        clf = IsolationForest()
+        with self.assertRaises(ValueError):
+            clf.score_samples(self.X_test)
+
+    def test_score_samples_trained_trainable(self):
+        clf = IsolationForest()
+        clf.fit(self.X_train)
+        with self.assertWarns(DeprecationWarning):
+            clf.score_samples(self.X_test)
+
 
 class TestKMeans(unittest.TestCase):
     def setUp(self):
