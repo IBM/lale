@@ -246,3 +246,5 @@ StackingRegressor: lale.operators.PlannedIndividualOp
 StackingRegressor = lale.operators.make_operator(
     _StackingRegressorImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(StackingRegressor)
