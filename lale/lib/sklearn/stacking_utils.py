@@ -25,6 +25,8 @@ def _concatenate_predictions_pandas(base_stacking, X, predictions):
                 f"estimator_{idx}_feature_{i}" for i in range(X_meta[-1].shape[1])
             ],
         )
+        if base_stacking.passthrough:
+            X_meta[-1].set_index(X.index, inplace=True)
         idx += 1
     if base_stacking.passthrough:
         X_meta.append(X)
