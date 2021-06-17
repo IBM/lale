@@ -268,3 +268,5 @@ StackingClassifier: lale.operators.PlannedIndividualOp
 StackingClassifier = lale.operators.make_operator(
     _StackingClassifierImpl, _combined_schemas
 )
+
+lale.docstrings.set_docstrings(StackingClassifier)
