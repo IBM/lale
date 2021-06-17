@@ -30,6 +30,7 @@ from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import (
     PCA,
     GaussianNB,
+    IsolationForest,
     KNeighborsClassifier,
     LinearRegression,
     LinearSVC,
@@ -909,3 +910,37 @@ class TestScore(unittest.TestCase):
         planned_pipeline = StandardScaler >> LogisticRegression
         with self.assertRaises(AttributeError):
             planned_pipeline.score(self.X_test, self.y_test)  # type: ignore
+
+
+class TestScoreSamples(unittest.TestCase):
+    def setUp(self):
+        from sklearn.model_selection import train_test_split
+
+        data = sklearn.datasets.load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+        import warnings
+
+        warnings.filterwarnings("ignore")
+
+    def test_trained_pipeline(self):
+        trainable_pipeline = StandardScaler() >> IsolationForest()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        _ = trained_pipeline.score_samples(self.X_test)
+
+    def test_trainable_pipeline(self):
+        trainable_pipeline = StandardScaler() >> IsolationForest()
+        trainable_pipeline.fit(self.X_train, self.y_train)
+        with self.assertWarns(DeprecationWarning):
+            _ = trainable_pipeline.score_samples(self.X_test)
+
+    def test_planned_pipeline(self):
+        planned_pipeline = StandardScaler >> IsolationForest
+        with self.assertRaises(AttributeError):
+            planned_pipeline.score_samples(self.X_test)  # type: ignore
+
+    def test_with_incompatible_estimator(self):
+        trainable_pipeline = StandardScaler() >> LogisticRegression()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        with self.assertRaises(AttributeError):
+            _ = trained_pipeline.score_samples(self.X_test)
