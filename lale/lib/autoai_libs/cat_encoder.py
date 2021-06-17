@@ -151,7 +151,7 @@ In the inverse transform, an unknown category will be denoted as None.""",
                 },
                 "sklearn_version_family": {
                     "description": "The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.",
-                    "enum": ["20", "23", None],
+                    "enum": ["20", "21", "22", "23", "24", None],
                     "default": None,
                 },
                 "activate_flag": {
