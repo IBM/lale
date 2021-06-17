@@ -121,7 +121,7 @@ _output_predict_schema = {
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """Operator from `autoai_ts_libs`_.
-.. _`autoai_libs`: https://pypi.org/project/autoai-ts-libs""",
+.. _`autoai_ts_libs`: https://pypi.org/project/autoai-ts-libs""",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_ts_libs.autoai_ts_pipeline.html",
     "import_from": "autoai_ts_libs.sklearn.autoai_ts_pipeline",
     "type": "object",
