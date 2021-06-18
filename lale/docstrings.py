@@ -1,5 +1,6 @@
 import inspect
 import pprint
+import re
 from typing import TYPE_CHECKING
 
 import lale.helpers
@@ -112,6 +113,9 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     body = None
     if "anyOf" in schema:
         item_docstrings = [item_docstring(None, s) for s in schema["anyOf"]]
+        if name is not None and name.startswith("constraint "):
+            dict_of = re.compile(r"( *- )(dict \*\*of\*\* )(.+)")
+            item_docstrings = [dict_of.sub(r"\1\3", s) for s in item_docstrings]
         body = "\n\n".join(item_docstrings)
     elif "allOf" in schema:
         item_docstrings = [item_docstring(None, s) for s in schema["allOf"]]
