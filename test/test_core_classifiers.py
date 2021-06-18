@@ -281,6 +281,10 @@ class TestBaggingClassifier(unittest.TestCase):
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
+        import warnings
+
+        warnings.filterwarnings("ignore")
+
     def test_with_lale_classifiers(self):
         from lale.lib.sklearn import BaggingClassifier
 
@@ -318,6 +322,28 @@ class TestBaggingClassifier(unittest.TestCase):
             base_estimator=PCA() >> (LogisticRegression() | KNeighborsClassifier())
         )
         _ = clf.auto_configure(self.X_train, self.y_train, Hyperopt, max_evals=1)
+
+    def test_predict_log_proba(self):
+        from lale.lib.sklearn import BaggingClassifier
+
+        clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
+        trained = clf.fit(self.X_train, self.y_train)
+        trained.predict_log_proba(self.X_test)
+
+    def test_predict_log_proba_trained_trainable(self):
+        from lale.lib.sklearn import BaggingClassifier
+
+        clf = BaggingClassifier()
+        clf.fit(self.X_train, self.y_train)
+        with self.assertWarns(DeprecationWarning):
+            clf.predict_log_proba(self.X_test)
+
+    def test_predict_log_proba_trainable(self):
+        from lale.lib.sklearn import BaggingClassifier
+
+        clf = BaggingClassifier(base_estimator=PCA() >> LogisticRegression())
+        with self.assertRaises(ValueError):
+            clf.predict_log_proba(self.X_test)
 
 
 class TestStackingClassifier(unittest.TestCase):
