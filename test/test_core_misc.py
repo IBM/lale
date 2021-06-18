@@ -894,6 +894,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
         try:
             planned.fit(self.X, self.y)
         except AttributeError as e:
+            self.maxDiff = None
             self.assertEqual(
                 e.__str__(),
                 """The pipeline is not trainable, which means you can not call fit on it.

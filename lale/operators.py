@@ -654,13 +654,13 @@ class Operator(metaclass=AbstractVisitorMeta):
             # we don't need to account for the case when self is trainable or trained.
             if isinstance(self, PlannedIndividualOp):
                 error_msg = f"""Please use `{self.name()}()` instead of `{self.name()}` to make it trainable.
-    Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the operator to use Hyperopt for
-    `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
+Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the operator to use Hyperopt for
+`max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
                 error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
             elif isinstance(self, PlannedPipeline) or isinstance(self, OperatorChoice):
                 error_msg = f"""The pipeline is not trainable, which means you can not call {name} on it.\n
-    Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in order to make it trainable:\n"""
+Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in order to make it trainable:\n"""
                 i = 1
                 if isinstance(self, PlannedPipeline):
                     for step in self.steps():
@@ -674,7 +674,7 @@ class Operator(metaclass=AbstractVisitorMeta):
                 error_msg = (
                     error_msg
                     + """\nFix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
-    to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
+to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
                 )
                 error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
