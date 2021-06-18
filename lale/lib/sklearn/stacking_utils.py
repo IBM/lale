@@ -7,7 +7,10 @@ def _concatenate_predictions_pandas(base_stacking, X, predictions):
     for est_idx, preds in enumerate(predictions):
         # case where the the estimator returned a 1D array
         if preds.ndim == 1:
-            X_meta.append(preds.reshape(-1, 1))
+            if isinstance(preds, pd.Series):
+                X_meta.append(preds.to_numpy().reshape(-1, 1))
+            else:
+                X_meta.append(preds.reshape(-1, 1))
         else:
             if (
                 base_stacking.stack_method_[est_idx] == "predict_proba"
