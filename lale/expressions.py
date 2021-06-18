@@ -19,6 +19,7 @@ from copy import deepcopy
 from typing import Any, Dict, Optional, Union
 
 import astunparse
+from six.moves import cStringIO
 
 AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict)
 AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict]
@@ -46,6 +47,27 @@ AstExpr = Union[
     ast.Attribute,
     ast.Subscript,
 ]
+
+
+# !! WORKAROUND !!
+# There is a bug with astunparse and Python 3.8.
+# https://github.com/simonpercivall/astunparse/issues/43
+# Until it is fixed (which may be never), here is a workaround,
+# based on the workaround found in https://github.com/juanlao7/codeclose
+class FixUnparser(astunparse.Unparser):
+    def _Constant(self, t):
+        if not hasattr(t, "kind"):
+            setattr(t, "kind", None)
+
+        super()._Constant(t)
+
+
+# !! WORKAROUND !!
+# This method should be called instead of astunparse.unparse
+def fixedUnparse(tree):
+    v = cStringIO()
+    FixUnparser(tree, file=v)
+    return v.getvalue()
 
 
 class Expr:
@@ -104,7 +126,7 @@ class Expr:
         return Expr(subscript)
 
     def __str__(self) -> str:
-        result = astunparse.unparse(self._expr).strip()
+        result = fixedUnparse(self._expr).strip()
         if isinstance(self._expr, (ast.UnaryOp, ast.BinOp, ast.Compare, ast.BoolOp)):
             if result.startswith("(") and result.endswith(")"):
                 result = result[1:-1]
