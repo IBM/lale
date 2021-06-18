@@ -62,6 +62,19 @@ class TestTags(unittest.TestCase):
         self.assertNotIn("MLPClassifier", ops_names)
 
 
+class TestUnparseExpr(unittest.TestCase):
+    def test_unparse_const38(self):
+        import lale.expressions
+        from lale.expressions import it
+
+        test_expr = it.hello["hi"]
+        # This fails on 3.8 with some versions of the library
+        # which is why we use the fixed version
+        # import astunparse
+        # astunparse.unparse(he._expr)
+        str(lale.expressions.fixedUnparse(test_expr._expr))
+
+
 class TestOperatorWithoutSchema(unittest.TestCase):
     def test_trainable_pipe_left(self):
         from sklearn.decomposition import PCA
