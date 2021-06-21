@@ -149,6 +149,7 @@ import copy
 import enum as enumeration
 import importlib
 import inspect
+import itertools
 import logging
 import os
 import shutil
@@ -1794,6 +1795,42 @@ class IndividualOp(Operator):
             self, schemas, relevantToOptimizer, constraint, tags, **kwargs
         )
 
+    def _propose_fixed_hyperparams(
+        self, key_candidates, hp_all, hp_schema, max_depth=2
+    ):
+        defaults = self.get_defaults()
+        explicit_defaults: Dict[str, Any] = {k: defaults[k] for k in key_candidates}
+
+        found: bool = False
+
+        for depth in range(0, max_depth):
+            if found:
+                return None
+            candidate_replacements: Any = list(
+                itertools.combinations(explicit_defaults.items(), depth + 1)
+            )
+            for replacements in candidate_replacements:
+                new_values = dict(replacements)
+                fixed_hp = {**hp_all, **new_values}
+                try:
+                    lale.type_checking.validate_schema(fixed_hp, hp_schema)
+                    found = True
+                    yield new_values
+                except jsonschema.ValidationError:
+                    pass
+
+    MAX_FIX_DEPTH: int = 2
+    MAX_FIX_SUGGESTIONS: int = 3
+
+    def _format_fix_suggestion(self, d: Dict[str, Any]) -> str:
+        def stringify(v):
+            if isinstance(v, str):
+                return '"' + v + '"'
+            else:
+                return str(v)
+
+        return ", ".join((f"{k}={stringify(v)}" for k, v in d.items()))
+
     def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema, class_):
         from lale.settings import disable_hyperparams_schema_validation
 
@@ -1806,6 +1843,22 @@ class IndividualOp(Operator):
             e = e_orig if e_orig.parent is None else e_orig.parent
             lale.type_checking.validate_is_schema(e.schema)
             schema = lale.pretty_print.to_string(e.schema)
+            find_fixed_hyperparam_iter = self._propose_fixed_hyperparams(
+                hp_explicit.keys(), hp_all, hp_schema, max_depth=self.MAX_FIX_DEPTH
+            )
+            fix_suggestions: List[Dict[str, Any]] = list(
+                itertools.islice(find_fixed_hyperparam_iter, self.MAX_FIX_SUGGESTIONS)
+            )
+            if fix_suggestions:
+                proposed_fix = "Some possible fixes include:\n" + "".join(
+                    (
+                        "- Setting: " + self._format_fix_suggestion(d) + "\n"
+                        for d in fix_suggestions
+                    )
+                )
+            else:
+                proposed_fix = ""
+
             if [*e.schema_path][:3] == ["allOf", 0, "properties"]:
                 arg = e.schema_path[3]
                 reason = f"invalid value {arg}={e.instance}"
@@ -1830,6 +1883,7 @@ class IndividualOp(Operator):
                 f"Invalid configuration for {self.name()}("
                 + f"{lale.pretty_print.hyperparams_to_string(hp_explicit if hp_explicit else {})}) "
                 + f"due to {reason}.\n"
+                + proposed_fix
                 + f"Schema of {schema_path}: {schema}\n"
                 + f"Value: {e.instance}"
             )

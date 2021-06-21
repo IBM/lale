@@ -683,6 +683,28 @@ class TestErrorMessages(unittest.TestCase):
                 summary,
                 "Invalid configuration for LogisticRegression(C=-1) due to invalid value C=-1.",
             )
+            fix1 = cm.exception.message.split("\n")[2]
+            self.assertRegex(fix1, "C=1.0")
+
+    def test_fixes2(self):
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError) as cm:
+                LogisticRegression(
+                    penalty="l1",
+                    solver="liblinear",
+                    multi_class="multinomial",
+                    dual=True,
+                )
+            summary = cm.exception.message.split("\n")[0]
+            self.assertRegex(
+                summary,
+                "Invalid configuration for LogisticRegression(.*) due to constraint",
+            )
+            fix1 = cm.exception.message.split("\n")[2]
+            fix2 = cm.exception.message.split("\n")[3]
+            # we don't care what order they are in
+            self.assertRegex(fix1 + fix2, 'penalty="l2", multi_class="auto"')
+            self.assertRegex(fix1 + fix2, 'multi_class="auto", dual=False')
 
     def test_wrong_cat(self):
         with EnableSchemaValidation():
