@@ -867,6 +867,30 @@ _categorical_output_predict_schema = {
     ],
 }
 
+_categorical_input_predict_proba_schema = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        }
+    },
+}
+
+_categorical_output_predict_proba_schema = {
+    "description": "The class probabilities of the input samples",
+    "anyOf": [
+        {"type": "array", "items": {"laleType": "Any"}},
+        {"type": "array", "items": {"type": "array", "items": {"laleType": "Any"}}},
+    ],
+}
+
 _categorical_input_transform_schema = {
     "description": "Input data schema for transform.",
     "type": "object",
