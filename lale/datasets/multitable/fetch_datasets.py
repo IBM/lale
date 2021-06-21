@@ -12,9 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os, urllib.request, sys, csv
-import pandas as pd
+import csv
+import logging
+import os
+import urllib.request
+
 import mysql.connector
+import pandas as pd
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 try:
     from pyspark.sql import SparkSession
@@ -24,17 +32,18 @@ except ImportError:
     spark_installed = False
 
 imdb_config = {
-  'user': 'guest',
-  'password': 'relational',
-  'host': 'relational.fit.cvut.cz',
-  'database': 'imdb_ijs',
-  'port': 3306,
-  'raise_on_warnings': True
+    "user": "guest",
+    "password": "relational",
+    "host": "relational.fit.cvut.cz",
+    "database": "imdb_ijs",
+    "port": 3306,
+    "raise_on_warnings": True,
 }
+
 
 def get_data_from_csv(datatype, data_file_name):
     if datatype.casefold() == "pandas":
-         return pd.read_csv(data_file_name)
+        return pd.read_csv(data_file_name)
     elif datatype.casefold() == "spark":
         if spark_installed:
             spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()
@@ -42,13 +51,48 @@ def get_data_from_csv(datatype, data_file_name):
         else:
             raise ValueError("Spark is not installed on this machine!")
     else:
-        raise ValueError("Can fetch the go_sales data in pandas or spark dataframes only! Pass either 'pandas' or 'spark' in datatype parameter!")
+        raise ValueError(
+            "Can fetch the go_sales data in pandas or spark dataframes only! Pass either 'pandas' or 'spark' in datatype parameter!"
+        )
 
 
-def fetch_go_sales_dataset(datatype='pandas'):
+def fetch_go_sales_dataset(datatype="pandas"):
+
+    """
+    Fetches the Go_Sales dataset from IBM's Watson's ML samples.
+    It contains information about daily sales, methods, retailers
+    and products of a company in form of 5 CSV files.
+    This method downloads and stores these 5 CSV files under the
+    'lale/lale/datasets/multitable/go_sales_data' directory. It creates
+    this directory by itself if it does not exists.
+
+    Dataset URL: https://github.com/IBM/watson-machine-learning-samples/raw/master/cloud/data/go_sales/
+
+    Parameters
+    ----------
+    datatype : string, optional, default 'pandas'
+
+      If 'pandas',
+      Returns a dictionary of pandas dataframes after reading the downloaded CSV files.
+      If 'spark',
+      Returns a dictionary of spark dataframes after reading the downloaded CSV files.
+      Else,
+      Throws an error as it does not support any other return type.
+
+    Returns
+    -------
+    go_sales_dict : dictionary of pandas / spark dataframes
+    """
+
     download_data_dir = os.path.join(os.path.dirname(__file__), "go_sales_data")
-    base_url = 'https://github.com/IBM/watson-machine-learning-samples/raw/master/cloud/data/go_sales/'
-    filenames = ['go_1k.csv', 'go_daily_sales.csv', 'go_methods.csv', 'go_products.csv', 'go_retailers.csv']
+    base_url = "https://github.com/IBM/watson-machine-learning-samples/raw/master/cloud/data/go_sales/"
+    filenames = [
+        "go_1k.csv",
+        "go_daily_sales.csv",
+        "go_methods.csv",
+        "go_products.csv",
+        "go_retailers.csv",
+    ]
     go_sales_dict = {}
     for file in filenames:
         data_file_name = os.path.join(download_data_dir, file)
@@ -56,11 +100,40 @@ def fetch_go_sales_dataset(datatype='pandas'):
             if not os.path.exists(download_data_dir):
                 os.makedirs(download_data_dir)
             urllib.request.urlretrieve(base_url + file, data_file_name)
-            print("Created:", file)
-        go_sales_dict[file.split('.')[0]] = get_data_from_csv(datatype, data_file_name)
+            logger.info(" Created: {}".format(data_file_name))
+        go_sales_dict[file.split(".")[0]] = get_data_from_csv(datatype, data_file_name)
+    logger.info(" Fetched the Go_Sales dataset! Process completed!")
     return go_sales_dict
 
-def fetch_imdb_dataset(datatype='pandas'):
+
+def fetch_imdb_dataset(datatype="pandas"):
+
+    """
+    Fetches the IMDB movie dataset from Relational Dataset Repo.
+    It contains information about directors, actors, roles
+    and genres of multiple movies in form of 7 CSV files.
+    This method downloads and stores these 7 CSV files under the
+    'lale/lale/datasets/multitable/imdb_data' directory. It creates
+    this directory by itself if it does not exists.
+
+    Dataset URL: https://relational.fit.cvut.cz/dataset/IMDb
+
+    Parameters
+    ----------
+    datatype : string, optional, default 'pandas'
+
+      If 'pandas',
+      Returns a dictionary of pandas dataframes after reading the downloaded CSV files.
+      If 'spark',
+      Returns a dictionary of spark dataframes after reading the downloaded CSV files.
+      Else,
+      Throws an error as it does not support any other return type.
+
+    Returns
+    -------
+    imdb_dict : dictionary of pandas / spark dataframes
+    """
+
     try:
         cnx = mysql.connector.connect(**imdb_config)
         cursor = cnx.cursor()
@@ -81,25 +154,18 @@ def fetch_imdb_dataset(datatype='pandas'):
                 if not os.path.exists(download_data_dir):
                     os.makedirs(download_data_dir)
                 cursor.execute("select * from {}".format(table))
-                result=cursor.fetchall()
-                c = csv.writer(open(data_file_name, 'w', encoding='utf-8'))
+                result = cursor.fetchall()
+                c = csv.writer(open(data_file_name, "w", encoding="utf-8"))
                 c.writerow(header_list)
                 for row in result:
                     c.writerow(row)
-                print("Created:", csv_name)
-            imdb_dict[csv_name.split('.')[0]] = get_data_from_csv(datatype, data_file_name)
+                logger.info(" Created: {}".format(data_file_name))
+            imdb_dict[csv_name.split(".")[0]] = get_data_from_csv(
+                datatype, data_file_name
+            )
+        logger.info(" Fetched the IMDB dataset! Process completed!")
         return imdb_dict
     except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            raise ValueError("Something is wrong with your user name or password")
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            raise ValueError("Database does not exist")
-        else:
-            raise ValueError(err)
+        raise ValueError(err)
     else:
         cnx.close()
-
-# d1 = fetch_imdb_dataset('spark')
-d1 = fetch_go_sales_dataset('pandas')
-print(type(d1['go_1k']))
-print(d1['go_1k'])
