@@ -94,6 +94,7 @@ setup(
             "cvxpy>=1.0,<=1.1.7",
             "fairlearn",
             "h5py",
+            "mysql-connector-python",
         ],
         "dev": ["pre-commit"],
         "test": [
