@@ -1822,15 +1822,6 @@ class IndividualOp(Operator):
     MAX_FIX_DEPTH: int = 2
     MAX_FIX_SUGGESTIONS: int = 3
 
-    def _format_fix_suggestion(self, d: Dict[str, Any]) -> str:
-        def stringify(v):
-            if isinstance(v, str):
-                return "'" + v + "'"
-            else:
-                return str(v)
-
-        return ", ".join((f"{k}={stringify(v)}" for k, v in d.items()))
-
     def _validate_hyperparams(self, hp_explicit, hp_all, hp_schema, class_):
         from lale.settings import disable_hyperparams_schema_validation
 
@@ -1887,6 +1878,8 @@ class IndividualOp(Operator):
                     )
                 )
                 if fix_suggestions:
+                    from lale.pretty_print import hyperparams_to_string
+
                     if remove_recommendation:
                         remove_recommendation = (
                             "Remove " + remove_recommendation + " and "
@@ -1896,7 +1889,7 @@ class IndividualOp(Operator):
                             "- "
                             + remove_recommendation
                             + "Set "
-                            + self._format_fix_suggestion(d)
+                            + hyperparams_to_string(d)
                             + "\n"
                             for d in fix_suggestions
                         )
