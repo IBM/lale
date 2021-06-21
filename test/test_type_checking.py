@@ -703,8 +703,8 @@ class TestErrorMessages(unittest.TestCase):
             fix1 = cm.exception.message.split("\n")[2]
             fix2 = cm.exception.message.split("\n")[3]
             # we don't care what order they are in
-            self.assertRegex(fix1 + fix2, 'penalty="l2", multi_class="auto"')
-            self.assertRegex(fix1 + fix2, 'multi_class="auto", dual=False')
+            self.assertRegex(fix1 + fix2, "penalty='l2', multi_class='auto'")
+            self.assertRegex(fix1 + fix2, "multi_class='auto', dual=False")
 
     def test_wrong_cat(self):
         with EnableSchemaValidation():
@@ -725,6 +725,8 @@ class TestErrorMessages(unittest.TestCase):
                 summary,
                 "Invalid configuration for LogisticRegression(activation='relu') due to argument 'activation' was unexpected.",
             )
+            fix1 = cm.exception.message.split("\n")[1]
+            self.assertRegex(fix1, "remove unknown key 'activation'")
 
     def test_constraint(self):
         with EnableSchemaValidation():
@@ -735,6 +737,20 @@ class TestErrorMessages(unittest.TestCase):
                 summary,
                 "Invalid configuration for LogisticRegression(solver='sag', penalty='l1') due to constraint the newton-cg, sag, and lbfgs solvers support only l2 or no penalties.",
             )
+            fix1 = cm.exception.message.split("\n")[2]
+            self.assertRegex(fix1, "Set penalty='l2'")
+
+    def test_unknown_arg_and_constraint(self):
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError) as cm:
+                LogisticRegression(activation="relu", solver="sag", penalty="l1")
+            summary = cm.exception.message.split("\n")[0]
+            self.assertRegex(
+                summary,
+                "Invalid configuration for LogisticRegression.*due to argument 'activation' was unexpected.",
+            )
+            fix1 = cm.exception.message.split("\n")[2]
+            self.assertRegex(fix1, "Remove unknown key 'activation'.*Set penalty='l2'")
 
 
 class TestSchemaValidation(unittest.TestCase):

@@ -1825,7 +1825,7 @@ class IndividualOp(Operator):
     def _format_fix_suggestion(self, d: Dict[str, Any]) -> str:
         def stringify(v):
             if isinstance(v, str):
-                return '"' + v + '"'
+                return "'" + v + "'"
             else:
                 return str(v)
 
@@ -1843,21 +1843,64 @@ class IndividualOp(Operator):
             e = e_orig if e_orig.parent is None else e_orig.parent
             lale.type_checking.validate_is_schema(e.schema)
             schema = lale.pretty_print.to_string(e.schema)
-            find_fixed_hyperparam_iter = self._propose_fixed_hyperparams(
-                hp_explicit.keys(), hp_all, hp_schema, max_depth=self.MAX_FIX_DEPTH
-            )
-            fix_suggestions: List[Dict[str, Any]] = list(
-                itertools.islice(find_fixed_hyperparam_iter, self.MAX_FIX_SUGGESTIONS)
-            )
-            if fix_suggestions:
-                proposed_fix = "Some possible fixes include:\n" + "".join(
-                    (
-                        "- Setting: " + self._format_fix_suggestion(d) + "\n"
-                        for d in fix_suggestions
+
+            defaults = self.get_defaults()
+            extra_keys = [k for k in hp_explicit.keys() if k not in defaults]
+            trimmed_valid: bool = False
+            if extra_keys:
+                trimmed_hp_all = {
+                    k: v for k, v in hp_all.items() if k not in extra_keys
+                }
+                trimmed_hp_explicit_keys = {
+                    k for k in hp_explicit.keys() if k not in extra_keys
+                }
+                remove_recommendation = (
+                    "unknown key "
+                    + ("s" if len(extra_keys) > 1 else "")
+                    + ", ".join(("'" + k + "'" for k in extra_keys))
+                )
+
+                try:
+                    lale.type_checking.validate_schema(trimmed_hp_all, hp_schema)
+                    trimmed_valid = True
+                except jsonschema.ValidationError:
+                    pass
+
+            else:
+                trimmed_hp_all = hp_all
+                trimmed_hp_explicit_keys = hp_explicit.keys()
+                remove_recommendation = ""
+
+            proposed_fix: str = ""
+            if trimmed_valid and remove_recommendation:
+                proposed_fix = "To fix, please remove " + remove_recommendation + "\n"
+            else:
+                find_fixed_hyperparam_iter = self._propose_fixed_hyperparams(
+                    trimmed_hp_explicit_keys,
+                    trimmed_hp_all,
+                    hp_schema,
+                    max_depth=self.MAX_FIX_DEPTH,
+                )
+                fix_suggestions: List[Dict[str, Any]] = list(
+                    itertools.islice(
+                        find_fixed_hyperparam_iter, self.MAX_FIX_SUGGESTIONS
                     )
                 )
-            else:
-                proposed_fix = ""
+                if fix_suggestions:
+                    if remove_recommendation:
+                        remove_recommendation = (
+                            "Remove " + remove_recommendation + " and "
+                        )
+                    proposed_fix = "Some possible fixes include:\n" + "".join(
+                        (
+                            "- "
+                            + remove_recommendation
+                            + "Set "
+                            + self._format_fix_suggestion(d)
+                            + "\n"
+                            for d in fix_suggestions
+                        )
+                    )
 
             if [*e.schema_path][:3] == ["allOf", 0, "properties"]:
                 arg = e.schema_path[3]
