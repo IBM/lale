@@ -50,14 +50,18 @@ class _TA1Impl:
     def fit(self, X, y=None, **fit_params):
         num_columns = X.shape[1]
         col_dtypes = self._hyperparams["col_dtypes"]
+
         if len(col_dtypes) < num_columns:
-            if hasattr(self, "column_names"):
+            if hasattr(self, "column_names") and len(self.column_names) == num_columns:
                 col_names = self.column_names
             else:
                 col_names = self._hyperparams["col_names"]
                 for i in range(num_columns - len(col_dtypes)):
                     col_names.append("col" + str(i))
-            if hasattr(self, "column_dtypes"):
+            if (
+                hasattr(self, "column_dtypes")
+                and len(self.column_dtypes) == num_columns
+            ):
                 col_dtypes = self.column_dtypes
             else:
                 for i in range(num_columns - len(col_dtypes)):

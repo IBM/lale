@@ -29,19 +29,23 @@ class _FS1Impl:
             **self._hyperparams
         )
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fit_params):
         self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
         result = self._wrapped_model.transform(X)
         try:
-            if hasattr(self, "column_names"):
+            if hasattr(self, "column_names") and len(self.column_names) == len(
+                self._wrapped_model.cols_to_keep_final_
+            ):
                 self.column_names = [
                     self.column_names[i]
                     for i in self._wrapped_model.cols_to_keep_final_
                 ]
-            if hasattr(self, "column_dtypes"):
+            if hasattr(self, "column_dtypes") and len(self.column_dtypes) == len(
+                self._wrapped_model.cols_to_keep_final_
+            ):
                 self.column_dtypes = [
                     self.column_dtypes[i]
                     for i in self._wrapped_model.cols_to_keep_final_
