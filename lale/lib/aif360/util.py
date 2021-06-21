@@ -706,6 +706,14 @@ class _BaseInEstimatorImpl:
         decoded_y = self._decode(result_y)
         return decoded_y
 
+    def predict_proba(self, X):
+        # Note, will break for GerryFairClassifier
+        encoded_data = self._prep_and_encode(X)
+        result_data = self.mitigator.predict(encoded_data)
+        favorable_probs = result_data.scores
+        all_probs = np.hstack([1 - favorable_probs, favorable_probs])
+        return pd.DataFrame(all_probs, columns=["0", "1"])
+
 
 class _BasePostEstimatorImpl:
     def __init__(
@@ -779,6 +787,19 @@ class _BasePostEstimatorImpl:
         _, result_y = dataset_to_pandas(dataset_out, return_only="y")
         decoded_y = self._decode(result_y)
         return decoded_y
+
+    def predict_proba(self, X):
+        predicted_y = self.redact_and_estim.predict(X)
+        predicted_probas = self.redact_and_estim.predict_proba(X)
+        predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
+        encoded_X, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        dataset_pred = self.pandas_to_dataset.convert(
+            encoded_X, predicted_y, predicted_probas
+        )
+        dataset_out = self.mitigator.predict(dataset_pred)
+        favorable_probs = dataset_out.scores
+        all_probs = np.hstack([1 - favorable_probs, favorable_probs])
+        return pd.DataFrame(all_probs, columns=["0", "1"])
 
 
 _categorical_supervised_input_fit_schema = {
