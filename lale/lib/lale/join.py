@@ -215,7 +215,7 @@ class _JoinImpl:
             return left_df, right_df
 
         # Iterate over all the elements of the predicate
-        for pred_element in self.pred:
+        for pred_element in self.pred if self.pred is not None else []:
             left_table_name = ""
             left_key_col = []
             right_table_name = ""
