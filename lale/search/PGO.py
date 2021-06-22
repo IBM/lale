@@ -197,7 +197,7 @@ def freqsAsIntegerValues(
     inclusive_min: Optional[float] = None,
     inclusive_max: Optional[float] = None,
 ) -> Iterator[Tuple[Defaultable[int], int]]:
-    """ maps the str values to integers, and skips anything that does not look like an integer"""
+    """maps the str values to integers, and skips anything that does not look like an integer"""
     for v, f in freqs:
         try:
             if v == DEFAULT_STR:
@@ -218,7 +218,7 @@ def freqsAsFloatValues(
     inclusive_min: Optional[float] = None,
     inclusive_max: Optional[float] = None,
 ) -> Iterator[Tuple[Defaultable[float], int]]:
-    """ maps the str values to integers, and skips anything that does not look like an integer"""
+    """maps the str values to integers, and skips anything that does not look like an integer"""
     for v, f in freqs:
         try:
             if v == DEFAULT_STR:

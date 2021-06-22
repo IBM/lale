@@ -346,7 +346,7 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     @abstractmethod
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
-        """ For scikit-learn compatibility """
+        """For scikit-learn compatibility"""
         pass
 
     def visualize(self, ipython_display: bool = True):
