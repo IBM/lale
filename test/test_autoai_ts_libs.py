@@ -299,7 +299,7 @@ class TimeseriesWindowTransformerTest(unittest.TestCase):
 
 
 class TestMT2RForecaster(unittest.TestCase):
-    """ class for testing MT2RForecaster """
+    """class for testing MT2RForecaster"""
 
     @classmethod
     def setUp(cls):
@@ -311,13 +311,13 @@ class TestMT2RForecaster(unittest.TestCase):
         cls.X = X
 
     def test_fit(self):
-        """ method for testing the fit method of MT2RForecaster"""
+        """method for testing the fit method of MT2RForecaster"""
         test_class = self.__class__
         model = MT2RForecaster(target_columns=test_class.target_columns)
         model.fit(test_class.X)
 
     def test_predict_multicols(self):
-        """ Tests the multivariate predict method of MT2RForecaster"""
+        """Tests the multivariate predict method of MT2RForecaster"""
         test_class = self.__class__
         model = MT2RForecaster(
             target_columns=test_class.target_columns, prediction_win=2
@@ -341,7 +341,7 @@ class TestMT2RForecaster(unittest.TestCase):
         self.assertEqual(len(ypred), 12)
 
     def test_predict_prob(self):
-        """ Tests predict_prob method of MT2RForecaster"""
+        """Tests predict_prob method of MT2RForecaster"""
         test_class = self.__class__
         model = MT2RForecaster(target_columns=[0], prediction_win=2)
         fitted_model = model.fit(test_class.X)
@@ -353,7 +353,7 @@ class TestMT2RForecaster(unittest.TestCase):
         self.assertEqual(ypred.shape, (2, 2, 2))
 
     def test_predict_uni_cols(self):
-        """ Tests the univariate predict method of MT2RForecaster"""
+        """Tests the univariate predict method of MT2RForecaster"""
         x = np.arange(10)
         X = x.reshape(-1, 1)
         model = MT2RForecaster(target_columns=[0], prediction_win=2)
