@@ -42,6 +42,7 @@ class _FlattenAutoEnsemblerImpl:
         ensemble_type="voting",
         store_lookback_history=False,
         n_jobs=-1,
+        estimator=None,
     ):
         self._hyperparams = {
             "feature_columns": feature_columns,
@@ -63,6 +64,7 @@ class _FlattenAutoEnsemblerImpl:
             "ensemble_type": ensemble_type,
             "store_lookback_history": store_lookback_history,
             "n_jobs": n_jobs,
+            "estimator": estimator,
         }
         self._wrapped_model = model_to_be_wrapped(**self._hyperparams)
 
@@ -103,6 +105,7 @@ _hyperparams_schema = {
                 "ensemble_type",
                 "store_lookback_history",
                 "n_jobs",
+                "estimator",
             ],
             "relevantToOptimizer": ["lookback_win", "data_transformation_scheme"],
             "properties": {
@@ -234,6 +237,11 @@ _hyperparams_schema = {
                         },
                     ],
                     "default": -1,
+                },
+                "estimator": {
+                    "description": "estimator object",
+                    "anyOf": [{"laleType": "Any"}, {"enum": [None]}],
+                    "default": None,
                 },
             },
         }
