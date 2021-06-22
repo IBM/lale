@@ -27,6 +27,7 @@ from typing import (
     Tuple,
     TypeVar,
     Union,
+    cast,
     overload,
 )
 
@@ -136,8 +137,8 @@ class FrequencyDistribution(Generic[T]):
         self.vals = freqs_array["value"]
         self.cumulative_freqs = np.cumsum(freqs_array["frequency"])
 
-    def __len__(self):
-        return np.int_(self.cumulative_freqs[-1])
+    def __len__(self) -> int:
+        return cast(int, np.int_(self.cumulative_freqs[-1]))
 
     @overload
     def __getitem__(self, key: int) -> T:

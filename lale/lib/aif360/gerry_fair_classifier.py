@@ -21,7 +21,9 @@ import lale.operators
 from .util import (
     _BaseInEstimatorImpl,
     _categorical_fairness_properties,
+    _categorical_input_predict_proba_schema,
     _categorical_input_predict_schema,
+    _categorical_output_predict_proba_schema,
     _categorical_output_predict_schema,
     _categorical_supervised_input_fit_schema,
 )
@@ -77,6 +79,8 @@ class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
 _input_fit_schema = _categorical_supervised_input_fit_schema
 _input_predict_schema = _categorical_input_predict_schema
 _output_predict_schema = _categorical_output_predict_schema
+_input_predict_proba_schema = _categorical_input_predict_proba_schema
+_output_predict_proba_schema = _categorical_output_predict_proba_schema
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema.",
@@ -201,6 +205,8 @@ _combined_schemas = {
         "input_fit": _input_fit_schema,
         "input_predict": _input_predict_schema,
         "output_predict": _output_predict_schema,
+        "input_predict_proba": _input_predict_proba_schema,
+        "output_predict_proba": _output_predict_proba_schema,
     },
 }
 

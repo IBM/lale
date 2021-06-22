@@ -258,6 +258,14 @@ experiments_dict["numerai28.6"][
 experiments_dict["numerai28.6"]["task_type"] = "classification"
 experiments_dict["numerai28.6"]["target"] = "attribute_21"
 
+# 457
+experiments_dict["prnn_cushings"] = {
+    "task_type": "classification",
+    "target": "type",
+    "download_arff_url": "https://www.openml.org/data/download/52569/prnn_cushings.arff",
+    "download_csv_url": "https://www.openml.org/data/get_csv/52569/prnn_cushings.csv",
+}
+
 # 503
 experiments_dict["adult"] = {}
 experiments_dict["adult"][

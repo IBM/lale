@@ -64,6 +64,9 @@ class _RejectOptionClassificationImpl(_BasePostEstimatorImpl):
             mitigator=mitigator,
         )
 
+    def predict_proba(self, X):
+        raise NotImplementedError()
+
 
 _input_fit_schema = _categorical_supervised_input_fit_schema
 _input_predict_schema = _categorical_input_predict_schema

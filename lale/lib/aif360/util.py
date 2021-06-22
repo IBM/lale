@@ -706,6 +706,14 @@ class _BaseInEstimatorImpl:
         decoded_y = self._decode(result_y)
         return decoded_y
 
+    def predict_proba(self, X):
+        # Note, will break for GerryFairClassifier
+        encoded_data = self._prep_and_encode(X)
+        result_data = self.mitigator.predict(encoded_data)
+        favorable_probs = result_data.scores
+        all_probs = np.hstack([1 - favorable_probs, favorable_probs])
+        return pd.DataFrame(all_probs, columns=["0", "1"])
+
 
 class _BasePostEstimatorImpl:
     def __init__(
@@ -780,6 +788,19 @@ class _BasePostEstimatorImpl:
         decoded_y = self._decode(result_y)
         return decoded_y
 
+    def predict_proba(self, X):
+        predicted_y = self.redact_and_estim.predict(X)
+        predicted_probas = self.redact_and_estim.predict_proba(X)
+        predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
+        encoded_X, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        dataset_pred = self.pandas_to_dataset.convert(
+            encoded_X, predicted_y, predicted_probas
+        )
+        dataset_out = self.mitigator.predict(dataset_pred)
+        favorable_probs = dataset_out.scores
+        all_probs = np.hstack([1 - favorable_probs, favorable_probs])
+        return pd.DataFrame(all_probs, columns=["0", "1"])
+
 
 _categorical_supervised_input_fit_schema = {
     "type": "object",
@@ -843,6 +864,30 @@ _categorical_output_predict_schema = {
     "anyOf": [
         {"type": "array", "items": {"type": "number"}},
         {"type": "array", "items": {"type": "string"}},
+    ],
+}
+
+_categorical_input_predict_proba_schema = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        }
+    },
+}
+
+_categorical_output_predict_proba_schema = {
+    "description": "The class probabilities of the input samples",
+    "anyOf": [
+        {"type": "array", "items": {"laleType": "Any"}},
+        {"type": "array", "items": {"type": "array", "items": {"laleType": "Any"}}},
     ],
 }
 
