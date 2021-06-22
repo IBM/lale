@@ -740,6 +740,39 @@ class TestErrorMessages(unittest.TestCase):
             fix1 = cm.exception.message.split("\n")[2]
             self.assertRegex(fix1, "Set penalty='l2'")
 
+    def test_unknown_arg_and_constraint2(self):
+        with EnableSchemaValidation():
+            with EnableSchemaValidation():
+                with self.assertRaises(jsonschema.ValidationError) as cm:
+                    LogisticRegression(
+                        activation="relu",
+                        penalty="l1",
+                        solver="liblinear",
+                        multi_class="multinomial",
+                        dual=True,
+                    )
+                print(cm.exception.message)
+                summary = cm.exception.message.split("\n")[0]
+
+                self.assertRegex(
+                    summary,
+                    "Invalid configuration for LogisticRegression.*due to argument 'activation' was unexpected.",
+                )
+
+                fix1 = cm.exception.message.split("\n")[2]
+                fix2 = cm.exception.message.split("\n")[3]
+                # we don't care what order they are in
+                self.assertRegex(
+                    fix1 + fix2, "Remove unknown key 'activation'.*Set.*penalty='l2'"
+                )
+                self.assertRegex(
+                    fix1 + fix2, "Remove unknown key 'activation'.*Set.*dual=False"
+                )
+                self.assertRegex(
+                    fix1 + fix2,
+                    "Remove unknown key 'activation'.*Set.*multi_class='auto'",
+                )
+
     def test_unknown_arg_and_constraint(self):
         with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError) as cm:
