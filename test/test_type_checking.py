@@ -751,7 +751,6 @@ class TestErrorMessages(unittest.TestCase):
                         multi_class="multinomial",
                         dual=True,
                     )
-                print(cm.exception.message)
                 summary = cm.exception.message.split("\n")[0]
 
                 self.assertRegex(
