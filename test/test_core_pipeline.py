@@ -787,7 +787,9 @@ class TestAutoPipeline(unittest.TestCase):
             score = f"accuracy {sklearn.metrics.accuracy_score(test_y, predicted):.1%}"
         if verbose:
             print(score)
-            print(trained.get_pipeline().pretty_print(show_imports=False))
+            pipe = trained.get_pipeline()
+            assert pipe is not None
+            print(pipe.pretty_print(show_imports=False))
 
     def test_sklearn_iris(self):
         # classification, only numbers, no missing values

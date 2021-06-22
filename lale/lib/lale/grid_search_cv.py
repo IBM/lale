@@ -53,7 +53,10 @@ class _GridSearchCVImpl:
             # if we are given a class name, instantiate it
             observer = observer()
         if scoring is None:
-            is_clf = estimator.is_classifier()
+            if estimator is None:
+                is_clf = True  # Since we will use LogisticRegression
+            else:
+                is_clf = estimator.is_classifier()
             if is_clf:
                 scoring = "accuracy"
             else:

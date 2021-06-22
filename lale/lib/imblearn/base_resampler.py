@@ -19,8 +19,14 @@ class _BaseResamplerImpl:
         self.resampler = resampler
 
     def fit(self, X, y=None):
-        X, y = self.resampler.fit_resample(X, y)
-        self.trained_operator = self.operator.fit(X, y)
+        resampler = self.resampler
+        assert resampler is not None
+        X, y = resampler.fit_resample(X, y)
+
+        op = self.operator
+        assert op is not None
+        self.trained_operator = op.fit(X, y)
+
         return self
 
     def transform(self, X, y=None):

@@ -346,10 +346,13 @@ class TestMT2RForecaster(unittest.TestCase):
         model = MT2RForecaster(target_columns=[0], prediction_win=2)
         fitted_model = model.fit(test_class.X)
         ypred = fitted_model.predict_proba()
+        assert ypred is not None
         self.assertEqual(ypred.shape, (2, 1, 2))
         model = MT2RForecaster(target_columns=[0, 1], prediction_win=2)
         fitted_model = model.fit(test_class.X)
         ypred = fitted_model.predict_proba()
+        self.assertIsNotNone(ypred)
+        assert ypred is not None
         self.assertEqual(ypred.shape, (2, 2, 2))
 
     def test_predict_uni_cols(self):

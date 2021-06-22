@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -187,12 +187,13 @@ and mitigators, so you often do not need to use it directly yourself.
 
 class _ProtectedAttributesEncoderImpl:
     y_name: str
+    protected_attributes: List[Dict[str, Any]]
 
     def __init__(
         self,
         *,
         favorable_labels=None,
-        protected_attributes=None,
+        protected_attributes=[],
         remainder="drop",
         return_X_y=False,
         combine="keep_separate",

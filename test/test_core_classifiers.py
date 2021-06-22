@@ -692,6 +692,7 @@ class TestIsolationForest(unittest.TestCase):
         )
         trained = hyperopt.fit(self.X_train)
         pipeline = trained.get_pipeline()
+        assert pipeline is not None
         _ = pipeline.decision_function(self.X_test)
 
     def test_decision_function_2(self):
@@ -710,6 +711,7 @@ class TestIsolationForest(unittest.TestCase):
         )
         trained = hyperopt.fit(self.X_train)
         pipeline = trained.get_pipeline()
+        assert pipeline is not None
         _ = pipeline.decision_function(self.X_test)
 
     def test_score_samples(self):

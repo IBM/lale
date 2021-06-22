@@ -32,6 +32,7 @@ from sklearn.model_selection._split import check_cv
 import lale.docstrings
 import lale.helpers
 import lale.operators
+import lale.pretty_print
 from lale.helpers import (
     create_instance_from_hyperopt_search_space,
     cross_val_score_track_trials,
@@ -161,7 +162,7 @@ class _HyperoptImpl:
                 )
             except BaseException as e:
                 # If there is any error in cross validation, use the score based on a random train-test split as the evaluation criterion
-                if self.handle_cv_failure:
+                if self.handle_cv_failure and trainable is not None:
                     (
                         X_train_part,
                         X_validation,
@@ -183,9 +184,16 @@ class _HyperoptImpl:
                         logger.debug("Warning, log loss cannot be computed")
                 else:
                     logger.debug(e)
-                    logger.debug(
-                        "Error {} with pipeline:{}".format(e, trainable.to_json())
-                    )
+                    if trainable is None:
+                        logger.debug(
+                            "Error {} with uncreatable pipeline with parameters:{}".format(
+                                e, lale.pretty_print.hyperparams_to_string(params)
+                            )
+                        )
+                    else:
+                        logger.debug(
+                            "Error {} with pipeline:{}".format(e, trainable.to_json())
+                        )
                     raise e
             return cv_score, logloss, execution_time
 
@@ -222,9 +230,11 @@ class _HyperoptImpl:
                     trainable = create_instance_from_hyperopt_search_space(
                         self.estimator, params
                     )
-                    trial_info = (
-                        f'pipeline: """{trainable.pretty_print(show_imports=False)}"""'
-                    )
+                    if trainable is None:
+                        trial_info = f"hyperparams: {params}"
+                    else:
+                        trial_info = f'pipeline: """{trainable.pretty_print(show_imports=False)}"""'
+
                 except BaseException:
                     trial_info = f"hyperparams: {params}"
                 error_msg = f"Exception caught in Hyperopt: {exception_type}, {traceback.format_exc()}with {trial_info}"
@@ -239,8 +249,11 @@ class _HyperoptImpl:
             trainable = create_instance_from_hyperopt_search_space(
                 self.estimator, params
             )
-            trained = trainable.fit(X_train, y_train)
-            return trained
+            if trainable is None:
+                return None
+            else:
+                trained = trainable.fit(X_train, y_train)
+                return trained
 
         def f(params):
             current_time = time.time()
@@ -252,7 +265,7 @@ class _HyperoptImpl:
             if self.max_eval_time:
                 # Run hyperopt in a subprocess that can be interupted
                 manager = multiprocessing.Manager()
-                proc_dict = manager.dict()
+                proc_dict: Dict[str, Any] = manager.dict()
                 p = multiprocessing.Process(
                     target=proc_train_test, args=(params, X_train, y_train, proc_dict)
                 )
@@ -416,6 +429,7 @@ class _HyperoptImpl:
         if pipeline_name == best_name:
             result = getattr(self, "_best_estimator", None)
         else:
+            assert pipeline_name is not None
             tid = int(pipeline_name[1:])
             params = self._trials.trials[tid]["result"]["params"]
             result = create_instance_from_hyperopt_search_space(self.estimator, params)

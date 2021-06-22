@@ -39,7 +39,7 @@ class VisitorMeta(type):
         except BaseException as e:
             raise VisitorPathError([self]) from e
         """.format(
-            cls.__name__
+            getattr(cls, "__name__", "???")
         )
         _accept_code = "def _accept(self, visitor, *args, **kwargs):\n\t{}".format(
             selector

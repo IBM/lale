@@ -400,7 +400,7 @@ def set_docstrings(lale_op: "IndividualOp"):
                 def __init__():
                     pass
 
-                new_class = type(name, (lale_op.__class__,), {"__init__": __init__})
+                new_class = type(name, (lale_op.__class__,), {"__init__": __init__})  # type: ignore
                 new_class.__module__ = module.__name__
                 module.__dict__[name] = new_class
 
