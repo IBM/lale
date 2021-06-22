@@ -16,10 +16,10 @@ import ast  # see also https://greentreesnakes.readthedocs.io/
 import pprint
 import typing
 from copy import deepcopy
+from io import StringIO
 from typing import Any, Dict, Optional, Union
 
 import astunparse
-from six.moves import cStringIO
 
 AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict)
 AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict]
@@ -65,7 +65,7 @@ class FixUnparser(astunparse.Unparser):
 # !! WORKAROUND !!
 # This method should be called instead of astunparse.unparse
 def fixedUnparse(tree):
-    v = cStringIO()
+    v = StringIO()
     FixUnparser(tree, file=v)
     return v.getvalue()
 
