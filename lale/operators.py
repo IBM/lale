@@ -499,6 +499,8 @@ class Operator(metaclass=AbstractVisitorMeta):
                     model = impl
                 elif hasattr(impl, "estimator"):
                     model = impl.estimator
+                elif hasattr(impl, "mitigator"):
+                    model = impl
 
         return "passthrough" if model is None else model
 
@@ -1365,6 +1367,8 @@ class IndividualOp(Operator):
                 self.impl.estimator, "classes_"
             ):
                 return self.impl.estimator.classes_
+            elif hasattr(self.impl, "classes_"):
+                return self.impl.classes_
 
         return super().__getattr__(name)
 
