@@ -495,13 +495,8 @@ class Operator(metaclass=AbstractVisitorMeta):
                 impl = op._impl_instance()
                 if hasattr(impl, "_wrapped_model"):
                     model = impl._wrapped_model
-                elif isinstance(impl, sklearn.base.BaseEstimator):
+                else:
                     model = impl
-                elif hasattr(impl, "estimator"):
-                    model = impl.estimator
-                elif hasattr(impl, "mitigator"):
-                    model = impl
-
         return "passthrough" if model is None else model
 
     @property
@@ -1362,13 +1357,6 @@ class IndividualOp(Operator):
                 return "classifier"  # satisfy sklearn.base.is_classifier(op)
             elif self.is_regressor():
                 return "regressor"  # satisfy sklearn.base.is_regressor(op)
-        if name == "classes_":
-            if hasattr(self.impl, "estimator") and hasattr(
-                self.impl.estimator, "classes_"
-            ):
-                return self.impl.estimator.classes_
-            elif hasattr(self.impl, "classes_"):
-                return self.impl.classes_
 
         return super().__getattr__(name)
 

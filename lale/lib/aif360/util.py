@@ -774,7 +774,9 @@ class _BasePostEstimatorImpl:
             encoded_X, predicted_y, predicted_probas
         )
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
-        self.unfavorable_labels = list(set(list(y)) - set(list(self.favorable_labels)))
+        self.classes_ = set(list(y))
+        self.unfavorable_labels = list(self.classes_ - set(list(self.favorable_labels)))
+        self.classes_ = np.array(list(self.classes_))
         return self
 
     def predict(self, X):
