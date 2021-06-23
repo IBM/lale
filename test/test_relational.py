@@ -28,10 +28,7 @@ except ImportError:
 from test import EnableSchemaValidation
 
 from lale import wrap_imported_operators
-from lale.datasets.multitable.fetch_datasets import (
-    fetch_go_sales_dataset,
-    fetch_imdb_dataset,
-)
+from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import (
     count,
     day_of_month,
@@ -328,23 +325,6 @@ class TestJoin(unittest.TestCase):
         self.assertEqual(transformed_df.shape, (2012, 11))
         self.assertEqual(transformed_df["Product number"][3], 128140)
 
-    # TestCase 1: IMDB dataset
-    def test_join_pandas_imdb(self):
-        imdb = fetch_imdb_dataset()
-        trainable = Join(
-            pred=[
-                it.directors.id == it.movies_directors.director_id,
-                it.movies_directors.movie_id == it.movies_genres.movie_id,
-                it.movies_genres.movie_id == it.movies.id,
-                it.movies_directors.movie_id == it.roles.movie_id,
-                it.roles.actor_id == it.actors.id,
-            ],
-            join_type="left",
-        )
-        transformed_df = trainable.transform(imdb)
-        self.assertEqual(transformed_df.shape, (6063934, 16))
-        self.assertEqual(transformed_df["movie_id"][1], 281325)
-
 
 # Testing join operator for spark dataframes
 class TestJoinSpark(unittest.TestCase):
@@ -631,24 +611,6 @@ class TestJoinSpark(unittest.TestCase):
             self.assertEqual(transformed_df.count(), 2012)
             self.assertEqual(len(transformed_df.columns), 11)
             self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1201")
-
-    # TestCase 1: IMDB dataset
-    def test_join_spark_imdb(self):
-        if spark_installed:
-            imdb = fetch_imdb_dataset("spark")
-            trainable = Join(
-                pred=[
-                    it.directors.id == it.movies_directors.director_id,
-                    it.movies_directors.movie_id == it.movies_genres.movie_id,
-                    it.movies_genres.movie_id == it.movies.id,
-                    it.movies_directors.movie_id == it.roles.movie_id,
-                    it.roles.actor_id == it.actors.id,
-                ],
-                join_type="left",
-            )
-            transformed_df = trainable.transform(imdb)
-            self.assertEqual(transformed_df.count(), 6063934)
-            self.assertEqual(len(transformed_df.columns), 16)
 
 
 class TestMap(unittest.TestCase):

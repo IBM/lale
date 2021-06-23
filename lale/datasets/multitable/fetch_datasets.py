@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import csv
 import logging
 import os
 import urllib.request
 
-import mysql.connector
 import pandas as pd
 
 logging.basicConfig()
@@ -30,15 +28,6 @@ try:
     spark_installed = True
 except ImportError:
     spark_installed = False
-
-imdb_config = {
-    "user": "guest",
-    "password": "relational",
-    "host": "relational.fit.cvut.cz",
-    "database": "imdb_ijs",
-    "port": 3306,
-    "raise_on_warnings": True,
-}
 
 
 def get_data_from_csv(datatype, data_file_name):
@@ -134,15 +123,15 @@ def fetch_imdb_dataset(datatype="pandas"):
 
       If 'pandas',
       Returns a list of singleton dictionaries (each element of the list is one
-      table from the dataset) after reading the downloaded CSV files. The key of
-      each dictionary is the name of the table and the value contains a pandas
-      dataframe consisting of the data.
+      table from the dataset) after reading the already existing CSV files.
+      The key of each dictionary is the name of the table and the value contains
+      a pandas dataframe consisting of the data.
 
       If 'spark',
       Returns a list of singleton dictionaries (each element of the list is one
-      table from the dataset) after reading the downloaded CSV files. The key of
-      each dictionary is the name of the table and the value contains a spark
-      dataframe consisting of the data.
+      table from the dataset) after reading the already existing CSV files.
+      The key of each dictionary is the name of the table and the value contains
+      a spark dataframe consisting of the data.
 
       Else,
       Throws an error as it does not support any other return type.
@@ -152,38 +141,29 @@ def fetch_imdb_dataset(datatype="pandas"):
     imdb_dict : dictionary of pandas / spark dataframes
     """
 
-    try:
-        cnx = mysql.connector.connect(**imdb_config)
-        cursor = cnx.cursor()
-        imdb_table_list = []
-        download_data_dir = os.path.join(os.path.dirname(__file__), "imdb_data")
-        imdb_list = []
-        cursor.execute("show tables")
-        for table in cursor:
-            imdb_table_list.append(table[0])
-        for table in imdb_table_list:
-            header_list = []
-            cursor.execute("desc {}".format(table))
-            for column in cursor:
-                header_list.append(column[0])
-            csv_name = "{}.csv".format(table)
-            data_file_name = os.path.join(download_data_dir, csv_name)
-            if not os.path.exists(data_file_name):
-                if not os.path.exists(download_data_dir):
-                    os.makedirs(download_data_dir)
-                cursor.execute("select * from {}".format(table))
-                result = cursor.fetchall()
-                c = csv.writer(open(data_file_name, "w", encoding="utf-8"))
-                c.writerow(header_list)
-                for row in result:
-                    c.writerow(row)
-                logger.info(" Created: {}".format(data_file_name))
-            imdb_list.append(
-                {csv_name.split(".")[0]: get_data_from_csv(datatype, data_file_name)}
+    download_data_dir = os.path.join(os.path.dirname(__file__), "imdb_data")
+    imdb_list = []
+    if not os.path.exists(download_data_dir):
+        raise ValueError(
+            "IMDB dataset not found at {}. Please download it using lalegpl repository.".format(
+                download_data_dir
             )
-        logger.info(" Fetched the IMDB dataset. Process completed.")
-        return imdb_list
-    except mysql.connector.Error as err:
-        raise ValueError(err)
+        )
     else:
-        cnx.close()
+        for root, dirs, files in os.walk(download_data_dir):
+            for file in files:
+                filename, extension = os.path.splitext(file)
+                if extension == ".csv":
+                    data_file_name = os.path.join(download_data_dir, file)
+                    imdb_list.append(
+                        {filename: get_data_from_csv(datatype, data_file_name)}
+                    )
+        if len(imdb_list) == 7:
+            logger.info(" Fetched the IMDB dataset. Process completed.")
+        else:
+            raise ValueError(
+                "Incomplete IMDB dataset found at {}. Please download complete dataset using lalegpl repository.".format(
+                    download_data_dir
+                )
+            )
+    return imdb_list
