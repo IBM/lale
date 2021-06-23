@@ -712,7 +712,7 @@ class _BaseInEstimatorImpl:
         result_data = self.mitigator.predict(encoded_data)
         favorable_probs = result_data.scores
         all_probs = np.hstack([1 - favorable_probs, favorable_probs])
-        return pd.DataFrame(all_probs, columns=["0", "1"])
+        return all_probs
 
 
 class _BasePostEstimatorImpl:
@@ -799,7 +799,11 @@ class _BasePostEstimatorImpl:
         dataset_out = self.mitigator.predict(dataset_pred)
         favorable_probs = dataset_out.scores
         all_probs = np.hstack([1 - favorable_probs, favorable_probs])
-        return pd.DataFrame(all_probs, columns=["0", "1"])
+        return all_probs
+
+    @property
+    def classes_(self):
+        return self.estimator.classes_
 
 
 _categorical_supervised_input_fit_schema = {
