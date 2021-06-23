@@ -74,6 +74,7 @@ class _ReweighingImpl:
         if isinstance(self.estimator, lale.operators.TrainablePipeline):
             trainable_prefix = self.estimator.remove_last()
             trainable_suffix = self.estimator.get_last()
+            assert trainable_suffix is not None
             trained_prefix = trainable_prefix.fit(X, y)
             transformed_X = trained_prefix.transform(redacted_X)
             trained_suffix = trainable_suffix.fit(

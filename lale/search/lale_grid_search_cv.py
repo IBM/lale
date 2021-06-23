@@ -108,7 +108,7 @@ DEFAULT_SAMPLES_PER_DISTRIBUTION = 2
 def SearchSpaceNumberToGSValues(
     key: str, hp: SearchSpaceNumber, num_samples: Optional[int] = None
 ) -> List[GSValue]:
-    """Returns either a list of values intended to be sampled uniformly """
+    """Returns either a list of values intended to be sampled uniformly"""
     samples: int
     if num_samples is None:
         samples = DEFAULT_SAMPLES_PER_DISTRIBUTION

@@ -24,7 +24,9 @@ class _IdentityWrapperImpl:
         self._hyperparams = {"op": op}
 
     def getOp(self):
-        return self._hyperparams["op"]
+        op = self._hyperparams["op"]
+        assert op is not None
+        return op
 
     def transform(self, X, y=None):
         return self.getOp().transform(X, y=y)

@@ -103,6 +103,7 @@ class _ProjectImpl:
             return s_X
         else:
             X = lale.datasets.data_schemas.add_schema(s_X)
+            assert X is not None
             self.fit(X)
             return self._transform_schema_fit_columns(X.json_schema)
 

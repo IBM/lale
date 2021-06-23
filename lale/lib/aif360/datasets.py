@@ -332,6 +332,8 @@ def _try_download_compas(violent_recidivism=False):
 
 def _get_pandas_and_fairness_info_from_compas_dataset(dataset):
     X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
+    assert X is not None
+
     at_least_25 = pd.Series(X["age"] >= 25, dtype=np.float64)
     dropped_X = X.drop(columns=["age"])
     encoded_X = dropped_X.assign(age=at_least_25)
@@ -831,6 +833,7 @@ def fetch_boston_housing_df(preprocess=False):
     )
     orig_X = pd.concat([train_X, test_X]).sort_index()
     orig_y = pd.concat([train_y, test_y]).sort_index()
+    assert train_X is not None
     black_median = np.median(train_X["B"])
     label_median = np.median(train_y)
 

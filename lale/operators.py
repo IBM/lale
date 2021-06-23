@@ -346,7 +346,7 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     @abstractmethod
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
-        """ For scikit-learn compatibility """
+        """For scikit-learn compatibility"""
         pass
 
     def visualize(self, ipython_display: bool = True):
@@ -1192,8 +1192,6 @@ class IndividualOp(Operator):
     def _with_params(self, try_mutate: bool, **impl_params) -> "IndividualOp":
         main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
         hyper = self.hyperparams()
-        if hyper is None:
-            hyper = {}
         # we set the sub params first
         for sub_key, sub_params in partitioned_sub_params.items():
             with_structured_params(try_mutate, sub_key, sub_params, hyper)
@@ -1237,7 +1235,7 @@ class IndividualOp(Operator):
     def frozen_hyperparams(self) -> Optional[List[str]]:
         return getattr(self, "_frozen_hyperparams", None)
 
-    def hyperparams(self) -> Optional[Dict[str, Any]]:
+    def _hyperparams_helper(self) -> Optional[Dict[str, Any]]:
         actuals = self.hyperparams_all()
         if actuals is None:
             return None
@@ -1247,8 +1245,15 @@ class IndividualOp(Operator):
         params = {k: actuals[k] for k in frozen_params}
         return params
 
+    def hyperparams(self) -> Dict[str, Any]:
+        params = self._hyperparams_helper()
+        if params is None:
+            return {}
+        else:
+            return params
+
     def reduced_hyperparams(self):
-        actuals = self.hyperparams()
+        actuals = self._hyperparams_helper()
         if actuals is None:
             return None
         defaults = self.get_defaults()
@@ -2217,7 +2222,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
 
     def _trained_hyperparams(self, trained_impl) -> Optional[Dict[str, Any]]:
         hp = self.hyperparams()
-        if hp is None:
+        if not hp:
             return None
         # TODO: may also want to do this for other higher-order operators
         if self.class_name() != _LALE_SKL_PIPELINE:

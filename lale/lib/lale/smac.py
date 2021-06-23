@@ -188,6 +188,12 @@ or with
 
         warnings.filterwarnings("ignore")
         trained = self._best_estimator
+        if trained is None:
+            logger.warning(
+                "Could not get trained best estimator when predicting using SMACCV:{}, the error is"
+            )
+            return None
+
         try:
             predictions = trained.predict(X_eval)
         except ValueError as e:

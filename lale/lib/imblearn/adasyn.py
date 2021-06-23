@@ -57,8 +57,12 @@ class _ADASYNImpl(_BaseResamplerImpl):
     def fit(self, X, y=None):
         import numpy as np
 
-        X, y = self.resampler.fit_resample(X, np.array(y))
-        self.trained_operator = self.operator.fit(X, y)
+        resampler = self.resampler
+        assert resampler is not None
+        X, y = resampler.fit_resample(X, np.array(y))
+        op = self.operator
+        assert op is not None
+        self.trained_operator = op.fit(X, y)
         return self
 
 

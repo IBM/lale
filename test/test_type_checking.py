@@ -95,7 +95,9 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.datasets.data_schemas import to_schema
         from lale.type_checking import validate_schema
 
-        all_X, all_y = self._irisArr["X"], self._irisArr["y"]
+        irisArr = self._irisArr
+        assert irisArr is not None
+        all_X, all_y = irisArr["X"], irisArr["y"]
         assert not hasattr(all_X, "json_schema")
         all_X_schema = to_schema(all_X)
         validate_schema(all_X, all_X_schema, subsample_array=False)
@@ -129,7 +131,10 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.datasets.data_schemas import to_schema
         from lale.type_checking import validate_schema
 
-        train_X, train_y = self._irisDf["X"], self._irisDf["y"]
+        irisDf = self._irisDf
+        assert irisDf is not None
+
+        train_X, train_y = irisDf["X"], irisDf["y"]
         assert isinstance(train_X, pd.DataFrame)
         assert not hasattr(train_X, "json_schema")
         train_X_schema = to_schema(train_X)
@@ -168,7 +173,9 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.datasets.data_schemas import to_schema
         from lale.type_checking import validate_schema
 
-        train_X, train_y = self._creditG["X"], self._creditG["y"]
+        creditG = self._creditG
+        assert creditG is not None
+        train_X, train_y = creditG["X"], creditG["y"]
         assert hasattr(train_X, "json_schema")
         train_X_schema = to_schema(train_X)
         validate_schema(train_X, train_X_schema, subsample_array=False)
@@ -291,7 +298,9 @@ class TestDatasetSchemas(unittest.TestCase):
         from lale.datasets.data_schemas import to_schema
         from lale.lib.lale import Project
 
-        train_X = self._creditG["X"]
+        creditG = self._creditG
+        assert creditG is not None
+        train_X = creditG["X"]
         trainable = Project(columns={"type": "number"})
         trained = trainable.fit(train_X)
         transformed = trained.transform(train_X)
@@ -323,7 +332,9 @@ class TestDatasetSchemas(unittest.TestCase):
             from lale.datasets.data_schemas import to_schema
             from lale.lib.lale import Project
 
-            train_X = self._creditG["X"]
+            creditG = self._creditG
+            assert creditG is not None
+            train_X = creditG["X"]
             trainable = Project(columns={"not": {"type": "number"}})
             trained = trainable.fit(train_X)
             transformed = trained.transform(train_X)
@@ -496,6 +507,7 @@ class TestDatasetSchemas(unittest.TestCase):
                 self._movies,
                 self._drugRev,
             ]:
+                assert ds is not None
                 s_input = to_schema(ds["X"])
                 s_output = NoOp.transform_schema(s_input)
                 self.assertIs(s_input, s_output)
@@ -505,7 +517,9 @@ class TestDatasetSchemas(unittest.TestCase):
             from lale.datasets.data_schemas import to_schema
 
             pipeline = NMF >> LogisticRegression
-            input_schema = to_schema(self._digits["X"])
+            digits = self._digits
+            assert digits is not None
+            input_schema = to_schema(digits["X"])
             transformed_schema = pipeline.transform_schema(input_schema)
             transformed_expected = {
                 "description": "Probability of the sample for each class in the model.",
@@ -520,7 +534,9 @@ class TestDatasetSchemas(unittest.TestCase):
             from lale.datasets.data_schemas import to_schema
 
             choice = NMF | LogisticRegression
-            input_schema = to_schema(self._digits["X"])
+            digits = self._digits
+            assert digits is not None
+            input_schema = to_schema(digits["X"])
             transformed_schema = choice.transform_schema(input_schema)
             transformed_expected = {
                 "type": "array",
@@ -535,7 +551,9 @@ class TestDatasetSchemas(unittest.TestCase):
 
             inner = LogisticRegression
             outer = IdentityWrapper(op=LogisticRegression)
-            input_schema = to_schema(self._digits["X"])
+            digits = self._digits
+            assert digits is not None
+            input_schema = to_schema(digits["X"])
             transformed_inner = inner.transform_schema(input_schema)
             transformed_outer = outer.transform_schema(input_schema)
             self.maxDiff = None
@@ -545,7 +563,9 @@ class TestDatasetSchemas(unittest.TestCase):
         with EnableSchemaValidation():
             from lale.datasets.data_schemas import to_schema
 
-            data_X, data_y = self._irisArr["X"], self._irisArr["y"]
+            irisArr = self._irisArr
+            assert irisArr is not None
+            data_X, data_y = irisArr["X"], irisArr["y"]
             s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
 
             def check(s_actual, n_expected, s_expected):
@@ -572,7 +592,9 @@ class TestDatasetSchemas(unittest.TestCase):
         with EnableSchemaValidation():
             from lale.datasets.data_schemas import to_schema
 
-            data_X, data_y = self._irisDf["X"], self._irisDf["y"]
+            irisDf = self._irisDf
+            assert irisDf is not None
+            data_X, data_y = irisDf["X"], irisDf["y"]
             s_in_X, s_in_y = to_schema(data_X), to_schema(data_y)
 
             def check(s_actual, n_expected, s_expected):
@@ -667,7 +689,9 @@ class TestDatasetSchemas(unittest.TestCase):
     def test_decision_function_binary(self):
         from lale.lib.lale import Project
 
-        train_X, train_y = self._creditG["X"], self._creditG["y"]
+        creditG = self._creditG
+        assert creditG is not None
+        train_X, train_y = creditG["X"], creditG["y"]
         trainable = Project(columns={"type": "number"}) >> LogisticRegression()
         trained = trainable.fit(train_X, train_y)
         _ = trained.decision_function(train_X)

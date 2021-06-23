@@ -54,10 +54,14 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             assert False, f"Exception was thrown during model pickle: {e}"
 
     def test_02_predict_on_model(self):
-        check_X = TestAutoAIOutputConsumption.training_df.drop(["Risk"], axis=1).values
+        t_df = TestAutoAIOutputConsumption.training_df
+        assert t_df is not None
+        check_X = t_df.drop(["Risk"], axis=1).values
         x = check_X
         try:
-            pred = TestAutoAIOutputConsumption.model.predict(x)
+            m = TestAutoAIOutputConsumption.model
+            assert m is not None
+            pred = m.predict(x)
             assert len(pred) == len(
                 x
             ), f"Prediction has returned unexpected number of rows {len(pred)} - expected {len(x)}"
@@ -66,7 +70,9 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
     def test_03_print_pipeline(self):
         lale_pipeline = TestAutoAIOutputConsumption.model
+        assert lale_pipeline is not None
         wrapped_pipeline = wrap_pipeline_segments(lale_pipeline)
+        assert wrapped_pipeline is not None
         TestAutoAIOutputConsumption.pipeline_content = wrapped_pipeline.pretty_print()
         assert type(TestAutoAIOutputConsumption.pipeline_content) is str
         assert len(TestAutoAIOutputConsumption.pipeline_content) > 0
@@ -91,6 +97,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             spec = importlib.util.spec_from_file_location(
                 "pp_pipeline", "pp_pipeline.py"
             )
+            assert spec is not None
             pipeline_module = importlib.util.module_from_spec(spec)
             assert spec.loader is not None
             # the type stubs for _Loader are currently incomplete
@@ -109,16 +116,26 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
                 println_pos("Couldn't remove pp_pipeline.py file")
 
     def test_05_train_pretty_print_pipeline(self):
-        train_X = TestAutoAIOutputConsumption.training_df.drop(["Risk"], axis=1).values
-        train_y = TestAutoAIOutputConsumption.training_df.Risk.values
+        t_df = TestAutoAIOutputConsumption.training_df
+        assert t_df is not None
+        train_X = t_df.drop(["Risk"], axis=1).values
+        train_y = t_df.Risk.values
 
-        TestAutoAIOutputConsumption.pp_pipeline.fit(train_X, train_y)
+        ppp = TestAutoAIOutputConsumption.pp_pipeline
+        assert ppp is not None
+        ppp.fit(train_X, train_y)
 
     def test_06_predict_on_pretty_print_pipeline(self):
-        check_X = TestAutoAIOutputConsumption.training_df.drop(["Risk"], axis=1).values
+        t_df = TestAutoAIOutputConsumption.training_df
+        assert t_df is not None
+
+        check_X = t_df.drop(["Risk"], axis=1).values
         x = check_X
         try:
-            pred = TestAutoAIOutputConsumption.pp_pipeline.predict(x)
+            ppp = TestAutoAIOutputConsumption.pp_pipeline
+            assert ppp is not None
+
+            pred = ppp.predict(x)
             assert len(pred) == len(
                 x
             ), f"Prediction on pretty print model has returned unexpected number of rows {len(pred)} - expected {len(x)}"
@@ -132,6 +149,7 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
 
         try:
             lale_pipeline = TestAutoAIOutputConsumption.model
+            assert lale_pipeline is not None
             TestAutoAIOutputConsumption.prefix_model = (
                 lale_pipeline.remove_last().freeze_trainable()
             )
@@ -153,11 +171,13 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             )
             println_pos(f"type(LR) {type(LR)}")
             # This is for classifiers, regressors needs to have different operators & different scoring metrics (e.g 'r2')
-            new_model = TestAutoAIOutputConsumption.prefix_model >> (LR | Tree | KNN)
-            train_X = TestAutoAIOutputConsumption.training_df.drop(
-                ["Risk"], axis=1
-            ).values
-            train_y = TestAutoAIOutputConsumption.training_df["Risk"].values
+            pm = TestAutoAIOutputConsumption.prefix_model
+            assert pm is not None
+            new_model = pm >> (LR | Tree | KNN)
+            t_df = TestAutoAIOutputConsumption.training_df
+            assert t_df is not None
+            train_X = t_df.drop(["Risk"], axis=1).values
+            train_y = t_df["Risk"].values
             hyperopt = Hyperopt(
                 estimator=new_model, cv=2, max_evals=3, scoring="roc_auc"
             )
@@ -169,10 +189,14 @@ class TestAutoAIOutputConsumption(unittest.TestCase):
             assert False, f"Exception was thrown during model refinery: {e}"
 
     def test_09_predict_refined_model(self):
-        check_X = TestAutoAIOutputConsumption.training_df.drop(["Risk"], axis=1).values
+        t_df = TestAutoAIOutputConsumption.training_df
+        assert t_df is not None
+        check_X = t_df.drop(["Risk"], axis=1).values
         x = check_X
         try:
-            pred = TestAutoAIOutputConsumption.refined_model.predict(x)
+            model = TestAutoAIOutputConsumption.refined_model
+            assert model is not None
+            pred = model.predict(x)
             assert len(pred) == len(
                 x
             ), f"Prediction on refined model has returned unexpected number of rows {len(pred)} - expected {len(x)}"

@@ -55,7 +55,10 @@ class _BatchingImpl:
         data_loader = lale.helpers.create_data_loader(
             X=X, y=y, batch_size=self.batch_size
         )
-        transformed_data = self.operator.transform_with_batches(
+
+        op = self.operator
+        assert op is not None
+        transformed_data = op.transform_with_batches(
             data_loader, serialize=self.inmemory
         )
         return transformed_data

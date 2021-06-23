@@ -474,13 +474,14 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         BasePipeline,
         OperatorChoice,
         PlannedIndividualOp,
+        TrainableOperator,
         TrainablePipeline,
     )
 
     if isinstance(lale_object, PlannedIndividualOp):
         new_hyperparams: Dict[str, Any] = dict_without(hyperparams, "name")
         hps = lale_object.hyperparams()
-        if hps is not None:
+        if hps:
             obj_hyperparams = dict(hps)
         else:
             obj_hyperparams = {}
@@ -509,6 +510,7 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
         for op_index, sub_params in enumerate(hyperparams):
             sub_op = steps[op_index]
             op_instance = create_instance_from_hyperopt_search_space(sub_op, sub_params)
+            assert isinstance(op_instance, TrainableOperator)
             assert (
                 isinstance(sub_op, OperatorChoice)
                 or sub_op.class_name() == op_instance.class_name()
