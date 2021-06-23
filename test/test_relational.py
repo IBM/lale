@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import unittest
 
 import jsonschema
@@ -29,6 +28,10 @@ except ImportError:
 from test import EnableSchemaValidation
 
 from lale import wrap_imported_operators
+from lale.datasets.multitable.fetch_datasets import (
+    fetch_go_sales_dataset,
+    fetch_imdb_dataset,
+)
 from lale.expressions import (
     count,
     day_of_month,
@@ -52,10 +55,6 @@ from lale.lib.lale import (
 )
 from lale.lib.sklearn import KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
-
-go_sales_dataset_path = os.path.join(
-    os.path.dirname(__file__), "..", "lale", "datasets", "data", "go_sales"
-)
 
 
 # Testing join operator for pandas dataframes
@@ -105,12 +104,6 @@ class TestJoin(unittest.TestCase):
         }
         self.df6 = pd.DataFrame(data=table6)
 
-        self.go_1k = pd.read_csv(go_sales_dataset_path + "/go_1k.csv")
-        self.go_daily_sales = pd.read_csv(go_sales_dataset_path + "/go_daily_sales.csv")
-        self.go_methods = pd.read_csv(go_sales_dataset_path + "/go_methods.csv")
-        self.go_products = pd.read_csv(go_sales_dataset_path + "/go_products.csv")
-        self.go_retailers = pd.read_csv(go_sales_dataset_path + "/go_retailers.csv")
-
     # Multiple elements in predicate with different key column names
     def test_join_pandas_multiple_left(self):
         trainable = Join(
@@ -155,7 +148,7 @@ class TestJoin(unittest.TestCase):
                 [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
             ],
             join_type="left",
-        )  # .impl
+        )
         transformed_df = trainable.transform(
             [{"main": self.df1}, {"info": self.df5}, {"t1": self.df3}, {"t2": self.df6}]
         )
@@ -285,6 +278,7 @@ class TestJoin(unittest.TestCase):
 
     # TestCase 1: Go_Sales dataset
     def test_join_pandas_go_sales1(self):
+        go_sales = fetch_go_sales_dataset()
         trainable = Join(
             pred=[
                 it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
@@ -295,20 +289,13 @@ class TestJoin(unittest.TestCase):
             ],
             join_type="inner",
         )
-        transformed_df = trainable.transform(
-            [
-                {"go_1k": self.go_1k},
-                {"go_daily_sales": self.go_daily_sales},
-                {"go_retailers": self.go_retailers},
-                {"go_methods": self.go_methods},
-                {"go_products": self.go_products},
-            ]
-        )
+        transformed_df = trainable.transform(go_sales)
         self.assertEqual(transformed_df.shape, (1887899, 21))
         self.assertEqual(transformed_df["Country"][4], "Switzerland")
 
     # TestCase 2: Go_Sales dataset and different types of join conditions
     def test_join_pandas_go_sales2(self):
+        go_sales = fetch_go_sales_dataset()
         trainable = Join(
             pred=[
                 [
@@ -319,14 +306,13 @@ class TestJoin(unittest.TestCase):
             ],
             join_type="left",
         )
-        transformed_df = trainable.transform(
-            [{"go_1k": self.go_1k}, {"go_daily_sales": self.go_daily_sales}]
-        )
+        transformed_df = trainable.transform(go_sales)
         self.assertEqual(transformed_df.shape, (37502, 9))
         self.assertEqual(transformed_df["Unit price"][1], 43.85)
 
     # TestCase 3: Go_Sales dataset
     def test_join_pandas_go_sales3(self):
+        go_sales = fetch_go_sales_dataset()
         trainable = Join(
             pred=[
                 [
@@ -338,15 +324,26 @@ class TestJoin(unittest.TestCase):
             ],
             join_type="inner",
         )
-        transformed_df = trainable.transform(
-            [
-                {"go_1k": self.go_1k},
-                {"go_daily_sales": self.go_daily_sales},
-                {"go_retailers": self.go_retailers},
-            ]
-        )
+        transformed_df = trainable.transform(go_sales)
         self.assertEqual(transformed_df.shape, (2012, 11))
         self.assertEqual(transformed_df["Product number"][3], 128140)
+
+    # TestCase 1: IMDB dataset
+    def test_join_pandas_imdb(self):
+        imdb = fetch_imdb_dataset()
+        trainable = Join(
+            pred=[
+                it.directors.id == it.movies_directors.director_id,
+                it.movies_directors.movie_id == it.movies_genres.movie_id,
+                it.movies_genres.movie_id == it.movies.id,
+                it.movies_directors.movie_id == it.roles.movie_id,
+                it.roles.actor_id == it.actors.id,
+            ],
+            join_type="left",
+        )
+        transformed_df = trainable.transform(imdb)
+        self.assertEqual(transformed_df.shape, (6063934, 16))
+        self.assertEqual(transformed_df["movie_id"][1], 281325)
 
 
 # Testing join operator for spark dataframes
@@ -395,22 +392,6 @@ class TestJoinSpark(unittest.TestCase):
             rdd = sc.parallelize(l6)
             table6 = rdd.map(lambda x: Row(t_id=int(x[0]), col3=x[1]))
             self.spark_df6 = sqlContext.createDataFrame(table6)
-
-            self.spark_go_1k = spark.read.csv(
-                go_sales_dataset_path + "/go_1k.csv", header=True
-            )
-            self.spark_go_daily_sales = spark.read.csv(
-                go_sales_dataset_path + "/go_daily_sales.csv", header=True
-            )
-            self.spark_go_methods = spark.read.csv(
-                go_sales_dataset_path + "/go_methods.csv", header=True
-            )
-            self.spark_go_products = spark.read.csv(
-                go_sales_dataset_path + "/go_products.csv", header=True
-            )
-            self.spark_go_retailers = spark.read.csv(
-                go_sales_dataset_path + "/go_retailers.csv", header=True
-            )
 
     # Multiple elements in predicate with different key column names
     def test_join_spark_multiple_left(self):
@@ -592,70 +573,82 @@ class TestJoinSpark(unittest.TestCase):
 
     # TestCase 1: Go_Sales dataset
     def test_join_spark_go_sales1(self):
-        trainable = Join(
-            pred=[
-                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
-                it.go_daily_sales["Product number"] == it.go_1k["Product number"],
-                it.go_methods["Order method code"]
-                == it.go_daily_sales["Order method code"],
-                it.go_products["Product number"] == it.go_1k["Product number"],
-            ],
-            join_type="inner",
-        )
-        transformed_df = trainable.transform(
-            [
-                {"go_1k": self.spark_go_1k},
-                {"go_daily_sales": self.spark_go_daily_sales},
-                {"go_retailers": self.spark_go_retailers},
-                {"go_methods": self.spark_go_methods},
-                {"go_products": self.spark_go_products},
-            ]
-        )
-        self.assertEqual(transformed_df.count(), 1887899)
-        self.assertEqual(len(transformed_df.columns), 21)
+        if spark_installed:
+            go_sales = fetch_go_sales_dataset("spark")
+            trainable = Join(
+                pred=[
+                    it.go_daily_sales["Retailer code"]
+                    == it.go_retailers["Retailer code"],
+                    it.go_daily_sales["Product number"] == it.go_1k["Product number"],
+                    it.go_methods["Order method code"]
+                    == it.go_daily_sales["Order method code"],
+                    it.go_products["Product number"] == it.go_1k["Product number"],
+                ],
+                join_type="inner",
+            )
+            transformed_df = trainable.transform(go_sales)
+            self.assertEqual(transformed_df.count(), 1887899)
+            self.assertEqual(len(transformed_df.columns), 21)
 
     # TestCase 2: Go_Sales dataset
     def test_join_spark_go_sales2(self):
-        trainable = Join(
-            pred=[
-                [
-                    it["go_1k"]["Retailer code"] == it.go_daily_sales["Retailer code"],
-                    it.go_1k["Product number"]
-                    == it["go_daily_sales"]["Product number"],
-                ]
-            ],
-            join_type="left",
-        )
-        transformed_df = trainable.transform(
-            [{"go_1k": self.spark_go_1k}, {"go_daily_sales": self.spark_go_daily_sales}]
-        )
-        self.assertEqual(transformed_df.count(), 37502)
-        self.assertEqual(len(transformed_df.columns), 9)
-        self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1206")
+        if spark_installed:
+            go_sales = fetch_go_sales_dataset("spark")
+            trainable = Join(
+                pred=[
+                    [
+                        it["go_1k"]["Retailer code"]
+                        == it.go_daily_sales["Retailer code"],
+                        it.go_1k["Product number"]
+                        == it["go_daily_sales"]["Product number"],
+                    ]
+                ],
+                join_type="left",
+            )
+            transformed_df = trainable.transform(go_sales)
+            self.assertEqual(transformed_df.count(), 37502)
+            self.assertEqual(len(transformed_df.columns), 9)
+            self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1206")
 
     # TestCase 3: Go_Sales dataset
     def test_join_spark_go_sales3(self):
-        trainable = Join(
-            pred=[
-                [
-                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
-                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
-                    it.go_1k.Quantity == it.go_daily_sales.Quantity,
+        if spark_installed:
+            go_sales = fetch_go_sales_dataset("spark")
+            trainable = Join(
+                pred=[
+                    [
+                        it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
+                        it.go_1k["Product number"]
+                        == it.go_daily_sales["Product number"],
+                        it.go_1k.Quantity == it.go_daily_sales.Quantity,
+                    ],
+                    it.go_daily_sales["Retailer code"]
+                    == it.go_retailers["Retailer code"],
                 ],
-                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
-            ],
-            join_type="inner",
-        )
-        transformed_df = trainable.transform(
-            [
-                {"go_1k": self.spark_go_1k},
-                {"go_daily_sales": self.spark_go_daily_sales},
-                {"go_retailers": self.spark_go_retailers},
-            ]
-        )
-        self.assertEqual(transformed_df.count(), 2012)
-        self.assertEqual(len(transformed_df.columns), 11)
-        self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1201")
+                join_type="inner",
+            )
+            transformed_df = trainable.transform(go_sales)
+            self.assertEqual(transformed_df.count(), 2012)
+            self.assertEqual(len(transformed_df.columns), 11)
+            self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1201")
+
+    # TestCase 1: IMDB dataset
+    def test_join_spark_imdb(self):
+        if spark_installed:
+            imdb = fetch_imdb_dataset("spark")
+            trainable = Join(
+                pred=[
+                    it.directors.id == it.movies_directors.director_id,
+                    it.movies_directors.movie_id == it.movies_genres.movie_id,
+                    it.movies_genres.movie_id == it.movies.id,
+                    it.movies_directors.movie_id == it.roles.movie_id,
+                    it.roles.actor_id == it.actors.id,
+                ],
+                join_type="left",
+            )
+            transformed_df = trainable.transform(imdb)
+            self.assertEqual(transformed_df.count(), 6063934)
+            self.assertEqual(len(transformed_df.columns), 16)
 
 
 class TestMap(unittest.TestCase):

@@ -49,10 +49,10 @@ def get_data_from_csv(datatype, data_file_name):
             spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()
             return spark.read.csv(data_file_name, header=True)
         else:
-            raise ValueError("Spark is not installed on this machine!")
+            raise ValueError("Spark is not installed on this machine.")
     else:
         raise ValueError(
-            "Can fetch the go_sales data in pandas or spark dataframes only! Pass either 'pandas' or 'spark' in datatype parameter!"
+            "Can fetch the go_sales data in pandas or spark dataframes only. Pass either 'pandas' or 'spark' in datatype parameter."
         )
 
 
@@ -73,9 +73,17 @@ def fetch_go_sales_dataset(datatype="pandas"):
     datatype : string, optional, default 'pandas'
 
       If 'pandas',
-      Returns a dictionary of pandas dataframes after reading the downloaded CSV files.
+      Returns a list of singleton dictionaries (each element of the list is one
+      table from the dataset) after reading the downloaded CSV files. The key of
+      each dictionary is the name of the table and the value contains a pandas
+      dataframe consisting of the data.
+
       If 'spark',
-      Returns a dictionary of spark dataframes after reading the downloaded CSV files.
+      Returns a list of singleton dictionaries (each element of the list is one
+      table from the dataset) after reading the downloaded CSV files. The key of
+      each dictionary is the name of the table and the value contains a spark
+      dataframe consisting of the data.
+
       Else,
       Throws an error as it does not support any other return type.
 
@@ -93,7 +101,7 @@ def fetch_go_sales_dataset(datatype="pandas"):
         "go_products.csv",
         "go_retailers.csv",
     ]
-    go_sales_dict = {}
+    go_sales_list = []
     for file in filenames:
         data_file_name = os.path.join(download_data_dir, file)
         if not os.path.exists(data_file_name):
@@ -101,9 +109,11 @@ def fetch_go_sales_dataset(datatype="pandas"):
                 os.makedirs(download_data_dir)
             urllib.request.urlretrieve(base_url + file, data_file_name)
             logger.info(" Created: {}".format(data_file_name))
-        go_sales_dict[file.split(".")[0]] = get_data_from_csv(datatype, data_file_name)
-    logger.info(" Fetched the Go_Sales dataset! Process completed!")
-    return go_sales_dict
+        go_sales_list.append(
+            {file.split(".")[0]: get_data_from_csv(datatype, data_file_name)}
+        )
+    logger.info(" Fetched the Go_Sales dataset. Process completed.")
+    return go_sales_list
 
 
 def fetch_imdb_dataset(datatype="pandas"):
@@ -123,9 +133,17 @@ def fetch_imdb_dataset(datatype="pandas"):
     datatype : string, optional, default 'pandas'
 
       If 'pandas',
-      Returns a dictionary of pandas dataframes after reading the downloaded CSV files.
+      Returns a list of singleton dictionaries (each element of the list is one
+      table from the dataset) after reading the downloaded CSV files. The key of
+      each dictionary is the name of the table and the value contains a pandas
+      dataframe consisting of the data.
+
       If 'spark',
-      Returns a dictionary of spark dataframes after reading the downloaded CSV files.
+      Returns a list of singleton dictionaries (each element of the list is one
+      table from the dataset) after reading the downloaded CSV files. The key of
+      each dictionary is the name of the table and the value contains a spark
+      dataframe consisting of the data.
+
       Else,
       Throws an error as it does not support any other return type.
 
@@ -139,7 +157,7 @@ def fetch_imdb_dataset(datatype="pandas"):
         cursor = cnx.cursor()
         imdb_table_list = []
         download_data_dir = os.path.join(os.path.dirname(__file__), "imdb_data")
-        imdb_dict = {}
+        imdb_list = []
         cursor.execute("show tables")
         for table in cursor:
             imdb_table_list.append(table[0])
@@ -160,11 +178,11 @@ def fetch_imdb_dataset(datatype="pandas"):
                 for row in result:
                     c.writerow(row)
                 logger.info(" Created: {}".format(data_file_name))
-            imdb_dict[csv_name.split(".")[0]] = get_data_from_csv(
-                datatype, data_file_name
+            imdb_list.append(
+                {csv_name.split(".")[0]: get_data_from_csv(datatype, data_file_name)}
             )
-        logger.info(" Fetched the IMDB dataset! Process completed!")
-        return imdb_dict
+        logger.info(" Fetched the IMDB dataset. Process completed.")
+        return imdb_list
     except mysql.connector.Error as err:
         raise ValueError(err)
     else:
