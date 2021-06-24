@@ -147,8 +147,8 @@ class TestOperatorErrors(unittest.TestCase):
             self.fail("summary did not fail")
         except AttributeError as e:
             msg: str = str(e)
-            self.assertRegex(msg, "TrainableOperator is deprecated")
-            self.assertRegex(msg, "meant to train")
+            self.assertRegex(msg, "is not trained.")
+            self.assertRegex(msg, "the result of fit is a new trained")
 
     def test_trained_summary_fail(self):
         try:
