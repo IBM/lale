@@ -133,8 +133,8 @@ class TestOperatorErrors(unittest.TestCase):
             self.fail("get_pipeline did not fail")
         except AttributeError as e:
             msg: str = str(e)
-            self.assertRegex(msg, "TrainableOperator is deprecated")
-            self.assertRegex(msg, "meant to train")
+            self.assertRegex(msg, "is not trained.")
+            self.assertRegex(msg, "the result of fit is a new trained")
 
     def test_trained_get_pipeline_fail(self):
         try:
@@ -160,8 +160,8 @@ class TestOperatorErrors(unittest.TestCase):
             self.fail("summary did not fail")
         except AttributeError as e:
             msg: str = str(e)
-            self.assertRegex(msg, "TrainableOperator is deprecated")
-            self.assertRegex(msg, "meant to train")
+            self.assertRegex(msg, "is not trained.")
+            self.assertRegex(msg, "the result of fit is a new trained")
 
     def test_trained_summary_fail(self):
         try:
@@ -907,6 +907,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
         try:
             planned.fit(self.X, self.y)
         except AttributeError as e:
+            self.maxDiff = None
             self.assertEqual(
                 e.__str__(),
                 """The pipeline is not trainable, which means you can not call fit on it.

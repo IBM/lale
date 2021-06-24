@@ -82,6 +82,9 @@ class _BaggingClassifierImpl:
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)
 
+    def predict_log_proba(self, X):
+        return self._wrapped_model.predict_log_proba(X)
+
     def decision_function(self, X):
         return self._wrapped_model.decision_function(X)
 

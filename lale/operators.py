@@ -587,8 +587,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         return self
 
     def __getattr__(self, name: str) -> Any:
-
-        if name in [
+        predict_methods = [
             "get_pipeline",
             "summary",
             "transform",
@@ -597,23 +596,31 @@ class Operator(metaclass=AbstractVisitorMeta):
             "decision_function",
             "score",
             "score_samples",
-        ]:
-            if isinstance(self, TrainedIndividualOp):
+            "predict_log_proba",
+        ]
+        if name in predict_methods:
+            if isinstance(self, TrainedIndividualOp) or (
+                isinstance(self, TrainableIndividualOp) and hasattr(self, "_trained")
+            ):
                 raise AttributeError(
-                    f"The underlying operator impl does not define {name}"
+                    f"The underlying operator implementation class does not define {name}"
                 )
-            elif isinstance(self, TrainableIndividualOp):
+            elif isinstance(self, TrainableIndividualOp) and not hasattr(
+                self, "_trained"
+            ):
                 raise AttributeError(
-                    f"The underlying operator impl does not define {name}.  Also, calling {name} on a TrainableOperator is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
+                    f"{self.name()} is not trained. Note that in lale, the result of fit is a new trained operator that should be used with {name}."
                 )
+            elif isinstance(self, PlannedOperator) and not isinstance(
+                self, TrainableOperator
+            ):
+                pass  # as the plannedOperators are handled in a separate block next
             else:
                 raise AttributeError(
-                    f"Calling {name} on a {type(self)} is deprecated.  Perhaps you meant to train this operator first?  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
+                    f"Calling {name} on a {type(self)} is deprecated.  It needs to be trained by calling fit.  Note that in lale, the result of fit is a new TrainedOperator that should be used with {name}."
                 )
 
-        if name in [
-            "fit",
-        ]:
+        if name == "fit" or name in predict_methods:
 
             def get_error_msg(op, i):
                 if isinstance(op, OperatorChoice):
@@ -626,14 +633,32 @@ class Operator(metaclass=AbstractVisitorMeta):
                     return ""
                 return error_msg
 
+            def add_error_msg_for_predict_methods(op, error_msg):
+                if name in [
+                    "get_pipeline",
+                    "summary",
+                    "transform",
+                    "predict",
+                    "predict_proba",
+                    "decision_function",
+                    "score",
+                    "score_samples",
+                    "predict_log_proba",
+                ]:
+                    error_msg = (
+                        error_msg
+                        + """\nAfter applying the suggested fixes the operator might need to be trained by calling fit ."""
+                    )
+                return error_msg
+
             # This method is called only when `name` is not found on the object, so
             # we don't need to account for the case when self is trainable or trained.
             if isinstance(self, PlannedIndividualOp):
-                raise AttributeError(
-                    f"""Please use `{self.name()}()` instead of `{self.name()}` to make it trainable.
+                error_msg = f"""Please use `{self.name()}()` instead of `{self.name()}` to make it trainable.
 Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the operator to use Hyperopt for
 `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
-                )
+                error_msg = add_error_msg_for_predict_methods(self, error_msg)
+                raise AttributeError(error_msg)
             elif isinstance(self, PlannedPipeline) or isinstance(self, OperatorChoice):
                 error_msg = f"""The pipeline is not trainable, which means you can not call {name} on it.\n
 Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in order to make it trainable:\n"""
@@ -652,6 +677,7 @@ Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in
                     + """\nFix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
 to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`."""
                 )
+                error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
 
         raise AttributeError()
@@ -926,6 +952,22 @@ class TrainedOperator(TrainableOperator):
         -------
         score :
             performance metric value
+        """
+        pass
+
+    @abstractmethod
+    def predict_log_proba(self, X):
+        """Predicted class log-probabilities for X.
+
+        Parameters
+        ----------
+        X :
+            Features.
+
+        Returns
+        -------
+        result :
+            Class log probabilities.
         """
         pass
 
@@ -1455,6 +1497,14 @@ class IndividualOp(Operator):
         """Input schema for the predict_proba method."""
         return self.get_schema("input_predict_proba")
 
+    def input_schema_predict_log_proba(self) -> JSON_TYPE:
+        """Input schema for the predict_log_proba method.
+        We assume that it is the same as the predict_proba method if none has been defined explicitly."""
+        if self.has_schema("input_predict_log_proba"):
+            return self.get_schema("input_predict_log_proba")
+        else:
+            return self.get_schema("input_predict_proba")
+
     def input_schema_decision_function(self) -> JSON_TYPE:
         """Input schema for the decision_function method."""
         return self.get_schema("input_decision_function")
@@ -1490,6 +1540,14 @@ class IndividualOp(Operator):
             return self.get_schema("output_score_samples")
         else:
             return self.get_schema("output_predict")
+
+    def output_schema_predict_log_proba(self) -> JSON_TYPE:
+        """Output schema for the predict_log_proba method.
+        We assume that it is the same as the predict_proba method if none has been defined explicitly."""
+        if self.has_schema("output_predict_log_proba"):
+            return self.get_schema("output_predict_log_proba")
+        else:
+            return self.get_schema("output_predict_proba")
 
     def hyperparam_schema(self, name: Optional[str] = None) -> JSON_TYPE:
         """Returns the hyperparameter schema for the operator.
@@ -1961,6 +2019,8 @@ class IndividualOp(Operator):
                 schema = self.input_schema_predict()
             elif method == "predict_proba":
                 schema = self.input_schema_predict_proba()
+            elif method == "predict_log_proba":
+                schema = self.input_schema_predict_log_proba()
             elif method == "decision_function":
                 schema = self.input_schema_decision_function()
             elif method == "score_samples":
@@ -1997,6 +2057,8 @@ class IndividualOp(Operator):
             schema = self.output_schema_predict()
         elif method == "predict_proba":
             schema = self.output_schema_predict_proba()
+        elif method == "predict_log_proba":
+            schema = self.output_schema_predict_log_proba()
         elif method == "decision_function":
             schema = self.output_schema_decision_function()
         elif method == "score_samples":
@@ -2482,6 +2544,22 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `score_samples`.")
 
+    @if_delegate_has_method(delegate="_impl")
+    def predict_log_proba(self, X=None):
+        """
+        .. deprecated:: 0.0.0
+           The `predict_log_proba` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `predict_log_proba`
+           on the trained operator returned by `fit` instead.
+
+        """
+        warnings.warn(_mutation_warning("predict_log_proba"), DeprecationWarning)
+        try:
+            return self._trained.predict_log_proba(X)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `predict_log_proba`.")
+
     def free_hyperparams(self) -> Set[str]:
         hyperparam_schema = self.hyperparam_schema()
         to_bind: List[str]
@@ -2748,6 +2826,25 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         X = self._validate_input_schema("X", X, "score_samples")
         raw_result = self._impl_instance().score_samples(X)
         result = self._validate_output_schema(raw_result, "score_samples")
+        return result
+
+    @if_delegate_has_method(delegate="_impl")
+    def predict_log_proba(self, X=None):
+        """Predicted class log-probabilities for X.
+
+        Parameters
+        ----------
+        X :
+            Features.
+
+        Returns
+        -------
+        result :
+            Class log probabilities.
+        """
+        X = self._validate_input_schema("X", X, "predict_log_proba")
+        raw_result = self._impl_instance().predict_log_proba(X)
+        result = self._validate_output_schema(raw_result, "predict_log_proba")
         return result
 
     def freeze_trainable(self) -> "TrainedIndividualOp":
@@ -3761,6 +3858,21 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `score_samples`.")
 
+    def predict_log_proba(self, X):
+        """
+        .. deprecated:: 0.0.0
+           The `predict_log_proba` method is deprecated on a trainable
+           operator, because the learned coefficients could be
+           accidentally overwritten by retraining. Call `predict_log_proba`
+           on the trained operator returned by `fit` instead.
+
+        """
+        warnings.warn(_mutation_warning("predict_log_proba"), DeprecationWarning)
+        try:
+            return self._trained.predict_log_proba(X)
+        except AttributeError:
+            raise ValueError("Must call `fit` before `predict_log_proba`.")
+
     def freeze_trainable(self) -> "TrainablePipeline":
         frozen_steps: List[TrainableOperator] = []
         frozen_map: Dict[Operator, Operator] = {}
@@ -4162,6 +4274,21 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             Scores per sample.
         """
         return self._predict_based_on_type("score_samples", "score_samples", X)
+
+    def predict_log_proba(self, X):
+        """Predicted class log-probabilities for X.
+
+        Parameters
+        ----------
+        X :
+            Features.
+
+        Returns
+        -------
+        result :
+            Class log probabilities.
+        """
+        return self._predict_based_on_type("predict_log_proba", "predict_log_proba", X)
 
     def transform_with_batches(self, X, y=None, serialize=True):
         """[summary]
