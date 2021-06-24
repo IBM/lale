@@ -495,7 +495,7 @@ class Operator(metaclass=AbstractVisitorMeta):
                 impl = op._impl_instance()
                 if hasattr(impl, "_wrapped_model"):
                     model = impl._wrapped_model
-                elif isinstance(impl, sklearn.base.BaseEstimator):
+                else:
                     model = impl
         return "passthrough" if model is None else model
 

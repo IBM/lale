@@ -696,7 +696,9 @@ class _BaseInEstimatorImpl:
         )
         encoded_data = self._prep_and_encode(X, y)
         self.mitigator.fit(encoded_data)
-        self.unfavorable_labels = list(set(list(y)) - set(list(self.favorable_labels)))
+        self.classes_ = set(list(y))
+        self.unfavorable_labels = list(self.classes_ - set(list(self.favorable_labels)))
+        self.classes_ = np.array(list(self.classes_))
         return self
 
     def predict(self, X):
@@ -712,7 +714,7 @@ class _BaseInEstimatorImpl:
         result_data = self.mitigator.predict(encoded_data)
         favorable_probs = result_data.scores
         all_probs = np.hstack([1 - favorable_probs, favorable_probs])
-        return pd.DataFrame(all_probs, columns=["0", "1"])
+        return all_probs
 
 
 class _BasePostEstimatorImpl:
@@ -772,7 +774,9 @@ class _BasePostEstimatorImpl:
             encoded_X, predicted_y, predicted_probas
         )
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
-        self.unfavorable_labels = list(set(list(y)) - set(list(self.favorable_labels)))
+        self.classes_ = set(list(y))
+        self.unfavorable_labels = list(self.classes_ - set(list(self.favorable_labels)))
+        self.classes_ = np.array(list(self.classes_))
         return self
 
     def predict(self, X):
@@ -799,7 +803,7 @@ class _BasePostEstimatorImpl:
         dataset_out = self.mitigator.predict(dataset_pred)
         favorable_probs = dataset_out.scores
         all_probs = np.hstack([1 - favorable_probs, favorable_probs])
-        return pd.DataFrame(all_probs, columns=["0", "1"])
+        return all_probs
 
 
 _categorical_supervised_input_fit_schema = {
