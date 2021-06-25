@@ -273,57 +273,36 @@ class TestJoin(unittest.TestCase):
                 ]
             )
 
-    # TestCase 1: Go_Sales dataset
+    # TestCase 1: Go_Sales dataset with different forms of predicate (join conditions)
     def test_join_pandas_go_sales1(self):
         go_sales = fetch_go_sales_dataset()
         trainable = Join(
             pred=[
-                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
-                it.go_daily_sales["Product number"] == it.go_1k["Product number"],
-                it.go_methods["Order method code"]
-                == it.go_daily_sales["Order method code"],
-                it.go_products["Product number"] == it.go_1k["Product number"],
+                it.go_daily_sales["Retailer code"]
+                == it["go_retailers"]["Retailer code"]
             ],
             join_type="inner",
         )
         transformed_df = trainable.transform(go_sales)
-        self.assertEqual(transformed_df.shape, (1887899, 21))
-        self.assertEqual(transformed_df["Country"][4], "Switzerland")
+        self.assertEqual(transformed_df.shape, (149257, 10))
+        self.assertEqual(transformed_df["Country"][4], "United States")
 
-    # TestCase 2: Go_Sales dataset and different types of join conditions
+    # TestCase 2: Go_Sales dataset throws error because of duplicate non-key columns
     def test_join_pandas_go_sales2(self):
-        go_sales = fetch_go_sales_dataset()
-        trainable = Join(
-            pred=[
-                [
-                    it["go_1k"]["Retailer code"] == it.go_daily_sales["Retailer code"],
-                    it.go_1k["Product number"]
-                    == it["go_daily_sales"]["Product number"],
-                ]
-            ],
-            join_type="left",
-        )
-        transformed_df = trainable.transform(go_sales)
-        self.assertEqual(transformed_df.shape, (37502, 9))
-        self.assertEqual(transformed_df["Unit price"][1], 43.85)
-
-    # TestCase 3: Go_Sales dataset
-    def test_join_pandas_go_sales3(self):
-        go_sales = fetch_go_sales_dataset()
-        trainable = Join(
-            pred=[
-                [
-                    it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
-                    it.go_1k["Product number"] == it.go_daily_sales["Product number"],
-                    it.go_1k.Quantity == it.go_daily_sales.Quantity,
+        with self.assertRaises(ValueError):
+            go_sales = fetch_go_sales_dataset()
+            trainable = Join(
+                pred=[
+                    [
+                        it["go_1k"]["Retailer code"]
+                        == it.go_daily_sales["Retailer code"],
+                        it.go_1k["Product number"]
+                        == it["go_daily_sales"]["Product number"],
+                    ]
                 ],
-                it.go_daily_sales["Retailer code"] == it.go_retailers["Retailer code"],
-            ],
-            join_type="inner",
-        )
-        transformed_df = trainable.transform(go_sales)
-        self.assertEqual(transformed_df.shape, (2012, 11))
-        self.assertEqual(transformed_df["Product number"][3], 128140)
+                join_type="left",
+            )
+            _ = trainable.transform(go_sales)
 
 
 # Testing join operator for spark dataframes
@@ -456,27 +435,28 @@ class TestJoinSpark(unittest.TestCase):
             self.assertEqual(transformed_df.collect()[0]["col2"], 1)
 
     # Invert one of the join conditions as compared to the test case: test_join_pandas_composite
-    def test_join_spark_composite1(self):
+    def test_join_spark_composite_error_dup_col(self):
         if spark_installed:
-            trainable = Join(
-                pred=[
-                    [it.main.train_id == it.info.TrainId, it.main.col1 == it.info.col3],
-                    it.t1.tid == it.info.TrainId,
-                    it.t1.tid == it.t2.t_id,
-                ],
-                join_type="left",
-            )
-            transformed_df = trainable.transform(
-                [
-                    {"main": self.spark_df1},
-                    {"info": self.spark_df5},
-                    {"t1": self.spark_df3},
-                    {"t2": self.spark_df6},
-                ]
-            )
-            self.assertEqual(transformed_df.count(), 3)
-            self.assertEqual(len(transformed_df.columns), 10)
-            self.assertEqual(transformed_df.collect()[0]["col4"], 100)
+            with self.assertRaises(ValueError):
+                trainable = Join(
+                    pred=[
+                        [
+                            it.main.train_id == it.info.TrainId,
+                            it.main.col1 == it.info.col3,
+                        ],
+                        it.t1.tid == it.info.TrainId,
+                        it.t1.tid == it.t2.t_id,
+                    ],
+                    join_type="left",
+                )
+                _ = trainable.transform(
+                    [
+                        {"main": self.spark_df1},
+                        {"info": self.spark_df5},
+                        {"t1": self.spark_df3},
+                        {"t2": self.spark_df6},
+                    ]
+                )
 
     # Composite key join having conditions involving more than 2 tables
     # This test case execution should throw a ValueError which is handled in the test case itself
@@ -528,7 +508,7 @@ class TestJoinSpark(unittest.TestCase):
                     ]
                 )
 
-    # A table to be joinen not present in input X
+    # A table to be joined not present in input X
     # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_spark_composite_error2(self):
         if spark_installed:
@@ -551,66 +531,39 @@ class TestJoinSpark(unittest.TestCase):
                     ]
                 )
 
-    # TestCase 1: Go_Sales dataset
+    # TestCase 1: Go_Sales dataset with different forms of predicate (join conditions)
     def test_join_spark_go_sales1(self):
         if spark_installed:
             go_sales = fetch_go_sales_dataset("spark")
             trainable = Join(
                 pred=[
                     it.go_daily_sales["Retailer code"]
-                    == it.go_retailers["Retailer code"],
-                    it.go_daily_sales["Product number"] == it.go_1k["Product number"],
-                    it.go_methods["Order method code"]
-                    == it.go_daily_sales["Order method code"],
-                    it.go_products["Product number"] == it.go_1k["Product number"],
+                    == it["go_retailers"]["Retailer code"]
                 ],
                 join_type="inner",
             )
             transformed_df = trainable.transform(go_sales)
-            self.assertEqual(transformed_df.count(), 1887899)
-            self.assertEqual(len(transformed_df.columns), 21)
+            self.assertEqual(transformed_df.count(), 149257)
+            self.assertEqual(len(transformed_df.columns), 10)
+            self.assertEqual(transformed_df.collect()[4]["Country"], "United States")
 
-    # TestCase 2: Go_Sales dataset
+    # TestCase 2: Go_Sales dataset throws error because of duplicate non-key columns
     def test_join_spark_go_sales2(self):
         if spark_installed:
-            go_sales = fetch_go_sales_dataset("spark")
-            trainable = Join(
-                pred=[
-                    [
-                        it["go_1k"]["Retailer code"]
-                        == it.go_daily_sales["Retailer code"],
-                        it.go_1k["Product number"]
-                        == it["go_daily_sales"]["Product number"],
-                    ]
-                ],
-                join_type="left",
-            )
-            transformed_df = trainable.transform(go_sales)
-            self.assertEqual(transformed_df.count(), 37502)
-            self.assertEqual(len(transformed_df.columns), 9)
-            self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1206")
-
-    # TestCase 3: Go_Sales dataset
-    def test_join_spark_go_sales3(self):
-        if spark_installed:
-            go_sales = fetch_go_sales_dataset("spark")
-            trainable = Join(
-                pred=[
-                    [
-                        it.go_1k["Retailer code"] == it.go_daily_sales["Retailer code"],
-                        it.go_1k["Product number"]
-                        == it.go_daily_sales["Product number"],
-                        it.go_1k.Quantity == it.go_daily_sales.Quantity,
+            with self.assertRaises(ValueError):
+                go_sales = fetch_go_sales_dataset("spark")
+                trainable = Join(
+                    pred=[
+                        [
+                            it["go_1k"]["Retailer code"]
+                            == it.go_daily_sales["Retailer code"],
+                            it.go_1k["Product number"]
+                            == it["go_daily_sales"]["Product number"],
+                        ]
                     ],
-                    it.go_daily_sales["Retailer code"]
-                    == it.go_retailers["Retailer code"],
-                ],
-                join_type="inner",
-            )
-            transformed_df = trainable.transform(go_sales)
-            self.assertEqual(transformed_df.count(), 2012)
-            self.assertEqual(len(transformed_df.columns), 11)
-            self.assertEqual(transformed_df.collect()[2]["Retailer code"], "1201")
+                    join_type="left",
+                )
+                _ = trainable.transform(go_sales)
 
 
 class TestMap(unittest.TestCase):
