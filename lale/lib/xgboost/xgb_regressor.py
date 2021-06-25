@@ -59,6 +59,7 @@ class _XGBRegressorImpl:
     def __init__(self, **hyperparams):
         self.validate_hyperparams(**hyperparams)
         self._hyperparams = hyperparams
+        self._estimator_type = "regressor"
 
     def fit(self, X, y, **fit_params):
         result = _XGBRegressorImpl(**self._hyperparams)

@@ -59,6 +59,7 @@ class _XGBClassifierImpl:
     def __init__(self, **hyperparams):
         self.validate_hyperparams(**hyperparams)
         self._hyperparams = hyperparams
+        self._estimator_type = "classifier"
 
     def fit(self, X, y, **fit_params):
         result = _XGBClassifierImpl(**self._hyperparams)

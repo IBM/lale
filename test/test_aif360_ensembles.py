@@ -30,6 +30,7 @@ from lale.lib.sklearn import (
     StackingClassifier,
     VotingClassifier,
 )
+from lale.lib.xgboost import XGBClassifier
 
 
 class TestEnsemblesWithAIF360(unittest.TestCase):
@@ -227,6 +228,18 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
             ],
             final_estimator=DisparateImpactRemover(**self.fairness_info)
             >> DecisionTreeClassifier(),
+            passthrough=True,
+        )
+        self._attempt_fit_predict(model)
+
+    def test_stacking_pre_estimator_mitigation_final_only_xgboost(self):
+        model = StackingClassifier(
+            estimators=[
+                ("dtc", DecisionTreeClassifier()),
+                ("xgb", XGBClassifier(use_label_encoder=False, verbosity=0)),
+            ],
+            final_estimator=DisparateImpactRemover(**self.fairness_info)
+            >> XGBClassifier(use_label_encoder=False, verbosity=0),
             passthrough=True,
         )
         self._attempt_fit_predict(model)
