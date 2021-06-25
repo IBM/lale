@@ -607,8 +607,14 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             "lale.lib.xgboost",
             "lale.lib.lightgbm",
             "lale.lib.snapml",
-            "lale.lib.autoai_ts_libs",
         ]
+
+        try:
+            import autoai_ts_libs  # noqa
+
+            module_names.append("lale.lib.autoai_ts_libs")
+        except ImportError:
+            pass
 
         lale_wrapper_found = False
         class_name = sklearn_obj.__class__.__name__
