@@ -78,7 +78,7 @@ def fetch_go_sales_dataset(datatype="pandas"):
 
     Returns
     -------
-    go_sales_dict : dictionary of pandas / spark dataframes
+    go_sales_list : list of singleton dictionary of pandas / spark dataframes
     """
 
     download_data_dir = os.path.join(os.path.dirname(__file__), "go_sales_data")
@@ -138,7 +138,7 @@ def fetch_imdb_dataset(datatype="pandas"):
 
     Returns
     -------
-    imdb_dict : dictionary of pandas / spark dataframes
+    imdb_list : list of singleton dictionary of pandas / spark dataframes
     """
 
     download_data_dir = os.path.join(os.path.dirname(__file__), "imdb_data")
