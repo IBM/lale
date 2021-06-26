@@ -166,6 +166,7 @@ class _JoinImpl:
                 drop_col = []
                 left_table = left_df.alias("left_table")
                 right_table = right_df.alias("right_table")
+
                 for k, key in enumerate(left_key_col):
                     on.append(
                         col("{}.{}".format("left_table", key))
@@ -176,22 +177,16 @@ class _JoinImpl:
                 op_df = left_table.join(right_table, on, self.join_type)
                 for key in drop_col:
                     op_df = op_df.drop(getattr(right_table, key))
+                return op_df
 
             # Joining pandas dataframes
-            elif _is_df(left_df) and _is_df(right_df):
-                op_df = pd.merge(
-                    left_df,
-                    right_df,
-                    how=self.join_type,
-                    left_on=left_key_col,
-                    right_on=right_key_col,
-                )
-            else:
-                raise ValueError(
-                    "ERROR: Cannot perform join operation, either '{}' or '{}' table not present in input X!".format(
-                        left_table_name, right_table_name
-                    )
-                )
+            op_df = pd.merge(
+                left_df,
+                right_df,
+                how=self.join_type,
+                left_on=left_key_col,
+                right_on=right_key_col,
+            )
             return op_df
 
         def fetch_df(left_table_name, right_table_name):
@@ -239,6 +234,21 @@ class _JoinImpl:
                     right_key_col,
                 ) = self._get_join_info(pred_element._expr)
             left_df, right_df = fetch_df(left_table_name, right_table_name)
+            if not _is_df(left_df) or not _is_df(right_df):
+                raise ValueError(
+                    "ERROR: Cannot perform join operation, either '{}' or '{}' table not present in input X!".format(
+                        left_table_name, right_table_name
+                    )
+                )
+            columns_in_both_tables = set(left_df.columns).intersection(  # type: ignore
+                set(right_df.columns)  # type: ignore
+            )
+            if columns_in_both_tables and not set(
+                sorted(columns_in_both_tables)
+            ) == set(sorted(left_key_col + right_key_col)):
+                raise ValueError(
+                    "Cannot perfrom join operation! Non-key columns cannot be duplicate."
+                )
             joined_df = join_df(left_df, right_df)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)

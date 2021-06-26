@@ -452,6 +452,13 @@ class TestImportExport(unittest.TestCase):
         pipe = Pipeline([("noop", NoOp()), ("gbc", GradientBoostingClassifier())])
         _ = import_from_sklearn_pipeline(pipe)
 
+    def test_import_from_sklearn_pipeline_no_wrapper(self):
+        from sklearn.neighbors import LocalOutlierFactor
+        from sklearn.pipeline import make_pipeline
+
+        sklearn_pipeline = make_pipeline(PCA(), LocalOutlierFactor())
+        _ = import_from_sklearn_pipeline(sklearn_pipeline, fitted=False)
+
     def test_export_to_sklearn_pipeline(self):
         lale_pipeline = PCA(n_components=3) >> KNeighborsClassifier()
         trained_lale_pipeline = lale_pipeline.fit(self.X_train, self.y_train)

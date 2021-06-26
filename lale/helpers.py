@@ -619,7 +619,10 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         lale_wrapper_found = False
         class_name = sklearn_obj.__class__.__name__
         for module_name in module_names:
-            module = importlib.import_module(module_name)
+            try:
+                module = importlib.import_module(module_name)
+            except ModuleNotFoundError:
+                continue
             try:
                 class_ = getattr(module, class_name)
                 lale_wrapper_found = True
