@@ -786,14 +786,14 @@ class TestErrorMessages(unittest.TestCase):
                 fix2 = cm.exception.message.split("\n")[3]
                 # we don't care what order they are in
                 self.assertRegex(
-                    fix1 + fix2, "Remove unknown key 'activation'.*set.*penalty='l2'"
+                    fix1 + fix2, "remove unknown key 'activation'.*set.*penalty='l2'"
                 )
                 self.assertRegex(
-                    fix1 + fix2, "Remove unknown key 'activation'.*set.*dual=False"
+                    fix1 + fix2, "remove unknown key 'activation'.*set.*dual=False"
                 )
                 self.assertRegex(
                     fix1 + fix2,
-                    "Remove unknown key 'activation'.*set.*multi_class='auto'",
+                    "remove unknown key 'activation'.*set.*multi_class='auto'",
                 )
 
     def test_unknown_arg_and_constraint(self):
@@ -806,7 +806,7 @@ class TestErrorMessages(unittest.TestCase):
                 "Invalid configuration for LogisticRegression.*due to argument 'activation' was unexpected.",
             )
             fix1 = cm.exception.message.split("\n")[2]
-            self.assertRegex(fix1, "Remove unknown key 'activation'.*set penalty='l2'")
+            self.assertRegex(fix1, "remove unknown key 'activation'.*set penalty='l2'")
 
 
 class TestSchemaValidation(unittest.TestCase):
