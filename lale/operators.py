@@ -1945,13 +1945,13 @@ class IndividualOp(Operator):
 
                     if remove_recommendation:
                         remove_recommendation = (
-                            "Remove " + remove_recommendation + " and "
+                            "remove " + remove_recommendation + " and "
                         )
                     proposed_fix = "Some possible fixes include:\n" + "".join(
                         (
                             "- "
                             + remove_recommendation
-                            + "Set "
+                            + "set "
                             + hyperparams_to_string(d)
                             + "\n"
                             for d in fix_suggestions
@@ -1975,6 +1975,8 @@ class IndividualOp(Operator):
                     descr = descr[:-1]
                 reason = f"constraint {descr[0].lower()}{descr[1:]}"
                 schema_path = f"constraint {e.schema_path[1]}"
+                if self.documentation_url() is not None:
+                    schema = f"{self.documentation_url()}#constraint{e.schema_path[1]}"
             else:
                 reason = e.message
                 schema_path = e.schema_path

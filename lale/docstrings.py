@@ -114,8 +114,12 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     if "anyOf" in schema:
         item_docstrings = [item_docstring(None, s) for s in schema["anyOf"]]
         if name is not None and name.startswith("constraint "):
-            dict_of = re.compile(r"( *- )(dict \*\*of\*\* )(.+)")
-            item_docstrings = [dict_of.sub(r"\1\3", s) for s in item_docstrings]
+            rexp = re.compile(r"( *- )(dict \*\*of\*\* )(.+)")
+            item_docstrings = [rexp.sub(r"\1\3", s) for s in item_docstrings]
+        if len(item_docstrings) > 1:
+            rexp = re.compile(r"( *- )(.+)")
+            rest = [rexp.sub(r"\1or \2", s) for s in item_docstrings[1:]]
+            item_docstrings = item_docstrings[:1] + rest
         body = "\n\n".join(item_docstrings)
     elif "allOf" in schema:
         item_docstrings = [item_docstring(None, s) for s in schema["allOf"]]
@@ -157,7 +161,7 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     return result.rstrip()
 
 
-def _params_docstring(params_schema):
+def _params_docstring(params_schema, hp2constraints=None):
     if params_schema is None:
         return ""
     params = params_schema.get("properties", {})
@@ -173,6 +177,13 @@ def _params_docstring(params_schema):
         )
         item_docstring = _schema_docstring(param_name, param_schema, required, relevant)
         result += _indent("  ", item_docstring, "").rstrip()
+        if hp2constraints is not None and param_name in hp2constraints:
+            constraints = [
+                f":ref:`{i} <constraint{i}>`" for i in hp2constraints[param_name]
+            ]
+            result += "\n  See also constraint"
+            result += "s " if len(constraints) > 1 else " "
+            result += ", ".join(constraints) + "."
         result += "\n\n"
     return result
 
@@ -215,12 +226,24 @@ def _paramlist_docstring(hyperparams_schema) -> str:
     return result
 
 
+def _get_hp2constraints(hyperparams_schema):
+    result = {}
+    for i in range(1, len(hyperparams_schema["allOf"])):
+        schema = hyperparams_schema["allOf"][i]
+        for disjunct in schema.get("anyOf", []):
+            for hyperparam in disjunct.get("properties", {}).keys():
+                result[hyperparam] = result.get(hyperparam, []) + [i]
+    return result
+
+
 def _hyperparams_docstring(hyperparams_schema):
-    result = _params_docstring(hyperparams_schema["allOf"][0])
+    hp2constraints = _get_hp2constraints(hyperparams_schema)
+    result = _params_docstring(hyperparams_schema["allOf"][0], hp2constraints)
     if len(hyperparams_schema["allOf"]) > 1:
         result += "Notes\n-----\n"
         item_docstrings = [
-            _schema_docstring(f"constraint {i}", hyperparams_schema["allOf"][i])
+            f".. _constraint{i}:\n\n"
+            + _schema_docstring(f"constraint {i}", hyperparams_schema["allOf"][i])
             for i in range(1, len(hyperparams_schema["allOf"]))
         ]
         result += "\n\n".join(item_docstrings)
