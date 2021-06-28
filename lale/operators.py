@@ -1977,7 +1977,7 @@ class IndividualOp(Operator):
                 reason = f"constraint {descr[0].lower()}{descr[1:]}"
                 schema_path = f"constraint {e.schema_path[1]}"
                 if self.documentation_url() is not None:
-                    schema = f"{self.documentation_url()}#constraint{e.schema_path[1]}"
+                    schema = f"{self.documentation_url()}#constraint-{e.schema_path[1]}"
             else:
                 reason = e.message
                 schema_path = e.schema_path
