@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# import copy
 import unittest
+
+# from multiprocessing import cpu_count
 from typing import cast
 
 import numpy as np
@@ -22,7 +25,7 @@ from sklearn.metrics import make_scorer
 from sklearn.model_selection import TimeSeriesSplit
 
 from lale.datasets.uci import fetch_household_power_consumption
-from lale.lib.autoai_ts_libs import (  # StandardRowMeanCenterMTS,; WindowTransformerMTS
+from lale.lib.autoai_ts_libs import (  # StandardRowMeanCenterMTS,; WindowTransformerMTS; DifferenceFlattenAutoEnsembler,; FlattenAutoEnsembler,; LocalizedFlattenAutoEnsembler,
     AutoaiTSPipeline,
     AutoaiWindowedWrappedRegressor,
     AutoaiWindowTransformedTargetRegressor,
@@ -472,3 +475,233 @@ class TestMT2RForecaster(unittest.TestCase):
 #             lambda x: 0 if x == "?" else x
 #         )
 #         self.y = self.y.astype("float64").fillna(0).to_numpy()
+
+
+# def train_test_split(inputX,split_size):
+#     return inputX[:split_size],inputX[split_size:]
+
+# def get_srom_time_series_estimators(
+#     feature_column_indices,
+#     target_column_indices,
+#     lookback_window,
+#     prediction_horizon,
+#     time_column_index=-1,
+#     optimization_stetagy="Once",
+#     mode="Test",
+#     number_rows=None,
+#     n_jobs=cpu_count() - 1,
+# ):
+#     """
+#     This method returns the best performing time_series estimators in SROM. The no. of estiamtors
+#     depend upon the mode of operation. The mode available are 'Test', 'Benchmark' and
+#     'benchmark_extended'.
+#     Parameters:
+#         feature_column_indices (list): feature indices.
+#         target_column_indices (list): target indices.
+#         time_column_index (int): time column index.
+#         lookback_window (int): Look-back window for the models returned.
+#         prediction_horizon (int): Look-ahead window for the models returned.
+#         init_time_optimization (string , optional): whether to optimize at the start of automation.
+#         mode (string, optional) : The available modes are test, benchmark, benchmark_extended.
+#     """
+#     srom_estimators = []
+#     from autoai_ts_libs.srom.estimators.regression.auto_ensemble_regressor import (
+#         EnsembleRegressor,
+#     )
+#     # adding P21
+#     srom_estimators.append(
+#         MT2RForecaster(
+#             target_columns=target_column_indices,
+#             trend="Linear",
+#             lookback_win=lookback_window,
+#             prediction_win=prediction_horizon,
+#             n_jobs=n_jobs,
+#         )
+#     )
+
+#     ensemble_regressor = EnsembleRegressor(
+#         cv=None,
+#         execution_platform=None,
+#         execution_time_per_pipeline=None,
+#         level=None,
+#         n_estimators_for_pred_interval=1,
+#         n_leaders_for_ensemble=1,
+#         num_option_per_pipeline_for_intelligent_search=None,
+#         num_options_per_pipeline_for_random_search=None,
+#         save_prefix=None,
+#         total_execution_time=None,
+#     )
+#     # Setting commong parameters
+#     auto_est_params = {
+#         "feature_columns": feature_column_indices,
+#         "target_columns": target_column_indices,
+#         "lookback_win": lookback_window,
+#         "pred_win": prediction_horizon,
+#         "time_column": time_column_index,
+#         "execution_platform": "spark_node_random_search",
+#         "n_leaders_for_ensemble": 1,
+#         "n_estimators_for_pred_interval": 1,
+#         "max_samples_for_pred_interval": 1.0,
+#         "init_time_optimization": True,
+#         "dag_granularity": "flat",
+#         "total_execution_time": 3,
+#         "execution_time_per_pipeline": 3,
+#         "store_lookback_history": True,
+#         "n_jobs": n_jobs,
+#         "estimator":ensemble_regressor
+#     }
+
+#     if prediction_horizon > 1:
+#         auto_est_params["multistep_prediction_win"] = prediction_horizon
+#         auto_est_params["multistep_prediction_strategy"] = "multioutput"
+#         auto_est_params["dag_granularity"] = "multioutput_flat"
+#     elif len(target_column_indices) > 1:
+#         auto_est_params["dag_granularity"] = "multioutput_flat"
+#     else:
+#         pass
+#     auto_est_params["data_transformation_scheme"] = "log"
+
+#     # adding P18
+#     P18_params = copy.deepcopy(auto_est_params)
+#     srom_estimators.append(FlattenAutoEnsembler(**P18_params))
+
+#     # adding P17, Local Model
+#     P17_params = copy.deepcopy(auto_est_params)
+#     srom_estimators.append(DifferenceFlattenAutoEnsembler(**P17_params))
+
+#     # adding P14m Local Model
+#     auto_est_params["data_transformation_scheme"] = None
+#     P14_params = copy.deepcopy(auto_est_params)
+#     srom_estimators.append(LocalizedFlattenAutoEnsembler(**P14_params))
+
+#     return srom_estimators
+
+# class TestSROMEnsemblers(unittest.TestCase):
+#     """Test various SROM Ensemblers classes"""
+
+#     @classmethod
+#     def setUpClass(test_class):
+#         pass
+
+#     @classmethod
+#     def tearDownClass(test_class):
+#         pass
+
+#     def test_fit_predict_predict_sliding_window_univariate_single_step(self):
+#         X = np.arange(1,441)
+#         X = X.reshape(-1,1)
+#         SIZE=len(X)
+#         target_columns = [0]
+#         number_rows = SIZE
+#         prediction_horizon = 1
+#         lookback_window = 10
+#         run_mode = 'test'
+
+#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
+#                                                                target_column_indices=target_columns,
+#                                                                lookback_window=lookback_window,
+#                                                                prediction_horizon=prediction_horizon,
+#                                                                optimization_stetagy='Once',
+#                                                                mode=run_mode,
+#                                                                number_rows=number_rows,
+#                                                                )
+#         for index,estimator in enumerate(srom_estimators[1:]):
+#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+#             import pdb;pdb.set_trace()
+#             estimator.fit(X_train)
+#             y_pred = estimator.predict(X_test)
+#             assert(len(y_pred)==prediction_horizon)
+#             assert(y_pred.shape[1]==len(target_columns))
+#             y_pred_win = estimator.predict_sliding_window(X_test)
+#             assert(len(y_pred_win)==lookback_window+1)
+#             assert(y_pred_win.shape[1]==len(target_columns))
+
+#     def test_fit_predict_predict_sliding_window_univariate_multi_step(self):
+#         X = np.arange(1,441)
+#         X = X.reshape(-1,1)
+#         SIZE=len(X)
+#         target_columns = [0]
+#         number_rows = SIZE
+#         prediction_horizon = 8
+#         lookback_window = 10
+#         run_mode = 'test'
+
+#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
+#                                                                target_column_indices=target_columns,
+#                                                                lookback_window=lookback_window,
+#                                                                prediction_horizon=prediction_horizon,
+#                                                                optimization_stetagy='Once',
+#                                                                mode=run_mode,
+#                                                                number_rows=number_rows,
+#                                                                )
+#         for index,estimator in enumerate(srom_estimators[1:]):
+#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+#             estimator.fit(X_train)
+#             y_pred = estimator.predict(X_test)
+#             assert(len(y_pred)==prediction_horizon)
+#             assert(y_pred.shape[1]==len(target_columns))
+#             y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
+#             assert(y_pred_win.shape[1]==len(target_columns))
+
+#     def test_fit_predict_predict_sliding_window_multivariate_single_step(self):
+#         X = np.arange(1,441)
+#         X = X.reshape(-1,1)
+#         X2 = np.arange(1001,1441)
+#         X2 = X2.reshape(-1,1)
+#         X3 = np.arange(10001,10441)
+#         X3 = X3.reshape(-1,1)
+#         X = np.hstack([X,X2,X3])
+#         SIZE=len(X)
+#         target_columns = [0,1,2]
+#         number_rows = SIZE
+#         prediction_horizon = 1
+#         lookback_window = 10
+#         run_mode = 'test'
+#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
+#                                                                target_column_indices=target_columns,
+#                                                                lookback_window=lookback_window,
+#                                                                prediction_horizon=prediction_horizon,
+#                                                                optimization_stetagy='Once',
+#                                                                mode=run_mode,
+#                                                                number_rows=number_rows,
+#                                                                )
+#         for index,estimator in enumerate(srom_estimators[1:]):
+#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+#             estimator.fit(X_train)
+#             y_pred = estimator.predict(X_test)
+#             assert(len(y_pred)==prediction_horizon)
+#             assert(y_pred.shape[1]==len(target_columns))
+#             y_pred_win = estimator.predict_sliding_window(X_test)
+#             assert(len(y_pred_win)==lookback_window+1)
+#             assert(y_pred_win.shape[1]==len(target_columns))
+
+#     def test_fit_predict_predict_sliding_window_multivariate_multi_step(self):
+#         X = np.arange(1,441)
+#         X = X.reshape(-1,1)
+#         X2 = np.arange(1001,1441)
+#         X2 = X2.reshape(-1,1)
+#         X3 = np.arange(10001,10441)
+#         X3 = X3.reshape(-1,1)
+#         X = np.hstack([X,X2,X3])
+#         SIZE=len(X)
+#         target_columns = [0,1,2]
+#         number_rows = SIZE
+#         prediction_horizon = 8
+#         lookback_window = 10
+#         run_mode = 'test'
+#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
+#                                                                target_column_indices=target_columns,
+#                                                                lookback_window=lookback_window,
+#                                                                prediction_horizon=prediction_horizon,
+#                                                                optimization_stetagy='Once',
+#                                                                mode=run_mode,
+#                                                                number_rows=number_rows,
+#                                                                )
+#         for index,estimator in enumerate(srom_estimators[1:]):
+#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+#             estimator.fit(X_train)
+#             y_pred = estimator.predict(X_test)
+#             assert(len(y_pred)==prediction_horizon)
+#             assert(y_pred.shape[1]==len(target_columns))
+#             y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
+#             assert(y_pred_win.shape[1]==len(target_columns))
