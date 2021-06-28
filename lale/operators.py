@@ -476,12 +476,13 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         return False
 
+    @property
     def _final_individual_op(self) -> Optional["IndividualOp"]:
         return None
 
     @property
     def _final_estimator(self) -> Any:
-        op: Optional[IndividualOp] = self._final_individual_op()
+        op: Optional[IndividualOp] = self._final_individual_op
         model = None
         if op is not None:
             # if fit was called, we want to use trained result
@@ -531,7 +532,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         into the corresponding list of values.
 
         Warning: ignores side constraints and unions."""
-        op: Optional[IndividualOp] = self._final_individual_op()
+        op: Optional[IndividualOp] = self._final_individual_op
         if op is None:
             raise ValueError("This pipeline does not end with an individual operator")
         else:
@@ -544,7 +545,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         it returns up to `size` uniformly distributed values.
 
         Warning: ignores side constraints, unions, and distributions."""
-        op: Optional[IndividualOp] = self._final_individual_op()
+        op: Optional[IndividualOp] = self._final_individual_op
         if op is None:
             raise ValueError("This pipeline does not end with an individual operator")
         else:
@@ -2109,6 +2110,7 @@ class IndividualOp(Operator):
         """Checks if the operator is a transformer"""
         return self.has_method("transform")
 
+    @property
     def _final_individual_op(self) -> Optional["IndividualOp"]:
         return self
 
@@ -3071,7 +3073,7 @@ class BasePipeline(Operator, Generic[OpType]):
 
     @property
     def _estimator_type(self):
-        estimator = self._final_estimator
+        estimator = self._final_individual_op
         if estimator is not None:
             return estimator._estimator_type
 
@@ -3610,12 +3612,13 @@ class BasePipeline(Operator, Generic[OpType]):
 
         return defaults
 
+    @property
     def _final_individual_op(self) -> Optional["IndividualOp"]:
         op = self.get_last()
         if op is None:
             return None
         else:
-            return op._final_individual_op()
+            return op._final_individual_op
 
 
 PlannedOpType = TypeVar("PlannedOpType", bound=PlannedOperator, covariant=True)
