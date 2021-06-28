@@ -128,11 +128,26 @@ _hyperparams_schema = {
             "properties": {
                 "boosting_type": {
                     "anyOf": [
-                        {"enum": ["gbdt", "dart"]},
-                        {"enum": ["goss", "rf"], "forOptimizer": False},
+                        {
+                            "enum": ["gbdt"],
+                            "description": "Traditional Gradient Boosting Decision Tree.",
+                        },
+                        {
+                            "enum": ["dart"],
+                            "description": "Dropouts meet Multiple Additive Regression Trees.",
+                        },
+                        {
+                            "enum": ["goss"],
+                            "forOptimizer": False,
+                            "description": "Gradient-based One-Side Sampling.",
+                        },
+                        {
+                            "enum": ["rf"],
+                            "forOptimizer": False,
+                            "description": "Random Forest.",
+                        },
                     ],
                     "default": "gbdt",
-                    "description": "‘gbdt’, traditional Gradient Boosting Decision Tree. ‘dart’, Dropouts meet Multiple Additive Regression Trees. ‘goss’, Gradient-based One-Side Sampling. ‘rf’, Random Forest.",
                 },
                 "num_leaves": {
                     "anyOf": [
@@ -295,23 +310,19 @@ _hyperparams_schema = {
             ],
         },
         {
-            "description": "boosting_type `goss` can not use bagging (which means subsample_freq = 0 and subsample = 1.0)",
+            "description": "boosting_type `goss` cannot use bagging (which means subsample_freq = 0 and subsample = 1.0)",
             "anyOf": [
                 {
                     "type": "object",
                     "properties": {"boosting_type": {"not": {"enum": ["goss"]}}},
                 },
                 {
-                    "allOf": [
-                        {
-                            "type": "object",
-                            "properties": {"subsample_freq": {"enum": [0]}},
-                        },
-                        {
-                            "type": "object",
-                            "properties": {"subsample": {"enum": [1.0]}},
-                        },
-                    ]
+                    "type": "object",
+                    "properties": {"subsample_freq": {"enum": [0]}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"subsample": {"enum": [1.0]}},
                 },
             ],
         },
