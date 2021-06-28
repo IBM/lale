@@ -113,7 +113,7 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     body = None
     if "anyOf" in schema:
         item_docstrings = [item_docstring(None, s) for s in schema["anyOf"]]
-        if name is not None and name.startswith("constraint "):
+        if name is not None and name.startswith("_`constraint-"):
             rexp = re.compile(r"( *- )(dict \*\*of\*\* )(.+)")
             item_docstrings = [rexp.sub(r"\1\3", s) for s in item_docstrings]
         if len(item_docstrings) > 1:
@@ -178,12 +178,8 @@ def _params_docstring(params_schema, hp2constraints=None):
         item_docstring = _schema_docstring(param_name, param_schema, required, relevant)
         result += _indent("  ", item_docstring, "").rstrip()
         if hp2constraints is not None and param_name in hp2constraints:
-            constraints = [
-                f":ref:`{i} <constraint{i}>`" for i in hp2constraints[param_name]
-            ]
-            result += "\n  See also constraint"
-            result += "s " if len(constraints) > 1 else " "
-            result += ", ".join(constraints) + "."
+            constraints = [f"`constraint-{i}`_" for i in hp2constraints[param_name]]
+            result += f"\n\n  See also {', '.join(constraints)}."
         result += "\n\n"
     return result
 
@@ -242,8 +238,7 @@ def _hyperparams_docstring(hyperparams_schema):
     if len(hyperparams_schema["allOf"]) > 1:
         result += "Notes\n-----\n"
         item_docstrings = [
-            f".. _constraint{i}:\n\n"
-            + _schema_docstring(f"constraint {i}", hyperparams_schema["allOf"][i])
+            _schema_docstring(f"_`constraint-{i}`", hyperparams_schema["allOf"][i])
             for i in range(1, len(hyperparams_schema["allOf"]))
         ]
         result += "\n\n".join(item_docstrings)
