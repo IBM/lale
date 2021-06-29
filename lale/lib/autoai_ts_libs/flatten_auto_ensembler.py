@@ -152,6 +152,7 @@ _hyperparams_schema = {
                         "reciprocal",
                         "anscombe",
                         "fisher",
+                        None,
                     ],
                     "default": None,
                 },
