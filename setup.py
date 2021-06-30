@@ -82,7 +82,7 @@ setup(
             "pytorch-pretrained-bert>=0.6.1",
             "torchvision>=0.2.2",
             "tensorflow-datasets>=1.0.1",
-            "tensorflow>=1.13.1,<2",
+            "tensorflow>=1.13.1",
             "tensorflow_hub",
             "spacy<=3.0.5",
             "smac<=0.10.0",
