@@ -29,12 +29,27 @@ _hyperparams_schema = {
             "required": ["strategy", "quantile"],
             "properties": {
                 "strategy": {
-                    "description": """Strategy to use to generate predictions.
-- “mean”: always predicts the mean of the training set
-- “median”: always predicts the median of the training set
-- “quantile”: always predicts a specified quantile of the training set, provided with the quantile parameter.
-- “constant”: always predicts a constant value that is provided by the user.""",
-                    "enum": ["mean", "median", "quantile", "constant"],
+                    "description": "Strategy to use to generate predictions.",
+                    "anyOf": [
+                        {
+                            "enum": ["mean"],
+                            "description": "Always predicts the mean of the training set.",
+                        },
+                        {
+                            "enum": ["median"],
+                            "description": "Always predicts the median of the training set.",
+                        },
+                        {
+                            "enum": ["quantile"],
+                            "description": "Always predicts a specified quantile of the training set, provided with the quantile parameter.",
+                            "forOptimizer": False,
+                        },
+                        {
+                            "enum": ["constant"],
+                            "description": "Always predicts a constant label that is provided by the user. This is useful for metrics that evaluate a non-majority class",
+                            "forOptimizer": False,
+                        },
+                    ],
                     "default": "mean",
                 },
                 "constant": {
@@ -54,7 +69,33 @@ _hyperparams_schema = {
                     "default": None,
                 },
             },
-        }
+        },
+        {
+            "description": "The constant strategy requires a non-None value for the constant hyperparameter.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"strategy": {"not": {"enum": ["constant"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"constant": {"not": {"enum": [None]}}},
+                },
+            ],
+        },
+        {
+            "description": "The quantile strategy requires a non-None value for the quantile hyperparameter.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"strategy": {"not": {"enum": ["quantile"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"quantile": {"not": {"enum": [None]}}},
+                },
+            ],
+        },
     ]
 }
 

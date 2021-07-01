@@ -168,14 +168,12 @@ preprocess the data with a scaler from sklearn.preprocessing.""",
                     "default": "l2",
                 },
                 "dual": {
-                    "description": """Dual or primal formulation.
-Dual formulation is only implemented for l2 penalty with liblinear solver. Prefer dual=False when n_samples > n_features.""",
+                    "description": "Dual or primal formulation. Prefer dual=False when n_samples > n_features.",
                     "type": "boolean",
                     "default": False,
                 },
                 "C": {
-                    "description": "Inverse regularization strength. Smaller values specify "
-                    "stronger regularization.",
+                    "description": "Inverse regularization strength. Smaller values specify stronger regularization.",
                     "type": "number",
                     "distribution": "loguniform",
                     "minimum": 0.0,
@@ -195,8 +193,7 @@ Dual formulation is only implemented for l2 penalty with liblinear solver. Prefe
                     "maximumForOptimizer": 0.01,
                 },
                 "fit_intercept": {
-                    "description": "Specifies whether a constant (bias or intercept) should be "
-                    "added to the decision function.",
+                    "description": "Specifies whether a constant (bias or intercept) should be added to the decision function.",
                     "type": "boolean",
                     "default": True,
                 },
