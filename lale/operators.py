@@ -1975,7 +1975,7 @@ class IndividualOp(Operator):
                 if descr.endswith("."):
                     descr = descr[:-1]
                 reason = f"constraint {descr[0].lower()}{descr[1:]}"
-                schema_path = f"constraint {e.schema_path[1]}"
+                schema_path = "failing constraint"
                 if self.documentation_url() is not None:
                     schema = f"{self.documentation_url()}#constraint-{e.schema_path[1]}"
             else:
@@ -1987,7 +1987,7 @@ class IndividualOp(Operator):
                 + f"due to {reason}.\n"
                 + proposed_fix
                 + f"Schema of {schema_path}: {schema}\n"
-                + f"Value: {e.instance}"
+                + f"Invalid value: {e.instance}"
             )
             raise jsonschema.ValidationError(msg)
         user_validator = getattr(class_, "validate_hyperparams", None)

@@ -34,18 +34,29 @@ _hyperparams_schema = {
             ],
             "properties": {
                 "strategy": {
-                    "description": """Strategy to use to generate predictions.
-- “stratified”: generates predictions by respecting the training set’s class distribution.
-- “most_frequent”: always predicts the most frequent label in the training set.
-- “prior”: always predicts the class that maximizes the class prior (like “most_frequent”) and predict_proba returns the class prior.
-- “uniform”: generates predictions uniformly at random.
-- “constant”: always predicts a constant label that is provided by the user. This is useful for metrics that evaluate a non-majority class""",
-                    "enum": [
-                        "stratified",
-                        "most_frequent",
-                        "prior",
-                        "uniform",
-                        "constant",
+                    "description": "Strategy to use to generate predictions.",
+                    "anyOf": [
+                        {
+                            "enum": ["stratified"],
+                            "description": "Generates predictions by respecting the training set's class distribution.",
+                        },
+                        {
+                            "enum": ["most_frequent"],
+                            "description": "Always predicts the most frequent label in the training set.",
+                        },
+                        {
+                            "enum": ["prior"],
+                            "description": "Always predicts the class that maximizes the class prior (like 'most_frequent') and predict_proba returns the class prior.",
+                        },
+                        {
+                            "enum": ["uniform"],
+                            "description": "Generates predictions uniformly at random.",
+                        },
+                        {
+                            "enum": ["constant"],
+                            "description": "Always predicts a constant label that is provided by the user. This is useful for metrics that evaluate a non-majority class",
+                            "forOptimizer": False,
+                        },
                     ],
                     "default": "prior",
                 },
@@ -73,6 +84,19 @@ _hyperparams_schema = {
                     "default": None,
                 },
             },
+        },
+        {
+            "description": "The constant strategy requires a non-None value for the constant hyperparameter.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"strategy": {"not": {"enum": ["constant"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"constant": {"not": {"enum": [None]}}},
+                },
+            ],
         },
     ]
 }

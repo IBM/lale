@@ -39,7 +39,7 @@ def _kind_tag(schema):
         elif schema["type"] == "number":
             return "float"
         elif isinstance(schema["type"], list):
-            return " or ".join(schema["type"])
+            return " *or* ".join(schema["type"])
         else:
             return schema["type"]
     elif "enum" in schema:
@@ -48,10 +48,10 @@ def _kind_tag(schema):
         if len(values) == 1:
             return _value_docstring(values[0])
         elif len(values) == 2:
-            return " or ".join([_value_docstring(v) for v in values])
+            return " *or* ".join([_value_docstring(v) for v in values])
         else:
             prefix = ", ".join([_value_docstring(v) for v in values[:-1]])
-            suffix = ", or " + _value_docstring(values[-1])
+            suffix = ", *or* " + _value_docstring(values[-1])
             return prefix + suffix
     else:
         return "any type"
@@ -114,15 +114,19 @@ def _schema_docstring(name, schema, required=True, relevant=True):
     if "anyOf" in schema:
         item_docstrings = [item_docstring(None, s) for s in schema["anyOf"]]
         if name is not None and name.startswith("_`constraint-"):
-            rexp = re.compile(r"( *- )(dict \*\*of\*\* )(.+)")
+            rexp = re.compile(r"^(  - )(dict \*of\* )(.+)")
             item_docstrings = [rexp.sub(r"\1\3", s) for s in item_docstrings]
         if len(item_docstrings) > 1:
-            rexp = re.compile(r"( *- )(.+)")
-            rest = [rexp.sub(r"\1or \2", s) for s in item_docstrings[1:]]
+            rexp = re.compile(r"^(  - )(.+)")
+            rest = [rexp.sub(r"\1*or* \2", s) for s in item_docstrings[1:]]
             item_docstrings = item_docstrings[:1] + rest
         body = "\n\n".join(item_docstrings)
     elif "allOf" in schema:
         item_docstrings = [item_docstring(None, s) for s in schema["allOf"]]
+        if len(item_docstrings) > 1:
+            rexp = re.compile(r"^(  - )(.+)")
+            rest = [rexp.sub(r"\1*and* \2", s) for s in item_docstrings[1:]]
+            item_docstrings = item_docstrings[:1] + rest
         body = "\n\n".join(item_docstrings)
     elif "not" in schema:
         body = item_docstring(None, schema["not"])
@@ -153,7 +157,7 @@ def _schema_docstring(name, schema, required=True, relevant=True):
         result = "\\" + result
     if body is not None and body.find("\n") == -1:
         assert body.startswith("  - ")
-        result += " **of** " + body[4:]
+        result += " *of* " + body[4:]
     if "description" in schema:
         result += "\n\n" + _indent("  ", schema["description"]).rstrip()
     if body is not None and body.find("\n") != -1:
