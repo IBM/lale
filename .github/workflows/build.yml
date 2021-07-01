@@ -75,7 +75,6 @@ jobs:
         - test/test_core_regressors.py
         - test/test_core_transformers.py
         - test/test_core_misc.py
-        - test/test_lale_lib_versions.py
         - test/test_core_pipeline.py
         - test/test_custom_schemas.py
         - test/test_json_pretty_viz.py
@@ -102,6 +101,10 @@ jobs:
         - test-case: test/test_halving_gridsearchcv.py
           python-version: 3.7
           setup-target: '.[test]'
+        - test-case: test/test_lale_lib_versions.py
+          python-version: 3.7
+          setup-target: '.[full,test]'
+
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
@@ -152,7 +155,7 @@ jobs:
         - test/test_core_classifiers.py
         - test/test_core_regressors.py
         - test/test_core_transformers.py
-        python-version: [3.8]
+        python-version: [3.6]
         setup-target: ['.']
     steps:
     - uses: actions/checkout@v2
@@ -198,7 +201,7 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.8]
+        python-version: [3.7]
         setup-target: ['.[full,test]']
         test-case: [test/test_notebooks.py]
     steps:
@@ -236,7 +239,7 @@ jobs:
     needs: [static, test_matrix, test_notebooks]
     strategy:
       matrix:
-        python-version: [3.6]
+        python-version: [3.7]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
