@@ -14,7 +14,8 @@
 
 import logging
 import os
-import sys
+
+# import sys
 from datetime import datetime
 
 from setuptools import find_packages, setup
@@ -71,6 +72,7 @@ extras_require = {
         "pytorch-pretrained-bert>=0.6.1",
         "torchvision>=0.2.2",
         "tensorflow-datasets>=1.0.1",
+        "tensorflow>=1.13.1",
         "tensorflow_hub",
         "spacy<=3.0.5",
         "smac<=0.10.0",
@@ -79,7 +81,7 @@ extras_require = {
         "torch>=1.0",
         "BlackBoxAuditing",
         "imbalanced-learn",
-        "cvxpy>=1.0,<=1.1.7",
+        "cvxpy>=1.0",
         "fairlearn",
         "h5py",
     ],
@@ -100,9 +102,9 @@ extras_require = {
     ],
 }
 
-# Inserting tensorflow 1.x only for Python 3.7
-if sys.version_info.minor == 7:
-    extras_require["full"].append("tensorflow>=1.13.1,<2")
+# # Inserting tensorflow 1.x only for Python 3.7
+# if sys.version_info.minor == 7:
+#     extras_require["full"].append("tensorflow>=1.13.1,<2")
 
 setup(
     name="lale",
