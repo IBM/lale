@@ -96,19 +96,23 @@ class Expr:
                 left=self._expr, ops=[ast.Eq()], comparators=[other._expr]
             )
             return Expr(comp)
-        else:
+        elif other is not None:
             comp = ast.Compare(left=self._expr, ops=[ast.Eq()], comparators=[other])
             return Expr(comp)
+        else:
+            return False
 
-    def __ge__(self, other) -> "Expr":
+    def __ge__(self, other):
         if isinstance(other, Expr):
             comp = ast.Compare(
                 left=self._expr, ops=[ast.GtE()], comparators=[other._expr]
             )
             return Expr(comp)
-        else:
+        elif other is not None:
             comp = ast.Compare(left=self._expr, ops=[ast.GtE()], comparators=[other])
             return Expr(comp)
+        else:
+            return False
 
     def __getattr__(self, name: str) -> "Expr":
         attr = ast.Attribute(value=self._expr, attr=name)
@@ -127,35 +131,41 @@ class Expr:
         subscript = ast.Subscript(value=self._expr, slice=key_ast)
         return Expr(subscript)
 
-    def __gt__(self, other) -> "Expr":
+    def __gt__(self, other):
         if isinstance(other, Expr):
             comp = ast.Compare(
                 left=self._expr, ops=[ast.Gt()], comparators=[other._expr]
             )
             return Expr(comp)
-        else:
+        elif other is not None:
             comp = ast.Compare(left=self._expr, ops=[ast.Gt()], comparators=[other])
             return Expr(comp)
+        else:
+            return False
 
-    def __le__(self, other) -> "Expr":
+    def __le__(self, other):
         if isinstance(other, Expr):
             comp = ast.Compare(
                 left=self._expr, ops=[ast.LtE()], comparators=[other._expr]
             )
             return Expr(comp)
-        else:
+        elif other is not None:
             comp = ast.Compare(left=self._expr, ops=[ast.LtE()], comparators=[other])
             return Expr(comp)
+        else:
+            return False
 
-    def __lt__(self, other) -> "Expr":
+    def __lt__(self, other):
         if isinstance(other, Expr):
             comp = ast.Compare(
                 left=self._expr, ops=[ast.Lt()], comparators=[other._expr]
             )
             return Expr(comp)
-        else:
+        elif other is not None:
             comp = ast.Compare(left=self._expr, ops=[ast.Lt()], comparators=[other])
             return Expr(comp)
+        else:
+            return False
 
     def __ne__(self, other):
         if isinstance(other, Expr):
@@ -163,9 +173,11 @@ class Expr:
                 left=self._expr, ops=[ast.NotEq()], comparators=[other._expr]
             )
             return Expr(comp)
-        else:
+        elif other is not None:
             comp = ast.Compare(left=self._expr, ops=[ast.NotEq()], comparators=[other])
             return Expr(comp)
+        else:
+            return False
 
     def __str__(self) -> str:
         result = fixedUnparse(self._expr).strip()
