@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoai_ts_libs.sklearn.mvp_windowed_transformed_target_estimators import (
+from autoai_ts_libs.sklearn.mvp_windowed_transformed_target_estimators import (  # type: ignore # noqa
     AutoaiWindowTransformedTargetRegressor as model_to_be_wrapped,
 )
 from sklearn.pipeline import Pipeline, make_pipeline

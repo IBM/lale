@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoai_ts_libs.sklearn.mvp_windowed_wrapped_regressor import (
+from autoai_ts_libs.sklearn.mvp_windowed_wrapped_regressor import (  # type: ignore # noqa
     AutoaiWindowedWrappedRegressor as model_to_be_wrapped,
 )
 from sklearn.pipeline import make_pipeline

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoai_ts_libs.sklearn.autoai_ts_pipeline import (
+from autoai_ts_libs.sklearn.autoai_ts_pipeline import (  # type: ignore # noqa
     AutoaiTSPipeline as model_to_be_wrapped,
 )
 

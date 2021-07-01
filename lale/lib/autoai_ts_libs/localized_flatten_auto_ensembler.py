@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoai_ts_libs.srom.estimators.time_series.models.srom_estimators import (
+from autoai_ts_libs.srom.estimators.time_series.models.srom_estimators import (  # type: ignore # noqa
     LocalizedFlattenAutoEnsembler as model_to_be_wrapped,
 )
 

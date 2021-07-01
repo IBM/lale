@@ -610,7 +610,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         ]
 
         try:
-            import autoai_ts_libs  # noqa
+            import autoai_ts_libs  # type: ignore # noqa
 
             module_names.append("lale.lib.autoai_ts_libs")
         except ImportError:
