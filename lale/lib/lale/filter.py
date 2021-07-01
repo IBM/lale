@@ -30,13 +30,12 @@ except ImportError:
 
 
 def _is_df(df):
-    return (
-        isinstance(df, pd.DataFrame)
-        or isinstance(df, pd.Series)
-    )
+    return isinstance(df, pd.DataFrame) or isinstance(df, pd.Series)
+
 
 def _is_spark_df(df):
     return isinstance(df, spark_df)
+
 
 def _is_ast_subscript(expr):
     return isinstance(expr, ast.Subscript)
@@ -50,14 +49,22 @@ class _FilterImpl:
     def _get_filter_info(self, expr_to_parse, X):
         col_list = X.columns
         lhs = expr_to_parse.left.slice.value.s
-        if not lhs in col_list:
-            raise ValueError("Cannot perform filter operation as {} not a column of input dataframe X.".format(lhs))
+        if lhs not in col_list:
+            raise ValueError(
+                "Cannot perform filter operation as {} not a column of input dataframe X.".format(
+                    lhs
+                )
+            )
         op = expr_to_parse.ops[0]
         rhs = expr_to_parse.comparators[0]
         if _is_ast_subscript(expr_to_parse.comparators[0]):
             rhs = expr_to_parse.comparators[0].slice.value.s
-            if not rhs in col_list:
-                raise ValueError("Cannot perform filter operation as {} not a column of input dataframe X.".format(rhs))
+            if rhs not in col_list:
+                raise ValueError(
+                    "Cannot perform filter operation as {} not a column of input dataframe X.".format(
+                        rhs
+                    )
+                )
         return lhs, op, rhs
 
     def transform(self, X):
@@ -67,37 +74,95 @@ class _FilterImpl:
             # Filtering spark dataframes
             if _is_spark_df(X):
                 if isinstance(op, ast.Eq):
-                    return X.filter(col(lhs) == col(rhs)) if _is_ast_subscript(expr_to_parse.comparators[0]) else X.filter(col(lhs) == rhs)
+                    return (
+                        X.filter(col(lhs) == col(rhs))
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X.filter(col(lhs) == rhs)
+                    )
                 elif isinstance(op, ast.NotEq):
-                    return X.filter(col(lhs) != col(rhs)) if _is_ast_subscript(expr_to_parse.comparators[0]) else X.filter(col(lhs) != rhs)
+                    return (
+                        X.filter(col(lhs) != col(rhs))
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X.filter(col(lhs) != rhs)
+                    )
                 elif isinstance(op, ast.GtE):
-                    return X.filter(col(lhs) >= col(rhs)) if _is_ast_subscript(expr_to_parse.comparators[0]) else X.filter(col(lhs) >= rhs)
+                    return (
+                        X.filter(col(lhs) >= col(rhs))
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X.filter(col(lhs) >= rhs)
+                    )
                 elif isinstance(op, ast.Gt):
-                    return X.filter(col(lhs) > col(rhs)) if _is_ast_subscript(expr_to_parse.comparators[0]) else X.filter(col(lhs) > rhs)
+                    return (
+                        X.filter(col(lhs) > col(rhs))
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X.filter(col(lhs) > rhs)
+                    )
                 elif isinstance(op, ast.LtE):
-                    return X.filter(col(lhs) <= col(rhs)) if _is_ast_subscript(expr_to_parse.comparators[0]) else X.filter(col(lhs) <= rhs)
+                    return (
+                        X.filter(col(lhs) <= col(rhs))
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X.filter(col(lhs) <= rhs)
+                    )
                 elif isinstance(op, ast.Lt):
-                    return X.filter(col(lhs) < col(rhs)) if _is_ast_subscript(expr_to_parse.comparators[0]) else X.filter(col(lhs) < rhs)
+                    return (
+                        X.filter(col(lhs) < col(rhs))
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X.filter(col(lhs) < rhs)
+                    )
                 else:
-                    raise ValueError("{} operator type found. Only ==, !=, >=, <=, >, < operators supported.".format(op))
+                    raise ValueError(
+                        "{} operator type found. Only ==, !=, >=, <=, >, < operators supported.".format(
+                            op
+                        )
+                    )
             # Filtering pandas dataframes
             if _is_df(X):
                 if isinstance(op, ast.Eq):
-                    return X[X[lhs] == X[rhs]] if _is_ast_subscript(expr_to_parse.comparators[0]) else X[X[lhs] == rhs]
+                    return (
+                        X[X[lhs] == X[rhs]]
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X[X[lhs] == rhs]
+                    )
                 elif isinstance(op, ast.NotEq):
-                    return X[X[lhs] != X[rhs]] if _is_ast_subscript(expr_to_parse.comparators[0]) else X[X[lhs] != rhs]
+                    return (
+                        X[X[lhs] != X[rhs]]
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X[X[lhs] != rhs]
+                    )
                 elif isinstance(op, ast.GtE):
-                    return X[X[lhs] >= X[rhs]] if _is_ast_subscript(expr_to_parse.comparators[0]) else X[X[lhs] >= rhs]
+                    return (
+                        X[X[lhs] >= X[rhs]]
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X[X[lhs] >= rhs]
+                    )
                 elif isinstance(op, ast.Gt):
-                    return X[X[lhs] > X[rhs]] if _is_ast_subscript(expr_to_parse.comparators[0]) else X[X[lhs] > rhs]
+                    return (
+                        X[X[lhs] > X[rhs]]
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X[X[lhs] > rhs]
+                    )
                 elif isinstance(op, ast.LtE):
-                    return X[X[lhs] <= X[rhs]] if _is_ast_subscript(expr_to_parse.comparators[0]) else X[X[lhs] <= rhs]
+                    return (
+                        X[X[lhs] <= X[rhs]]
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X[X[lhs] <= rhs]
+                    )
                 elif isinstance(op, ast.Lt):
-                    return X[X[lhs] < X[rhs]] if _is_ast_subscript(expr_to_parse.comparators[0]) else X[X[lhs] < rhs]
+                    return (
+                        X[X[lhs] < X[rhs]]
+                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        else X[X[lhs] < rhs]
+                    )
                 else:
-                    raise ValueError("{} operator type found. Only ==, !=, >=, <=, >, < operators supported.".format(op))
+                    raise ValueError(
+                        "{} operator type found. Only ==, !=, >=, <=, >, < operators supported.".format(
+                            op
+                        )
+                    )
             else:
-                raise ValueError("Only pandas and spark dataframes are supported by the filter operator.")
+                raise ValueError(
+                    "Only pandas and spark dataframes are supported by the filter operator."
+                )
 
         for pred_element in self.pred if self.pred is not None else []:
             expr_to_parse = pred_element._expr
