@@ -25,7 +25,7 @@ from sklearn.metrics import make_scorer
 from sklearn.model_selection import TimeSeriesSplit
 
 from lale.datasets.uci import fetch_household_power_consumption
-from lale.lib.autoai_ts_libs import (  # StandardRowMeanCenterMTS,; WindowTransformerMTS; DifferenceFlattenAutoEnsembler,; FlattenAutoEnsembler,; LocalizedFlattenAutoEnsembler,
+from lale.lib.autoai_ts_libs import (  # type: ignore # noqa; StandardRowMeanCenterMTS,; WindowTransformerMTS; DifferenceFlattenAutoEnsembler,; FlattenAutoEnsembler,; LocalizedFlattenAutoEnsembler,
     AutoaiTSPipeline,
     AutoaiWindowedWrappedRegressor,
     AutoaiWindowTransformedTargetRegressor,

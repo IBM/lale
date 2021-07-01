@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoai_ts_libs.sklearn.small_data_window_transformers import (
+from autoai_ts_libs.sklearn.small_data_window_transformers import (  # type: ignore # noqa
     SmallDataWindowTargetTransformer as model_to_be_wrapped,
 )
 

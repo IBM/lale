@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoai_ts_libs.sklearn.small_data_standard_row_mean_center_transformers import (
+from autoai_ts_libs.sklearn.small_data_standard_row_mean_center_transformers import (  # type: ignore # noqa
     WindowStandardRowMeanCenterMTS as model_to_be_wrapped,
 )
 

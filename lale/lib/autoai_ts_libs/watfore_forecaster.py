@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from autoai_ts_libs.watfore.watfore_forecasters import (
+from autoai_ts_libs.watfore.watfore_forecasters import (  # type: ignore # noqa
     WatForeForecaster as model_to_be_wrapped,
 )
 
