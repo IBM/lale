@@ -502,7 +502,7 @@ custom_op = CustomOp(
     known_values_list=[[36, 45, 56, 67, 68, 75, 78, 89]],
     missing_values_reference_list=["", "-", "?", float("nan")],
 )
-pipeline = numpy_replace_unknown_values >> LR()"""
+pipeline = custom_op >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_tam_1(self):
