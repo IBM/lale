@@ -19,7 +19,7 @@ import pandas as pd
 
 try:
     from pyspark import SparkConf, SparkContext
-    from pyspark.sql import Row, SparkSession, SQLContext
+    from pyspark.sql import Row, SQLContext
 
     spark_installed = True
 except ImportError:
@@ -44,6 +44,7 @@ from lale.expressions import (
 from lale.lib.lale import (
     Aggregate,
     ConcatFeatures,
+    Filter,
     Hyperopt,
     Join,
     Map,
@@ -52,6 +53,228 @@ from lale.lib.lale import (
 )
 from lale.lib.sklearn import KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
+
+
+# Testing filter operator for pandas dataframes
+class TestFilter(unittest.TestCase):
+    # Define pandas dataframes with different structures
+    def setUp(self):
+        table1 = {
+            "train_id": [1, 2, 3, 4, 5],
+            "col1": ["NY", "TX", "CA", "NY", "CA"],
+            "col2": [0, 1, 1, 0, 1],
+        }
+        self.df1 = pd.DataFrame(data=table1)
+
+        table3 = {
+            "tid": [2, 3, 4, 5],
+            "col5": ["Warm", "Cold", "Warm", "Cold"],
+        }
+        self.df3 = pd.DataFrame(data=table3)
+
+        table5 = {
+            "TrainId": [1, 2, 3, 4, 5],
+            "col3": ["NY", "NY", "CA", "TX", "TX"],
+            "col4": [1, 1, 4, 8, 0],
+        }
+        self.df5 = pd.DataFrame(data=table5)
+
+        trainable = Join(
+            pred=[
+                it.main.train_id == it.info.TrainId,
+                it.info.TrainId == it.t1.tid,
+            ],
+            join_type="left",
+        )
+        self.transformed_df = trainable.transform(
+            [{"main": self.df1}, {"info": self.df5}, {"t1": self.df3}]
+        )
+        self.assertEqual(self.transformed_df.shape, (5, 8))
+        self.assertEqual(self.transformed_df["col3"][2], "CA")
+
+    def test_filter_pandas_eq(self):
+        trainable = Filter(pred=[it["col3"] == "TX"])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (2, 8))
+
+    def test_filter_pandas_neq(self):
+        trainable = Filter(pred=[it["col1"] != it["col3"]])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (3, 8))
+
+    def test_filter_pandas_ge(self):
+        trainable = Filter(pred=[it["col4"] >= 5])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (1, 8))
+
+    def test_filter_pandas_gt(self):
+        trainable = Filter(pred=[it["train_id"] > it["col4"]])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (2, 8))
+
+    def test_filter_pandas_le(self):
+        trainable = Filter(pred=[it["col3"] <= "NY"])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (3, 8))
+
+    def test_filter_pandas_lt(self):
+        trainable = Filter(pred=[it["col4"] < it["TrainId"]])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (2, 8))
+
+    def test_filter_pandas_multiple1(self):
+        trainable = Filter(pred=[it["col3"] == "TX", it["col4"] > 4])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (1, 8))
+
+    def test_filter_pandas_multiple2(self):
+        trainable = Filter(pred=[it["col5"] != "Cold", it["train_id"] <= 4])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (3, 8))
+
+    def test_filter_pandas_multiple3(self):
+        trainable = Filter(
+            pred=[
+                it["train_id"] == it["TrainId"],
+                it["col2"] != it["col4"],
+                it["col5"] == "Cold",
+            ]
+        )
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (2, 8))
+
+    def test_filter_pandas_no_col_error(self):
+        with self.assertRaises(ValueError):
+            trainable = Filter(pred=[it["col_na"] < it["TrainId"]])
+            _ = trainable.transform(self.transformed_df)
+
+
+# Testing filter operator for spark dataframes
+class TestFilterSpark(unittest.TestCase):
+    # Define spark dataframes with different structures
+    def setUp(self):
+        if spark_installed:
+            conf = (
+                SparkConf()
+                .setMaster("local[2]")
+                .set("spark.driver.bindAddress", "127.0.0.1")
+            )
+            sc = SparkContext.getOrCreate(conf=conf)
+            sqlContext = SQLContext(sc)
+
+            l2 = [
+                (1, "NY", 100),
+                (2, "NY", 150),
+                (3, "TX", 200),
+                (4, "TX", 100),
+                (5, "CA", 200),
+            ]
+            rdd = sc.parallelize(l2)
+            table2 = rdd.map(
+                lambda x: Row(TrainId=int(x[0]), col3=x[1], col4=int(x[2]))
+            )
+            self.spark_df2 = sqlContext.createDataFrame(table2)
+
+            l3 = [(2, "Warm"), (3, "Cold"), (4, "Warm"), (5, "Cold")]
+            rdd = sc.parallelize(l3)
+            table3 = rdd.map(lambda x: Row(tid=int(x[0]), col5=x[1]))
+            self.spark_df3 = sqlContext.createDataFrame(table3)
+
+            l4 = [(1, "NY", 1), (2, "TX", 6), (3, "CA", 2), (4, "NY", 5), (5, "CA", 0)]
+            rdd = sc.parallelize(l4)
+            table4 = rdd.map(
+                lambda x: Row(TrainId=int(x[0]), col1=x[1], col2=int(x[2]))
+            )
+            self.spark_df4 = sqlContext.createDataFrame(table4)
+
+            trainable = Join(
+                pred=[it.main.TrainId == it.info.TrainId, it.info.TrainId == it.t1.tid],
+                join_type="left",
+            )
+            self.transformed_df = trainable.transform(
+                [
+                    {"main": self.spark_df4},
+                    {"info": self.spark_df2},
+                    {"t1": self.spark_df3},
+                ]
+            )
+            self.assertEqual(self.transformed_df.count(), 5)
+            self.assertEqual(len(self.transformed_df.columns), 7)
+            self.assertEqual(self.transformed_df.collect()[2]["col1"], "CA")
+
+    def test_filter_spark_eq(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col3"] == "NY"])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 2)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_neq(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col1"] != it["col3"]])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 3)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_ge(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col4"] >= 150])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 3)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_gt(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col2"] > it["tid"]])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 2)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_le(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col3"] <= "NY"])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 3)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_lt(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col2"] < it["TrainId"]])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 2)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_multiple1(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col3"] == "TX", it["col4"] >= 150])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 1)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_multiple2(self):
+        if spark_installed:
+            trainable = Filter(pred=[it["col5"] != "Cold", it["TrainId"] <= 4])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 2)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_multiple3(self):
+        if spark_installed:
+            trainable = Filter(
+                pred=[
+                    it["tid"] == it["TrainId"],
+                    it["col2"] > it["tid"],
+                    it["col5"] == "Warm",
+                ]
+            )
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 2)
+            self.assertEqual(len(filtered_df.columns), 7)
+
+    def test_filter_spark_no_col_error(self):
+        with self.assertRaises(ValueError):
+            trainable = Filter(pred=[it["col_na"] < it["TrainId"]])
+            _ = trainable.transform(self.transformed_df)
 
 
 # Testing join operator for pandas dataframes
@@ -310,8 +533,12 @@ class TestJoinSpark(unittest.TestCase):
     # Define spark dataframes with different structures
     def setUp(self):
         if spark_installed:
-            spark = SparkSession.builder.appName("Test Spark Join").getOrCreate()
-            sc = spark.sparkContext
+            conf = (
+                SparkConf()
+                .setMaster("local[2]")
+                .set("spark.driver.bindAddress", "127.0.0.1")
+            )
+            sc = SparkContext.getOrCreate(conf=conf)
             sqlContext = SQLContext(sc)
 
             l1 = [(1, "NY", 0), (2, "TX", 1), (3, "CA", 1), (4, "NY", 0), (5, "CA", 1)]
@@ -545,7 +772,6 @@ class TestJoinSpark(unittest.TestCase):
             transformed_df = trainable.transform(go_sales)
             self.assertEqual(transformed_df.count(), 149257)
             self.assertEqual(len(transformed_df.columns), 10)
-            self.assertEqual(transformed_df.collect()[4]["Country"], "United States")
 
     # TestCase 2: Go_Sales dataset throws error because of duplicate non-key columns
     def test_join_spark_go_sales2(self):

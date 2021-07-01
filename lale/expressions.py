@@ -97,16 +97,18 @@ class Expr:
             )
             return Expr(comp)
         else:
-            return False
+            comp = ast.Compare(left=self._expr, ops=[ast.Eq()], comparators=[other])
+            return Expr(comp)
 
-    def __ge__(self, other) -> Union[bool, "Expr"]:
+    def __ge__(self, other) -> "Expr":
         if isinstance(other, Expr):
             comp = ast.Compare(
                 left=self._expr, ops=[ast.GtE()], comparators=[other._expr]
             )
             return Expr(comp)
         else:
-            return False
+            comp = ast.Compare(left=self._expr, ops=[ast.GtE()], comparators=[other])
+            return Expr(comp)
 
     def __getattr__(self, name: str) -> "Expr":
         attr = ast.Attribute(value=self._expr, attr=name)
@@ -124,6 +126,46 @@ class Expr:
             raise TypeError(f"expected int, str, or slice, got {type(key)}")
         subscript = ast.Subscript(value=self._expr, slice=key_ast)
         return Expr(subscript)
+
+    def __gt__(self, other) -> "Expr":
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.Gt()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        else:
+            comp = ast.Compare(left=self._expr, ops=[ast.Gt()], comparators=[other])
+            return Expr(comp)
+
+    def __le__(self, other) -> "Expr":
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.LtE()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        else:
+            comp = ast.Compare(left=self._expr, ops=[ast.LtE()], comparators=[other])
+            return Expr(comp)
+
+    def __lt__(self, other) -> "Expr":
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.Lt()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        else:
+            comp = ast.Compare(left=self._expr, ops=[ast.Lt()], comparators=[other])
+            return Expr(comp)
+
+    def __ne__(self, other):
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.NotEq()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        else:
+            comp = ast.Compare(left=self._expr, ops=[ast.NotEq()], comparators=[other])
+            return Expr(comp)
 
     def __str__(self) -> str:
         result = fixedUnparse(self._expr).strip()
