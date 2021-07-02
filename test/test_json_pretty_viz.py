@@ -492,8 +492,8 @@ pipeline = numpy_replace_unknown_values >> LR()"""
         )
         pipeline = numpy_replace_unknown_values >> LR()
         expected = """from autoai_libs.transformers.exportable import (
-            NumpyReplaceUnknownValues as CustomOp,
-        )
+    NumpyReplaceUnknownValues as CustomOp,
+)
 from sklearn.linear_model import LogisticRegression as LR
 import lale
 
