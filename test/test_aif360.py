@@ -26,6 +26,17 @@ import sklearn.model_selection
 import tensorflow as tf
 
 import lale.helpers
+
+try:
+    import tempeh.configurations as tc  # noqa
+except ImportError:
+    print(tf.__version__)
+    import tempeh
+
+    print(tempeh.__version__)
+    import keras
+
+    print(keras.__version__)
 import lale.lib.aif360
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
@@ -497,7 +508,8 @@ class TestAIF360Num(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_list = []
         for split in splits:
-            tf.reset_default_graph()  # for AdversarialDebiasing
+            tf.compat.v1.reset_default_graph()  # for AdversarialDebiasing
+            tf.compat.v1.disable_eager_execution()
             train_X = split["train_X"]
             train_y = split["train_y"]
             trained_remi = trainable_remi.fit(train_X, train_y)
@@ -530,7 +542,7 @@ class TestAIF360Num(unittest.TestCase):
 
     def test_adversarial_debiasing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
-        tf.reset_default_graph()
+        tf.compat.v1.reset_default_graph()
         trainable_remi = AdversarialDebiasing(**fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.5)
 
@@ -841,7 +853,7 @@ class TestAIF360Cat(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_list = []
         for split in splits:
-            tf.reset_default_graph()  # for AdversarialDebiasing
+            tf.compat.v1.reset_default_graph()  # for AdversarialDebiasing
             train_X = split["train_X"]
             train_y = split["train_y"]
             trained_remi = trainable_remi.fit(train_X, train_y)

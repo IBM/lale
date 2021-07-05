@@ -22,26 +22,6 @@ from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import PCA, LogisticRegression, Nystroem
 
 
-@unittest.skip(
-    "Skipping here because travis-ci fails to allocate memory. This runs on internal travis."
-)
-class TestResNet50(unittest.TestCase):
-    def test_init_fit_predict(self):
-        import torchvision.datasets as datasets
-        import torchvision.transforms as transforms
-
-        from lale.lib.pytorch import ResNet50
-
-        transform = transforms.Compose([transforms.ToTensor()])
-
-        data_train = datasets.FakeData(
-            size=50, num_classes=2, transform=transform
-        )  # , target_transform = transform)
-        clf = ResNet50(num_classes=2, num_epochs=1)
-        clf.fit(data_train)
-        _ = clf.predict(data_train)
-
-
 class TestResamplers(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import make_classification

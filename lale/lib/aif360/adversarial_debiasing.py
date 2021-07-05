@@ -56,9 +56,9 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
     pip install tensorflow
 or with
     pip install 'lale[full]'"""
-        assert "1.13.1" <= tf.__version__ <= "2", tf.__version__
+        assert "1.13.1" <= tf.__version__
         if sess is None:
-            sess = tf.Session()
+            sess = tf.compat.v1.Session()
         prot_attr_names = [pa["feature"] for pa in protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]

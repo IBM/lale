@@ -218,7 +218,7 @@ class TestFeatureAgglomeration(unittest.TestCase):
 
     def test_distance_threshold(self):
         with self.assertRaisesRegex(
-            TypeError, "type 'function' is not JSON serializable"
+            TypeError, "type function is not JSON serializable"
         ):
             _ = (
                 FeatureAgglomeration(

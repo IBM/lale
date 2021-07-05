@@ -14,6 +14,8 @@
 
 import logging
 import os
+
+# import sys
 from datetime import datetime
 
 from setuptools import find_packages, setup
@@ -61,6 +63,44 @@ if "TRAVIS" in os.environ:
 else:
     VERSION = lale.__version__
 
+extras_require = {
+    "full": [
+        "xgboost<=1.3.3",
+        "lightgbm",
+        "snapml>=1.7.0rc3",
+        "liac-arff>=2.4.0",
+        "tensorflow==2.4.0",
+        "smac<=0.10.0",
+        "numba==0.49.0",
+        "aif360>=0.4.0",
+        "torch>=1.0",
+        "BlackBoxAuditing",
+        "imbalanced-learn",
+        "cvxpy>=1.0",
+        "fairlearn",
+        "h5py",
+    ],
+    "dev": ["pre-commit"],
+    "test": [
+        "autoai-libs>=1.12.6",
+        "joblib",
+        "jupyter",
+        "numpydoc",
+        "sphinx==2.4.4",
+        "m2r",
+        "sphinx_rtd_theme",
+        "sphinxcontrib.apidoc",
+        "pytest-cov",
+        "codecov",
+        "pyspark",
+        "func_timeout",
+    ],
+}
+
+# # Inserting tensorflow 1.x only for Python 3.7
+# if sys.version_info.minor == 7:
+#     extras_require["full"].append("tensorflow>=1.13.1,<2")
+
 setup(
     name="lale",
     version=VERSION,
@@ -73,42 +113,5 @@ setup(
     packages=find_packages(),
     license="",
     install_requires=install_requires,
-    extras_require={
-        "full": [
-            "xgboost<=1.3.3",
-            "lightgbm",
-            "snapml>=1.7.0rc3",
-            "liac-arff>=2.4.0",
-            "pytorch-pretrained-bert>=0.6.1",
-            "torchvision>=0.2.2",
-            "tensorflow-datasets>=1.0.1",
-            "tensorflow>=1.13.1,<2",
-            "tensorflow_hub",
-            "spacy<=3.0.5",
-            "smac<=0.10.0",
-            "numba==0.49.0",
-            "aif360>=0.4.0",
-            "torch>=1.0",
-            "BlackBoxAuditing",
-            "imbalanced-learn",
-            "cvxpy>=1.0,<=1.1.7",
-            "fairlearn",
-            "h5py",
-        ],
-        "dev": ["pre-commit"],
-        "test": [
-            "autoai-libs>=1.12.6",
-            "joblib",
-            "jupyter",
-            "numpydoc",
-            "sphinx==2.4.4",
-            "m2r",
-            "sphinx_rtd_theme",
-            "sphinxcontrib.apidoc",
-            "pytest-cov",
-            "codecov",
-            "pyspark",
-            "func_timeout",
-        ],
-    },
+    extras_require=extras_require,
 )

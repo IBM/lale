@@ -491,18 +491,20 @@ pipeline = numpy_replace_unknown_values >> LR()"""
             missing_values_reference_list=["", "-", "?", float("nan")],
         )
         pipeline = numpy_replace_unknown_values >> LR()
-        expected = """from autoai_libs.transformers.exportable import NumpyReplaceUnknownValues
+        expected = """from autoai_libs.transformers.exportable import (
+    NumpyReplaceUnknownValues as CustomOp,
+)
 from sklearn.linear_model import LogisticRegression as LR
 import lale
 
 lale.wrap_imported_operators()
-numpy_replace_unknown_values = NumpyReplaceUnknownValues(
+custom_op = CustomOp(
     filling_values=float("nan"),
     filling_values_list=[float("nan")],
     known_values_list=[[36, 45, 56, 67, 68, 75, 78, 89]],
     missing_values_reference_list=["", "-", "?", float("nan")],
 )
-pipeline = numpy_replace_unknown_values >> LR()"""
+pipeline = custom_op >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_autoai_libs_tam_1(self):
