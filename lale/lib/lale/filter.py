@@ -56,7 +56,7 @@ class _FilterImpl:
                 )
             )
         op = expr_to_parse.ops[0]
-        rhs = expr_to_parse.comparators[0]
+        rhs = expr_to_parse.comparators[0].value
         if _is_ast_subscript(expr_to_parse.comparators[0]):
             rhs = expr_to_parse.comparators[0].slice.value.s
             if rhs not in col_list:

@@ -55,6 +55,48 @@ from lale.lib.sklearn import KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
 
 
+# Testing '==' and '!=' operator with different types of expressions
+class TestExpressions(unittest.TestCase):
+    def test_expr_1(self):
+        with self.assertRaises(TypeError):
+            if it.col < 3:
+                _ = "If it throws an exception, then the test is successful."
+
+    def test_expr_2(self):
+        self.assertFalse(it.col == 5)
+
+    def test_expr_3(self):
+        try:
+            if it.col == it.col:
+                _ = "If it does not throw an exception, then the test is successful."
+        except Exception:
+            self.fail("Expression 'it.col == it.col' raised an exception unexpectedly!")
+
+    def test_expr_4(self):
+        self.assertFalse(it.col == it.col2)
+
+    def test_expr_5(self):
+        X = it.col
+        self.assertTrue(X == X)
+
+    def test_expr_6(self):
+        self.assertFalse(it.col != 5)
+
+    def test_expr_7(self):
+        try:
+            if it.col != it.col:
+                _ = "If it does not throw an exception, then the test is successful."
+        except Exception:
+            self.fail("Expression 'it.col != it.col' raised an exception unexpectedly!")
+
+    def test_expr_8(self):
+        self.assertFalse(it.col != it.col2)
+
+    def test_expr_9(self):
+        X = it.col
+        self.assertTrue(X != X)
+
+
 # Testing filter operator for pandas dataframes
 class TestFilter(unittest.TestCase):
     # Define pandas dataframes with different structures
