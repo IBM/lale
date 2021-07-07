@@ -26,17 +26,6 @@ import sklearn.model_selection
 import tensorflow as tf
 
 import lale.helpers
-
-try:
-    import tempeh.configurations as tc  # noqa
-except ImportError:
-    print(tf.__version__)
-    import tempeh
-
-    print(tempeh.__version__)
-    import keras
-
-    print(keras.__version__)
 import lale.lib.aif360
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
