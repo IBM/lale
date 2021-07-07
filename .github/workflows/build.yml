@@ -203,7 +203,7 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.7]
+        python-version: [3.7, 3.8]
         setup-target: ['.[full,test]']
         test-case: [test/test_notebooks.py]
     steps:
