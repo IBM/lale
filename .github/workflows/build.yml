@@ -31,8 +31,8 @@ jobs:
       run: pip install -U numpy==1.19.2
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
-    - name: Install deps for test_autoai_ts_libs
-      run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
+    # - name: Install deps for test_autoai_ts_libs
+    #   run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
