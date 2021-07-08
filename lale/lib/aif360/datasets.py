@@ -21,6 +21,9 @@ import aif360
 import aif360.datasets
 import numpy as np
 import pandas as pd
+from aif360.algorithms.preprocessing.optim_preproc_helpers.data_preproc_functions import (
+    load_preproc_data_compas,
+)
 
 import lale.datasets
 import lale.datasets.openml
@@ -334,18 +337,14 @@ def _get_pandas_and_fairness_info_from_compas_dataset(dataset):
     X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
     assert X is not None
 
-    at_least_25 = pd.Series(X["age"] >= 25, dtype=np.float64)
-    dropped_X = X.drop(columns=["age"])
-    encoded_X = dropped_X.assign(age=at_least_25)
     fairness_info = {
         "favorable_labels": [0],
         "protected_attributes": [
             {"feature": "sex", "reference_group": [1]},
             {"feature": "race", "reference_group": [1]},
-            {"feature": "age", "reference_group": [1]},
         ],
     }
-    return encoded_X, y, fairness_info
+    return X, y, fairness_info
 
 
 def _get_dataframe_from_compas_csv(violent_recidivism=False):
@@ -386,6 +385,122 @@ def _perform_default_preprocessing(df):
     ]
 
 
+def _perform_custom_preprocessing(df):
+    """The custom pre-processing function is adapted from
+    https://github.com/fair-preprocessing/nips2017/blob/master/compas/code/Generate_Compas_Data.ipynb
+    """
+
+    df = df[
+        [
+            "age",
+            "c_charge_degree",
+            "race",
+            "age_cat",
+            "score_text",
+            "sex",
+            "priors_count",
+            "days_b_screening_arrest",
+            "decile_score",
+            "is_recid",
+            "two_year_recid",
+            "c_jail_in",
+            "c_jail_out",
+        ]
+    ]
+
+    # Indices of data samples to keep
+    ix = df["days_b_screening_arrest"] <= 30
+    ix = (df["days_b_screening_arrest"] >= -30) & ix
+    ix = (df["is_recid"] != -1) & ix
+    ix = (df["c_charge_degree"] != "O") & ix
+    ix = (df["score_text"] != "N/A") & ix
+    df = df.loc[ix, :]
+    df["length_of_stay"] = (
+        pd.to_datetime(df["c_jail_out"]) - pd.to_datetime(df["c_jail_in"])
+    ).apply(lambda x: x.days)
+
+    # Restrict races to African-American and Caucasian
+    dfcut = df.loc[
+        ~df["race"].isin(["Native American", "Hispanic", "Asian", "Other"]), :
+    ]
+
+    # Restrict the features to use
+    dfcutQ = dfcut[
+        [
+            "sex",
+            "race",
+            "age_cat",
+            "c_charge_degree",
+            "score_text",
+            "priors_count",
+            "is_recid",
+            "two_year_recid",
+            "length_of_stay",
+        ]
+    ].copy()
+
+    # Quantize priors count between 0, 1-3, and >3
+    def quantizePrior(x):
+        if x <= 0:
+            return "0"
+        elif 1 <= x <= 3:
+            return "1 to 3"
+        else:
+            return "More than 3"
+
+    # Quantize length of stay
+    def quantizeLOS(x):
+        if x <= 7:
+            return "<week"
+        if 8 < x <= 93:
+            return "<3months"
+        else:
+            return ">3 months"
+
+    # Quantize length of stay
+    def adjustAge(x):
+        if x == "25 - 45":
+            return "25 to 45"
+        else:
+            return x
+
+    # Quantize score_text to MediumHigh
+    def quantizeScore(x):
+        if (x == "High") | (x == "Medium"):
+            return "MediumHigh"
+        else:
+            return x
+
+    def group_race(x):
+        if x == "Caucasian":
+            return 1.0
+        else:
+            return 0.0
+
+    dfcutQ["priors_count"] = dfcutQ["priors_count"].apply(lambda x: quantizePrior(x))
+    dfcutQ["length_of_stay"] = dfcutQ["length_of_stay"].apply(lambda x: quantizeLOS(x))
+    dfcutQ["score_text"] = dfcutQ["score_text"].apply(lambda x: quantizeScore(x))
+    dfcutQ["age_cat"] = dfcutQ["age_cat"].apply(lambda x: adjustAge(x))
+
+    # Recode sex and race
+    dfcutQ["sex"] = dfcutQ["sex"].replace({"Female": 1.0, "Male": 0.0})
+    dfcutQ["race"] = dfcutQ["race"].apply(lambda x: group_race(x))
+
+    features = [
+        "two_year_recid",
+        "sex",
+        "race",
+        "age_cat",
+        "priors_count",
+        "c_charge_degree",
+    ]
+
+    # Pass vallue to df
+    df = dfcutQ[features]
+
+    return df
+
+
 def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
     df = _get_dataframe_from_compas_csv(violent_recidivism=violent_recidivism)
     # preprocessing steps performed by ProPublica team, even in the preprocess=False case
@@ -401,7 +516,6 @@ def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
         "protected_attributes": [
             {"feature": "sex", "reference_group": ["Female"]},
             {"feature": "race", "reference_group": ["Caucasian"]},
-            {"feature": "age", "reference_group": [[25, 1000]]},
         ],
     }
     return X, y, fairness_info
@@ -415,8 +529,8 @@ def fetch_compas_df(preprocess=False):
     classification for recidivism, indicating whether they were
     re-arrested within two years after the first arrest. Without
     preprocessing, the dataset has 6,172 rows and 51 columns.  There
-    are three protected attributes, sex, race, and age, and the disparate
-    impact is 0.59.  The data includes numeric and categorical columns, with some
+    are two protected attributes, sex and race, and the disparate
+    impact is 0.75.  The data includes numeric and categorical columns, with some
     missing values.
 
     .. _`compas-two-years`: https://github.com/propublica/compas-analysis
@@ -427,8 +541,7 @@ def fetch_compas_df(preprocess=False):
 
       If True,
       encode protected attributes in X as 0 or 1 to indicate privileged groups
-      (1 if Female, Caucasian, or at least 25 for the corresponding sex, race, and
-      age columns respectively);
+      (1 if Female or Caucasian for the corresponding sex and race columns respectively);
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protected attributes.
 
@@ -459,7 +572,7 @@ def fetch_compas_df(preprocess=False):
         # See https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm
         # and https://github.com/propublica/compas-analysis/blob/master/Compas%20Analysis.ipynb
         # (hunch is that COMPAS was trained on more biased data that is not reproduced in ProPublica's dataset)
-        dataset = aif360.datasets.CompasDataset()
+        dataset = load_preproc_data_compas()
         # above preprocessing results in a WARNING of "Missing Data: 5 rows removed from CompasDataset."
         # unclear how to resolve at the moment
         return _get_pandas_and_fairness_info_from_compas_dataset(dataset)
@@ -478,7 +591,7 @@ def fetch_compas_violent_df(preprocess=False):
     re-arrested within two years after the first arrest. Without
     preprocessing, the dataset has 4,020 rows and 51 columns.  There
     are three protected attributes, sex, race, and age, and the disparate
-    impact is 0.77.  The data includes numeric and categorical columns, with some
+    impact is 0.85.  The data includes numeric and categorical columns, with some
     missing values.
 
     .. _`compas-two-years-violent`: https://github.com/propublica/compas-analysis
@@ -537,25 +650,20 @@ def fetch_compas_violent_df(preprocess=False):
             label_name="two_year_recid",
             favorable_classes=[0],
             protected_attribute_names=["sex", "race"],
-            privileged_classes=[["Female"], ["Caucasian"]],
+            privileged_classes=[[1.0], [1.0]],
+            categorical_features=["age_cat", "priors_count", "c_charge_degree"],
             instance_weights_name=None,
-            categorical_features=["age_cat", "c_charge_degree", "c_charge_desc"],
             features_to_keep=[
                 "sex",
-                "age",
                 "age_cat",
                 "race",
-                "juv_fel_count",
-                "juv_misd_count",
-                "juv_other_count",
                 "priors_count",
                 "c_charge_degree",
-                "c_charge_desc",
                 "two_year_recid",
             ],
             features_to_drop=[],
             na_values=[],
-            custom_preprocessing=_perform_default_preprocessing,
+            custom_preprocessing=_perform_custom_preprocessing,
             metadata=default_mappings,
         )
         # above preprocessing results in a WARNING of "Missing Data: 5 rows removed from StandardDataset."
