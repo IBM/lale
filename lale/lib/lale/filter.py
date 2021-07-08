@@ -41,6 +41,18 @@ def _is_ast_subscript(expr):
     return isinstance(expr, ast.Subscript)
 
 
+def _is_ast_attribute(expr):
+    return isinstance(expr, ast.Attribute)
+
+
+def _is_ast_constant(expr):
+    return isinstance(expr, ast.Constant)
+
+
+def _is_ast_subs_or_attr(expr):
+    return isinstance(expr, ast.Subscript) or isinstance(expr, ast.Attribute)
+
+
 class _FilterImpl:
     def __init__(self, pred=None):
         self.pred = pred
@@ -48,7 +60,14 @@ class _FilterImpl:
     # Parse the predicate element passed as input
     def _get_filter_info(self, expr_to_parse, X):
         col_list = X.columns
-        lhs = expr_to_parse.left.slice.value.s
+        if _is_ast_subscript(expr_to_parse.left):
+            lhs = expr_to_parse.left.slice.value.s  # type: ignore
+        elif _is_ast_attribute(expr_to_parse.left):
+            lhs = expr_to_parse.left.attr
+        else:
+            raise ValueError(
+                "ERROR: Expression format not supported for expression on the left side! Formats supported: it.col_name or it['col_name']"
+            )
         if lhs not in col_list:
             raise ValueError(
                 "Cannot perform filter operation as {} not a column of input dataframe X.".format(
@@ -56,15 +75,22 @@ class _FilterImpl:
                 )
             )
         op = expr_to_parse.ops[0]
-        rhs = expr_to_parse.comparators[0].value
         if _is_ast_subscript(expr_to_parse.comparators[0]):
-            rhs = expr_to_parse.comparators[0].slice.value.s
-            if rhs not in col_list:
-                raise ValueError(
-                    "Cannot perform filter operation as {} not a column of input dataframe X.".format(
-                        rhs
-                    )
+            rhs = expr_to_parse.comparators[0].slice.value.s  # type: ignore
+        elif _is_ast_attribute(expr_to_parse.comparators[0]):
+            rhs = expr_to_parse.comparators[0].attr
+        elif _is_ast_constant(expr_to_parse.comparators[0]):
+            rhs = expr_to_parse.comparators[0].value
+        else:
+            raise ValueError(
+                "ERROR: Expression format not supported for expression on the right side! Formats supported: it.col_name or it['col_name'] or a constant value"
+            )
+        if not _is_ast_constant(expr_to_parse.comparators[0]) and rhs not in col_list:
+            raise ValueError(
+                "Cannot perform filter operation as {} not a column of input dataframe X.".format(
+                    rhs
                 )
+            )
         return lhs, op, rhs
 
     def transform(self, X):
@@ -76,42 +102,42 @@ class _FilterImpl:
                 if isinstance(op, ast.Eq):
                     return (
                         X.filter(col(lhs) == col(rhs))
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) == rhs)
                     )
                 elif isinstance(op, ast.NotEq):
                     return (
                         X.filter(col(lhs) != col(rhs))
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) != rhs)
                     )
                 elif isinstance(op, ast.GtE):
                     return (
                         X.filter(col(lhs) >= col(rhs))
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) >= rhs)
                     )
                 elif isinstance(op, ast.Gt):
                     return (
                         X.filter(col(lhs) > col(rhs))
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) > rhs)
                     )
                 elif isinstance(op, ast.LtE):
                     return (
                         X.filter(col(lhs) <= col(rhs))
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) <= rhs)
                     )
                 elif isinstance(op, ast.Lt):
                     return (
                         X.filter(col(lhs) < col(rhs))
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) < rhs)
                     )
                 else:
                     raise ValueError(
-                        "{} operator type found. Only ==, !=, >=, <=, >, < operators supported.".format(
+                        "{} operator type found. Only ==, !=, >=, <=, >, < operators are supported".format(
                             op
                         )
                     )
@@ -120,42 +146,42 @@ class _FilterImpl:
                 if isinstance(op, ast.Eq):
                     return (
                         X[X[lhs] == X[rhs]]
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] == rhs]
                     )
                 elif isinstance(op, ast.NotEq):
                     return (
                         X[X[lhs] != X[rhs]]
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] != rhs]
                     )
                 elif isinstance(op, ast.GtE):
                     return (
                         X[X[lhs] >= X[rhs]]
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] >= rhs]
                     )
                 elif isinstance(op, ast.Gt):
                     return (
                         X[X[lhs] > X[rhs]]
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] > rhs]
                     )
                 elif isinstance(op, ast.LtE):
                     return (
                         X[X[lhs] <= X[rhs]]
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] <= rhs]
                     )
                 elif isinstance(op, ast.Lt):
                     return (
                         X[X[lhs] < X[rhs]]
-                        if _is_ast_subscript(expr_to_parse.comparators[0])
+                        if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] < rhs]
                     )
                 else:
                     raise ValueError(
-                        "{} operator type found. Only ==, !=, >=, <=, >, < operators supported.".format(
+                        "{} operator type found. Only ==, !=, >=, <=, >, < operators are supported".format(
                             op
                         )
                     )
