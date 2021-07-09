@@ -847,7 +847,6 @@ def fetch_speeddating_df(preprocess=False):
       If True,
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
       encode labels in y as 0 or 1 to indicate favorable outcomes;
-      standardize numeric columns;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protected attributes.
 
@@ -908,11 +907,6 @@ def fetch_speeddating_df(preprocess=False):
         # drop wave column
         columns_to_drop.append("wave")
         dropped_X = orig_X.drop(labels=columns_to_drop, axis=1)
-        columns_to_standardize = dropped_X.columns[np.max(dropped_X) != 1]
-        for col in columns_to_standardize:
-            dropped_X[col] = (dropped_X[col] - np.mean(dropped_X[col])) / np.std(
-                dropped_X[col]
-            )
         encoded_X = dropped_X.assign(
             samerace=samerace, importance_same_race=importance_same_race
         )
@@ -1095,7 +1089,6 @@ def fetch_titanic_df(preprocess=False):
 
       If True,
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
-      standardize numeric columns;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protected attributes.
 
@@ -1140,12 +1133,6 @@ def fetch_titanic_df(preprocess=False):
             list(filter(extra_categorical_columns_filter, orig_X.columns))
         )
         dropped_X = orig_X.drop(labels=columns_to_drop, axis=1)
-
-        columns_to_standardize = ["fare", "body"]
-        for col in columns_to_standardize:
-            dropped_X[col] = (dropped_X[col] - np.mean(dropped_X[col])) / np.std(
-                dropped_X[col]
-            )
         encoded_X = dropped_X.assign(sex=sex, age=age)
         fairness_info = {
             "favorable_labels": [1],
