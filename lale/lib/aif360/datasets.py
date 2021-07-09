@@ -1094,7 +1094,8 @@ def fetch_titanic_df(preprocess=False):
     preprocess : boolean, optional, default False
 
       If True,
-      encode protected attributes in X as 0 or 1 to indicate privileged groups
+      encode protected attributes in X as 0 or 1 to indicate privileged groups;
+      standardize numeric columns;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protected attributes.
 
@@ -1123,7 +1124,28 @@ def fetch_titanic_df(preprocess=False):
     if preprocess:
         sex = pd.Series(orig_X["sex_female"] == 1, dtype=np.float64)
         age = pd.Series(orig_X["age"] <= 18, dtype=np.float64)
-        dropped_X = orig_X.drop(labels=["sex_female", "sex_male"], axis=1)
+        columns_to_drop = ["sex_female", "sex_male"]
+
+        # drop more columns that turn into gigantic one-hot encodings otherwise, like name and cabin
+
+        def extra_categorical_columns_filter(c: str):
+            return (
+                c.startswith("name")
+                or c.startswith("ticket")
+                or c.startswith("cabin")
+                or c.startswith("home.dest")
+            )
+
+        columns_to_drop.extend(
+            list(filter(extra_categorical_columns_filter, orig_X.columns))
+        )
+        dropped_X = orig_X.drop(labels=columns_to_drop, axis=1)
+
+        columns_to_standardize = ["fare", "body"]
+        for col in columns_to_standardize:
+            dropped_X[col] = (dropped_X[col] - np.mean(dropped_X[col])) / np.std(
+                dropped_X[col]
+            )
         encoded_X = dropped_X.assign(sex=sex, age=age)
         fairness_info = {
             "favorable_labels": [1],
