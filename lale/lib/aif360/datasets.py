@@ -847,6 +847,7 @@ def fetch_speeddating_df(preprocess=False):
       If True,
       encode protected attributes in X as 0 or 1 to indicate privileged groups;
       encode labels in y as 0 or 1 to indicate favorable outcomes;
+      standardize numeric columns;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protected attributes.
 
@@ -877,7 +878,41 @@ def fetch_speeddating_df(preprocess=False):
             orig_X["importance_same_race"] >= 9, dtype=np.float64
         )
         samerace = pd.Series(orig_X["samerace_1"] == 1, dtype=np.float64)
-        dropped_X = orig_X.drop(labels=["samerace_0", "samerace_1"], axis=1)
+        # drop samerace-related columns
+        columns_to_drop = ["samerace_0", "samerace_1"]
+
+        # drop preprocessed columns
+
+        def preprocessed_column_filter(x: str):
+            return x.startswith("d_")
+
+        columns_to_drop.extend(list(filter(preprocessed_column_filter, orig_X.columns)))
+
+        # drop has-null columns
+        columns_to_drop.extend(["has_null_0", "has_null_1"])
+
+        # drop decision columns
+
+        def decision_column_filter(x: str):
+            return x.startswith("decision")
+
+        columns_to_drop.extend(list(filter(decision_column_filter, orig_X.columns)))
+
+        # drop field columns
+
+        def field_column_filter(x: str):
+            return x.startswith("field")
+
+        columns_to_drop.extend(list(filter(field_column_filter, orig_X.columns)))
+
+        # drop wave column
+        columns_to_drop.append("wave")
+        dropped_X = orig_X.drop(labels=columns_to_drop, axis=1)
+        columns_to_standardize = dropped_X.columns[np.max(dropped_X) != 1]
+        for col in columns_to_standardize:
+            dropped_X[col] = (dropped_X[col] - np.mean(dropped_X[col])) / np.std(
+                dropped_X[col]
+            )
         encoded_X = dropped_X.assign(
             samerace=samerace, importance_same_race=importance_same_race
         )

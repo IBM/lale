@@ -151,7 +151,7 @@ class TestAIF360Datasets(unittest.TestCase):
 
     def test_dataset_speeddating_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 8_378, 503, {0, 1}, 0.853)
+        self._attempt_dataset(X, y, fairness_info, 8_378, 70, {0, 1}, 0.853)
 
     def test_dataset_boston_housing_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(preprocess=False)
