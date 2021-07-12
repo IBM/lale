@@ -218,9 +218,9 @@ def fetch_tae_df(preprocess=False):
     at the University of Wisconsin--Madison.
     The prediction task is a classification on the type
     of rating a TA receives (1=Low, 2=Medium, 3=High). Without preprocessing,
-    the dataset has 151 rows and 5 columns. There are two protected
-    attributes, "summer_or_regular_semester" and "whether_of_not_the_ta_is_a_native_english_speaker" [sic],
-    and the disparate impact of 0.5. The data
+    the dataset has 151 rows and 5 columns. There is one protected
+    attributes, "whether_of_not_the_ta_is_a_native_english_speaker" [sic],
+    and the disparate impact of 0.45. The data
     includes both categorical and numeric columns, with no missing
     values.
 
@@ -231,8 +231,8 @@ def fetch_tae_df(preprocess=False):
     preprocess : boolean, optional, default False
 
       If True,
-      encode protected attributes in X as 0 or 1 to indicate privileged groups
-      ("native_english_speaker" and "summer" respectively);
+      encode protected attributes in X as 0 or 1 to indicate privileged group
+      ("native_english_speaker");
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protecteded attributes.
@@ -265,27 +265,19 @@ def fetch_tae_df(preprocess=False):
             orig_X["whether_of_not_the_ta_is_a_native_english_speaker_1"] == 1,
             dtype=np.float64,
         )
-        summer = pd.Series(
-            orig_X["summer_or_regular_semester_1"] == 1, dtype=np.float64
-        )
         dropped_X = orig_X.drop(
             labels=[
                 "whether_of_not_the_ta_is_a_native_english_speaker_1",
                 "whether_of_not_the_ta_is_a_native_english_speaker_2",
-                "summer_or_regular_semester_1",
-                "summer_or_regular_semester_2",
             ],
             axis=1,
         )
-        encoded_X = dropped_X.assign(
-            native_english_speaker=native_english_speaker, summer=summer
-        )
+        encoded_X = dropped_X.assign(native_english_speaker=native_english_speaker)
         encoded_y = pd.Series(orig_y == 2, dtype=np.float64)
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
                 {"feature": "native_english_speaker", "reference_group": [1]},
-                {"feature": "summer", "reference_group": [1]},
             ],
         }
         return encoded_X, encoded_y, fairness_info
@@ -297,7 +289,6 @@ def fetch_tae_df(preprocess=False):
                     "feature": "whether_of_not_the_ta_is_a_native_english_speaker",
                     "reference_group": [1],
                 },
-                {"feature": "summer_or_regular_semester", "reference_group": [1]},
             ],
         }
         return orig_X, orig_y, fairness_info
