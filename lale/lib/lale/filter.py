@@ -57,6 +57,16 @@ class _FilterImpl:
     def __init__(self, pred=None):
         self.pred = pred
 
+    @classmethod
+    def validate_hyperparams(cls, pred=None, X=None, **hyperparams):
+        for pred_element in pred:
+            if not isinstance(pred_element._expr, ast.Compare):
+                raise ValueError(
+                    (
+                        "Filter predicate '{}' not a comparison. All filter predicates should be comparisons."
+                    ).format(pred_element)
+                )
+
     # Parse the predicate element passed as input
     def _get_filter_info(self, expr_to_parse, X):
         col_list = X.columns
@@ -66,7 +76,7 @@ class _FilterImpl:
             lhs = expr_to_parse.left.attr
         else:
             raise ValueError(
-                "ERROR: Expression format not supported for expression on the left side! Formats supported: it.col_name or it['col_name']"
+                "Filter predicate only supports subscript or dot notation for the left hand side. For example, it.col_name or it['col_name']"
             )
         if lhs not in col_list:
             raise ValueError(
@@ -83,7 +93,7 @@ class _FilterImpl:
             rhs = expr_to_parse.comparators[0].value
         else:
             raise ValueError(
-                "ERROR: Expression format not supported for expression on the right side! Formats supported: it.col_name or it['col_name'] or a constant value"
+                "Filter predicate only supports subscript or dot notation for the right hand side. For example, it.col_name or it['col_name'] or a constant value"
             )
         if not _is_ast_constant(expr_to_parse.comparators[0]) and rhs not in col_list:
             raise ValueError(
