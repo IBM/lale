@@ -73,10 +73,15 @@ def fixedUnparse(tree):
 class Expr:
     _expr: AstExpr
 
-    def __init__(self, expr: AstExpr):
+    def __init__(self, expr: AstExpr, istrue=None):
+        # _istrue variable is used to check the boolean nature of
+        # '==' and '!=' operator's results.
         self._expr = expr
+        self._istrue = istrue
 
     def __bool__(self) -> bool:
+        if self._istrue is not None:
+            return self._istrue
         raise TypeError(
             f"Cannot convert expression e1=`{str(self)}` to bool."
             "Instead of `e1 and e2`, try writing `[e1, e2]`."
@@ -95,14 +100,26 @@ class Expr:
             comp = ast.Compare(
                 left=self._expr, ops=[ast.Eq()], comparators=[other._expr]
             )
-            return Expr(comp)
+            return Expr(comp, istrue=self is other)
+        elif other is not None:
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.Eq()], comparators=[ast.Constant(value=other)]
+            )
+            return Expr(comp, istrue=False)
         else:
             return False
 
-    def __ge__(self, other) -> Union[bool, "Expr"]:
+    def __ge__(self, other):
         if isinstance(other, Expr):
             comp = ast.Compare(
                 left=self._expr, ops=[ast.GtE()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        elif other is not None:
+            comp = ast.Compare(
+                left=self._expr,
+                ops=[ast.GtE()],
+                comparators=[ast.Constant(value=other)],
             )
             return Expr(comp)
         else:
@@ -124,6 +141,66 @@ class Expr:
             raise TypeError(f"expected int, str, or slice, got {type(key)}")
         subscript = ast.Subscript(value=self._expr, slice=key_ast)
         return Expr(subscript)
+
+    def __gt__(self, other):
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.Gt()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        elif other is not None:
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.Gt()], comparators=[ast.Constant(value=other)]
+            )
+            return Expr(comp)
+        else:
+            return False
+
+    def __le__(self, other):
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.LtE()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        elif other is not None:
+            comp = ast.Compare(
+                left=self._expr,
+                ops=[ast.LtE()],
+                comparators=[ast.Constant(value=other)],
+            )
+            return Expr(comp)
+        else:
+            return False
+
+    def __lt__(self, other):
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.Lt()], comparators=[other._expr]
+            )
+            return Expr(comp)
+        elif other is not None:
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.Lt()], comparators=[ast.Constant(value=other)]
+            )
+            return Expr(comp)
+        else:
+            return False
+
+    def __ne__(self, other):
+        if isinstance(other, Expr):
+            comp = ast.Compare(
+                left=self._expr, ops=[ast.NotEq()], comparators=[other._expr]
+            )
+            return Expr(comp, istrue=self is other)
+        elif other is not None:
+            comp = ast.Compare(
+                left=self._expr,
+                ops=[ast.NotEq()],
+                comparators=[ast.Constant(value=other)],
+            )
+            return Expr(comp, istrue=False)
+        else:
+            return False
 
     def __str__(self) -> str:
         result = fixedUnparse(self._expr).strip()
