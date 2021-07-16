@@ -18,6 +18,7 @@ from sklearn.ensemble import BaggingRegressor as SKLModel
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import schema_1D_numbers, schema_X_numbers
 from .function_transformer import FunctionTransformer
 
 
@@ -105,7 +106,10 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "base_estimator": {
-                    "anyOf": [{"laleType": "operator"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "operator"},
+                        {"enum": [None], "description": "DecisionTreeRegressor"},
+                    ],
                     "default": None,
                     "description": "The base estimator to fit on random subsets of the dataset.",
                 },
@@ -165,12 +169,12 @@ _hyperparams_schema = {
                 "bootstrap_features": {
                     "type": "boolean",
                     "default": False,
-                    "description": "Whether features are drawn with replacement.",
+                    "description": "Whether features are drawn with (True) or wrhout (False) replacement.",
                 },
                 "oob_score": {
                     "type": "boolean",
                     "default": False,
-                    "description": "Whether to use out-of-bag samples to estimate",
+                    "description": "Whether to use out-of-bag samples to estimate the generalization error.",
                 },
                 "warm_start": {
                     "type": "boolean",
@@ -222,12 +226,12 @@ _input_fit_schema = {
                 "type": "array",
                 "items": {"type": "number"},
             },
-            "description": "The training input samples. Sparse matrices are accepted only if",
+            "description": "The training input samples. Sparse matrices are accepted only if they are supported by the base estimator.",
         },
         "y": {
             "type": "array",
             "items": {"type": "number"},
-            "description": "The target values (class labels in classification, real numbers in",
+            "description": "The target values (class labels in classification, real numbers in regression)",
         },
         "sample_weight": {
             "anyOf": [
@@ -235,30 +239,14 @@ _input_fit_schema = {
                     "type": "array",
                     "items": {"type": "number"},
                 },
-                {"enum": [None]},
+                {
+                    "enum": [None],
+                    "description": "Samples are equally weighted.",
+                },
             ],
-            "description": "Sample weights. If None, then samples are equally weighted.",
+            "description": "Sample weights. Supported only if the base estimator supports sample weighting.",
         },
     },
-}
-
-_input_predict_schema = {
-    "type": "object",
-    "required": ["X"],
-    "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-        },
-    },
-}
-
-_output_predict_schema = {
-    "type": "array",
-    "items": {"type": "number"},
 }
 
 _input_score_schema = {
@@ -285,12 +273,16 @@ _input_score_schema = {
                     "type": "array",
                     "items": {"type": "number"},
                 },
-                {"enum": [None]},
+                {
+                    "enum": [None],
+                    "description": "Samples are equally weighted.",
+                },
             ],
-            "description": "Sample weights. If None, then samples are equally weighted.",
+            "description": "Sample weights. Supported only if the base estimator supports sample weighting.",
         },
     },
 }
+
 _output_score_schema = {
     "description": "R^2 of 'self.predict' wrt 'y'",
     "type": "number",
@@ -305,12 +297,12 @@ _combined_schemas = {
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.sklearn.bagging_classifier.html",
     "import_from": "sklearn.ensemble",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
+        "input_predict": schema_X_numbers,
+        "output_predict": schema_1D_numbers,
         "input_score": _input_score_schema,
         "output_score": _output_score_schema,
     },

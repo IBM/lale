@@ -18,6 +18,7 @@ from sklearn.ensemble import BaggingClassifier as SKLModel
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import schema_1D_cats, schema_2D_numbers, schema_X_numbers
 from .function_transformer import FunctionTransformer
 
 
@@ -114,7 +115,10 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "base_estimator": {
-                    "anyOf": [{"laleType": "operator"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"laleType": "operator"},
+                        {"enum": [None], "description": "DecisionTreeClassifier"},
+                    ],
                     "default": None,
                     "description": "The base estimator to fit on random subsets of the dataset.",
                 },
@@ -174,12 +178,12 @@ _hyperparams_schema = {
                 "bootstrap_features": {
                     "type": "boolean",
                     "default": False,
-                    "description": "Whether features are drawn with replacement.",
+                    "description": "Whether features are drawn with (True) or wrhout (False) replacement.",
                 },
                 "oob_score": {
                     "type": "boolean",
                     "default": False,
-                    "description": "Whether to use out-of-bag samples to estimate",
+                    "description": "Whether to use out-of-bag samples to estimate the generalization error.",
                 },
                 "warm_start": {
                     "type": "boolean",
@@ -254,61 +258,6 @@ _input_fit_schema = {
     },
 }
 
-_input_predict_schema = {
-    "type": "object",
-    "required": ["X"],
-    "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-        },
-    },
-}
-
-_output_predict_schema = {
-    "type": "array",
-    "items": {"type": "number"},
-}
-
-_input_predict_proba_schema = {
-    "type": "object",
-    "required": ["X"],
-    "properties": {
-        "X": {
-            "type": "array",
-            "items": {
-                "type": "array",
-                "items": {"type": "number"},
-            },
-            "description": "The training input samples. Sparse matrices are accepted only if",
-        },
-    },
-}
-
-_output_predict_proba_schema = {
-    "type": "array",
-    "items": {
-        "type": "array",
-        "items": {"type": "number"},
-    },
-}
-
-_input_decision_function_schema = {
-    "type": "object",
-    "required": ["X"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
-            "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
-        }
-    },
-}
-
 _output_decision_function_schema = {
     "anyOf": [
         {
@@ -354,6 +303,7 @@ _input_score_schema = {
         },
     },
 }
+
 _output_score_schema = {
     "description": "Mean accuracy of 'self.predict' wrt 'y'",
     "type": "number",
@@ -372,11 +322,11 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
-        "input_predict_proba": _input_predict_proba_schema,
-        "output_predict_proba": _output_predict_proba_schema,
-        "input_decision_function": _input_decision_function_schema,
+        "input_predict": schema_X_numbers,
+        "output_predict": schema_1D_cats,
+        "input_predict_proba": schema_X_numbers,
+        "output_predict_proba": schema_2D_numbers,
+        "input_decision_function": schema_X_numbers,
         "output_decision_function": _output_decision_function_schema,
         "input_score": _input_score_schema,
         "output_score": _output_score_schema,
