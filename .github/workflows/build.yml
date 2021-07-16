@@ -32,8 +32,8 @@ jobs:
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
     - name: Install deps for test_autoai_ts_libs
+      if: ${{ matrix.python-version == 3.7 }}
       run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
-      python-version: [3.7, 3.8]
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
