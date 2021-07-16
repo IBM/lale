@@ -920,7 +920,7 @@ def fetch_speeddating_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_boston_housing_df(preprocess=False):
+def _fetch_boston_housing_df(preprocess=False):
     """
     Fetch the `Boston housing`_ dataset from sklearn and add `fairness info`.
 
@@ -930,7 +930,10 @@ def fetch_boston_housing_df(preprocess=False):
     1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town, and the disparate
     impact is 0.5. The data includes only numeric columns, with no missing values.
 
+    Hiding dataset from public consumption based on issues described at length `here`_
+
     .. _`Boston housing`: https://scikit-learn.org/0.20/datasets/index.html#boston-house-prices-dataset
+    .. _`here`: https://medium.com/@docintangible/racist-data-destruction-113e3eff54a8
 
     Parameters
     ----------

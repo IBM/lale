@@ -154,12 +154,12 @@ class TestAIF360Datasets(unittest.TestCase):
         self._attempt_dataset(X, y, fairness_info, 8_378, 70, {0, 1}, 0.853)
 
     def test_dataset_boston_housing_pd_cat(self):
-        X, y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(preprocess=False)
+        X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=False)
         # TODO: consider better way of handling "set_y" parameter for regression problems
         self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
 
     def test_dataset_boston_housing_pd_num(self):
-        X, y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(preprocess=True)
+        X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=True)
         # TODO: consider better way of handling "set_y" parameter for regression problems
         self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
 
@@ -321,7 +321,7 @@ class TestAIF360Num(unittest.TestCase):
     def _boston_pd_num(cls):
         # TODO: Consider investigating test failure when preprocess is set to True
         # (eo_diff is not less than 0 in this case; perhaps regression model learns differently?)
-        orig_X, orig_y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(
+        orig_X, orig_y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(
             preprocess=False
         )
         train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(

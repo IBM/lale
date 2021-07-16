@@ -76,7 +76,6 @@ Datasets:
 ================
 * `fetch_adult_df`_
 * `fetch_bank_df`_
-* `fetch_boston_housing_df`_
 * `fetch_compas_df`_
 * `fetch_compas_violent_df`_
 * `fetch_creditg_df`_
@@ -164,7 +163,6 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_creditg_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_creditg_df
 .. _`fetch_ricci_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_ricci_df
 .. _`fetch_speeddating_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_speeddating_df
-.. _`fetch_boston_housing_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_boston_housing_df
 .. _`fetch_nursery_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_nursery_df
 .. _`fetch_titanic_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_titanic_df
 .. _`fetch_meps_panel19_fy2015_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_meps_panel19_fy2015_df
@@ -180,9 +178,9 @@ zero or one to simplify the task for the mitigator.
 from .adversarial_debiasing import AdversarialDebiasing
 from .calibrated_eq_odds_postprocessing import CalibratedEqOddsPostprocessing
 from .datasets import (
+    _fetch_boston_housing_df,
     fetch_adult_df,
     fetch_bank_df,
-    fetch_boston_housing_df,
     fetch_compas_df,
     fetch_compas_violent_df,
     fetch_creditg_df,
