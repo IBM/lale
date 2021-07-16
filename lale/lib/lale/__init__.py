@@ -89,6 +89,7 @@ from .batching import Batching
 # estimators and transformers
 from .both import Both
 from .concat_features import ConcatFeatures
+from .filter import Filter
 
 # functions
 from .functions import categorical, date_time
