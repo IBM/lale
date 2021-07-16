@@ -31,8 +31,9 @@ jobs:
       run: pip install -U numpy==1.19.2
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
-    # - name: Install deps for test_autoai_ts_libs
-    #   run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
+    - name: Install deps for test_autoai_ts_libs
+      if: ${{ matrix.python-version == 3.7 }}
+      run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -103,9 +104,9 @@ jobs:
         - test-case: test/test_lale_lib_versions.py
           python-version: 3.7
           setup-target: '.[full,test]'
-        # - test-case: test/test_aif360.py
-        #   python-version: 3.7
-        #   setup-target: '.[full,test]'
+        - test-case: test/test_aif360.py
+          python-version: 3.7
+          setup-target: '.[full,test]'
 
     steps:
     - uses: actions/checkout@v2

@@ -97,19 +97,19 @@ class TestAIF360Datasets(unittest.TestCase):
 
     def test_dataset_compas_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=False)
-        self._attempt_dataset(X, y, fairness_info, 6_172, 51, {0, 1}, 0.589)
+        self._attempt_dataset(X, y, fairness_info, 6_172, 51, {0, 1}, 0.747)
 
     def test_dataset_compas_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 6_167, 401, {0, 1}, 0.591)
+        self._attempt_dataset(X, y, fairness_info, 5_278, 10, {0, 1}, 0.687)
 
     def test_dataset_compas_violent_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_violent_df(preprocess=False)
-        self._attempt_dataset(X, y, fairness_info, 4_020, 51, {0, 1}, 0.772)
+        self._attempt_dataset(X, y, fairness_info, 4_020, 51, {0, 1}, 0.852)
 
     def test_dataset_compas_violent_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_compas_violent_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 4_015, 327, {0, 1}, 0.772)
+        self._attempt_dataset(X, y, fairness_info, 3_377, 10, {0, 1}, 0.822)
 
     def test_dataset_creditg_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
@@ -151,15 +151,15 @@ class TestAIF360Datasets(unittest.TestCase):
 
     def test_dataset_speeddating_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_speeddating_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 8_378, 503, {0, 1}, 0.853)
+        self._attempt_dataset(X, y, fairness_info, 8_378, 70, {0, 1}, 0.853)
 
     def test_dataset_boston_housing_pd_cat(self):
-        X, y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(preprocess=False)
+        X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=False)
         # TODO: consider better way of handling "set_y" parameter for regression problems
         self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
 
     def test_dataset_boston_housing_pd_num(self):
-        X, y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(preprocess=True)
+        X, y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(preprocess=True)
         # TODO: consider better way of handling "set_y" parameter for regression problems
         self._attempt_dataset(X, y, fairness_info, 506, 13, set(y), 0.814)
 
@@ -169,15 +169,15 @@ class TestAIF360Datasets(unittest.TestCase):
 
     def test_dataset_titanic_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 1_309, 2_828, {0, 1}, 0.254)
+        self._attempt_dataset(X, y, fairness_info, 1_309, 37, {0, 1}, 0.254)
 
     def test_dataset_tae_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=False)
-        self._attempt_dataset(X, y, fairness_info, 151, 5, {1, 2, 3}, 0.347)
+        self._attempt_dataset(X, y, fairness_info, 151, 5, {1, 2, 3}, 0.449)
 
     def test_dataset_tae_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 151, 5, {0, 1}, 0.347)
+        self._attempt_dataset(X, y, fairness_info, 151, 6, {0, 1}, 0.449)
 
     @classmethod
     def _try_download_csv(cls, filename):
@@ -321,7 +321,7 @@ class TestAIF360Num(unittest.TestCase):
     def _boston_pd_num(cls):
         # TODO: Consider investigating test failure when preprocess is set to True
         # (eo_diff is not less than 0 in this case; perhaps regression model learns differently?)
-        orig_X, orig_y, fairness_info = lale.lib.aif360.fetch_boston_housing_df(
+        orig_X, orig_y, fairness_info = lale.lib.aif360._fetch_boston_housing_df(
             preprocess=False
         )
         train_X, test_X, train_y, test_y = sklearn.model_selection.train_test_split(

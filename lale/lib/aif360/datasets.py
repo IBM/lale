@@ -21,6 +21,9 @@ import aif360
 import aif360.datasets
 import numpy as np
 import pandas as pd
+from aif360.algorithms.preprocessing.optim_preproc_helpers.data_preproc_functions import (
+    load_preproc_data_compas,
+)
 
 import lale.datasets
 import lale.datasets.openml
@@ -215,9 +218,9 @@ def fetch_tae_df(preprocess=False):
     at the University of Wisconsin--Madison.
     The prediction task is a classification on the type
     of rating a TA receives (1=Low, 2=Medium, 3=High). Without preprocessing,
-    the dataset has 151 rows and 5 columns. There are two protected
-    attributes, "summer_or_regular_semester" and "whether_of_not_the_ta_is_a_native_english_speaker" [sic],
-    and the disparate impact of 0.5. The data
+    the dataset has 151 rows and 5 columns. There is one protected
+    attributes, "whether_of_not_the_ta_is_a_native_english_speaker" [sic],
+    and the disparate impact of 0.45. The data
     includes both categorical and numeric columns, with no missing
     values.
 
@@ -228,8 +231,8 @@ def fetch_tae_df(preprocess=False):
     preprocess : boolean, optional, default False
 
       If True,
-      encode protected attributes in X as 0 or 1 to indicate privileged groups
-      ("native_english_speaker" and "summer" respectively);
+      encode protected attributes in X as 0 or 1 to indicate privileged group
+      ("native_english_speaker");
       encode labels in y as 0 or 1 to indicate favorable outcomes;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protecteded attributes.
@@ -262,27 +265,19 @@ def fetch_tae_df(preprocess=False):
             orig_X["whether_of_not_the_ta_is_a_native_english_speaker_1"] == 1,
             dtype=np.float64,
         )
-        summer = pd.Series(
-            orig_X["summer_or_regular_semester_1"] == 1, dtype=np.float64
-        )
         dropped_X = orig_X.drop(
             labels=[
                 "whether_of_not_the_ta_is_a_native_english_speaker_1",
                 "whether_of_not_the_ta_is_a_native_english_speaker_2",
-                "summer_or_regular_semester_1",
-                "summer_or_regular_semester_2",
             ],
             axis=1,
         )
-        encoded_X = dropped_X.assign(
-            native_english_speaker=native_english_speaker, summer=summer
-        )
+        encoded_X = dropped_X.assign(native_english_speaker=native_english_speaker)
         encoded_y = pd.Series(orig_y == 2, dtype=np.float64)
         fairness_info = {
             "favorable_labels": [1],
             "protected_attributes": [
                 {"feature": "native_english_speaker", "reference_group": [1]},
-                {"feature": "summer", "reference_group": [1]},
             ],
         }
         return encoded_X, encoded_y, fairness_info
@@ -294,7 +289,6 @@ def fetch_tae_df(preprocess=False):
                     "feature": "whether_of_not_the_ta_is_a_native_english_speaker",
                     "reference_group": [1],
                 },
-                {"feature": "summer_or_regular_semester", "reference_group": [1]},
             ],
         }
         return orig_X, orig_y, fairness_info
@@ -334,18 +328,14 @@ def _get_pandas_and_fairness_info_from_compas_dataset(dataset):
     X, y = lale.lib.aif360.util.dataset_to_pandas(dataset)
     assert X is not None
 
-    at_least_25 = pd.Series(X["age"] >= 25, dtype=np.float64)
-    dropped_X = X.drop(columns=["age"])
-    encoded_X = dropped_X.assign(age=at_least_25)
     fairness_info = {
         "favorable_labels": [0],
         "protected_attributes": [
             {"feature": "sex", "reference_group": [1]},
             {"feature": "race", "reference_group": [1]},
-            {"feature": "age", "reference_group": [1]},
         ],
     }
-    return encoded_X, y, fairness_info
+    return X, y, fairness_info
 
 
 def _get_dataframe_from_compas_csv(violent_recidivism=False):
@@ -386,6 +376,122 @@ def _perform_default_preprocessing(df):
     ]
 
 
+def _perform_custom_preprocessing(df):
+    """The custom pre-processing function is adapted from
+    https://github.com/fair-preprocessing/nips2017/blob/master/compas/code/Generate_Compas_Data.ipynb
+    """
+
+    df = df[
+        [
+            "age",
+            "c_charge_degree",
+            "race",
+            "age_cat",
+            "score_text",
+            "sex",
+            "priors_count",
+            "days_b_screening_arrest",
+            "decile_score",
+            "is_recid",
+            "two_year_recid",
+            "c_jail_in",
+            "c_jail_out",
+        ]
+    ]
+
+    # Indices of data samples to keep
+    ix = df["days_b_screening_arrest"] <= 30
+    ix = (df["days_b_screening_arrest"] >= -30) & ix
+    ix = (df["is_recid"] != -1) & ix
+    ix = (df["c_charge_degree"] != "O") & ix
+    ix = (df["score_text"] != "N/A") & ix
+    df = df.loc[ix, :]
+    df["length_of_stay"] = (
+        pd.to_datetime(df["c_jail_out"]) - pd.to_datetime(df["c_jail_in"])
+    ).apply(lambda x: x.days)
+
+    # Restrict races to African-American and Caucasian
+    dfcut = df.loc[
+        ~df["race"].isin(["Native American", "Hispanic", "Asian", "Other"]), :
+    ]
+
+    # Restrict the features to use
+    dfcutQ = dfcut[
+        [
+            "sex",
+            "race",
+            "age_cat",
+            "c_charge_degree",
+            "score_text",
+            "priors_count",
+            "is_recid",
+            "two_year_recid",
+            "length_of_stay",
+        ]
+    ].copy()
+
+    # Quantize priors count between 0, 1-3, and >3
+    def quantizePrior(x):
+        if x <= 0:
+            return "0"
+        elif 1 <= x <= 3:
+            return "1 to 3"
+        else:
+            return "More than 3"
+
+    # Quantize length of stay
+    def quantizeLOS(x):
+        if x <= 7:
+            return "<week"
+        if 8 < x <= 93:
+            return "<3months"
+        else:
+            return ">3 months"
+
+    # Quantize length of stay
+    def adjustAge(x):
+        if x == "25 - 45":
+            return "25 to 45"
+        else:
+            return x
+
+    # Quantize score_text to MediumHigh
+    def quantizeScore(x):
+        if (x == "High") | (x == "Medium"):
+            return "MediumHigh"
+        else:
+            return x
+
+    def group_race(x):
+        if x == "Caucasian":
+            return 1.0
+        else:
+            return 0.0
+
+    dfcutQ["priors_count"] = dfcutQ["priors_count"].apply(lambda x: quantizePrior(x))
+    dfcutQ["length_of_stay"] = dfcutQ["length_of_stay"].apply(lambda x: quantizeLOS(x))
+    dfcutQ["score_text"] = dfcutQ["score_text"].apply(lambda x: quantizeScore(x))
+    dfcutQ["age_cat"] = dfcutQ["age_cat"].apply(lambda x: adjustAge(x))
+
+    # Recode sex and race
+    dfcutQ["sex"] = dfcutQ["sex"].replace({"Female": 1.0, "Male": 0.0})
+    dfcutQ["race"] = dfcutQ["race"].apply(lambda x: group_race(x))
+
+    features = [
+        "two_year_recid",
+        "sex",
+        "race",
+        "age_cat",
+        "priors_count",
+        "c_charge_degree",
+    ]
+
+    # Pass vallue to df
+    df = dfcutQ[features]
+
+    return df
+
+
 def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
     df = _get_dataframe_from_compas_csv(violent_recidivism=violent_recidivism)
     # preprocessing steps performed by ProPublica team, even in the preprocess=False case
@@ -401,7 +507,6 @@ def _get_pandas_and_fairness_info_from_compas_csv(violent_recidivism=False):
         "protected_attributes": [
             {"feature": "sex", "reference_group": ["Female"]},
             {"feature": "race", "reference_group": ["Caucasian"]},
-            {"feature": "age", "reference_group": [[25, 1000]]},
         ],
     }
     return X, y, fairness_info
@@ -415,8 +520,8 @@ def fetch_compas_df(preprocess=False):
     classification for recidivism, indicating whether they were
     re-arrested within two years after the first arrest. Without
     preprocessing, the dataset has 6,172 rows and 51 columns.  There
-    are three protected attributes, sex, race, and age, and the disparate
-    impact is 0.59.  The data includes numeric and categorical columns, with some
+    are two protected attributes, sex and race, and the disparate
+    impact is 0.75.  The data includes numeric and categorical columns, with some
     missing values.
 
     .. _`compas-two-years`: https://github.com/propublica/compas-analysis
@@ -427,8 +532,7 @@ def fetch_compas_df(preprocess=False):
 
       If True,
       encode protected attributes in X as 0 or 1 to indicate privileged groups
-      (1 if Female, Caucasian, or at least 25 for the corresponding sex, race, and
-      age columns respectively);
+      (1 if Female or Caucasian for the corresponding sex and race columns respectively);
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protected attributes.
 
@@ -459,7 +563,7 @@ def fetch_compas_df(preprocess=False):
         # See https://www.propublica.org/article/how-we-analyzed-the-compas-recidivism-algorithm
         # and https://github.com/propublica/compas-analysis/blob/master/Compas%20Analysis.ipynb
         # (hunch is that COMPAS was trained on more biased data that is not reproduced in ProPublica's dataset)
-        dataset = aif360.datasets.CompasDataset()
+        dataset = load_preproc_data_compas()
         # above preprocessing results in a WARNING of "Missing Data: 5 rows removed from CompasDataset."
         # unclear how to resolve at the moment
         return _get_pandas_and_fairness_info_from_compas_dataset(dataset)
@@ -478,7 +582,7 @@ def fetch_compas_violent_df(preprocess=False):
     re-arrested within two years after the first arrest. Without
     preprocessing, the dataset has 4,020 rows and 51 columns.  There
     are three protected attributes, sex, race, and age, and the disparate
-    impact is 0.77.  The data includes numeric and categorical columns, with some
+    impact is 0.85.  The data includes numeric and categorical columns, with some
     missing values.
 
     .. _`compas-two-years-violent`: https://github.com/propublica/compas-analysis
@@ -537,25 +641,20 @@ def fetch_compas_violent_df(preprocess=False):
             label_name="two_year_recid",
             favorable_classes=[0],
             protected_attribute_names=["sex", "race"],
-            privileged_classes=[["Female"], ["Caucasian"]],
+            privileged_classes=[[1.0], [1.0]],
+            categorical_features=["age_cat", "priors_count", "c_charge_degree"],
             instance_weights_name=None,
-            categorical_features=["age_cat", "c_charge_degree", "c_charge_desc"],
             features_to_keep=[
                 "sex",
-                "age",
                 "age_cat",
                 "race",
-                "juv_fel_count",
-                "juv_misd_count",
-                "juv_other_count",
                 "priors_count",
                 "c_charge_degree",
-                "c_charge_desc",
                 "two_year_recid",
             ],
             features_to_drop=[],
             na_values=[],
-            custom_preprocessing=_perform_default_preprocessing,
+            custom_preprocessing=_perform_custom_preprocessing,
             metadata=default_mappings,
         )
         # above preprocessing results in a WARNING of "Missing Data: 5 rows removed from StandardDataset."
@@ -769,7 +868,36 @@ def fetch_speeddating_df(preprocess=False):
             orig_X["importance_same_race"] >= 9, dtype=np.float64
         )
         samerace = pd.Series(orig_X["samerace_1"] == 1, dtype=np.float64)
-        dropped_X = orig_X.drop(labels=["samerace_0", "samerace_1"], axis=1)
+        # drop samerace-related columns
+        columns_to_drop = ["samerace_0", "samerace_1"]
+
+        # drop preprocessed columns
+
+        def preprocessed_column_filter(x: str):
+            return x.startswith("d_")
+
+        columns_to_drop.extend(list(filter(preprocessed_column_filter, orig_X.columns)))
+
+        # drop has-null columns
+        columns_to_drop.extend(["has_null_0", "has_null_1"])
+
+        # drop decision columns
+
+        def decision_column_filter(x: str):
+            return x.startswith("decision")
+
+        columns_to_drop.extend(list(filter(decision_column_filter, orig_X.columns)))
+
+        # drop field columns
+
+        def field_column_filter(x: str):
+            return x.startswith("field")
+
+        columns_to_drop.extend(list(filter(field_column_filter, orig_X.columns)))
+
+        # drop wave column
+        columns_to_drop.append("wave")
+        dropped_X = orig_X.drop(labels=columns_to_drop, axis=1)
         encoded_X = dropped_X.assign(
             samerace=samerace, importance_same_race=importance_same_race
         )
@@ -792,7 +920,7 @@ def fetch_speeddating_df(preprocess=False):
         return orig_X, orig_y, fairness_info
 
 
-def fetch_boston_housing_df(preprocess=False):
+def _fetch_boston_housing_df(preprocess=False):
     """
     Fetch the `Boston housing`_ dataset from sklearn and add `fairness info`.
 
@@ -802,7 +930,10 @@ def fetch_boston_housing_df(preprocess=False):
     1000(Bk - 0.63)^2 where Bk is the proportion of Blacks by town, and the disparate
     impact is 0.5. The data includes only numeric columns, with no missing values.
 
+    Hiding dataset from public consumption based on issues described at length `here`_
+
     .. _`Boston housing`: https://scikit-learn.org/0.20/datasets/index.html#boston-house-prices-dataset
+    .. _`here`: https://medium.com/@docintangible/racist-data-destruction-113e3eff54a8
 
     Parameters
     ----------
@@ -951,7 +1082,7 @@ def fetch_titanic_df(preprocess=False):
     preprocess : boolean, optional, default False
 
       If True,
-      encode protected attributes in X as 0 or 1 to indicate privileged groups
+      encode protected attributes in X as 0 or 1 to indicate privileged groups;
       and apply one-hot encoding to any remaining features in X that
       are categorical and not protected attributes.
 
@@ -980,7 +1111,22 @@ def fetch_titanic_df(preprocess=False):
     if preprocess:
         sex = pd.Series(orig_X["sex_female"] == 1, dtype=np.float64)
         age = pd.Series(orig_X["age"] <= 18, dtype=np.float64)
-        dropped_X = orig_X.drop(labels=["sex_female", "sex_male"], axis=1)
+        columns_to_drop = ["sex_female", "sex_male"]
+
+        # drop more columns that turn into gigantic one-hot encodings otherwise, like name and cabin
+
+        def extra_categorical_columns_filter(c: str):
+            return (
+                c.startswith("name")
+                or c.startswith("ticket")
+                or c.startswith("cabin")
+                or c.startswith("home.dest")
+            )
+
+        columns_to_drop.extend(
+            list(filter(extra_categorical_columns_filter, orig_X.columns))
+        )
+        dropped_X = orig_X.drop(labels=columns_to_drop, axis=1)
         encoded_X = dropped_X.assign(sex=sex, age=age)
         fairness_info = {
             "favorable_labels": [1],
