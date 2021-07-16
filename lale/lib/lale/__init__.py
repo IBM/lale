@@ -24,6 +24,8 @@ Estimators:
 * lale.lib.lale. `GridSearchCV`_
 * lale.lib.lale. `HalvingGridSearchCV`_
 * lale.lib.lale. `Hyperopt`_
+* lale.lib.lale. `OptimizeLast_`
+* lale.lib.lale. `OptimizeSuffix_`
 * lale.lib.lale. `TopKVotingClassifier`_
 * lale.lib.lale. `SMAC`_
 
@@ -51,6 +53,9 @@ Estimators and transformers:
 .. _`GridSearchCV`: lale.lib.lale.grid_search_cv.html
 .. _`HalvingGridSearchCV`: lale.lib.lale.halving_grid_search_cv.html
 .. _`Hyperopt`: lale.lib.lale.hyperopt.html
+.. _`OptimizeLast_`: lale.lib.lale.optimize_last
+.. _`OptimizeSuffix_`: lale.lib.lale.optimize_suffix
+
 .. _`TopKVotingClassifier`: lale.lib.lale.topk_voting_classifier.html
 .. _`SMAC`: lale.lib.lale.smac.html
 .. _`Batching`: lale.lib.lale.batching.html
@@ -102,6 +107,8 @@ from .join import Join
 from .map import Map
 from .no_op import NoOp
 from .observing import Observing
+from .optimize_last import OptimizeLast
+from .optimize_suffix import OptimizeSuffix
 from .project import Project
 from .relational import Relational
 from .sample_based_voting import SampleBasedVoting
