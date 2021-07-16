@@ -45,6 +45,7 @@ Classifiers:
 Regressors:
 
 * lale.lib.sklearn. `AdaBoostRegressor`_
+* lale.lib.sklearn. `BaggingRegressor`_
 * lale.lib.sklearn. `DecisionTreeRegressor`_
 * lale.lib.sklearn. `DummyRegressor`_
 * lale.lib.sklearn. `ExtraTreesRegressor`_
@@ -74,7 +75,6 @@ Transformers:
 * lale.lib.sklearn. `OneHotEncoder`_
 * lale.lib.sklearn. `OrdinalEncoder`_
 * lale.lib.sklearn. `PCA`_
-* lale.lib.sklearn. `Pipeline`_
 * lale.lib.sklearn. `PolynomialFeatures`_
 * lale.lib.sklearn. `QuadraticDiscriminantAnalysis`_
 * lale.lib.sklearn. `QuantileTransformer`_
@@ -85,6 +85,10 @@ Transformers:
 * lale.lib.sklearn. `StandardScaler`_
 * lale.lib.sklearn. `TfidfVectorizer`_
 * lale.lib.sklearn. `VarianceThreshold`_
+
+Estimators and transformers:
+
+* lale.lib.sklearn. `Pipeline`_
 
 Clustering:
 
