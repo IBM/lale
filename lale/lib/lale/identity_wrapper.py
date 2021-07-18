@@ -37,14 +37,14 @@ class _IdentityWrapperImpl:
     def input_schema_fit(self):
         return self.getOp().input_schema_fit()
 
-    def predict(self, X):
-        return self.getOp().predict(X)
+    def predict(self, X, **predict_params):
+        return self.getOp().predict(X, **predict_params)
 
     def predict_proba(self, X):
         return self.getOp().predict_proba(self, X)
 
-    def fit(self, X, y=None):
-        return self.getOp().fit(X, y=y)
+    def fit(self, X, y=None, **fit_params):
+        return self.getOp().fit(X, y=y, **fit_params)
 
     # def get_feature_names(self, input_features=None):
     #     if input_features is not None:

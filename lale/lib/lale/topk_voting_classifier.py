@@ -48,11 +48,11 @@ class _TopKVotingClassifierImpl:
             self.args_to_optimizer = args_to_optimizer
         self.k = k
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, **fit_params):
         optimizer_instance = self.optimizer(
             estimator=self.estimator, **self.args_to_optimizer
         )
-        trained_optimizer1 = optimizer_instance.fit(X_train, y_train)
+        trained_optimizer1 = optimizer_instance.fit(X_train, y_train, **fit_params)
         results = trained_optimizer1.summary()
         results = results[
             results["status"] == STATUS_OK
@@ -75,11 +75,11 @@ class _TopKVotingClassifierImpl:
             "max_evals"
         ] = 1  # Currently, voting classifier has no useful hyperparameters to tune.
         optimizer_instance2 = self.optimizer(estimator=voting, **args_to_optimizer)
-        trained_optimizer2 = optimizer_instance2.fit(X_train, y_train)
+        trained_optimizer2 = optimizer_instance2.fit(X_train, y_train, **fit_params)
         self._best_estimator = trained_optimizer2.get_pipeline()
         return self
 
-    def predict(self, X_eval):
+    def predict(self, X_eval, **predict_params):
         import warnings
 
         warnings.filterwarnings("ignore")
@@ -90,7 +90,7 @@ class _TopKVotingClassifierImpl:
             )
         trained = self._best_estimator
         try:
-            predictions = trained.predict(X_eval)
+            predictions = trained.predict(X_eval, **predict_params)
         except ValueError as e:
             logger.warning(
                 "ValueError in predicting using Hyperopt:{}, the error is:{}".format(

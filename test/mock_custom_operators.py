@@ -210,3 +210,81 @@ _combined_schemas = {
 }
 
 MyLR = lale.operators.make_operator(_MyLRImpl, _combined_schemas)
+
+
+class _CustomParamsCheckerOpImpl:
+    def __init__(self, fit_params=None, predict_params=None):
+        self._fit_params = fit_params
+        self._predict_params = predict_params
+
+    def fit(self, X, y=None, **kwargs):
+        result = _CustomParamsCheckerOpImpl(kwargs, self._predict_params)
+        return result
+
+    def predict(self, X, **kwargs):
+        self._predict_params = kwargs
+
+
+_input_fit_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {"type": "array", "items": {"type": "array", "items": {"type": "number"}}},
+        "y": {"items": {"type": "array", "items": {"type": "number"}}},
+    },
+}
+
+_input_predict_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Predict using the linear model",
+    "type": "object",
+    "required": ["X"],
+    "properties": {
+        "X": {
+            "type": "number",
+        }
+    },
+}
+_output_predict_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Returns predicted values.",
+    "type": "array",
+    "items": {"type": "number"},
+}
+
+# ,
+#  'type': 'array',
+#  'items': {'type': 'number'}
+
+_hyperparam_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "allOf": [
+        {
+            "description": "This first sub-object lists all constructor arguments with their "
+            "types, one at a time, omitting cross-argument constraints.",
+            "type": "object",
+            "additionalProperties": False,
+            "relevantToOptimizer": [],
+            "properties": {},
+        }
+    ],
+}
+
+_combined_schemas = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters.",
+    "type": "object",
+    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "properties": {
+        "hyperparams": _hyperparam_schema,
+        "input_fit": _input_fit_schema,
+        "input_predict": _input_predict_schema,
+        "output_predict": _output_predict_schema,
+    },
+}
+
+CustomParamsCheckerOp = lale.operators.make_operator(
+    _CustomParamsCheckerOpImpl, _combined_schemas
+)
