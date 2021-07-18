@@ -47,17 +47,17 @@ class _PipelineImpl:
         self._pipeline = lale.operators.make_pipeline(*new_steps)
         self._final_estimator = self._pipeline.get_last()
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **fit_params):
         if y is None:
-            self._pipeline = self._pipeline.fit(X)
+            self._pipeline = self._pipeline.fit(X, **fit_params)
         else:
-            self._pipeline = self._pipeline.fit(X, y)
+            self._pipeline = self._pipeline.fit(X, y, **fit_params)
         self._final_estimator = self._pipeline.get_last()
         return self
 
     @if_delegate_has_method(delegate="_final_estimator")
-    def predict(self, X):
-        result = self._pipeline.predict(X)
+    def predict(self, X, **predict_params):
+        result = self._pipeline.predict(X, **predict_params)
         return result
 
     @if_delegate_has_method(delegate="_final_estimator")

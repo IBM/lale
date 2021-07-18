@@ -873,7 +873,7 @@ class TrainedOperator(TrainableOperator):
         pass
 
     @abstractmethod
-    def predict(self, X) -> Any:
+    def predict(self, X, **predict_params) -> Any:
         """Make predictions.
 
         Parameters
@@ -2466,7 +2466,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             raise ValueError("Must call `fit` before `transform`.")
 
     @if_delegate_has_method(delegate="_impl")
-    def predict(self, X=None) -> Any:
+    def predict(self, X=None, **predict_params) -> Any:
         """
         .. deprecated:: 0.0.0
            The `predict` method is deprecated on a trainable
@@ -2715,14 +2715,15 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         # logger.info("%s exit  transform %s", time.asctime(), self.name())
         return result
 
-    def _predict(self, X):
+    def _predict(self, X, **predict_params):
         X = self._validate_input_schema("X", X, "predict")
-        raw_result = self._impl_instance().predict(X)
+
+        raw_result = self._impl_instance().predict(X, **predict_params)
         result = self._validate_output_schema(raw_result, "predict")
         return result
 
     @if_delegate_has_method(delegate="_impl")
-    def predict(self, X=None) -> Any:
+    def predict(self, X=None, **predict_params) -> Any:
         """Make predictions.
 
         Parameters
@@ -2736,7 +2737,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             Predictions; see output_predict schema of the operator.
         """
         # logger.info("%s enter predict %s", time.asctime(), self.name())
-        result = self._predict(X)
+        result = self._predict(X, **predict_params)
         # logger.info("%s exit  predict %s", time.asctime(), self.name())
         if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
             return lale.datasets.data_schemas.strip_schema(
@@ -3788,7 +3789,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         except AttributeError:
             raise ValueError("Must call `fit` before `transform`.")
 
-    def predict(self, X) -> Any:
+    def predict(self, X, **predict_params) -> Any:
         """
         .. deprecated:: 0.0.0
            The `predict` method is deprecated on a trainable
@@ -3799,7 +3800,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         """
         warnings.warn(_mutation_warning("predict"), DeprecationWarning)
         try:
-            return self._trained.predict(X)
+            return self._trained.predict(X, **predict_params)
         except AttributeError:
             raise ValueError("Must call `fit` before `predict`.")
 
@@ -4122,11 +4123,13 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         assert isinstance(pipe, TrainedPipeline)
         return pipe
 
-    def _predict(self, X, y=None):
-        return self._predict_based_on_type("predict", "_predict", X, y)
+    def _predict(self, X, y=None, **predict_params):
+        return self._predict_based_on_type(
+            "predict", "_predict", X, y, **predict_params
+        )
 
-    def predict(self, X) -> Any:
-        result = self._predict(X)
+    def predict(self, X, **predict_params) -> Any:
+        result = self._predict(X, **predict_params)
         if isinstance(result, lale.datasets.data_schemas.NDArrayWithSchema):
             return lale.datasets.data_schemas.strip_schema(
                 result
@@ -4141,7 +4144,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         return self._predict_based_on_type("transform", "transform", X, y)
 
     def _predict_based_on_type(
-        self, impl_method_name, operator_method_name, X=None, y=None
+        self, impl_method_name, operator_method_name, X=None, y=None, **kwargs
     ):
         outputs = {}
         meta_outputs = {}
@@ -4178,9 +4181,9 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
                     method_to_call_on_operator = getattr(operator, operator_method_name)
                     if operator_method_name == "score":
-                        output = method_to_call_on_operator(X=inputs, y=y)
+                        output = method_to_call_on_operator(X=inputs, y=y, **kwargs)
                     else:
-                        output = method_to_call_on_operator(X=inputs)
+                        output = method_to_call_on_operator(X=inputs, **kwargs)
                 else:
                     raise AttributeError(
                         "The sink node of the pipeline does not support",

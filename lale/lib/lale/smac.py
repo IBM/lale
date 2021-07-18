@@ -87,7 +87,7 @@ or with
         self.lale_num_grids = lale_num_grids
         self.trials = None
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, **fit_params):
         data_schema = lale.helpers.fold_schema(
             X_train, y_train, self.cv, self.estimator.is_classifier()
         )
@@ -126,7 +126,7 @@ or with
                         y_validation,
                     ) = train_test_split(X_train, y_train, test_size=0.20)
                     start = time.time()
-                    trained = trainable.fit(X_train_part, y_train_part)
+                    trained = trainable.fit(X_train_part, y_train_part, **fit_params)
                     scorer = check_scoring(trainable, scoring=self.scoring)
                     cv_score = scorer(trained, X_validation, y_validation)
                     execution_time = time.time() - start
@@ -171,7 +171,7 @@ or with
             self.trials = smac.get_runhistory()
             trainable = lale_trainable_op_from_config(self.estimator, incumbent)
             # get the trainable corresponding to the best params and train it on the entire training dataset.
-            trained = trainable.fit(X_train, y_train)
+            trained = trainable.fit(X_train, y_train, **fit_params)
             self._best_estimator = trained
         except BudgetExhaustedException:
             logger.warning(
@@ -183,7 +183,7 @@ or with
 
         return self
 
-    def predict(self, X_eval):
+    def predict(self, X_eval, **predict_params):
         import warnings
 
         warnings.filterwarnings("ignore")
@@ -195,7 +195,7 @@ or with
             return None
 
         try:
-            predictions = trained.predict(X_eval)
+            predictions = trained.predict(X_eval, **predict_params)
         except ValueError as e:
             logger.warning(
                 "ValueError in predicting using SMACCV:{}, the error is:{}".format(

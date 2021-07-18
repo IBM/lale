@@ -76,7 +76,7 @@ class _GridSearchCVImpl:
             "max_opt_time": max_opt_time,
         }
 
-    def fit(self, X, y):
+    def fit(self, X, y, **fit_params):
         if self._hyperparams["estimator"] is None:
             op = lale.lib.sklearn.LogisticRegression
         else:
@@ -154,7 +154,7 @@ class _GridSearchCVImpl:
                             or set max_opt_time to None."""
                         )
                 else:
-                    self.grid.fit(X, y)
+                    self.grid.fit(X, y, **fit_params)
                 be = self.grid.best_estimator_
             except BaseException as e:
                 if obs is not None:
@@ -175,12 +175,12 @@ class _GridSearchCVImpl:
             assert isinstance(op, lale.operators.TrainableOperator)
             be = op
 
-        self._best_estimator = be.fit(X, y)
+        self._best_estimator = be.fit(X, y, **fit_params)
         return self
 
-    def predict(self, X):
+    def predict(self, X, **predict_params):
         assert self._best_estimator is not None
-        return self._best_estimator.predict(X)
+        return self._best_estimator.predict(X, **predict_params)
 
     def get_pipeline(self, pipeline_name=None, astype="lale"):
         if pipeline_name is not None:

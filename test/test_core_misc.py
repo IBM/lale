@@ -191,6 +191,34 @@ class TestLaleVersion(unittest.TestCase):
         self.assertIsNot(lale.__version__, None)
 
 
+class TestMethodParameters(unittest.TestCase):
+    def test_fit_predict_params_individual(self):
+        from test.mock_custom_operators import CustomParamsCheckerOp
+
+        trainable = CustomParamsCheckerOp()
+
+        trained = trainable.fit([[3, 4], [5, 6]], fit_version=5)
+        _ = trained.predict([3, 4], predict_version=6)
+
+        self.assertEqual(trained.impl._fit_params.get("fit_version", None), 5)
+        self.assertEqual(trained.impl._predict_params.get("predict_version", None), 6)
+
+    def test_predict_params_pipeline(self):
+        from test.mock_custom_operators import CustomParamsCheckerOp
+
+        trainable = CustomParamsCheckerOp() >> CustomParamsCheckerOp()
+
+        trained = trainable.fit([[3, 4], [5, 6]], y=[3], fit_version=5)
+        _ = trained.predict([3, 4], predict_version=6)
+
+        self.assertEqual(
+            trained.steps()[1].impl._predict_params.get("predict_version", None), 6
+        )
+
+
+#        self.assertEqual(trained.steps()[1].impl._fit_params.get("fit_version", None), 5)
+
+
 class TestOperatorLogging(unittest.TestCase):
     def setUp(self):
         self.old_level = Ops.logger.level

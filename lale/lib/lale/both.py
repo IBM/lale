@@ -45,14 +45,14 @@ class _BothImpl:
     #    def transform_schema(self, s_X):
     #        return self.getPipeline().transform_schema(s_X)
 
-    def predict(self, X):
-        return self.getPipeline().predict(X)
+    def predict(self, X, **predict_params):
+        return self.getPipeline().predict(X, **predict_params)
 
     def predict_proba(self, X):
         return self.getPipeline().predict_proba(X)
 
-    def fit(self, X, y=None):
-        return self.getPipeline().fit(X, y=y)
+    def fit(self, X, y=None, **fit_params):
+        return self.getPipeline().fit(X, y=y, **fit_params)
 
     # def get_feature_names(self, input_features=None):
     #     if input_features is not None:

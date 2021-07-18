@@ -108,7 +108,7 @@ class _HyperoptImpl:
             if not self.verbose:
                 print("Run with verbose=True to see per-trial exceptions.")
 
-    def fit(self, X_train, y_train):
+    def fit(self, X_train, y_train, **fit_params):
         opt_start_time = time.time()
         is_clf = self.estimator.is_classifier()
         self.cv = check_cv(self.cv, y=y_train, classifier=is_clf)
@@ -170,7 +170,7 @@ class _HyperoptImpl:
                         y_validation,
                     ) = train_test_split(X_train, y_train, test_size=0.20)
                     start = time.time()
-                    trained = trainable.fit(X_train_part, y_train_part)
+                    trained = trainable.fit(X_train_part, y_train_part, **fit_params)
                     scorer = check_scoring(trainable, scoring=self.scoring)
                     cv_score = scorer(
                         trained, X_validation, y_validation, **self.args_to_scorer
@@ -252,7 +252,7 @@ class _HyperoptImpl:
             if trainable is None:
                 return None
             else:
-                trained = trainable.fit(X_train, y_train)
+                trained = trainable.fit(X_train, y_train, **fit_params)
                 return trained
 
         def f(params):
@@ -359,7 +359,7 @@ class _HyperoptImpl:
 
         return self
 
-    def predict(self, X_eval):
+    def predict(self, X_eval, **predict_params):
         import warnings
 
         warnings.filterwarnings("ignore")
@@ -370,7 +370,7 @@ class _HyperoptImpl:
             )
         trained = self._best_estimator
         try:
-            predictions = trained.predict(X_eval)
+            predictions = trained.predict(X_eval, **predict_params)
         except ValueError as e:
             logger.warning(
                 "ValueError in predicting using Hyperopt:{}, the error is:{}".format(

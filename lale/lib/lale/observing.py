@@ -89,16 +89,16 @@ class _ObservingImpl:
         return self.getOp().input_schema_fit()
 
     @observe
-    def predict(self, X):
-        return self.getOp().predict(X)
+    def predict(self, X, **predict_params):
+        return self.getOp().predict(X, **predict_params)
 
     @observe
     def predict_proba(self, X):
         return self.getOp().predict_proba(self, X)
 
     @observe
-    def fit(self, X, y=None):
-        return self.getOp().fit(X, y=y)
+    def fit(self, X, y=None, **fit_params):
+        return self.getOp().fit(X, y=y, **fit_params)
 
 
 _hyperparams_schema = {
