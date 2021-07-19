@@ -70,9 +70,8 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": [
-                "prefix",
-                "suffix",
-                "optimizer",
+                "estimator",
+                "last_optimizer",
             ],
             "relevantToOptimizer": [],
             "additionalProperties": True,
