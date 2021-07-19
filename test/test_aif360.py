@@ -165,11 +165,11 @@ class TestAIF360Datasets(unittest.TestCase):
 
     def test_dataset_titanic_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=False)
-        self._attempt_dataset(X, y, fairness_info, 1_309, 13, {"0", "1"}, 0.254)
+        self._attempt_dataset(X, y, fairness_info, 1_309, 13, {"0", "1"}, 0.263)
 
     def test_dataset_titanic_pd_num(self):
         X, y, fairness_info = lale.lib.aif360.fetch_titanic_df(preprocess=True)
-        self._attempt_dataset(X, y, fairness_info, 1_309, 37, {0, 1}, 0.254)
+        self._attempt_dataset(X, y, fairness_info, 1_309, 37, {0, 1}, 0.263)
 
     def test_dataset_tae_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_tae_df(preprocess=False)
