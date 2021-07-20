@@ -38,15 +38,20 @@ from lale.expressions import (
     day_of_year,
     hour,
     it,
+    max,
+    mean,
+    min,
     minute,
     month,
     replace,
     string_indexer,
+    sum,
 )
 from lale.lib.lale import (
     Aggregate,
     ConcatFeatures,
     Filter,
+    GroupBy,
     Hyperopt,
     Join,
     Map,
@@ -363,6 +368,122 @@ class TestFilterSpark(unittest.TestCase):
         with self.assertRaises(ValueError):
             trainable = Filter(pred=[it["TrainId"] < it.col_na])
             _ = trainable.transform(self.transformed_df)
+
+
+# Testing group_by operator for pandas and spark dataframes
+class TestGroupBy(unittest.TestCase):
+    # Get go_sales dataset in pandas and spark dataframes
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+        self.go_sales_spark = fetch_go_sales_dataset("spark")
+
+    def test_groupby_pandas(self):
+        trainable = GroupBy(by=[it["Product line"]])
+        grouped_df = trainable.transform(self.go_sales[3]["go_products"])
+        self.assertEqual(grouped_df.ngroups, 5)
+
+    def test_groupby_pandas1(self):
+        trainable = GroupBy(by=[it["Product line"], it.Product])
+        grouped_df = trainable.transform(self.go_sales[3]["go_products"])
+        self.assertEqual(grouped_df.ngroups, 144)
+
+    def test_groupby_spark(self):
+        trainable = GroupBy(by=[it["Product line"], it.Product])
+        _ = trainable.transform(self.go_sales_spark[3]["go_products"])
+
+    def test_groupby_pandas_no_col(self):
+        trainable = GroupBy(by=[it["Product line"], it.Product.name])
+        with self.assertRaises(ValueError):
+            _ = trainable.transform(self.go_sales[3]["go_products"])
+
+
+# Testing aggregate operator for pandas dataframes
+class TestAggregate(unittest.TestCase):
+    # Get go_sales dataset in pandas dataframe
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+
+    def test_aggregate_1(self):
+        trainable = GroupBy(by=[it["Product line"], it["Product brand"]])
+        grouped_df = trainable.transform(self.go_sales[3]["go_products"])
+        self.assertEqual(grouped_df.ngroups, 30)
+        trainable = Aggregate(
+            columns={
+                "sum_uc": sum(it["Unit cost"]),
+                "max_up": max(it["Unit price"]),
+                "max_uc": max(it["Unit cost"]),
+                "min_uc": min(it["Unit cost"]),
+                "min_up": min(it["Unit price"]),
+            }
+        )
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.shape, (30, 5))
+        self.assertEqual(
+            aggregated_df.loc[("Golf Equipment", "Blue Steel"), "max_uc"], 89.41
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Outdoor Protection", "Sun"), "min_uc"], 1.79
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Personal Accessories", "Edge"), "sum_uc"], 89.22
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Mountaineering Equipment", "Granite"), "max_up"], 80
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Personal Accessories", "Xray"), "min_up"], 125.4
+        )
+
+    def test_aggregate_2(self):
+        trainable = GroupBy(by=[it["Product number"], it["Retailer code"]])
+        grouped_df = trainable.transform(self.go_sales[1]["go_daily_sales"])
+        self.assertEqual(grouped_df.ngroups, 5000)
+        trainable = Aggregate(
+            columns={
+                "mean_quantity": mean(it["Quantity"]),
+                "max_usp": max(it["Unit sale price"]),
+                "count_quantity": count(it["Quantity"]),
+            }
+        )
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.shape, (5000, 3))
+        self.assertEqual(
+            round(aggregated_df.loc[(130130, 1137), "mean_quantity"], 2), 8.74
+        )
+        self.assertEqual(aggregated_df.loc[(147160, 1192), "max_usp"], 32.85)
+        self.assertEqual(aggregated_df.loc[(147120, 1216), "count_quantity"], 52)
+
+
+# Testing aggregate operator for spark dataframes
+class TestAggregateSpark(unittest.TestCase):
+    # Get go_sales dataset in spark dataframe
+    def setUp(self):
+        self.go_sales_spark = fetch_go_sales_dataset("spark")
+
+    def test_aggregate_1(self):
+        trainable = GroupBy(by=[it["Product line"], it["Product brand"]])
+        grouped_df = trainable.transform(self.go_sales_spark[3]["go_products"])
+        print(grouped_df.show())
+        trainable = Aggregate(
+            columns={"sum_uc": sum(it["Unit cost"]), "max_up": max(it["Unit price"])}
+        )
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.count(), 30)
+        self.assertEqual(len(aggregated_df.columns), 4)
+        self.assertEqual(
+            aggregated_df.filter(
+                (aggregated_df["Product line"] == "Personal Accessories")
+                & (aggregated_df["Product brand"] == "Edge")
+            ).collect()[0]["sum_uc"],
+            89.22,
+        )
+        self.assertEqual(
+            aggregated_df.filter(
+                (aggregated_df["Product line"] == "Golf Equipment")
+                & (aggregated_df["Product brand"] == "Blue Steel")
+            ).collect()[0]["max_up"],
+            180.63,
+        )
 
 
 # Testing join operator for pandas dataframes
