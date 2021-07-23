@@ -38,7 +38,8 @@ def _is_df(d):
 
 
 def _is_spark_df(d):
-    return isinstance(d, spark_df)
+    if spark_installed:
+        return isinstance(d, spark_df)
 
 
 class _JoinImpl:

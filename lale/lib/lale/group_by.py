@@ -34,7 +34,8 @@ def _is_pandas_df(df):
 
 
 def _is_spark_df(df):
-    return isinstance(df, spark_df)
+    if spark_installed:
+        return isinstance(df, spark_df)
 
 
 def _is_ast_subscript(expr):

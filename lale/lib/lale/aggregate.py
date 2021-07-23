@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+import importlib
 
 import pandas as pd
 
@@ -20,7 +21,7 @@ import lale.docstrings
 import lale.operators
 
 try:
-    import pyspark
+    import pyspark.sql as pysql
     from pyspark.sql.dataframe import DataFrame as spark_df
 
     spark_installed = True
@@ -36,7 +37,8 @@ def _is_pandas_df(df):
 
 
 def _is_spark_df(df):
-    return isinstance(df, pyspark.sql.group.GroupedData) or isinstance(df, spark_df)  # type: ignore
+    if spark_installed:
+        return isinstance(df, pysql.GroupedData) or isinstance(df, spark_df)  # type: ignore
 
 
 def _is_ast_subscript(expr):
@@ -48,45 +50,84 @@ def _is_ast_attribute(expr):
 
 
 class _AggregateImpl:
-    def __init__(self, columns):
+    def __init__(self, columns=None, group_by=None):
         self.columns = columns
+        self.group_by = group_by
+
+    # Commented the validation for now to pass the OBM test cases.
+    # We can uncomment this when OBM starts supporting the new format of Aggregate operator.
+    # @classmethod
+    # def validate_hyperparams(cls, group_by=None, **hyperparams):
+    #     if group_by is not None:
+    #         raise ValueError(
+    #             "The use of group_by in Aggregate is deprecated. Please use the GroupBy operator instead."
+    #         )
 
     def transform(self, X):
+        agg_info = {}
+        agg_expr = {}
+
+        def create_spark_agg_expr(new_col_name, agg_col_func):
+            functions_module = importlib.import_module("lale.lib.lale.functions")
+
+            def get_spark_agg_method(agg_method_name):
+                if agg_method_name == "sum":
+                    return getattr(functions_module, "grouped_sum")
+                if agg_method_name == "max":
+                    return getattr(functions_module, "grouped_max")
+                if agg_method_name == "min":
+                    return getattr(functions_module, "grouped_min")
+                if agg_method_name == "count":
+                    return getattr(functions_module, "grouped_count")
+                if agg_method_name == "mean":
+                    return getattr(functions_module, "grouped_mean")
+
+            agg_method = get_spark_agg_method(agg_col_func[1])()  # type: ignore
+            return agg_method(agg_col_func[0]).alias(new_col_name)
+
+        for new_col_name, expr in (
+            self.columns.items() if self.columns is not None else []
+        ):
+            agg_func = expr._expr.func.id
+            expr_to_parse = expr._expr.args[0]
+            if _is_ast_subscript(expr_to_parse):
+                agg_col = expr_to_parse.slice.value.s  # type: ignore
+            elif _is_ast_attribute(expr_to_parse):
+                agg_col = expr_to_parse.attr
+            else:
+                raise ValueError(
+                    "Aggregate 'columns' parameter only supports subscript or dot notation for the key columns. For example, it.col_name or it['col_name']."
+                )
+            agg_info[new_col_name] = (agg_col, agg_func)
+        agg_info_sorted = {
+            k: v for k, v in sorted(agg_info.items(), key=lambda item: item[1])
+        }
+
         if _is_pandas_df(X):
-            agg_col = []
-            agg_func = []
-            rename_col = []
-            agg_expr = {}
-
-            for new_col_name, expr in self.columns.items():
-                rename_col.append(new_col_name)
-                agg_func.append(expr._expr.func.id)
-                expr_to_parse = expr._expr.args[0]
-                if _is_ast_subscript(expr_to_parse):
-                    agg_col.append(expr_to_parse.slice.value.s)  # type: ignore
-                elif _is_ast_attribute(expr_to_parse):
-                    agg_col.append(expr_to_parse.attr)
+            for agg_col_func in agg_info_sorted.values():
+                if agg_col_func[0] in agg_expr:
+                    agg_expr[agg_col_func[0]].append(agg_col_func[1])
                 else:
-                    raise ValueError(
-                        "Aggregate 'columns' parameter only supports subscript or dot notation for the key columns. For example, it.col_name or it['col_name']."
-                    )
-
-            zipped_lists = zip(agg_col, agg_func, rename_col)
-            sorted_pairs = sorted(zipped_lists)
-            tuples = zip(*sorted_pairs)
-            agg_col, agg_func, rename_col = [list(tuple) for tuple in tuples]
-
-            for col, func in zip(agg_col, agg_func):
-                if col in agg_expr:
-                    agg_expr[col].append(func)
-                else:
-                    agg_expr[col] = [func]
+                    agg_expr[agg_col_func[0]] = [agg_col_func[1]]
             try:
                 aggregated_df = X.agg(agg_expr)
-                aggregated_df.columns = rename_col
-                return aggregated_df
+                aggregated_df.columns = agg_info_sorted.keys()
             except KeyError as e:
                 raise KeyError(e)
+        elif _is_spark_df(X):
+            agg_expr = [
+                create_spark_agg_expr(new_col_name, agg_col_func)
+                for new_col_name, agg_col_func in agg_info_sorted.items()
+            ]
+            try:
+                aggregated_df = X.agg(*agg_expr)
+            except Exception as e:
+                raise Exception(e)
+        else:
+            raise ValueError(
+                "Only pandas and spark dataframes are supported by the Aggregate operator."
+            )
+        return aggregated_df
 
 
 _hyperparams_schema = {
@@ -107,6 +148,21 @@ _hyperparams_schema = {
                         },
                         {
                             "description": "List of aggregation expressions. The output column name is determined by a heuristic based on the input column name and the transformation function.",
+                            "type": "array",
+                            "items": {"laleType": "expression"},
+                        },
+                    ],
+                    "default": [],
+                },
+                "group_by": {
+                    "description": "Group by columns for aggregates.",
+                    "anyOf": [
+                        {
+                            "description": "Expressions for columns name if there is a single column.",
+                            "laleType": "expression",
+                        },
+                        {
+                            "description": "List of expressions for columns.",
                             "type": "array",
                             "items": {"laleType": "expression"},
                         },
