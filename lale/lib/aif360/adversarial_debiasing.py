@@ -151,7 +151,7 @@ _hyperparams_schema = {
                     "default": None,
                 },
                 "scope_name": {
-                    "description": "Scope name for the tenforflow variables.",
+                    "description": "Scope name for the tenforflow variables. A unique alpha-numeric suffix is added to this value.",
                     "type": "string",
                     "default": "adversarial_debiasing",
                 },
