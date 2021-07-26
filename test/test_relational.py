@@ -402,6 +402,9 @@ class TestAggregate(unittest.TestCase):
     # Get go_sales dataset in pandas dataframe
     def setUp(self):
         self.go_sales = fetch_go_sales_dataset()
+        trainable = GroupBy(by=[it["Product number"]])
+        self.grouped_df_err = trainable.transform(self.go_sales[1]["go_daily_sales"])
+        self.assertEqual(self.grouped_df_err.ngroups, 244)
 
     def test_aggregate_1(self):
         trainable = GroupBy(by=[it["Retailer code"]])
@@ -464,12 +467,19 @@ class TestAggregate(unittest.TestCase):
         )
 
     def test_aggregate_no_col_error(self):
-        trainable = GroupBy(by=[it["Product number"]])
-        grouped_df = trainable.transform(self.go_sales[1]["go_daily_sales"])
-        self.assertEqual(grouped_df.ngroups, 244)
         trainable = Aggregate(columns={"mean_quantity": mean(it["Quantity_1"])})
         with self.assertRaises(KeyError):
-            _ = trainable.transform(grouped_df)
+            _ = trainable.transform(self.grouped_df_err)
+
+    def test_aggregate_col_not_dict(self):
+        trainable = Aggregate(columns=[mean(it["Quantity_1"])])
+        with self.assertRaises(ValueError):
+            _ = trainable.transform(self.grouped_df_err)
+
+    def test_aggregate_x_not_pd_pysp(self):
+        trainable = Aggregate(columns={"mean_quantity": mean(it["Quantity_1"])})
+        with self.assertRaises(ValueError):
+            _ = trainable.transform(pd.Series([1, 2, 3]))
 
 
 # Testing aggregate operator for spark dataframes
@@ -749,7 +759,7 @@ class TestJoin(unittest.TestCase):
                 ]
             )
 
-    # A table to be joinen not present in input X
+    # A table to be joined not present in input X
     # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error3(self):
         with self.assertRaises(ValueError):

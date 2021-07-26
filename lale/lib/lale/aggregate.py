@@ -50,7 +50,7 @@ def _is_ast_attribute(expr):
 
 
 class _AggregateImpl:
-    def __init__(self, columns=None, group_by=None):
+    def __init__(self, columns, group_by=[]):
         self.columns = columns
         self.group_by = group_by
 
@@ -71,19 +71,15 @@ class _AggregateImpl:
             functions_module = importlib.import_module("lale.lib.lale.functions")
 
             def get_spark_agg_method(agg_method_name):
-                if agg_method_name == "sum":
-                    return getattr(functions_module, "grouped_sum")
-                if agg_method_name == "max":
-                    return getattr(functions_module, "grouped_max")
-                if agg_method_name == "min":
-                    return getattr(functions_module, "grouped_min")
-                if agg_method_name == "count":
-                    return getattr(functions_module, "grouped_count")
-                if agg_method_name == "mean":
-                    return getattr(functions_module, "grouped_mean")
+                return getattr(functions_module, "grouped_" + agg_method_name)
 
             agg_method = get_spark_agg_method(agg_col_func[1])()  # type: ignore
             return agg_method(agg_col_func[0]).alias(new_col_name)
+
+        if not isinstance(self.columns, dict):
+            raise ValueError(
+                "Aggregate 'columns' parameter should be of dictionary type."
+            )
 
         for new_col_name, expr in (
             self.columns.items() if self.columns is not None else []
@@ -180,7 +176,7 @@ _input_transform_schema = {
     "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "List of tables.",
+            "description": "Output of the group by operator - Pandas / Pyspark grouped dataframe",
             "type": "array",
             "items": {"type": "array", "items": {"laleType": "Any"}},
             "minItems": 1,

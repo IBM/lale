@@ -47,9 +47,8 @@ def _is_ast_attribute(expr):
 
 
 class _GroupByImpl:
-    def __init__(self, by=None, sort=False):
+    def __init__(self, by=None):
         self.by = by
-        self.sort = sort
 
     # Parse the 'by' element passed as input
     def _get_group_key(self, expr_to_parse):
@@ -77,7 +76,7 @@ class _GroupByImpl:
         if _is_spark_df(X):
             return X.groupby(group_by_keys)
         elif _is_pandas_df(X):
-            return X.groupby(group_by_keys, sort=self.sort)
+            return X.groupby(group_by_keys, sort=False)
         else:
             raise ValueError(
                 "Only pandas and spark dataframes are supported by the GroupBy operator."
@@ -95,10 +94,6 @@ _hyperparams_schema = {
             "relevantToOptimizer": [],
             "properties": {
                 "by": {"description": "GroupBy key(s).", "laleType": "Any"},
-                "sort": {
-                    "description": "Flag responsible for sorting the grouped dataframe",
-                    "laleType": "Boolean",
-                },
             },
         }
     ]
