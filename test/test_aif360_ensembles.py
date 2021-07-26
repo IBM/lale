@@ -21,6 +21,7 @@ from lale.lib.aif360 import (
     PrejudiceRemover,
     fair_stratified_train_test_split,
 )
+from lale.lib.aif360.adversarial_debiasing import AdversarialDebiasing
 from lale.lib.aif360.datasets import fetch_creditg_df
 from lale.lib.sklearn import (
     AdaBoostClassifier,
@@ -74,6 +75,15 @@ class TestEnsemblesWithAIF360(unittest.TestCase):
 
     def test_bagging_in_estimator_mitigation_base(self):
         model = BaggingClassifier(base_estimator=PrejudiceRemover(**self.fairness_info))
+        self._attempt_fit_predict(model)
+
+    def test_bagging_in_estimator_mitigation_base_1(self):
+        import tensorflow as tf
+
+        tf.compat.v1.disable_eager_execution()
+        model = BaggingClassifier(
+            base_estimator=AdversarialDebiasing(**self.fairness_info), n_estimators=2
+        )
         self._attempt_fit_predict(model)
 
     def test_bagging_post_estimator_mitigation_base(self):

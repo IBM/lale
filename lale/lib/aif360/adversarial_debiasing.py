@@ -21,6 +21,8 @@ try:
 except ImportError:
     tensorflow_installed = False
 
+import uuid
+
 import lale.docstrings
 import lale.operators
 
@@ -57,30 +59,48 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
 or with
     pip install 'lale[full]'"""
         assert "1.13.1" <= tf.__version__
-        if sess is None:
-            sess = tf.compat.v1.Session()
-        prot_attr_names = [pa["feature"] for pa in protected_attributes]
+        self.scope_name = scope_name
+        self.protected_attributes = protected_attributes
+        self.seed = seed
+        self.sess = sess
+        self.adversary_loss_weight = adversary_loss_weight
+        self.num_epochs = num_epochs
+        self.batch_size = batch_size
+        self.classifier_num_hidden_units = classifier_num_hidden_units
+        self.debias = debias
+        self.favorable_labels = favorable_labels
+        self.redact = redact
+        self.preparation = preparation
+
+    def fit(self, X, y=None):
+        tf.compat.v1.reset_default_graph()
+        if self.sess is None:
+            self.sess = tf.compat.v1.Session()
+
+        prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]
+
         mitigator = aif360.algorithms.inprocessing.AdversarialDebiasing(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
-            scope_name=scope_name,
-            sess=sess,
-            seed=seed,
-            adversary_loss_weight=adversary_loss_weight,
-            num_epochs=num_epochs,
-            batch_size=batch_size,
-            classifier_num_hidden_units=classifier_num_hidden_units,
-            debias=debias,
+            scope_name=self.scope_name + str(uuid.uuid4()),
+            sess=self.sess,
+            seed=self.seed,
+            adversary_loss_weight=self.adversary_loss_weight,
+            num_epochs=self.num_epochs,
+            batch_size=self.batch_size,
+            classifier_num_hidden_units=self.classifier_num_hidden_units,
+            debias=self.debias,
         )
         super(_AdversarialDebiasingImpl, self).__init__(
-            favorable_labels=favorable_labels,
-            protected_attributes=protected_attributes,
-            redact=redact,
-            preparation=preparation,
+            favorable_labels=self.favorable_labels,
+            protected_attributes=self.protected_attributes,
+            redact=self.redact,
+            preparation=self.preparation,
             mitigator=mitigator,
         )
+        return super(_AdversarialDebiasingImpl, self).fit(X, y)
 
 
 _input_fit_schema = _categorical_supervised_input_fit_schema
@@ -131,7 +151,7 @@ _hyperparams_schema = {
                     "default": None,
                 },
                 "scope_name": {
-                    "description": "Scope name for the tenforflow variables.",
+                    "description": "Scope name for the tenforflow variables. A unique alpha-numeric suffix is added to this value.",
                     "type": "string",
                     "default": "adversarial_debiasing",
                 },
