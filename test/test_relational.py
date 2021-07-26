@@ -38,15 +38,20 @@ from lale.expressions import (
     day_of_year,
     hour,
     it,
+    max,
+    mean,
+    min,
     minute,
     month,
     replace,
     string_indexer,
+    sum,
 )
 from lale.lib.lale import (
     Aggregate,
     ConcatFeatures,
     Filter,
+    GroupBy,
     Hyperopt,
     Join,
     Map,
@@ -365,6 +370,195 @@ class TestFilterSpark(unittest.TestCase):
             _ = trainable.transform(self.transformed_df)
 
 
+# Testing group_by operator for pandas and spark dataframes
+class TestGroupBy(unittest.TestCase):
+    # Get go_sales dataset in pandas and spark dataframes
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+        self.go_sales_spark = fetch_go_sales_dataset("spark")
+
+    def test_groupby_pandas(self):
+        trainable = GroupBy(by=[it["Product line"]])
+        grouped_df = trainable.transform(self.go_sales[3]["go_products"])
+        self.assertEqual(grouped_df.ngroups, 5)
+
+    def test_groupby_pandas1(self):
+        trainable = GroupBy(by=[it["Product line"], it.Product])
+        grouped_df = trainable.transform(self.go_sales[3]["go_products"])
+        self.assertEqual(grouped_df.ngroups, 144)
+
+    def test_groupby_spark(self):
+        trainable = GroupBy(by=[it["Product line"], it.Product])
+        _ = trainable.transform(self.go_sales_spark[3]["go_products"])
+
+    def test_groupby_pandas_no_col(self):
+        trainable = GroupBy(by=[it["Product line"], it.Product.name])
+        with self.assertRaises(ValueError):
+            _ = trainable.transform(self.go_sales[3]["go_products"])
+
+
+# Testing aggregate operator for pandas dataframes
+class TestAggregate(unittest.TestCase):
+    # Get go_sales dataset in pandas dataframe
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+        trainable = GroupBy(by=[it["Product number"]])
+        self.grouped_df_err = trainable.transform(self.go_sales[1]["go_daily_sales"])
+        self.assertEqual(self.grouped_df_err.ngroups, 244)
+
+    def test_aggregate_1(self):
+        trainable = GroupBy(by=[it["Retailer code"]])
+        grouped_df = trainable.transform(self.go_sales[1]["go_daily_sales"])
+        self.assertEqual(grouped_df.ngroups, 289)
+        trainable = Aggregate(columns={"min_quantity": min(it["Quantity"])})
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.shape, (289, 1))
+        self.assertEqual(aggregated_df.loc[1698, "min_quantity"], 4)
+        self.assertEqual(aggregated_df.loc[1196, "min_quantity"], 1)
+
+    def test_aggregate_2(self):
+        trainable = GroupBy(by=[it["Product number"], it["Retailer code"]])
+        grouped_df = trainable.transform(self.go_sales[1]["go_daily_sales"])
+        self.assertEqual(grouped_df.ngroups, 5000)
+        trainable = Aggregate(
+            columns={
+                "mean_quantity": mean(it["Quantity"]),
+                "max_usp": max(it["Unit sale price"]),
+                "count_quantity": count(it["Quantity"]),
+            }
+        )
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.shape, (5000, 3))
+        self.assertEqual(
+            round(aggregated_df.loc[(130130, 1137), "mean_quantity"], 2), 8.74
+        )
+        self.assertEqual(aggregated_df.loc[(147160, 1192), "max_usp"], 32.85)
+        self.assertEqual(aggregated_df.loc[(147120, 1216), "count_quantity"], 52)
+
+    def test_aggregate_3(self):
+        trainable = GroupBy(by=[it["Product line"], it["Product brand"]])
+        grouped_df = trainable.transform(self.go_sales[3]["go_products"])
+        self.assertEqual(grouped_df.ngroups, 30)
+        trainable = Aggregate(
+            columns={
+                "sum_uc": sum(it["Unit cost"]),
+                "max_up": max(it["Unit price"]),
+                "max_uc": max(it["Unit cost"]),
+                "min_uc": min(it["Unit cost"]),
+                "min_up": min(it["Unit price"]),
+            }
+        )
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.shape, (30, 5))
+        self.assertEqual(
+            aggregated_df.loc[("Golf Equipment", "Blue Steel"), "max_uc"], 89.41
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Outdoor Protection", "Sun"), "min_uc"], 1.79
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Personal Accessories", "Edge"), "sum_uc"], 89.22
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Mountaineering Equipment", "Granite"), "max_up"], 80
+        )
+        self.assertEqual(
+            aggregated_df.loc[("Personal Accessories", "Xray"), "min_up"], 125.4
+        )
+
+    def test_aggregate_no_col_error(self):
+        trainable = Aggregate(columns={"mean_quantity": mean(it["Quantity_1"])})
+        with self.assertRaises(KeyError):
+            _ = trainable.transform(self.grouped_df_err)
+
+    def test_aggregate_col_not_dict(self):
+        trainable = Aggregate(columns=[mean(it["Quantity_1"])])
+        with self.assertRaises(ValueError):
+            _ = trainable.transform(self.grouped_df_err)
+
+    def test_aggregate_x_not_pd_pysp(self):
+        trainable = Aggregate(columns={"mean_quantity": mean(it["Quantity_1"])})
+        with self.assertRaises(ValueError):
+            _ = trainable.transform(pd.Series([1, 2, 3]))
+
+
+# Testing aggregate operator for spark dataframes
+class TestAggregateSpark(unittest.TestCase):
+    # Get go_sales dataset in spark dataframe
+    def setUp(self):
+        self.go_sales_spark = fetch_go_sales_dataset("spark")
+        # Typecast numerical columns in the dataset which are of string datatype to float datatype
+        self.go_sales_spark[3]["go_products"] = (
+            self.go_sales_spark[3]["go_products"]
+            .withColumn(
+                "Unit price",
+                self.go_sales_spark[3]["go_products"]["Unit price"].cast("float"),
+            )
+            .withColumn(
+                "Unit cost",
+                self.go_sales_spark[3]["go_products"]["Unit cost"].cast("float"),
+            )
+        )
+
+    def test_aggregate_1(self):
+        trainable = GroupBy(by=[it["Product line"], it["Product brand"]])
+        grouped_df = trainable.transform(self.go_sales_spark[3]["go_products"])
+        trainable = Aggregate(
+            columns={"sum_uc": sum(it["Unit cost"]), "max_uc": max(it["Unit cost"])}
+        )
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.count(), 30)
+        self.assertEqual(len(aggregated_df.columns), 4)
+        self.assertEqual(
+            round(
+                aggregated_df.filter(
+                    (aggregated_df["Product line"] == "Personal Accessories")
+                    & (aggregated_df["Product brand"] == "Edge")
+                ).collect()[0]["sum_uc"],
+                2,
+            ),
+            89.22,
+        )
+
+    def test_aggregate_2(self):
+        trainable = GroupBy(by=[it["Product line"]])
+        grouped_df = trainable.transform(self.go_sales_spark[3]["go_products"])
+        trainable = Aggregate(
+            columns={
+                "mean_uc": mean(it["Unit cost"]),
+                "min_up": min(it["Unit price"]),
+                "count_pc": count(it["Product color"]),
+            }
+        )
+        aggregated_df = trainable.transform(grouped_df)
+        self.assertEqual(aggregated_df.count(), 5)
+        self.assertEqual(len(aggregated_df.columns), 4)
+        self.assertEqual(
+            round(
+                aggregated_df.filter(
+                    (aggregated_df["Product line"] == "Camping Equipment")
+                ).collect()[0]["mean_uc"],
+                2,
+            ),
+            89.01,
+        )
+        self.assertEqual(
+            round(
+                aggregated_df.filter(
+                    (aggregated_df["Product line"] == "Golf Equipment")
+                ).collect()[0]["min_up"],
+                2,
+            ),
+            10.64,
+        )
+        self.assertEqual(
+            aggregated_df.filter(
+                (aggregated_df["Product line"] == "Personal Accessories")
+            ).collect()[0]["count_pc"],
+            182,
+        )
+
+
 # Testing join operator for pandas dataframes
 class TestJoin(unittest.TestCase):
     def test_init(self):
@@ -565,7 +759,7 @@ class TestJoin(unittest.TestCase):
                 ]
             )
 
-    # A table to be joinen not present in input X
+    # A table to be joined not present in input X
     # This test case execution should throw a ValueError which is handled in the test case itself
     def test_join_pandas_composite_error3(self):
         with self.assertRaises(ValueError):

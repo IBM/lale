@@ -21,6 +21,7 @@ import numpy as np
 import pandas as pd
 
 try:
+    import pyspark.sql.functions as pysql
     from pyspark.ml.feature import StringIndexer
     from pyspark.sql.dataframe import DataFrame as spark_df
 
@@ -229,3 +230,23 @@ def string_indexer(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
         )
 
     return new_column_name, df
+
+
+def grouped_sum():
+    return pysql.sum
+
+
+def grouped_max():
+    return pysql.max
+
+
+def grouped_min():
+    return pysql.min
+
+
+def grouped_count():
+    return pysql.count
+
+
+def grouped_mean():
+    return pysql.mean

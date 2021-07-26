@@ -35,6 +35,7 @@ Transformers:
 * lale.lib.lale. `Project`_
 * lale.lib.lale. `SampleBasedVoting`_
 * lale.lib.lale. `Aggregate`_
+* lale.lib.lale. `Filter`_
 * lale.lib.lale. `GroupBy`_
 * lale.lib.lale. `Map`_
 * lale.lib.lale. `Join`_
@@ -59,6 +60,7 @@ Estimators and transformers:
 .. _`Project`: lale.lib.lale.project.html
 .. _`SampleBasedVoting`: lale.lib.lale.sample_based_voting.html
 .. _`Aggregate`: lale.lib.lale.aggregate.html
+.. _`Filter`: lale.lib.lale.filter.html
 .. _`GroupBy`: lale.lib.lale.group_by.html
 .. _`Map`: lale.lib.lale.map.html
 .. _`Join`: lale.lib.lale.join.html

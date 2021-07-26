@@ -12,16 +12,75 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
+
+import numpy as np
+import pandas as pd
+
 import lale.docstrings
 import lale.operators
 
+try:
+    from pyspark.sql.dataframe import DataFrame as spark_df
+
+    spark_installed = True
+
+except ImportError:
+    spark_installed = False
+
+
+def _is_pandas_df(df):
+    return isinstance(df, pd.DataFrame) or isinstance(df, pd.Series)
+
+
+def _is_spark_df(df):
+    if spark_installed:
+        return isinstance(df, spark_df)
+
+
+def _is_ast_subscript(expr):
+    return isinstance(expr, ast.Subscript)
+
+
+def _is_ast_attribute(expr):
+    return isinstance(expr, ast.Attribute)
+
 
 class _GroupByImpl:
-    def __init__(self, key=None):
-        self._hyperparams = {"key": key}
+    def __init__(self, by=None):
+        self.by = by
+
+    # Parse the 'by' element passed as input
+    def _get_group_key(self, expr_to_parse):
+        if _is_ast_subscript(expr_to_parse):
+            return expr_to_parse.slice.value.s  # type: ignore
+        elif _is_ast_attribute(expr_to_parse):
+            return expr_to_parse.attr
+        else:
+            raise ValueError(
+                "GroupBy by parameter only supports subscript or dot notation for the key columns. For example, it.col_name or it['col_name']."
+            )
 
     def transform(self, X):
-        raise NotImplementedError()
+        group_by_keys = []
+        for by_element in self.by if self.by is not None else []:
+            expr_to_parse = by_element._expr
+            group_by_keys.append(self._get_group_key(expr_to_parse))
+        col_not_in_X = np.setdiff1d(group_by_keys, X.columns)
+        if col_not_in_X.size > 0:
+            raise ValueError(
+                "GroupBy key columns {} not present in input dataframe X.".format(
+                    col_not_in_X
+                )
+            )
+        if _is_spark_df(X):
+            return X.groupby(group_by_keys)
+        elif _is_pandas_df(X):
+            return X.groupby(group_by_keys, sort=False)
+        else:
+            raise ValueError(
+                "Only pandas and spark dataframes are supported by the GroupBy operator."
+            )
 
 
 _hyperparams_schema = {
@@ -31,10 +90,10 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints, if any.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["key"],
+            "required": ["by"],
             "relevantToOptimizer": [],
             "properties": {
-                "key": {"description": "GroupBy key(s).", "laleType": "Any"}
+                "by": {"description": "GroupBy key(s).", "laleType": "Any"},
             },
         }
     ]

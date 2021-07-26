@@ -12,16 +12,118 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
+import importlib
+
+import pandas as pd
+
 import lale.docstrings
 import lale.operators
+
+try:
+    import pyspark.sql as pysql
+    from pyspark.sql.dataframe import DataFrame as spark_df
+
+    spark_installed = True
+
+except ImportError:
+    spark_installed = False
+
+
+def _is_pandas_df(df):
+    return isinstance(df, pd.core.groupby.generic.DataFrameGroupBy) or isinstance(
+        df, pd.DataFrame
+    )
+
+
+def _is_spark_df(df):
+    if spark_installed:
+        return isinstance(df, pysql.GroupedData) or isinstance(df, spark_df)  # type: ignore
+
+
+def _is_ast_subscript(expr):
+    return isinstance(expr, ast.Subscript)
+
+
+def _is_ast_attribute(expr):
+    return isinstance(expr, ast.Attribute)
 
 
 class _AggregateImpl:
     def __init__(self, columns, group_by=[]):
-        self._hyperparams = {"columns": columns, "group_by": group_by}
+        self.columns = columns
+        self.group_by = group_by
+
+    # Commented the validation for now to pass the OBM test cases.
+    # We can uncomment this when OBM starts supporting the new format of Aggregate operator.
+    # @classmethod
+    # def validate_hyperparams(cls, group_by=None, **hyperparams):
+    #     if group_by is not None:
+    #         raise ValueError(
+    #             "The use of group_by in Aggregate is deprecated. Please use the GroupBy operator instead."
+    #         )
 
     def transform(self, X):
-        raise NotImplementedError()
+        agg_info = {}
+        agg_expr = {}
+
+        def create_spark_agg_expr(new_col_name, agg_col_func):
+            functions_module = importlib.import_module("lale.lib.lale.functions")
+
+            def get_spark_agg_method(agg_method_name):
+                return getattr(functions_module, "grouped_" + agg_method_name)
+
+            agg_method = get_spark_agg_method(agg_col_func[1])()  # type: ignore
+            return agg_method(agg_col_func[0]).alias(new_col_name)
+
+        if not isinstance(self.columns, dict):
+            raise ValueError(
+                "Aggregate 'columns' parameter should be of dictionary type."
+            )
+
+        for new_col_name, expr in (
+            self.columns.items() if self.columns is not None else []
+        ):
+            agg_func = expr._expr.func.id
+            expr_to_parse = expr._expr.args[0]
+            if _is_ast_subscript(expr_to_parse):
+                agg_col = expr_to_parse.slice.value.s  # type: ignore
+            elif _is_ast_attribute(expr_to_parse):
+                agg_col = expr_to_parse.attr
+            else:
+                raise ValueError(
+                    "Aggregate 'columns' parameter only supports subscript or dot notation for the key columns. For example, it.col_name or it['col_name']."
+                )
+            agg_info[new_col_name] = (agg_col, agg_func)
+        agg_info_sorted = {
+            k: v for k, v in sorted(agg_info.items(), key=lambda item: item[1])
+        }
+
+        if _is_pandas_df(X):
+            for agg_col_func in agg_info_sorted.values():
+                if agg_col_func[0] in agg_expr:
+                    agg_expr[agg_col_func[0]].append(agg_col_func[1])
+                else:
+                    agg_expr[agg_col_func[0]] = [agg_col_func[1]]
+            try:
+                aggregated_df = X.agg(agg_expr)
+                aggregated_df.columns = agg_info_sorted.keys()
+            except KeyError as e:
+                raise KeyError(e)
+        elif _is_spark_df(X):
+            agg_expr = [
+                create_spark_agg_expr(new_col_name, agg_col_func)
+                for new_col_name, agg_col_func in agg_info_sorted.items()
+            ]
+            try:
+                aggregated_df = X.agg(*agg_expr)
+            except Exception as e:
+                raise Exception(e)
+        else:
+            raise ValueError(
+                "Only pandas and spark dataframes are supported by the Aggregate operator."
+            )
+        return aggregated_df
 
 
 _hyperparams_schema = {
@@ -74,13 +176,10 @@ _input_transform_schema = {
     "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "The outer array is over rows.",
+            "description": "Output of the group by operator - Pandas / Pyspark grouped dataframe",
             "type": "array",
-            "items": {
-                "description": "The inner array is over columns.",
-                "type": "array",
-                "items": {"laleType": "Any"},
-            },
+            "items": {"type": "array", "items": {"laleType": "Any"}},
+            "minItems": 1,
         }
     },
 }
