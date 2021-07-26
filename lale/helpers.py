@@ -51,6 +51,14 @@ try:
 except ImportError:
     torch_installed = False
 
+try:
+    from pyspark.sql.dataframe import DataFrame as spark_df
+
+    spark_installed = True
+
+except ImportError:
+    spark_installed = False
+
 logger = logging.getLogger(__name__)
 
 LALE_NESTED_SPACE_KEY = "__lale_nested_space"
@@ -987,3 +995,32 @@ def are_hyperparameters_equal(hyperparam1, hyperparam2):
         return np.all(hyperparam1 == hyperparam2)
     else:
         return hyperparam1 == hyperparam2
+
+
+def _is_ast_subscript(expr):
+    return isinstance(expr, ast.Subscript)
+
+
+def _is_ast_attribute(expr):
+    return isinstance(expr, ast.Attribute)
+
+
+def _is_ast_constant(expr):
+    return isinstance(expr, ast.Constant)
+
+
+def _is_ast_subs_or_attr(expr):
+    return isinstance(expr, ast.Subscript) or isinstance(expr, ast.Attribute)
+
+
+def _is_df(d):
+    return isinstance(d, pd.DataFrame) or isinstance(d, spark_df)
+
+
+def _is_pandas_df(df):
+    return isinstance(df, pd.DataFrame)
+
+
+def _is_spark_df(df):
+    if spark_installed:
+        return isinstance(df, spark_df)

@@ -13,17 +13,9 @@
 # limitations under the License.
 import importlib
 
-import pandas as pd
-
-try:
-    from pyspark.sql.dataframe import DataFrame as spark_df
-
-    spark_installed = True
-except ImportError:
-    spark_installed = False
-
 import lale.docstrings
 import lale.operators
+from lale.helpers import _is_pandas_df, _is_spark_df
 
 
 class _MapImpl:
@@ -53,9 +45,9 @@ class _MapImpl:
 
         out_df = X  # Do nothing as X already has the right columns
         if self.remainder == "drop":
-            if isinstance(X, pd.DataFrame):
+            if _is_pandas_df(X):
                 out_df = X[columns_to_keep]
-            elif spark_installed and isinstance(X, spark_df):
+            elif _is_spark_df(X):
                 out_df = X.select(columns_to_keep)
             else:
                 raise ValueError(

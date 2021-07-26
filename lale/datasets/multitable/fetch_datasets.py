@@ -36,7 +36,9 @@ def get_data_from_csv(datatype, data_file_name):
     elif datatype.casefold() == "spark":
         if spark_installed:
             spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()
-            return spark.read.csv(data_file_name, header=True)
+            return spark.read.options(inferSchema="True", delimiter=",").csv(
+                data_file_name, header=True
+            )
         else:
             raise ValueError("Spark is not installed on this machine.")
     else:

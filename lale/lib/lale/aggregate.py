@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
 import importlib
 
 import pandas as pd
@@ -29,24 +28,18 @@ try:
 except ImportError:
     spark_installed = False
 
+from lale.helpers import _is_ast_attribute, _is_ast_subscript
 
-def _is_pandas_df(df):
+
+def _is_pandas_grouped_df(df):
     return isinstance(df, pd.core.groupby.generic.DataFrameGroupBy) or isinstance(
         df, pd.DataFrame
     )
 
 
-def _is_spark_df(df):
+def _is_spark_grouped_df(df):
     if spark_installed:
         return isinstance(df, pysql.GroupedData) or isinstance(df, spark_df)  # type: ignore
-
-
-def _is_ast_subscript(expr):
-    return isinstance(expr, ast.Subscript)
-
-
-def _is_ast_attribute(expr):
-    return isinstance(expr, ast.Attribute)
 
 
 class _AggregateImpl:
@@ -99,7 +92,7 @@ class _AggregateImpl:
             k: v for k, v in sorted(agg_info.items(), key=lambda item: item[1])
         }
 
-        if _is_pandas_df(X):
+        if _is_pandas_grouped_df(X):
             for agg_col_func in agg_info_sorted.values():
                 if agg_col_func[0] in agg_expr:
                     agg_expr[agg_col_func[0]].append(agg_col_func[1])
@@ -110,7 +103,7 @@ class _AggregateImpl:
                 aggregated_df.columns = agg_info_sorted.keys()
             except KeyError as e:
                 raise KeyError(e)
-        elif _is_spark_df(X):
+        elif _is_spark_grouped_df(X):
             agg_expr = [
                 create_spark_agg_expr(new_col_name, agg_col_func)
                 for new_col_name, agg_col_func in agg_info_sorted.items()

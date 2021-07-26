@@ -12,34 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-
 import pandas as pd
 
 import lale.docstrings
 import lale.operators
+from lale.helpers import _is_ast_attribute, _is_ast_subscript, _is_df, _is_spark_df
 
 try:
-    from pyspark.sql.dataframe import DataFrame as spark_df
     from pyspark.sql.functions import col
 
     spark_installed = True
 
 except ImportError:
     spark_installed = False
-
-
-def _is_df(d):
-    return (
-        isinstance(d, pd.DataFrame)
-        or isinstance(d, pd.Series)
-        or isinstance(d, spark_df)
-    )
-
-
-def _is_spark_df(d):
-    if spark_installed:
-        return isinstance(d, spark_df)
 
 
 class _JoinImpl:
@@ -56,33 +41,33 @@ class _JoinImpl:
     def _get_join_info(cls, expr_to_parse):
         left_key = []
         right_key = []
-        if isinstance(expr_to_parse.left.value, ast.Subscript):
+        if _is_ast_subscript(expr_to_parse.left.value):
             left_name = expr_to_parse.left.value.slice.value.s  # type: ignore
-        elif isinstance(expr_to_parse.left.value, ast.Attribute):
+        elif _is_ast_attribute(expr_to_parse.left.value):
             left_name = expr_to_parse.left.value.attr
         else:
             raise ValueError(
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
             )
-        if isinstance(expr_to_parse.left, ast.Subscript):
+        if _is_ast_subscript(expr_to_parse.left):
             left_key.append(expr_to_parse.left.slice.value.s)  # type: ignore
-        elif isinstance(expr_to_parse.left, ast.Attribute):
+        elif _is_ast_attribute(expr_to_parse.left):
             left_key.append(expr_to_parse.left.attr)
         else:
             raise ValueError(
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it.table_name['column_name']"
             )
-        if isinstance(expr_to_parse.comparators[0].value, ast.Subscript):
+        if _is_ast_subscript(expr_to_parse.comparators[0].value):
             right_name = expr_to_parse.comparators[0].value.slice.value.s  # type: ignore
-        elif isinstance(expr_to_parse.comparators[0].value, ast.Attribute):
+        elif _is_ast_attribute(expr_to_parse.comparators[0].value):
             right_name = expr_to_parse.comparators[0].value.attr
         else:
             raise ValueError(
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
             )
-        if isinstance(expr_to_parse.comparators[0], ast.Subscript):
+        if _is_ast_subscript(expr_to_parse.comparators[0]):
             right_key.append(expr_to_parse.comparators[0].slice.value.s)  # type: ignore
-        elif isinstance(expr_to_parse.comparators[0], ast.Attribute):
+        elif _is_ast_attribute(expr_to_parse.comparators[0]):
             right_key.append(expr_to_parse.comparators[0].attr)
         else:
             raise ValueError(
