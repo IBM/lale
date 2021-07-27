@@ -12,38 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-
 import numpy as np
-import pandas as pd
 
 import lale.docstrings
 import lale.operators
-
-try:
-    from pyspark.sql.dataframe import DataFrame as spark_df
-
-    spark_installed = True
-
-except ImportError:
-    spark_installed = False
-
-
-def _is_pandas_df(df):
-    return isinstance(df, pd.DataFrame) or isinstance(df, pd.Series)
-
-
-def _is_spark_df(df):
-    if spark_installed:
-        return isinstance(df, spark_df)
-
-
-def _is_ast_subscript(expr):
-    return isinstance(expr, ast.Subscript)
-
-
-def _is_ast_attribute(expr):
-    return isinstance(expr, ast.Attribute)
+from lale.helpers import (
+    _is_ast_attribute,
+    _is_ast_subscript,
+    _is_pandas_df,
+    _is_spark_df,
+)
 
 
 class _GroupByImpl:

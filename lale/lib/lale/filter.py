@@ -14,44 +14,24 @@
 
 import ast
 
-import pandas as pd
-
 import lale.docstrings
 import lale.operators
+from lale.helpers import (
+    _is_ast_attribute,
+    _is_ast_constant,
+    _is_ast_subs_or_attr,
+    _is_ast_subscript,
+    _is_pandas_df,
+    _is_spark_df,
+)
 
 try:
-    from pyspark.sql.dataframe import DataFrame as spark_df
     from pyspark.sql.functions import col
 
     spark_installed = True
 
 except ImportError:
     spark_installed = False
-
-
-def _is_df(df):
-    return isinstance(df, pd.DataFrame) or isinstance(df, pd.Series)
-
-
-def _is_spark_df(df):
-    if spark_installed:
-        return isinstance(df, spark_df)
-
-
-def _is_ast_subscript(expr):
-    return isinstance(expr, ast.Subscript)
-
-
-def _is_ast_attribute(expr):
-    return isinstance(expr, ast.Attribute)
-
-
-def _is_ast_constant(expr):
-    return isinstance(expr, ast.Constant)
-
-
-def _is_ast_subs_or_attr(expr):
-    return isinstance(expr, ast.Subscript) or isinstance(expr, ast.Attribute)
 
 
 class _FilterImpl:
@@ -153,7 +133,7 @@ class _FilterImpl:
                         )
                     )
             # Filtering pandas dataframes
-            if _is_df(X):
+            if _is_pandas_df(X):
                 if isinstance(op, ast.Eq):
                     return (
                         X[X[lhs] == X[rhs]]

@@ -487,18 +487,6 @@ class TestAggregateSpark(unittest.TestCase):
     # Get go_sales dataset in spark dataframe
     def setUp(self):
         self.go_sales_spark = fetch_go_sales_dataset("spark")
-        # Typecast numerical columns in the dataset which are of string datatype to float datatype
-        self.go_sales_spark[3]["go_products"] = (
-            self.go_sales_spark[3]["go_products"]
-            .withColumn(
-                "Unit price",
-                self.go_sales_spark[3]["go_products"]["Unit price"].cast("float"),
-            )
-            .withColumn(
-                "Unit cost",
-                self.go_sales_spark[3]["go_products"]["Unit cost"].cast("float"),
-            )
-        )
 
     def test_aggregate_1(self):
         trainable = GroupBy(by=[it["Product line"], it["Product brand"]])
