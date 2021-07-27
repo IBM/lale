@@ -33,4 +33,6 @@ def _concatenate_predictions_pandas(base_stacking, X, predictions):
         idx += 1
     if base_stacking.passthrough:
         X_meta.append(X)
-    return pd.concat(X_meta, axis=1)
+    return pd.concat(X_meta, axis=1).fillna(
+        0
+    )  # on the off-chance an estimator produces a NaN
