@@ -47,8 +47,10 @@ from lale.expressions import (
     string_indexer,
     sum,
 )
+from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.lale import (
     Aggregate,
+    Alias,
     ConcatFeatures,
     Filter,
     GroupBy,
@@ -368,6 +370,41 @@ class TestFilterSpark(unittest.TestCase):
         with self.assertRaises(ValueError):
             trainable = Filter(pred=[it["TrainId"] < it.col_na])
             _ = trainable.transform(self.transformed_df)
+
+
+# Testing alias operator for pandas and spark dataframes
+class TestAlias(unittest.TestCase):
+    # Get go_sales dataset in pandas and spark dataframes
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+        self.go_sales_spark = fetch_go_sales_dataset("spark")
+
+    def test_alias_pandas(self):
+        trainable = Alias(name="test_alias")
+        transformed_df = trainable.transform(self.go_sales[3]["go_products"])
+        self.assertTrue(isinstance(transformed_df, dict))
+        self.assertEqual(list(transformed_df.keys()), ["test_alias"])
+        self.assertEqual(len(transformed_df.keys()), 1)
+        self.assertTrue(_is_pandas_df(list(transformed_df.values())[0]))
+        self.assertEqual(list(transformed_df.values())[0].shape, (274, 8))
+
+    def test_alias_spark(self):
+        trainable = Alias(name="test_alias")
+        transformed_df = trainable.transform(self.go_sales_spark[3]["go_products"])
+        self.assertTrue(isinstance(transformed_df, dict))
+        self.assertEqual(list(transformed_df.keys()), ["test_alias"])
+        self.assertEqual(len(transformed_df.keys()), 1)
+        self.assertTrue(_is_spark_df(list(transformed_df.values())[0]))
+        self.assertEqual(list(transformed_df.values())[0].count(), 274)
+        self.assertEqual(len(list(transformed_df.values())[0].columns), 8)
+
+    def test_alias_name_error(self):
+        with self.assertRaises(ValueError):
+            _ = Alias()
+        with self.assertRaises(ValueError):
+            _ = Alias(name="")
+        with self.assertRaises(ValueError):
+            _ = Alias(name="    ")
 
 
 # Testing group_by operator for pandas and spark dataframes
