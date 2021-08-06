@@ -456,21 +456,27 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "estimator": {
-                    "description": "Planned Lale individual operator or pipeline,\nby default LogisticRegression.",
+                    "description": "Planned Lale individual operator or pipeline.",
                     "anyOf": [
-                        {"laleType": "operator", "not": {"enum": [None]}},
-                        {"enum": [None]},
+                        {"laleType": "operator"},
+                        {"enum": [None], "description": "LogisticRegression"},
                     ],
                     "default": None,
                 },
                 "algo": {
-                    "description": """Algorithm for searching the space.
-
-Use 'rand' for random search,
-'tpe' for tree of parzen estimators,
-'atpe' for adaptive TPE,
-'anneal' for variant on random search that takes some advantage of a smooth response surface.""",
-                    "enum": ["rand", "tpe", "atpe", "anneal"],
+                    "description": "Algorithm for searching the space.",
+                    "anyOf": [
+                        {
+                            "enum": ["tpe"],
+                            "description": "tree-structured Parzen estimator: https://proceedings.neurips.cc/paper/2011/hash/86e8f7ab32cfd12577bc2619bc635690-Abstract.html",
+                        },
+                        {"enum": ["atpe"], "description": "adaptive TPE"},
+                        {"enum": ["rand"], "description": "random search"},
+                        {
+                            "enum": ["anneal"],
+                            "description": "variant on random search that takes some advantage of a smooth response surface",
+                        },
+                    ],
                     "default": "tpe",
                 },
                 "max_evals": {
@@ -493,15 +499,17 @@ for (1-frac_evals_with_defaults) fraction of max_evals.""",
 The fit method performs cross validation on the input dataset for per
 trial, and uses the mean cross validation performance for optimization.
 This behavior is also impacted by handle_cv_failure flag.
-
-If integer: number of folds in sklearn.model_selection.StratifiedKFold.
-
-If object with split function: generator yielding (train, test) splits
-as arrays of indices. Can use any of the iterators from
-https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
+""",
                     "anyOf": [
-                        {"type": "integer"},
-                        {"laleType": "Any", "forOptimizer": False},
+                        {
+                            "type": "integer",
+                            "description": "Number of folds in sklearn.model_selection.StratifiedKFold (for classification) or KFold (for regression).",
+                        },
+                        {
+                            "laleType": "Any",
+                            "forOptimizer": False,
+                            "description": "Object with split function: generator yielding (train, test) splits as arrays of indices. Can use any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators",
+                        },
                     ],
                     "minimum": 1,
                     "default": 5,
@@ -527,8 +535,8 @@ or it can be a user-written Python function to create a completely
 custom scorer objects, following the `model_evaluation`_ example.
 The metric has to return a scalar value. Note that scikit-learns's
 scorer object always returns values such that higher score is
-better. Since Hyperopt solves a minimization problem, we pass
-(best_score - score) to Hyperopt.
+better. Since ``hyperopt.fmin`` solves a minimization problem, we pass
+``(best_score - score)`` to ``hyperopt.fmin``.
 
 .. _`make_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
 .. _metrics: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
@@ -568,10 +576,7 @@ better. Since Hyperopt solves a minimization problem, we pass
                     "default": None,
                 },
                 "best_score": {
-                    "description": """The best score for the specified scorer.
-
-This allows us to return a loss to hyperopt that is >=0,
-where zero is the best loss.""",
+                    "description": "The best score for the specified scorer. We pass ``(best_score - score)`` as a loss to ``hyperopt.fmin``, which minimizes the loss, thus maximizing the score. By specifying best_score, we can give ``hyperopt.fmin`` a loss that is >=0, where 0 is the best loss.",
                     "type": "number",
                     "default": 0.0,
                 },
@@ -605,9 +610,7 @@ where zero is the best loss.""",
                         {"type": "object"},  # Python dictionary
                         {"enum": [None]},
                     ],
-                    "description": """A dictionary of additional keyword arguments to pass to the scorer.
-                Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
-                """,
+                    "description": "A dictionary of additional keyword arguments to pass to the scorer. Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.",
                     "default": None,
                 },
                 "verbose": {

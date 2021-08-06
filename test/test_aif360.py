@@ -433,6 +433,9 @@ class TestAIF360Num(unittest.TestCase):
         theil_index_scorer = lale.lib.aif360.theil_index(**fi)
         theil_index = theil_index_scorer(estimator, test_X, test_y)
         self.assertGreater(theil_index, 0.1)
+        symm_di_scorer = lale.lib.aif360.symmetric_disparate_impact(**fi)
+        symm_di = symm_di_scorer(estimator, test_X, test_y)
+        self.assertLess(symm_di, 0.9)
 
     def test_scorers_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -780,6 +783,9 @@ class TestAIF360Cat(unittest.TestCase):
         theil_index_scorer = lale.lib.aif360.theil_index(**fi)
         theil_index = theil_index_scorer(estimator, test_X, test_y)
         self.assertGreater(theil_index, 0.1)
+        symm_di_scorer = lale.lib.aif360.symmetric_disparate_impact(**fi)
+        symm_di = symm_di_scorer(estimator, test_X, test_y)
+        self.assertLess(symm_di, 0.9)
 
     def test_scorers_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
