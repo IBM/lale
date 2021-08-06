@@ -469,7 +469,7 @@ def disparate_impact(favorable_labels, protected_attributes):
         \frac{\text{Pr}(Y = 1 | D = \text{unprivileged})}
         {\text{Pr}(Y = 1 | D = \text{privileged})}
 
-    The ideal value of this metric is 1. A value <1 implies higher
+    The ideal value of this metric is 1. A value <1 implies a higher
     benefit for the privileged group and a value >1 implies a higher
     benefit for the unprivileged group. Fairness for this metric is
     between 0.8 and 1.25.
@@ -493,8 +493,8 @@ def equal_opportunity_difference(favorable_labels, protected_attributes):
     .. math::
         \text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}}
 
-    The ideal value is 0. A value of <0 implies higher benefit for the
-    privileged group and a value >0 implies higher benefit for the
+    The ideal value is 0. A value of <0 implies disparate benefit for the
+    privileged group and a value >0 implies disparate benefit for the
     unprivileged group. Fairness for this metric is between -0.1 and 0.1.
 
     .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
@@ -608,6 +608,49 @@ def statistical_parity_difference(favorable_labels, protected_attributes):
 
 statistical_parity_difference.__doc__ = (
     str(statistical_parity_difference.__doc__) + _SCORER_DOCSTRING
+)
+
+
+class _SymmetricDisparateImpact:
+    def __init__(self, favorable_labels, protected_attributes):
+        self.disparate_impact_scorer = disparate_impact(
+            favorable_labels, protected_attributes
+        )
+
+    def _make_symmetric(self, disp_impact):
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return disp_impact
+        if disp_impact <= 1.0:
+            return disp_impact
+        return 1.0 / disp_impact
+
+    def scoring(self, y_true=None, y_pred=None, X=None):
+        disp_impact = self.disparate_impact_scorer.scoring(y_true, y_pred, X)
+        return self._make_symmetric(disp_impact)
+
+    def scorer(self, estimator, X, y):
+        disp_impact = self.disparate_impact_scorer.scorer(estimator, X, y)
+        return self._make_symmetric(disp_impact)
+
+    def __call__(self, estimator, X, y):
+        return self.scorer(estimator, X, y)
+
+
+def symmetric_disparate_impact(favorable_labels, protected_attributes):
+    """
+    Create a scikit-learn compatible scorer for symmetric `disparate impact`_ given the fairness info.
+    For disparate impact <= 1.0, return that value, otherwise return
+    its inverse.  The result is between 0 and 1.  The higher this
+    metric, the better, and the ideal value is 1.  A value <1 implies
+    that either the privileged group or the unprivileged group is
+    receiving a disparate benefit.
+
+    .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact"""
+    return _SymmetricDisparateImpact(favorable_labels, protected_attributes)
+
+
+symmetric_disparate_impact.__doc__ = (
+    str(symmetric_disparate_impact.__doc__) + _SCORER_DOCSTRING
 )
 
 

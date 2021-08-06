@@ -70,6 +70,7 @@ Metrics:
 * `equal_opportunity_difference`_
 * `r2_and_disparate_impact`_
 * `statistical_parity_difference`_
+* `symmetric_disparate_impact`_
 * `theil_index`_
 
 Datasets:
@@ -171,6 +172,7 @@ zero or one to simplify the task for the mitigator.
 .. _`fetch_tae_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_tae_df
 .. _`r2_and_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.r2_and_disparate_impact
 .. _`statistical_parity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.statistical_parity_difference
+.. _`symmetric_disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
 .. _`theil_index`: lale.lib.aif360.util.html#lale.lib.aif360.util.theil_index
 
 """
@@ -215,5 +217,6 @@ from .util import (
     fair_stratified_train_test_split,
     r2_and_disparate_impact,
     statistical_parity_difference,
+    symmetric_disparate_impact,
     theil_index,
 )
