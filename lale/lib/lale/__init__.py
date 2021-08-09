@@ -41,6 +41,7 @@ Transformers:
 * lale.lib.lale. `GroupBy`_
 * lale.lib.lale. `Map`_
 * lale.lib.lale. `Join`_
+* lale.lib.lale. `Alias`_
 * lale.lib.lale. `Scan`_
 * lale.lib.lale. `Relational`_
 
@@ -69,6 +70,7 @@ Estimators and transformers:
 .. _`GroupBy`: lale.lib.lale.group_by.html
 .. _`Map`: lale.lib.lale.map.html
 .. _`Join`: lale.lib.lale.join.html
+.. _`Alias`: lale.lib.lale.alias.html
 .. _`Scan`: lale.lib.lale.scan.html
 .. _`Relational`: lale.lib.lale.relational.html
 .. _`Both`: lale.lib.lale.both.html
@@ -86,6 +88,7 @@ Functions:
 """
 
 from .aggregate import Aggregate
+from .alias import Alias
 
 # estimators
 from .auto_pipeline import AutoPipeline
