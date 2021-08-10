@@ -1144,6 +1144,10 @@ class TestMap(unittest.TestCase):
             trainable = Map(columns={"new_name": rename(it["  "])})
             trained = trainable.fit(df)
             _ = trained.transform(df)
+        with self.assertRaises(ValueError):
+            trainable = Map(columns=[rename(it.gender)])
+            trained = trainable.fit(df)
+            _ = trained.transform(df)
 
     def test_transform_replace_list_and_remainder(self):
         d = {
