@@ -23,7 +23,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": ["init", "presort"],
+            "required": ["init"],
             "relevantToOptimizer": [
                 "loss",
                 "n_estimators",
@@ -32,7 +32,6 @@ _hyperparams_schema = {
                 "max_depth",
                 "max_features",
                 "alpha",
-                "presort",
             ],
             "additionalProperties": False,
             "properties": {
