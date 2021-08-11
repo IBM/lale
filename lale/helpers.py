@@ -592,7 +592,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
         # Validate that the sklearn_obj is a valid sklearn-compatible object
         if sklearn_obj is None or not hasattr(sklearn_obj, "get_params"):
             raise ValueError(
-                "The input pipeline has a step that is not scikit-learn compatible."
+                f"The input pipeline has a step {sklearn_obj} that is not scikit-learn compatible."
             )
         orig_hyperparams = sklearn_obj.get_params(deep=False)
         higher_order = False
@@ -717,17 +717,46 @@ def create_data_loader(X, y=None, batch_size=1):
     from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
     from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
 
+    collate_fn = None
+
+    def numpy_collate_fn(batch):
+        return_X = None
+        return_y = None
+        for item in batch:
+            if isinstance(item, tuple):
+                if return_X is None:
+                    return_X = item[0]
+                else:
+                    return_X = np.vstack((return_X, item[0]))
+                if return_y is None:
+                    return_y = item[1]
+                else:
+                    return_y = np.vstack((return_y, item[1]))
+            else:
+                if return_X is None:
+                    return_X = item
+                else:
+                    return_X = np.vstack((return_X, item))
+        if return_y is not None:
+            if len(return_y.shape) > 1 and return_y.shape[1] == 1:
+                return_y = np.reshape(return_y, (len(return_y),))
+            return return_X, return_y
+        else:
+            return return_X
+
     if isinstance(X, pd.DataFrame):
         X = X.to_numpy()
         if isinstance(y, pd.Series):
             y = y.to_numpy()
         dataset = NumpyTorchDataset(X, y)
+        collate_fn = numpy_collate_fn
     elif isinstance(X, scipy.sparse.csr.csr_matrix):
         # unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
         X = X.toarray()
         if isinstance(y, lale.datasets.data_schemas.NDArrayWithSchema):
             y = y.view(np.ndarray)
         dataset = NumpyTorchDataset(X, y)
+        collate_fn = numpy_collate_fn
     elif isinstance(X, np.ndarray):
         # unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
         if isinstance(X, lale.datasets.data_schemas.NDArrayWithSchema):
@@ -735,6 +764,7 @@ def create_data_loader(X, y=None, batch_size=1):
         if isinstance(y, lale.datasets.data_schemas.NDArrayWithSchema):
             y = y.view(np.ndarray)
         dataset = NumpyTorchDataset(X, y)
+        collate_fn = numpy_collate_fn
     elif isinstance(X, str):  # Assume that this is path to hdf5 file
         dataset = HDF5TorchDataset(X)
     elif isinstance(X, BatchDataDict):
@@ -758,7 +788,7 @@ def create_data_loader(X, y=None, batch_size=1):
         raise TypeError(
             "Can not create a data loader for a dataset with type {}".format(type(X))
         )
-    return DataLoader(dataset, batch_size=batch_size)
+    return DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
 
 
 def write_batch_output_to_file(

@@ -3894,6 +3894,119 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         assert result.is_frozen_trainable()
         return result
 
+    def _fit_last_node_with_batches(
+        self, X, y=None, num_epochs_batching=None
+    ) -> "TrainedPipeline[TrainedIndividualOp]":
+        """
+        This method handles the case where all but the last node of a pipeline are frozen_trained and
+        only the last node needs to be fitted batch-wise.
+        """
+        sink_nodes = self._find_sink_nodes()
+        if len(sink_nodes) > 1:
+            raise ValueError(
+                "A pipeline with more than one sink node is not supported."
+            )
+        sink_node = sink_nodes[0]
+        new_sink_node: Union[TrainableIndividualOp, TrainedIndividualOp] = sink_node
+
+        try:
+            num_epochs = sink_node._impl_instance().num_epochs
+        except AttributeError:
+            if num_epochs_batching is None:
+                warnings.warn(
+                    "Operator {} does not have num_epochs and none given to Batching operator, using 1 as a default".format(
+                        sink_node.name()
+                    )
+                )
+                num_epochs = 1
+            else:
+                num_epochs = num_epochs_batching
+        assert num_epochs >= 0
+        outputs: Dict[Operator, Any] = {}
+        edges: List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
+        trained_map: Dict[
+            Union[TrainedIndividualOp, TrainableIndividualOp], TrainedIndividualOp
+        ] = {}
+        trained_steps: List[IndividualOp] = []
+        for operator in self._steps[
+            :-1
+        ]:  # Again a strict assumption on the structure of the pipeline
+            trained_map[operator] = operator  # type:ignore
+            trained_steps.append(operator)
+
+        for epoch in range(num_epochs):
+            for _, batch_data in enumerate(
+                X  # With Batching, X is a dataloader which contains y too if given
+            ):  # batching_transformer will output only one obj
+                if isinstance(batch_data, tuple):
+                    batch_X, batch_y = batch_data
+                elif isinstance(batch_data, list):
+                    batch_X = batch_data[0]
+                    batch_y = batch_data[1]
+                else:
+                    batch_X = batch_data
+                    batch_y = None
+                batch_output = None
+                for operator in self._steps[
+                    :-1
+                ]:  # Again a strict assumption on the structure of the pipeline
+                    if not operator.is_frozen_trained():
+                        raise ValueError(
+                            "All the nodes but the last one should be frozen trained to use this mode of batch-wise training."
+                        )
+                    preds = self._preds[operator]
+                    if len(preds) == 0:
+                        batch_input = [batch_X]
+                    else:
+                        batch_input = [
+                            outputs[pred][0]
+                            if isinstance(outputs[pred], tuple)
+                            else outputs[pred]
+                            for pred in preds
+                        ]
+                    if len(batch_input) == 1:
+                        batch_input = batch_input[0]
+
+                    if operator.is_transformer():
+                        batch_output = operator.transform(batch_input, batch_y)
+                    else:
+                        # This is ok because trainable pipelines steps
+                        # must only be individual operators
+                        if operator.has_method("predict_proba"):  # type: ignore
+                            batch_output = operator.predict_proba(X=batch_input)
+                        elif operator.has_method("decision_function"):  # type: ignore
+                            batch_output = operator.decision_function(X=batch_input)
+                        else:
+                            batch_output = operator._predict(X=batch_input)
+                    outputs[operator] = batch_output
+
+                if sink_node.is_supervised():
+                    try:
+                        new_sink_node = new_sink_node.partial_fit(
+                            batch_output, batch_y, classes=y
+                        )
+                    except TypeError:
+                        new_sink_node = new_sink_node.partial_fit(batch_output, batch_y)
+                else:
+                    new_sink_node = new_sink_node.partial_fit(batch_output)
+        trained = TrainedIndividualOp(
+            new_sink_node.name(),
+            new_sink_node._impl,
+            new_sink_node._schemas,
+            None,
+            _lale_trained=True,
+        )
+        trained_steps.append(trained)
+        trained_map[sink_node] = trained
+        trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
+
+        trained_steps2: Any = list(trained_steps)
+        result: TrainedPipeline[TrainedIndividualOp] = TrainedPipeline(
+            trained_steps2, trained_edges, ordered=True, _lale_trained=True
+        )
+        self._trained = result
+        return result
+
     def fit_with_batches(
         self, X, y=None, serialize=True, num_epochs_batching=None
     ) -> "TrainedPipeline[TrainedIndividualOp]":
@@ -3911,6 +4024,21 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         [type]
             [description]
         """
+        estimator_only = True
+        concat_features = False
+        from lale.lib.lale import ConcatFeatures
+
+        for operator in self._steps[:-1]:
+            if not operator.is_frozen_trained():
+                estimator_only = False
+            if isinstance(operator.impl_instance, ConcatFeatures.impl_instance):
+                concat_features = True
+        if not estimator_only and concat_features:
+            raise ValueError(
+                "A pipeline with ConcatFeatures where the prefix is not frozen trained can not be fitted batch-wise."
+            )
+        elif estimator_only:
+            return self._fit_last_node_with_batches(X, y, num_epochs_batching=None)
         trained_steps: List[TrainedIndividualOp] = []
         outputs: Dict[Operator, Any] = {}
         edges: List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
@@ -3939,7 +4067,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             trainable = operator
             if len(inputs) == 1:
                 inputs = inputs[0]
-            trained: Optional[TrainedIndividualOp] = None
+            trained: Optional[IndividualOp] = None
+            num_epochs = 0
             if trainable.has_method("partial_fit"):
                 try:
                     num_epochs = trainable._impl_instance().num_epochs
@@ -3954,6 +4083,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     else:
                         num_epochs = num_epochs_batching
                 assert num_epochs >= 0
+            elif trainable.is_frozen_trained():
+                pass
             else:
                 raise AttributeError(
                     "All operators to be trained with batching need to implement partial_fit. {} doesn't.".format(
@@ -3961,25 +4092,30 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     )
                 )
             inputs_for_transform: Any = inputs
-            for epoch in range(num_epochs):
-                for _, batch_data in enumerate(
-                    inputs
-                ):  # batching_transformer will output only one obj
-                    if isinstance(batch_data, tuple):
-                        batch_X, batch_y = batch_data
-                    elif isinstance(batch_data, list):
-                        batch_X = batch_data[0]
-                        batch_y = batch_data[1]
-                    else:
-                        batch_X = batch_data
-                        batch_y = None
-                    if trainable.is_supervised():
-                        try:
-                            trained = trainable.partial_fit(batch_X, batch_y, classes=y)
-                        except TypeError:
-                            trained = trainable.partial_fit(batch_X, batch_y)
-                    else:
-                        trained = trainable.partial_fit(batch_X)
+            if trainable.is_frozen_trained():
+                trained = trainable
+            else:
+                for epoch in range(num_epochs):
+                    for _, batch_data in enumerate(
+                        inputs
+                    ):  # batching_transformer will output only one obj
+                        if isinstance(batch_data, tuple):
+                            batch_X, batch_y = batch_data
+                        elif isinstance(batch_data, list):
+                            batch_X = batch_data[0]
+                            batch_y = batch_data[1]
+                        else:
+                            batch_X = batch_data
+                            batch_y = None
+                        if trainable.is_supervised():
+                            try:
+                                trained = trainable.partial_fit(
+                                    batch_X, batch_y, classes=y
+                                )
+                            except TypeError:
+                                trained = trainable.partial_fit(batch_X, batch_y)
+                        else:
+                            trained = trainable.partial_fit(batch_X)
             assert trained is not None
             trained = TrainedIndividualOp(
                 trained.name(),
@@ -4322,97 +4458,105 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 os.mkdir(serialization_out_dir)
 
         sink_nodes = self._find_sink_nodes()
+        sink_node = sink_nodes[0]
         operator_idx = 0
         inputs: Any
-        for operator in self._steps:
-            preds = self._preds[operator]
-            if len(preds) == 0:
-                inputs = [X]
+        output = None
+
+        for batch_idx, batch_data in enumerate(
+            X
+        ):  # batching_transformer will output only one obj
+            if isinstance(batch_data, Tuple):
+                batch_X, batch_y = batch_data
             else:
-                inputs = [
-                    outputs[pred][0]
-                    if isinstance(outputs[pred], tuple)
-                    else outputs[pred]
-                    for pred in preds
-                ]
-            if len(inputs) == 1:
-                inputs = inputs[0]
-            trained = operator
-            output = None
-            for batch_idx, batch_data in enumerate(
-                inputs
-            ):  # batching_transformer will output only one obj
-                if isinstance(batch_data, Tuple):
-                    batch_X, batch_y = batch_data
+                batch_X = batch_data
+                batch_y = None
+
+            for operator in self._steps:
+                preds = self._preds[operator]
+                if len(preds) == 0:
+                    inputs = batch_X
                 else:
-                    batch_X = batch_data
-                    batch_y = None
+                    inputs = [
+                        outputs[pred][0]
+                        if isinstance(outputs[pred], tuple)
+                        else outputs[pred]
+                        for pred in preds
+                    ]
+                if len(inputs) == 1:
+                    inputs = inputs[0]
+                trained = operator
                 if trained.is_transformer():
-                    batch_output = trained.transform(batch_X, batch_y)
+                    batch_output = trained.transform(inputs, batch_y)
                 else:
                     if trained in sink_nodes:
                         batch_output = trained._predict(
-                            X=batch_X
+                            X=inputs
                         )  # We don't support y for predict yet as there is no compelling case
                     else:
                         # This is ok because trainable pipelines steps
                         # must only be individual operators
                         if trained.has_method("predict_proba"):  # type: ignore
-                            batch_output = trained.predict_proba(X=batch_X)
+                            batch_output = trained.predict_proba(X=inputs)
                         elif trained.has_method("decision_function"):  # type: ignore
-                            batch_output = trained.decision_function(X=batch_X)
+                            batch_output = trained.decision_function(X=inputs)
                         else:
-                            batch_output = trained._predict(X=batch_X)
-                if isinstance(batch_output, tuple):
-                    batch_out_X, batch_out_y = batch_output
-                else:
-                    batch_out_X = batch_output
-                    batch_out_y = None
-                if serialize:
-                    output = lale.helpers.write_batch_output_to_file(
-                        output,
-                        os.path.join(
-                            serialization_out_dir,
-                            "fit_with_batches" + str(operator_idx) + ".hdf5",
-                        ),
-                        len(inputs.dataset),
-                        batch_idx,
-                        batch_X,
-                        batch_y,
-                        batch_out_X,
-                        batch_out_y,
-                    )
-                else:
-                    if batch_out_y is not None:
+                            batch_output = trained._predict(X=inputs)
+                if trained == sink_node:
+                    if isinstance(batch_output, tuple):
                         output = lale.helpers.append_batch(
-                            output, (batch_output, batch_out_y)
+                            output, (batch_output[0], batch_output[1])
                         )
                     else:
                         output = lale.helpers.append_batch(output, batch_output)
-            if serialize:
-                output.close()  # type: ignore
-                output = lale.helpers.create_data_loader(
-                    os.path.join(
-                        serialization_out_dir,
-                        "fit_with_batches" + str(operator_idx) + ".hdf5",
-                    ),
-                    batch_size=inputs.batch_size,
-                )
-            else:
-                if isinstance(output, tuple):
-                    output = lale.helpers.create_data_loader(
-                        X=output[0], y=output[1], batch_size=inputs.batch_size
-                    )
-                else:
-                    output = lale.helpers.create_data_loader(
-                        X=output, y=None, batch_size=inputs.batch_size
-                    )
-            outputs[operator] = output
-            operator_idx += 1
+                outputs[operator] = batch_output
+                operator_idx += 1
 
-        return_data = outputs[self._steps[-1]].dataset.get_data()
-        if serialize:
-            shutil.rmtree(serialization_out_dir)
+            #     if serialize:
+            #         output = lale.helpers.write_batch_output_to_file(
+            #             output,
+            #             os.path.join(
+            #                 serialization_out_dir,
+            #                 "fit_with_batches" + str(operator_idx) + ".hdf5",
+            #             ),
+            #             len(inputs.dataset),
+            #             batch_idx,
+            #             batch_X,
+            #             batch_y,
+            #             batch_out_X,
+            #             batch_out_y,
+            #         )
+            #     else:
+            #         if batch_out_y is not None:
+            #             output = lale.helpers.append_batch(
+            #                 output, (batch_output, batch_out_y)
+            #             )
+            #         else:
+            #             output = lale.helpers.append_batch(output, batch_output)
+            # if serialize:
+            #     output.close()  # type: ignore
+            #     output = lale.helpers.create_data_loader(
+            #         os.path.join(
+            #             serialization_out_dir,
+            #             "fit_with_batches" + str(operator_idx) + ".hdf5",
+            #         ),
+            #         batch_size=inputs.batch_size,
+            #     )
+            # else:
+            #     if isinstance(output, tuple):
+            #         output = lale.helpers.create_data_loader(
+            #             X=output[0], y=output[1], batch_size=inputs.batch_size
+            #         )
+            #     else:
+            #         output = lale.helpers.create_data_loader(
+            #             X=output, y=None, batch_size=inputs.batch_size
+            #         )
+            # outputs[operator] = output
+            # operator_idx += 1
+
+        return_data = output  # outputs[self._steps[-1]]#.dataset.get_data()
+        # if serialize:
+        #     shutil.rmtree(serialization_out_dir)
 
         return return_data
 
