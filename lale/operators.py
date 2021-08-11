@@ -4031,7 +4031,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         for operator in self._steps[:-1]:
             if not operator.is_frozen_trained():
                 estimator_only = False
-            if isinstance(operator.impl_instance, ConcatFeatures.impl_instance):
+            if isinstance(operator, ConcatFeatures):  # type:ignore
                 concat_features = True
         if not estimator_only and concat_features:
             raise ValueError(
