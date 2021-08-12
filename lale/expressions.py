@@ -316,6 +316,10 @@ def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
     return _make_call_expr("replace", subject, old2new_ast)
 
 
+def identity(subject: Expr) -> Expr:
+    return _make_call_expr("identity", subject)
+
+
 def sum(group: Expr) -> Expr:
     return _make_call_expr("sum", group)
 

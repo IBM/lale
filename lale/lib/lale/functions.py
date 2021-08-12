@@ -23,7 +23,6 @@ import pandas as pd
 try:
     import pyspark.sql.functions as pysql
     from pyspark.ml.feature import StringIndexer
-    from pyspark.sql.dataframe import DataFrame as spark_df
 
     # noqa in the imports here because those get used dynamically and flake fails.
     from pyspark.sql.functions import hour as spark_hour  # noqa
@@ -45,6 +44,12 @@ except ImportError:
 
 
 from lale.expressions import Expr
+from lale.helpers import (
+    _is_ast_attribute,
+    _is_ast_subscript,
+    _is_pandas_df,
+    _is_spark_df,
+)
 
 
 class categorical:
@@ -78,7 +83,7 @@ class categorical:
                         return False
             return True
 
-        if isinstance(X, pd.DataFrame):
+        if _is_pandas_df(X):
             result = [c for c in X.columns if is_categorical(X[c])]
         elif isinstance(X, np.ndarray):
             result = [c for c in range(X.shape[1]) if is_categorical(X[:, c])]
@@ -120,7 +125,7 @@ class date_time:
                 return False
             return True
 
-        if isinstance(X, pd.DataFrame):
+        if _is_pandas_df(X):
             result = [c for c in X.columns if is_date_time(X[c])]
         elif isinstance(X, np.ndarray):
             result = [c for c in range(X.shape[1]) if is_date_time(X[:, c])]
@@ -135,12 +140,12 @@ def replace(df: Any, replace_expr: Expr, new_column_name: str):
     if new_column_name is None:
         new_column_name = column_name
     mapping_dict = ast.literal_eval(re.args[1].value)
-    if isinstance(df, pd.DataFrame):
+    if _is_pandas_df(df):
         new_column = df[column_name].replace(mapping_dict)
         df[new_column_name] = new_column
         if new_column_name != column_name:
             del df[column_name]
-    elif spark_installed and isinstance(df, spark_df):
+    elif spark_installed and _is_spark_df(df):
         mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])  # type: ignore
         df = df.withColumn(new_column_name, mapping_expr[df[column_name]])  # type: ignore
         if new_column_name != column_name:
@@ -148,6 +153,34 @@ def replace(df: Any, replace_expr: Expr, new_column_name: str):
     else:
         raise ValueError(
             "function replace supports only Pandas dataframes or spark dataframes."
+        )
+    return new_column_name, df
+
+
+def identity(df: Any, column: Expr, new_column_name: str):
+    if _is_ast_subscript(column._expr):  # type: ignore
+        column_name = column._expr.slice.value.s  # type: ignore
+    elif _is_ast_attribute(column._expr):  # type: ignore
+        column_name = column._expr.attr  # type: ignore
+    else:
+        raise ValueError(
+            "ERROR: Expression type not supported! Formats supported: it.column_name or it['column_name']."
+        )
+
+    if column_name is None or not column_name.strip():
+        raise ValueError("Name of the column to be renamed cannot be None or empty.")
+    if new_column_name is None or not new_column_name.strip():
+        raise ValueError(
+            "New name of the column to be renamed cannot be None or empty."
+        )
+
+    if _is_pandas_df(df):
+        df = df.rename(columns={column_name: new_column_name})
+    elif spark_installed and _is_spark_df(df):
+        df = df.withColumnRenamed(column_name, new_column_name)
+    else:
+        raise ValueError(
+            "Function identity supports only Pandas dataframes or spark dataframes."
         )
     return new_column_name, df
 
@@ -162,12 +195,12 @@ def time_functions(
         new_column_name = column_name
     if len(de.args) > 1:
         fmt = ast.literal_eval(de.args[1])
-    if isinstance(df, pd.DataFrame):
+    if _is_pandas_df(df):
         new_column = pd.to_datetime(df[column_name], format=fmt)
         df[new_column_name] = getattr(getattr(new_column, "dt"), pandas_func)
         if new_column_name != column_name:
             del df[column_name]
-    elif spark_installed and isinstance(df, spark_df):
+    elif spark_installed and _is_spark_df(df):
         df = df.withColumn(column_name, to_timestamp(df[column_name], fmt))  # type: ignore
         df = df.select(eval(spark_func + "(df[column_name])").alias(new_column_name))
         if new_column_name != column_name:
@@ -210,14 +243,14 @@ def string_indexer(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     if new_column_name is None:
         new_column_name = column_name
 
-    if isinstance(df, pd.DataFrame):
+    if _is_pandas_df(df):
         sorted_indices = df[column_name].value_counts().index
         df[new_column_name] = df[column_name].map(
             dict(zip(sorted_indices, range(0, len(sorted_indices))))
         )
         if new_column_name != column_name:
             del df[column_name]
-    elif spark_installed and isinstance(df, spark_df):
+    elif spark_installed and _is_spark_df(df):
         df = df.withColumnRenamed(
             column_name, "newColName"
         )  # renaming because inputCol and outputCol can't be the same.

@@ -28,6 +28,9 @@ class _AliasImpl:
     def transform(self, X):
         return {self.name: X}
 
+    def viz_label(self) -> str:
+        return "Alias:\n" + str(self.name)
+
 
 _hyperparams_schema = {
     "allOf": [

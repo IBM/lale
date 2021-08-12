@@ -37,6 +37,7 @@ from lale.expressions import (
     day_of_week,
     day_of_year,
     hour,
+    identity,
     it,
     max,
     mean,
@@ -1105,6 +1106,49 @@ class TestMap(unittest.TestCase):
         state_map = {"NY": "New York", "CA": "California"}
         _ = Map(columns=[replace(it.gender, gender_map), replace(it.state, state_map)])
 
+    def test_transform_identity_map(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        trainable = Map(
+            columns={
+                "new_gender": it.gender,
+                "new_status": it["status"],
+            }
+        )
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.columns[0], "new_gender")
+        self.assertEqual(transformed_df.columns[2], "new_status")
+        self.assertEqual(len(transformed_df.columns), 3)
+
+    def test_transform_identity_map_error(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        with self.assertRaises(ValueError):
+            trainable = Map(columns={"new_name": identity(it.gender)})
+            trained = trainable.fit(df)
+            _ = trained.transform(df)
+        with self.assertRaises(ValueError):
+            trainable = Map(columns={"   ": it.gender})
+            trained = trainable.fit(df)
+            _ = trained.transform(df)
+        with self.assertRaises(ValueError):
+            trainable = Map(columns={"new_name": it["  "]})
+            trained = trainable.fit(df)
+            _ = trained.transform(df)
+        with self.assertRaises(ValueError):
+            trainable = Map(columns=[it.gender])
+            trained = trainable.fit(df)
+            _ = trained.transform(df)
+
     def test_transform_replace_list_and_remainder(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
@@ -1697,6 +1741,26 @@ class TestMapSpark(unittest.TestCase):
             )
             sc = SparkContext.getOrCreate(conf=conf)
             self.sqlCtx = SQLContext(sc)
+
+    def test_transform_identity_map(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(
+            columns={
+                "new_gender": it.gender,
+                "new_status": it["status"],
+            }
+        )
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(transformed_df.columns[0], "new_gender")
+        self.assertEqual(transformed_df.columns[2], "new_status")
+        self.assertEqual(len(transformed_df.columns), 3)
 
     def test_transform_spark_replace_list(self):
         if spark_installed:
