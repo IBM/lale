@@ -37,13 +37,13 @@ from lale.expressions import (
     day_of_week,
     day_of_year,
     hour,
+    identity,
     it,
     max,
     mean,
     min,
     minute,
     month,
-    rename,
     replace,
     string_indexer,
     sum,
@@ -1106,7 +1106,7 @@ class TestMap(unittest.TestCase):
         state_map = {"NY": "New York", "CA": "California"}
         _ = Map(columns=[replace(it.gender, gender_map), replace(it.state, state_map)])
 
-    def test_transform_rename_map(self):
+    def test_transform_identity_map(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
             "state": ["NY", "NY", "CA", "NY", "CA"],
@@ -1115,8 +1115,8 @@ class TestMap(unittest.TestCase):
         df = pd.DataFrame(data=d)
         trainable = Map(
             columns={
-                "new_gender": rename(it.gender),
-                "new_status": rename(it["status"]),
+                "new_gender": it.gender,
+                "new_status": it["status"],
             }
         )
         trained = trainable.fit(df)
@@ -1125,7 +1125,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df.columns[2], "new_status")
         self.assertEqual(len(transformed_df.columns), 3)
 
-    def test_transform_rename_map_error(self):
+    def test_transform_identity_map_error(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
             "state": ["NY", "NY", "CA", "NY", "CA"],
@@ -1133,19 +1133,19 @@ class TestMap(unittest.TestCase):
         }
         df = pd.DataFrame(data=d)
         with self.assertRaises(ValueError):
-            trainable = Map(columns={"": rename(it.gender)})
+            trainable = Map(columns={"new_name": identity(it.gender)})
             trained = trainable.fit(df)
             _ = trained.transform(df)
         with self.assertRaises(ValueError):
-            trainable = Map(columns={"   ": rename(it.gender)})
+            trainable = Map(columns={"   ": it.gender})
             trained = trainable.fit(df)
             _ = trained.transform(df)
         with self.assertRaises(ValueError):
-            trainable = Map(columns={"new_name": rename(it["  "])})
+            trainable = Map(columns={"new_name": it["  "]})
             trained = trainable.fit(df)
             _ = trained.transform(df)
         with self.assertRaises(ValueError):
-            trainable = Map(columns=[rename(it.gender)])
+            trainable = Map(columns=[it.gender])
             trained = trainable.fit(df)
             _ = trained.transform(df)
 
@@ -1742,7 +1742,7 @@ class TestMapSpark(unittest.TestCase):
             sc = SparkContext.getOrCreate(conf=conf)
             self.sqlCtx = SQLContext(sc)
 
-    def test_transform_rename_map(self):
+    def test_transform_identity_map(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
             "state": ["NY", "NY", "CA", "NY", "CA"],
@@ -1752,8 +1752,8 @@ class TestMapSpark(unittest.TestCase):
         sdf = self.sqlCtx.createDataFrame(df)
         trainable = Map(
             columns={
-                "new_gender": rename(it.gender),
-                "new_status": rename(it["status"]),
+                "new_gender": it.gender,
+                "new_status": it["status"],
             }
         )
         trained = trainable.fit(sdf)

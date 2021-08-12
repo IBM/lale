@@ -15,7 +15,12 @@ import importlib
 
 import lale.docstrings
 import lale.operators
-from lale.helpers import _is_pandas_df, _is_spark_df
+from lale.helpers import (
+    _is_ast_attribute,
+    _is_ast_subscript,
+    _is_pandas_df,
+    _is_spark_df,
+)
 
 
 class _MapImpl:
@@ -28,7 +33,10 @@ class _MapImpl:
 
         def get_map_function_output(column, new_column_name):
             functions_module = importlib.import_module("lale.lib.lale.functions")
-            function_name = column._expr.func.id
+            if _is_ast_subscript(column._expr) or _is_ast_attribute(column._expr):
+                function_name = "identity"
+            else:
+                function_name = column._expr.func.id
             map_func_to_be_called = getattr(functions_module, function_name)
             return map_func_to_be_called(X, column, new_column_name)
 

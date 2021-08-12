@@ -157,11 +157,11 @@ def replace(df: Any, replace_expr: Expr, new_column_name: str):
     return new_column_name, df
 
 
-def rename(df: Any, column: Expr, new_column_name: str):
-    if _is_ast_subscript(column._expr.args[0]):  # type: ignore
-        column_name = column._expr.args[0].slice.value.s  # type: ignore
-    elif _is_ast_attribute(column._expr.args[0]):  # type: ignore
-        column_name = column._expr.args[0].attr  # type: ignore
+def identity(df: Any, column: Expr, new_column_name: str):
+    if _is_ast_subscript(column._expr):  # type: ignore
+        column_name = column._expr.slice.value.s  # type: ignore
+    elif _is_ast_attribute(column._expr):  # type: ignore
+        column_name = column._expr.attr  # type: ignore
     else:
         raise ValueError(
             "ERROR: Expression type not supported! Formats supported: it.column_name or it['column_name']."
@@ -180,7 +180,7 @@ def rename(df: Any, column: Expr, new_column_name: str):
         df = df.withColumnRenamed(column_name, new_column_name)
     else:
         raise ValueError(
-            "Function rename supports only Pandas dataframes or spark dataframes."
+            "Function identity supports only Pandas dataframes or spark dataframes."
         )
     return new_column_name, df
 
