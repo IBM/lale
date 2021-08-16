@@ -4978,7 +4978,11 @@ def customize_schema(
     PlannedIndividualOp
         Copy of the operator with a customized schema
     """
-    op_index = _all_available_operators.index(op)
+    op_index = -1
+    try:
+        op_index = _all_available_operators.index(op)
+    except ValueError:
+        pass
     # TODO: why are we doing a deeopcopy here?
     op = copy.deepcopy(op)
     methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
@@ -5043,7 +5047,7 @@ def customize_schema(
     )
     # we also need to prune the hyperparameter, if any, removing defaults (which may have changed)
     op._hyperparams = op.hyperparams()
-    if set_as_available:
+    if set_as_available and op_index >= 0:
         _all_available_operators[op_index] = op
     return op
 
