@@ -261,6 +261,67 @@ class TestBoth(unittest.TestCase):
         _ = trained.transform(test_X)
 
 
+class TestTee(unittest.TestCase):
+    def test_tee_None(self):
+        import lale.datasets
+        from lale.lib.lale import Tee
+
+        pca = PCA()
+        trainable = Tee() >> pca
+        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        _ = trained.transform(test_X)
+
+    def test_tee_lambda(self):
+        import numpy as np
+
+        import lale.datasets
+        from lale.lib.lale import Tee
+
+        def check_data(X, y):
+            self.assertEqual(X.dtypes["x1"], np.float64)
+
+        pca = PCA()
+        trainable = Tee(listener=lambda df, y: check_data(df, y)) >> pca
+        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        _ = trained.transform(test_X)
+
+    def test_tee_def(self):
+        import numpy as np
+
+        import lale.datasets
+        from lale.lib.lale import Tee
+
+        def check_data(X, y):
+            self.assertEqual(X.dtypes["x1"], np.float64)
+
+        pca = PCA()
+        trainable = Tee(listener=check_data) >> pca
+        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        _ = trained.transform(test_X)
+
+    def test_tee_obj(self):
+        import numpy as np
+
+        import lale.datasets
+        from lale.lib.lale import Tee
+
+        class check_data:
+            def __init__(self, outerSelf):
+                self._outerSelf = outerSelf
+
+            def __call__(self, X, y):
+                self._outerSelf.assertEqual(X.dtypes["x1"], np.float64)
+
+        pca = PCA()
+        trainable = Tee(listener=check_data(self)) >> pca
+        (train_X, train_y), (test_X, test_y) = lale.datasets.digits_df()
+        trained = trainable.fit(train_X, train_y)
+        _ = trained.transform(test_X)
+
+
 class TestClone(unittest.TestCase):
     def test_clone_with_scikit1(self):
         lr = LogisticRegression()
