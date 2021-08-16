@@ -206,6 +206,7 @@ if sklearn.__version__ >= "0.21":
             [Object(n_clusters=Null()), Object(distance_threshold=Null())],
             desc="n_clusters must be None if distance_threshold is not None.",
         ),
+        set_as_available=True,
     )
     FeatureAgglomeration = FeatureAgglomeration.customize_schema(
         constraint=AnyOf(
@@ -214,7 +215,8 @@ if sklearn.__version__ >= "0.21":
                 Object(distance_threshold=Null()),
             ],
             desc="compute_full_tree must be True if distance_threshold is not None.",
-        )
+        ),
+        set_as_available=True,
     )
 
 if sklearn.__version__ >= "0.24":
@@ -228,6 +230,7 @@ if sklearn.__version__ >= "0.24":
             default=False,
             forOptimizer=False,
         ),
+        set_as_available=True,
     )
 
 

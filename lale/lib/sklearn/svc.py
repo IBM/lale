@@ -341,6 +341,7 @@ if sklearn.__version__ >= "0.22":
             desc="If true, decision_function_shape='ovr', and number of classes > 2, predict will break ties according to the confidence values of decision_function; otherwise the first class among the tied classes is returned.",
             default=False,
         ),
+        set_as_available=True,
     )
 
 

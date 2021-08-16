@@ -134,7 +134,8 @@ if sklearn.__version__ >= "0.24":
             desc="If True, scale data so that normally distributed features have a variance of 1. In general, if the difference between the x-values of q_max and q_min for a standard normal distribution is greater than 1, the dataset will be scaled down. If less than 1, the dataset will be scaled up.",
             default=False,
             forOptimizer=True,
-        )
+        ),
+        set_as_available=True,
     )
 
 

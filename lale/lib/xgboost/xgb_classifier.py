@@ -531,7 +531,8 @@ if xgboost_installed and xgboost.__version__ >= "0.90":
                 ],
                 "default": "binary:logistic",
             }
-        )
+        ),
+        set_as_available=True,
     )
 
 if xgboost_installed and xgboost.__version__ >= "1.3":
@@ -767,6 +768,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             "minimum": 0,
             "maximum": 3,
         },
+        set_as_available=True,
     )
 
 lale.docstrings.set_docstrings(XGBClassifier)

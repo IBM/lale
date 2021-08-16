@@ -210,6 +210,7 @@ if sklearn.__version__ >= "0.21":
             "type": "boolean",
             "default": False,
         },
+        set_as_available=True,
     )
 
 
