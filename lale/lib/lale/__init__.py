@@ -34,6 +34,7 @@ Transformers:
 * lale.lib.lale. `Batching`_
 * lale.lib.lale. `ConcatFeatures`_
 * lale.lib.lale. `NoOp`_
+* lale.lib.lale. `Tee`_
 * lale.lib.lale. `Project`_
 * lale.lib.lale. `SampleBasedVoting`_
 * lale.lib.lale. `Aggregate`_
@@ -76,6 +77,7 @@ Estimators and transformers:
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
 .. _`Observing`: lale.lib.lale.observing.html
+.. _`Tee`: lale.lib.lale.tee.html
 
 Functions:
 ==========
@@ -119,4 +121,5 @@ from .relational import Relational
 from .sample_based_voting import SampleBasedVoting
 from .scan import Scan
 from .smac import SMAC
+from .tee import Tee
 from .topk_voting_classifier import TopKVotingClassifier

@@ -143,7 +143,7 @@ _output_schema = {  # TODO: separate predict vs. predict_proba vs. transform
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """This should functionally be identical to the identity wrapper, except that it calls methods on the observer (if they exist) before and after calls to the underlying wrapper. This is similar to aspect-oriented programming.""",
+    "description": """This should functionally be identical to the identity wrapper, except that it calls methods on the observer (if they exist) before and after calls to the underlying wrapper. This is similar to aspect-oriented programming.  See also Tee, which provides a simpler method for observing/logging data.""",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.identity.html",
     "import_from": "lale.lib.lale",
     "type": "object",
