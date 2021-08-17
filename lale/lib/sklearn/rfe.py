@@ -178,6 +178,7 @@ if sklearn.__version__ >= "0.24":
             ],
             "default": "auto",
         },
+        set_as_available=True,
     )
 
 

@@ -230,7 +230,8 @@ if sklearn.__version__ >= "0.24":
             ],
             default="both",
             forOptimizer=True,
-        )
+        ),
+        set_as_available=True,
     )
 
 lale.docstrings.set_docstrings(NMF)

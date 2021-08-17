@@ -267,6 +267,8 @@ IsolationForest = lale.operators.make_operator(SKLModel, _combined_schemas)
 if sklearn.__version__ >= "0.24":
     # old: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.IsolationForest.html
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.IsolationForest.html
-    IsolationForest = IsolationForest.customize_schema(behaviour=None)
+    IsolationForest = IsolationForest.customize_schema(
+        behaviour=None, set_as_available=True
+    )
 
 lale.docstrings.set_docstrings(IsolationForest)

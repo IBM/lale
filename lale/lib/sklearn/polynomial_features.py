@@ -119,7 +119,8 @@ if sklearn.__version__ >= "0.21":
             values=["C", "F"],
             desc="Order of output array in the dense case. 'F' order is faster to compute, but may slow down subsequent estimators.",
             default="C",
-        )
+        ),
+        set_as_available=True,
     )
 
 

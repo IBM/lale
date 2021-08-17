@@ -156,6 +156,7 @@ if sklearn.__version__ >= "0.22":
             default=False,
         ),
         pass_y=None,
+        set_as_available=True,
     )
 
 

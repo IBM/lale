@@ -214,6 +214,7 @@ if sklearn.__version__ >= "0.21":
                 desc="If True, the time elapsed while fitting each step will be printed as it is completed.",
                 default=False,
             ),
+            set_as_available=True,
         ),
     )
 

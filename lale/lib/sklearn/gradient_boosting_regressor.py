@@ -344,6 +344,7 @@ if sklearn.__version__ >= "0.22":
             minimum=0.0,
             maximumForOptimizer=0.1,
         ),
+        set_as_available=True,
     )
 
 if sklearn.__version__ >= "0.24":
@@ -363,6 +364,7 @@ if sklearn.__version__ >= "0.24":
             ],
             "default": "friedman_mse",
         },
+        set_as_available=True,
     )
 
 lale.docstrings.set_docstrings(GradientBoostingRegressor)

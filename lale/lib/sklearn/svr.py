@@ -228,7 +228,8 @@ if sklearn.__version__ >= "0.22":
             ],
             desc="Kernel coefficient for 'rbf', 'poly' and 'sigmoid'.",
             default="scale",
-        )
+        ),
+        set_as_available=True,
     )
 
 

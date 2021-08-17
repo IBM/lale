@@ -1847,17 +1847,17 @@ class IndividualOp(Operator):
             return False
         return self._impl_class() == other._impl_class()
 
-    def customize_schema(
-        self,
-        schemas: Optional[Schema] = None,
-        relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Union[Schema, JSON_TYPE, None] = None,
-        tags: Optional[Dict] = None,
-        **kwargs: Union[Schema, JSON_TYPE, None],
-    ) -> "IndividualOp":
-        return customize_schema(
-            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
-        )
+    # def customize_schema(
+    #     self,
+    #     schemas: Optional[Schema] = None,
+    #     relevantToOptimizer: Optional[List[str]] = None,
+    #     constraint: Union[Schema, JSON_TYPE, None] = None,
+    #     tags: Optional[Dict] = None,
+    #     **kwargs: Union[Schema, JSON_TYPE, None],
+    # ) -> "IndividualOp":
+    #     return customize_schema(
+    #         self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+    #     )
 
     def _propose_fixed_hyperparams(
         self, key_candidates, hp_all, hp_schema, max_depth=2
@@ -2204,10 +2204,17 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         relevantToOptimizer: Optional[List[str]] = None,
         constraint: Union[Schema, JSON_TYPE, None] = None,
         tags: Optional[Dict] = None,
+        set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "PlannedIndividualOp":
         return customize_schema(
-            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+            self,
+            schemas,
+            relevantToOptimizer,
+            constraint,
+            tags,
+            set_as_available,
+            **kwargs,
         )
 
 
@@ -2623,10 +2630,17 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         relevantToOptimizer: Optional[List[str]] = None,
         constraint: Union[Schema, JSON_TYPE, None] = None,
         tags: Optional[Dict] = None,
+        set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainableIndividualOp":
         return customize_schema(
-            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+            self,
+            schemas,
+            relevantToOptimizer,
+            constraint,
+            tags,
+            set_as_available,
+            **kwargs,
         )
 
 
@@ -2899,10 +2913,17 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         relevantToOptimizer: Optional[List[str]] = None,
         constraint: Union[Schema, JSON_TYPE, None] = None,
         tags: Optional[Dict] = None,
+        set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainedIndividualOp":
         return customize_schema(
-            self, schemas, relevantToOptimizer, constraint, tags, **kwargs
+            self,
+            schemas,
+            relevantToOptimizer,
+            constraint,
+            tags,
+            set_as_available,
+            **kwargs,
         )
 
 
@@ -4916,7 +4937,7 @@ def _fixup_hyperparams_dict(d):
     return d2
 
 
-CustomizeOpType = TypeVar("CustomizeOpType", bound=IndividualOp)
+CustomizeOpType = TypeVar("CustomizeOpType", bound=PlannedIndividualOp)
 
 
 def customize_schema(
@@ -4925,6 +4946,7 @@ def customize_schema(
     relevantToOptimizer: Optional[List[str]] = None,
     constraint: Union[Schema, JSON_TYPE, None] = None,
     tags: Optional[Dict] = None,
+    set_as_available: bool = False,
     **kwargs: Union[Schema, JSON_TYPE, None],
 ) -> CustomizeOpType:
     """Return a new operator with a customized schema
@@ -4948,12 +4970,19 @@ def customize_schema(
         `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
     tags : Dict
         Override the tags of the operator.
+    set_as_available: bool
+        Override the list of available operators so `get_available_operators` returns this customized operator.
 
     Returns
     -------
-    IndividualOp
+    PlannedIndividualOp
         Copy of the operator with a customized schema
     """
+    op_index = -1
+    try:
+        op_index = _all_available_operators.index(op)
+    except ValueError:
+        pass
     # TODO: why are we doing a deeopcopy here?
     op = copy.deepcopy(op)
     methods = ["fit", "transform", "predict", "predict_proba", "decision_function"]
@@ -5018,6 +5047,8 @@ def customize_schema(
     )
     # we also need to prune the hyperparameter, if any, removing defaults (which may have changed)
     op._hyperparams = op.hyperparams()
+    if set_as_available and op_index >= 0:
+        _all_available_operators[op_index] = op
     return op
 
 

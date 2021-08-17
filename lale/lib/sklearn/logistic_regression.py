@@ -428,6 +428,7 @@ if sklearn.__version__ >= "0.21":
                 desc="Norm used in the penalization.",
                 default="l2",
             ),
+            set_as_available=True,
         ),
     )
 
@@ -452,6 +453,7 @@ if sklearn.__version__ >= "0.22":
                 desc="The Elastic-Net mixing parameter.",
                 default=None,
             ),
+            set_as_available=True,
         ),
     )
 

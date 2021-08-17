@@ -282,14 +282,15 @@ if sklearn.__version__ >= "0.21":
             distribution="uniform",
             desc="The maximum number of passes over the training data (aka epochs).",
             default=1000,
-        )
+        ),
+        set_as_available=True,
     )
 
 if sklearn.__version__ >= "0.22":
     # old: https://scikit-learn.org/0.21/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     # new: https://scikit-learn.org/0.22/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier.html
     PassiveAggressiveClassifier = PassiveAggressiveClassifier.customize_schema(
-        n_iter=None
+        n_iter=None, set_as_available=True
     )
 
 lale.docstrings.set_docstrings(PassiveAggressiveClassifier)
