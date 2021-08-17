@@ -710,6 +710,29 @@ def append_batch(data, batch_data):
 
 
 def create_data_loader(X, y=None, batch_size=1):
+    """A function that takes a dataset as input and outputs a Pytorch dataloader.
+
+    Parameters
+    ----------
+    X : Input data. The formats supported are Pandas DataFrame, Numpy array,
+        a sparse matrix, torch.tensor, torch.utils.data.Dataset, path to a HDF5 file,
+        lale.util.batch_data_dictionary_dataset.BatchDataDict,
+        a Python dictionary of the format `{"dataset": torch.utils.data.Dataset,
+        "collate_fn":collate_fn for torch.utils.data.DataLoader}`
+    y : Labels., optional
+        Supported formats are Numpy array or Pandas series, by default None
+    batch_size : int, optional
+        Number of samples in each batch, by default 1
+
+    Returns
+    -------
+    torch.utils.data.DataLoader
+
+    Raises
+    ------
+    TypeError
+        Raises a TypeError if the input format is not supported.
+    """
     import torch
     from torch.utils.data import DataLoader, Dataset, TensorDataset
 
