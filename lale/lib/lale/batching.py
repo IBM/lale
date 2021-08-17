@@ -100,13 +100,23 @@ _input_fit_schema = {
                         },
                     },
                 },
+                {"type": "object"},
             ],
         },
         "y": {
-            "type": "array",
-            "items": {
-                "anyOf": [{"type": "integer"}, {"type": "number"}, {"type": "string"}]
-            },
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {"type": "integer"},
+                            {"type": "number"},
+                            {"type": "string"},
+                        ]
+                    },
+                },
+                {"enum": [None]},
+            ],
         },
         "classes": {
             "anyOf": [
