@@ -711,7 +711,7 @@ def append_batch(data, batch_data):
 
 def create_data_loader(X, y=None, batch_size=1):
     import torch
-    from torch.utils.data import DataLoader, TensorDataset
+    from torch.utils.data import DataLoader, Dataset, TensorDataset
 
     from lale.util.batch_data_dictionary_dataset import BatchDataDict
     from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
@@ -744,7 +744,9 @@ def create_data_loader(X, y=None, batch_size=1):
         else:
             return return_X
 
-    if isinstance(X, pd.DataFrame):
+    if isinstance(X, Dataset):
+        dataset = X
+    elif isinstance(X, pd.DataFrame):
         X = X.to_numpy()
         if isinstance(y, pd.Series):
             y = y.to_numpy()
@@ -777,7 +779,11 @@ def create_data_loader(X, y=None, batch_size=1):
 
         return DataLoader(dataset, batch_size=1, collate_fn=my_collate_fn)
     elif isinstance(X, dict):  # Assumed that it is data indexed by batch number
-        return [X]
+        if "dataset" in X:
+            dataset = X["dataset"]
+            collate_fn = X.get("collate_fn", None)
+        else:
+            return [X]
     elif isinstance(X, torch.Tensor) and y is not None:
         if isinstance(y, np.ndarray):
             y = torch.from_numpy(y)
