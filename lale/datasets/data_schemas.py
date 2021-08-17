@@ -28,6 +28,13 @@ try:
 except ImportError:
     torch_installed = False
 
+try:
+    import pyspark.sql
+
+    spark_installed = True
+except ImportError:
+    spark_installed = False
+
 
 # See instructions for subclassing numpy ndarray:
 # https://docs.scipy.org/doc/numpy/user/basics.subclassing.html
@@ -41,23 +48,26 @@ class NDArrayWithSchema(np.ndarray):
         strides=None,
         order=None,
         json_schema=None,
+        table_name=None,
     ):
         result = super(NDArrayWithSchema, cls).__new__(
             cls, shape, dtype, buffer, offset, strides, order  # type: ignore
         )
         result.json_schema = json_schema
+        result.table_name = table_name
         return result
 
     def __array_finalize__(self, obj):
         if obj is None:
             return
         self.json_schema = getattr(obj, "json_schema", None)
+        self.table_name = getattr(obj, "table_name", None)
 
 
 # See instructions for subclassing pandas DataFrame:
 # https://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 class DataFrameWithSchema(pd.DataFrame):
-    _internal_names = pd.DataFrame._internal_names + ["json_schema"]
+    _internal_names = pd.DataFrame._internal_names + ["json_schema", "table_name"]
     _internal_names_set = set(_internal_names)
 
     @property
@@ -66,7 +76,7 @@ class DataFrameWithSchema(pd.DataFrame):
 
 
 class SeriesWithSchema(pd.Series):
-    _internal_names = pd.Series._internal_names + ["json_schema"]
+    _internal_names = pd.Series._internal_names + ["json_schema", "table_name"]
     _internal_names_set = set(_internal_names)
 
     @property
@@ -74,7 +84,7 @@ class SeriesWithSchema(pd.Series):
         return SeriesWithSchema
 
 
-def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
+def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
     from lale.settings import disable_data_schema_validation
 
     if disable_data_schema_validation:
@@ -96,18 +106,26 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False):
     elif is_list_tensor(obj):
         obj = np.array(obj)
         result = obj.view(NDArrayWithSchema)
+    elif isinstance(
+        obj, (pd.core.groupby.DataFrameGroupBy, pd.core.groupby.SeriesGroupBy)
+    ):
+        result = obj
+    elif spark_installed and isinstance(
+        obj, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)
+    ):
+        result = obj
     elif raise_on_failure:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
     else:
         return obj
     if recalc:
-        result.json_schema = None
-    if not hasattr(result, "json_schema") or result.json_schema is None:
+        setattr(result, "json_schema", None)
+    if getattr(result, "json_schema", None) is None:
         if schema is None:
-            result.json_schema = to_schema(obj)
+            setattr(result, "json_schema", to_schema(obj))
         else:
             lale.type_checking.validate_is_schema(schema)
-            result.json_schema = schema
+            setattr(result, "json_schema", schema)
     return result
 
 
@@ -118,6 +136,42 @@ def add_schema_adjusting_n_rows(obj, schema):
     mod_schema = {**schema, "minItems": n_rows, "maxItems": n_rows}
     result = add_schema(obj, mod_schema)
     return result
+
+
+def add_table_name(obj, name) -> Any:
+    if obj is None:
+        return None
+    if isinstance(obj, NDArrayWithSchema):
+        result = obj
+    elif isinstance(obj, np.ndarray):
+        result = obj.view(NDArrayWithSchema)
+    elif isinstance(obj, SeriesWithSchema):
+        result = obj
+    elif isinstance(obj, pd.Series):
+        result = SeriesWithSchema(obj)
+    elif isinstance(obj, DataFrameWithSchema):
+        result = obj
+    elif isinstance(obj, pd.DataFrame):
+        result = DataFrameWithSchema(obj)
+    elif is_list_tensor(obj):
+        obj = np.array(obj)
+        result = obj.view(NDArrayWithSchema)
+    elif isinstance(
+        obj, (pd.core.groupby.DataFrameGroupBy, pd.core.groupby.SeriesGroupBy)
+    ):
+        result = obj
+    elif spark_installed and isinstance(
+        obj, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)
+    ):
+        result = obj
+    else:
+        raise ValueError(f"unexpected type(obj) {type(obj)}")
+    setattr(result, "table_name", name)
+    return result
+
+
+def get_table_name(obj):
+    return getattr(obj, "table_name", None)
 
 
 def strip_schema(obj):
