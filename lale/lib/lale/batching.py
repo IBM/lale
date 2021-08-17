@@ -36,13 +36,14 @@ class _BatchingImpl:
         self.inmemory = inmemory
         self.num_epochs = num_epochs
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, classes=None):
         if self.operator is None:
             raise ValueError("The pipeline object can't be None at the time of fit.")
         data_loader = lale.helpers.create_data_loader(
             X=X, y=y, batch_size=self.batch_size
         )
-        classes = np.unique(y)
+        if y is not None and classes is None:
+            classes = np.unique(y)
         self.operator = self.operator.fit_with_batches(
             data_loader,
             y=classes,
@@ -76,16 +77,52 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
                 {
                     "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"}},
+                    "items": {
+                        "anyOf": [
+                            {"type": "number"},
+                            {"type": "string"},
+                            {"type": "boolean"},
+                        ]
+                    },
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {"type": "number"},
+                                {"type": "string"},
+                                {"type": "boolean"},
+                            ]
+                        },
+                    },
                 },
             ],
         },
         "y": {
             "type": "array",
-            "items": {"anyOf": [{"type": "integer"}, {"type": "number"}]},
+            "items": {
+                "anyOf": [{"type": "integer"}, {"type": "number"}, {"type": "string"}]
+            },
+        },
+        "classes": {
+            "anyOf": [
+                {
+                    "type": "array",
+                    "items": {
+                        "anyOf": [
+                            {"type": "number"},
+                            {"type": "string"},
+                            {"type": "boolean"},
+                        ]
+                    },
+                },
+                {"enum": [None]},
+            ],
+            "description": """The total number of classes in the entire training dataset.""",
         },
     },
 }
@@ -99,11 +136,30 @@ _input_predict_transform_schema = {  # TODO: separate predict vs. transform
         "X": {
             "description": "Features; the outer array is over samples.",
             "anyOf": [
-                {"type": "array", "items": {"type": "number"}},
                 {
                     "type": "array",
-                    "items": {"type": "array", "items": {"type": "number"}},
+                    "items": {
+                        "anyOf": [
+                            {"type": "number"},
+                            {"type": "string"},
+                            {"type": "boolean"},
+                        ]
+                    },
                 },
+                {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {"type": "number"},
+                                {"type": "string"},
+                                {"type": "boolean"},
+                            ]
+                        },
+                    },
+                },
+                {},
             ],
         },
         "y": {

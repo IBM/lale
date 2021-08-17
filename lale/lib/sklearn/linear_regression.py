@@ -141,7 +141,8 @@ if sklearn.__version__ >= "0.24":
             "type": "boolean",
             "description": "When set to True, forces the coefficients to be positive.",
             "default": False,
-        }
+        },
+        set_as_available=True,
     )
     LinearRegression = LinearRegression.customize_schema(
         constraint={
@@ -150,7 +151,8 @@ if sklearn.__version__ >= "0.24":
                 {"type": "object", "properties": {"positive": {"enum": [False]}}},
                 {"type": "object", "laleNot": "X/isSparse"},
             ],
-        }
+        },
+        set_as_available=True,
     )
 
 

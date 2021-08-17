@@ -206,7 +206,8 @@ if sklearn.__version__ >= "0.24":
             ],
             "default": None,
             "description": "The number of jobs to use for the computation.",
-        }
+        },
+        set_as_available=True,
     )
 
 

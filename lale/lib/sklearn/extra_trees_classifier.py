@@ -358,6 +358,7 @@ if sklearn.__version__ >= "0.22":
             desc="If bootstrap is True, the number of samples to draw from X to train each base estimator.",
             default=None,
         ),
+        set_as_available=True,
     )
 
 

@@ -325,7 +325,8 @@ if sklearn.__version__ >= "0.21":
                 distribution="uniform",
                 desc="The maximum number of passes over the training data (aka epochs).",
                 default=1000,
-            )
+            ),
+            set_as_available=True,
         ),
     )
 

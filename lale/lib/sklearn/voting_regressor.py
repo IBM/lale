@@ -251,7 +251,8 @@ if sklearn.__version__ >= "0.21":
                 ],
             },
             "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingRegressor`` will fit clones.",
-        }
+        },
+        set_as_available=True,
     )
 
 if sklearn.__version__ >= "0.24":
@@ -269,7 +270,8 @@ if sklearn.__version__ >= "0.24":
                 ],
             },
             "description": "List of (string, estimator) tuples. Invoking the ``fit`` method on the ``VotingClassifier`` will fit clones.",
-        }
+        },
+        set_as_available=True,
     )
 
 

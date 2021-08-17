@@ -328,6 +328,7 @@ It has to be distinct from the values used to encode any of the categories in fi
                 default=None,
                 types=[Int(), Enum(values=[np.nan]), Null()],
             ),
+            set_as_available=True,
         ),
     )
 

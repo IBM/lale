@@ -131,6 +131,7 @@ if sklearn.__version__ >= "0.24":
             "description": "Set to True to clip transformed values of held-out data to provided feature range.",
             "default": False,
         },
+        set_as_available=True,
     )
 
 

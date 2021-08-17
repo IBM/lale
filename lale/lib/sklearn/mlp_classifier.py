@@ -370,7 +370,8 @@ if sklearn.__version__ >= "0.22":
             default=15000,
             forOptimizer=False,
             minimum=0,
-        )
+        ),
+        set_as_available=True,
     )
 
 
