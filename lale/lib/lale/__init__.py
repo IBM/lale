@@ -84,9 +84,11 @@ Functions:
 
 * lale.lib.lale. `categorical`_
 * lale.lib.lale. `date_time`_
+* SparkExplainer. `spark_explainer`_
 
 .. _`categorical`: lale.lib.lale.functions.html#lale.lib.lale.functions.categorical
 .. _`date_time`: lale.lib.lale.functions.html#lale.lib.lale.functions.date_time
+.. _`spark_explainer`: lale.lib.lale.spark_explainer.html
 """
 
 from .aggregate import Aggregate
@@ -121,5 +123,6 @@ from .relational import Relational
 from .sample_based_voting import SampleBasedVoting
 from .scan import Scan
 from .smac import SMAC
+from .spark_explainer import SparkExplainer
 from .tee import Tee
 from .topk_voting_classifier import TopKVotingClassifier
