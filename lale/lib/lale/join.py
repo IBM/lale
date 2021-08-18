@@ -14,6 +14,7 @@
 
 import pandas as pd
 
+import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.helpers import _is_ast_attribute, _is_ast_subscript, _is_df, _is_spark_df
@@ -175,24 +176,35 @@ class _JoinImpl:
             )
             return op_df
 
+        def fetch_one_df(named_df, table_name):
+            if isinstance(named_df, dict):
+                return named_df.get(table_name)
+            if lale.datasets.data_schemas.get_table_name(named_df) == table_name:
+                return named_df
+            return None
+
         def fetch_df(left_table_name, right_table_name):
             left_df = []
             right_df = []
-            for a_dict in X:
+            for named_df in X:
                 if not tables_encountered:
-                    if _is_df(a_dict.get(left_table_name)):
-                        left_df = a_dict.get(left_table_name)
-                    if _is_df(a_dict.get(right_table_name)):
-                        right_df = a_dict.get(right_table_name)
+                    left_df_candidate = fetch_one_df(named_df, left_table_name)
+                    if _is_df(left_df_candidate):
+                        left_df = left_df_candidate
+                    right_df_candidate = fetch_one_df(named_df, right_table_name)
+                    if _is_df(right_df_candidate):
+                        right_df = right_df_candidate
                 else:
                     if left_table_name in tables_encountered:
                         left_df = joined_df
-                        if _is_df(a_dict.get(right_table_name)):
-                            right_df = a_dict.get(right_table_name)
+                        right_df_candidate = fetch_one_df(named_df, right_table_name)
+                        if _is_df(right_df_candidate):
+                            right_df = right_df_candidate
                     elif right_table_name in tables_encountered:
                         right_df = joined_df
-                        if _is_df(a_dict.get(left_table_name)):
-                            left_df = a_dict.get(left_table_name)
+                        left_df_candidate = fetch_one_df(named_df, left_table_name)
+                        if _is_df(left_df_candidate):
+                            left_df = left_df_candidate
             return left_df, right_df
 
         # Iterate over all the elements of the predicate
