@@ -109,7 +109,7 @@ class _JoinImpl:
                         left_expr = f"it.{left_table_name}{left_key_col}"
                         right_expr = f"it.{right_table_name}{right_key_col}"
                         raise ValueError(
-                            "ERROR: Composite key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key.  Join operations must be chained (they can't have two disconnected join conditions)".format(
+                            "ERROR: Composite key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key. Join operations must be chained (they can't have two disconnected join conditions)".format(
                                 left_expr, right_expr, left_table_name, right_table_name
                             )
                         )
@@ -131,7 +131,7 @@ class _JoinImpl:
                     left_expr = f"it.{left_table_name}{left_key_col}"
                     right_expr = f"it.{right_table_name}{right_key_col}"
                     raise ValueError(
-                        "ERROR: Single key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key.  Join operations must be chained (they can't have two disconnected join conditions)".format(
+                        "ERROR: Single key involving {} == {} is problematic, since neither the {} nor the {} tables were used in a previous key. Join operations must be chained (they can't have two disconnected join conditions)".format(
                             left_expr, right_expr, left_table_name, right_table_name
                         )
                     )

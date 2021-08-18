@@ -164,7 +164,7 @@ def identity(df: Any, column: Expr, new_column_name: str):
         column_name = column._expr.attr  # type: ignore
     else:
         raise ValueError(
-            "ERROR: Expression type not supported! Formats supported: it.column_name or it['column_name']."
+            "Expression type not supported. Formats supported: it.column_name or it['column_name']."
         )
 
     if column_name is None or not column_name.strip():
