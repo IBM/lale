@@ -709,7 +709,7 @@ def append_batch(data, batch_data):
     # TODO:Handle dataframes
 
 
-def create_data_loader(X, y=None, batch_size=1):
+def create_data_loader(X, y=None, batch_size=1, num_workers=0):
     """A function that takes a dataset as input and outputs a Pytorch dataloader.
 
     Parameters
@@ -723,6 +723,8 @@ def create_data_loader(X, y=None, batch_size=1):
         Supported formats are Numpy array or Pandas series, by default None
     batch_size : int, optional
         Number of samples in each batch, by default 1
+    num_workers : int, optional
+        Number of workers used by the data loader, by default 0
 
     Returns
     -------
@@ -741,6 +743,7 @@ def create_data_loader(X, y=None, batch_size=1):
     from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
 
     collate_fn = None
+    worker_init_fn = None
 
     def numpy_collate_fn(batch):
         return_X = None
@@ -805,6 +808,7 @@ def create_data_loader(X, y=None, batch_size=1):
         if "dataset" in X:
             dataset = X["dataset"]
             collate_fn = X.get("collate_fn", None)
+            worker_init_fn = getattr(dataset, "worker_init_fn", None)
         else:
             return [X]
     elif isinstance(X, torch.Tensor) and y is not None:
@@ -817,7 +821,8 @@ def create_data_loader(X, y=None, batch_size=1):
         raise TypeError(
             "Can not create a data loader for a dataset with type {}".format(type(X))
         )
-    return DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn)
+    return DataLoader(dataset, batch_size=batch_size, collate_fn=collate_fn,
+                      num_workers=num_workers, worker_init_fn=worker_init_fn)
 
 
 def write_batch_output_to_file(
