@@ -2978,7 +2978,7 @@ def get_lib_schemas(impl_class) -> Optional[JSON_TYPE]:
 
 
 def make_operator(
-    impl, schemas=None, name: Optional[str] = None
+    impl, schemas=None, name: Optional[str] = None, set_as_available: bool = True
 ) -> PlannedIndividualOp:
     if name is None:
         name = lale.helpers.assignee_name(level=2)
@@ -3034,7 +3034,8 @@ def make_operator(
             )
 
     operatorObj._check_schemas()
-    _all_available_operators.append(operatorObj)
+    if set_as_available:
+        _all_available_operators.append(operatorObj)
     return operatorObj
 
 
