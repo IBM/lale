@@ -714,7 +714,8 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0):
 
     Parameters
     ----------
-    X : Input data. The formats supported are Pandas DataFrame, Numpy array,
+    X : Input data.
+        The formats supported are Pandas DataFrame, Numpy array,
         a sparse matrix, torch.tensor, torch.utils.data.Dataset, path to a HDF5 file,
         lale.util.batch_data_dictionary_dataset.BatchDataDict,
         a Python dictionary of the format `{"dataset": torch.utils.data.Dataset,
