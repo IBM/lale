@@ -40,7 +40,7 @@ class _BatchingImpl:
         if self.operator is None:
             raise ValueError("The pipeline object can't be None at the time of fit.")
         data_loader = lale.helpers.create_data_loader(
-            X=X, y=y, batch_size=self.batch_size
+            X=X, y=y, batch_size=self.batch_size, num_workers=self.num_workers
         )
         if y is not None and classes is None:
             classes = np.unique(y)
@@ -54,7 +54,7 @@ class _BatchingImpl:
 
     def transform(self, X, y=None):
         data_loader = lale.helpers.create_data_loader(
-            X=X, y=y, batch_size=self.batch_size
+            X=X, y=y, batch_size=self.batch_size, num_workers=self.num_workers
         )
 
         op = self.operator
