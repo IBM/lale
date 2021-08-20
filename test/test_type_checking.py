@@ -74,7 +74,7 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_datasets_with_own_schemas(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.type_checking import validate_schema
+        from lale.type_checking import validate_schema_directly
 
         for name in [
             "irisArr",
@@ -88,22 +88,22 @@ class TestDatasetSchemas(unittest.TestCase):
             dataset = getattr(self, f"_{name}")
             data_X, data_y = dataset["X"], dataset["y"]
             schema_X, schema_y = to_schema(data_X), to_schema(data_y)
-            validate_schema(data_X, schema_X, subsample_array=False)
-            validate_schema(data_y, schema_y, subsample_array=False)
+            validate_schema_directly(data_X, schema_X, subsample_array=False)
+            validate_schema_directly(data_y, schema_y, subsample_array=False)
 
     def test_ndarray_to_schema(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.type_checking import validate_schema
+        from lale.type_checking import validate_schema_directly
 
         irisArr = self._irisArr
         assert irisArr is not None
         all_X, all_y = irisArr["X"], irisArr["y"]
         assert not hasattr(all_X, "json_schema")
         all_X_schema = to_schema(all_X)
-        validate_schema(all_X, all_X_schema, subsample_array=False)
+        validate_schema_directly(all_X, all_X_schema, subsample_array=False)
         assert not hasattr(all_y, "json_schema")
         all_y_schema = to_schema(all_y)
-        validate_schema(all_y, all_y_schema, subsample_array=False)
+        validate_schema_directly(all_y, all_y_schema, subsample_array=False)
         all_X_expected = {
             "type": "array",
             "minItems": 150,
@@ -129,7 +129,7 @@ class TestDatasetSchemas(unittest.TestCase):
         import pandas as pd
 
         from lale.datasets.data_schemas import to_schema
-        from lale.type_checking import validate_schema
+        from lale.type_checking import validate_schema_directly
 
         irisDf = self._irisDf
         assert irisDf is not None
@@ -138,11 +138,11 @@ class TestDatasetSchemas(unittest.TestCase):
         assert isinstance(train_X, pd.DataFrame)
         assert not hasattr(train_X, "json_schema")
         train_X_schema = to_schema(train_X)
-        validate_schema(train_X, train_X_schema, subsample_array=False)
+        validate_schema_directly(train_X, train_X_schema, subsample_array=False)
         assert isinstance(train_y, pd.Series)
         assert not hasattr(train_y, "json_schema")
         train_y_schema = to_schema(train_y)
-        validate_schema(train_y, train_y_schema, subsample_array=False)
+        validate_schema_directly(train_y, train_y_schema, subsample_array=False)
         train_X_expected = {
             "type": "array",
             "minItems": 120,
@@ -171,17 +171,17 @@ class TestDatasetSchemas(unittest.TestCase):
 
     def test_arff_to_schema(self):
         from lale.datasets.data_schemas import to_schema
-        from lale.type_checking import validate_schema
+        from lale.type_checking import validate_schema_directly
 
         creditG = self._creditG
         assert creditG is not None
         train_X, train_y = creditG["X"], creditG["y"]
         assert hasattr(train_X, "json_schema")
         train_X_schema = to_schema(train_X)
-        validate_schema(train_X, train_X_schema, subsample_array=False)
+        validate_schema_directly(train_X, train_X_schema, subsample_array=False)
         assert hasattr(train_y, "json_schema")
         train_y_schema = to_schema(train_y)
-        validate_schema(train_y, train_y_schema, subsample_array=False)
+        validate_schema_directly(train_y, train_y_schema, subsample_array=False)
         train_X_expected = {
             "type": "array",
             "minItems": 670,

@@ -1877,7 +1877,7 @@ class IndividualOp(Operator):
                 new_values = dict(replacements)
                 fixed_hp = {**hp_all, **new_values}
                 try:
-                    lale.type_checking.validate_schema(fixed_hp, hp_schema)
+                    lale.type_checking.validate_schema_directly(fixed_hp, hp_schema)
                     found = True
                     yield new_values
                 except jsonschema.ValidationError:
@@ -1893,7 +1893,7 @@ class IndividualOp(Operator):
             return
 
         try:
-            lale.type_checking.validate_schema(hp_all, hp_schema)
+            lale.type_checking.validate_schema_directly(hp_all, hp_schema)
         except jsonschema.ValidationError as e_orig:
             e = e_orig if e_orig.parent is None else e_orig.parent
             lale.type_checking.validate_is_schema(e.schema)
@@ -1916,7 +1916,9 @@ class IndividualOp(Operator):
                 )
 
                 try:
-                    lale.type_checking.validate_schema(trimmed_hp_all, hp_schema)
+                    lale.type_checking.validate_schema_directly(
+                        trimmed_hp_all, hp_schema
+                    )
                     trimmed_valid = True
                 except jsonschema.ValidationError:
                     pass
@@ -2034,7 +2036,7 @@ class IndividualOp(Operator):
                 arg = lale.datasets.data_schemas.add_schema(arg)
                 try:
                     sup: JSON_TYPE = schema["properties"][arg_name]
-                    lale.type_checking.validate_schema_or_subschema(arg, sup)
+                    lale.type_checking.validate_schema(arg, sup)
                 except lale.type_checking.SubschemaError as e:
                     sub_str: str = lale.pretty_print.json_to_string(e.sub)
                     sup_str: str = lale.pretty_print.json_to_string(e.sup)
@@ -2071,7 +2073,7 @@ class IndividualOp(Operator):
 
         result = lale.datasets.data_schemas.add_schema(result)
         try:
-            lale.type_checking.validate_schema_or_subschema(result, schema)
+            lale.type_checking.validate_schema(result, schema)
         except Exception as e:
             print(f"{self.name()}.{method}() invalid result: {e}")
             raise ValueError(f"{self.name()}.{method}() invalid result: {e}") from e

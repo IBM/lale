@@ -119,7 +119,7 @@ def always_validate_schema(value, schema: JSON_TYPE, subsample_array: bool = Tru
     )
 
 
-def validate_schema(value, schema: JSON_TYPE, subsample_array: bool = True):
+def validate_schema_directly(value, schema: JSON_TYPE, subsample_array: bool = True):
     """Validate that the value is an instance of the schema.
 
     Parameters
@@ -254,12 +254,12 @@ def _validate_subschema(
         raise SubschemaError(sub, sup, sub_name, sup_name)
 
 
-def validate_schema_or_subschema(lhs: Any, super_schema: JSON_TYPE):
+def validate_schema(lhs: Any, super_schema: JSON_TYPE):
     """Validate that lhs is an instance of or a subschema of super_schema.
 
     Parameters
     ----------
-    lhs: value or JSON schema
+    lhs: value
         Left-hand side of instance or subschema check.
 
     super_schema: JSON schema
@@ -271,24 +271,21 @@ def validate_schema_or_subschema(lhs: Any, super_schema: JSON_TYPE):
         The lhs was an invalid value for super_schema.
 
     SubschemaError
-        The lhs was or had a schema that was not a subschema of super_schema.
+        The lhs had a schema that was not a subschema of super_schema.
     """
     from lale.settings import disable_data_schema_validation
 
     if disable_data_schema_validation:
         return True  # If schema validation is disabled, always return as valid
     sub_schema: Optional[JSON_TYPE]
-    if is_schema(lhs):
-        sub_schema = lhs
-    else:
-        import lale.datasets.data_schemas
+    import lale.datasets.data_schemas
 
-        try:
-            sub_schema = lale.datasets.data_schemas.to_schema(lhs)
-        except ValueError:
-            sub_schema = None
+    try:
+        sub_schema = lale.datasets.data_schemas.to_schema(lhs)
+    except ValueError:
+        sub_schema = None
     if sub_schema is None:
-        validate_schema(lhs, super_schema)
+        validate_schema_directly(lhs, super_schema)
     else:
         _validate_subschema(sub_schema, super_schema)
 

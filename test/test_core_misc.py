@@ -848,7 +848,7 @@ class TestHyperparamRanges(unittest.TestCase):
                 self.assertTrue(len(d) == size)
             schema = operator.hyperparam_schema(hp)
             for v in d:
-                lale.type_checking.validate_schema(v, schema)
+                lale.type_checking.validate_schema_directly(v, schema)
 
     def test_get_param_ranges_and_dist(self):
         for op in [
