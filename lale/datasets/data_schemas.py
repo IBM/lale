@@ -29,6 +29,7 @@ except ImportError:
     torch_installed = False
 
 try:
+    import py4j.protocol
     import pyspark.sql
 
     spark_installed = True
@@ -106,14 +107,14 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
     elif is_list_tensor(obj):
         obj = np.array(obj)
         result = obj.view(NDArrayWithSchema)
-    elif isinstance(
-        obj, (pd.core.groupby.DataFrameGroupBy, pd.core.groupby.SeriesGroupBy)
-    ):
-        result = obj
-    elif spark_installed and isinstance(
-        obj, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)
-    ):
-        result = obj
+    # elif isinstance(
+    #     obj, (pd.core.groupby.DataFrameGroupBy, pd.core.groupby.SeriesGroupBy)
+    # ):
+    #     result = obj
+    # elif spark_installed and isinstance(
+    #     obj, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)
+    # ):
+    #     result = obj
     elif raise_on_failure:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
     else:
@@ -141,6 +142,10 @@ def add_schema_adjusting_n_rows(obj, schema):
 def add_table_name(obj, name) -> Any:
     if obj is None:
         return None
+    if name is None:
+        return obj
+    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+        return obj.alias(name)
     if isinstance(obj, NDArrayWithSchema):
         result = obj
     elif isinstance(obj, np.ndarray):
@@ -160,9 +165,7 @@ def add_table_name(obj, name) -> Any:
         obj, (pd.core.groupby.DataFrameGroupBy, pd.core.groupby.SeriesGroupBy)
     ):
         result = obj
-    elif spark_installed and isinstance(
-        obj, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)
-    ):
+    elif spark_installed and isinstance(obj, pyspark.sql.GroupedData):
         result = obj
     else:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
@@ -171,6 +174,13 @@ def add_table_name(obj, name) -> Any:
 
 
 def get_table_name(obj):
+    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+        spark_query = obj._jdf.queryExecution().analyzed()  # type: ignore
+        try:
+            result = str(spark_query.identifier())
+        except py4j.protocol.Py4JError:
+            result = None
+        return result
     return getattr(obj, "table_name", None)
 
 

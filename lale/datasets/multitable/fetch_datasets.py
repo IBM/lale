@@ -18,6 +18,8 @@ import urllib.request
 
 import pandas as pd
 
+from lale.datasets.data_schemas import add_table_name
+
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -100,9 +102,9 @@ def fetch_go_sales_dataset(datatype="pandas"):
                 os.makedirs(download_data_dir)
             urllib.request.urlretrieve(base_url + file, data_file_name)
             logger.info(" Created: {}".format(data_file_name))
-        go_sales_list.append(
-            {file.split(".")[0]: get_data_from_csv(datatype, data_file_name)}
-        )
+        table_name = file.split(".")[0]
+        data_frame = get_data_from_csv(datatype, data_file_name)
+        go_sales_list.append(add_table_name(data_frame, table_name))
     logger.info(" Fetched the Go_Sales dataset. Process completed.")
     return go_sales_list
 
