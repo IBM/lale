@@ -14,6 +14,7 @@
 
 import numpy as np
 
+import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.helpers import (
@@ -52,13 +53,17 @@ class _GroupByImpl:
                 )
             )
         if _is_spark_df(X):
-            return X.groupby(group_by_keys)
+            grouped_df = X.groupby(group_by_keys)
         elif _is_pandas_df(X):
-            return X.groupby(group_by_keys, sort=False)
+            grouped_df = X.groupby(group_by_keys, sort=False)
         else:
             raise ValueError(
                 "Only pandas and spark dataframes are supported by the GroupBy operator."
             )
+        named_grouped_df = lale.datasets.data_schemas.add_table_name(
+            grouped_df, lale.datasets.data_schemas.get_table_name(X)
+        )
+        return named_grouped_df
 
 
 _hyperparams_schema = {

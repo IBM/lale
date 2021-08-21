@@ -16,6 +16,7 @@ import importlib
 
 import pandas as pd
 
+import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
@@ -116,7 +117,10 @@ class _AggregateImpl:
             raise ValueError(
                 "Only pandas and spark dataframes are supported by the Aggregate operator."
             )
-        return aggregated_df
+        named_aggregated_df = lale.datasets.data_schemas.add_table_name(
+            aggregated_df, lale.datasets.data_schemas.get_table_name(X)
+        )
+        return named_aggregated_df
 
 
 _hyperparams_schema = {

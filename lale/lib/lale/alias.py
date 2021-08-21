@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
 
 class _AliasImpl:
-    def __init__(self, name=None):
+    def __init__(self, name=None, return_singleton_dict=True):
         self.name = name
+        self.return_singleton_dict = return_singleton_dict
 
     @classmethod
     def validate_hyperparams(cls, name=None, **hyperparams):
@@ -26,7 +28,9 @@ class _AliasImpl:
             raise ValueError("Alias hyperparam 'name' cannot be None or empty.")
 
     def transform(self, X):
-        return {self.name: X}
+        if self.return_singleton_dict:
+            return {self.name: X}
+        return lale.datasets.data_schemas.add_table_name(X, self.name)
 
     def viz_label(self) -> str:
         return "Alias:\n" + str(self.name)
@@ -39,12 +43,17 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints, if any.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["name"],
+            "required": ["name", "return_singleton_dict"],
             "relevantToOptimizer": [],
             "properties": {
                 "name": {
                     "description": "The name to be given to the input dataframe.",
                     "laleType": "Any",
+                },
+                "return_singleton_dict": {
+                    "description": "If True, return a singleton dictionary mapping the name to the data. Otherwise, add a table_name property to the data itself.",
+                    "type": "boolean",
+                    "default": True,
                 },
             },
         }

@@ -87,7 +87,11 @@ class _ProjectImpl:
             raise TypeError(f"type {type(X)}")
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
-        return lale.datasets.data_schemas.add_schema(result, s_result)
+        result = lale.datasets.data_schemas.add_schema(result, s_result)
+        result = lale.datasets.data_schemas.add_table_name(
+            result, lale.datasets.data_schemas.get_table_name(X)
+        )
+        return result
 
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""

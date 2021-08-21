@@ -13,6 +13,7 @@
 # limitations under the License.
 import importlib
 
+import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.helpers import (
@@ -50,17 +51,20 @@ class _MapImpl:
                 columns_to_keep.append(new_column_name)
         else:
             raise ValueError("columns must be either a list or a dictionary.")
-        out_df = X  # Do nothing as X already has the right columns
+        mapped_df = X  # Do nothing as X already has the right columns
         if self.remainder == "drop":
             if _is_pandas_df(X):
-                out_df = X[columns_to_keep]
+                mapped_df = X[columns_to_keep]
             elif _is_spark_df(X):
-                out_df = X.select(columns_to_keep)
+                mapped_df = X.select(columns_to_keep)
             else:
                 raise ValueError(
                     "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
                 )
-        return out_df
+        named_mapped_df = lale.datasets.data_schemas.add_table_name(
+            mapped_df, lale.datasets.data_schemas.get_table_name(X)
+        )
+        return named_mapped_df
 
 
 _hyperparams_schema = {
