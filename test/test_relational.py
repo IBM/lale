@@ -376,7 +376,7 @@ class TestAlias(unittest.TestCase):
         self.go_sales_spark = fetch_go_sales_dataset("spark")
 
     def test_alias_pandas(self):
-        trainable = Alias(name="test_alias", return_singleton_dict=False)
+        trainable = Alias(name="test_alias")
         go_products = self.go_sales[3]
         assert get_table_name(go_products) == "go_products"
         transformed_df = trainable.transform(go_products)
@@ -385,7 +385,7 @@ class TestAlias(unittest.TestCase):
         self.assertEqual(transformed_df.shape, (274, 8))
 
     def test_alias_spark(self):
-        trainable = Alias(name="test_alias", return_singleton_dict=False)
+        trainable = Alias(name="test_alias")
         go_products = self.go_sales_spark[3]
         assert get_table_name(go_products) == "go_products"
         transformed_df = trainable.transform(go_products)
