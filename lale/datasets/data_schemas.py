@@ -111,7 +111,6 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
     else:
         return obj
-    assert isinstance(obj, (NDArrayWithSchema, SeriesWithSchema, DataFrameWithSchema))
     if recalc:
         setattr(result, "json_schema", None)
     if getattr(result, "json_schema", None) is None:
