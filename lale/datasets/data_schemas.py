@@ -107,14 +107,6 @@ def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
     elif is_list_tensor(obj):
         obj = np.array(obj)
         result = obj.view(NDArrayWithSchema)
-    # elif isinstance(
-    #     obj, (pd.core.groupby.DataFrameGroupBy, pd.core.groupby.SeriesGroupBy)
-    # ):
-    #     result = obj
-    # elif spark_installed and isinstance(
-    #     obj, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)
-    # ):
-    #     result = obj
     elif raise_on_failure:
         raise ValueError(f"unexpected type(obj) {type(obj)}")
     else:
@@ -145,6 +137,10 @@ def add_table_name(obj, name) -> Any:
     if name is None:
         return obj
     if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+        # alias method documentation: https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.DataFrame.alias.html
+        # Python class DataFrame with method alias(self, alias): https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
+        # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
+        # Scala class DataSet with method as(alias: String): https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/Dataset.scala
         return obj.alias(name)
     if isinstance(obj, NDArrayWithSchema):
         result = obj
@@ -175,13 +171,35 @@ def add_table_name(obj, name) -> Any:
 
 def get_table_name(obj):
     if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+        # Python class DataFrame with field self._jdf: https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
+        # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
+        # Scala class DataSet with field queryExecution: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/Dataset.scala
+        # Scala fields turn into Java nullary methods
+        # Py4J exposes Java methods as Python methods
+        # Scala class QueryExecution with field analyzed: LogicalPlan: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/execution/QueryExecution.scala
         spark_query = obj._jdf.queryExecution().analyzed()  # type: ignore
         try:
+            # calling spark_df.explain("extended") shows the analyzed contents
+            # after spark_df.alias("foo"), analyzed contents should be SubqueryAlias
+            # Scala class SuqueryAlias with field identifier: https://github.com/apache/spark/blob/master/sql/catalyst/src/main/scala/org/apache/spark/sql/catalyst/plans/logical/basicLogicalOperators.scala
+            # str(..) converts the Java string into a Python string
             result = str(spark_query.identifier())
         except py4j.protocol.Py4JError:
             result = None
         return result
-    return getattr(obj, "table_name", None)
+    if isinstance(
+        obj,
+        (
+            NDArrayWithSchema,
+            SeriesWithSchema,
+            DataFrameWithSchema,
+            pd.core.groupby.DataFrameGroupBy,
+            pd.core.groupby.SeriesGroupBy,
+            pyspark.sql.GroupedData,
+        ),
+    ):
+        return getattr(obj, "table_name", None)
+    return None
 
 
 def strip_schema(obj):

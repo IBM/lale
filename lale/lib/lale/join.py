@@ -140,7 +140,7 @@ class _JoinImpl:
                 tables_encountered.add(right_table_name)
 
     def transform(self, X):
-        # X is assumed to be a list of dictionaries
+        # X is assumed to be a list of datasets with get_table_name(d) != None
         joined_df = pd.DataFrame()
         tables_encountered = set()
 
@@ -177,8 +177,6 @@ class _JoinImpl:
             return op_df
 
         def fetch_one_df(named_df, table_name):
-            if isinstance(named_df, dict):
-                return named_df.get(table_name)
             if lale.datasets.data_schemas.get_table_name(named_df) == table_name:
                 return named_df
             return None
