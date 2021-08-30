@@ -187,16 +187,18 @@ def get_table_name(obj):
         except py4j.protocol.Py4JError:
             result = None
         return result
-    if isinstance(
-        obj,
-        (
-            NDArrayWithSchema,
-            SeriesWithSchema,
-            DataFrameWithSchema,
-            pd.core.groupby.DataFrameGroupBy,
-            pd.core.groupby.SeriesGroupBy,
-            pyspark.sql.GroupedData,
-        ),
+    if (
+        isinstance(
+            obj,
+            (
+                NDArrayWithSchema,
+                SeriesWithSchema,
+                DataFrameWithSchema,
+                pd.core.groupby.DataFrameGroupBy,
+                pd.core.groupby.SeriesGroupBy,
+            ),
+        )
+        or (spark_installed and isinstance(obj, pyspark.sql.GroupedData))
     ):
         return getattr(obj, "table_name", None)
     return None
