@@ -89,8 +89,11 @@ class _OptimizeSuffix:
         return trained
 
     def predict(self, X_eval, **kwargs):
-        pipeline = self.get_pipeline()
-        return pipeline.predict(X_eval, **kwargs)
+        if self._prefix is None:
+            input = X_eval
+        else:
+            input = self._prefix.transform(X_eval)
+        return self._optimizer.predict(input, **kwargs)
 
     def summary(self, **kwargs):
         return self._optimizer.summary(**kwargs)
