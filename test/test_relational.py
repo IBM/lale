@@ -368,6 +368,40 @@ class TestFilterSpark(unittest.TestCase):
             _ = trainable.transform(self.transformed_df)
 
 
+class TestScan(unittest.TestCase):
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+
+    def test_attribute(self):
+        with EnableSchemaValidation():
+            trained = Scan(table=it.go_products)
+            transformed = trained.transform(self.go_sales)
+            self.assertEqual(get_table_name(transformed), "go_products")
+            self.assertIs(self.go_sales[3], transformed)
+
+    def test_subscript(self):
+        with EnableSchemaValidation():
+            trained = Scan(table=it["go_products"])
+            transformed = trained.transform(self.go_sales)
+            self.assertEqual(get_table_name(transformed), "go_products")
+            self.assertIs(self.go_sales[3], transformed)
+
+    def test_error1(self):
+        with EnableSchemaValidation():
+            trained = Scan(table=it.go_products)
+            with self.assertRaisesRegex(ValueError, "invalid X"):
+                _ = trained.transform(self.go_sales[3])
+
+    def test_error2(self):
+        trained = Scan(table=it.unknown_table)
+        with self.assertRaisesRegex(ValueError, "could not find 'unknown_table'"):
+            _ = trained.transform(self.go_sales)
+
+    def test_error3(self):
+        with self.assertRaisesRegex(ValueError, "expected `it.table_name` or"):
+            _ = Scan(table=(it.go_products == 42))
+
+
 # Testing alias operator for pandas and spark dataframes
 class TestAlias(unittest.TestCase):
     # Get go_sales dataset in pandas and spark dataframes

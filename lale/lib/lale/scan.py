@@ -12,19 +12,43 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
+
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import get_table_name
 
 
 class _ScanImpl:
     def __init__(self, table=None):
-        self._hyperparams = {"table": table}
+        assert table is not None
+        if isinstance(table._expr, ast.Attribute):
+            self.table_name = table._expr.attr
+        else:
+            self.table_name = table._expr.slice.value.s
+
+    @classmethod
+    def validate_hyperparams(cls, table=None, X=None, **hyperparams):
+        valid = isinstance(table._expr, (ast.Attribute, ast.Subscript))
+        if valid:
+            base = table._expr.value
+            valid = isinstance(base, ast.Name) and base.id == "it"
+        if valid and isinstance(table._expr, ast.Subscript):
+            sub = table._expr.slice
+            valid = isinstance(sub, ast.Index) and isinstance(sub.value, ast.Str)
+        if not valid:
+            raise ValueError("expected `it.table_name` or `it['table name']`")
 
     def transform(self, X):
-        raise NotImplementedError()
+        named_datasets = {get_table_name(d): d for d in X}
+        if self.table_name in named_datasets:
+            return named_datasets[self.table_name]
+        raise ValueError(
+            f"could not find '{self.table_name}' in {list(named_datasets.keys())}"
+        )
 
     def viz_label(self) -> str:
-        return "Scan:\n" + str(self._hyperparams["table"])
+        return "Scan:\n" + self.table_name
 
 
 _hyperparams_schema = {
@@ -38,8 +62,8 @@ _hyperparams_schema = {
             "relevantToOptimizer": [],
             "properties": {
                 "table": {
-                    "description": "Which table to scan. Given as Python AST expression.",
-                    "laleType": "Any",
+                    "description": "Which table to scan.",
+                    "laleType": "expression",
                 }
             },
         }
@@ -52,17 +76,28 @@ _input_transform_schema = {
     "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "List of table file names.",
+            "description": "Outermost array dimension is over datasets that have table names.",
             "type": "array",
-            "items": {"type": "string"},
+            "items": {
+                "description": "Middle array dimension is over samples (aka rows).",
+                "type": "array",
+                "items": {
+                    "description": "Innermost array dimension is over features (aka columns).",
+                    "type": "array",
+                    "items": {"laleType": "Any"},
+                },
+            },
             "minItems": 1,
         }
     },
 }
 
 _output_transform_schema = {
-    "description": "Features; no restrictions on data type.",
-    "laleType": "Any",
+    "type": "array",
+    "items": {
+        "type": "array",
+        "items": {"laleType": "Any"},
+    },
 }
 
 _combined_schemas = {
