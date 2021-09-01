@@ -744,9 +744,9 @@ class _BaseInEstimatorImpl:
         self.classes_ = np.array(list(self.classes_))
         return self
 
-    def predict(self, X):
+    def predict(self, X, **predict_params):
         encoded_data = self._prep_and_encode(X)
-        result_data = self.mitigator.predict(encoded_data)
+        result_data = self.mitigator.predict(encoded_data, **predict_params)
         _, result_y = dataset_to_pandas(result_data, return_only="y")
         decoded_y = self._decode(result_y)
         return decoded_y

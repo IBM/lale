@@ -37,8 +37,8 @@ class _AutoaiWindowedWrappedRegressorImpl:
         self._wrapped_model.fit(X, y)
         return self
 
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
+    def predict(self, X, **predict_params):
+        return self._wrapped_model.predict(X, **predict_params)
 
 
 _hyperparams_schema = {

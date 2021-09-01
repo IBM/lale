@@ -67,9 +67,9 @@ class _XGBClassifierImpl:
         result._wrapped_model.fit(renamed_X, y, **fit_params)
         return result
 
-    def predict(self, X):
+    def predict(self, X, **predict_params):
         renamed_X = _rename_all_features(X)
-        result = self._wrapped_model.predict(renamed_X)
+        result = self._wrapped_model.predict(renamed_X, **predict_params)
         return result
 
     def predict_proba(self, X):

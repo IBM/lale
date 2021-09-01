@@ -22,8 +22,8 @@ from .stacking_utils import _concatenate_predictions_pandas
 
 
 class _StackingRegressorImpl(SKLModel):
-    def predict(self, X):
-        return super().predict(X)
+    def predict(self, X, **predict_params):
+        return super().predict(X, **predict_params)
 
     def score(self, X, y, sample_weight=None):
         return super().score(X, y, sample_weight)

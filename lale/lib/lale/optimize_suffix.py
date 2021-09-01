@@ -88,12 +88,12 @@ class _OptimizeSuffix:
         assert isinstance(trained, lale.operators.TrainedOperator)
         return trained
 
-    def predict(self, X_eval, **kwargs):
+    def predict(self, X_eval, **predict_params):
         if self._prefix is None:
             input = X_eval
         else:
             input = self._prefix.transform(X_eval)
-        return self._optimizer.predict(input, **kwargs)
+        return self._optimizer.predict(input, **predict_params)
 
     def summary(self, **kwargs):
         return self._optimizer.summary(**kwargs)

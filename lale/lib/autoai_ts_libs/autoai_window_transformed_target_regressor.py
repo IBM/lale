@@ -62,8 +62,8 @@ class _AutoaiWindowTransformedTargetRegressorImpl:
         self._wrapped_model.fit(X, y)
         return self
 
-    def predict(self, X=None, prediction_type=None):
-        return self._wrapped_model.predict(X, prediction_type)
+    def predict(self, X=None, prediction_type=None, **predict_params):
+        return self._wrapped_model.predict(X, prediction_type, **predict_params)
 
 
 _hyperparams_schema = {

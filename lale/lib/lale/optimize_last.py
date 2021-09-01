@@ -61,8 +61,8 @@ class _OptimizeLast:
     def fit(self, X_train, y_train=None, **kwargs):
         return self._suffix_optimizer.fit(X_train, y_train, **kwargs)
 
-    def predict(self, X_eval, **kwargs):
-        return self._suffix_optimizer.predict(X_eval, **kwargs)
+    def predict(self, X_eval, **predict_params):
+        return self._suffix_optimizer.predict(X_eval, **predict_params)
 
 
 _hyperparams_schema = {

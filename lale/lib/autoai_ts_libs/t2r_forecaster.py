@@ -40,8 +40,8 @@ class _T2RForecasterImpl:
         self._wrapped_model.fit(X, y)
         return self
 
-    def predict(self, X=None):
-        return self._wrapped_model.predict(X)
+    def predict(self, X=None, **predict_params):
+        return self._wrapped_model.predict(X, **predict_params)
 
 
 _hyperparams_schema = {
