@@ -21,7 +21,6 @@ from lale.datasets.data_schemas import get_table_name
 
 class _ScanImpl:
     def __init__(self, table=None):
-        self._hyperparams = {"table": table}
         assert table is not None
         if isinstance(table._expr, ast.Attribute):
             self.table_name = table._expr.attr
