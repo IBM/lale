@@ -368,6 +368,17 @@ class TestFilterSpark(unittest.TestCase):
             _ = trainable.transform(self.transformed_df)
 
 
+class TestScan(unittest.TestCase):
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+
+    def test_scan_pandas(self):
+        trained = Scan(table=it.go_products)
+        transformed = trained.transform(self.go_sales)
+        self.assertEqual(get_table_name(transformed), "go_products")
+        self.assertIs(self.go_sales[3], transformed)
+
+
 # Testing alias operator for pandas and spark dataframes
 class TestAlias(unittest.TestCase):
     # Get go_sales dataset in pandas and spark dataframes
