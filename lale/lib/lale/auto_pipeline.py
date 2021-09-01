@@ -265,9 +265,9 @@ class _AutoPipelineImpl:
         self._fit_hyperopt(X, y)
         return self
 
-    def predict(self, X):
+    def predict(self, X, **predict_params):
         best_pipeline = self._pipelines[self._name_of_best]
-        result = best_pipeline.predict(X)
+        result = best_pipeline.predict(X, **predict_params)
         return result
 
     def summary(self):

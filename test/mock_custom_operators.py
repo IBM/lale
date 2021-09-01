@@ -221,8 +221,8 @@ class _CustomParamsCheckerOpImpl:
         result = _CustomParamsCheckerOpImpl(kwargs, self._predict_params)
         return result
 
-    def predict(self, X, **kwargs):
-        self._predict_params = kwargs
+    def predict(self, X, **predict_params):
+        self._predict_params = predict_params
 
 
 _input_fit_schema = {

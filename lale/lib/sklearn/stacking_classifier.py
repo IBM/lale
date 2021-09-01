@@ -22,8 +22,8 @@ from .stacking_utils import _concatenate_predictions_pandas
 
 
 class _StackingClassifierImpl(SKLModel):
-    def predict(self, X):
-        return super().predict(X)
+    def predict(self, X, **predict_params):
+        return super().predict(X, **predict_params)
 
     def predict_proba(self, X):
         return super().predict_proba(X)

@@ -30,8 +30,8 @@ class UnknownOp:
             **self._hyperparams
         )
 
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
+    def predict(self, X, **predict_params):
+        return self._wrapped_model.predict(X, **predict_params)
 
 
 class BadClassifier:

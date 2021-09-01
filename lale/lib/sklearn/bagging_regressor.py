@@ -77,8 +77,8 @@ class _BaggingRegressorImpl:
 
         return self
 
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
+    def predict(self, X, **predict_params):
+        return self._wrapped_model.predict(X, **predict_params)
 
     def score(self, X, y, sample_weight=None):
         return self._wrapped_model.score(X, y, sample_weight)

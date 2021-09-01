@@ -32,8 +32,8 @@ class _BaseResamplerImpl:
     def transform(self, X, y=None):
         return self.trained_operator.transform(X, y)
 
-    def predict(self, X):
-        return self.trained_operator.predict(X)
+    def predict(self, X, **predict_params):
+        return self.trained_operator.predict(X, **predict_params)
 
     def predict_proba(self, X):
         return self.trained_operator.predict_proba(X)
