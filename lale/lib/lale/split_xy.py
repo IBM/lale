@@ -16,8 +16,6 @@ import lale.docstrings
 import lale.operators
 import pandas as pd
 from lale.helpers import (
-    _is_ast_attribute,
-    _is_ast_subscript,
     _is_pandas_df,
     _is_spark_df,
 )
