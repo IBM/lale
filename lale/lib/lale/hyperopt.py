@@ -524,9 +524,12 @@ validation part. If False, terminate the trial with FAIL status.""",
                     "default": False,
                 },
                 "scoring": {
-                    "description": """Scorer object, or known scorer named by string.
-Default of None translates to `accuracy` for classification and `r2` for regression.""",
+                    "description": """Scorer object, or known scorer named by string.""",
                     "anyOf": [
+                        {
+                            "enum": [None],
+                            "description": "For regression, use `accuracy`; for regression, use `r2`.",
+                        },
                         {
                             "description": """Callable with signature `scoring(estimator, X, y)` as documented in `sklearn scoring`_.
 
