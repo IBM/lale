@@ -2120,10 +2120,10 @@ class TestSplitXy(unittest.TestCase):
     def setUp(self):
         data = load_iris()
         X, y = data.data, data.target
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(pd.DataFrame(X), pd.DataFrame(y))
-        self.combined_df = pd.concat(
-            [self.X_train, self.y_train], axis=1
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            pd.DataFrame(X), pd.DataFrame(y)
         )
+        self.combined_df = pd.concat([self.X_train, self.y_train], axis=1)
         self.combined_df.columns = [
             "sepal_length",
             "sepal_width",
@@ -2157,10 +2157,10 @@ class TestSplitXySpark(unittest.TestCase):
             self.sqlCtx = SQLContext(sc)
             data = load_iris()
             X, y = data.data, data.target
-            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(pd.DataFrame(X), pd.DataFrame(y))
-            self.combined_df = pd.concat(
-                [self.X_train, self.y_train], axis=1
+            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+                pd.DataFrame(X), pd.DataFrame(y)
             )
+            self.combined_df = pd.concat([self.X_train, self.y_train], axis=1)
             self.combined_df.columns = [
                 "sepal_length",
                 "sepal_width",
@@ -2170,12 +2170,12 @@ class TestSplitXySpark(unittest.TestCase):
             ]
             self.combined_df_spark = self.sqlCtx.createDataFrame(self.combined_df)
 
-
     def test_split_spark_transform(self):
         pipeline = PCA()
         trainable = SplitXy(operator=pipeline, label_name="class")
         trained = trainable.fit(self.combined_df_spark)
         _ = trained.transform(self.combined_df_spark)
+
     #
     # def test_split_spark_predict(self):
     #     pipeline = PCA() >> LogisticRegression(random_state=42)

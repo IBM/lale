@@ -125,7 +125,7 @@ from .relational import Relational
 from .sample_based_voting import SampleBasedVoting
 from .scan import Scan
 from .smac import SMAC
-from .split_xy import SplitXy
 from .spark_explainer import SparkExplainer
+from .split_xy import SplitXy
 from .tee import Tee
 from .topk_voting_classifier import TopKVotingClassifier
