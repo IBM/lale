@@ -528,21 +528,24 @@ validation part. If False, terminate the trial with FAIL status.""",
 Default of None translates to `accuracy` for classification and `r2` for regression.""",
                     "anyOf": [
                         {
-                            "description": """Custom scorer object created with `make_scorer`_.
+                            "description": """Callable with signature `scoring(estimator, X, y)` as documented in `sklearn scoring`_.
 
-The argument to make_scorer can be one of scikit-learn's metrics_,
-or it can be a user-written Python function to create a completely
-custom scorer objects, following the `model_evaluation`_ example.
-The metric has to return a scalar value. Note that scikit-learns's
-scorer object always returns values such that higher score is
+This may created from one of the `sklearn metrics`_ using `make_scorer`_.
+Or it can be one of the scoring callables returned by the factory
+functions in `lale.lib.aif360 metrics`_, for example,
+`symmetric_disparate_impact(**fairness_info)`.
+Or it can be a user-written Python function to create a completely
+custom scorer object.
+The callable has to return a scalar value, such that a higher score is
 better. Since ``hyperopt.fmin`` solves a minimization problem, we pass
 ``(best_score - score)`` to ``hyperopt.fmin``.
 
+.. _`sklearn scoring`: https://scikit-learn.org/stable/modules/model_evaluation.html#the-scoring-parameter-defining-model-evaluation-rules
 .. _`make_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
-.. _metrics: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
-.. _`model_evaluation`: https://scikit-learn.org/stable/modules/model_evaluation.html
+.. _`sklearn metrics`: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
+.. _`lale.lib.aif360 metrics`: https://lale.readthedocs.io/en/latest/modules/lale.lib.aif360.html#metrics
 """,
-                            "not": {"type": "string"},
+                            "laleType": "callable",
                         },
                         {
                             "description": "Known scorer for classification task.",
