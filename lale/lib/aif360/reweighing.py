@@ -87,9 +87,9 @@ class _ReweighingImpl:
             )
         return self
 
-    def predict(self, X):
+    def predict(self, X, **predict_params):
         redacted_X = self.redacting.transform(X)
-        result = self.estimator.predict(redacted_X)
+        result = self.estimator.predict(redacted_X, **predict_params)
         return result
 
 

@@ -74,8 +74,8 @@ class _DifferenceFlattenAutoEnsemblerImpl:
         self._wrapped_model.fit(X, y)
         return self
 
-    def predict(self, X=None):
-        return self._wrapped_model.predict(X)
+    def predict(self, X=None, **predict_params):
+        return self._wrapped_model.predict(X, **predict_params)
 
     def predict_proba(self, X=None):
         return self._wrapped_model.predict_proba(X)

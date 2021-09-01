@@ -82,8 +82,8 @@ or with
             raise RuntimeError(str(self._hyperparams)) from e
         return self
 
-    def predict(self, X):
-        return self._wrapped_model.predict(X)
+    def predict(self, X, **predict_params):
+        return self._wrapped_model.predict(X, **predict_params)
 
     def predict_proba(self, X):
         return self._wrapped_model.predict_proba(X)

@@ -362,7 +362,7 @@ to create an init method with the appropriate parameter list, an exception was r
         "output_transform",
     )
 
-    def predict(self, X):
+    def predict(self, X, **predict_params):
         pass
 
     make_fun(
