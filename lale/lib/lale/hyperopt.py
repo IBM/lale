@@ -530,12 +530,12 @@ Default of None translates to `accuracy` for classification and `r2` for regress
                         {
                             "description": """Callable with signature `scoring(estimator, X, y)` as documented in `sklearn scoring`_.
 
-This may created from one of the `sklearn metrics`_ using `make_scorer`_.
+This may be created from one of the `sklearn metrics`_ using `make_scorer`_.
 Or it can be one of the scoring callables returned by the factory
 functions in `lale.lib.aif360 metrics`_, for example,
 `symmetric_disparate_impact(**fairness_info)`.
-Or it can be a user-written Python function to create a completely
-custom scorer object.
+Or it can be a completely custom user-written Python callable with
+signature `scoring(estimator, X, y)`.
 The callable has to return a scalar value, such that a higher score is
 better. Since ``hyperopt.fmin`` solves a minimization problem, we pass
 ``(best_score - score)`` to ``hyperopt.fmin``.
