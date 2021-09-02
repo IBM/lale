@@ -233,7 +233,11 @@ def fold_schema(X, y, cv=1, is_classifier=True):
         return aux_result
 
     n_splits = cv if isinstance(cv, int) else cv.get_n_splits()
-    n_samples = X.shape[0] if hasattr(X, "shape") else len(X)
+    try:
+        n_samples = X.shape[0] if hasattr(X, "shape") else len(X)
+    except TypeError:  # raised for Spark dataframes.
+        n_samples = X.count() if hasattr(X, "count") else 0
+
     if n_splits == 1:
         n_rows_fold = n_samples
     elif is_classifier:

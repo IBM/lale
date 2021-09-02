@@ -29,6 +29,9 @@ except ImportError:
 
 from test import EnableSchemaValidation
 
+from sklearn.datasets import load_iris
+from sklearn.model_selection import train_test_split
+
 from lale import wrap_imported_operators
 from lale.datasets.data_schemas import add_table_name, get_table_name
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
@@ -61,8 +64,9 @@ from lale.lib.lale import (
     Map,
     Relational,
     Scan,
+    SplitXy,
 )
-from lale.lib.sklearn import KNeighborsClassifier, LogisticRegression
+from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
 
 
@@ -1069,6 +1073,8 @@ class TestMap(unittest.TestCase):
         state_map = {"NY": "New York", "CA": "California"}
         _ = Map(columns=[replace(it.gender, gender_map), replace(it.state, state_map)])
 
+    # The rename column functionality implemented as part of identity function for Map operator
+    # does not support explicit identity calls for now.
     def test_transform_identity_map(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
@@ -1705,6 +1711,8 @@ class TestMapSpark(unittest.TestCase):
             sc = SparkContext.getOrCreate(conf=conf)
             self.sqlCtx = SQLContext(sc)
 
+    # The rename column functionality implemented as part of identity function for Map operator
+    # does not support explicit identity calls for now.
     def test_transform_identity_map(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
@@ -2069,3 +2077,73 @@ class TestMapSpark(unittest.TestCase):
         self.assertEqual(transformed_df.collect()[0]["string_indexed"], 1)
         self.assertEqual(transformed_df.collect()[1]["string_indexed"], 0)
         self.assertEqual(transformed_df.collect()[2]["string_indexed"], 0)
+
+
+class TestSplitXy(unittest.TestCase):
+    def setUp(self):
+        data = load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            pd.DataFrame(X), pd.DataFrame(y)
+        )
+        self.combined_df = pd.concat([self.X_train, self.y_train], axis=1)
+        self.combined_df.columns = [
+            "sepal_length",
+            "sepal_width",
+            "petal_length",
+            "petal_width",
+            "class",
+        ]
+
+    def test_split_transform(self):
+        pipeline = PCA()
+        trainable = SplitXy(operator=pipeline, label_name="class")
+        trained = trainable.fit(self.combined_df)
+        _ = trained.transform(self.combined_df)
+
+    def test_split_predict(self):
+        pipeline = PCA() >> LogisticRegression(random_state=42)
+        trainable = SplitXy(operator=pipeline, label_name="class")
+        trained = trainable.fit(self.combined_df)
+        _ = trained.predict(self.X_test)
+
+
+@unittest.skip(
+    "skipping because we don't have any estimators that handle a Spark dataframe."
+)
+class TestSplitXySpark(unittest.TestCase):
+    def setUp(self):
+        if spark_installed:
+            conf = (
+                SparkConf()
+                .setMaster("local[2]")
+                .set("spark.driver.bindAddress", "127.0.0.1")
+            )
+            sc = SparkContext.getOrCreate(conf=conf)
+            self.sqlCtx = SQLContext(sc)
+            data = load_iris()
+            X, y = data.data, data.target
+            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+                pd.DataFrame(X), pd.DataFrame(y)
+            )
+            self.combined_df = pd.concat([self.X_train, self.y_train], axis=1)
+            self.combined_df.columns = [
+                "sepal_length",
+                "sepal_width",
+                "petal_length",
+                "petal_width",
+                "class",
+            ]
+            self.combined_df_spark = self.sqlCtx.createDataFrame(self.combined_df)
+
+    def test_split_spark_transform(self):
+        pipeline = PCA()
+        trainable = SplitXy(operator=pipeline, label_name="class")
+        trained = trainable.fit(self.combined_df_spark)
+        _ = trained.transform(self.combined_df_spark)
+
+    def test_split_spark_predict(self):
+        pipeline = PCA() >> LogisticRegression(random_state=42)
+        trainable = SplitXy(operator=pipeline, label_name="class")
+        trained = trainable.fit(self.combined_df)
+        _ = trained.predict(pd.DataFrame(self.X_test))

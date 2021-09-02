@@ -44,6 +44,7 @@ Transformers:
 * lale.lib.lale. `Join`_
 * lale.lib.lale. `Alias`_
 * lale.lib.lale. `Scan`_
+* lale.lib.lale. `SplitXy`_
 * lale.lib.lale. `Relational`_
 
 Estimators and transformers:
@@ -73,6 +74,7 @@ Estimators and transformers:
 .. _`Join`: lale.lib.lale.join.html
 .. _`Alias`: lale.lib.lale.alias.html
 .. _`Scan`: lale.lib.lale.scan.html
+.. _`SplitXy`: lale.lib.lale.split_xy.html
 .. _`Relational`: lale.lib.lale.relational.html
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
@@ -124,5 +126,6 @@ from .sample_based_voting import SampleBasedVoting
 from .scan import Scan
 from .smac import SMAC
 from .spark_explainer import SparkExplainer
+from .split_xy import SplitXy
 from .tee import Tee
 from .topk_voting_classifier import TopKVotingClassifier

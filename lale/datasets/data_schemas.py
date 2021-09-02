@@ -19,6 +19,7 @@ import pandas as pd
 import scipy.sparse
 
 import lale.type_checking
+from lale.helpers import _is_spark_df
 from lale.type_checking import JSON_TYPE
 
 try:
@@ -452,6 +453,8 @@ def to_schema(obj) -> JSON_TYPE:
         result = obj
     elif isinstance(obj, list):
         result = list_tensor_to_schema(obj)
+    elif _is_spark_df(obj):
+        result = dataframe_to_schema(obj.toPandas())
     if result is None:
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
     lale.type_checking.validate_is_schema(result)
