@@ -2145,6 +2145,9 @@ class TestSplitXy(unittest.TestCase):
         _ = trained.predict(self.X_test)
 
 
+@unittest.skip(
+    "skipping because we don't have any estimators that handle a Spark dataframe."
+)
 class TestSplitXySpark(unittest.TestCase):
     def setUp(self):
         if spark_installed:
@@ -2176,9 +2179,8 @@ class TestSplitXySpark(unittest.TestCase):
         trained = trainable.fit(self.combined_df_spark)
         _ = trained.transform(self.combined_df_spark)
 
-    #
-    # def test_split_spark_predict(self):
-    #     pipeline = PCA() >> LogisticRegression(random_state=42)
-    #     trainable = SplitXy(operator=pipeline, label_name="class")
-    #     trained = trainable.fit(self.combined_df)
-    #     _ = trained.predict(pd.DataFrame(self.X_test))
+    def test_split_spark_predict(self):
+        pipeline = PCA() >> LogisticRegression(random_state=42)
+        trainable = SplitXy(operator=pipeline, label_name="class")
+        trained = trainable.fit(self.combined_df)
+        _ = trained.predict(pd.DataFrame(self.X_test))
