@@ -28,6 +28,8 @@ import lale.sklearn_compat
 from lale.helpers import cross_val_score_track_trials
 from lale.lib.sklearn import LogisticRegression
 
+from ._common_schemas import schema_best_score, schema_estimator, schema_scoring
+
 try:
     # Import ConfigSpace and different types of parameters
     from smac.configspace import ConfigurationSpace
@@ -53,12 +55,13 @@ logger = logging.getLogger(__name__)
 class _SMACImpl:
     def __init__(
         self,
+        *,
         estimator=None,
-        max_evals=50,
-        cv=5,
-        handle_cv_failure=False,
         scoring=None,
         best_score=0.0,
+        cv=5,
+        handle_cv_failure=False,
+        max_evals=50,
         max_opt_time=None,
         lale_num_grids=None,
     ):
@@ -242,23 +245,9 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["estimator"],
             "additionalProperties": False,
             "properties": {
-                "estimator": {
-                    "anyOf": [
-                        {"laleType": "operator"},
-                        {
-                            "enum": [None],
-                            "description": "lale.lib.sklearn.LogisticRegression",
-                        },
-                    ],
-                    "description": "A valid Lale operator or pipeline.",
-                    "default": None,
-                },
-                "max_evals": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 50,
-                    "description": "Number of trials of SMAC search i.e. runcount_limit of SMAC.",
-                },
+                "estimator": schema_estimator,
+                "scoring": schema_scoring,
+                "best_score": schema_best_score,
                 "cv": {
                     "description": """Cross-validation as integer or as object that has a split function.
 
@@ -287,65 +276,11 @@ validation part. If False, terminate the trial with FAIL status.""",
                     "type": "boolean",
                     "default": False,
                 },
-                "scoring": {
-                    "description": """Scorer object, or known scorer named by string.
-Default of None translates to `accuracy` for classification and `r2` for regression.""",
-                    "anyOf": [
-                        {
-                            "description": """Custom scorer object created with `make_scorer`_.
-
-The argument to make_scorer can be one of scikit-learn's metrics_,
-or it can be a user-written Python function to create a completely
-custom scorer objects, following the `model_evaluation`_ example.
-The metric has to return a scalar value. Note that scikit-learns's
-scorer object always returns values such that higher score is
-better. Since SMAC solves a minimization problem, we pass
-(best_score - score) to SMAC.
-
-.. _`make_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
-.. _metrics: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
-.. _`model_evaluation`: https://scikit-learn.org/stable/modules/model_evaluation.html
-""",
-                            "not": {"type": "string"},
-                        },
-                        {
-                            "description": "Known scorer for classification task.",
-                            "enum": [
-                                "accuracy",
-                                "explained_variance",
-                                "max_error",
-                                "roc_auc",
-                                "roc_auc_ovr",
-                                "roc_auc_ovo",
-                                "roc_auc_ovr_weighted",
-                                "roc_auc_ovo_weighted",
-                                "balanced_accuracy",
-                                "average_precision",
-                                "neg_log_loss",
-                                "neg_brier_score",
-                            ],
-                        },
-                        {
-                            "description": "Known scorer for regression task.",
-                            "enum": [
-                                "r2",
-                                "neg_mean_squared_error",
-                                "neg_mean_absolute_error",
-                                "neg_root_mean_squared_error",
-                                "neg_mean_squared_log_error",
-                                "neg_median_absolute_error",
-                            ],
-                        },
-                    ],
-                    "default": None,
-                },
-                "best_score": {
-                    "description": """The best score for the specified scorer.
-
-This allows us to return a loss to SMAC that is >=0,
-where zero is the best loss.""",
-                    "type": "number",
-                    "default": 0.0,
+                "max_evals": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 50,
+                    "description": "Number of trials of SMAC search i.e. runcount_limit of SMAC.",
                 },
                 "max_opt_time": {
                     "description": "Maximum amout of time in seconds for the optimization.",

@@ -25,6 +25,8 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 
+from ._common_schemas import schema_best_score, schema_scoring
+
 try:
     import xgboost  # noqa: F401
 
@@ -99,13 +101,14 @@ class _AutoPipelineImpl:
 
     def __init__(
         self,
+        *,
         prediction_type="classification",
-        max_opt_time=600.0,
-        max_eval_time=120.0,
-        max_evals=100,
-        verbose=False,
         scoring=None,
         best_score=0.0,
+        verbose=False,
+        max_evals=100,
+        max_opt_time=600.0,
+        max_eval_time=120.0,
     ):
         self.prediction_type = prediction_type
         self.max_opt_time = max_opt_time
@@ -321,6 +324,20 @@ _hyperparams_schema = {
                     "enum": ["binary", "multiclass", "classification", "regression"],
                     "default": "classification",
                 },
+                "scoring": schema_scoring,
+                "best_score": schema_best_score,
+                "verbose": {
+                    "description": """Whether to print errors from each of the trials if any.
+This is also logged using logger.warning in Hyperopt.""",
+                    "type": "boolean",
+                    "default": False,
+                },
+                "max_evals": {
+                    "description": "Number of trials of Hyperopt search.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 100,
+                },
                 "max_opt_time": {
                     "description": "Maximum time in seconds for the optimization.",
                     "anyOf": [
@@ -336,80 +353,6 @@ _hyperparams_schema = {
                         {"description": "No runtime bound.", "enum": [None]},
                     ],
                     "default": 120.0,
-                },
-                "max_evals": {
-                    "description": "Number of trials of Hyperopt search.",
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 100,
-                },
-                "verbose": {
-                    "description": """Whether to print errors from each of the trials if any.
-This is also logged using logger.warning in Hyperopt.""",
-                    "type": "boolean",
-                    "default": False,
-                },
-                "scoring": {
-                    "description": "Scorer object or known scorer named by string.",
-                    "anyOf": [
-                        {
-                            "description": "If None, use accuracy for classification and r2 for regression.",
-                            "enum": [None],
-                        },
-                        {
-                            "description": """Custom scorer object created with `make_scorer`_.
-
-The argument to make_scorer can be one of scikit-learn's metrics_,
-or it can be a user-written Python function to create a completely
-custom scorer object, following the `model_evaluation`_ example.
-The metric has to return a scalar value. Note that scikit-learns's
-scorer object always returns values such that higher score is
-better.
-
-.. _`make_scorer`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.make_scorer.html#sklearn.metrics.make_scorer.
-.. _metrics: https://scikit-learn.org/stable/modules/classes.html#module-sklearn.metrics
-.. _`model_evaluation`: https://scikit-learn.org/stable/modules/model_evaluation.html
-""",
-                            "not": {"type": ["string", "null"]},
-                        },
-                        {
-                            "description": "Known scorer for classification task.",
-                            "enum": [
-                                "accuracy",
-                                "explained_variance",
-                                "max_error",
-                                "roc_auc",
-                                "roc_auc_ovr",
-                                "roc_auc_ovo",
-                                "roc_auc_ovr_weighted",
-                                "roc_auc_ovo_weighted",
-                                "balanced_accuracy",
-                                "average_precision",
-                                "neg_log_loss",
-                                "neg_brier_score",
-                            ],
-                        },
-                        {
-                            "description": "Known scorer for regression task.",
-                            "enum": [
-                                "r2",
-                                "neg_mean_squared_error",
-                                "neg_mean_absolute_error",
-                                "neg_root_mean_squared_error",
-                                "neg_mean_squared_log_error",
-                                "neg_median_absolute_error",
-                            ],
-                        },
-                    ],
-                    "default": None,
-                },
-                "best_score": {
-                    "description": """The best score for the specified scorer.
-
-This allows us to return a loss that is >=0,
-where zero is the best loss.""",
-                    "type": "number",
-                    "default": 0.0,
                 },
             },
         }

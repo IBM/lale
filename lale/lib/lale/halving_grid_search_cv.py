@@ -22,6 +22,7 @@ import lale.lib.sklearn
 import lale.operators
 import lale.search.lale_grid_search_cv
 
+from ._common_schemas import schema_estimator, schema_scoring
 from .observing import Observing
 
 func_timeout_installed = False
@@ -38,21 +39,22 @@ class _HalvingGridSearchCVImpl:
 
     def __init__(
         self,
+        *,
         estimator=None,
+        scoring=None,
+        cv=5,
+        verbose=0,
         param_grid=None,
         factor=3,
         resource="n_strings",
         max_resources="auto",
         min_resources="exhaust",
         aggressive_elimination=False,
-        scoring=None,
         refit=True,
         error_score=np.nan,
         return_train_score=False,
         random_state=None,
         n_jobs=None,
-        verbose=0,
-        cv=5,
         lale_num_samples=None,
         lale_num_grids=None,
         pgo=None,
@@ -232,16 +234,19 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["estimator"],
             "additionalProperties": False,
             "properties": {
-                "estimator": {
-                    "description": "Planned Lale individual operator or pipeline,\nby default LogisticRegression.",
-                    "anyOf": [
-                        {"laleType": "operator", "not": {"enum": [None]}},
-                        {
-                            "enum": [None],
-                            "description": "lale.lib.sklearn.LogisticRegression",
-                        },
-                    ],
-                    "default": None,
+                "estimator": schema_estimator,
+                "scoring": schema_scoring,
+                "cv": {
+                    "description": "Number of folds for cross-validation.",
+                    "type": "integer",
+                    "minimum": 1,
+                    "default": 5,
+                },
+                "verbose": {
+                    "description": "Controls the verbosity: the higher, the more messages.",
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 0,
                 },
                 "factor": {
                     "description": """The `halving` parameter, which determines the proportion of candidates
@@ -296,51 +301,6 @@ It can also be set to any parameter of the base estimator that accepts positive 
                     "type": "boolean",
                     "default": False,
                 },
-                "cv": {
-                    "description": "Number of folds for cross-validation.",
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 5,
-                },
-                "scoring": {
-                    "description": """Scorer object, or known scorer named by string.
-Default of None translates to `accuracy` for classification and `r2` for regression.""",
-                    "anyOf": [
-                        {
-                            "description": "Custom scorer object, see https://scikit-learn.org/stable/modules/model_evaluation.html",
-                            "not": {"type": "string"},
-                        },
-                        {
-                            "description": "Known scorer for classification task.",
-                            "enum": [
-                                "accuracy",
-                                "explained_variance",
-                                "max_error",
-                                "roc_auc",
-                                "roc_auc_ovr",
-                                "roc_auc_ovo",
-                                "roc_auc_ovr_weighted",
-                                "roc_auc_ovo_weighted",
-                                "balanced_accuracy",
-                                "average_precision",
-                                "neg_log_loss",
-                                "neg_brier_score",
-                            ],
-                        },
-                        {
-                            "description": "Known scorer for regression task.",
-                            "enum": [
-                                "r2",
-                                "neg_mean_squared_error",
-                                "neg_mean_absolute_error",
-                                "neg_root_mean_squared_error",
-                                "neg_mean_squared_log_error",
-                                "neg_median_absolute_error",
-                            ],
-                        },
-                    ],
-                    "default": None,
-                },
                 "refit": {
                     "description": "Refit an estimator using the best found parameters on the whole dataset.",
                     "type": "boolean",
@@ -390,12 +350,6 @@ Default of None translates to `accuracy` for classification and `r2` for regress
                         },
                     ],
                     "default": None,
-                },
-                "verbose": {
-                    "description": "Controls the verbosity: the higher, the more messages.",
-                    "type": "integer",
-                    "minimum": 0,
-                    "default": 0,
                 },
                 "lale_num_samples": {
                     "description": "How many samples to draw when discretizing a continuous hyperparameter.",
