@@ -159,9 +159,9 @@ def fetch_imdb_dataset(datatype="pandas"):
                 filename, extension = os.path.splitext(file)
                 if extension == ".csv":
                     data_file_name = os.path.join(download_data_dir, file)
-                    imdb_list.append(
-                        {filename: get_data_from_csv(datatype, data_file_name)}
-                    )
+                    table_name = filename
+                    data_frame = get_data_from_csv(datatype, data_file_name)
+                    imdb_list.append(add_table_name(data_frame, table_name))
         if len(imdb_list) == 7:
             logger.info(" Fetched the IMDB dataset. Process completed.")
         else:

@@ -681,7 +681,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
                 error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
 
-        raise AttributeError()
+        raise AttributeError(f"Attribute {name} not found for {self}")
 
 
 Operator.__doc__ = cast(str, Operator.__doc__) + "\n" + _combinators_docstrings
