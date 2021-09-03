@@ -76,7 +76,7 @@ class TestAIF360Datasets(unittest.TestCase):
         self.assertEqual(y.shape, (n_rows,))
         self.assertEqual(set(y), set_y)
         di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        di_measured = di_scorer.scoring(X=X, y_pred=y)
+        di_measured = di_scorer.score_data(X=X, y_pred=y)
         self.assertAlmostEqual(di_measured, di_expected, places=3)
 
     def test_dataset_adult_pd_cat(self):

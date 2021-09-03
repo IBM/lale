@@ -243,7 +243,7 @@ class _ScorerFactory:
             protected_attribute_names=[_ensure_str(pa["feature"]) for pa in pas],
         )
 
-    def scoring(self, y_true=None, y_pred=None, X=None):
+    def score_data(self, y_true=None, y_pred=None, X=None):
         assert y_pred is not None
         assert X is not None
         y_pred_orig = y_pred
@@ -296,11 +296,11 @@ class _ScorerFactory:
             )
         return result
 
-    def scorer(self, estimator, X, y):
-        return self.scoring(y_true=y, y_pred=estimator.predict(X), X=X)
+    def score_estimator(self, estimator, X, y):
+        return self.score_data(y_true=y, y_pred=estimator.predict(X), X=X)
 
     def __call__(self, estimator, X, y):
-        return self.scorer(estimator, X, y)
+        return self.score_estimator(estimator, X, y)
 
 
 _SCORER_DOCSTRING = """
@@ -352,10 +352,10 @@ _SCORER_DOCSTRING = """
     -------
     result : callable
 
-      Scorer that takes three arguments (estimator, X, y) and returns
-      score.  Furthermore, besides being callable, the returned object
-      also has two methods, `scoring(y_true, y_pred, X)` for
-      evaluating datasets and `scorer(estimator, X, y)` for evaluating
+      Scorer that takes three arguments ``(estimator, X, y)`` and returns a
+      scalar number.  Furthermore, besides being callable, the returned object
+      also has two methods, ``score_data(y_true, y_pred, X)`` for evaluating
+      datasets and ``score_estimator(estimator, X, y)`` for evaluating
       estimators.
 """
 
@@ -395,18 +395,18 @@ class _AccuracyAndDisparateImpact:
             )
         return result
 
-    def scoring(self, y_true=None, y_pred=None, X=None):
+    def score_data(self, y_true=None, y_pred=None, X=None):
         accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
-        disp_impact = self.disparate_impact_scorer.scoring(y_true, y_pred, X)
+        disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
         return self._combine(accuracy, disp_impact)
 
-    def scorer(self, estimator, X, y):
+    def score_estimator(self, estimator, X, y):
         accuracy = self.accuracy_scorer(estimator, X, y)
-        disp_impact = self.disparate_impact_scorer.scorer(estimator, X, y)
+        disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
         return self._combine(accuracy, disp_impact)
 
     def __call__(self, estimator, X, y):
-        return self.scorer(estimator, X, y)
+        return self.score_estimator(estimator, X, y)
 
 
 def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
@@ -545,18 +545,18 @@ class _R2AndDisparateImpact:
             )
         return result
 
-    def scoring(self, y_true=None, y_pred=None, X=None):
+    def score_data(self, y_true=None, y_pred=None, X=None):
         r2 = sklearn.metrics.r2_score(y_true, y_pred)
-        disp_impact = self.disparate_impact_scorer.scoring(y_true, y_pred, X)
+        disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
         return self._combine(r2, disp_impact)
 
-    def scorer(self, estimator, X, y):
+    def score_estimator(self, estimator, X, y):
         r2 = self.r2_scorer(estimator, X, y)
-        disp_impact = self.disparate_impact_scorer.scorer(estimator, X, y)
+        disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
         return self._combine(r2, disp_impact)
 
     def __call__(self, estimator, X, y):
-        return self.scorer(estimator, X, y)
+        return self.score_estimator(estimator, X, y)
 
 
 def r2_and_disparate_impact(favorable_labels, protected_attributes):
@@ -624,16 +624,16 @@ class _SymmetricDisparateImpact:
             return disp_impact
         return 1.0 / disp_impact
 
-    def scoring(self, y_true=None, y_pred=None, X=None):
-        disp_impact = self.disparate_impact_scorer.scoring(y_true, y_pred, X)
+    def score_data(self, y_true=None, y_pred=None, X=None):
+        disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
         return self._make_symmetric(disp_impact)
 
-    def scorer(self, estimator, X, y):
-        disp_impact = self.disparate_impact_scorer.scorer(estimator, X, y)
+    def score_estimator(self, estimator, X, y):
+        disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
         return self._make_symmetric(disp_impact)
 
     def __call__(self, estimator, X, y):
-        return self.scorer(estimator, X, y)
+        return self.score_estimator(estimator, X, y)
 
 
 def symmetric_disparate_impact(favorable_labels, protected_attributes):
@@ -656,30 +656,28 @@ symmetric_disparate_impact.__doc__ = (
 
 def theil_index(favorable_labels, protected_attributes):
     r"""
-Create a scikit-learn compatible `Theil index`_ scorer given the
-fairness info (`Speicher et al. 2018`_). Generalized entropy of
-benefit for all individuals in the dataset, with alpha=1. Measures
-the inequality in benefit allocation for individuals.  With
-:math:`b_i = \hat{y}_i - y_i + 1`:
+    Create a scikit-learn compatible `Theil index`_ scorer given the
+    fairness info (`Speicher et al. 2018`_). Generalized entropy of
+    benefit for all individuals in the dataset, with alpha=1. Measures
+    the inequality in benefit allocation for individuals.  With
+    :math:`b_i = \hat{y}_i - y_i + 1`:
 
-.. math::
-    \mathcal{E}(\alpha) = \begin{cases}
-      \frac{1}{n \alpha (\alpha-1)}\sum_{i=1}^n\left[\left(\frac{b_i}{\mu}\right)^\alpha - 1\right],& \alpha \ne 0, 1,\\
-      \frac{1}{n}\sum_{i=1}^n\frac{b_{i}}{\mu}\ln\frac{b_{i}}{\mu},& \alpha=1,\\
-      -\frac{1}{n}\sum_{i=1}^n\ln\frac{b_{i}}{\mu},& \alpha=0.
-    \end{cases}
+    .. math::
+        \mathcal{E}(\alpha) = \begin{cases}
+          \frac{1}{n \alpha (\alpha-1)}\sum_{i=1}^n\left[\left(\frac{b_i}{\mu}\right)^\alpha - 1\right],& \alpha \ne 0, 1,\\
+          \frac{1}{n}\sum_{i=1}^n\frac{b_{i}}{\mu}\ln\frac{b_{i}}{\mu},& \alpha=1,\\
+          -\frac{1}{n}\sum_{i=1}^n\ln\frac{b_{i}}{\mu},& \alpha=0.
+        \end{cases}
 
-A value of 0 implies perfect fairness. Fairness is indicated by
-lower scores, higher scores are problematic.
+    A value of 0 implies perfect fairness. Fairness is indicated by
+    lower scores, higher scores are problematic.
 
-.. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
-.. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
+    .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
+    .. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
     return _ScorerFactory("theil_index", favorable_labels, protected_attributes)
 
 
-average_odds_difference.__doc__ = (
-    str(average_odds_difference.__doc__) + _SCORER_DOCSTRING
-)
+theil_index.__doc__ = str(theil_index.__doc__) + _SCORER_DOCSTRING
 
 
 class _BaseInEstimatorImpl:

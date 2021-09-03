@@ -26,26 +26,26 @@ Estimators:
 * lale.lib.lale. `Hyperopt`_
 * lale.lib.lale. `OptimizeLast`_
 * lale.lib.lale. `OptimizeSuffix`_
-* lale.lib.lale. `TopKVotingClassifier`_
 * lale.lib.lale. `SMAC`_
+* lale.lib.lale. `TopKVotingClassifier`_
 
 Transformers:
 
+* lale.lib.lale. `Aggregate`_
+* lale.lib.lale. `Alias`_
 * lale.lib.lale. `Batching`_
 * lale.lib.lale. `ConcatFeatures`_
-* lale.lib.lale. `NoOp`_
-* lale.lib.lale. `Tee`_
-* lale.lib.lale. `Project`_
-* lale.lib.lale. `SampleBasedVoting`_
-* lale.lib.lale. `Aggregate`_
 * lale.lib.lale. `Filter`_
 * lale.lib.lale. `GroupBy`_
-* lale.lib.lale. `Map`_
 * lale.lib.lale. `Join`_
-* lale.lib.lale. `Alias`_
+* lale.lib.lale. `Map`_
+* lale.lib.lale. `NoOp`_
+* lale.lib.lale. `Project`_
+* lale.lib.lale. `Relational`_
+* lale.lib.lale. `SampleBasedVoting`_
 * lale.lib.lale. `Scan`_
 * lale.lib.lale. `SplitXy`_
-* lale.lib.lale. `Relational`_
+* lale.lib.lale. `Tee`_
 
 Estimators and transformers:
 
@@ -57,8 +57,8 @@ Estimators and transformers:
 .. _`GridSearchCV`: lale.lib.lale.grid_search_cv.html
 .. _`HalvingGridSearchCV`: lale.lib.lale.halving_grid_search_cv.html
 .. _`Hyperopt`: lale.lib.lale.hyperopt.html
-.. _`OptimizeLast`: lale.lib.lale.optimize_last
-.. _`OptimizeSuffix`: lale.lib.lale.optimize_suffix
+.. _`OptimizeLast`: lale.lib.lale.optimize_last.html
+.. _`OptimizeSuffix`: lale.lib.lale.optimize_suffix.html
 
 .. _`TopKVotingClassifier`: lale.lib.lale.topk_voting_classifier.html
 .. _`SMAC`: lale.lib.lale.smac.html

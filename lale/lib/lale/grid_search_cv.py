@@ -21,6 +21,7 @@ import lale.operators
 import lale.search.lale_grid_search_cv
 import lale.sklearn_compat
 
+from ._common_schemas import schema_estimator, schema_scoring
 from .observing import Observing
 
 func_timeout_installed = False
@@ -37,10 +38,11 @@ class _GridSearchCVImpl:
 
     def __init__(
         self,
+        *,
         estimator=None,
+        scoring=None,
         cv=5,
         verbose=0,
-        scoring=None,
         n_jobs=None,
         lale_num_samples=None,
         lale_num_grids=None,
@@ -211,17 +213,8 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["estimator"],
             "additionalProperties": False,
             "properties": {
-                "estimator": {
-                    "description": "Planned Lale individual operator or pipeline,\nby default LogisticRegression.",
-                    "anyOf": [
-                        {"laleType": "operator", "not": {"enum": [None]}},
-                        {
-                            "enum": [None],
-                            "description": "lale.lib.sklearn.LogisticRegression",
-                        },
-                    ],
-                    "default": None,
-                },
+                "estimator": schema_estimator,
+                "scoring": schema_scoring,
                 "cv": {
                     "description": "Number of folds for cross-validation.",
                     "type": "integer",
@@ -232,45 +225,6 @@ _hyperparams_schema = {
                     "description": "Controls the verbosity: the higher, the more messages.",
                     "type": "integer",
                     "default": 0,
-                },
-                "scoring": {
-                    "description": """Scorer object, or known scorer named by string.
-Default of None translates to `accuracy` for classification and `r2` for regression.""",
-                    "anyOf": [
-                        {
-                            "description": "Custom scorer object, see https://scikit-learn.org/stable/modules/model_evaluation.html",
-                            "not": {"type": "string"},
-                        },
-                        {
-                            "description": "Known scorer for classification task.",
-                            "enum": [
-                                "accuracy",
-                                "explained_variance",
-                                "max_error",
-                                "roc_auc",
-                                "roc_auc_ovr",
-                                "roc_auc_ovo",
-                                "roc_auc_ovr_weighted",
-                                "roc_auc_ovo_weighted",
-                                "balanced_accuracy",
-                                "average_precision",
-                                "neg_log_loss",
-                                "neg_brier_score",
-                            ],
-                        },
-                        {
-                            "description": "Known scorer for regression task.",
-                            "enum": [
-                                "r2",
-                                "neg_mean_squared_error",
-                                "neg_mean_absolute_error",
-                                "neg_root_mean_squared_error",
-                                "neg_mean_squared_log_error",
-                                "neg_median_absolute_error",
-                            ],
-                        },
-                    ],
-                    "default": None,
                 },
                 "n_jobs": {
                     "description": "Number of jobs to run in parallel.",

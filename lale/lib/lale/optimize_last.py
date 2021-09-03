@@ -20,6 +20,8 @@ import lale.operators
 import lale.pretty_print
 from lale.lib.lale.optimize_suffix import OptimizeSuffix
 
+from ._common_schemas import schema_estimator
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)
 
@@ -76,14 +78,7 @@ _hyperparams_schema = {
             "relevantToOptimizer": [],
             "additionalProperties": True,
             "properties": {
-                "estimator": {
-                    "description": "Trained Lale operator or pipeline,\nIf None, LogisticRegression is used.",
-                    "anyOf": [
-                        {"laleType": "operator", "not": {"enum": [None]}},
-                        {"enum": [None]},
-                    ],
-                    "default": None,
-                },
+                "estimator": schema_estimator,
                 "last_optimizer": {
                     "description": "Lale optimizer.\nIf (default) None is specified, Hyperopt is used.",
                     "anyOf": [
