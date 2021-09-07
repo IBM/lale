@@ -284,5 +284,6 @@ def grouped_count():
 def grouped_mean():
     return pysql.mean
 
+
 def grouped_first():
     return pysql.first

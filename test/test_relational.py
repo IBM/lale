@@ -40,6 +40,7 @@ from lale.expressions import (
     day_of_month,
     day_of_week,
     day_of_year,
+    first,
     hour,
     identity,
     it,
@@ -51,7 +52,6 @@ from lale.expressions import (
     replace,
     string_indexer,
     sum,
-    first
 )
 from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.lale import (
@@ -530,7 +530,7 @@ class TestAggregate(unittest.TestCase):
                 "max_uc": max(it["Unit cost"]),
                 "min_uc": min(it["Unit cost"]),
                 "min_up": min(it["Unit price"]),
-                "first_uc": first(it["Unit cost"])
+                "first_uc": first(it["Unit cost"]),
             }
         )
         aggregated_df = trainable.transform(grouped_df)
@@ -582,8 +582,11 @@ class TestAggregateSpark(unittest.TestCase):
         assert get_table_name(go_products_spark) == "go_products"
         grouped_df = trainable.transform(go_products_spark)
         trainable = Aggregate(
-            columns={"sum_uc": sum(it["Unit cost"]), "max_uc": max(it["Unit cost"]),
-            "first_uc": first(it["Unit cost"])}
+            columns={
+                "sum_uc": sum(it["Unit cost"]),
+                "max_uc": max(it["Unit cost"]),
+                "first_uc": first(it["Unit cost"]),
+            }
         )
         aggregated_df = trainable.transform(grouped_df)
         self.assertEqual(aggregated_df.count(), 30)
