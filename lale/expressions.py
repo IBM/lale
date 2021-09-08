@@ -368,4 +368,8 @@ def string_indexer(subject: Expr) -> Expr:
     return _make_call_expr("string_indexer", subject)
 
 
+def first(group: Expr) -> Expr:
+    return _make_call_expr("first", group)
+
+
 it = Expr(ast.Name(id="it"))

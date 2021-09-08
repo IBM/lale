@@ -40,6 +40,7 @@ from lale.expressions import (
     day_of_month,
     day_of_week,
     day_of_year,
+    first,
     hour,
     identity,
     it,
@@ -529,10 +530,14 @@ class TestAggregate(unittest.TestCase):
                 "max_uc": max(it["Unit cost"]),
                 "min_uc": min(it["Unit cost"]),
                 "min_up": min(it["Unit price"]),
+                "first_uc": first(it["Unit cost"]),
             }
         )
         aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.shape, (30, 5))
+        self.assertEqual(aggregated_df.shape, (30, 6))
+        self.assertEqual(
+            aggregated_df.loc[("Golf Equipment", "Blue Steel"), "first_uc"], 41.2
+        )
         self.assertEqual(
             aggregated_df.loc[("Golf Equipment", "Blue Steel"), "max_uc"], 89.41
         )
@@ -577,11 +582,15 @@ class TestAggregateSpark(unittest.TestCase):
         assert get_table_name(go_products_spark) == "go_products"
         grouped_df = trainable.transform(go_products_spark)
         trainable = Aggregate(
-            columns={"sum_uc": sum(it["Unit cost"]), "max_uc": max(it["Unit cost"])}
+            columns={
+                "sum_uc": sum(it["Unit cost"]),
+                "max_uc": max(it["Unit cost"]),
+                "first_uc": first(it["Unit cost"]),
+            }
         )
         aggregated_df = trainable.transform(grouped_df)
         self.assertEqual(aggregated_df.count(), 30)
-        self.assertEqual(len(aggregated_df.columns), 4)
+        self.assertEqual(len(aggregated_df.columns), 5)
         self.assertEqual(
             round(
                 aggregated_df.filter(
@@ -591,6 +600,16 @@ class TestAggregateSpark(unittest.TestCase):
                 2,
             ),
             89.22,
+        )
+        self.assertEqual(
+            round(
+                aggregated_df.filter(
+                    (aggregated_df["Product line"] == "Golf Equipment")
+                    & (aggregated_df["Product brand"] == "Blue Steel")
+                ).collect()[0]["first_uc"],
+                2,
+            ),
+            41.2,
         )
 
     def test_aggregate_2(self):
