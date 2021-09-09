@@ -255,6 +255,11 @@ class _JoinImpl:
             tables_encountered.add(right_table_name)
         return lale.datasets.data_schemas.add_table_name(joined_df, self.name)
 
+    def viz_label(self) -> str:
+        if isinstance(self.name, str):
+            return f"Join:\n{self.name}"
+        return "Join"
+
 
 _hyperparams_schema = {
     "allOf": [
