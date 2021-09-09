@@ -30,12 +30,17 @@ except ImportError:
 
 class _JoinImpl:
     def __init__(
-        self, pred=None, join_limit=None, sliding_window_length=None, join_type="inner"
+        self,
+        *,
+        pred=None,
+        join_limit=None,
+        sliding_window_length=None,
+        join_type="inner",
+        name=None,
     ):
         self.pred = pred
-        self.join_limit = join_limit
-        self.sliding_window_length = sliding_window_length
         self.join_type = join_type
+        self.name = name
 
     # Parse the predicate element passed as input
     @classmethod
@@ -243,12 +248,12 @@ class _JoinImpl:
                 sorted(columns_in_both_tables)
             ) == set(sorted(left_key_col + right_key_col)):
                 raise ValueError(
-                    "Cannot perfrom join operation! Non-key columns cannot be duplicate."
+                    "Cannot perform join operation! Non-key columns cannot be duplicate."
                 )
             joined_df = join_df(left_df, right_df)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)
-        return joined_df
+        return lale.datasets.data_schemas.add_table_name(joined_df, self.name)
 
 
 _hyperparams_schema = {
@@ -258,7 +263,13 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints, if any.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["pred", "join_limit", "sliding_window_length", "join_type"],
+            "required": [
+                "pred",
+                "join_limit",
+                "sliding_window_length",
+                "join_type",
+                "name",
+            ],
             "relevantToOptimizer": [],
             "properties": {
                 "pred": {
@@ -266,7 +277,8 @@ _hyperparams_schema = {
                     "laleType": "Any",
                 },
                 "join_limit": {
-                    "description": """For join paths that are one-to-many, join_limit is use to sample the joined results.
+                    "description": """Not yet implemented!
+For join paths that are one-to-many, join_limit is use to sample the joined results.
 When the right hand side of the join has a timestamp column, the join_limit is applied to select the most recent rows.
 When the right hand side does not have a timestamp, it randomly samples join_limit number of rows.
 Sampling is applied after each pair of tables are joined.""",
@@ -274,7 +286,8 @@ Sampling is applied after each pair of tables are joined.""",
                     "default": None,
                 },
                 "sliding_window_length": {
-                    "description": """sliding_window_length is also used for sampling the joined results,
+                    "description": """Not yet implemented!
+sliding_window_length is also used for sampling the joined results,
 only rows in a recent window of length sliding_window_length seconds is used in addition to join_limit.""",
                     "anyOf": [{"type": "number"}, {"enum": [None]}],
                     "default": None,
@@ -284,6 +297,21 @@ only rows in a recent window of length sliding_window_length seconds is used in 
 to choose which type of join the user wants to implement.""",
                     "enum": ["inner", "left", "right"],
                     "default": "inner",
+                },
+                "name": {
+                    "description": "The table name to be given to the output dataframe.",
+                    "anyOf": [
+                        {
+                            "type": "string",
+                            "pattern": "[^ ]",
+                            "description": "String (cannot be all spaces).",
+                        },
+                        {
+                            "enum": [None],
+                            "description": "No table name.",
+                        },
+                    ],
+                    "default": None,
                 },
             },
         }

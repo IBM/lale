@@ -30,6 +30,7 @@ class _MapImpl:
         self.remainder = remainder
 
     def transform(self, X):
+        table_name = lale.datasets.data_schemas.get_table_name(X)
         columns_to_keep = []
 
         def get_map_function_output(column, new_column_name):
@@ -61,10 +62,8 @@ class _MapImpl:
                 raise ValueError(
                     "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
                 )
-        named_mapped_df = lale.datasets.data_schemas.add_table_name(
-            mapped_df, lale.datasets.data_schemas.get_table_name(X)
-        )
-        return named_mapped_df
+        mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
+        return mapped_df
 
 
 _hyperparams_schema = {

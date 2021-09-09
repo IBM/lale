@@ -417,7 +417,7 @@ class TestAlias(unittest.TestCase):
     def test_alias_pandas(self):
         trainable = Alias(name="test_alias")
         go_products = self.go_sales[3]
-        assert get_table_name(go_products) == "go_products"
+        self.assertEqual(get_table_name(go_products), "go_products")
         transformed_df = trainable.transform(go_products)
         self.assertEqual(get_table_name(transformed_df), "test_alias")
         self.assertTrue(_is_pandas_df(transformed_df))
@@ -426,7 +426,7 @@ class TestAlias(unittest.TestCase):
     def test_alias_spark(self):
         trainable = Alias(name="test_alias")
         go_products = self.go_sales_spark[3]
-        assert get_table_name(go_products) == "go_products"
+        self.assertEqual(get_table_name(go_products), "go_products")
         transformed_df = trainable.transform(go_products)
         self.assertEqual(get_table_name(transformed_df), "test_alias")
         self.assertTrue(_is_spark_df(transformed_df))
@@ -434,12 +434,46 @@ class TestAlias(unittest.TestCase):
         self.assertEqual(len(transformed_df.columns), 8)
 
     def test_alias_name_error(self):
-        with self.assertRaises(ValueError):
+        with self.assertRaises(jsonschema.ValidationError):
             _ = Alias()
-        with self.assertRaises(ValueError):
+        with self.assertRaises(jsonschema.ValidationError):
             _ = Alias(name="")
-        with self.assertRaises(ValueError):
+        with self.assertRaises(jsonschema.ValidationError):
             _ = Alias(name="    ")
+
+    def test_filter_name(self):
+        go_products = self.go_sales[3]
+        trained = Filter(pred=[it["Unit cost"] >= 10])
+        transformed = trained.transform(go_products)
+        self.assertEqual(get_table_name(transformed), "go_products")
+
+    def test_map_name(self):
+        go_products = self.go_sales[3]
+        trained = Map(columns={"unit_cost": it["Unit cost"]})
+        transformed = trained.transform(go_products)
+        self.assertEqual(get_table_name(transformed), "go_products")
+
+    def test_join_name(self):
+        trained = Join(
+            pred=[it.go_1k["Retailer code"] == it.go_retailers["Retailer code"]],
+            name="joined_tables",
+        )
+        transformed = trained.transform(self.go_sales)
+        self.assertEqual(get_table_name(transformed), "joined_tables")
+
+    def test_groupby_name(self):
+        go_products = self.go_sales[3]
+        trained = GroupBy(by=[it["Product line"]])
+        transformed = trained.transform(go_products)
+        self.assertEqual(get_table_name(transformed), "go_products")
+
+    def test_aggregate_name(self):
+        go_daily_sales = self.go_sales[1]
+        group_by = GroupBy(by=[it["Retailer code"]])
+        aggregate = Aggregate(columns={"min_quantity": min(it.Quantity)})
+        trained = group_by >> aggregate
+        transformed = trained.transform(go_daily_sales)
+        self.assertEqual(get_table_name(transformed), "go_daily_sales")
 
 
 # Testing group_by operator for pandas and spark dataframes

@@ -44,8 +44,9 @@ _hyperparams_schema = {
             "relevantToOptimizer": [],
             "properties": {
                 "name": {
-                    "description": "The name to be given to the input dataframe.",
-                    "laleType": "Any",
+                    "description": "The table name to be given to the output dataframe.",
+                    "type": "string",
+                    "pattern": "[^ ]",
                 },
             },
         }
