@@ -265,6 +265,7 @@ def string_indexer(df: pd.DataFrame, dom_expr: Expr, new_column_name: str):
     return new_column_name, df
 
 
+# functions for aggregate
 def grouped_sum():
     return pysql.sum
 
@@ -287,3 +288,56 @@ def grouped_mean():
 
 def grouped_first():
     return pysql.first
+
+
+# functions for filter
+def filter_isnan(df: Any, column_name: str):
+    if _is_pandas_df(df):
+        return df[df[column_name].isnull()]
+    elif spark_installed and _is_spark_df(df):
+        from pyspark.sql.functions import isnan
+
+        return df.filter(isnan(df[column_name]))
+    else:
+        raise ValueError(
+            "the filter isnan supports only Pandas dataframes or spark dataframes."
+        )
+
+
+def filter_isnotnan(df: Any, column_name: str):
+    if _is_pandas_df(df):
+        return df[df[column_name].notnull()]
+    elif spark_installed and _is_spark_df(df):
+        from pyspark.sql.functions import isnan
+
+        return df.filter(~isnan(df[column_name]))
+    else:
+        raise ValueError(
+            "the filter isnotnan supports only Pandas dataframes or spark dataframes."
+        )
+
+
+def filter_isnull(df: Any, column_name: str):
+    if _is_pandas_df(df):
+        return df[df[column_name].isnull()]
+    elif spark_installed and _is_spark_df(df):
+        from pyspark.sql.functions import isnull
+
+        return df.filter(isnull(df[column_name]))
+    else:
+        raise ValueError(
+            "the filter isnan supports only Pandas dataframes or spark dataframes."
+        )
+
+
+def filter_isnotnull(df: Any, column_name: str):
+    if _is_pandas_df(df):
+        return df[df[column_name].notnull()]
+    elif spark_installed and _is_spark_df(df):
+        from pyspark.sql.functions import isnull
+
+        return df.filter(~isnull(df[column_name]))
+    else:
+        raise ValueError(
+            "the filter isnotnan supports only Pandas dataframes or spark dataframes."
+        )

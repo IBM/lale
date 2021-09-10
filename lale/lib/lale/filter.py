@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+import importlib
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -39,19 +40,45 @@ class _FilterImpl:
     def __init__(self, pred=None):
         self.pred = pred
 
-    @classmethod
-    def validate_hyperparams(cls, pred=None, X=None, **hyperparams):
-        for pred_element in pred:
-            if not isinstance(pred_element._expr, ast.Compare):
-                raise ValueError(
-                    (
-                        "Filter predicate '{}' not a comparison. All filter predicates should be comparisons."
-                    ).format(pred_element)
-                )
+    # @classmethod
+    # def validate_hyperparams(cls, pred=None, X=None, **hyperparams):
+    #     for pred_element in pred:
+    #         if not isinstance(pred_element._expr, ast.Compare):
+    #             raise ValueError(
+    #                 (
+    #                     "Filter predicate '{}' not a comparison. All filter predicates should be comparisons."
+    #                 ).format(pred_element)
+    #             )
 
     # Parse the predicate element passed as input
     def _get_filter_info(self, expr_to_parse, X):
         col_list = X.columns
+
+        if isinstance(expr_to_parse, ast.Call):
+            op = expr_to_parse.func
+
+            # for now, we only support single argument predicates
+            if len(expr_to_parse.args) != 1:
+                raise ValueError(
+                    "Filter predicate functions currently only support a single argument"
+                )
+            arg = expr_to_parse.args[0]
+            if _is_ast_subscript(arg):
+                lhs = arg.slice.value.s  # type: ignore
+            elif _is_ast_attribute(arg):
+                lhs = arg.attr  # type: ignore
+            else:
+                raise ValueError(
+                    "Filter predicate functions only supports subscript or dot notation for the argument. For example, it.col_name or it['col_name']"
+                )
+            if lhs not in col_list:
+                raise ValueError(
+                    "Cannot perform filter predicate operation as {} not a column of input dataframe X.".format(
+                        lhs
+                    )
+                )
+            return lhs, op, None
+
         if _is_ast_subscript(expr_to_parse.left):
             lhs = expr_to_parse.left.slice.value.s  # type: ignore
         elif _is_ast_attribute(expr_to_parse.left):
@@ -89,6 +116,12 @@ class _FilterImpl:
         filtered_df = X
 
         def filter(X):
+            if isinstance(op, ast.Name):
+                # currently only handles single argument predicates
+                functions_module = importlib.import_module("lale.lib.lale.functions")
+                func = getattr(functions_module, "filter_" + op.id)
+                return func(X, lhs)
+
             # Filtering spark dataframes
             if _is_spark_df(X):
                 if isinstance(op, ast.Eq):
