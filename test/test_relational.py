@@ -43,6 +43,10 @@ from lale.expressions import (
     first,
     hour,
     identity,
+    isnan,
+    isnotnan,
+    isnotnull,
+    isnull,
     it,
     max,
     mean,
@@ -134,6 +138,7 @@ class TestFilter(unittest.TestCase):
             "TrainId": [1, 2, 3, 4, 5],
             "col3": ["NY", "NY", "CA", "TX", "TX"],
             "col4": [1, 1, 4, 8, 0],
+            "col6": [1, np.nan, 2, None, 3],
         }
         self.df5 = add_table_name(pd.DataFrame(data=table5), "info")
 
@@ -145,56 +150,80 @@ class TestFilter(unittest.TestCase):
             join_type="left",
         )
         self.transformed_df = trainable.transform([self.df1, self.df5, self.df3])
-        self.assertEqual(self.transformed_df.shape, (5, 8))
+        self.assertEqual(self.transformed_df.shape, (5, 9))
         self.assertEqual(self.transformed_df["col3"][2], "CA")
+
+    def test_filter_pandas_isnan(self):
+        trainable = Filter(pred=[isnan(it.col6)])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (2, 9))
+        self.assertTrue(np.all(np.isnan(filtered_df["col6"])))
+
+    def test_filter_pandas_isnotnan(self):
+        trainable = Filter(pred=[isnotnan(it.col6)])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (3, 9))
+        self.assertTrue(np.any(np.logical_not(np.isnan(filtered_df["col6"]))))
+
+    def test_filter_pandas_isnull(self):
+        trainable = Filter(pred=[isnull(it.col6)])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (2, 9))
+        self.assertTrue(np.all(np.isnan(filtered_df["col6"])))
+
+    def test_filter_pandas_isnotnull(self):
+        trainable = Filter(pred=[isnotnull(it.col6)])
+        filtered_df = trainable.transform(self.transformed_df)
+        self.assertEqual(filtered_df.shape, (3, 9))
+        self.assertTrue(np.any(np.logical_not(np.isnan(filtered_df["col6"]))))
 
     def test_filter_pandas_eq(self):
         trainable = Filter(pred=[it.col3 == "TX"])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (2, 8))
+        self.assertEqual(filtered_df.shape, (2, 9))
         self.assertTrue(np.all(filtered_df["col3"] == "TX"))
 
     def test_filter_pandas_neq(self):
         trainable = Filter(pred=[it.col1 != it["col3"]])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (3, 8))
+        self.assertEqual(filtered_df.shape, (3, 9))
         self.assertTrue(np.all(filtered_df["col1"] != filtered_df["col3"]))
 
     def test_filter_pandas_ge(self):
         trainable = Filter(pred=[it["col4"] >= 5])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (1, 8))
+        self.assertEqual(filtered_df.shape, (1, 9))
         self.assertTrue(np.all(filtered_df["col4"] >= 5))
 
     def test_filter_pandas_gt(self):
         trainable = Filter(pred=[it["train_id"] > it.col4])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (2, 8))
+        self.assertEqual(filtered_df.shape, (2, 9))
         self.assertTrue(np.all(filtered_df["train_id"] != filtered_df["col4"]))
 
     def test_filter_pandas_le(self):
         trainable = Filter(pred=[it["col3"] <= "NY"])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (3, 8))
+        self.assertEqual(filtered_df.shape, (3, 9))
         self.assertTrue(np.all(filtered_df["col3"] <= "NY"))
 
     def test_filter_pandas_lt(self):
         trainable = Filter(pred=[it["col4"] < it["TrainId"]])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (2, 8))
+        self.assertEqual(filtered_df.shape, (2, 9))
         self.assertTrue(np.all(filtered_df["col4"] < filtered_df["TrainId"]))
 
     def test_filter_pandas_multiple1(self):
         trainable = Filter(pred=[it.col3 == "TX", it["col4"] > 4])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (1, 8))
+        self.assertEqual(filtered_df.shape, (1, 9))
         self.assertTrue(np.all(filtered_df["col3"] == "TX"))
         self.assertTrue(np.all(filtered_df["col4"] > 4))
 
     def test_filter_pandas_multiple2(self):
         trainable = Filter(pred=[it.col5 != "Cold", it.train_id <= 4])
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (3, 8))
+        self.assertEqual(filtered_df.shape, (3, 9))
         self.assertTrue(np.all(filtered_df["col5"] != "Cold"))
         self.assertTrue(np.all(filtered_df["train_id"] <= 4))
 
@@ -207,7 +236,7 @@ class TestFilter(unittest.TestCase):
             ]
         )
         filtered_df = trainable.transform(self.transformed_df)
-        self.assertEqual(filtered_df.shape, (2, 8))
+        self.assertEqual(filtered_df.shape, (2, 9))
         self.assertTrue(np.all(filtered_df["train_id"] == filtered_df["train_id"]))
         self.assertTrue(np.all(filtered_df["col2"] != filtered_df["col4"]))
         self.assertTrue(np.all(filtered_df["col5"] == "Cold"))
@@ -249,10 +278,16 @@ class TestFilterSpark(unittest.TestCase):
             table3 = rdd.map(lambda x: Row(tid=int(x[0]), col5=x[1]))
             self.spark_df3 = add_table_name(sqlContext.createDataFrame(table3), "t1")
 
-            l4 = [(1, "NY", 1), (2, "TX", 6), (3, "CA", 2), (4, "NY", 5), (5, "CA", 0)]
+            l4 = [
+                (1, "NY", 1, float(1)),
+                (2, "TX", 6, np.nan),
+                (3, "CA", 2, float(2)),
+                (4, "NY", 5, None),
+                (5, "CA", 0, float(3)),
+            ]
             rdd = sc.parallelize(l4)
             table4 = rdd.map(
-                lambda x: Row(TrainId=int(x[0]), col1=x[1], col2=int(x[2]))
+                lambda x: Row(TrainId=int(x[0]), col1=x[1], col2=int(x[2]), col6=x[3])
             )
             self.spark_df4 = add_table_name(sqlContext.createDataFrame(table4), "main")
 
@@ -264,15 +299,55 @@ class TestFilterSpark(unittest.TestCase):
                 [self.spark_df4, self.spark_df2, self.spark_df3]
             )
             self.assertEqual(self.transformed_df.count(), 5)
-            self.assertEqual(len(self.transformed_df.columns), 7)
+            self.assertEqual(len(self.transformed_df.columns), 8)
             self.assertEqual(self.transformed_df.collect()[2]["col1"], "CA")
+
+    def test_filter_spark_isnan(self):
+        if spark_installed:
+            trainable = Filter(pred=[isnan(it["col6"])])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 1)
+            self.assertEqual(len(filtered_df.columns), 8)
+            rows = filtered_df.rdd.collect()
+            row0 = rows[0]
+            self.assertEqual(row0[1], "TX")
+            self.assertTrue(np.isnan(row0[3]))
+
+    def test_filter_spark_isnotnan(self):
+        if spark_installed:
+            trainable = Filter(pred=[isnotnan(it["col6"])])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 4)
+            self.assertEqual(len(filtered_df.columns), 8)
+            test_list = filtered_df.select(f.collect_list("col6")).first()[0]
+            self.assertTrue(np.all((not np.isnan(i) for i in test_list)))
+
+    def test_filter_spark_isnull(self):
+        if spark_installed:
+            trainable = Filter(pred=[isnull(it["col6"])])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 1)
+            self.assertEqual(len(filtered_df.columns), 8)
+            rows = filtered_df.rdd.collect()
+            row0 = rows[0]
+            self.assertEqual(row0[1], "NY")
+            self.assertIsNone(row0[3])
+
+    def test_filter_spark_isnotnull(self):
+        if spark_installed:
+            trainable = Filter(pred=[isnotnull(it["col6"])])
+            filtered_df = trainable.transform(self.transformed_df)
+            self.assertEqual(filtered_df.count(), 4)
+            self.assertEqual(len(filtered_df.columns), 8)
+            test_list = filtered_df.select(f.collect_list("col6")).first()[0]
+            self.assertTrue(np.all(i is not None for i in test_list))
 
     def test_filter_spark_eq(self):
         if spark_installed:
             trainable = Filter(pred=[it["col3"] == "NY"])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 2)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col3")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) == "NY"))
 
@@ -281,7 +356,7 @@ class TestFilterSpark(unittest.TestCase):
             trainable = Filter(pred=[it.col1 != it["col3"]])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 3)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col1")).first()[0]
             test_list1 = filtered_df.select(f.collect_list("col3")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) != pd.Series(test_list1)))
@@ -291,7 +366,7 @@ class TestFilterSpark(unittest.TestCase):
             trainable = Filter(pred=[it["col4"] >= 150])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 3)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col4")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) >= 150))
 
@@ -300,7 +375,7 @@ class TestFilterSpark(unittest.TestCase):
             trainable = Filter(pred=[it["col2"] > it.tid])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 2)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col2")).first()[0]
             test_list1 = filtered_df.select(f.collect_list("tid")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) > pd.Series(test_list1)))
@@ -310,7 +385,7 @@ class TestFilterSpark(unittest.TestCase):
             trainable = Filter(pred=[it.col3 <= "NY"])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 3)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col3")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) <= "NY"))
 
@@ -319,7 +394,7 @@ class TestFilterSpark(unittest.TestCase):
             trainable = Filter(pred=[it.col2 < it.TrainId])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 2)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col2")).first()[0]
             test_list1 = filtered_df.select(f.collect_list("TrainId")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) < pd.Series(test_list1)))
@@ -329,7 +404,7 @@ class TestFilterSpark(unittest.TestCase):
             trainable = Filter(pred=[it["col3"] == "TX", it.col4 >= 150])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 1)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col3")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) == "TX"))
             test_list = filtered_df.select(f.collect_list("col4")).first()[0]
@@ -340,7 +415,7 @@ class TestFilterSpark(unittest.TestCase):
             trainable = Filter(pred=[it["col5"] != "Cold", it["TrainId"] <= 4])
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 2)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col5")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) != "Cold"))
             test_list = filtered_df.select(f.collect_list("TrainId")).first()[0]
@@ -357,7 +432,7 @@ class TestFilterSpark(unittest.TestCase):
             )
             filtered_df = trainable.transform(self.transformed_df)
             self.assertEqual(filtered_df.count(), 2)
-            self.assertEqual(len(filtered_df.columns), 7)
+            self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("tid")).first()[0]
             test_list1 = filtered_df.select(f.collect_list("TrainId")).first()[0]
             self.assertTrue(np.all(pd.Series(test_list) == pd.Series(test_list1)))

@@ -372,4 +372,20 @@ def first(group: Expr) -> Expr:
     return _make_call_expr("first", group)
 
 
+def isnan(column: Expr) -> Expr:
+    return _make_call_expr("isnan", column)
+
+
+def isnotnan(column: Expr) -> Expr:
+    return _make_call_expr("isnotnan", column)
+
+
+def isnull(column: Expr) -> Expr:
+    return _make_call_expr("isnull", column)
+
+
+def isnotnull(column: Expr) -> Expr:
+    return _make_call_expr("isnotnull", column)
+
+
 it = Expr(ast.Name(id="it"))
