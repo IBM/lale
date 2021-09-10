@@ -35,6 +35,7 @@ from sklearn.model_selection import train_test_split
 from lale import wrap_imported_operators
 from lale.datasets.data_schemas import add_table_name, get_table_name
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
+from lale.datasets.multitable import multitable_train_test_split
 from lale.expressions import (
     count,
     day_of_month,
@@ -2200,3 +2201,41 @@ class TestSplitXySpark(unittest.TestCase):
         trainable = SplitXy(operator=pipeline, label_name="class")
         trained = trainable.fit(self.combined_df)
         _ = trained.predict(pd.DataFrame(self.X_test))
+
+class TestTrainTestSplit(unittest.TestCase):
+    # Get go_sales dataset in pandas and spark dataframes
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+        self.go_sales_spark = fetch_go_sales_dataset("spark")
+
+    def test_split_pandas(self):
+        train, test = multitable_train_test_split(self.go_sales, main_table_name = 'go_daily_sales', test_size=0.2)
+        main_table_df: pd.Dataframe = None
+        for df in train:
+            if get_table_name(df) == 'go_daily_sales':
+                main_table_df = df
+        self.assertEqual(len(main_table_df), 119406)
+        for df in test:
+            if get_table_name(df) == 'go_daily_sales':
+                main_table_df = df
+        self.assertEqual(len(main_table_df), 29851)
+
+    def test_split_pandas_1(self):
+        train, test = multitable_train_test_split(self.go_sales, main_table_name = 'go_daily_sales', test_size=20000)
+        main_table_df: pd.Dataframe = None
+        for df in test:
+            if get_table_name(df) == 'go_daily_sales':
+                main_table_df = df
+        self.assertEqual(len(main_table_df), 20000)
+
+    def test_split_spark(self):
+        train, test = multitable_train_test_split(self.go_sales_spark, main_table_name = 'go_daily_sales', test_size=0.2)
+        main_table_df: pd.Dataframe = None
+        for df in train:
+            if get_table_name(df) == 'go_daily_sales':
+                main_table_df = df
+        self.assertEqual(main_table_df.count(), 119406)
+        for df in test:
+            if get_table_name(df) == 'go_daily_sales':
+                main_table_df = df
+        self.assertEqual(main_table_df.count(), 29851)
