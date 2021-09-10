@@ -126,36 +126,48 @@ class _FilterImpl:
             # Filtering spark dataframes
             if _is_spark_df(X):
                 if isinstance(op, ast.Eq):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X.filter(col(lhs) == col(rhs))
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) == rhs)
                     )
                 elif isinstance(op, ast.NotEq):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X.filter(col(lhs) != col(rhs))
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) != rhs)
                     )
                 elif isinstance(op, ast.GtE):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X.filter(col(lhs) >= col(rhs))
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) >= rhs)
                     )
                 elif isinstance(op, ast.Gt):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X.filter(col(lhs) > col(rhs))
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) > rhs)
                     )
                 elif isinstance(op, ast.LtE):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X.filter(col(lhs) <= col(rhs))
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X.filter(col(lhs) <= rhs)
                     )
                 elif isinstance(op, ast.Lt):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X.filter(col(lhs) < col(rhs))
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
@@ -169,6 +181,8 @@ class _FilterImpl:
                     )
             # Filtering pandas dataframes
             if _is_pandas_df(X):
+                assert lhs is not None
+                assert rhs is not None
                 if isinstance(op, ast.Eq):
                     return (
                         X[X[lhs] == X[rhs]]
@@ -176,30 +190,40 @@ class _FilterImpl:
                         else X[X[lhs] == rhs]
                     )
                 elif isinstance(op, ast.NotEq):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X[X[lhs] != X[rhs]]
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] != rhs]
                     )
                 elif isinstance(op, ast.GtE):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X[X[lhs] >= X[rhs]]
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] >= rhs]
                     )
                 elif isinstance(op, ast.Gt):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X[X[lhs] > X[rhs]]
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] > rhs]
                     )
                 elif isinstance(op, ast.LtE):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X[X[lhs] <= X[rhs]]
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
                         else X[X[lhs] <= rhs]
                     )
                 elif isinstance(op, ast.Lt):
+                    assert lhs is not None
+                    assert rhs is not None
                     return (
                         X[X[lhs] < X[rhs]]
                         if _is_ast_subs_or_attr(expr_to_parse.comparators[0])
