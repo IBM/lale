@@ -14,6 +14,7 @@
 
 import ast
 import importlib
+from typing import Any, Optional, Tuple
 
 import lale.datasets.data_schemas
 import lale.docstrings
@@ -51,7 +52,7 @@ class _FilterImpl:
     #             )
 
     # Parse the predicate element passed as input
-    def _get_filter_info(self, expr_to_parse, X):
+    def _get_filter_info(self, expr_to_parse, X) -> Tuple[str, Any, Optional[str]]:
         col_list = X.columns
 
         if isinstance(expr_to_parse, ast.Call):
