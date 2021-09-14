@@ -11,3 +11,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""
+
+Functions:
+================
+* `multitable_train_test_split`_
+
+.. _`multitable_train_test_split`: lale.datasets.multitable.util.html#lale.datasets.multitable.util.multitable_train_test_split
+
+"""
+
+from .util import multitable_train_test_split
