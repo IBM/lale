@@ -1067,7 +1067,7 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 3)
             self.assertEqual(len(transformed_df.columns), 8)
-            self.assertEqual(transformed_df.collect()[0]["col2"], 0)
+            self.assertEqual(transformed_df.sort(['train_id']).collect()[0]["col2"], 0)
 
     # Composite key join
     def test_join_spark_composite(self):
