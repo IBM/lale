@@ -15,6 +15,7 @@
 import unittest
 
 import numpy as np
+import pandas as pd
 import sklearn.datasets
 import sklearn.model_selection
 
@@ -59,6 +60,15 @@ class TestAutoaiLibs(unittest.TestCase):
     def test_NumpyColumnSelector(self):
         trainable = lale.lib.autoai_libs.NumpyColumnSelector()
         self.doTest(trainable, **self._iris)
+
+    def test_NumpyColumnSelector_pandas(self):
+        iris_X, iris_y = sklearn.datasets.load_iris(return_X_y=True, as_frame=True)
+        keys = ["train_X", "test_X", "train_y", "test_y"]
+        splits = sklearn.model_selection.train_test_split(iris_X, iris_y)
+        iris = {key: data for key, data in zip(keys, splits)}
+        self.assertIsInstance(iris["train_X"], pd.DataFrame)
+        trainable = lale.lib.autoai_libs.NumpyColumnSelector(columns=[0, 2, 3])
+        self.doTest(trainable, **iris)
 
     def test_CompressStrings(self):
         n_columns = self._iris["train_X"].shape[1]
