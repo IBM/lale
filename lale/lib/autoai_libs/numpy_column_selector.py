@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import autoai_libs.transformers.exportable
+import pandas as pd
 
 import lale.docstrings
 import lale.operators
@@ -26,10 +27,14 @@ class _NumpyColumnSelectorImpl:
         )
 
     def fit(self, X, y=None):
+        if isinstance(X, pd.DataFrame):
+            X = X.to_numpy()
         self._wrapped_model.fit(X, y)
         return self
 
     def transform(self, X):
+        if isinstance(X, pd.DataFrame):
+            X = X.to_numpy()
         return self._wrapped_model.transform(X)
 
 
