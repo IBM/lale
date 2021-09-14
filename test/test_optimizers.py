@@ -1302,10 +1302,11 @@ class TestOptimizeLast(unittest.TestCase):
 
         res_last = opt_last.fit(self.X_train, self.y_train)
         pipeline2 = res_last.get_pipeline(pipeline_name="p1")
-        trained_pipeline2 = pipeline2.fit(self.X_train, self.y_train)
-        _ = trained_pipeline2.predict(self.X_test)
+        if pipeline2 is not None:
+            trained_pipeline2 = pipeline2.fit(self.X_train, self.y_train)
+            _ = trained_pipeline2.predict(self.X_test)
 
-        self.assertEqual(type(trained_pipeline), type(trained_pipeline2))
+            self.assertEqual(type(trained_pipeline), type(trained_pipeline2))
 
     def test_unspecified_arguments(self):
         from lale.lib.lale import OptimizeLast
