@@ -40,7 +40,11 @@ class _OptimizeLast:
         if estimator is None:
             last_estimator = None
             lale_prefix = None
+        elif isinstance(estimator, lale.operators.TrainedIndividualOp):
+            lale_prefix = None
+            last_estimator = estimator.clone()
         else:
+            assert isinstance(estimator, lale.operators.TrainedPipeline)
             steps = estimator.steps()
             num_steps = len(steps)
             if num_steps == 0:

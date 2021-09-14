@@ -1221,3 +1221,102 @@ class TestStandardScaler(unittest.TestCase):
                 self.train_X, self.train_y, optimizer=GridSearchCV, cv=3, scoring="r2"
             )
         _ = trained.predict(self.test_X)
+
+
+class TestOptimizeLast(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+
+        X, y = load_iris(return_X_y=True)
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_using_individual_operator(self):
+        from lale.lib.lale import Hyperopt, OptimizeLast
+
+        lr = LogisticRegression()  # Individual Operator
+        trained_operator = lr.fit(self.X_train, self.y_train)
+
+        # Now let's use Hyperopt to optimize the classifier
+        hyperopt_args = {"scoring": "accuracy", "cv": 3, "max_evals": 2}
+        opt_last = OptimizeLast(
+            estimator=trained_operator,
+            last_optimizer=Hyperopt,
+            optimizer_args=hyperopt_args,
+        )
+
+        res_last = opt_last.fit(self.X_train, self.y_train)
+        predictions = res_last.predict(self.X_test)
+        predictions_1 = opt_last.predict(self.X_test)
+        best_pipeline = res_last.get_pipeline()
+
+        self.assertEqual(type(trained_operator), type(best_pipeline))
+        assert np.array_equal(predictions_1, predictions)
+
+    def test_using_pipeline(self):
+        from sklearn.metrics import f1_score, make_scorer
+
+        from lale.lib.lale import Hyperopt, OptimizeLast
+
+        planned_pipeline = (PCA | NoOp) >> LogisticRegression
+
+        # Let's first use Hyperopt to find the best pipeline
+        opt = Hyperopt(estimator=planned_pipeline, max_evals=1)
+        # run optimizer
+        res = opt.fit(self.X_train, self.y_train)
+        best_pipeline = res.get_pipeline()
+
+        # Now let's use Hyperopt to optimize only the
+        # last step (i.e., classifier) in the best pipeline
+        hyperopt_args = {
+            "scoring": make_scorer(f1_score, average="macro"),
+            "cv": 3,
+            "max_evals": 2,
+        }
+        opt_last = OptimizeLast(
+            estimator=best_pipeline,
+            last_optimizer=Hyperopt,
+            optimizer_args=hyperopt_args,
+        )
+
+        res_last = opt_last.fit(self.X_train, self.y_train)
+        predictions = res_last.predict(self.X_test)
+        predictions_1 = opt_last.predict(self.X_test)
+        best_pipeline2 = res_last.get_pipeline()
+
+        self.assertEqual(type(best_pipeline), type(best_pipeline2))
+        assert np.array_equal(predictions_1, predictions)
+
+    def test_get_named_pipeline(self):
+        from lale.lib.lale import Hyperopt, OptimizeLast
+
+        pipeline = MinMaxScaler() >> KNeighborsClassifier()
+        trained_pipeline = pipeline.fit(self.X_train, self.y_train)
+
+        hyperopt_args = {"cv": 3, "max_evals": 2}
+        opt_last = OptimizeLast(
+            estimator=trained_pipeline,
+            last_optimizer=Hyperopt,
+            optimizer_args=hyperopt_args,
+        )
+
+        res_last = opt_last.fit(self.X_train, self.y_train)
+        pipeline2 = res_last.get_pipeline(pipeline_name="p1")
+        if pipeline2 is not None:
+            trained_pipeline2 = pipeline2.fit(self.X_train, self.y_train)
+            _ = trained_pipeline2.predict(self.X_test)
+
+            self.assertEqual(type(trained_pipeline), type(trained_pipeline2))
+
+    def test_unspecified_arguments(self):
+        from lale.lib.lale import OptimizeLast
+        from lale.operators import TrainedIndividualOp
+
+        opt = OptimizeLast(optimizer_args={"max_evals": 1})  # No arguments
+        res = opt.fit(self.X_train, self.y_train)
+        predictions = res.predict(self.X_test)
+        predictions_1 = opt.predict(self.X_test)
+        best_pipeline = res.get_pipeline()
+
+        assert np.array_equal(predictions_1, predictions)
+        self.assertEqual(type(best_pipeline), TrainedIndividualOp)
