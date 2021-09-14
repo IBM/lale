@@ -298,7 +298,7 @@ class TestFilterSpark(unittest.TestCase):
             )
             self.transformed_df = trainable.transform(
                 [self.spark_df4, self.spark_df2, self.spark_df3]
-            )
+            ).sort("TrainId")
             self.assertEqual(self.transformed_df.count(), 5)
             self.assertEqual(len(self.transformed_df.columns), 8)
             self.assertEqual(self.transformed_df.collect()[2]["col1"], "CA")
