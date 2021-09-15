@@ -41,7 +41,13 @@ from lale.lib.sklearn import LogisticRegression
 from lale.search.op2hp import hyperopt_search_space
 from lale.search.PGO import PGO
 
-from ._common_schemas import schema_best_score, schema_estimator, schema_scoring
+from ._common_schemas import (
+    schema_best_score_single,
+    schema_cv,
+    schema_estimator,
+    schema_max_opt_time,
+    schema_scoring_single,
+)
 
 SEED = 42
 logger = logging.getLogger(__name__)
@@ -459,8 +465,8 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "estimator": schema_estimator,
-                "scoring": schema_scoring,
-                "best_score": schema_best_score,
+                "scoring": schema_scoring_single,
+                "best_score": schema_best_score_single,
                 "args_to_scorer": {
                     "anyOf": [
                         {"type": "object"},  # Python dictionary
@@ -469,27 +475,7 @@ _hyperparams_schema = {
                     "description": "A dictionary of additional keyword arguments to pass to the scorer. Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.",
                     "default": None,
                 },
-                "cv": {
-                    "description": """Cross-validation as integer or as object that has a split function.
-
-The fit method performs cross validation on the input dataset for per
-trial, and uses the mean cross validation performance for optimization.
-This behavior is also impacted by the handle_cv_failure flag.
-""",
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "description": "Number of folds in sklearn.model_selection.StratifiedKFold (for classification) or KFold (for regression).",
-                        },
-                        {
-                            "not": {"type": "integer"},
-                            "forOptimizer": False,
-                            "description": "Object with split function: generator yielding (train, test) splits as arrays of indices. Can use any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators",
-                        },
-                    ],
-                    "minimum": 1,
-                    "default": 5,
-                },
+                "cv": schema_cv,
                 "handle_cv_failure": {
                     "description": """How to deal with cross validation failure for a trial.
 
@@ -540,14 +526,7 @@ for (1-frac_evals_with_defaults) fraction of max_evals.""",
                     "minimum": 0.0,
                     "default": 0,
                 },
-                "max_opt_time": {
-                    "description": "Maximum amout of time in seconds for the optimization.",
-                    "anyOf": [
-                        {"type": "number", "minimum": 0.0},
-                        {"description": "No runtime bound.", "enum": [None]},
-                    ],
-                    "default": None,
-                },
+                "max_opt_time": schema_max_opt_time,
                 "max_eval_time": {
                     "description": "Maximum amout of time in seconds for each evaluation.",
                     "anyOf": [

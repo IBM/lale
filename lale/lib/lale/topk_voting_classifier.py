@@ -21,7 +21,6 @@ from hyperopt import STATUS_OK
 import lale.docstrings
 import lale.operators
 from lale.lib.lale import Hyperopt
-from lale.lib.sklearn import VotingClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +48,8 @@ class _TopKVotingClassifierImpl:
         self.k = k
 
     def fit(self, X_train, y_train, **fit_params):
+        from lale.lib.sklearn import VotingClassifier
+
         optimizer_instance = self.optimizer(
             estimator=self.estimator, **self.args_to_optimizer
         )

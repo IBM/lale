@@ -28,7 +28,13 @@ import lale.sklearn_compat
 from lale.helpers import cross_val_score_track_trials
 from lale.lib.sklearn import LogisticRegression
 
-from ._common_schemas import schema_best_score, schema_estimator, schema_scoring
+from ._common_schemas import (
+    schema_best_score_single,
+    schema_cv,
+    schema_estimator,
+    schema_max_opt_time,
+    schema_scoring_single,
+)
 
 try:
     # Import ConfigSpace and different types of parameters
@@ -246,27 +252,9 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "estimator": schema_estimator,
-                "scoring": schema_scoring,
-                "best_score": schema_best_score,
-                "cv": {
-                    "description": """Cross-validation as integer or as object that has a split function.
-
-The fit method performs cross validation on the input dataset for per
-trial, and uses the mean cross validation performance for optimization.
-This behavior is also impacted by handle_cv_failure flag.
-
-If integer: number of folds in sklearn.model_selection.StratifiedKFold.
-
-If object with split function: generator yielding (train, test) splits
-as arrays of indices. Can use any of the iterators from
-https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators.""",
-                    "anyOf": [
-                        {"type": "integer"},
-                        {"laleType": "Any", "forOptimizer": False},
-                    ],
-                    "minimum": 1,
-                    "default": 5,
-                },
+                "scoring": schema_scoring_single,
+                "best_score": schema_best_score_single,
+                "cv": schema_cv,
                 "handle_cv_failure": {
                     "description": """How to deal with cross validation failure for a trial.
 
@@ -282,14 +270,7 @@ validation part. If False, terminate the trial with FAIL status.""",
                     "default": 50,
                     "description": "Number of trials of SMAC search i.e. runcount_limit of SMAC.",
                 },
-                "max_opt_time": {
-                    "description": "Maximum amout of time in seconds for the optimization.",
-                    "anyOf": [
-                        {"type": "number", "minimum": 0.0},
-                        {"description": "No runtime bound.", "enum": [None]},
-                    ],
-                    "default": None,
-                },
+                "max_opt_time": schema_max_opt_time,
                 "lale_num_grids": {
                     "anyOf": [
                         {"description": "If not set, keep all grids.", "enum": [None]},
