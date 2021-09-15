@@ -31,6 +31,7 @@ from lale.helpers import _is_pandas_df, _is_spark_df
 def multitable_train_test_split(
     dataset,
     main_table_name,
+    label_column_name,
     test_size=0.25,
     random_state=None,
 ) -> Tuple:
@@ -51,6 +52,10 @@ def multitable_train_test_split(
     main_table_name : string
 
       The name of the main table as the split is going to be based on the main table.
+
+    label_column_name : string
+
+      The name of the label column from the main table.
 
     test_size : float or int, default=0.25
 
@@ -78,9 +83,13 @@ def multitable_train_test_split(
     -------
     result : tuple
 
-      - item 0: List of datasets corresponding to the train split
+      - item 0: train_X, List of datasets corresponding to the train split
 
-      - item 1: List of datasets corresponding to the test split
+      - item 1: test_X, List of datasets corresponding to the test split
+
+      - item 2: train_y
+
+      - item 3: test_y
 
     """
     main_table_df = None
@@ -115,6 +124,8 @@ def multitable_train_test_split(
     if _is_pandas_df(main_table_df):
         train_main_df = main_table_df.iloc[train_indices]
         test_main_df = main_table_df.iloc[test_indices]
+        train_y = train_main_df[label_column_name]
+        test_y = test_main_df[label_column_name]
     elif _is_spark_df(main_table_df):
         spark_session = SparkSession.builder.appName(
             "multitable_train_test_split"
@@ -125,6 +136,8 @@ def multitable_train_test_split(
         test_main_df = spark_session.createDataFrame(
             data=main_table_df.toPandas().iloc[test_indices]
         )
+        train_y = train_main_df.select(label_column_name)
+        test_y = test_main_df.select(label_column_name)
     else:
         raise ValueError(
             "multitable_train_test_split can only work with a list of Pandas or Spark dataframes."
@@ -134,4 +147,4 @@ def multitable_train_test_split(
     test_main_df = add_table_name(test_main_df, main_table_name)
     train_dataset[index_of_main_table] = train_main_df
     test_dataset[index_of_main_table] = test_main_df
-    return train_dataset, test_dataset
+    return train_dataset, test_dataset, train_y, test_y
