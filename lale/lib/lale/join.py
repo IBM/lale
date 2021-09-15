@@ -161,8 +161,9 @@ class _JoinImpl:
 
                 for k, key in enumerate(left_key_col):
                     on.append(
-                        col("{}.{}".format("left_table", key))
-                        == col("{}.{}".format("right_table", right_key_col[k]))
+                        col("{}.{}".format("left_table", key)).eqNullSafe(
+                            col("{}.{}".format("right_table", right_key_col[k]))
+                        )
                     )
                     if key == right_key_col[k]:
                         drop_col.append(key)

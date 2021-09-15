@@ -298,7 +298,7 @@ class TestFilterSpark(unittest.TestCase):
             )
             self.transformed_df = trainable.transform(
                 [self.spark_df4, self.spark_df2, self.spark_df3]
-            )
+            ).sort("TrainId")
             self.assertEqual(self.transformed_df.count(), 5)
             self.assertEqual(len(self.transformed_df.columns), 8)
             self.assertEqual(self.transformed_df.collect()[2]["col1"], "CA")
@@ -1036,7 +1036,9 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 3)
             self.assertEqual(len(transformed_df.columns), 8)
-            self.assertEqual(transformed_df.collect()[0]["col5"], "Warm")
+            self.assertEqual(
+                transformed_df.sort(["train_id"]).collect()[0]["col5"], "Warm"
+            )
 
     # Multiple elements in predicate with identical key columns names
     def test_join_spark_multiple_left1(self):
@@ -1050,7 +1052,9 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 5)
             self.assertEqual(len(transformed_df.columns), 7)
-            self.assertEqual(transformed_df.collect()[2]["col1"], "CA")
+            self.assertEqual(
+                transformed_df.sort(["TrainId"]).collect()[2]["col1"], "CA"
+            )
 
     # Invert one of the join conditions as compared to the test case: test_join_spark_multiple_left
     def test_join_spark_multiple_right(self):
@@ -1067,7 +1071,7 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 3)
             self.assertEqual(len(transformed_df.columns), 8)
-            self.assertEqual(transformed_df.collect()[0]["col2"], 0)
+            self.assertEqual(transformed_df.sort(["train_id"]).collect()[0]["col2"], 0)
 
     # Composite key join
     def test_join_spark_composite(self):
@@ -1084,7 +1088,7 @@ class TestJoinSpark(unittest.TestCase):
             )
             self.assertEqual(transformed_df.count(), 5)
             self.assertEqual(len(transformed_df.columns), 8)
-            self.assertEqual(transformed_df.collect()[0]["col2"], 1)
+            self.assertEqual(transformed_df.sort(["train_id"]).collect()[0]["col2"], 0)
 
     # Invert one of the join conditions as compared to the test case: test_join_pandas_composite
     def test_join_spark_composite_error_dup_col(self):
