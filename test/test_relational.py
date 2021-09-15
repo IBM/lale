@@ -2289,39 +2289,53 @@ class TestTrainTestSplit(unittest.TestCase):
         self.go_sales_spark = fetch_go_sales_dataset("spark")
 
     def test_split_pandas(self):
-        train, test = multitable_train_test_split(
-            self.go_sales, main_table_name="go_products", test_size=0.2
+        train, test, train_y, test_y = multitable_train_test_split(
+            self.go_sales,
+            main_table_name="go_products",
+            label_column_name="Product number",
+            test_size=0.2,
         )
         main_table_df: pd.Dataframe = None
         for df in train:
             if get_table_name(df) == "go_products":
                 main_table_df = df
         self.assertEqual(len(main_table_df), 220)
+        self.assertEqual(len(train_y), 220)
         for df in test:
             if get_table_name(df) == "go_products":
                 main_table_df = df
         self.assertEqual(len(main_table_df), 54)
+        self.assertEqual(len(test_y), 54)
 
     def test_split_pandas_1(self):
-        train, test = multitable_train_test_split(
-            self.go_sales, main_table_name="go_products", test_size=200
+        train, test, train_y, test_y = multitable_train_test_split(
+            self.go_sales,
+            main_table_name="go_products",
+            label_column_name="Product number",
+            test_size=200,
         )
         main_table_df: pd.Dataframe = None
         for df in test:
             if get_table_name(df) == "go_products":
                 main_table_df = df
         self.assertEqual(len(main_table_df), 200)
+        self.assertEqual(len(test_y), 200)
 
     def test_split_spark(self):
-        train, test = multitable_train_test_split(
-            self.go_sales_spark, main_table_name="go_products", test_size=0.2
+        train, test, train_y, test_y = multitable_train_test_split(
+            self.go_sales_spark,
+            main_table_name="go_products",
+            label_column_name="Product number",
+            test_size=0.2,
         )
         main_table_df: pd.Dataframe = None
         for df in train:
             if get_table_name(df) == "go_products":
                 main_table_df = df
         self.assertEqual(main_table_df.count(), 220)
+        self.assertEqual(train_y.count(), 220)
         for df in test:
             if get_table_name(df) == "go_products":
                 main_table_df = df
         self.assertEqual(main_table_df.count(), 54)
+        self.assertEqual(test_y.count(), 54)
