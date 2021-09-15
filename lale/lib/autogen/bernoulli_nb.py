@@ -31,7 +31,7 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["alpha", "binarize", "fit_prior", "class_prior"],
-            "relevantToOptimizer": ["alpha", "fit_prior"],
+            "relevantToOptimizer": ["alpha", "fit_prior", "binarize"],
             "additionalProperties": False,
             "properties": {
                 "alpha": {
@@ -43,7 +43,14 @@ _hyperparams_schema = {
                     "description": "Additive (Laplace/Lidstone) smoothing parameter (0 for no smoothing).",
                 },
                 "binarize": {
-                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": -1.0,
+                            "maximumForOptimizer": 1.0,
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": 0.0,
                     "description": "Threshold for binarizing (mapping to booleans) of sample features",
                 },
@@ -61,7 +68,18 @@ _hyperparams_schema = {
                     "description": "Prior probabilities of the classes",
                 },
             },
-        }
+        },
+        {
+            "description": "Cannot binarize a sparse matrix with threshold < 0",
+            "anyOf": [
+                {"type": "object", "properties": {"binarize": {"enum": [None]}}},
+                {"type": "object", "laleNot": "X/isSparse"},
+                {
+                    "type": "object",
+                    "properties": {"binarize": {"type": "number", "minimum": 0}},
+                },
+            ],
+        },
     ],
 }
 _input_fit_schema = {
@@ -123,7 +141,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.BernoulliNB#sklearn-naive_bayes-bernoullinb",
     "import_from": "sklearn.naive_bayes",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
