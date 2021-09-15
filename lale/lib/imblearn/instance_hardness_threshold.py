@@ -166,6 +166,7 @@ desired number of samples for each class.""",
                 "cv": {
                     "description": "Number of folds to be used when estimating samples’ instance hardness.",
                     "type": "integer",
+                    "minimum": 1,
                     "default": 5,
                 },
                 "n_jobs": {

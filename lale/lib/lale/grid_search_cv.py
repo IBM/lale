@@ -21,7 +21,12 @@ import lale.operators
 import lale.search.lale_grid_search_cv
 import lale.sklearn_compat
 
-from ._common_schemas import schema_estimator, schema_scoring
+from ._common_schemas import (
+    schema_estimator,
+    schema_max_opt_time,
+    schema_scoring_single,
+    schema_simple_cv,
+)
 from .observing import Observing
 
 func_timeout_installed = False
@@ -214,13 +219,8 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "estimator": schema_estimator,
-                "scoring": schema_scoring,
-                "cv": {
-                    "description": "Number of folds for cross-validation.",
-                    "type": "integer",
-                    "minimum": 1,
-                    "default": 5,
-                },
+                "scoring": schema_scoring_single,
+                "cv": schema_simple_cv,
                 "verbose": {
                     "description": "Controls the verbosity: the higher, the more messages.",
                     "type": "integer",
@@ -291,14 +291,7 @@ _hyperparams_schema = {
                     "default": None,
                     "description": "a class or object with callbacks for observing the state of the optimization",
                 },
-                "max_opt_time": {
-                    "description": "Maximum amout of time in seconds for the optimization.",
-                    "anyOf": [
-                        {"type": "number", "minimum": 0.0},
-                        {"description": "No runtime bound.", "enum": [None]},
-                    ],
-                    "default": None,
-                },
+                "max_opt_time": schema_max_opt_time,
             },
         }
     ]

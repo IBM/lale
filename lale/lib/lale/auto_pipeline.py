@@ -25,7 +25,11 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 
-from ._common_schemas import schema_best_score, schema_scoring
+from ._common_schemas import (
+    schema_best_score_single,
+    schema_max_opt_time,
+    schema_scoring_single,
+)
 
 try:
     import xgboost  # noqa: F401
@@ -324,8 +328,8 @@ _hyperparams_schema = {
                     "enum": ["binary", "multiclass", "classification", "regression"],
                     "default": "classification",
                 },
-                "scoring": schema_scoring,
-                "best_score": schema_best_score,
+                "scoring": schema_scoring_single,
+                "best_score": schema_best_score_single,
                 "verbose": {
                     "description": """Whether to print errors from each of the trials if any.
 This is also logged using logger.warning in Hyperopt.""",
@@ -339,11 +343,7 @@ This is also logged using logger.warning in Hyperopt.""",
                     "default": 100,
                 },
                 "max_opt_time": {
-                    "description": "Maximum time in seconds for the optimization.",
-                    "anyOf": [
-                        {"type": "number", "minimum": 0.0, "exclusiveMinimum": True},
-                        {"description": "No runtime bound.", "enum": [None]},
-                    ],
+                    **schema_max_opt_time,
                     "default": 600.0,
                 },
                 "max_eval_time": {
