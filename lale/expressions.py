@@ -388,4 +388,12 @@ def isnotnull(column: Expr) -> Expr:
     return _make_call_expr("isnotnull", column)
 
 
+def asc(column: Union[Expr, str]) -> Expr:
+    return _make_call_expr("asc", column)
+
+
+def desc(column: Union[Expr, str]) -> Expr:
+    return _make_call_expr("desc", column)
+
+
 it = Expr(ast.Name(id="it"))
