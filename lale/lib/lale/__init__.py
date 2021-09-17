@@ -40,6 +40,7 @@ Transformers:
 * lale.lib.lale. `Join`_
 * lale.lib.lale. `Map`_
 * lale.lib.lale. `NoOp`_
+* lale.lib.lale. `OrderBy`_
 * lale.lib.lale. `Project`_
 * lale.lib.lale. `Relational`_
 * lale.lib.lale. `SampleBasedVoting`_
@@ -71,6 +72,7 @@ Estimators and transformers:
 .. _`Filter`: lale.lib.lale.filter.html
 .. _`GroupBy`: lale.lib.lale.group_by.html
 .. _`Map`: lale.lib.lale.map.html
+.. _`OrderBy`: lale.lib.lale.orderby.html
 .. _`Join`: lale.lib.lale.join.html
 .. _`Alias`: lale.lib.lale.alias.html
 .. _`Scan`: lale.lib.lale.scan.html
@@ -120,6 +122,7 @@ from .no_op import NoOp
 from .observing import Observing
 from .optimize_last import OptimizeLast
 from .optimize_suffix import OptimizeSuffix
+from .orderby import OrderBy
 from .project import Project
 from .relational import Relational
 from .sample_based_voting import SampleBasedVoting
