@@ -86,6 +86,7 @@ autoclass_content = "both"
 autodoc_mock_imports = [
     "aif360",
     "autoai_libs",
+    "autoai_ts_libs",
     "fairlearn",
     "pytorch",
     "tensorflow",
