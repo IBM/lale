@@ -173,6 +173,8 @@ class _JoinImpl:
                 return op_df
 
             # Joining pandas dataframes
+            left_df = left_df.reset_index()
+            right_df = right_df.reset_index()
             op_df = pd.merge(
                 left_df,
                 right_df,
