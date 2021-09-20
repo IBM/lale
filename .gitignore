@@ -9,3 +9,4 @@ dist/
 docs/_build/
 docs/modules/
 lale/lib/**/resources
+.DS_Store

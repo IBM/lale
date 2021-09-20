@@ -123,7 +123,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.naive_bayes.ComplementNB#sklearn-naive_bayes-complementnb",
     "import_from": "sklearn.naive_bayes",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

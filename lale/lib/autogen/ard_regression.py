@@ -168,7 +168,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.ARDRegression#sklearn-linear_model-ardregression",
     "import_from": "sklearn.linear_model",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

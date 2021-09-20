@@ -143,7 +143,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.kernel_ridge.KernelRidge#sklearn-kernel_ridge-kernelridge",
     "import_from": "sklearn.kernel_ridge",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

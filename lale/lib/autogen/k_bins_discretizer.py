@@ -28,7 +28,7 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["n_bins", "encode", "strategy"],
-            "relevantToOptimizer": [],
+            "relevantToOptimizer": ["encode", "strategy"],
             "additionalProperties": False,
             "properties": {
                 "n_bins": {
@@ -49,8 +49,18 @@ _hyperparams_schema = {
                     "default": "quantile",
                     "description": "Strategy used to define the widths of the bins",
                 },
+                "dtype": {
+                    "XXX TODO XXX": "dtype{np.float32, np.float64}, default=None",
+                    "laleType": "Any",
+                    "default": None,
+                },
             },
-        }
+        },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array. ",
+            "type": "object",
+            "laleNot": "X/isSparse",
+        },
     ],
 }
 _input_fit_schema = {

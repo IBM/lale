@@ -46,8 +46,10 @@ _hyperparams_schema = {
                 "selection",
             ],
             "relevantToOptimizer": [
+                "l1_ratio",
                 "eps",
                 "n_alphas",
+                "alpha",
                 "fit_intercept",
                 "normalize",
                 "precompute",
@@ -64,6 +66,9 @@ _hyperparams_schema = {
                     "XXX TODO XXX": "float or array of floats, optional",
                     "description": "float between 0 and 1 passed to ElasticNet (scaling between l1 and l2 penalties)",
                     "type": "number",
+                    "minimumForOptimizer": 0.0,
+                    "maximumForOptimizer": 1.0,
+                    "distribution": "uniform",
                     "default": 0.5,
                 },
                 "eps": {
@@ -189,7 +194,15 @@ _hyperparams_schema = {
                     "description": "If set to 'random', a random coefficient is updated every iteration rather than looping over features sequentially by default",
                 },
             },
-        }
+        },
+        {
+            "description": "From /linear_model/_coordinate_descent.py:None:_alpha_grid, Exception: raise ValueError(     "
+            "Automatic alpha grid generation is not supported for l1_ratio=0. Please supply a grid by providing your estimator with the appropriate `alphas=` argument.",
+            "anyOf": [
+                {"type": "object", "properties": {"alphas": {"not": {"enum": [None]}}}},
+                {"type": "object", "properties": {"l1_ratio": {"not": {"enum": [0]}}}},
+            ],
+        },
     ],
 }
 _input_fit_schema = {
@@ -249,7 +262,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.ElasticNetCV#sklearn-linear_model-elasticnetcv",
     "import_from": "sklearn.linear_model",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

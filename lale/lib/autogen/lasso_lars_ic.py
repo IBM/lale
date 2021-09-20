@@ -78,6 +78,7 @@ _hyperparams_schema = {
                             "XXX TODO XXX": "True | False | 'auto' | array-like",
                             "forOptimizer": False,
                         },
+                        {"type": "boolean"},
                         {"enum": ["auto"]},
                     ],
                     "default": "auto",
@@ -113,6 +114,31 @@ _hyperparams_schema = {
         },
         {
             "XXX TODO XXX": "Parameter: positive > only coefficients up to the smallest alpha value (alphas_[alphas_ > 0"
+        },
+        {
+            "description": "X cannot be None if Gram is not NoneUse lars_path_gram to avoid passing X and y.) ",
+            "anyOf": [
+                {"XXX TODO XXX": "input X is not None"},
+                {"type": "object", "properties": {"precompute": {"enum": [None]}}},
+            ],
+        },
+        {
+            "description": "From /linear_model/_least_angle.py:None:_lars_path_solver, Exception: raise ValueError('X and Gram cannot both be unspecified.') ",
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "type": "object",
+                            "properties": {"precompute": {"not": {"enum": [None]}}},
+                        },
+                        {
+                            "type": "object",
+                            "properties": {"precompute": {"not": {"enum": [False]}}},
+                        },
+                    ]
+                },
+                {"XXX TODO XXX": "input X is not None"},
+            ],
         },
     ],
 }
@@ -173,7 +199,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LassoLarsIC#sklearn-linear_model-lassolarsic",
     "import_from": "sklearn.linear_model",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

@@ -38,17 +38,24 @@ _hyperparams_schema = {
                 "random_state",
             ],
             "relevantToOptimizer": [
-                "n_components",
                 "tol",
                 "copy",
-                "max_iter",
+                "rotation",
                 "svd_method",
                 "iterated_power",
             ],
             "additionalProperties": False,
             "properties": {
                 "n_components": {
-                    "enum": ["int", None],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimumForOptimizer": 2,
+                            "maximumForOptimizer": 256,
+                            "distribution": "uniform",
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Dimensionality of latent space, the number of components of ``X`` that are obtained after ``transform``",
                 },
@@ -92,6 +99,11 @@ _hyperparams_schema = {
                     "default": 3,
                     "description": "Number of iterations for the power method",
                 },
+                "rotation": {
+                    "enum": ["varimax", "quartimax"],
+                    "default": None,
+                    "description": "if not None, apply the indicated rotation. Currently, varimax and quartimax are implemented.",
+                },
                 "random_state": {
                     "anyOf": [
                         {"type": "integer"},
@@ -108,6 +120,26 @@ _hyperparams_schema = {
         },
         {
             "XXX TODO XXX": "Parameter: random_state > only used when svd_method equals 'randomized'"
+        },
+        {
+            "description": "(‘random_state’ only used when svd_method equals ‘randomized’) From /utils/validation.py:None:check_random_state, Exception: raise ValueError(     '%r cannot be used to seed a numpy.random.RandomState instance' % seed) ",
+            "anyOf": [
+                {"type": "object", "properties": {"svd_method": {"enum": ["lapack"]}}},
+                {
+                    "type": "object",
+                    "properties": {"svd_method": {"not": {"enum": ["randomized"]}}},
+                },
+                {"type": "object", "properties": {"random_state": {"enum": [None]}}},
+                {"XXX TODO XXX": "self.random_state is np.random"},
+                {
+                    "XXX TODO XXX": "isinstance(self.random_state, np.random.RandomState)"
+                },
+            ],
+        },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.",
+            "type": "object",
+            "laleNot": "X/isSparse",
         },
     ],
 }
