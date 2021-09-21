@@ -604,7 +604,7 @@ class TestAggregate(unittest.TestCase):
         self.assertEqual(grouped_df.ngroups, 289)
         trainable = Aggregate(columns={"min_quantity": min(it["Quantity"])})
         aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.shape, (289, 1))
+        self.assertEqual(aggregated_df.shape, (289, 2))
         self.assertEqual(aggregated_df.loc[1698, "min_quantity"], 4)
         self.assertEqual(aggregated_df.loc[1196, "min_quantity"], 1)
 
@@ -620,7 +620,7 @@ class TestAggregate(unittest.TestCase):
             }
         )
         aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.shape, (5000, 3))
+        self.assertEqual(aggregated_df.shape, (5000, 5))
         self.assertEqual(
             round(aggregated_df.loc[(130130, 1137), "mean_quantity"], 2), 8.74
         )
@@ -644,7 +644,7 @@ class TestAggregate(unittest.TestCase):
             }
         )
         aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.shape, (30, 6))
+        self.assertEqual(aggregated_df.shape, (30, 8))
         self.assertEqual(
             aggregated_df.loc[("Golf Equipment", "Blue Steel"), "first_uc"], 41.2
         )

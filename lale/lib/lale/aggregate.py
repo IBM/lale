@@ -102,6 +102,7 @@ class _AggregateImpl:
             try:
                 aggregated_df = X.agg(agg_expr)
                 aggregated_df.columns = agg_info_sorted.keys()
+                aggregated_df = aggregated_df.reset_index()
             except KeyError as e:
                 raise KeyError(e)
         elif _is_spark_grouped_df(X):
