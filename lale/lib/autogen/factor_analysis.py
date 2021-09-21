@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.decomposition import FactorAnalysis as Op
 
@@ -35,13 +36,11 @@ _hyperparams_schema = {
                 "noise_variance_init",
                 "svd_method",
                 "iterated_power",
-                "rotation",
                 "random_state",
             ],
             "relevantToOptimizer": [
                 "tol",
                 "copy",
-                "rotation",
                 "svd_method",
                 "iterated_power",
             ],
@@ -101,11 +100,6 @@ _hyperparams_schema = {
                     "distribution": "uniform",
                     "default": 3,
                     "description": "Number of iterations for the power method",
-                },
-                "rotation": {
-                    "enum": ["varimax", "quartimax"],
-                    "default": None,
-                    "description": "if not None, apply the indicated rotation. Currently, varimax and quartimax are implemented.",
                 },
                 "random_state": {
                     "anyOf": [
@@ -194,5 +188,17 @@ _combined_schemas = {
     },
 }
 FactorAnalysis = make_operator(_FactorAnalysisImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.FactorAnalysis#sklearn-decomposition-factoranalysis
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.FactorAnalysis#sklearn-decomposition-factoranalysis
+    FactorAnalysis = FactorAnalysis.customize_schema(
+        rotation={
+            "enum": ["varimax", "quartimax"],
+            "default": None,
+            "description": "if not None, apply the indicated rotation. Currently, varimax and quartimax are implemented.",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(FactorAnalysis)

@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.preprocessing import KBinsDiscretizer as Op
 
@@ -27,7 +28,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": ["n_bins", "encode", "strategy", "dtype"],
+            "required": ["n_bins", "encode", "strategy"],
             "relevantToOptimizer": ["encode", "strategy"],
             "additionalProperties": False,
             "properties": {
@@ -48,11 +49,6 @@ _hyperparams_schema = {
                     "enum": ["uniform", "quantile", "kmeans"],
                     "default": "quantile",
                     "description": "Strategy used to define the widths of the bins",
-                },
-                "dtype": {
-                    "XXX TODO XXX": "dtype{np.float32, np.float64}, default=None",
-                    "laleType": "Any",
-                    "default": None,
                 },
             },
         },
@@ -111,5 +107,17 @@ _combined_schemas = {
     },
 }
 KBinsDiscretizer = make_operator(_KBinsDiscretizerImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.KBinsDiscretizer#sklearn-preprocessing-kbinsdiscretizer
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.preprocessing.KBinsDiscretizer#sklearn-preprocessing-kbinsdiscretizer
+    KBinsDiscretizer = KBinsDiscretizer.customize_schema(
+        dtype={
+            "XXX TODO XXX": "dtype{np.float32, np.float64}, default=None",
+            "laleType": "Any",
+            "default": None,
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(KBinsDiscretizer)

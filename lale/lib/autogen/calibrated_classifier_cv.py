@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.calibration import CalibratedClassifierCV as Op
 
@@ -30,7 +31,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": ["base_estimator", "method", "cv", "n_jobs", "ensemble"],
+            "required": ["base_estimator", "method", "cv"],
             "relevantToOptimizer": ["method", "cv"],
             "additionalProperties": False,
             "properties": {
@@ -69,27 +70,6 @@ _hyperparams_schema = {
                         {"enum": ["prefit"]},
                     ],
                     "default": None,
-                },
-                "n_jobs": {
-                    "description": "Number of jobs to run in parallel.",
-                    "anyOf": [
-                        {
-                            "description": "1 unless in joblib.parallel_backend context.",
-                            "enum": [None],
-                        },
-                        {"description": "Use all processors.", "enum": [-1]},
-                        {
-                            "description": "Number of jobs to run in parallel.",
-                            "type": "integer",
-                            "minimum": 1,
-                        },
-                    ],
-                    "default": None,
-                },
-                "ensemble": {
-                    "type": "boolean",
-                    "default": True,
-                    "description": "Determines how the calibrator is fitted when cv is not 'prefit'. Ignored if cv='prefit",
                 },
             },
         }
@@ -172,5 +152,37 @@ _combined_schemas = {
     },
 }
 CalibratedClassifierCV = make_operator(_CalibratedClassifierCVImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.calibration.CalibratedClassifierCV#sklearn-calibration-calibratedclassifiercv
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.calibration.CalibratedClassifierCV#sklearn-calibration-calibratedclassifiercv
+    CalibratedClassifierCV = CalibratedClassifierCV.customize_schema(
+        n_jobs={
+            "description": "Number of jobs to run in parallel.",
+            "anyOf": [
+                {
+                    "description": "1 unless in joblib.parallel_backend context.",
+                    "enum": [None],
+                },
+                {"description": "Use all processors.", "enum": [-1]},
+                {
+                    "description": "Number of jobs to run in parallel.",
+                    "type": "integer",
+                    "minimum": 1,
+                },
+            ],
+            "default": None,
+        },
+        set_as_available=True,
+    )
+    CalibratedClassifierCV = CalibratedClassifierCV.customize_schema(
+        ensemble={
+            "type": "boolean",
+            "default": True,
+            "description": "Determines how the calibrator is fitted when cv is not 'prefit'. Ignored if cv='prefit",
+        },
+        set_as_available=True,
+    )
+
 
 set_docstrings(CalibratedClassifierCV)
