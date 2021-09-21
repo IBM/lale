@@ -126,16 +126,8 @@ _hyperparams_schema = {
             "description": "From /linear_model/_least_angle.py:None:_lars_path_solver, Exception: raise ValueError('X and Gram cannot both be unspecified.') ",
             "anyOf": [
                 {
-                    "allOf": [
-                        {
-                            "type": "object",
-                            "properties": {"precompute": {"not": {"enum": [None]}}},
-                        },
-                        {
-                            "type": "object",
-                            "properties": {"precompute": {"not": {"enum": [False]}}},
-                        },
-                    ]
+                    "type": "object",
+                    "properties": {"precompute": {"not": {"enum": [None, False]}}},
                 },
                 {"XXX TODO XXX": "input X is not None"},
             ],

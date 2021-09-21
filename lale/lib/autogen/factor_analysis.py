@@ -50,6 +50,8 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
+                            "minimun": 1,
+                            "laleMaximum": "X/items/maxItems",
                             "minimumForOptimizer": 2,
                             "maximumForOptimizer": 256,
                             "distribution": "uniform",
