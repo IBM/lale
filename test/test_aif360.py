@@ -415,12 +415,24 @@ class TestAIF360Num(unittest.TestCase):
             )
             accuracy = accuracy_scorer(estimator, test_X, test_y)
             self.assertLess(combined, accuracy)
+            combined_scorer_2 = lale.lib.aif360.accuracy_and_disparate_impact(
+                **fi, fairness_weight=2.0
+            )
+            combined_2 = combined_scorer_2(estimator, test_X, test_y)
+            self.assertLess(combined, combined_2)
+            self.assertLess(combined_2, accuracy)
         else:
             combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
             combined = combined_scorer(estimator, test_X, test_y)
             r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
             r2 = r2_scorer(estimator, test_X, test_y)
             self.assertLess(combined, r2)
+            combined_scorer_2 = lale.lib.aif360.r2_and_disparate_impact(
+                **fi, fairness_weight=2.0
+            )
+            combined_2 = combined_scorer_2(estimator, test_X, test_y)
+            self.assertLess(combined, combined_2)
+            self.assertLess(combined_2, r2)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, 0.0)
@@ -839,7 +851,7 @@ class TestAIF360Cat(unittest.TestCase):
         with self.assertLogs(lale.lib.aif360.util.logger) as log_context_manager:
             impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertRegex(log_context_manager.output[-1], "is ill-defined")
-        self.assertEqual(impact, 0.0)
+        self.assertTrue(np.isnan(impact))
 
     def _attempt_remi_creditg_pd_cat(
         self, fairness_info, trainable_remi, min_di, max_di
