@@ -289,8 +289,6 @@ class _ScorerFactory:
                 logger.warning("there are 0 instances in the privileged group")
             if 0 == fairness_metrics.num_instances(privileged=False):
                 logger.warning("there are 0 instances in the unprivileged group")
-            if self.metric == "disparate_impact":
-                result = 0.0
             logger.warning(
                 f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration. The set of predicted labels is {set(y_pred_orig)}."
             )
@@ -303,7 +301,7 @@ class _ScorerFactory:
         return self.score_estimator(estimator, X, y)
 
 
-_SCORER_DOCSTRING = """
+_SCORER_DOCSTRING_ARGS = """
 
     Parameters
     ----------
@@ -315,11 +313,11 @@ _SCORER_DOCSTRING = """
 
           Literal value
 
-      - number
+      - *or* number
 
           Numerical value
 
-      - array of number, >= 2 items, <= 2 items
+      - *or* array of numbers, >= 2 items, <= 2 items
 
           Numeric range [a,b] from a to b inclusive.
 
@@ -333,20 +331,21 @@ _SCORER_DOCSTRING = """
 
       - reference_group : array of union
 
-          Values or ranges that indicate being a member of the reference group,
-          i.e., not the unprivileged group.
+          Values or ranges that indicate being a member of the privileged group.
 
           - string
 
               Literal value
 
-          - number
+          - *or* number
 
               Numerical value
 
-          - array of number, >= 2 items, <= 2 items
+          - *or* array of numbers, >= 2 items, <= 2 items
 
-              Numeric range [a,b] from a to b inclusive.
+              Numeric range [a,b] from a to b inclusive."""
+
+_SCORER_DOCSTRING_RETURNS = """
 
     Returns
     -------
@@ -359,21 +358,35 @@ _SCORER_DOCSTRING = """
       estimators.
 """
 
+_SCORER_DOCSTRING = _SCORER_DOCSTRING_ARGS + _SCORER_DOCSTRING_RETURNS
+
+_COMBINED_SCORER_DOCSTRING = (
+    _SCORER_DOCSTRING_ARGS
+    + """
+
+    fairness_weight : number, >1.0, default=4.0
+
+      Higher fairness weight yields lower combined score when unfair.
+"""
+    + _SCORER_DOCSTRING_RETURNS
+)
+
 
 class _AccuracyAndDisparateImpact:
-    def __init__(self, favorable_labels, protected_attributes):
+    def __init__(self, favorable_labels, protected_attributes, fairness_weight):
         self.accuracy_scorer = sklearn.metrics.make_scorer(
             sklearn.metrics.accuracy_score
         )
         self.disparate_impact_scorer = disparate_impact(
             favorable_labels, protected_attributes
         )
+        self.fairness_weight = fairness_weight
 
     def _combine(self, accuracy, disp_impact):
-        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
-            return accuracy
-        if accuracy < 0.0 or accuracy > 1.0 or disp_impact < 0.0:
-            logger.warning(f"invalid accuracy {accuracy}, disp_impact {disp_impact}")
+        if accuracy < 0.0 or accuracy > 1.0:
+            logger.warning(f"invalid accuracy {accuracy}")
+        if np.isnan(disp_impact) or disp_impact < 0.0:
+            logger.warning(f"invalid disp_impact {disp_impact}")
         if disp_impact == 0.0:
             return 0.0
         elif disp_impact <= 1.0:
@@ -385,8 +398,7 @@ class _AccuracyAndDisparateImpact:
             scaling_factor = symmetric_impact / disp_impact_treshold
         else:
             scaling_factor = 1.0
-        scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
-        result = accuracy * scaling_factor ** scaling_hardness
+        result = accuracy * scaling_factor ** self.fairness_weight
         if result < 0.0 or result > accuracy:
             logger.warning(f"unexpected result {result} for accuracy {accuracy}")
         if symmetric_impact < 0.9 and result >= accuracy:
@@ -409,7 +421,9 @@ class _AccuracyAndDisparateImpact:
         return self.score_estimator(estimator, X, y)
 
 
-def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
+def accuracy_and_disparate_impact(
+    favorable_labels, protected_attributes, fairness_weight=4.0
+):
     """
     Create a scikit-learn compatible combined scorer for `accuracy`_
     and `disparate impact`_ given the fairness info. The scorer is
@@ -424,11 +438,13 @@ def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
     .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
     .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
-    return _AccuracyAndDisparateImpact(favorable_labels, protected_attributes)
+    return _AccuracyAndDisparateImpact(
+        favorable_labels, protected_attributes, fairness_weight
+    )
 
 
 accuracy_and_disparate_impact.__doc__ = (
-    str(accuracy_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
+    str(accuracy_and_disparate_impact.__doc__) + _COMBINED_SCORER_DOCSTRING
 )
 
 
@@ -466,9 +482,14 @@ def disparate_impact(favorable_labels, protected_attributes):
     privileged group.
 
     .. math::
-        \frac{\text{Pr}(Y = 1 | D = \text{unprivileged})}
-        {\text{Pr}(Y = 1 | D = \text{privileged})}
+        \frac{\text{Pr}(Y = \text{favorable} | D = \text{unprivileged})}
+        {\text{Pr}(Y = \text{favorable} | D = \text{privileged})}
 
+    In the case of multiple protected attributes,
+    `D=privileged` means all protected attributes of the sample have
+    corresponding privileged values in the reference group, and
+    `D=unprivileged` means all protected attributes of the sample have
+    corresponding unprivileged values in the monitored group.
     The ideal value of this metric is 1. A value <1 implies a higher
     benefit for the privileged group and a value >1 implies a higher
     benefit for the unprivileged group. Fairness for this metric is
@@ -511,17 +532,18 @@ equal_opportunity_difference.__doc__ = (
 
 
 class _R2AndDisparateImpact:
-    def __init__(self, favorable_labels, protected_attributes):
+    def __init__(self, favorable_labels, protected_attributes, fairness_weight):
         self.r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         self.disparate_impact_scorer = disparate_impact(
             favorable_labels, protected_attributes
         )
+        self.fairness_weight = fairness_weight
 
     def _combine(self, r2, disp_impact):
-        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
-            return r2
-        if r2 > 1.0 or disp_impact < 0.0:
-            logger.warning(f"invalid r2 {r2}, disp_impact {disp_impact}")
+        if r2 > 1.0:
+            logger.warning(f"invalid r2 {r2}")
+        if np.isnan(disp_impact) or disp_impact < 0.0:
+            logger.warning(f"invalid disp_impact {disp_impact}")
         if disp_impact == 0.0:
             return np.finfo(np.float32).min
         elif disp_impact <= 1.0:
@@ -533,9 +555,8 @@ class _R2AndDisparateImpact:
             scaling_factor = symmetric_impact / disp_impact_treshold
         else:
             scaling_factor = 1.0
-        scaling_hardness = 4.0  # higher hardness yields result closer to 0 when unfair
         positive_r2 = 1 / (2.0 - r2)
-        scaled_r2 = positive_r2 * scaling_factor ** scaling_hardness
+        scaled_r2 = positive_r2 * scaling_factor ** self.fairness_weight
         result = 2.0 - 1 / scaled_r2
         if result > r2:
             logger.warning(f"unexpected result {result} for r2 {r2}")
@@ -559,7 +580,9 @@ class _R2AndDisparateImpact:
         return self.score_estimator(estimator, X, y)
 
 
-def r2_and_disparate_impact(favorable_labels, protected_attributes):
+def r2_and_disparate_impact(
+    favorable_labels, protected_attributes, fairness_weight=4.0
+):
     """
     Create a scikit-learn compatible combined scorer for `R2 score`_
     and `disparate impact`_ given the fairness info. The scorer is
@@ -574,11 +597,13 @@ def r2_and_disparate_impact(favorable_labels, protected_attributes):
     .. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
     .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt"""
-    return _R2AndDisparateImpact(favorable_labels, protected_attributes)
+    return _R2AndDisparateImpact(
+        favorable_labels, protected_attributes, fairness_weight
+    )
 
 
 r2_and_disparate_impact.__doc__ = (
-    str(r2_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
+    str(r2_and_disparate_impact.__doc__) + _COMBINED_SCORER_DOCSTRING
 )
 
 
@@ -590,8 +615,8 @@ def statistical_parity_difference(favorable_labels, protected_attributes):
     privileged group.
 
     .. math::
-        \text{Pr}(Y = 1 | D = \text{unprivileged})
-        - \text{Pr}(Y = 1 | D = \text{privileged})
+        \text{Pr}(Y = \text{favorable} | D = \text{unprivileged})
+        - \text{Pr}(Y = \text{favorable} | D = \text{privileged})
 
     The ideal value of this metric is 0. A value of <0 implies higher
     benefit for the privileged group and a value >0 implies higher
