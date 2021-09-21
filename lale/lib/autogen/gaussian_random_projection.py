@@ -64,7 +64,22 @@ _hyperparams_schema = {
                     "description": "Control the pseudo random number generator used to generate the matrix at fit time",
                 },
             },
-        }
+        },
+        {
+            "description": "eps=%f and n_samples=%d lead to a target dimension of %d which is larger than the original space with n_features=%d'      % (self.eps, n_samples, self.n_components_, n_features) ",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"n_components": {"not": {"enum": ["auto"]}}},
+                },
+                {
+                    "XXX TODO XXX": "johnson_lindenstrauss_min_dim(n_samples=X.shape[0], eps=self.eps) <= 0"
+                },
+                {
+                    "XXX TODO XXX": "johnson_lindenstrauss_min_dim(n_samples=X.shape[0], eps=self.eps) <= X.shape[1]"
+                },
+            ],
+        },
     ],
 }
 _input_fit_schema = {

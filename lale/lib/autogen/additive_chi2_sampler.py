@@ -28,24 +28,43 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["sample_steps", "sample_interval"],
-            "relevantToOptimizer": ["sample_steps"],
+            "relevantToOptimizer": ["sample_steps", "sample_interval"],
             "additionalProperties": False,
             "properties": {
                 "sample_steps": {
                     "type": "integer",
-                    "minimumForOptimizer": 2,
-                    "maximumForOptimizer": 3,
+                    "minimumForOptimizer": 1,
+                    "maximumForOptimizer": 5,
                     "distribution": "uniform",
                     "default": 2,
                     "description": "Gives the number of (complex) sampling points.",
                 },
                 "sample_interval": {
-                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.1,
+                            "maximumForOptimizer": 1.0,
+                            "distribution": "uniform",
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Sampling interval",
                 },
             },
-        }
+        },
+        {
+            "description": "From /kernel_approximation.py:AdditiveChi2Sampler:fit, Exception: raise ValueError(     'If "
+            "sample_steps is not in [1, 2, 3], you need to provide sample_interval') ",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"sample_interval": {"not": {"enum": [None]}}},
+                },
+                {"type": "object", "properties": {"sample_steps": {"enum": [1, 2, 3]}}},
+            ],
+        },
     ],
 }
 _input_fit_schema = {

@@ -106,7 +106,9 @@ _hyperparams_schema = {
                             "distribution": "uniform",
                         },
                         {"laleType": "Any", "forOptimizer": False},
+                        {"enum": [None]},
                     ],
+                    "default": None,
                 },
                 "max_n_alphas": {
                     "type": "integer",
@@ -191,7 +193,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.LarsCV#sklearn-linear_model-larscv",
     "import_from": "sklearn.linear_model",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

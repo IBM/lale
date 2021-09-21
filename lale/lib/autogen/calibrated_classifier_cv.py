@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.calibration import CalibratedClassifierCV as Op
 
@@ -43,7 +44,7 @@ _hyperparams_schema = {
                 "method": {
                     "XXX TODO XXX": "'sigmoid' or 'isotonic'",
                     "description": "The method to use for calibration",
-                    "enum": ["sigmoid"],
+                    "enum": ["sigmoid", "isotonic"],
                     "default": "sigmoid",
                 },
                 "cv": {
@@ -65,7 +66,10 @@ _hyperparams_schema = {
                             "distribution": "uniform",
                         },
                         {"laleType": "Any", "forOptimizer": False},
+                        {"enum": [None]},
+                        {"enum": ["prefit"]},
                     ],
+                    "default": None,
                 },
             },
         }
@@ -137,7 +141,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.calibration.CalibratedClassifierCV#sklearn-calibration-calibratedclassifiercv",
     "import_from": "sklearn.calibration",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,
@@ -148,5 +152,37 @@ _combined_schemas = {
     },
 }
 CalibratedClassifierCV = make_operator(_CalibratedClassifierCVImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.calibration.CalibratedClassifierCV#sklearn-calibration-calibratedclassifiercv
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.calibration.CalibratedClassifierCV#sklearn-calibration-calibratedclassifiercv
+    CalibratedClassifierCV = CalibratedClassifierCV.customize_schema(
+        n_jobs={
+            "description": "Number of jobs to run in parallel.",
+            "anyOf": [
+                {
+                    "description": "1 unless in joblib.parallel_backend context.",
+                    "enum": [None],
+                },
+                {"description": "Use all processors.", "enum": [-1]},
+                {
+                    "description": "Number of jobs to run in parallel.",
+                    "type": "integer",
+                    "minimum": 1,
+                },
+            ],
+            "default": None,
+        },
+        set_as_available=True,
+    )
+    CalibratedClassifierCV = CalibratedClassifierCV.customize_schema(
+        ensemble={
+            "type": "boolean",
+            "default": True,
+            "description": "Determines how the calibrator is fitted when cv is not 'prefit'. Ignored if cv='prefit",
+        },
+        set_as_available=True,
+    )
+
 
 set_docstrings(CalibratedClassifierCV)

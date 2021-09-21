@@ -48,9 +48,9 @@ _hyperparams_schema = {
                     "XXX TODO XXX": "float, greater than 1.0, default 1.35",
                     "description": "The parameter epsilon controls the number of samples that should be classified as outliers",
                     "type": "number",
-                    "minimumForOptimizer": 1e-08,
-                    "maximumForOptimizer": 1.35,
-                    "distribution": "loguniform",
+                    "minimumForOptimizer": 1.0,
+                    "maximumForOptimizer": 2.0,
+                    "distribution": "uniform",
                     "default": 1.35,
                 },
                 "max_iter": {

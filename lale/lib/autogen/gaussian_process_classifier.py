@@ -101,15 +101,7 @@ _hyperparams_schema = {
                 "multi_class": {
                     "XXX TODO XXX": "string, default",
                     "description": "Specifies how multi-class classification problems are handled",
-                    "enum": [
-                        "auto",
-                        "crammer_singer",
-                        "liblinear",
-                        "multinomial",
-                        "one_vs_one",
-                        "one_vs_rest",
-                        "ovr",
-                    ],
+                    "enum": ["one_vs_one", "one_vs_rest"],
                     "default": "one_vs_rest",
                 },
                 "n_jobs": {

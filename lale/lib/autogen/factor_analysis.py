@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.decomposition import FactorAnalysis as Op
 
@@ -38,17 +39,25 @@ _hyperparams_schema = {
                 "random_state",
             ],
             "relevantToOptimizer": [
-                "n_components",
                 "tol",
                 "copy",
-                "max_iter",
                 "svd_method",
                 "iterated_power",
             ],
             "additionalProperties": False,
             "properties": {
                 "n_components": {
-                    "enum": ["int", None],
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "minimun": 1,
+                            "laleMaximum": "X/items/maxItems",
+                            "minimumForOptimizer": 2,
+                            "maximumForOptimizer": 256,
+                            "distribution": "uniform",
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Dimensionality of latent space, the number of components of ``X`` that are obtained after ``transform``",
                 },
@@ -109,6 +118,26 @@ _hyperparams_schema = {
         {
             "XXX TODO XXX": "Parameter: random_state > only used when svd_method equals 'randomized'"
         },
+        {
+            "description": "(‘random_state’ only used when svd_method equals ‘randomized’) From /utils/validation.py:None:check_random_state, Exception: raise ValueError(     '%r cannot be used to seed a numpy.random.RandomState instance' % seed) ",
+            "anyOf": [
+                {"type": "object", "properties": {"svd_method": {"enum": ["lapack"]}}},
+                {
+                    "type": "object",
+                    "properties": {"svd_method": {"not": {"enum": ["randomized"]}}},
+                },
+                {"type": "object", "properties": {"random_state": {"enum": [None]}}},
+                {"XXX TODO XXX": "self.random_state is np.random"},
+                {
+                    "XXX TODO XXX": "isinstance(self.random_state, np.random.RandomState)"
+                },
+            ],
+        },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.",
+            "type": "object",
+            "laleNot": "X/isSparse",
+        },
     ],
 }
 _input_fit_schema = {
@@ -159,5 +188,17 @@ _combined_schemas = {
     },
 }
 FactorAnalysis = make_operator(_FactorAnalysisImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.FactorAnalysis#sklearn-decomposition-factoranalysis
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.FactorAnalysis#sklearn-decomposition-factoranalysis
+    FactorAnalysis = FactorAnalysis.customize_schema(
+        rotation={
+            "enum": ["varimax", "quartimax"],
+            "default": None,
+            "description": "if not None, apply the indicated rotation. Currently, varimax and quartimax are implemented.",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(FactorAnalysis)

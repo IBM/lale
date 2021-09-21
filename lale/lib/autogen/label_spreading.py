@@ -50,7 +50,10 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "properties": {
                 "kernel": {
-                    "enum": ["knn", "rbf", "callable"],
+                    "anyOf": [
+                        {"enum": ["knn", "rbf"]},
+                        {"laleType": "callable", "forOptimizer": False},
+                    ],
                     "default": "rbf",
                     "description": "String identifier for kernel function to use or the kernel function itself",
                 },
@@ -161,7 +164,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.semi_supervised.LabelSpreading#sklearn-semi_supervised-labelspreading",
     "import_from": "sklearn.semi_supervised",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

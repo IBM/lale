@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.preprocessing import KBinsDiscretizer as Op
 
@@ -28,7 +29,7 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["n_bins", "encode", "strategy"],
-            "relevantToOptimizer": [],
+            "relevantToOptimizer": ["encode", "strategy"],
             "additionalProperties": False,
             "properties": {
                 "n_bins": {
@@ -50,7 +51,12 @@ _hyperparams_schema = {
                     "description": "Strategy used to define the widths of the bins",
                 },
             },
-        }
+        },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array. ",
+            "type": "object",
+            "laleNot": "X/isSparse",
+        },
     ],
 }
 _input_fit_schema = {
@@ -101,5 +107,17 @@ _combined_schemas = {
     },
 }
 KBinsDiscretizer = make_operator(_KBinsDiscretizerImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.KBinsDiscretizer#sklearn-preprocessing-kbinsdiscretizer
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.preprocessing.KBinsDiscretizer#sklearn-preprocessing-kbinsdiscretizer
+    KBinsDiscretizer = KBinsDiscretizer.customize_schema(
+        dtype={
+            "XXX TODO XXX": "dtype{np.float32, np.float64}, default=None",
+            "laleType": "Any",
+            "default": None,
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(KBinsDiscretizer)
