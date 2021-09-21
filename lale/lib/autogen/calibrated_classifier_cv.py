@@ -30,7 +30,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": ["base_estimator", "method", "cv"],
+            "required": ["base_estimator", "method", "cv", "n_jobs", "ensemble"],
             "relevantToOptimizer": ["method", "cv"],
             "additionalProperties": False,
             "properties": {

@@ -35,6 +35,7 @@ _hyperparams_schema = {
                 "noise_variance_init",
                 "svd_method",
                 "iterated_power",
+                "rotation",
                 "random_state",
             ],
             "relevantToOptimizer": [

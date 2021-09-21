@@ -27,7 +27,7 @@ _hyperparams_schema = {
     "allOf": [
         {
             "type": "object",
-            "required": ["n_bins", "encode", "strategy"],
+            "required": ["n_bins", "encode", "strategy", "dtype"],
             "relevantToOptimizer": ["encode", "strategy"],
             "additionalProperties": False,
             "properties": {
