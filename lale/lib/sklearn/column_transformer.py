@@ -214,8 +214,8 @@ if sklearn.__version__ >= "0.21":
     )
 
 if sklearn.__version__ >= "1.0":
-    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html
-    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.compose.ColumnTransformer.html
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.compose.ColumnTransformer.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.compose.ColumnTransformer.html
     ColumnTransformer = ColumnTransformer.customize_schema(
         verbose_feature_names_out={
             "description": """If True, get_feature_names_out will prefix all feature names with the name of the transformer that generated that feature.
