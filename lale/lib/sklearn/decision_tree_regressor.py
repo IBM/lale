@@ -334,7 +334,14 @@ if sklearn.__version__ >= "1.0":
         criterion={
             "description": "Function to measure the quality of a split.",
             "anyOf": [
-                {"enum": ["squared_error", "friedman_mse", "absolute_error", "poisson"]},
+                {
+                    "enum": [
+                        "squared_error",
+                        "friedman_mse",
+                        "absolute_error",
+                        "poisson",
+                    ]
+                },
                 {"enum": ["mae", "mse"], "forOptimizer": False},
             ],
             "default": "squared_error",
