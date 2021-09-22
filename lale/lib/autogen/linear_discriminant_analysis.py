@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as Op
 
@@ -44,7 +45,7 @@ _hyperparams_schema = {
                 "store_covariance",
                 "tol",
             ],
-            "relevantToOptimizer": ["solver", "n_components", "tol"],
+            "relevantToOptimizer": ["solver", "n_components", "tol", "shrinkage"],
             "additionalProperties": False,
             "properties": {
                 "solver": {
@@ -53,7 +54,20 @@ _hyperparams_schema = {
                     "description": "Solver to use, possible values:   - 'svd': Singular value decomposition (default)",
                 },
                 "shrinkage": {
-                    "anyOf": [{"type": "string"}, {"type": "number"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"enum": ["auto"]},
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0,
+                            "maximumForOptimizer": 1,
+                            "minimum": 0,
+                            "maximum": 1,
+                            "exclusiveMinimum": True,
+                            "exclusiveMaximum": True,
+                            "distribution": "uniform",
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Shrinkage parameter, possible values:   - None: no shrinkage (default)",
                 },
@@ -67,6 +81,8 @@ _hyperparams_schema = {
                     "anyOf": [
                         {
                             "type": "integer",
+                            "minimun": 1,
+                            "laleMaximum": "X/items/maxItems",
                             "minimumForOptimizer": 2,
                             "maximumForOptimizer": 256,
                             "distribution": "uniform",
@@ -97,7 +113,7 @@ _hyperparams_schema = {
                 {"type": "object", "properties": {"shrinkage": {"enum": [None]}}},
                 {
                     "type": "object",
-                    "properties": {"solvers": {"enum": ["lsqr", "eigen"]}},
+                    "properties": {"solver": {"enum": ["lsqr", "eigen"]}},
                 },
             ],
         },
@@ -248,5 +264,57 @@ _combined_schemas = {
 LinearDiscriminantAnalysis = make_operator(
     _LinearDiscriminantAnalysisImpl, _combined_schemas
 )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.discriminant_analysis.LinearDiscriminantAnalysis#sklearn-discriminant_analysis-lineardiscriminantanalysis
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.discriminant_analysis.LinearDiscriminantAnalysis#sklearn-discriminant_analysis-lineardiscriminantanalysis
+    LinearDiscriminantAnalysis = LinearDiscriminantAnalysis.customize_schema(
+        covariance_estimator={
+            "anyOf": [
+                {
+                    "type": "string",
+                    "forOptimizer": False,
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "type of (covariance estimator). Estimate the covariance matrices instead of relying on the empirical covariance estimator (with potential shrinkage)",
+        },
+        set_as_available=True,
+    )
+    LinearDiscriminantAnalysis = LinearDiscriminantAnalysis.customize_schema(
+        constraint={
+            "description": "covariance estimator is not supported with svd solver. Try another solver",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"solver": {"not": {"enum": ["svd"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"covariance_estimator": {"enum": [None]}},
+                },
+            ],
+        },
+        set_as_available=True,
+    )
+    LinearDiscriminantAnalysis = LinearDiscriminantAnalysis.customize_schema(
+        constraint={
+            "description": "covariance_estimator and shrinkage parameters are not None. Only one of the two can be set.",
+            "anyOf": [
+                {"type": "object", "properties": {"solver": {"enum": ["svd", "lsqr"]}}},
+                {
+                    "type": "object",
+                    "properties": {"solver": {"not": {"enum": ["eigen"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"covariance_estimator": {"enum": [None]}},
+                },
+                {"type": "object", "properties": {"shrinkage": {"enum": [None, 0]}}},
+            ],
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(LinearDiscriminantAnalysis)

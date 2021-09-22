@@ -44,7 +44,6 @@ _hyperparams_schema = {
                 "n_jobs",
                 "verbose",
                 "random_state",
-                "n_topics",
             ],
             "relevantToOptimizer": [
                 "n_components",
@@ -53,11 +52,14 @@ _hyperparams_schema = {
                 "evaluate_every",
                 "total_samples",
                 "max_doc_update_iter",
+                "learning_method",
             ],
             "additionalProperties": False,
             "properties": {
                 "n_components": {
                     "type": "integer",
+                    "minimun": 1,
+                    "laleMaximum": "X/items/maxItems",
                     "minimumForOptimizer": 2,
                     "maximumForOptimizer": 256,
                     "distribution": "uniform",
@@ -163,46 +165,7 @@ _hyperparams_schema = {
                     "default": None,
                     "description": "If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.",
                 },
-                "n_topics": {
-                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
-                    "default": None,
-                    "description": "This parameter has been renamed to n_components and will be removed in version 0.21",
-                },
             },
-        },
-        {
-            "description": "learning_method, only used in fit method",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {"learning_method": {"enum": ["batch"]}},
-                },
-                {"type": "object", "properties": {"method": {"enum": ["fit"]}}},
-            ],
-        },
-        {
-            "description": "batch_size, only used in online learning",
-            "anyOf": [
-                {"type": "object", "properties": {"batch_size": {"enum": [128]}}},
-                {"type": "object", "properties": {"learning": {"enum": ["online"]}}},
-            ],
-        },
-        {
-            "description": "evaluate_every, only used in fit method",
-            "anyOf": [
-                {"type": "object", "properties": {"evaluate_every": {"enum": [(-1)]}}},
-                {"type": "object", "properties": {"method": {"enum": ["fit"]}}},
-            ],
-        },
-        {
-            "description": "total_samples, only used in the partial_fit method",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {"total_samples": {"enum": [1000000.0]}},
-                },
-                {"type": "object", "properties": {"method": {"enum": ["partial_fit"]}}},
-            ],
         },
         {
             "XXX TODO XXX": "Parameter: perp_tol > only used when evaluate_every is greater than 0"

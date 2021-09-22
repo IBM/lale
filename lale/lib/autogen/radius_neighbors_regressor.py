@@ -68,7 +68,7 @@ _hyperparams_schema = {
                 },
                 "p": {
                     "type": "integer",
-                    "minimumForOptimizer": 2,
+                    "minimumForOptimizer": 1,
                     "maximumForOptimizer": 3,
                     "distribution": "uniform",
                     "default": 2,
@@ -96,7 +96,7 @@ _hyperparams_schema = {
                 },
                 "n_jobs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
-                    "default": 1,
+                    "default": None,
                     "description": "The number of parallel jobs to run for neighbors search",
                 },
             },

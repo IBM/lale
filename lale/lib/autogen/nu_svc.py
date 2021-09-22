@@ -142,7 +142,7 @@ _hyperparams_schema = {
                 "decision_function_shape": {
                     "XXX TODO XXX": "'ovo', 'ovr', default='ovr'",
                     "description": "Whether to return a one-vs-rest ('ovr') decision function of shape (n_samples, n_classes) as all other classifiers, or the original one-vs-one ('ovo') decision function of libsvm which has shape (n_samples, n_classes * (n_classes - 1) / 2)",
-                    "enum": ["ovr"],
+                    "enum": ["ovr", "ovo"],
                     "default": "ovr",
                 },
                 "break_ties": {
@@ -246,7 +246,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.svm.NuSVC#sklearn-svm-nusvc",
     "import_from": "sklearn.svm",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

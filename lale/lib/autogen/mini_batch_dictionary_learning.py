@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.decomposition import MiniBatchDictionaryLearning as Op
 
@@ -169,6 +170,16 @@ _hyperparams_schema = {
         {
             "XXX TODO XXX": "Parameter: transform_n_nonzero_coefs > only used by algorithm='lars' and algorithm='omp' and is overridden by alpha in the omp case"
         },
+        {
+            "description": "From /decomposition/_dict_learning.py:None:_check_positive_coding, Exception: raise ValueError(\"Positive constraint not supported for '{}' coding method.\"     .format(method)) ",
+            "anyOf": [
+                {"type": "object", "properties": {"positive_code": {"enum": [False]}}},
+                {
+                    "type": "object",
+                    "properties": {"fit_algorithm": {"not": {"enum": ["omp", "lars"]}}},
+                },
+            ],
+        },
     ],
 }
 _input_fit_schema = {
@@ -221,5 +232,20 @@ _combined_schemas = {
 MiniBatchDictionaryLearning = make_operator(
     _MiniBatchDictionaryLearningImpl, _combined_schemas
 )
+
+if sklearn.__version__ >= "0.22":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.decomposition.MiniBatchDictionaryLearning#sklearn-decomposition-minibatchdictionarylearning
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.decomposition.MiniBatchDictionaryLearning#sklearn-decomposition-minibatchdictionarylearning
+    MiniBatchDictionaryLearning = MiniBatchDictionaryLearning.customize_schema(
+        transform_max_iter={
+            "type": "integer",
+            "minimumForOptimizer": 100,
+            "maximumForOptimizer": 2000,
+            "distribution": "uniform",
+            "default": 1000,
+            "description": "Maximum number of iterations to perform if algorithm='lasso_cd' or 'lasso_lars'",
+        },
+        set_as_available=True,
+    )
 
 set_docstrings(MiniBatchDictionaryLearning)

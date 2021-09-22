@@ -62,6 +62,8 @@ _hyperparams_schema = {
                 },
                 "n_components": {
                     "type": "integer",
+                    "minimun": 1,
+                    "laleMaximum": "X/items/maxItems",
                     "minimumForOptimizer": 2,
                     "maximumForOptimizer": 256,
                     "distribution": "uniform",
@@ -97,7 +99,7 @@ _hyperparams_schema = {
                 "method": {
                     "XXX TODO XXX": "string ('standard', 'hessian', 'modified' or 'ltsa')",
                     "description": "standard : use the standard locally linear embedding algorithm",
-                    "enum": ["ltsa", "modified", "standard"],
+                    "enum": ["ltsa", "modified", "standard", "hessian"],
                     "default": "standard",
                 },
                 "hessian_tol": {
@@ -144,6 +146,24 @@ _hyperparams_schema = {
                 {"type": "object", "properties": {"modified_tol": {"enum": [1e-12]}}},
                 {"type": "object", "properties": {"method": {"enum": ["modified"]}}},
             ],
+        },
+        {
+            "description": "for method='hessian', n_neighbors must be greater than [n_components * (n_components + 3) / 2]",
+            "anyOf": [
+                {"type": "object", "properties": {"method": {"enum": ["standard"]}}},
+                {
+                    "type": "object",
+                    "properties": {"method": {"not": {"enum": ["hessian"]}}},
+                },
+                {
+                    "XXX TODO XXX": "self.n_neighbors > self.n_components + self.n_components * (self.n_components + 1) // 2"
+                },
+            ],
+        },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.) ",
+            "type": "object",
+            "laleNot": "X/isSparse",
         },
     ],
 }
