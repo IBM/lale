@@ -213,5 +213,18 @@ if sklearn.__version__ >= "0.21":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.compose.ColumnTransformer.html
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.compose.ColumnTransformer.html
+    ColumnTransformer = ColumnTransformer.customize_schema(
+        verbose_feature_names_out={
+            "description": """If True, get_feature_names_out will prefix all feature names with the name of the transformer that generated that feature.
+If False, get_feature_names_out will not prefix any feature names and will error if feature names are not unique.""",
+            "type": "boolean",
+            "default": True,
+        },
+        set_as_available=True,
+    )
+
 
 lale.docstrings.set_docstrings(ColumnTransformer)
