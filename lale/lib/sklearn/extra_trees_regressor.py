@@ -332,7 +332,8 @@ if sklearn.__version__ >= "1.0":
     ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
         criterion={
             "description": """The function to measure the quality of a split.
-Supported criteria are “squared_error” for the mean squared error, which is equal to variance reduction as feature selection criterion, and “absolute_error” for the mean absolute error.""",
+Supported criteria are “squared_error” for the mean squared error, which is equal to variance reduction as feature selection criterion,
+and “absolute_error” for the mean absolute error.""",
             "anyOf": [
                 {"enum": ["squared_error", "absolute_error"]},
                 {"enum": ["mae", "mse"], "forOptimizer": False},

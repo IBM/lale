@@ -433,7 +433,7 @@ The default value of ‘friedman_mse’ is generally the best as it can provide 
             "anyOf": [
                 {"enum": ["squared_error", "friedman_mse"]},
                 {
-                    "description": "Deprecated since version 0.24.",
+                    "description": "Deprecated since version 0.24 and 1.0.",
                     "enum": ["mae", "mse"],
                     "forOptimizer": False,
                 },
