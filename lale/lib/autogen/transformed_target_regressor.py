@@ -66,7 +66,58 @@ _hyperparams_schema = {
                     "description": "Whether to check that ``transform`` followed by ``inverse_transform`` or ``func`` followed by ``inverse_func`` leads to the original targets.",
                 },
             },
-        }
+        },
+        {
+            "description": "transformer' and functions 'func'/'inverse_func' cannot both be set.",
+            "anyOf": [
+                {"type": "object", "properties": {"transformer": {"enum": [None]}}},
+                {
+                    "allOf": [
+                        {"type": "object", "properties": {"func": {"enum": [None]}}},
+                        {
+                            "type": "object",
+                            "properties": {"inverse_func": {"enum": [None]}},
+                        },
+                    ]
+                },
+            ],
+        },
+        {
+            "description": "When 'func' is provided, 'inverse_func' must also be provided",
+            "anyOf": [
+                {
+                    "allOf": [
+                        {
+                            "type": "object",
+                            "properties": {"transformer": {"not": {"enum": [None]}}},
+                        },
+                        {
+                            "anyOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {"func": {"not": {"enum": [None]}}},
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "inverse_func": {"not": {"enum": [None]}}
+                                    },
+                                },
+                            ]
+                        },
+                    ]
+                },
+                {
+                    "type": "object",
+                    "properties": {"transformer": {"not": {"enum": [None]}}},
+                },
+                {"type": "object", "properties": {"func": {"enum": [None]}}},
+                {
+                    "type": "object",
+                    "properties": {"inverse_func": {"not": {"enum": [None]}}},
+                },
+            ],
+        },
     ],
 }
 _input_fit_schema = {

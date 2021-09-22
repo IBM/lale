@@ -33,6 +33,8 @@ _hyperparams_schema = {
             "properties": {
                 "n_components": {
                     "type": "integer",
+                    "minimun": 1,
+                    "laleMaximum": "X/items/maxItems",
                     "minimumForOptimizer": 2,
                     "maximumForOptimizer": 256,
                     "distribution": "uniform",
@@ -70,7 +72,7 @@ _hyperparams_schema = {
                     "description": "Tolerance for ARPACK",
                 },
             },
-        }
+        },
     ],
 }
 _input_fit_schema = {

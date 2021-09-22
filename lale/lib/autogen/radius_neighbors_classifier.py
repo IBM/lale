@@ -38,7 +38,14 @@ _hyperparams_schema = {
                 "metric_params",
                 "n_jobs",
             ],
-            "relevantToOptimizer": ["weights", "algorithm", "leaf_size", "p", "metric"],
+            "relevantToOptimizer": [
+                "weights",
+                "algorithm",
+                "leaf_size",
+                "p",
+                "metric",
+                "outlier_label",
+            ],
             "additionalProperties": False,
             "properties": {
                 "radius": {
@@ -69,7 +76,7 @@ _hyperparams_schema = {
                 },
                 "p": {
                     "type": "integer",
-                    "minimumForOptimizer": 2,
+                    "minimumForOptimizer": 1,
                     "maximumForOptimizer": 3,
                     "distribution": "uniform",
                     "default": 2,
@@ -91,7 +98,11 @@ _hyperparams_schema = {
                     "description": "the distance metric to use for the tree",
                 },
                 "outlier_label": {
-                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "anyOf": [
+                        {"type": "integer", "forOptimizer": False},
+                        {"enum": ["most_frequent"]},
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Label, which is given for outlier samples (samples with no neighbors on given radius)",
                 },
@@ -102,7 +113,7 @@ _hyperparams_schema = {
                 },
                 "n_jobs": {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
-                    "default": 1,
+                    "default": None,
                     "description": "The number of parallel jobs to run for neighbors search",
                 },
             },

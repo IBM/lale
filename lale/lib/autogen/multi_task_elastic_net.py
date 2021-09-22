@@ -108,7 +108,7 @@ _hyperparams_schema = {
                     "description": "The seed of the pseudo random number generator that selects a random feature to update",
                 },
                 "selection": {
-                    "type": "string",
+                    "enum": ["cyclic", "random"],
                     "default": "cyclic",
                     "description": "If set to 'random', a random coefficient is updated every iteration rather than looping over features sequentially by default",
                 },
@@ -168,7 +168,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.MultiTaskElasticNet#sklearn-linear_model-multitaskelasticnet",
     "import_from": "sklearn.linear_model",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "regressor"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

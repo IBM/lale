@@ -34,7 +34,7 @@ _hyperparams_schema = {
                 "dense_output",
                 "random_state",
             ],
-            "relevantToOptimizer": ["n_components", "eps", "dense_output"],
+            "relevantToOptimizer": ["n_components", "eps", "dense_output", "density"],
             "additionalProperties": False,
             "properties": {
                 "n_components": {
@@ -54,7 +54,15 @@ _hyperparams_schema = {
                 "density": {
                     "XXX TODO XXX": "float in range ]0, 1], optional (default='auto')",
                     "description": "Ratio of non-zero component in the random projection matrix",
-                    "enum": ["auto"],
+                    "anyOf": [
+                        {"enum": ["auto"]},
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0,
+                            "maximumForOptimizer": 1,
+                            "distribution": "uniform",
+                        },
+                    ],
                     "default": "auto",
                 },
                 "eps": {

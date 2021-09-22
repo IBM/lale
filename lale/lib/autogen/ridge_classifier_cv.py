@@ -39,7 +39,14 @@ _hyperparams_schema = {
                 "class_weight",
                 "store_cv_values",
             ],
-            "relevantToOptimizer": ["fit_intercept", "normalize", "scoring", "cv"],
+            "relevantToOptimizer": [
+                "fit_intercept",
+                "normalize",
+                "scoring",
+                "cv",
+                "store_cv_values",
+                "class_weight",
+            ],
             "additionalProperties": False,
             "properties": {
                 "alphas": {
@@ -85,13 +92,15 @@ _hyperparams_schema = {
                             "distribution": "uniform",
                         },
                         {"laleType": "Any", "forOptimizer": False},
+                        {"enum": [None]},
                     ],
+                    "default": None,
                 },
                 "class_weight": {
                     "XXX TODO XXX": "dict or 'balanced', optional",
                     "description": "Weights associated with classes in the form ``{class_label: weight}``",
-                    "enum": ["balanced"],
-                    "default": "balanced",
+                    "anyOf": [{"enum": ["balanced"]}, {"enum": [None]}],
+                    "default": None,
                 },
                 "store_cv_values": {
                     "type": "boolean",
@@ -102,6 +111,16 @@ _hyperparams_schema = {
         },
         {
             "XXX TODO XXX": "Parameter: store_cv_values > only compatible with cv=none (i"
+        },
+        {
+            "description": "cv!=None and store_cv_values=True are incompatible",
+            "anyOf": [
+                {"type": "object", "properties": {"cv": {"enum": [None]}}},
+                {
+                    "type": "object",
+                    "properties": {"store_cv_values": {"enum": [False]}},
+                },
+            ],
         },
     ],
 }
@@ -192,7 +211,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.linear_model.RidgeClassifierCV#sklearn-linear_model-ridgeclassifiercv",
     "import_from": "sklearn.linear_model",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

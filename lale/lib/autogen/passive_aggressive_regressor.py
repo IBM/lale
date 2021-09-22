@@ -64,16 +64,11 @@ _hyperparams_schema = {
                     "description": "Whether the intercept should be estimated or not",
                 },
                 "max_iter": {
-                    "anyOf": [
-                        {
-                            "type": "integer",
-                            "minimumForOptimizer": 10,
-                            "maximumForOptimizer": 1000,
-                            "distribution": "uniform",
-                        },
-                        {"enum": [None]},
-                    ],
-                    "default": None,
+                    "type": "integer",
+                    "minimumForOptimizer": 10,
+                    "maximumForOptimizer": 1000,
+                    "distribution": "uniform",
+                    "default": 1000,
                     "description": "The maximum number of passes over the training data (aka epochs)",
                 },
                 "tol": {
@@ -86,7 +81,7 @@ _hyperparams_schema = {
                         },
                         {"enum": [None]},
                     ],
-                    "default": None,
+                    "default": 1e-3,
                     "description": "The stopping criterion",
                 },
                 "early_stopping": {

@@ -28,11 +28,11 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["method", "standardize", "copy"],
-            "relevantToOptimizer": [],
+            "relevantToOptimizer": ["method", "standardize"],
             "additionalProperties": False,
             "properties": {
                 "method": {
-                    "type": "string",
+                    "enum": ["yeo-johnson", "box-cox"],
                     "default": "yeo-johnson",
                     "description": "The power transform method",
                 },
@@ -50,6 +50,11 @@ _hyperparams_schema = {
         },
         {
             "XXX TODO XXX": "Parameter: method > only works with strictly positive values"
+        },
+        {
+            "description": "FA sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.",
+            "type": "object",
+            "laleNot": "X/isSparse",
         },
     ],
 }

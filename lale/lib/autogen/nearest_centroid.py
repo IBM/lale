@@ -28,24 +28,68 @@ _hyperparams_schema = {
         {
             "type": "object",
             "required": ["metric", "shrink_threshold"],
-            "relevantToOptimizer": ["metric"],
+            "relevantToOptimizer": ["metric", "shrink_threshold"],
             "additionalProperties": False,
             "properties": {
                 "metric": {
                     "anyOf": [
                         {"laleType": "callable", "forOptimizer": False},
-                        {"enum": ["euclidean", "manhattan", "minkowski"]},
+                        {
+                            "enum": [
+                                "cityblock",
+                                "cosine",
+                                "euclidean",
+                                "l1",
+                                "l2",
+                                "manhattan",
+                                "braycurtis",
+                                "canberra",
+                                "chebyshev",
+                                "correlation",
+                                "dice",
+                                "hamming",
+                                "jaccard",
+                                "kulsinski",
+                                "mahalanobis",
+                                "minkowski",
+                                "rogerstanimoto",
+                                "russellrao",
+                                "seuclidean",
+                                "sokalmichener",
+                                "sokalsneath",
+                                "sqeuclidean",
+                                "yule",
+                            ]
+                        },
                     ],
                     "default": "euclidean",
                     "description": "The metric to use when calculating distance between instances in a feature array",
                 },
                 "shrink_threshold": {
-                    "anyOf": [{"type": "number"}, {"enum": [None]}],
+                    "anyOf": [
+                        {
+                            "type": "number",
+                            "minimumForOptimizer": 0.0,
+                            "maximumForOptimizer": 1.0,
+                            "distribution": "uniform",
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                     "description": "Threshold for shrinking centroids to remove features.",
                 },
             },
-        }
+        },
+        {
+            "description": "threshold shrinking not supported for sparse input",
+            "anyOf": [
+                {"type": "object", "laleNot": "X/isSparse"},
+                {
+                    "type": "object",
+                    "properties": {"shrink_threshold": {"enum": [None]}},
+                },
+            ],
+        },
     ],
 }
 _input_fit_schema = {
@@ -87,7 +131,7 @@ _combined_schemas = {
     "documentation_url": "https://scikit-learn.org/0.20/modules/generated/sklearn.neighbors.NearestCentroid#sklearn-neighbors-nearestcentroid",
     "import_from": "sklearn.neighbors",
     "type": "object",
-    "tags": {"pre": [], "op": ["estimator"], "post": []},
+    "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_fit": _input_fit_schema,

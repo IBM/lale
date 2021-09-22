@@ -65,7 +65,10 @@ _hyperparams_schema = {
                     "description": "The number of clusters to form as well as the number of centroids to generate.",
                 },
                 "init": {
-                    "enum": ["k-means++", "random", "ndarray"],
+                    "anyOf": [
+                        {"enum": ["k-means++", "random"]},
+                        {"laleType": "callable", "forOptimizer": False},
+                    ],
                     "default": "k-means++",
                     "description": "Method for initialization, defaults to 'k-means++':  'k-means++' : selects initial cluster centers for k-mean clustering in a smart way to speed up convergence",
                 },

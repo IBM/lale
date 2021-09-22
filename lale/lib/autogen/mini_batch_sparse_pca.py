@@ -127,7 +127,12 @@ _hyperparams_schema = {
                     "description": "If int, random_state is the seed used by the random number generator; If RandomState instance, random_state is the random number generator; If None, the random number generator is the RandomState instance used by `np.random`.",
                 },
             },
-        }
+        },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.",
+            "type": "object",
+            "laleNot": "X/isSparse",
+        },
     ],
 }
 _input_fit_schema = {
