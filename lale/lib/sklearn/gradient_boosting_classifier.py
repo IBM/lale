@@ -421,4 +421,26 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
+        criterion={
+            "description": """The function to measure the quality of a split.
+Supported criteria are ‘friedman_mse’ for the mean squared error with improvement score by Friedman, ‘
+squared_error’ for mean squared error, and ‘mae’ for the mean absolute error.
+The default value of ‘friedman_mse’ is generally the best as it can provide a better approximation in some cases.""",
+            "anyOf": [
+                {"enum": ["squared_error", "friedman_mse"]},
+                {
+                    "description": "Deprecated since version 0.24.",
+                    "enum": ["mae", "mse"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "friedman_mse",
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(GradientBoostingClassifier)
