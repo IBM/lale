@@ -178,7 +178,16 @@ from typing import (
 import jsonschema
 import pandas as pd
 import sklearn.base
-from sklearn.pipeline import if_delegate_has_method
+
+try:
+    from sklearn.pipeline import if_delegate_has_method
+except ImportError as e:
+    import sklearn
+
+    if sklearn.__version__ >= "1.0":
+        from sklearn.utils.metaestimators import if_delegate_has_method
+    else:
+        raise e
 
 import lale.datasets.data_schemas
 import lale.helpers
