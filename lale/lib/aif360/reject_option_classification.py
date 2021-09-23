@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ class _RejectOptionClassificationImpl(_BasePostEstimatorImpl):
         *,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels=None,
         estimator,
         redact=True,
         low_class_thresh=0.01,
@@ -59,6 +60,7 @@ class _RejectOptionClassificationImpl(_BasePostEstimatorImpl):
         super(_RejectOptionClassificationImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
+            unfavorable_labels=unfavorable_labels,
             estimator=estimator,
             redact=redact,
             mitigator=mitigator,

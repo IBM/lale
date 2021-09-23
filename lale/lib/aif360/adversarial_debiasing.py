@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ class _AdversarialDebiasingImpl(_BaseInEstimatorImpl):
         *,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels=None,
         redact=True,
         preparation=None,
         scope_name="adversarial_debiasing",
@@ -69,18 +70,18 @@ or with
         self.classifier_num_hidden_units = classifier_num_hidden_units
         self.debias = debias
         self.favorable_labels = favorable_labels
+        self.unfavorable_labels = unfavorable_labels
         self.redact = redact
         self.preparation = preparation
 
     def fit(self, X, y=None):
+        tf.compat.v1.disable_eager_execution()
         tf.compat.v1.reset_default_graph()
         if self.sess is None:
             self.sess = tf.compat.v1.Session()
-
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         unprivileged_groups = [{name: 0 for name in prot_attr_names}]
         privileged_groups = [{name: 1 for name in prot_attr_names}]
-
         mitigator = aif360.algorithms.inprocessing.AdversarialDebiasing(
             unprivileged_groups=unprivileged_groups,
             privileged_groups=privileged_groups,
@@ -96,6 +97,7 @@ or with
         super(_AdversarialDebiasingImpl, self).__init__(
             favorable_labels=self.favorable_labels,
             protected_attributes=self.protected_attributes,
+            unfavorable_labels=self.unfavorable_labels,
             redact=self.redact,
             preparation=self.preparation,
             mitigator=mitigator,

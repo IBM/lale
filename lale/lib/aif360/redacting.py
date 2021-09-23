@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,7 +44,9 @@ def _redaction_value(column_values):
 
 
 class _RedactingImpl:
-    def __init__(self, *, favorable_labels, protected_attributes):
+    def __init__(
+        self, *, favorable_labels, protected_attributes, unfavorable_labels=None
+    ):
         self.prot_attr_names = [pa["feature"] for pa in protected_attributes]
 
     def fit(self, X, y=None):
@@ -94,7 +96,11 @@ _hyperparams_schema = {
         {
             "type": "object",
             "additionalProperties": False,
-            "required": ["favorable_labels", "protected_attributes"],
+            "required": [
+                "favorable_labels",
+                "protected_attributes",
+                "unfavorable_labels",
+            ],
             "relevantToOptimizer": [],
             "properties": {
                 "favorable_labels": {
@@ -104,6 +110,10 @@ _hyperparams_schema = {
                 "protected_attributes": _categorical_fairness_properties[
                     "protected_attributes"
                 ],
+                "unfavorable_labels": {
+                    "description": "Ignored.",
+                    "laleType": "Any",
+                },
             },
         }
     ],

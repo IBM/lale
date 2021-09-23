@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,6 +38,7 @@ class _LFRImpl:
         *,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels=None,
         redact=True,
         preparation=None,
         k=5,
@@ -50,6 +51,7 @@ class _LFRImpl:
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.unfavorable_labels = unfavorable_labels
         self.redact = redact
         if preparation is None:
             preparation = lale.lib.lale.NoOp
@@ -92,6 +94,7 @@ class _LFRImpl:
         fairness_info = {
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
+            "unfavorable_labels": self.unfavorable_labels,
         }
         redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         preparation = self.preparation

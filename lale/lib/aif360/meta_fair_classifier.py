@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ class _MetaFairClassifierImpl(_BaseInEstimatorImpl):
         *,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels,
         redact=True,
         preparation=None,
         tau=0.8,
@@ -45,6 +46,7 @@ class _MetaFairClassifierImpl(_BaseInEstimatorImpl):
         super(_MetaFairClassifierImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
+            unfavorable_labels=unfavorable_labels,
             redact=redact,
             preparation=preparation,
             mitigator=mitigator,
