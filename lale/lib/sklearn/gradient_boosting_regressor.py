@@ -397,6 +397,7 @@ if sklearn.__version__ >= "1.0":
             ],
             "default": "friedman_mse",
         },
+        min_impurity_split=None,
         set_as_available=True,
     )
 

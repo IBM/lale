@@ -440,6 +440,7 @@ The default value of ‘friedman_mse’ is generally the best as it can provide 
             ],
             "default": "friedman_mse",
         },
+        min_impurity_split=None,
         set_as_available=True,
     )
 

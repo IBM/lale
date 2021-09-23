@@ -361,5 +361,11 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.ExtraTreesClassifier.html
+    ExtraTreesClassifier = ExtraTreesClassifier.customize_schema(
+        min_impurity_split=None, set_as_available=True
+    )
 
 lale.docstrings.set_docstrings(ExtraTreesClassifier)

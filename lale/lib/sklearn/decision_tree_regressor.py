@@ -346,6 +346,7 @@ if sklearn.__version__ >= "1.0":
             ],
             "default": "squared_error",
         },
+        min_impurity_split=None,
         set_as_available=True,
     )
 
