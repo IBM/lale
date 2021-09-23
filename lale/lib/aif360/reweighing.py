@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,17 +31,25 @@ from .util import (
 
 class _ReweighingImpl:
     def __init__(
-        self, *, favorable_labels, protected_attributes, estimator, redact=True
+        self,
+        *,
+        favorable_labels,
+        protected_attributes,
+        estimator,
+        unfavorable_labels=None,
+        redact=True
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator
+        self.unfavorable_labels = unfavorable_labels
         self.redact = redact
 
     def fit(self, X, y):
         fairness_info = {
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
+            "unfavorable_labels": self.unfavorable_labels,
         }
         prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,

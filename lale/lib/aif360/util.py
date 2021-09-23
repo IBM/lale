@@ -122,8 +122,65 @@ _categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
                         ]
                     },
                 },
+                "monitored_group": {
+                    "description": "Values or ranges that indicate being a member of the unprivileged group.",
+                    "anyOf": [
+                        {
+                            "description": "If `monitored_group` is not explicitly specified, consider any values not captured by `reference_group` as monitored.",
+                            "enum": [None],
+                        },
+                        {
+                            "type": "array",
+                            "minItems": 1,
+                            "items": {
+                                "anyOf": [
+                                    {"description": "Literal value.", "type": "string"},
+                                    {
+                                        "description": "Numerical value.",
+                                        "type": "number",
+                                    },
+                                    {
+                                        "description": "Numeric range [a,b] from a to b inclusive.",
+                                        "type": "array",
+                                        "minItems": 2,
+                                        "maxItems": 2,
+                                        "items": {"type": "number"},
+                                    },
+                                ]
+                            },
+                        },
+                    ],
+                    "default": None,
+                },
             },
         },
+    },
+    "unfavorable_labels": {
+        "description": 'Label values which are considered unfavorable (i.e. "negative").',
+        "anyOf": [
+            {
+                "description": "If `unfavorable_labels` is not explicitly specified, consider any labels not captured by `favorable_labels` as unfavorable.",
+                "enum": [None],
+            },
+            {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                    "anyOf": [
+                        {"description": "Literal value.", "type": "string"},
+                        {"description": "Numerical value.", "type": "number"},
+                        {
+                            "description": "Numeric range [a,b] from a to b inclusive.",
+                            "type": "array",
+                            "minItems": 2,
+                            "maxItems": 2,
+                            "items": {"type": "number"},
+                        },
+                    ],
+                },
+            },
+        ],
+        "default": None,
     },
 }
 
@@ -163,25 +220,6 @@ class _PandasToDatasetConverter:
         return result
 
 
-def _group_flag(value, groups):
-    for group in groups:
-        if isinstance(group, list):
-            if group[0] <= value <= group[1]:
-                return 1
-        elif value == group:
-            return 1
-    return 0
-
-
-def _dataframe_replace(dataframe, subst):
-    new_columns = [
-        subst.get(i, subst.get(name, dataframe.iloc[:, i]))
-        for i, name in enumerate(dataframe.columns)
-    ]
-    result = pd.concat(new_columns, axis=1)
-    return result
-
-
 def _ensure_str(str_or_int):
     return f"f{str_or_int}" if isinstance(str_or_int, int) else str_or_int
 
@@ -213,7 +251,9 @@ def _ndarray_to_dataframe(array) -> pd.DataFrame:
 
 
 class _ScorerFactory:
-    def __init__(self, metric, favorable_labels, protected_attributes):
+    def __init__(
+        self, metric, favorable_labels, protected_attributes, unfavorable_labels
+    ):
         if hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric):
             self.kind = "BinaryLabelDatasetMetric"
         elif hasattr(aif360.metrics.ClassificationMetric, metric):
@@ -224,6 +264,7 @@ class _ScorerFactory:
         self.fairness_info = {
             "favorable_labels": favorable_labels,
             "protected_attributes": protected_attributes,
+            "unfavorable_labels": unfavorable_labels,
         }
 
         from lale.lib.aif360 import ProtectedAttributesEncoder
@@ -343,7 +384,51 @@ _SCORER_DOCSTRING_ARGS = """
 
           - *or* array of numbers, >= 2 items, <= 2 items
 
-              Numeric range [a,b] from a to b inclusive."""
+              Numeric range [a,b] from a to b inclusive.
+
+      - monitored_group : union type, default None
+
+          Values or ranges that indicate being a member of the unprivileged group.
+
+          - None
+
+              If `monitored_group` is not explicitly specified, consider any values not captured by `reference_group` as monitored.
+
+          - *or* array of union
+
+            - string
+
+                Literal value
+
+            - *or* number
+
+                Numerical value
+
+            - *or* array of numbers, >= 2 items, <= 2 items
+
+                Numeric range [a,b] from a to b inclusive.
+
+    unfavorable_labels : union type, default None
+
+      Label values which are considered unfavorable (i.e. "negative").
+
+      - None
+
+          If `unfavorable_labels` is not explicitly specified, consider any labels not captured by `favorable_labels` as unfavorable.
+
+      - *or* array of union
+
+        - string
+
+            Literal value
+
+        - *or* number
+
+            Numerical value
+
+        - *or* array of numbers, >= 2 items, <= 2 items
+
+            Numeric range [a,b] from a to b inclusive."""
 
 _SCORER_DOCSTRING_RETURNS = """
 
@@ -373,12 +458,18 @@ _COMBINED_SCORER_DOCSTRING = (
 
 
 class _AccuracyAndDisparateImpact:
-    def __init__(self, favorable_labels, protected_attributes, fairness_weight):
+    def __init__(
+        self,
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
+        fairness_weight,
+    ):
         self.accuracy_scorer = sklearn.metrics.make_scorer(
             sklearn.metrics.accuracy_score
         )
         self.disparate_impact_scorer = disparate_impact(
-            favorable_labels, protected_attributes
+            favorable_labels, protected_attributes, unfavorable_labels
         )
         self.fairness_weight = fairness_weight
 
@@ -422,7 +513,7 @@ class _AccuracyAndDisparateImpact:
 
 
 def accuracy_and_disparate_impact(
-    favorable_labels, protected_attributes, fairness_weight=4.0
+    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=4.0
 ):
     """
     Create a scikit-learn compatible combined scorer for `accuracy`_
@@ -439,7 +530,7 @@ def accuracy_and_disparate_impact(
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
     .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
     return _AccuracyAndDisparateImpact(
-        favorable_labels, protected_attributes, fairness_weight
+        favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
     )
 
 
@@ -448,7 +539,9 @@ accuracy_and_disparate_impact.__doc__ = (
 )
 
 
-def average_odds_difference(favorable_labels, protected_attributes):
+def average_odds_difference(
+    favorable_labels, protected_attributes, unfavorable_labels=None
+):
     r"""
     Create a scikit-learn compatible `average odds difference`_ scorer
     given the fairness info. Average of difference in false positive
@@ -465,7 +558,10 @@ def average_odds_difference(favorable_labels, protected_attributes):
 
     .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
     return _ScorerFactory(
-        "average_odds_difference", favorable_labels, protected_attributes
+        "average_odds_difference",
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
     )
 
 
@@ -474,7 +570,7 @@ average_odds_difference.__doc__ = (
 )
 
 
-def disparate_impact(favorable_labels, protected_attributes):
+def disparate_impact(favorable_labels, protected_attributes, unfavorable_labels=None):
     r"""
     Create a scikit-learn compatible `disparate_impact`_ scorer given
     the fairness info (`Feldman et al. 2015`_). Ratio of rate of
@@ -497,13 +593,17 @@ def disparate_impact(favorable_labels, protected_attributes):
 
     .. _`disparate_impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact
     .. _`Feldman et al. 2015`: https://doi.org/10.1145/2783258.2783311"""
-    return _ScorerFactory("disparate_impact", favorable_labels, protected_attributes)
+    return _ScorerFactory(
+        "disparate_impact", favorable_labels, protected_attributes, unfavorable_labels
+    )
 
 
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
 
 
-def equal_opportunity_difference(favorable_labels, protected_attributes):
+def equal_opportunity_difference(
+    favorable_labels, protected_attributes, unfavorable_labels=None
+):
     r"""
     Create a scikit-learn compatible `equal opportunity difference`_
     scorer given the fairness info. Difference of true positive rates
@@ -523,6 +623,7 @@ def equal_opportunity_difference(favorable_labels, protected_attributes):
         "equal_opportunity_difference",
         favorable_labels,
         protected_attributes,
+        unfavorable_labels,
     )
 
 
@@ -532,10 +633,16 @@ equal_opportunity_difference.__doc__ = (
 
 
 class _R2AndDisparateImpact:
-    def __init__(self, favorable_labels, protected_attributes, fairness_weight):
+    def __init__(
+        self,
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
+        fairness_weight,
+    ):
         self.r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
         self.disparate_impact_scorer = disparate_impact(
-            favorable_labels, protected_attributes
+            favorable_labels, protected_attributes, unfavorable_labels
         )
         self.fairness_weight = fairness_weight
 
@@ -581,7 +688,7 @@ class _R2AndDisparateImpact:
 
 
 def r2_and_disparate_impact(
-    favorable_labels, protected_attributes, fairness_weight=4.0
+    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=4.0
 ):
     """
     Create a scikit-learn compatible combined scorer for `R2 score`_
@@ -598,7 +705,7 @@ def r2_and_disparate_impact(
     .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt"""
     return _R2AndDisparateImpact(
-        favorable_labels, protected_attributes, fairness_weight
+        favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
     )
 
 
@@ -607,7 +714,9 @@ r2_and_disparate_impact.__doc__ = (
 )
 
 
-def statistical_parity_difference(favorable_labels, protected_attributes):
+def statistical_parity_difference(
+    favorable_labels, protected_attributes, unfavorable_labels=None
+):
     r"""
     Create a scikit-learn compatible `statistical parity difference`_
     scorer given the fairness info. Difference of the rate of
@@ -627,7 +736,10 @@ def statistical_parity_difference(favorable_labels, protected_attributes):
     .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference
     .. _`Dwork et al. 2012`: https://doi.org/10.1145/2090236.2090255"""
     return _ScorerFactory(
-        "statistical_parity_difference", favorable_labels, protected_attributes
+        "statistical_parity_difference",
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
     )
 
 
@@ -637,9 +749,9 @@ statistical_parity_difference.__doc__ = (
 
 
 class _SymmetricDisparateImpact:
-    def __init__(self, favorable_labels, protected_attributes):
+    def __init__(self, favorable_labels, protected_attributes, unfavorable_labels):
         self.disparate_impact_scorer = disparate_impact(
-            favorable_labels, protected_attributes
+            favorable_labels, protected_attributes, unfavorable_labels
         )
 
     def _make_symmetric(self, disp_impact):
@@ -661,7 +773,9 @@ class _SymmetricDisparateImpact:
         return self.score_estimator(estimator, X, y)
 
 
-def symmetric_disparate_impact(favorable_labels, protected_attributes):
+def symmetric_disparate_impact(
+    favorable_labels, protected_attributes, unfavorable_labels=None
+):
     """
     Create a scikit-learn compatible scorer for symmetric `disparate impact`_ given the fairness info.
     For disparate impact <= 1.0, return that value, otherwise return
@@ -671,7 +785,9 @@ def symmetric_disparate_impact(favorable_labels, protected_attributes):
     receiving a disparate benefit.
 
     .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact"""
-    return _SymmetricDisparateImpact(favorable_labels, protected_attributes)
+    return _SymmetricDisparateImpact(
+        favorable_labels, protected_attributes, unfavorable_labels
+    )
 
 
 symmetric_disparate_impact.__doc__ = (
@@ -679,7 +795,7 @@ symmetric_disparate_impact.__doc__ = (
 )
 
 
-def theil_index(favorable_labels, protected_attributes):
+def theil_index(favorable_labels, protected_attributes, unfavorable_labels=None):
     r"""
     Create a scikit-learn compatible `Theil index`_ scorer given the
     fairness info (`Speicher et al. 2018`_). Generalized entropy of
@@ -699,7 +815,9 @@ def theil_index(favorable_labels, protected_attributes):
 
     .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
     .. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
-    return _ScorerFactory("theil_index", favorable_labels, protected_attributes)
+    return _ScorerFactory(
+        "theil_index", favorable_labels, protected_attributes, unfavorable_labels
+    )
 
 
 theil_index.__doc__ = str(theil_index.__doc__) + _SCORER_DOCSTRING
@@ -707,10 +825,18 @@ theil_index.__doc__ = str(theil_index.__doc__) + _SCORER_DOCSTRING
 
 class _BaseInEstimatorImpl:
     def __init__(
-        self, *, favorable_labels, protected_attributes, redact, preparation, mitigator
+        self,
+        *,
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
+        redact,
+        preparation,
+        mitigator,
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.unfavorable_labels = unfavorable_labels
         self.redact = redact
         if preparation is None:
             preparation = lale.lib.lale.NoOp
@@ -733,9 +859,12 @@ class _BaseInEstimatorImpl:
 
     def _decode(self, y):
         assert isinstance(y, pd.Series)
-        assert len(self.favorable_labels) == 1 and len(self.unfavorable_labels) == 1
-        favorable, unfavorable = self.favorable_labels[0], self.unfavorable_labels[0]
-        result = y.map(lambda label: favorable if label == 1 else unfavorable)
+        assert len(self.favorable_labels) == 1 and len(self.not_favorable_labels) == 1
+        favorable, not_favorable = (
+            self.favorable_labels[0],
+            self.not_favorable_labels[0],
+        )
+        result = y.map(lambda label: favorable if label == 1 else not_favorable)
         return result
 
     def fit(self, X, y):
@@ -744,6 +873,7 @@ class _BaseInEstimatorImpl:
         fairness_info = {
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
+            "unfavorable_labels": self.unfavorable_labels,
         }
         redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         trainable_redact_and_prep = redacting >> self.preparation
@@ -763,7 +893,9 @@ class _BaseInEstimatorImpl:
         encoded_data = self._prep_and_encode(X, y)
         self.mitigator.fit(encoded_data)
         self.classes_ = set(list(y))
-        self.unfavorable_labels = list(self.classes_ - set(list(self.favorable_labels)))
+        self.not_favorable_labels = list(
+            self.classes_ - set(list(self.favorable_labels))
+        )
         self.classes_ = np.array(list(self.classes_))
         return self
 
@@ -789,21 +921,26 @@ class _BasePostEstimatorImpl:
         *,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels,
         estimator,
         redact,
         mitigator,
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.unfavorable_labels = unfavorable_labels
         self.estimator = estimator
         self.redact = redact
         self.mitigator = mitigator
 
     def _decode(self, y):
         assert isinstance(y, pd.Series)
-        assert len(self.favorable_labels) == 1 and len(self.unfavorable_labels) == 1
-        favorable, unfavorable = self.favorable_labels[0], self.unfavorable_labels[0]
-        result = y.map(lambda label: favorable if label == 1 else unfavorable)
+        assert len(self.favorable_labels) == 1 and len(self.not_favorable_labels) == 1
+        favorable, not_favorable = (
+            self.favorable_labels[0],
+            self.not_favorable_labels[0],
+        )
+        result = y.map(lambda label: favorable if label == 1 else not_favorable)
         return result
 
     def fit(self, X, y):
@@ -812,6 +949,7 @@ class _BasePostEstimatorImpl:
         fairness_info = {
             "favorable_labels": self.favorable_labels,
             "protected_attributes": self.protected_attributes,
+            "unfavorable_labels": self.unfavorable_labels,
         }
         redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         trainable_redact_and_estim = redacting >> self.estimator
@@ -841,7 +979,9 @@ class _BasePostEstimatorImpl:
         )
         self.mitigator = self.mitigator.fit(dataset_true, dataset_pred)
         self.classes_ = set(list(y))
-        self.unfavorable_labels = list(self.classes_ - set(list(self.favorable_labels)))
+        self.not_favorable_labels = list(
+            self.classes_ - set(list(self.favorable_labels))
+        )
         self.classes_ = np.array(list(self.classes_))
         return self
 
@@ -994,12 +1134,15 @@ _numeric_output_transform_schema = {
 }
 
 
-def _column_for_stratification(X, y, favorable_labels, protected_attributes):
+def _column_for_stratification(
+    X, y, favorable_labels, protected_attributes, unfavorable_labels
+):
     from lale.lib.aif360 import ProtectedAttributesEncoder
 
     prot_attr_enc = ProtectedAttributesEncoder(
         favorable_labels=favorable_labels,
         protected_attributes=protected_attributes,
+        unfavorable_labels=unfavorable_labels,
         remainder="drop",
         return_X_y=True,
     )
@@ -1007,7 +1150,7 @@ def _column_for_stratification(X, y, favorable_labels, protected_attributes):
     df = pd.concat([encoded_X, encoded_y], axis=1)
 
     def label_for_stratification(row):
-        return "".join(["T" if v == 1 else "F" for v in row])
+        return "".join(["T" if v == 1 else "F" if v == 0 else "N" for v in row])
 
     result = df.apply(label_for_stratification, axis=1)
     result.name = "stratify"
@@ -1020,6 +1163,7 @@ def fair_stratified_train_test_split(
     *arrays,
     favorable_labels,
     protected_attributes,
+    unfavorable_labels=None,
     test_size=0.25,
     random_state=None,
 ) -> Tuple:
@@ -1052,6 +1196,10 @@ def fair_stratified_train_test_split(
     protected_attributes : array
 
       Features for which fairness is desired.
+
+    unfavorable_labels : array or None, default None
+
+      Label values which are considered unfavorable (i.e. "negative").
 
     test_size : float or int, default=0.25
 
@@ -1089,7 +1237,9 @@ def fair_stratified_train_test_split(
 
       - item 4+: Each argument in `*arrays`, if any, yields two items in the result, for the two splits of that array.
     """
-    stratify = _column_for_stratification(X, y, favorable_labels, protected_attributes)
+    stratify = _column_for_stratification(
+        X, y, favorable_labels, protected_attributes, unfavorable_labels
+    )
     (
         train_X,
         test_X,
@@ -1124,6 +1274,7 @@ class FairStratifiedKFold:
         self,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels=None,
         n_splits=5,
         shuffle=False,
         random_state=None,
@@ -1138,6 +1289,10 @@ class FairStratifiedKFold:
         protected_attributes : array
 
           Features for which fairness is desired.
+
+        unfavorable_labels : array or None, default None
+
+          Label values which are considered unfavorable (i.e. "negative").
 
         n_splits : integer, optional, default 5
 
@@ -1166,6 +1321,7 @@ class FairStratifiedKFold:
         self._fairness_info = {
             "favorable_labels": favorable_labels,
             "protected_attributes": protected_attributes,
+            "unfavorable_labels": unfavorable_labels,
         }
         self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
             n_splits=n_splits, shuffle=shuffle, random_state=random_state

@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,9 +23,7 @@ import lale.type_checking
 
 from .util import (
     _categorical_fairness_properties,
-    _dataframe_replace,
     _ensure_str,
-    _group_flag,
     _ndarray_to_dataframe,
     _ndarray_to_series,
 )
@@ -48,6 +46,9 @@ _hyperparams_schema = {
                 },
                 "protected_attributes": _categorical_fairness_properties[
                     "protected_attributes"
+                ],
+                "unfavorable_labels": _categorical_fairness_properties[
+                    "unfavorable_labels"
                 ],
                 "remainder": {
                     "description": "Transformation for columns that were not specified in protected_attributes.",
@@ -127,7 +128,7 @@ _output_transform_schema = {
             "description": "If return_X_y is False, return X.",
             "type": "array",
             "items": {
-                "description": "This operator encodes protected attributes as `0` or `1`. So if the remainder (non-protected attributes) is dropped, the output is numeric. Otherwise, the output may still contain non-numeric values.",
+                "description": "This operator encodes protected attributes as `0`, `0.5`, or `1`. So if the remainder (non-protected attributes) is dropped, the output is numeric. Otherwise, the output may still contain non-numeric values.",
                 "type": "array",
                 "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
             },
@@ -163,7 +164,8 @@ _combined_schemas = {
 The `protected_attributes` argument describes each sensitive column by
 a `feature` name or index and a `reference_group` list of values or
 ranges. This transformer encodes protected attributes with values of
-`0` or `1` to indicate group membership. That encoding makes the
+`0`, `0.5`, or `1` to indicate membership in the unprivileged, neither,
+or privileged group, respectively. That encoding makes the
 protected attributes suitable as input for downstream fairness
 mitigation operators. This operator does not encode the remaining
 (non-protected) attributes. A common usage is to encode non-protected
@@ -185,6 +187,31 @@ and mitigators, so you often do not need to use it directly yourself.
 }
 
 
+def _dataframe_replace(dataframe, subst):
+    new_columns = [
+        subst.get(i, subst.get(name, dataframe.iloc[:, i]))
+        for i, name in enumerate(dataframe.columns)
+    ]
+    result = pd.concat(new_columns, axis=1)
+    return result
+
+
+def _group_flag(value, pos_groups, other_groups):
+    for group in pos_groups:
+        if value == group:
+            return 1
+        if isinstance(group, list) and group[0] <= value <= group[1]:
+            return 1
+    if other_groups is None:
+        return 0
+    for group in other_groups:
+        if value == group:
+            return 0
+        if isinstance(group, list) and group[0] <= value <= group[1]:
+            return 0
+    return 0.5  # neither positive nor other
+
+
 class _ProtectedAttributesEncoderImpl:
     y_name: str
     protected_attributes: List[Dict[str, Any]]
@@ -194,12 +221,14 @@ class _ProtectedAttributesEncoderImpl:
         *,
         favorable_labels=None,
         protected_attributes=[],
+        unfavorable_labels=None,
         remainder="drop",
         return_X_y=False,
         combine="keep_separate",
     ):
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
+        self.unfavorable_labels = unfavorable_labels
         self.remainder = remainder
         self.return_X_y = return_X_y
         self.combine = combine
@@ -214,31 +243,29 @@ class _ProtectedAttributesEncoderImpl:
         protected = {}
         for prot_attr in self.protected_attributes:
             feature = prot_attr["feature"]
-            groups = prot_attr["reference_group"]
+            pos_groups = prot_attr["reference_group"]
+            other_groups = prot_attr.get("monitored_group", None)
             if isinstance(feature, str):
                 column = X_pd[feature]
             else:
                 column = X_pd.iloc[:, feature]
-            series = column.apply(lambda v: _group_flag(v, groups))
+            series = column.apply(lambda v: _group_flag(v, pos_groups, other_groups))
             protected[feature] = series
         if self.combine in ["and", "or"]:
             prot_attr_names = [
                 _ensure_str(pa["feature"]) for pa in self.protected_attributes
             ]
-            comb_name = "_and_".join(prot_attr_names)
+            comb_name = f"_{self.combine}_".join(prot_attr_names)
             if comb_name in X_pd.columns:
                 suffix = 0
                 while f"{comb_name}_{suffix}" in X_pd.columns:
                     suffix += 1
                 comb_name = f"{comb_name}_{suffix}"
+            comb_df = pd.concat([protected[f] for f in protected], axis=1)
             if self.combine == "and":
-                comb_series = pd.Series(data=1, index=X_pd.index)
-                for name, series in protected.items():
-                    comb_series = comb_series & series
+                comb_series = comb_df.min(axis=1)
             elif self.combine == "or":
-                comb_series = pd.Series(data=0, index=X_pd.index)
-                for name, series in protected.items():
-                    comb_series = comb_series | series
+                comb_series = comb_df.max(axis=1)
             else:
                 assert False, self.combine
             comb_series.name = comb_name
@@ -265,7 +292,9 @@ class _ProtectedAttributesEncoderImpl:
             else:
                 self.y_name = y.name
                 series_y = y
-            result_y = series_y.apply(lambda v: _group_flag(v, self.favorable_labels))
+            result_y = series_y.apply(
+                lambda v: _group_flag(v, self.favorable_labels, self.unfavorable_labels)
+            )
         return result_X, result_y
 
     def transform_schema(self, s_X):
@@ -281,7 +310,7 @@ class _ProtectedAttributesEncoderImpl:
                         "minItems": len(out_names),
                         "maxItems": len(out_names),
                         "items": [
-                            {"description": n, "enum": [0, 1]} for n in out_names
+                            {"description": n, "enum": [0, 0.5, 1]} for n in out_names
                         ],
                     },
                 }
@@ -292,7 +321,7 @@ class _ProtectedAttributesEncoderImpl:
                         "type": "array",
                         "minItems": len(out_names),
                         "maxItems": len(out_names),
-                        "items": {"enum": [0, 1]},
+                        "items": {"enum": [0, 0.5, 1]},
                     },
                 }
         else:

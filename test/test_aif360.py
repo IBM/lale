@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -523,10 +523,9 @@ class TestAIF360Num(unittest.TestCase):
         di = pd.Series(di_list)
         _, _, function_name, _ = traceback.extract_stack()[-2]
         print(f"disparate impact {di.mean():.3f} +- {di.std():.3f} {function_name}")
-        self.assertTrue(
-            min_di <= di.mean() <= max_di,
-            f"{min_di} <= {di.mean()} <= {max_di}",
-        )
+        if min_di > 0:
+            self.assertLessEqual(min_di, di.mean())
+            self.assertLessEqual(di.mean(), max_di)
 
     def test_disparate_impact_remover_np_num(self):
         fairness_info = self.creditg_np_num["fairness_info"]
@@ -688,10 +687,51 @@ class TestAIF360Cat(unittest.TestCase):
         return result
 
     @classmethod
+    def _creditg_pd_ternary(cls):
+        X, y, _ = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {
+                    "feature": "personal_status",
+                    "reference_group": ["male div/sep", "male mar/wid", "male single"],
+                    "monitored_group": ["female div/dep/mar"],
+                },
+                {
+                    "feature": "age",
+                    "reference_group": [[26, 1000]],
+                    "monitored_group": [[1, 23]],
+                },
+            ],
+            "unfavorable_labels": ["bad"],
+        }
+        cv = lale.lib.aif360.FairStratifiedKFold(**fairness_info, n_splits=3)
+        splits = []
+        lr = LogisticRegression()
+        for train, test in cv.split(X, y):
+            train_X, train_y = lale.helpers.split_with_schemas(lr, X, y, train)
+            assert isinstance(train_X, pd.DataFrame), type(train_X)
+            assert isinstance(train_y, pd.Series), type(train_y)
+            test_X, test_y = lale.helpers.split_with_schemas(lr, X, y, test, train)
+            assert isinstance(test_X, pd.DataFrame), type(test_X)
+            assert isinstance(test_y, pd.Series), type(test_y)
+            splits.append(
+                {
+                    "train_X": train_X,
+                    "train_y": train_y,
+                    "test_X": test_X,
+                    "test_y": test_y,
+                }
+            )
+        result = {"splits": splits, "fairness_info": fairness_info}
+        return result
+
+    @classmethod
     def setUpClass(cls):
         cls.prep_pd_cat = cls._prep_pd_cat()
         cls.creditg_pd_cat = cls._creditg_pd_cat()
         cls.creditg_np_cat = cls._creditg_np_cat()
+        cls.creditg_pd_ternary = cls._creditg_pd_ternary()
 
     def test_encoder_pd_cat(self):
         info = self.creditg_pd_cat["fairness_info"]
@@ -710,12 +750,13 @@ class TestAIF360Cat(unittest.TestCase):
             cand_row = cand_X.loc[i]
             cand_name = list(cand_X.columns)[0]
             self.assertEqual(
-                orig_row["personal_status"].startswith("male"),
+                1 if orig_row["personal_status"].startswith("male") else 0,
                 csep_row["personal_status"],
             )
-            self.assertEqual(orig_row["age"] >= 26, csep_row["age"])
+            self.assertEqual(1 if orig_row["age"] >= 26 else 0, csep_row["age"])
             self.assertEqual(
-                cand_row[cand_name], csep_row["personal_status"] and csep_row["age"]
+                cand_row[cand_name],
+                1 if csep_row["personal_status"] == 1 == csep_row["age"] else 0,
             )
 
     def test_encoder_np_cat(self):
@@ -727,17 +768,57 @@ class TestAIF360Cat(unittest.TestCase):
         conv_X = encoder.transform(orig_X)
         for i in range(orig_X.shape[0]):
             self.assertEqual(
-                orig_X[i, 8].startswith("male"),
+                1 if orig_X[i, 8].startswith("male") else 0,
                 conv_X.at[i, "f8"],
             )
-            self.assertEqual(orig_X[i, 12] >= 26, conv_X.at[i, "f12"])
+            self.assertEqual(1 if orig_X[i, 12] >= 26 else 0, conv_X.at[i, "f12"])
+
+    def test_encoder_pd_ternary(self):
+        info = self.creditg_pd_ternary["fairness_info"]
+        orig_X = self.creditg_pd_ternary["splits"][0]["train_X"]
+        encoder_separate = lale.lib.aif360.ProtectedAttributesEncoder(
+            protected_attributes=info["protected_attributes"]
+        )
+        csep_X = encoder_separate.transform(orig_X)
+        encoder_and = lale.lib.aif360.ProtectedAttributesEncoder(
+            protected_attributes=info["protected_attributes"], combine="and"
+        )
+        cand_X = encoder_and.transform(orig_X)
+        for i in orig_X.index:
+            orig_row = orig_X.loc[i]
+            csep_row = csep_X.loc[i]
+            cand_row = cand_X.loc[i]
+            cand_name = list(cand_X.columns)[0]
+            self.assertEqual(
+                1
+                if orig_row["personal_status"].startswith("male")
+                else 0
+                if orig_row["personal_status"].startswith("female")
+                else 0.5,
+                csep_row["personal_status"],
+                f"personal_status {orig_row['personal_status']}",
+            )
+            self.assertEqual(
+                1
+                if 26 <= orig_row["age"] <= 1000
+                else 0
+                if 1 <= orig_row["age"] <= 23
+                else 0.5,
+                csep_row["age"],
+                f"age {orig_row['age']}",
+            )
+            self.assertEqual(
+                cand_row[cand_name],
+                min(csep_row["personal_status"], csep_row["age"]),
+                f"age {orig_row['age']}, personal_status {orig_row['personal_status']}",
+            )
 
     def test_column_for_stratification(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         train_X = self.creditg_pd_cat["splits"][0]["train_X"]
         train_y = self.creditg_pd_cat["splits"][0]["train_y"]
         stratify = lale.lib.aif360.util._column_for_stratification(
-            train_X, train_y, **fairness_info
+            train_X, train_y, **fairness_info, unfavorable_labels=None
         )
         for i in train_X.index:
             male = train_X.loc[i]["personal_status"].startswith("male")
@@ -834,6 +915,16 @@ class TestAIF360Cat(unittest.TestCase):
         trained = trainable.fit(train_X, train_y)
         test_X = self.creditg_np_cat["test_X"]
         test_y = self.creditg_np_cat["test_y"]
+        self._attempt_scorers(fairness_info, trained, test_X, test_y)
+
+    def test_scorers_pd_ternary(self):
+        fairness_info = self.creditg_pd_ternary["fairness_info"]
+        trainable = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
+        train_X = self.creditg_pd_ternary["splits"][0]["train_X"]
+        train_y = self.creditg_pd_ternary["splits"][0]["train_y"]
+        trained = trainable.fit(train_X, train_y)
+        test_X = self.creditg_pd_ternary["splits"][0]["test_X"]
+        test_y = self.creditg_pd_ternary["splits"][0]["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
     def test_scorers_warn(self):

@@ -1,4 +1,4 @@
-# Copyright 2020 IBM Corporation
+# Copyright 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
         *,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels=None,
         redact=True,
         preparation=None,
         C=10,
@@ -70,6 +71,7 @@ class _GerryFairClassifierImpl(_BaseInEstimatorImpl):
         super(_GerryFairClassifierImpl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
+            unfavorable_labels=unfavorable_labels,
             redact=redact,
             preparation=preparation,
             mitigator=mitigator,

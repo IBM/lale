@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ class _OptimPreprocImpl:
         *,
         favorable_labels,
         protected_attributes,
+        unfavorable_labels=None,
         optimizer,
         optim_options,
         verbose=0,
@@ -46,6 +47,7 @@ class _OptimPreprocImpl:
         self._hyperparams = {
             "favorable_labels": favorable_labels,
             "protected_attributes": protected_attributes,
+            "unfavorable_labels": unfavorable_labels,
             "optimizer": optimizer,
             "optim_options": optim_options,
             "verbose": verbose,
@@ -54,6 +56,7 @@ class _OptimPreprocImpl:
         fairness_info = {
             "favorable_labels": favorable_labels,
             "protected_attributes": protected_attributes,
+            "unfavorable_labels": unfavorable_labels,
         }
         self._prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,
