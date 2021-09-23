@@ -523,10 +523,9 @@ class TestAIF360Num(unittest.TestCase):
         di = pd.Series(di_list)
         _, _, function_name, _ = traceback.extract_stack()[-2]
         print(f"disparate impact {di.mean():.3f} +- {di.std():.3f} {function_name}")
-        self.assertTrue(
-            min_di <= di.mean() <= max_di,
-            f"{min_di} <= {di.mean()} <= {max_di}",
-        )
+        if min_di > 0:
+            self.assertLessEqual(min_di, di.mean())
+            self.assertLessEqual(di.mean(), max_di)
 
     def test_disparate_impact_remover_np_num(self):
         fairness_info = self.creditg_np_num["fairness_info"]
