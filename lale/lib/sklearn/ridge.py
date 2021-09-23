@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 import sklearn.linear_model
 
 import lale.docstrings
@@ -217,5 +218,20 @@ _combined_schemas = {
 
 
 Ridge = lale.operators.make_operator(sklearn.linear_model.Ridge, _combined_schemas)
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.Ridge.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.Ridge.html
+    Ridge = Ridge.customize_schema(
+        normalize={
+            "type": "boolean",
+            "description": """This parameter is ignored when fit_intercept is set to False.
+If True, the regressors X will be normalized before regression by subtracting the mean and dividing by the l2-norm.
+If you wish to standardize, please use StandardScaler before calling fit on an estimator with normalize=False.""",
+            "default": False,
+            "forOptimizer": False,
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(Ridge)

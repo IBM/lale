@@ -249,6 +249,7 @@ if sklearn.__version__ >= "1.0":
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.cluster.KMeans.html
     KMeans = KMeans.customize_schema(
         precompute_distances=None,
+        n_jobs=None,
         set_as_available=True,
     )
 
