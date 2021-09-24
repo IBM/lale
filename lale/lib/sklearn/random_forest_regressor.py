@@ -375,6 +375,7 @@ Training using “absolute_error” is significantly slower than when using “s
             ],
             "default": "squared_error",
         },
+        min_impurity_split=None,
         set_as_available=True,
     )
 
