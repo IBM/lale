@@ -356,4 +356,27 @@ if sklearn.__version__ >= "0.22":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.RandomForestRegressor.html
+    from lale.schemas import AnyOf, Float, Int, Null
+
+    RandomForestRegressor = RandomForestRegressor.customize_schema(
+        criterion={
+            "description": """The function to measure the quality of a split.
+Supported criteria are “squared_error” for the mean squared error, which is equal to variance reduction as feature selection criterion,
+“absolute_error” for the mean absolute error, and “poisson” which uses reduction in Poisson deviance to find splits.
+Training using “absolute_error” is significantly slower than when using “squared_error”.""",
+            "anyOf": [
+                {
+                    "enum": ["squared_error", "absolute_error", "poisson"],
+                },
+                {"enum": ["mse", "mae"], "forOptimizer": False},
+            ],
+            "default": "squared_error",
+        },
+        min_impurity_split=None,
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(RandomForestRegressor)

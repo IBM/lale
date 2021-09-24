@@ -234,4 +234,51 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.NMF.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.decomposition.NMF.html
+    from lale.schemas import AnyOf, Enum, Float, Null
+
+    NMF = NMF.customize_schema(
+        alpha=Float(
+            desc="""Constant that multiplies the regularization terms.
+Set it to zero to have no regularization. When using alpha instead of alpha_W and alpha_H,
+the regularization terms are not scaled by the n_features (resp. n_samples) factors for W (resp. H).""",
+            default=0.0,
+            forOptimizer=False,
+        ),
+        alpha_W=Float(
+            desc="""Constant that multiplies the regularization terms of W. Set it to zero (default) to have no regularization on W.""",
+            minimumForOptimizer=1e-10,
+            maximumForOptimizer=1.0,
+            distribution="loguniform",
+            default=0.0,
+            forOptimizer=True,
+        ),
+        alpha_H=AnyOf(
+            types=[
+                Enum(values=["same"]),
+                Float(
+                    minimumForOptimizer=1e-10,
+                    maximumForOptimizer=1.0,
+                    distribution="loguniform",
+                ),
+            ],
+            desc="""Constant that multiplies the regularization terms of H.
+Set it to zero to have no regularization on H. If “same” (default), it takes the same value as alpha_W.""",
+            default="same",
+            forOptimizer=True,
+        ),
+        regularization=AnyOf(
+            desc="Select whether the regularization affects the components (H), the transformation (W), both or none of them.",
+            types=[
+                Enum(values=["both", "components", "transformation"]),
+                Null(),
+            ],
+            default="both",
+            forOptimizer=False,
+        ),
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(NMF)

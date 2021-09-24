@@ -169,43 +169,49 @@ class TestFriedmanMSE(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_rfr(self):
-        reg = RandomForestRegressor(
-            bootstrap=True,
-            criterion="friedman_mse",
-            max_depth=4,
-            max_features=0.9832410473940374,
-            max_leaf_nodes=None,
-            min_impurity_decrease=0.0,
-            min_impurity_split=None,
-            min_samples_leaf=3,
-            min_samples_split=2,
-            min_weight_fraction_leaf=0.0,
-            n_estimators=29,
-            n_jobs=4,
-            oob_score=False,
-            random_state=33,
-            verbose=0,
-            warm_start=False,
-        )
-        reg.fit(self.X_train, self.y_train)
+        import sklearn
+
+        if sklearn.__version__ < "1.0":
+            reg = RandomForestRegressor(
+                bootstrap=True,
+                criterion="friedman_mse",
+                max_depth=4,
+                max_features=0.9832410473940374,
+                max_leaf_nodes=None,
+                min_impurity_decrease=0.0,
+                min_impurity_split=None,
+                min_samples_leaf=3,
+                min_samples_split=2,
+                min_weight_fraction_leaf=0.0,
+                n_estimators=29,
+                n_jobs=4,
+                oob_score=False,
+                random_state=33,
+                verbose=0,
+                warm_start=False,
+            )
+            reg.fit(self.X_train, self.y_train)
 
     def test_etr(self):
-        reg = ExtraTreesRegressor(
-            bootstrap=True,
-            criterion="friedman_mse",
-            max_depth=4,
-            max_features=0.9832410473940374,
-            max_leaf_nodes=None,
-            min_impurity_decrease=0.0,
-            min_impurity_split=None,
-            min_samples_leaf=3,
-            min_samples_split=2,
-            min_weight_fraction_leaf=0.0,
-            n_estimators=29,
-            n_jobs=4,
-            oob_score=False,
-            random_state=33,
-            verbose=0,
-            warm_start=False,
-        )
-        reg.fit(self.X_train, self.y_train)
+        import sklearn
+
+        if sklearn.__version__ < "1.0":
+            reg = ExtraTreesRegressor(
+                bootstrap=True,
+                criterion="friedman_mse",
+                max_depth=4,
+                max_features=0.9832410473940374,
+                max_leaf_nodes=None,
+                min_impurity_decrease=0.0,
+                min_impurity_split=None,
+                min_samples_leaf=3,
+                min_samples_split=2,
+                min_weight_fraction_leaf=0.0,
+                n_estimators=29,
+                n_jobs=4,
+                oob_score=False,
+                random_state=33,
+                verbose=0,
+                warm_start=False,
+            )
+            reg.fit(self.X_train, self.y_train)

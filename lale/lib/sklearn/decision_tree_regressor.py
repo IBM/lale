@@ -327,4 +327,27 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.tree.DecisionTreeRegressor.html
+    DecisionTreeRegressor = DecisionTreeRegressor.customize_schema(
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {
+                    "enum": [
+                        "squared_error",
+                        "friedman_mse",
+                        "absolute_error",
+                        "poisson",
+                    ]
+                },
+                {"enum": ["mae", "mse"], "forOptimizer": False},
+            ],
+            "default": "squared_error",
+        },
+        min_impurity_split=None,
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(DecisionTreeRegressor)

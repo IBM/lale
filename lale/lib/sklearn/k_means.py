@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 from sklearn.cluster import KMeans as SKLModel
 
 from lale.docstrings import set_docstrings
@@ -242,5 +243,14 @@ _combined_schemas = {
     },
 }
 KMeans = make_operator(SKLModel, _combined_schemas)
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.cluster.KMeans.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.cluster.KMeans.html
+    KMeans = KMeans.customize_schema(
+        precompute_distances=None,
+        n_jobs=None,
+        set_as_available=True,
+    )
 
 set_docstrings(KMeans)

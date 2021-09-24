@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sklearn
 from sklearn.linear_model import SGDClassifier as SKLModel
 
 import lale.docstrings
@@ -384,5 +385,40 @@ _combined_schemas = {
 
 
 SGDClassifier = lale.operators.make_operator(SKLModel, _combined_schemas)
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.SGDClassifer.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.SGDClassifier.html
+    SGDClassifier = SGDClassifier.customize_schema(
+        loss={
+            "description": """The loss function to be used. Defaults to ‘hinge’, which gives a linear SVM.
+The possible options are ‘hinge’, ‘log’, ‘modified_huber’, ‘squared_hinge’, ‘perceptron’,
+or a regression loss: ‘squared_error’, ‘huber’, ‘epsilon_insensitive’, or ‘squared_epsilon_insensitive’.
+The ‘log’ loss gives logistic regression, a probabilistic classifier.
+‘modified_huber’ is another smooth loss that brings tolerance to outliers as well as probability estimates.
+‘squared_hinge’ is like hinge but is quadratically penalized.
+‘perceptron’ is the linear loss used by the perceptron algorithm.
+The other losses are designed for regression but can be useful in classification as well; see SGDRegressor for a description.
+More details about the losses formulas can be found in the scikit-learn User Guide.""",
+            "anyOf": [
+                {
+                    "enum": [
+                        "hinge",
+                        "log",
+                        "modified_huber",
+                        "squared_hinge",
+                        "perceptron",
+                        "squared_error",
+                        "huber",
+                        "epsilon_insensitive",
+                        "squared_epsilon_insensitive",
+                    ],
+                },
+                {"enum": ["squared_loss"], "forOptimizer": False},
+            ],
+            "default": "hinge",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(SGDClassifier)

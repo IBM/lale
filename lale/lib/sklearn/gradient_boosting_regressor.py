@@ -367,4 +367,38 @@ if sklearn.__version__ >= "0.24":
         set_as_available=True,
     )
 
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
+        loss={
+            "description": """Loss function to be optimized.
+‘squared_error’ refers to the squared error for regression. ‘absolute_error’ refers to the absolute error of regression and is a robust loss function.
+‘huber’ is a combination of the two. ‘quantile’ allows quantile regression (use alpha to specify the quantile).""",
+            "anyOf": [
+                {"enum": ["squared_error", "absolute_error", "huber", "quantile"]},
+                {
+                    "description": "Deprecated since version 1.0",
+                    "enum": ["ls", "lad"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "squared_error",
+        },
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {"enum": ["squared_error", "friedman_mse"]},
+                {
+                    "description": "Deprecated since version 0.24 and 1.0.",
+                    "enum": ["mae", "mse"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "friedman_mse",
+        },
+        min_impurity_split=None,
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(GradientBoostingRegressor)

@@ -17,7 +17,16 @@ import typing
 
 import sklearn
 import sklearn.pipeline
-from sklearn.pipeline import if_delegate_has_method
+
+try:
+    from sklearn.pipeline import if_delegate_has_method
+except ImportError as e:
+    import sklearn
+
+    if sklearn.__version__ >= "1.0":
+        from sklearn.utils.metaestimators import if_delegate_has_method
+    else:
+        raise e
 
 import lale.docstrings
 import lale.helpers
