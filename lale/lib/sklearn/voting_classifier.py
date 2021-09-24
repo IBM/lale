@@ -13,17 +13,10 @@
 # limitations under the License.
 
 import sklearn
-from sklearn.ensemble import VotingClassifier as SKLModel
+import sklearn.ensemble
 
 import lale.docstrings
 import lale.operators
-
-
-class _VotingClassifierImpl(SKLModel):
-    # defining predict_proba regardless of whether classification is 'hard' or 'soft'
-    def predict_proba(self, X):
-        return self._predict_proba(X)
-
 
 _hyperparams_schema = {
     "description": "Soft Voting/Majority Rule classifier for unfitted estimators.",
@@ -257,7 +250,7 @@ _combined_schemas = {
 
 VotingClassifier: lale.operators.PlannedIndividualOp
 VotingClassifier = lale.operators.make_operator(
-    _VotingClassifierImpl, _combined_schemas
+    sklearn.ensemble.VotingClassifier, _combined_schemas
 )
 
 if sklearn.__version__ >= "0.21":
