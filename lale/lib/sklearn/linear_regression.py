@@ -159,6 +159,7 @@ if sklearn.__version__ >= "1.0":
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.LinearRegression.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.LinearRegression.html
     LinearRegression = LinearRegression.customize_schema(
+        relevantToOptimizer=["fit_intercept", "copy_X"],
         normalize={
             "type": "boolean",
             "description": """This parameter is ignored when fit_intercept is set to False.
