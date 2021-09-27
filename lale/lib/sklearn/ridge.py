@@ -223,13 +223,21 @@ if sklearn.__version__ >= "1.0":
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.Ridge.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.Ridge.html
     Ridge = Ridge.customize_schema(
+        relevantToOptimizer=[
+            "alpha",
+            "fit_intercept",
+            "copy_X",
+            "max_iter",
+            "tol",
+            "solver",
+        ],
         normalize={
             "type": "boolean",
             "description": """This parameter is ignored when fit_intercept is set to False.
 If True, the regressors X will be normalized before regression by subtracting the mean and dividing by the l2-norm.
 If you wish to standardize, please use StandardScaler before calling fit on an estimator with normalize=False.""",
             "default": False,
-            "forOptimizer": True,
+            "forOptimizer": False,
         },
         set_as_available=True,
     )
