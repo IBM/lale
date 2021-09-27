@@ -14,6 +14,7 @@
 
 import pandas as pd
 import scipy.sparse.csr
+import sklearn
 import sklearn.preprocessing
 
 import lale.docstrings
@@ -185,5 +186,56 @@ class _OneHotEncoderImpl:
 
 
 OneHotEncoder = lale.operators.make_operator(_OneHotEncoderImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.21":
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+    OneHotEncoder = OneHotEncoder.customize_schema(
+        drop={
+            "anyOf": [
+                {"enum": ["first"]},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "forOptimizer": False,
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "Specifies a methodology to use to drop one of the categories per feature.",
+        },
+        set_as_available=True,
+    )
+    OneHotEncoder = OneHotEncoder.customize_schema(
+        constraint={
+            "description": "'handle_unknown' must be 'error' when the drop parameter is specified, as both would create categories that are all zero.",
+            "anyOf": [
+                {"type": "object", "properties": {"drop": {"enum": [None]}}},
+                {
+                    "type": "object",
+                    "properties": {"handle_unknown": {"enum": ["error"]}},
+                },
+            ],
+        },
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "0.23":
+    # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.OneHotEncoder.html
+    OneHotEncoder = OneHotEncoder.customize_schema(
+        drop={
+            "anyOf": [
+                {"enum": ["first", "if_binary"]},
+                {
+                    "type": "array",
+                    "items": {"type": "number"},
+                    "forOptimizer": False,
+                },
+                {"enum": [None]},
+            ],
+            "default": None,
+            "description": "Specifies a methodology to use to drop one of the categories per feature.",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(OneHotEncoder)

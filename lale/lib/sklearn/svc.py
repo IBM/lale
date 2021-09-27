@@ -168,13 +168,13 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "coef0 only significant in kernel ‘poly’ and ‘sigmoid’.",
+            "description": "Sparse precomputed kernels are not supported.",
             "anyOf": [
+                {"type": "object", "laleNot": "X/isSparse"},
                 {
                     "type": "object",
-                    "properties": {"kernel": {"enum": ["poly", "sigmoid"]}},
+                    "properties": {"kernel": {"not": {"enum": ["precomputed"]}}},
                 },
-                {"type": "object", "properties": {"coef0": {"enum": [0.0]}}},
             ],
         },
     ]

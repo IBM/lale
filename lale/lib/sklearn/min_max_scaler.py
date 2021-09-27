@@ -91,7 +91,12 @@ _hyperparams_schema = {
                     "default": True,
                 },
             },
-        }
+        },
+        {
+            "description": "MinMaxScaler does not support sparse input. Consider using MaxAbsScaler instead.",
+            "type": "object",
+            "laleNot": "X/isSparse",
+        },
     ],
 }
 

@@ -79,13 +79,14 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "If validate is False, then accept_sparse has no effect.",
+            "description": "If validate is False, then accept_sparse has no effect. Otherwise, if accept_sparse is false, sparse matrix inputs will cause an exception to be raised.",
             "anyOf": [
+                {"type": "object", "properties": {"validate": {"enum": [False]}}},
+                {"type": "object", "laleNot": "X/isSparse"},
                 {
                     "type": "object",
-                    "properties": {"validate": {"not": {"enum": [False]}}},
+                    "properties": {"accept_sparse": {"not": {"enum": [False]}}},
                 },
-                {"type": "object", "properties": {"accept_sparse": {"enum": [False]}}},
             ],
         },
     ]

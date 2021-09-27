@@ -146,28 +146,43 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "The combination of penalty=`l1` and loss=`hinge` is not supported",
+            "description": "The combination of penalty=`l1` and loss=`hinge` is not supported. "
+            "If multi_class='crammer_singer', the options loss, penalty and dual will be ignored.",
             "anyOf": [
                 {"type": "object", "properties": {"penalty": {"enum": ["l2"]}}},
                 {"type": "object", "properties": {"loss": {"enum": ["squared_hinge"]}}},
+                {
+                    "type": "object",
+                    "properties": {"multi_class": {"enum": ["crammer_singer"]}},
+                },
             ],
         },
         {
             "description": "The combination of penalty=`l2` and loss=`hinge` "
-            "is not supported when dual=False.",
+            "is not supported when dual=False. If multi_class='crammer_singer', the options loss, "
+            "penalty and dual will be ignored.",
             "anyOf": [
                 {"type": "object", "properties": {"penalty": {"enum": ["l1"]}}},
                 {"type": "object", "properties": {"loss": {"enum": ["squared_hinge"]}}},
                 {"type": "object", "properties": {"dual": {"enum": [True]}}},
+                {
+                    "type": "object",
+                    "properties": {"multi_class": {"enum": ["crammer_singer"]}},
+                },
             ],
         },
         {
             "description": "The combination of penalty=`l1` and "
-            "loss=`squared_hinge` is not supported when dual=True.",
+            "loss=`squared_hinge` is not supported when dual=True.  If multi_class='crammer_singer', "
+            "the options loss, penalty and dual will be ignored.",
             "anyOf": [
                 {"type": "object", "properties": {"penalty": {"enum": ["l2"]}}},
                 {"type": "object", "properties": {"loss": {"enum": ["hinge"]}}},
                 {"type": "object", "properties": {"dual": {"enum": [False]}}},
+                {
+                    "type": "object",
+                    "properties": {"multi_class": {"enum": ["crammer_singer"]}},
+                },
             ],
         },
     ]

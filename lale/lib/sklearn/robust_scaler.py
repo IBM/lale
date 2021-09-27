@@ -63,7 +63,14 @@ _hyperparams_schema = {
                     "description": "If False, try to avoid a copy and do inplace scaling instead.",
                 },
             },
-        }
+        },
+        {
+            "description": "From /preprocessing/_data.py:RobustScaler:fit, Exception: raise ValueError(     'Cannot center sparse matrices: use `with_centering=False` instead. See docstring for motivation and alternatives.'     ) ",
+            "anyOf": [
+                {"type": "object", "properties": {"with_centering": {"enum": [False]}}},
+                {"type": "object", "laleNot": "X/isSparse"},
+            ],
+        },
     ],
 }
 _input_fit_schema = {

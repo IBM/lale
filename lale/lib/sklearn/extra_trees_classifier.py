@@ -213,6 +213,13 @@ _hyperparams_schema = {
             "type": "object",
             "laleNot": "y/isSparse",
         },
+        {
+            "description": "Out of bag estimation only available if bootstrap=True",
+            "anyOf": [
+                {"type": "object", "properties": {"bootstrap": {"enum": [True]}}},
+                {"type": "object", "properties": {"oob_score": {"enum": [False]}}},
+            ],
+        },
     ],
 }
 

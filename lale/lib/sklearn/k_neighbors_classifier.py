@@ -112,40 +112,6 @@ _hyperparams_schema = {
                 },
             },
         },
-        {
-            "description": "The leaf size only matters for tree algorithms.",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "algorithm": {"enum": ["ball_tree", "kd_tree"]},
-                    },
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "leaf_size": {"enum": [30]},
-                    },
-                },
-            ],
-        },
-        {
-            "description": "The power parameter is specific to the minkowski metric.",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {
-                        "metric": {"enum": ["minkowski"]},
-                    },
-                },
-                {
-                    "type": "object",
-                    "properties": {
-                        "p": {"enum": [2]},
-                    },
-                },
-            ],
-        },
     ],
 }
 
