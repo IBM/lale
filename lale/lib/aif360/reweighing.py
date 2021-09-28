@@ -26,6 +26,7 @@ from .util import (
     _categorical_output_predict_schema,
     _categorical_supervised_input_fit_schema,
     _PandasToDatasetConverter,
+    _validate_fairness_info,
 )
 
 
@@ -39,6 +40,9 @@ class _ReweighingImpl:
         unfavorable_labels=None,
         redact=True
     ):
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, False
+        )
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.estimator = estimator

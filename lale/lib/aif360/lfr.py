@@ -28,6 +28,7 @@ from .util import (
     _categorical_supervised_input_fit_schema,
     _numeric_output_transform_schema,
     _PandasToDatasetConverter,
+    _validate_fairness_info,
     dataset_to_pandas,
 )
 
@@ -49,6 +50,9 @@ class _LFRImpl:
         verbose=0,
         seed=None,
     ):
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, False
+        )
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.unfavorable_labels = unfavorable_labels

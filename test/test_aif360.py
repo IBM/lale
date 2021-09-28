@@ -19,6 +19,7 @@ import urllib.request
 import zipfile
 
 import aif360
+import jsonschema
 import numpy as np
 import pandas as pd
 import sklearn.metrics
@@ -943,6 +944,49 @@ class TestAIF360Cat(unittest.TestCase):
             impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertRegex(log_context_manager.output[-1], "is ill-defined")
         self.assertTrue(np.isnan(impact))
+
+    def test_scorers_warn2(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "unfavorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "reference_group": [[26, 1000]]}
+            ],
+        }
+        with self.assertLogs(lale.lib.aif360.util.logger) as log_context_manager:
+            _ = lale.lib.aif360.disparate_impact(**fairness_info)
+        self.assertRegex(
+            log_context_manager.output[-1],
+            "overlap between favorable labels and unfavorable labels on 'good' and 'good'",
+        )
+
+    def test_scorers_warn3(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {"feature": "age", "reference_group": [[1, 2, 3]]}
+            ],
+        }
+        with self.assertRaises(jsonschema.ValidationError):
+            _ = lale.lib.aif360.disparate_impact(**fairness_info)
+
+    def test_scorers_warn4(self):
+        fairness_info = {
+            "favorable_labels": ["good"],
+            "protected_attributes": [
+                {
+                    "feature": "age",
+                    "reference_group": [[20, 40]],
+                    "monitored_group": [30],
+                }
+            ],
+        }
+        with self.assertLogs(lale.lib.aif360.util.logger) as log_context_manager:
+            _ = lale.lib.aif360.disparate_impact(**fairness_info)
+        self.assertRegex(
+            log_context_manager.output[-1],
+            "overlap between reference group and monitored group of feature 'age'",
+        )
 
     def _attempt_remi_creditg_pd_cat(
         self, fairness_info, trainable_remi, min_di, max_di
