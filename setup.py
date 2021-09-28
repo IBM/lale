@@ -95,6 +95,13 @@ extras_require = {
         "pyspark",
         "func_timeout",
     ],
+    "fairness": [
+        "liac-arff>=2.4.0",
+        "aif360>=0.4.0",
+        "BlackBoxAuditing",
+        "cvxpy>=1.0",
+        "fairlearn"
+    ],
 }
 
 # # Inserting tensorflow 1.x only for Python 3.7
