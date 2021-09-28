@@ -100,7 +100,7 @@ extras_require = {
         "aif360>=0.4.0",
         "BlackBoxAuditing",
         "cvxpy>=1.0",
-        "fairlearn"
+        "fairlearn",
     ],
 }
 
