@@ -65,7 +65,7 @@ _hyperparams_schema = {
             },
         },
         {
-            "description": "From /preprocessing/_data.py:RobustScaler:fit, Exception: raise ValueError(     'Cannot center sparse matrices: use `with_centering=False` instead. See docstring for motivation and alternatives.'     ) ",
+            "description": "Cannot center sparse matrices: use `with_centering=False` instead. See docstring for motivation and alternatives.",
             "anyOf": [
                 {"type": "object", "properties": {"with_centering": {"enum": [False]}}},
                 {"type": "object", "laleNot": "X/isSparse"},

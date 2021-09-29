@@ -85,7 +85,7 @@ _hyperparams_schema = {
                 {"type": "object", "laleNot": "X/isSparse"},
                 {
                     "type": "object",
-                    "properties": {"accept_sparse": {"not": {"enum": [False]}}},
+                    "properties": {"accept_sparse": {"enum": [True]}},
                 },
             ],
         },

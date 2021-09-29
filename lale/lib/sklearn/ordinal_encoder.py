@@ -318,7 +318,7 @@ In inverse_transform, an unknown category will be denoted as None.
 When this parameter is set to `ignore` and an unknown category is encountered during transform,
 the resulting encoding with be set to the value indicated by `encode_unknown_with` (this functionality is added by lale).
 """,
-                values=["error", "use_encoded_value"],
+                values=["error", "ignore", "use_encoded_value"],
                 default="error",
             ),
             unknown_value=AnyOf(
@@ -333,13 +333,17 @@ It has to be distinct from the values used to encode any of the categories in fi
     )
     OrdinalEncoder = OrdinalEncoder.customize_schema(
         constraint={
-            "description": "unknown_value should be an integer or np.nan when handle_unknown is 'use_encoded_value'. s",
+            "description": "unknown_value should be an integer or np.nan when handle_unknown is 'use_encoded_value'.",
             "anyOf": [
                 {
                     "type": "object",
                     "properties": {
                         "handle_unknown": {"not": {"enum": ["use_encoded_value"]}}
                     },
+                },
+                {
+                    "type": "object",
+                    "properties": {"unknown_value": {"enum": [np.nan]}},
                 },
                 {
                     "type": "object",
