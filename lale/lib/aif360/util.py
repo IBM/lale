@@ -190,6 +190,78 @@ FAIRNESS_INFO_SCHEMA = {
 }
 
 
+def _validate_fairness_info(
+    favorable_labels, protected_attributes, unfavorable_labels, check_schema
+):
+    if check_schema:
+        lale.type_checking.validate_schema_directly(
+            {
+                "favorable_labels": favorable_labels,
+                "protected_attributes": protected_attributes,
+                "unfavorable_labels": unfavorable_labels,
+            },
+            FAIRNESS_INFO_SCHEMA,
+        )
+
+    def _check_ranges(base_name, name, groups):
+        for group in groups:
+            if isinstance(group, list):
+                if group[0] > group[1]:
+                    if base_name is None:
+                        logger.warning(f"range {group} in {name} has min>max")
+                    else:
+                        logger.warning(
+                            f"range {group} in {name} of feature '{base_name}' has min>max"
+                        )
+
+    def _check_overlaps(base_name, name1, groups1, name2, groups2):
+        for g1 in groups1:
+            for g2 in groups2:
+                overlap = False
+                if isinstance(g1, list):
+                    if isinstance(g2, list):
+                        overlap = g1[0] <= g2[0] <= g1[1] or g1[0] <= g2[1] <= g1[1]
+                    else:
+                        overlap = g1[0] <= g2 <= g1[1]
+                else:
+                    if isinstance(g2, list):
+                        overlap = g2[0] <= g1 <= g2[1]
+                    else:
+                        overlap = g1 == g2
+                if overlap:
+                    s1 = f"'{g1}'" if isinstance(g1, str) else str(g1)
+                    s2 = f"'{g2}'" if isinstance(g2, str) else str(g2)
+                    if base_name is None:
+                        logger.warning(
+                            f"overlap between {name1} and {name2} on {s1} and {s2}"
+                        )
+                    else:
+                        logger.warning(
+                            f"overlap between {name1} and {name2} of feature '{base_name}' on {s1} and {s2}"
+                        )
+
+    _check_ranges(None, "favorable labels", favorable_labels)
+    if unfavorable_labels is not None:
+        _check_ranges(None, "unfavorable labels", unfavorable_labels)
+        _check_overlaps(
+            None,
+            "favorable labels",
+            favorable_labels,
+            "unfavorable labels",
+            unfavorable_labels,
+        )
+    for attr in protected_attributes:
+        base_name = attr["feature"]
+        reference = attr["reference_group"]
+        _check_ranges(base_name, "reference group", reference)
+        monitored = attr.get("monitored_group", None)
+        if monitored is not None:
+            _check_ranges(base_name, "monitored group", monitored)
+            _check_overlaps(
+                base_name, "reference group", reference, "monitored group", monitored
+            )
+
+
 class _PandasToDatasetConverter:
     def __init__(self, favorable_label, unfavorable_label, protected_attribute_names):
         self.favorable_label = favorable_label
@@ -254,6 +326,9 @@ class _ScorerFactory:
     def __init__(
         self, metric, favorable_labels, protected_attributes, unfavorable_labels
     ):
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, True
+        )
         if hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric):
             self.kind = "BinaryLabelDatasetMetric"
         elif hasattr(aif360.metrics.ClassificationMetric, metric):
@@ -834,6 +909,9 @@ class _BaseInEstimatorImpl:
         preparation,
         mitigator,
     ):
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, False
+        )
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.unfavorable_labels = unfavorable_labels
@@ -926,6 +1004,9 @@ class _BasePostEstimatorImpl:
         redact,
         mitigator,
     ):
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, True
+        )
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.unfavorable_labels = unfavorable_labels
@@ -1237,6 +1318,9 @@ def fair_stratified_train_test_split(
 
       - item 4+: Each argument in `*arrays`, if any, yields two items in the result, for the two splits of that array.
     """
+    _validate_fairness_info(
+        favorable_labels, protected_attributes, unfavorable_labels, True
+    )
     stratify = _column_for_stratification(
         X, y, favorable_labels, protected_attributes, unfavorable_labels
     )
@@ -1318,6 +1402,9 @@ class FairStratifiedKFold:
 
               Explicit seed.
         """
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, True
+        )
         self._fairness_info = {
             "favorable_labels": favorable_labels,
             "protected_attributes": protected_attributes,

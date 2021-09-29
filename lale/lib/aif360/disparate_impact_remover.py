@@ -28,6 +28,7 @@ from .util import (
     _categorical_input_transform_schema,
     _categorical_supervised_input_fit_schema,
     _numeric_output_transform_schema,
+    _validate_fairness_info,
 )
 
 
@@ -42,6 +43,9 @@ class _DisparateImpactRemoverImpl:
         preparation=None,
         repair_level=1.0,
     ):
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, False
+        )
         self.favorable_labels = favorable_labels
         self.protected_attributes = protected_attributes
         self.unfavorable_labels = unfavorable_labels
