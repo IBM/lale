@@ -329,6 +329,8 @@ class _ScorerFactory:
         _validate_fairness_info(
             favorable_labels, protected_attributes, unfavorable_labels, True
         )
+        if metric in ["disparate_impact", "statistical_parity_difference"]:
+            unfavorable_labels = None  # not used and may confound AIF360
         if hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric):
             self.kind = "BinaryLabelDatasetMetric"
         elif hasattr(aif360.metrics.ClassificationMetric, metric):
@@ -374,7 +376,15 @@ class _ScorerFactory:
                 y_pred.dtype,
             )
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
-        dataset_pred = self.pandas_to_dataset.convert(encoded_X, y_pred)
+        try:
+            dataset_pred = self.pandas_to_dataset.convert(encoded_X, y_pred)
+        except ValueError as e:
+            raise ValueError(
+                "The data has unexpected labels given the fairness info: "
+                f"favorable labels {self.fairness_info['favorable_labels']}, "
+                f"unfavorable labels {self.fairness_info['unfavorable_labels']}, "
+                f"unique values in y_pred {set(y_pred_orig)}."
+            ) from e
         if self.kind == "BinaryLabelDatasetMetric":
             fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
                 dataset_pred, self.unprivileged_groups, self.privileged_groups
