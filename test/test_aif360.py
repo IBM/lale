@@ -988,6 +988,34 @@ class TestAIF360Cat(unittest.TestCase):
             "overlap between reference group and monitored group of feature 'age'",
         )
 
+    def test_scorers_ternary_nonexhaustive(self):
+        X, y, fairness_info = lale.lib.aif360.fetch_nursery_df(preprocess=False)
+        self.assertEqual(
+            set(y), {"not_recom", "recommend", "very_recom", "priority", "spec_prior"}
+        )
+        fairness_info = {**fairness_info, "unfavorable_labels": ["not_recom"]}
+        self.assertEqual(
+            set(
+                fairness_info["favorable_labels"] + fairness_info["unfavorable_labels"]
+            ),
+            {"spec_prior", "not_recom"},
+        )
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di_measured = di_scorer.score_data(X=X, y_pred=y)
+        self.assertAlmostEqual(di_measured, 0.461, places=3)
+        sp_scorer = lale.lib.aif360.statistical_parity_difference(**fairness_info)
+        sp_measured = sp_scorer.score_data(X=X, y_pred=y)
+        self.assertAlmostEqual(sp_measured, -0.205, places=3)
+        sdi_scorer = lale.lib.aif360.symmetric_disparate_impact(**fairness_info)
+        sdi_measured = sdi_scorer.score_data(X=X, y_pred=y)
+        self.assertAlmostEqual(sdi_measured, 0.461, places=3)
+        adi_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fairness_info)
+        adi_measured = adi_scorer.score_data(X=X, y_pred=y, y_true=y)
+        self.assertAlmostEqual(adi_measured, 0.069, places=3)
+        ao_scorer = lale.lib.aif360.average_odds_difference(**fairness_info)
+        with self.assertRaisesRegex(ValueError, "unexpected labels"):
+            _ = ao_scorer.score_data(X=X, y_pred=y)
+
     def _attempt_remi_creditg_pd_cat(
         self, fairness_info, trainable_remi, min_di, max_di
     ):
