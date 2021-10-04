@@ -384,22 +384,6 @@ not.""",
                 {"type": "object", "properties": {"solver": {"enum": ["saga"]}}},
             ],
         },
-        {
-            "description": "The combination of penalty='l1' and loss='logistic_regression' are not supported when dual=True",
-            "anyOf": [
-                {
-                    "type": "object",
-                    "properties": {"solver": {"not": {"enum": ["liblinear"]}}},
-                },
-                {
-                    "allOf": [
-                        {"type": "object", "properties": {"penalty": {"enum": ["l1"]}}},
-                        {"type": "object", "properties": {"dual": {"enum": [False]}}},
-                    ]
-                },
-                {"type": "object", "properties": {"penalty": {"enum": ["l2"]}}},
-            ],
-        },
     ],
 }
 

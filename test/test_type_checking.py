@@ -809,6 +809,302 @@ class TestErrorMessages(unittest.TestCase):
             self.assertRegex(fix1, "remove unknown key 'activation'.*set penalty='l2'")
 
 
+class TestHyperparamConstraints(unittest.TestCase):
+    def setUp(self):
+        import scipy.sparse
+        from sklearn.datasets import load_iris
+
+        data = load_iris()
+        X, y = data.data, data.target
+        # self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+        sparse_X = scipy.sparse.csr_matrix(X)
+        self.sparse_X = sparse_X
+        self.X = X
+        self.y = y
+
+    def test_bagging_classifier(self):
+        from lale.lib.sklearn import BaggingClassifier
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingClassifier(**bad_hyperparams)
+
+    def test_bagging_classifier_2(self):
+        from lale.lib.sklearn import BaggingClassifier
+
+        bad_hyperparams = {"warm_start": True, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingClassifier(**bad_hyperparams)
+
+    def test_bagging_regressor(self):
+        from lale.lib.sklearn import BaggingRegressor
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingRegressor(**bad_hyperparams)
+
+    def test_bagging_regressor_2(self):
+        from lale.lib.sklearn import BaggingRegressor
+
+        bad_hyperparams = {"warm_start": True, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingRegressor(**bad_hyperparams)
+
+    def test_extra_trees_classifier(self):
+        from lale.lib.sklearn import ExtraTreesClassifier
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                ExtraTreesClassifier(**bad_hyperparams)
+
+    def test_extra_trees_regressor(self):
+        from lale.lib.sklearn import ExtraTreesRegressor
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                ExtraTreesRegressor(**bad_hyperparams)
+
+    def test_function_transformer(self):
+        from lale.lib.sklearn import FunctionTransformer
+
+        bad_hyperparams = {"validate": True, "accept_sparse": False}
+        bad_X = self.sparse_X
+        y = self.y
+        trainable = FunctionTransformer(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_linear_svc_1(self):
+        from lale.lib.sklearn import LinearSVC
+
+        bad_hyperparams = {"penalty": "l1", "loss": "hinge", "multi_class": "ovr"}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVC(**bad_hyperparams)
+
+    def test_linear_svc_2(self):
+        from lale.lib.sklearn import LinearSVC
+
+        bad_hyperparams = {
+            "penalty": "l2",
+            "loss": "hinge",
+            "dual": False,
+            "multi_class": "ovr",
+        }
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVC(**bad_hyperparams)
+
+    def test_linear_svc_3(self):
+        from lale.lib.sklearn import LinearSVC
+
+        bad_hyperparams = {
+            "penalty": "l1",
+            "loss": "squared_hinge",
+            "dual": True,
+            "multi_class": "ovr",
+        }
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVC(**bad_hyperparams)
+
+    def test_linear_svr(self):
+        from lale.lib.sklearn import LinearSVR
+
+        bad_hyperparams = {"loss": "epsilon_insensitive", "dual": False}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVR(**bad_hyperparams)
+
+    def test_logistic_regression_1(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        bad_hyperparams = {"solver": "liblinear", "penalty": "none"}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LogisticRegression(**bad_hyperparams)
+
+    def test_logistic_regression_2(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        bad_hyperparams = {
+            "penalty": "elasticnet",
+            "l1_ratio": None,
+            "solver": "liblinear",
+        }
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LogisticRegression(**bad_hyperparams)
+
+    def test_logistic_regression_3(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        bad_hyperparams = {
+            "penalty": "elasticnet",
+            "solver": "liblinear",
+            "l1_ratio": 0.5,
+        }
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LogisticRegression(**bad_hyperparams)
+
+    def test_missing_indicator(self):
+        from lale.lib.sklearn import MissingIndicator
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"missing_values": 0}
+        trainable = MissingIndicator(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_one_hot_encoder(self):
+        from lale.lib.sklearn import OneHotEncoder
+
+        bad_hyperparams = {"drop": "first", "handle_unknown": "ignore"}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                OneHotEncoder(**bad_hyperparams)
+
+    def test_ordinal_encoder_1(self):
+        from lale.lib.sklearn import OrdinalEncoder
+
+        bad_hyperparams = {"handle_unknown": "use_encoded_value", "unknown_value": None}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                OrdinalEncoder(**bad_hyperparams)
+
+    def test_ordinal_encoder_2(self):
+        from lale.lib.sklearn import OrdinalEncoder
+
+        bad_hyperparams = {"handle_unknown": "error", "unknown_value": 1}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                OrdinalEncoder(**bad_hyperparams)
+
+    def test_random_forest_classifier(self):
+        from lale.lib.sklearn import RandomForestClassifier
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                RandomForestClassifier(**bad_hyperparams)
+
+    def test_random_forest_regressor(self):
+        from lale.lib.sklearn import RandomForestRegressor
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                RandomForestRegressor(**bad_hyperparams)
+
+    def test_ridge_classifier_1(self):
+        from lale.lib.sklearn import RidgeClassifier
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"fit_intercept": True, "solver": "lsqr"}
+        trainable = RidgeClassifier(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_ridge_classifier_2(self):
+        from lale.lib.sklearn import RidgeClassifier
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"solver": "svd", "fit_intercept": False}
+        trainable = RidgeClassifier(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_ridge_1(self):
+        from lale.lib.sklearn import Ridge
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"fit_intercept": True, "solver": "lsqr"}
+        trainable = Ridge(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_ridge_2(self):
+        from lale.lib.sklearn import Ridge
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"solver": "svd", "fit_intercept": False}
+        trainable = Ridge(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_robust_scaler(self):
+        from lale.lib.sklearn import RobustScaler
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"with_centering": True}
+        trainable = RobustScaler(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_simple_imputer(self):
+        from lale.lib.sklearn import SimpleImputer
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"missing_values": 0}
+        trainable = SimpleImputer(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_svc(self):
+        from lale.lib.sklearn import SVC
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"kernel": "precomputed"}
+        trainable = SVC(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_svr(self):
+        from lale.lib.sklearn import SVR
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"kernel": "precomputed"}
+        trainable = SVR(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+
 class TestSchemaValidation(unittest.TestCase):
     def test_any(self):
         from lale.type_checking import is_subschema

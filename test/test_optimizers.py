@@ -381,7 +381,7 @@ class TestHyperopt(unittest.TestCase):
 
         X, y = load_iris(return_X_y=True)
 
-        max_opt_time = 2.0
+        max_opt_time = 10.0
         hoc = Hyperopt(
             estimator=planned_pipeline,
             max_evals=1,
