@@ -116,9 +116,7 @@ jobs:
     #   if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
     #   run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
     - name: Run test
-      run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
-    - name: Upload coverage metrics to CodeCov
-      uses: codecov/codecov-action@v1
+      run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
   test_newer:
     name: Test with newest sklearn
@@ -155,14 +153,12 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
-    - name: Install pytest and codecov
-      run: pip install pytest-cov codecov
+    - name: Install pytest
+      run: pip install pytest
     - name: Install latest scikit-learn, xgboost, and lightgbm
       run: pip install --upgrade --upgrade-strategy eager scikit-learn xgboost lightgbm
     - name: Run test
-      run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
-    - name: Upload coverage metrics to CodeCov
-      uses: codecov/codecov-action@v1
+      run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
   test_notebooks:
     name: Test Notebooks
@@ -203,9 +199,7 @@ jobs:
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Run test
-      run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
-    - name: Upload coverage metrics to CodeCov
-      uses: codecov/codecov-action@v1
+      run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys ${{matrix.test-case}}
 
   test_fairness:
     name: Test fairness install
