@@ -207,7 +207,6 @@ jobs:
     - name: Upload coverage metrics to CodeCov
       uses: codecov/codecov-action@v1
 
-
   test_fairness:
     name: Test fairness install
     runs-on: ubuntu-latest
@@ -230,6 +229,8 @@ jobs:
       run: sudo apt-get install graphviz swig
     - name: Install numpy
       run: pip install -U numpy
+    - name: Install pytest
+      run: pip install pytest-cov
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Run test
