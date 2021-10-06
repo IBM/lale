@@ -13,8 +13,16 @@
 # limitations under the License.
 
 import aif360.algorithms.preprocessing
-import aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools
-import aif360.datasets
+
+try:
+    import cvxpy  # noqa because the import is only done as a check and flake fails.
+
+    cvxpy_installed = True
+except ImportError:
+    cvxpy_installed = False
+
+if cvxpy_installed:
+    import aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools
 
 import lale.docstrings
 import lale.operators
@@ -40,6 +48,10 @@ class _OptimPreprocImpl:
         verbose=0,
         seed=None,
     ):
+        assert cvxpy_installed, """Your Python environment does not have cvxpy installed. You can install it with
+    pip install 'cvxpy>=1.0'
+or with
+    pip install 'lale[full]'"""
         if optimizer is None:
             optimizer = (
                 aif360.algorithms.preprocessing.optim_preproc_helpers.opt_tools.OptTools

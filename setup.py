@@ -97,10 +97,8 @@ extras_require = {
     ],
     "fairness": [
         "liac-arff>=2.4.0",
-        "aif360>=0.4.0",
+        "aif360<0.4.0",
         "BlackBoxAuditing",
-        "cvxpy>=1.0",
-        "fairlearn",
     ],
 }
 
