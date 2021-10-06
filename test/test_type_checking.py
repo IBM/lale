@@ -1116,34 +1116,39 @@ class TestHyperparamConstraints(unittest.TestCase):
 
         from lale.lib.sklearn import OrdinalEncoder
 
-        bad_hyperparams = {"handle_unknown": "use_encoded_value", "unknown_value": None}
-        trainable = sklearn.preprocessing.OrdinalEncoder(**bad_hyperparams)
-        with self.assertRaisesRegex(
-            TypeError,
-            "unknown_value should be an integer or np.nan when handle_unknown is 'use_encoded_value'",
-        ):
-            trainable.fit(self.X, self.y)
+        if sklearn.__version__ >= "0.24.1":
+            bad_hyperparams = {
+                "handle_unknown": "use_encoded_value",
+                "unknown_value": None,
+            }
+            trainable = sklearn.preprocessing.OrdinalEncoder(**bad_hyperparams)
+            with self.assertRaisesRegex(
+                TypeError,
+                "unknown_value should be an integer or np.nan when handle_unknown is 'use_encoded_value'",
+            ):
+                trainable.fit(self.X, self.y)
 
-        with EnableSchemaValidation():
-            with self.assertRaises(jsonschema.ValidationError):
-                OrdinalEncoder(**bad_hyperparams)
+            with EnableSchemaValidation():
+                with self.assertRaises(jsonschema.ValidationError):
+                    OrdinalEncoder(**bad_hyperparams)
 
     def test_ordinal_encoder_2(self):
         import sklearn
 
         from lale.lib.sklearn import OrdinalEncoder
 
-        bad_hyperparams = {"handle_unknown": "error", "unknown_value": 1}
-        trainable = sklearn.preprocessing.OrdinalEncoder(**bad_hyperparams)
-        with self.assertRaisesRegex(
-            TypeError,
-            "unknown_value should only be set when handle_unknown is 'use_encoded_value'",
-        ):
-            trainable.fit(self.X, self.y)
+        if sklearn.__version__ >= "0.24.1":
+            bad_hyperparams = {"handle_unknown": "error", "unknown_value": 1}
+            trainable = sklearn.preprocessing.OrdinalEncoder(**bad_hyperparams)
+            with self.assertRaisesRegex(
+                TypeError,
+                "unknown_value should only be set when handle_unknown is 'use_encoded_value'",
+            ):
+                trainable.fit(self.X, self.y)
 
-        with EnableSchemaValidation():
-            with self.assertRaises(jsonschema.ValidationError):
-                OrdinalEncoder(**bad_hyperparams)
+            with EnableSchemaValidation():
+                with self.assertRaises(jsonschema.ValidationError):
+                    OrdinalEncoder(**bad_hyperparams)
 
     def test_random_forest_classifier(self):
         import sklearn
