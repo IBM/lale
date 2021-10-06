@@ -126,27 +126,6 @@ _hyperparams_schema = {
                 },
             },
         },
-        {
-            "description": "solver {svd, lsqr, cholesky, saga} does not support fitting the intercept on sparse data. Please set the solver to 'auto' or 'sparse_cg', 'sag', or set `fit_intercept=False. ",
-            "anyOf": [
-                {"type": "object", "laleNot": "X/isSparse"},
-                {"type": "object", "properties": {"fit_intercept": {"enum": [False]}}},
-                {
-                    "type": "object",
-                    "properties": {"solver": {"enum": ["auto", "sparse_cg", "sag"]}},
-                },
-            ],
-        },
-        {
-            "description": "SVD solver does not support sparse inputs currently.",
-            "anyOf": [
-                {"type": "object", "laleNot": "X/isSparse"},
-                {
-                    "type": "object",
-                    "properties": {"solver": {"not": {"enum": ["svd"]}}},
-                },
-            ],
-        },
     ],
 }
 
