@@ -110,7 +110,17 @@ _hyperparams_schema = {
                     "description": "If True, a MissingIndicator transform will stack onto output of the imputer’s transform.",
                 },
             },
-        }
+        },
+        {
+            "description": "Imputation not possible when missing_values == 0 and input is sparse. Provide a dense array instead.",
+            "anyOf": [
+                {"type": "object", "laleNot": "X/isSparse"},
+                {
+                    "type": "object",
+                    "properties": {"missing_values": {"not": {"enum": [0]}}},
+                },
+            ],
+        },
     ],
 }
 

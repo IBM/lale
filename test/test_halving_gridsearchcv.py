@@ -65,7 +65,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
 
         X, y = load_iris(return_X_y=True)
 
-        max_opt_time = 2.0
+        max_opt_time = 10.0
         hoc = HalvingGridSearchCV(
             estimator=planned_pipeline,
             cv=3,

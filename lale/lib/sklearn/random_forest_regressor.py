@@ -232,7 +232,19 @@ _hyperparams_schema = {
                     "description": "When set to True, reuse the solution of the previous call to fit and add more estimators to the ensemble, otherwise, just fit a whole new forest.",
                 },
             },
-        }
+        },
+        {
+            "description": "This classifier does not support sparse labels.",
+            "type": "object",
+            "laleNot": "y/isSparse",
+        },
+        {
+            "description": "Out of bag estimation only available if bootstrap=True.",
+            "anyOf": [
+                {"type": "object", "properties": {"bootstrap": {"enum": [True]}}},
+                {"type": "object", "properties": {"oob_score": {"enum": [False]}}},
+            ],
+        },
     ],
 }
 

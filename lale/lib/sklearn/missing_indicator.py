@@ -71,6 +71,16 @@ _hyperparams_schema = {
                 },
             ],
         },
+        {
+            "description": "Sparse input with missing_values=0 is not supported. Provide a dense array instead.",
+            "anyOf": [
+                {"type": "object", "laleNot": "X/isSparse"},
+                {
+                    "type": "object",
+                    "properties": {"missing_values": {"not": {"enum": [0]}}},
+                },
+            ],
+        },
     ],
 }
 _input_fit_schema = {

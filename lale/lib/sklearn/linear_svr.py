@@ -70,9 +70,7 @@ The strength of the regularization is inversely proportional to C. Must be stric
                 },
                 "loss": {
                     "enum": [
-                        "hinge",
                         "squared_epsilon_insensitive",
-                        "squared_hinge",
                         "epsilon_insensitive",
                     ],
                     "default": "epsilon_insensitive",
@@ -126,7 +124,17 @@ Note that this setting takes advantage of a per-process runtime setting in libli
                     "description": "The maximum number of iterations to be run.",
                 },
             },
-        }
+        },
+        {
+            "description": "loss='epsilon_insensitive' is not supported when dual=False.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"loss": {"enum": ["squared_epsilon_insensitive"]}},
+                },
+                {"type": "object", "properties": {"dual": {"enum": [True]}}},
+            ],
+        },
     ],
 }
 _input_fit_schema = {

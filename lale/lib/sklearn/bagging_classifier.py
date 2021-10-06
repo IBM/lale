@@ -221,7 +221,21 @@ _hyperparams_schema = {
                     "description": "Controls the verbosity when fitting and predicting.",
                 },
             },
-        }
+        },
+        {
+            "description": "Out of bag estimation only available if bootstrap=True",
+            "anyOf": [
+                {"type": "object", "properties": {"bootstrap": {"enum": [True]}}},
+                {"type": "object", "properties": {"oob_score": {"enum": [False]}}},
+            ],
+        },
+        {
+            "description": "Out of bag estimate only available if warm_start=False",
+            "anyOf": [
+                {"type": "object", "properties": {"warm_start": {"enum": [False]}}},
+                {"type": "object", "properties": {"oob_score": {"enum": [False]}}},
+            ],
+        },
     ],
 }
 

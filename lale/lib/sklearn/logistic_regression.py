@@ -341,49 +341,49 @@ not.""",
                 },
             ],
         },
-        # {
-        #     "description": "Penalty elasticnet is only supported by the saga solver.",
-        #     "anyOf": [
-        #         {
-        #             "type": "object",
-        #             "properties": {"penalty": {"not": {"enum": ["elasticnet"]}}},
-        #         },
-        #         {"type": "object", "properties": {"solver": {"enum": ["saga"]}}},
-        #     ],
-        # },
-        # {
-        #     "description": "When penalty is elasticnet, l1_ratio must be between 0 and 1.",
-        #     "anyOf": [
-        #         {
-        #             "type": "object",
-        #             "properties": {"penalty": {"not": {"enum": ["elasticnet"]}}},
-        #         },
-        #         {
-        #             "type": "object",
-        #             "properties": {
-        #                 "l1_ratio": {
-        #                     "type": "number",
-        #                     "minimum": 0.0,
-        #                     "exclusiveMinimum": True,
-        #                     "maximum": 1.0,
-        #                 }
-        #             },
-        #         },
-        #     ],
-        # },
-        # {
-        #     "description": "Solver liblinear does not support penalty none.",
-        #     "anyOf": [
-        #         {
-        #             "type": "object",
-        #             "properties": {"solver": {"not": {"enum": ["liblinear"]}}},
-        #         },
-        #         {
-        #             "type": "object",
-        #             "properties": {"penalty": {"enum": ["l1", "l2", "elasticnet"]}},
-        #         },
-        #     ],
-        # },
+        {
+            "description": "penalty='none' is not supported for the liblinear solver",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"solver": {"not": {"enum": ["liblinear"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"penalty": {"not": {"enum": ["none"]}}},
+                },
+            ],
+        },
+        {
+            "description": "When penalty is elasticnet, l1_ratio must be between 0 and 1.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"penalty": {"not": {"enum": ["elasticnet"]}}},
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "l1_ratio": {
+                            "type": "number",
+                            "minimum": 0.0,
+                            "exclusiveMinimum": True,
+                            "maximum": 1.0,
+                        }
+                    },
+                },
+            ],
+        },
+        {
+            "description": "Only 'saga' solver supports elasticnet penalty",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"penalty": {"not": {"enum": ["elasticnet"]}}},
+                },
+                {"type": "object", "properties": {"solver": {"enum": ["saga"]}}},
+            ],
+        },
     ],
 }
 

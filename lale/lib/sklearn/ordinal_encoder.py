@@ -331,5 +331,40 @@ It has to be distinct from the values used to encode any of the categories in fi
             set_as_available=True,
         ),
     )
+    OrdinalEncoder = OrdinalEncoder.customize_schema(
+        constraint={
+            "description": "unknown_value should be an integer or np.nan when handle_unknown is 'use_encoded_value'.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "handle_unknown": {"not": {"enum": ["use_encoded_value"]}}
+                    },
+                },
+                {
+                    "type": "object",
+                    "properties": {"unknown_value": {"enum": [np.nan]}},
+                },
+                {
+                    "type": "object",
+                    "properties": {"unknown_value": {"type": "integer"}},
+                },
+            ],
+        },
+        set_as_available=True,
+    )
+    OrdinalEncoder = OrdinalEncoder.customize_schema(
+        constraint={
+            "description": "unknown_value should only be set when handle_unknown is 'use_encoded_value'.",
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {"handle_unknown": {"enum": ["use_encoded_value"]}},
+                },
+                {"type": "object", "properties": {"unknown_value": {"enum": [None]}}},
+            ],
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(OrdinalEncoder)

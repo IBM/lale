@@ -493,7 +493,7 @@ class TestSpuriousSideConstraintsClassification(unittest.TestCase):
         reg.fit(self.X_train, self.y_train)
 
     def test_ridge_classifier(self):
-        reg = RidgeClassifier(fit_intercept=False, normalize=True)
+        reg = RidgeClassifier(fit_intercept=False)
         reg.fit(self.X_train, self.y_train)
 
     def test_ridge_classifier_1(self):

@@ -809,6 +809,502 @@ class TestErrorMessages(unittest.TestCase):
             self.assertRegex(fix1, "remove unknown key 'activation'.*set penalty='l2'")
 
 
+class TestHyperparamConstraints(unittest.TestCase):
+    def setUp(self):
+        import scipy.sparse
+        import sklearn.datasets
+
+        data = sklearn.datasets.load_iris()
+        X, y = data.data, data.target
+
+        sparse_X = scipy.sparse.csr_matrix(X)
+        self.sparse_X = sparse_X
+        self.X = X
+        self.y = y
+
+        self.regression_X, self.regression_y = sklearn.datasets.make_regression(
+            n_features=4, n_informative=2, random_state=0, shuffle=False
+        )
+
+    def test_bagging_classifier(self):
+        import sklearn
+
+        from lale.lib.sklearn import BaggingClassifier
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        trainable = sklearn.ensemble.BaggingClassifier(**bad_hyperparams)
+
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimation only available if bootstrap=True"
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingClassifier(**bad_hyperparams)
+
+    def test_bagging_classifier_2(self):
+        import sklearn
+
+        from lale.lib.sklearn import BaggingClassifier
+
+        bad_hyperparams = {"warm_start": True, "oob_score": True}
+        trainable = sklearn.ensemble.BaggingClassifier(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimate only available if warm_start=False"
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingClassifier(**bad_hyperparams)
+
+    def test_bagging_regressor(self):
+        import sklearn
+
+        from lale.lib.sklearn import BaggingRegressor
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        trainable = sklearn.ensemble.BaggingRegressor(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimation only available if bootstrap=True"
+        ):
+            trainable.fit(self.regression_X, self.regression_y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingRegressor(**bad_hyperparams)
+
+    def test_bagging_regressor_2(self):
+        import sklearn
+
+        from lale.lib.sklearn import BaggingRegressor
+
+        bad_hyperparams = {"warm_start": True, "oob_score": True}
+        trainable = sklearn.ensemble.BaggingRegressor(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimate only available if warm_start=False"
+        ):
+            trainable.fit(self.regression_X, self.regression_y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                BaggingRegressor(**bad_hyperparams)
+
+    def test_extra_trees_classifier(self):
+        import sklearn
+
+        from lale.lib.sklearn import ExtraTreesClassifier
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        trainable = sklearn.ensemble.ExtraTreesClassifier(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimation only available if bootstrap=True"
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                ExtraTreesClassifier(**bad_hyperparams)
+
+    def test_extra_trees_regressor(self):
+        import sklearn
+
+        from lale.lib.sklearn import ExtraTreesRegressor
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        trainable = sklearn.ensemble.ExtraTreesRegressor(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimation only available if bootstrap=True"
+        ):
+            trainable.fit(self.regression_X, self.regression_y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                ExtraTreesRegressor(**bad_hyperparams)
+
+    def test_function_transformer(self):
+        import sklearn
+
+        from lale.lib.sklearn import FunctionTransformer
+
+        bad_hyperparams = {"validate": True, "accept_sparse": False}
+        bad_X = self.sparse_X
+        y = self.y
+
+        trainable = sklearn.preprocessing.FunctionTransformer(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            TypeError, "A sparse matrix was passed, but dense data is required."
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = FunctionTransformer(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_linear_svc_1(self):
+        import sklearn
+
+        from lale.lib.sklearn import LinearSVC
+
+        bad_hyperparams = {"penalty": "l1", "loss": "hinge", "multi_class": "ovr"}
+        trainable = sklearn.svm.LinearSVC(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError,
+            "The combination of penalty='l1' and loss='hinge' is not supported",
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVC(**bad_hyperparams)
+
+    def test_linear_svc_2(self):
+        import sklearn
+
+        from lale.lib.sklearn import LinearSVC
+
+        bad_hyperparams = {
+            "penalty": "l2",
+            "loss": "hinge",
+            "dual": False,
+            "multi_class": "ovr",
+        }
+        trainable = sklearn.svm.LinearSVC(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError,
+            "The combination of penalty='l2' and loss='hinge' are not supported when dual=False",
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVC(**bad_hyperparams)
+
+    def test_linear_svc_3(self):
+        import sklearn
+
+        from lale.lib.sklearn import LinearSVC
+
+        bad_hyperparams = {
+            "penalty": "l1",
+            "loss": "squared_hinge",
+            "dual": True,
+            "multi_class": "ovr",
+        }
+        trainable = sklearn.svm.LinearSVC(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError,
+            "The combination of penalty='l1' and loss='squared_hinge' are not supported when dual=True",
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVC(**bad_hyperparams)
+
+    def test_linear_svr(self):
+        import sklearn
+
+        from lale.lib.sklearn import LinearSVR
+
+        bad_hyperparams = {"loss": "epsilon_insensitive", "dual": False}
+        trainable = sklearn.svm.LinearSVR(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError,
+            "The combination of penalty='l2' and loss='epsilon_insensitive' are not supported when dual=False",
+        ):
+            trainable.fit(self.regression_X, self.regression_y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LinearSVR(**bad_hyperparams)
+
+    def test_logistic_regression_1(self):
+        import sklearn
+
+        from lale.lib.sklearn import LogisticRegression
+
+        bad_hyperparams = {"solver": "liblinear", "penalty": "none"}
+        trainable = sklearn.linear_model.LogisticRegression(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "penalty='none' is not supported for the liblinear solver"
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LogisticRegression(**bad_hyperparams)
+
+    def test_logistic_regression_2(self):
+        import sklearn
+
+        from lale.lib.sklearn import LogisticRegression
+
+        bad_hyperparams = {
+            "penalty": "elasticnet",
+            "l1_ratio": None,
+            "solver": "saga",
+        }
+        trainable = sklearn.linear_model.LogisticRegression(**bad_hyperparams)
+        with self.assertRaisesRegex(ValueError, "l1_ratio must be between 0 and 1"):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LogisticRegression(**bad_hyperparams)
+
+    def test_logistic_regression_3(self):
+        import sklearn
+
+        from lale.lib.sklearn import LogisticRegression
+
+        bad_hyperparams = {
+            "penalty": "elasticnet",
+            "solver": "liblinear",
+            "l1_ratio": 0.5,
+        }
+        trainable = sklearn.linear_model.LogisticRegression(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Only 'saga' solver supports elasticnet penalty"
+        ):
+            trainable.fit(self.X, self.y)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                LogisticRegression(**bad_hyperparams)
+
+    def test_missing_indicator(self):
+        import sklearn
+
+        from lale.lib.sklearn import MissingIndicator
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"missing_values": 0}
+
+        trainable = sklearn.impute.MissingIndicator(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Sparse input with missing_values=0 is not supported."
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = MissingIndicator(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_one_hot_encoder(self):
+        import sklearn
+
+        from lale.lib.sklearn import OneHotEncoder
+
+        bad_hyperparams = {"drop": "first", "handle_unknown": "ignore"}
+        trainable = sklearn.preprocessing.OneHotEncoder(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError,
+            "`handle_unknown` must be 'error' when the drop parameter is specified",
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                OneHotEncoder(**bad_hyperparams)
+
+    def test_ordinal_encoder_1(self):
+        import sklearn
+
+        from lale.lib.sklearn import OrdinalEncoder
+
+        if sklearn.__version__ >= "0.24.1":
+            bad_hyperparams = {
+                "handle_unknown": "use_encoded_value",
+                "unknown_value": None,
+            }
+            trainable = sklearn.preprocessing.OrdinalEncoder(**bad_hyperparams)
+            with self.assertRaisesRegex(
+                TypeError,
+                "unknown_value should be an integer or np.nan when handle_unknown is 'use_encoded_value'",
+            ):
+                trainable.fit(self.X, self.y)
+
+            with EnableSchemaValidation():
+                with self.assertRaises(jsonschema.ValidationError):
+                    OrdinalEncoder(**bad_hyperparams)
+
+    def test_ordinal_encoder_2(self):
+        import sklearn
+
+        from lale.lib.sklearn import OrdinalEncoder
+
+        if sklearn.__version__ >= "0.24.1":
+            bad_hyperparams = {"handle_unknown": "error", "unknown_value": 1}
+            trainable = sklearn.preprocessing.OrdinalEncoder(**bad_hyperparams)
+            with self.assertRaisesRegex(
+                TypeError,
+                "unknown_value should only be set when handle_unknown is 'use_encoded_value'",
+            ):
+                trainable.fit(self.X, self.y)
+
+            with EnableSchemaValidation():
+                with self.assertRaises(jsonschema.ValidationError):
+                    OrdinalEncoder(**bad_hyperparams)
+
+    def test_random_forest_classifier(self):
+        import sklearn
+
+        from lale.lib.sklearn import RandomForestClassifier
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        trainable = sklearn.ensemble.RandomForestClassifier(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimation only available if bootstrap=True"
+        ):
+            trainable.fit(self.X, self.y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                RandomForestClassifier(**bad_hyperparams)
+
+    def test_random_forest_regressor(self):
+        import sklearn
+
+        from lale.lib.sklearn import RandomForestRegressor
+
+        bad_hyperparams = {"bootstrap": False, "oob_score": True}
+        trainable = sklearn.ensemble.RandomForestRegressor(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "Out of bag estimation only available if bootstrap=True"
+        ):
+            trainable.fit(self.regression_X, self.regression_y)
+
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                RandomForestRegressor(**bad_hyperparams)
+
+    def test_ridge_1(self):
+        import sklearn
+
+        from lale.lib.sklearn import Ridge
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"fit_intercept": True, "solver": "lsqr"}
+        trainable = sklearn.linear_model.Ridge(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError, "does not support fitting the intercept on sparse data."
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = Ridge(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_ridge_2(self):
+        import sklearn
+
+        from lale.lib.sklearn import Ridge
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"solver": "svd", "fit_intercept": False}
+        trainable = sklearn.linear_model.Ridge(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            TypeError, "SVD solver does not support sparse inputs currently"
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = Ridge(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_robust_scaler(self):
+        import sklearn
+
+        from lale.lib.sklearn import RobustScaler
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"with_centering": True}
+        trainable = sklearn.preprocessing.RobustScaler(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError,
+            "Cannot center sparse matrices: use `with_centering=False` instead.",
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = RobustScaler(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_simple_imputer(self):
+        import sklearn
+
+        from lale.lib.sklearn import SimpleImputer
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"missing_values": 0}
+        trainable = sklearn.impute.SimpleImputer(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            ValueError,
+            "Imputation not possible when missing_values == 0 and input is sparse.",
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = SimpleImputer(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_svc(self):
+        import sklearn
+
+        from lale.lib.sklearn import SVC
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"kernel": "precomputed"}
+        trainable = sklearn.svm.SVC(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            TypeError, "Sparse precomputed kernels are not supported."
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = SVC(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+    def test_svr(self):
+        import sklearn
+
+        from lale.lib.sklearn import SVR
+
+        bad_X = self.sparse_X
+        y = self.y
+
+        bad_hyperparams = {"kernel": "precomputed"}
+        trainable = sklearn.svm.SVR(**bad_hyperparams)
+        with self.assertRaisesRegex(
+            TypeError, "Sparse precomputed kernels are not supported."
+        ):
+            trainable.fit(bad_X, self.y)
+
+        trainable = SVR(**bad_hyperparams)
+        with EnableSchemaValidation():
+            with self.assertRaises(jsonschema.ValidationError):
+                trainable.fit(bad_X, y)
+
+
 class TestSchemaValidation(unittest.TestCase):
     def test_any(self):
         from lale.type_checking import is_subschema

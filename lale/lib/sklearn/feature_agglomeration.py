@@ -112,6 +112,11 @@ _hyperparams_schema = {
                 },
             ],
         },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.",
+            "type": "object",
+            "laleNot": "X/isSparse",
+        },
     ],
 }
 

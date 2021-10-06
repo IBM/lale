@@ -45,7 +45,12 @@ _hyperparams_schema = {
                     "description": "Portion of the largest variance of all features that is added to variances for calculation stability.",
                 },
             },
-        }
+        },
+        {
+            "description": "A sparse matrix was passed, but dense data is required. Use X.toarray() to convert to a dense numpy array.",
+            "type": "object",
+            "laleNot": "X/isSparse",
+        },
     ],
 }
 _input_fit_schema = {

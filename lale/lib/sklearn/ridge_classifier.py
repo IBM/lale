@@ -125,7 +125,7 @@ _hyperparams_schema = {
                     "description": "The seed of the pseudo random number generator to use when shuffling",
                 },
             },
-        }
+        },
     ],
 }
 
