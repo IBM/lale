@@ -218,9 +218,8 @@ jobs:
         test-case:
         - test/test_aif360.py
         - test/test_aif360_ensembles.py
-        python-version: 3.7
+        python-version: [3.7]
         setup-target: ['.[fairness]']
-
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
