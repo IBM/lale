@@ -1182,46 +1182,6 @@ class TestHyperparamConstraints(unittest.TestCase):
             with self.assertRaises(jsonschema.ValidationError):
                 RandomForestRegressor(**bad_hyperparams)
 
-    def test_ridge_classifier_1(self):
-        import sklearn
-
-        from lale.lib.sklearn import RidgeClassifier
-
-        bad_X = self.sparse_X
-        y = self.y
-
-        bad_hyperparams = {"fit_intercept": True, "solver": "lsqr"}
-        trainable = sklearn.linear_model.RidgeClassifier(**bad_hyperparams)
-        with self.assertRaisesRegex(
-            ValueError, "does not support fitting the intercept on sparse data."
-        ):
-            trainable.fit(bad_X, self.y)
-
-        trainable = RidgeClassifier(**bad_hyperparams)
-        with EnableSchemaValidation():
-            with self.assertRaises(jsonschema.ValidationError):
-                trainable.fit(bad_X, y)
-
-    def test_ridge_classifier_2(self):
-        import sklearn
-
-        from lale.lib.sklearn import RidgeClassifier
-
-        bad_X = self.sparse_X
-        y = self.y
-
-        bad_hyperparams = {"solver": "svd", "fit_intercept": False}
-        trainable = sklearn.linear_model.RidgeClassifier(**bad_hyperparams)
-        with self.assertRaisesRegex(
-            TypeError, "SVD solver does not support sparse inputs currently"
-        ):
-            trainable.fit(bad_X, self.y)
-
-        trainable = RidgeClassifier(**bad_hyperparams)
-        with EnableSchemaValidation():
-            with self.assertRaises(jsonschema.ValidationError):
-                trainable.fit(bad_X, y)
-
     def test_ridge_1(self):
         import sklearn
 
