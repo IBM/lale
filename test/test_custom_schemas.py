@@ -349,6 +349,34 @@ class TestCustomSchema(unittest.TestCase):
                 globals()[sym] = obj
 
 
+class TestConstraintDropping(unittest.TestCase):
+    def test_constraint_dropping(self):
+        from lale.lib.sklearn import LogisticRegression
+        from lale.operators import make_operator
+        from lale.search.schema2search_space import op_to_search_space
+
+        orig_schemas = LogisticRegression._schemas
+        mod_schemas = {
+            **orig_schemas,
+            "properties": {
+                **orig_schemas["properties"],
+                "hyperparams": {
+                    "allOf": [
+                        s if i == 0 else {**s, "forOptimizer": False}
+                        for i, s in enumerate(
+                            orig_schemas["properties"]["hyperparams"]["allOf"]
+                        )
+                    ]
+                },
+            },
+        }
+        orig_space = op_to_search_space(LogisticRegression)
+        mod_op = make_operator(LogisticRegression._impl_class(), mod_schemas)
+        mod_space = op_to_search_space(mod_op)
+        # dropping constraints makes the search space smaller
+        self.assertGreater(len(str(orig_space)), len(str(mod_space)))
+
+
 class TestConstraintMerging(unittest.TestCase):
     def test_override_float_param1(self):
         from lale.lib.sklearn import PCA

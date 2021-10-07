@@ -28,6 +28,7 @@ from lale.schema_simplifier import (
     filterForOptimizer,
     findRelevantFields,
     narrowToGivenRelevantFields,
+    narrowToRelevantConstraints,
     simplify,
 )
 from lale.schema_utils import (
@@ -576,6 +577,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     def schemaToSimplifiedAndSearchSpace(
         self, longName: str, name: str, schema: JsonSchema
     ) -> Tuple[Optional[JsonSchema], Optional[SearchSpace]]:
+        schema = narrowToRelevantConstraints(schema)
         relevantFields = findRelevantFields(schema)
         if relevantFields:
             schema = narrowToGivenRelevantFields(schema, relevantFields)
