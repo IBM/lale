@@ -494,19 +494,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         op: Optional[IndividualOp] = self._final_individual_op
         model = None
         if op is not None:
-            # if fit was called, we want to use trained result
-            # even if the code uses the original operrator
-            # since sklearn assumes that fit mutates the operator
-            if hasattr(op, "_trained"):
-                tr_op: Any = op._trained
-                assert isinstance(tr_op, TrainedIndividualOp)
-                op = tr_op
-            if hasattr(op, "_impl"):
-                impl = op._impl_instance()
-                if hasattr(impl, "_wrapped_model"):
-                    model = impl._wrapped_model
-                else:
-                    model = impl
+            model = op.impl
         return "passthrough" if model is None else model
 
     @property
@@ -1786,7 +1774,9 @@ class IndividualOp(Operator):
     def _impl_class(self):
         return _WithoutGetParams.unwrap(self._wrapped_impl_class())
 
-    def _impl_instance(self):
+    def _impl_instance(self) -> Any:
+        hyperparams: Mapping[str, Any]
+
         if not self._is_instantiated():
             defaults = self.get_defaults()
             all_hps = self.hyperparams_all()
@@ -1811,12 +1801,39 @@ class IndividualOp(Operator):
         return self._impl
 
     @property
-    def impl(self):
+    def impl(self) -> Any:
+        """Returns the underlying impl.  This can be used to access additional
+        field and methods not exposed by Lale.  If only the type of the
+        impl is needed, please use self.impl_class instead, as it can be more efficient.
+
+        If the found impl has a _wrapped_model, it will be returned instead
+        """
+        model = self.shallow_impl
+        if model is None:
+            return None
+        while True:
+            base_model = getattr(model, "_wrapped_model", model)
+            if base_model is None or base_model is model:
+                return model
+            model = base_model
+        return model
+
+    @property
+    def shallow_impl(self) -> Any:
         """Returns the underlying impl.  This can be used to access additional
         field and methods not exposed by Lale.  If only the type of the
         impl is needed, please use self.impl_class instead, as it can be more efficient.
         """
-        return self._impl_instance()
+        # if fit was called, we want to use trained result
+        # even if the code uses the original operrator
+        # since sklearn assumes that fit mutates the operator
+        op = self
+        if hasattr(op, "_trained"):
+            tr_op: Any = op._trained
+            if tr_op is not None:
+                assert isinstance(tr_op, TrainedIndividualOp)
+                op = tr_op
+        return op._impl_instance()
 
     @property
     def impl_class(self) -> type:
@@ -2345,7 +2362,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
 
         if isinstance(self, TrainedIndividualOp):
-            trainable_impl = self.impl
+            trainable_impl = self._impl_instance()
         else:
             trainable_impl = self._clone_impl()
 
@@ -2383,7 +2400,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
 
         if isinstance(self, TrainedIndividualOp):
-            trainable_impl = self.impl
+            trainable_impl = self._impl_instance()
         else:
             trainable_impl = self._clone_impl()
 

@@ -62,7 +62,7 @@ class _OptimizeLast:
         )
 
     def __getattr__(self, item):
-        return getattr(self._suffix_optimizer.impl, item)
+        return getattr(self._suffix_optimizer.shallow_impl, item)
 
     def fit(self, X_train, y_train=None, **kwargs):
         return self._suffix_optimizer.fit(X_train, y_train, **kwargs)
