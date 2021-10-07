@@ -36,4 +36,4 @@ clean:
 	-rm -rf examples/.ipynb_checkpoints
 	-rm -rf lale/search/__pycache__
 	-rm -rf lale/lib/lale/__pycache__
-.PHONY: clean docker% docker_build% docker_run%
+.PHONY: clean run_tests docker% docker_build% docker_run%

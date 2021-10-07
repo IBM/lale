@@ -51,7 +51,7 @@ following in the ``lale`` directory:
 .. code:: Bash
 
     export PYTHONPATH=`pwd`
-    python -m unittest test.test.TestLogisticRegression
+    python -m unittest test.test_core_classifiers.TestLogisticRegression
 
 The output should look like::
 
