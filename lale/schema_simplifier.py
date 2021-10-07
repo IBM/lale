@@ -1096,8 +1096,27 @@ def filterForOptimizer(schema: JsonSchema) -> Optional[JsonSchema]:
     return schema
 
 
+def narrowToRelevantConstraints(schema: JsonSchema) -> JsonSchema:
+    # only narrow in top-level conjuncts, to avoid tricky reasoning
+    if "allOf" not in schema:
+        return schema
+    # drop conjuncts that are explicitly marked as not relevant to
+    # optimizer, to reduce cost in the simplify() call that would be
+    # wasted when a filterForOptimizer() call later drops them anyway
+    result = {
+        **schema,
+        "allOf": [
+            narrowToRelevantConstraints(s)
+            for s in schema["allOf"]
+            if s.get("forOptimizer", True)
+        ],
+    }
+    return result
+
+
 def narrowSimplifyAndFilter(schema: JsonSchema, floatAny: bool) -> Optional[JsonSchema]:
-    n_schema = narrowToRelevantFields(schema)
-    simplified_schema = simplify(n_schema, floatAny)
+    nc_schema = narrowToRelevantConstraints(schema)
+    nf_schema = narrowToRelevantFields(nc_schema)
+    simplified_schema = simplify(nf_schema, floatAny)
     filtered_schema = filterForOptimizer(simplified_schema)
     return filtered_schema

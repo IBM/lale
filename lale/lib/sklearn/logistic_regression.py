@@ -343,6 +343,7 @@ not.""",
         },
         {
             "description": "penalty='none' is not supported for the liblinear solver",
+            "forOptimizer": False,
             "anyOf": [
                 {
                     "type": "object",
@@ -356,6 +357,7 @@ not.""",
         },
         {
             "description": "When penalty is elasticnet, l1_ratio must be between 0 and 1.",
+            "forOptimizer": False,
             "anyOf": [
                 {
                     "type": "object",
@@ -376,6 +378,7 @@ not.""",
         },
         {
             "description": "Only 'saga' solver supports elasticnet penalty",
+            "forOptimizer": False,
             "anyOf": [
                 {
                     "type": "object",
