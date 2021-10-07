@@ -48,7 +48,7 @@ else:
         "hyperopt",
         "jsonschema",
         "jsonsubschema",
-        "scikit-learn>=0.20.3",
+        "scikit-learn<1.0",
         "scipy",
         "pandas",
         "decorator",
