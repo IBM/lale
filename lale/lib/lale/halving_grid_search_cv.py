@@ -189,11 +189,13 @@ class _HalvingGridSearchCVImpl:
             except BaseException as e:
                 if obs is not None:
                     assert isinstance(observed_op, Observing)  # type: ignore
-                    impl = observed_op.impl  # type: ignore
+                    impl = observed_op.shallow_impl  # type: ignore
                     impl.failObserving("optimize", e)
                 raise
 
-            impl = getattr(be, "impl", None)
+            impl = None
+            if isinstance(be, lale.operators.Operator):
+                impl = be._impl_instance()
             if impl is not None:
                 assert isinstance(be, Observing)  # type: ignore
                 be = impl.getOp()

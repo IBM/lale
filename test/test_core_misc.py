@@ -219,6 +219,20 @@ class TestMethodParameters(unittest.TestCase):
 #        self.assertEqual(trained.steps()[1].impl._fit_params.get("fit_version", None), 5)
 
 
+class TestWrappedImpl(unittest.TestCase):
+    def test_impl(self):
+        import sklearn.preprocessing._encoders as skohe
+
+        ohe = OneHotEncoder()
+        self.assertIsInstance(ohe.impl, skohe.OneHotEncoder)
+
+    def test_shallow_impl(self):
+        import lale.lib.sklearn.one_hot_encoder as lohe
+
+        ohe = OneHotEncoder()
+        self.assertIsInstance(ohe.shallow_impl, lohe._OneHotEncoderImpl)
+
+
 class TestOperatorLogging(unittest.TestCase):
     def setUp(self):
         self.old_level = Ops.logger.level
