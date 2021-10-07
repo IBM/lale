@@ -24,7 +24,27 @@ import numpy as np
 import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
-import tensorflow as tf
+
+try:
+    import cvxpy  # noqa because the import is only done as a check and flake fails
+
+    cvxpy_installed = True
+except ImportError:
+    cvxpy_installed = False
+
+try:
+    import numba  # noqa because the import is only done as a check and flake fails
+
+    numba_installed = True
+except ImportError:
+    numba_installed = False
+
+try:
+    import tensorflow as tf
+
+    tensorflow_installed = True
+except ImportError:
+    tensorflow_installed = False
 
 import lale.helpers
 import lale.lib.aif360
@@ -513,8 +533,9 @@ class TestAIF360Num(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_list = []
         for split in splits:
-            tf.compat.v1.reset_default_graph()  # for AdversarialDebiasing
-            tf.compat.v1.disable_eager_execution()
+            if tensorflow_installed:  # for AdversarialDebiasing
+                tf.compat.v1.reset_default_graph()
+                tf.compat.v1.disable_eager_execution()
             train_X = split["train_X"]
             train_y = split["train_y"]
             trained_remi = trainable_remi.fit(train_X, train_y)
@@ -545,10 +566,11 @@ class TestAIF360Num(unittest.TestCase):
         self.assertTrue(0.8 < impact_remi < 1.0, f"impact_remi {impact_remi}")
 
     def test_adversarial_debiasing_pd_num(self):
-        fairness_info = self.creditg_pd_num["fairness_info"]
-        tf.compat.v1.reset_default_graph()
-        trainable_remi = AdversarialDebiasing(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.5)
+        if tensorflow_installed:
+            fairness_info = self.creditg_pd_num["fairness_info"]
+            tf.compat.v1.reset_default_graph()
+            trainable_remi = AdversarialDebiasing(**fairness_info)
+            self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.0, 1.5)
 
     def test_calibrated_eq_odds_postprocessing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -577,14 +599,16 @@ class TestAIF360Num(unittest.TestCase):
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.677, 0.678)
 
     def test_lfr_pd_num(self):
-        fairness_info = self.creditg_pd_num["fairness_info"]
-        trainable_remi = LFR(**fairness_info) >> LogisticRegression(max_iter=1000)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.95, 1.05)
+        if numba_installed:
+            fairness_info = self.creditg_pd_num["fairness_info"]
+            trainable_remi = LFR(**fairness_info) >> LogisticRegression(max_iter=1000)
+            self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.95, 1.05)
 
     def test_meta_fair_classifier_pd_num(self):
-        fairness_info = self.creditg_pd_num["fairness_info"]
-        trainable_remi = MetaFairClassifier(**fairness_info)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.62, 0.87)
+        if aif360.__version__ >= "4.0.0":
+            fairness_info = self.creditg_pd_num["fairness_info"]
+            trainable_remi = MetaFairClassifier(**fairness_info)
+            self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.62, 0.87)
 
     def test_prejudice_remover_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -1023,7 +1047,8 @@ class TestAIF360Cat(unittest.TestCase):
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_list = []
         for split in splits:
-            tf.compat.v1.reset_default_graph()  # for AdversarialDebiasing
+            if tensorflow_installed:  # for AdversarialDebiasing
+                tf.compat.v1.reset_default_graph()
             train_X = split["train_X"]
             train_y = split["train_y"]
             trained_remi = trainable_remi.fit(train_X, train_y)
@@ -1039,11 +1064,12 @@ class TestAIF360Cat(unittest.TestCase):
         )
 
     def test_adversarial_debiasing_pd_cat(self):
-        fairness_info = self.creditg_pd_cat["fairness_info"]
-        trainable_remi = AdversarialDebiasing(
-            **fairness_info, preparation=self.prep_pd_cat
-        )
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.5)
+        if tensorflow_installed:
+            fairness_info = self.creditg_pd_cat["fairness_info"]
+            trainable_remi = AdversarialDebiasing(
+                **fairness_info, preparation=self.prep_pd_cat
+            )
+            self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.0, 1.5)
 
     def test_calibrated_eq_odds_postprocessing_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
@@ -1081,26 +1107,29 @@ class TestAIF360Cat(unittest.TestCase):
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.677, 0.678)
 
     def test_lfr_pd_cat(self):
-        fairness_info = self.creditg_pd_cat["fairness_info"]
-        trainable_remi = LFR(
-            **fairness_info, preparation=self.prep_pd_cat
-        ) >> LogisticRegression(max_iter=1000)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.95, 1.05)
+        if numba_installed:
+            fairness_info = self.creditg_pd_cat["fairness_info"]
+            trainable_remi = LFR(
+                **fairness_info, preparation=self.prep_pd_cat
+            ) >> LogisticRegression(max_iter=1000)
+            self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.95, 1.05)
 
     def test_meta_fair_classifier_pd_cat(self):
-        fairness_info = self.creditg_pd_cat["fairness_info"]
-        trainable_remi = MetaFairClassifier(
-            **fairness_info, preparation=self.prep_pd_cat
-        )
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.62, 0.87)
+        if aif360.__version__ >= "4.0.0":
+            fairness_info = self.creditg_pd_cat["fairness_info"]
+            trainable_remi = MetaFairClassifier(
+                **fairness_info, preparation=self.prep_pd_cat
+            )
+            self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.62, 0.87)
 
     def test_optim_preproc_pd_cat(self):
         # TODO: set the optimizer options as shown in the example https://github.com/Trusted-AI/AIF360/blob/master/examples/demo_optim_data_preproc.ipynb
-        fairness_info = self.creditg_pd_cat["fairness_info"]
-        _ = OptimPreproc(**fairness_info, optim_options={}) >> LogisticRegression(
-            max_iter=1000
-        )
-        # TODO: this test does not yet call fit or predict
+        if cvxpy_installed:
+            fairness_info = self.creditg_pd_cat["fairness_info"]
+            _ = OptimPreproc(**fairness_info, optim_options={}) >> LogisticRegression(
+                max_iter=1000
+            )
+            # TODO: this test does not yet call fit or predict
 
     def test_prejudice_remover_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
