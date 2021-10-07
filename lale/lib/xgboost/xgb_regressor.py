@@ -59,13 +59,12 @@ class _XGBRegressorImpl:
     def __init__(self, **hyperparams):
         self.validate_hyperparams(**hyperparams)
         self._hyperparams = hyperparams
+        self._wrapped_model = xgboost.XGBRegressor(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        result = _XGBRegressorImpl(**self._hyperparams)
-        result._wrapped_model = xgboost.XGBRegressor(**self._hyperparams)
         renamed_X = _rename_all_features(X)
-        result._wrapped_model.fit(renamed_X, y, **fit_params)
-        return result
+        self._wrapped_model.fit(renamed_X, y, **fit_params)
+        return self
 
     def predict(self, X, **predict_params):
         renamed_X = _rename_all_features(X)

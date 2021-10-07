@@ -59,13 +59,12 @@ class _XGBClassifierImpl:
     def __init__(self, **hyperparams):
         self.validate_hyperparams(**hyperparams)
         self._hyperparams = hyperparams
+        self._wrapped_model = xgboost.XGBClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
-        result = _XGBClassifierImpl(**self._hyperparams)
-        result._wrapped_model = xgboost.XGBClassifier(**self._hyperparams)
         renamed_X = _rename_all_features(X)
-        result._wrapped_model.fit(renamed_X, y, **fit_params)
-        return result
+        self._wrapped_model.fit(renamed_X, y, **fit_params)
+        return self
 
     def predict(self, X, **predict_params):
         renamed_X = _rename_all_features(X)
