@@ -224,13 +224,11 @@ jobs:
     - name: Install numpy
       run: pip install -U numpy
     - name: Install pytest
-      run: pip install pytest-cov
+      run: pip install pytest
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
     - name: Run test
-      run: py.test -v --capture=tee-sys --cov-report=xml --cov=lale ${{matrix.test-case}}
-    - name: Upload coverage metrics to CodeCov
-      uses: codecov/codecov-action@v1
+      run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
   deploy:
     name: Deploy to TestPyPI
