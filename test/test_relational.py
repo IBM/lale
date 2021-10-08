@@ -2295,6 +2295,61 @@ class TestMapSpark(unittest.TestCase):
         self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 4))
         self.assertEqual(transformed_df.collect()[0]["ratio_h_w"], 0.1)
 
+    def test_transform_ratio_map_subscript(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns={"ratio_h_w": it["height"] / it.weight})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 4))
+        self.assertEqual(transformed_df.collect()[0]["ratio_h_w"], 0.1)
+
+    def test_transform_ratio_map_list(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns=[it.height / it.weight])
+        trained = trainable.fit(sdf)
+        with self.assertRaises(ValueError):
+            _ = trained.transform(df)
+
+    def test_transform_ratio_map_function_name(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns={"ratio_h_w": ratio(it.height, it.weight)})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 4))
+        self.assertEqual(transformed_df.collect()[0]["ratio_h_w"], 0.1)
+
+    def test_transform_ratio_map_function_name_subscript(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns={"ratio_h_w": ratio(it["height"], it.weight)})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 4))
+        self.assertEqual(transformed_df.collect()[0]["ratio_h_w"], 0.1)
+
 
 class TestOrderBy(unittest.TestCase):
     def setUp(self):
