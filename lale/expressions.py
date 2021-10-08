@@ -209,6 +209,9 @@ class Expr:
                 result = result[1:-1]
         return result
 
+    def __truediv__(self, other):
+        return _make_call_expr("ratio", self, other)
+
 
 def _make_ast_expr(arg: Union[Expr, int, float, str, AstExpr]) -> AstExpr:
     if isinstance(arg, Expr):
@@ -394,6 +397,10 @@ def asc(column: Union[Expr, str]) -> Expr:
 
 def desc(column: Union[Expr, str]) -> Expr:
     return _make_call_expr("desc", column)
+
+
+def ratio(num: Expr, denom: Expr) -> Expr:
+    return _make_call_expr("ratio", num, denom)
 
 
 it = Expr(ast.Name(id="it"))
