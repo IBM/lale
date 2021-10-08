@@ -474,9 +474,19 @@ class TestGetParams(unittest.TestCase):
         params = op.get_params(deep=False)
         filtered_params = self.remove_lale_params(params)
 
+        self.assertIn("_lale_schemas", params)
         expected = LogisticRegression.get_defaults()
 
         self.assertEqual(filtered_params, expected)
+
+    def test_shallow0_planned_individual_operator(self):
+        op: Ops.PlannedIndividualOp = LogisticRegression
+        params = op.get_params(deep=0)
+
+        self.assertNotIn("_lale_schemas", params)
+        expected = LogisticRegression.get_defaults()
+
+        self.assertEqual(params, expected)
 
     def test_deep_planned_individual_operator(self):
         op: Ops.PlannedIndividualOp = LogisticRegression
@@ -626,6 +636,25 @@ class TestGetParams(unittest.TestCase):
 
         self.assertEqual(lr_filtered_params, lr_expected)
 
+    def test_shallow0_trainable_pipeline_configured(self):
+        op: Ops.TrainablePipeline = PCA() >> LogisticRegression(
+            LogisticRegression.enum.solver.saga
+        )
+
+        params = op.get_params(deep=0)
+        assert "steps" in params
+        assert "_lale_preds" not in params
+        pca = params["steps"][0]
+        lr = params["steps"][1]
+        assert isinstance(pca, Ops.TrainableIndividualOp)
+        assert isinstance(lr, Ops.TrainableIndividualOp)
+        lr_params = lr.get_params()
+
+        lr_expected = dict(LogisticRegression.get_defaults())
+        lr_expected["solver"] = "saga"
+
+        self.assertEqual(lr_params, lr_expected)
+
     def test_shallow_planned_nested_indiv_operator(self):
         from lale.lib.sklearn import BaggingClassifier, DecisionTreeClassifier
 
@@ -647,7 +676,7 @@ class TestGetParams(unittest.TestCase):
 
         params = op.get_params(deep=True)
         assert "steps" in params
-        assert "_lale_preds" in params
+        assert "_lale_preds" not in params
         pca = params["steps"][0]
         lr = params["steps"][1]
         assert isinstance(pca, Ops.PlannedIndividualOp)
