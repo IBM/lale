@@ -153,6 +153,7 @@ import itertools
 import logging
 import os
 import shutil
+import sys
 import warnings
 from abc import abstractmethod
 from types import MappingProxyType
@@ -174,6 +175,11 @@ from typing import (
     cast,
     overload,
 )
+
+if sys.version_info >= (3, 8):
+    from typing import Literal  # raises a mypy error for <3.8
+else:
+    from typing_extensions import Literal
 
 import jsonschema
 import pandas as pd
@@ -1184,7 +1190,7 @@ class IndividualOp(Operator):
             output.update(deep_stuff)
         return output
 
-    def get_params(self, deep: bool = True) -> Dict[str, Any]:
+    def get_params(self, deep: Union[bool, Literal[0]] = True) -> Dict[str, Any]:
         """Get parameters for this operator.
 
         This method follows scikit-learn's convention that all operators
@@ -1195,8 +1201,9 @@ class IndividualOp(Operator):
         Parameters
         ----------
         deep : boolean, optional
-            If True, will return the parameters for this operator state wrapper and
-            its impl object
+            If True, will return the parameters for this operator, and their nested parameters
+            If False, will return the parameters for this operator, along with '_lale_XXX` fields needed to support cloning
+
         Returns
         -------
         params : mapping of string to any
@@ -1204,9 +1211,10 @@ class IndividualOp(Operator):
         """
 
         out: Dict[str, Any] = dict()
-        out["_lale_name"] = self._name
-        out["_lale_schemas"] = self._schemas
-        out["_lale_impl"] = _WithoutGetParams.wrap(self._wrapped_impl_class())
+        if deep is False:
+            out["_lale_name"] = self._name
+            out["_lale_schemas"] = self._schemas
+            out["_lale_impl"] = _WithoutGetParams.wrap(self._wrapped_impl_class())
         # we need to stringify the class object, since the class object
         # has a get_params method (the instance method), which causes problems for
         # sklearn clone
@@ -1218,13 +1226,13 @@ class IndividualOp(Operator):
             elif hasattr(impl, "_wrapped_model") and hasattr(
                 impl._wrapped_model, "get_params"
             ):
-                out.update(impl._wrapped_model.get_params(deep=deep))
+                out.update(impl._wrapped_model.get_params(deep=bool(deep)))
             else:
-                out.update(self._get_params_all(deep=deep))
+                out.update(self._get_params_all(deep=bool(deep)))
         else:
-            out.update(self._get_params_all(deep=deep))
+            out.update(self._get_params_all(deep=bool(deep)))
 
-        if self.frozen_hyperparams() is not None:
+        if deep is False and self.frozen_hyperparams() is not None:
             out["_lale_frozen_hyperparameters"] = self.frozen_hyperparams()
 
         return out
@@ -3136,10 +3144,15 @@ class BasePipeline(Operator, Generic[OpType]):
             _steps[k]: ([_steps[v] for v in vs]) for (k, vs) in _pred_indices.items()
         }
 
-    def get_params(self, deep: bool = True) -> Dict[str, Any]:
+    def get_params(self, deep: Union[bool, Literal[0]] = True) -> Dict[str, Any]:
+        """
+        If deep is False, additional '_lale_XXX' fields are added to support
+        cloning.  If these are not desires, deep=0 can be used to disable this
+        """
         out: Dict[str, Any] = {}
         out["steps"] = self._steps
-        out["_lale_preds"] = self._get_preds_indices()
+        if deep is False:
+            out["_lale_preds"] = self._get_preds_indices()
 
         indices: Dict[str, int] = {}
 
