@@ -196,9 +196,7 @@ def ratio(df: Any, replace_expr: Expr, new_column_name: str):
                 "Expression type not supported. Formats supported: it.column_name or it['column_name']."
             )
         if column_name is None or not column_name.strip():
-            raise ValueError(
-                "Name of the column to be renamed cannot be None or empty."
-            )
+            raise ValueError("Name of the column cannot be None or empty.")
         return column_name
 
     numerator_col = replace_expr._expr.args[0]  # type: ignore
@@ -218,6 +216,42 @@ def ratio(df: Any, replace_expr: Expr, new_column_name: str):
         df = df.withColumn(
             new_column_name, df[numerator_col_name] / df[denominator_col_name]
         )
+    else:
+        raise ValueError(
+            "Function identity supports only Pandas dataframes or spark dataframes."
+        )
+    return new_column_name, df
+
+
+def subtract(df: Any, replace_expr: Expr, new_column_name: str):
+    def get_column_name(column):
+        if _is_ast_subscript(column):
+            column_name = column.slice.value.s
+        elif _is_ast_attribute(column):
+            column_name = column.attr
+        else:
+            raise ValueError(
+                "Expression type not supported. Formats supported: it.column_name or it['column_name']."
+            )
+        if column_name is None or not column_name.strip():
+            raise ValueError("Name of the column cannot be None or empty.")
+        return column_name
+
+    op1_col = replace_expr._expr.args[0]  # type: ignore
+    op2_col = replace_expr._expr.args[1]  # type: ignore
+    op1_col_name = get_column_name(op1_col)
+    op2_col_name = get_column_name(op2_col)
+
+    if new_column_name is None or not new_column_name.strip():
+        raise ValueError(
+            """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
+            to specify the new column name as the key, and the expression as the value."""
+        )
+
+    if _is_pandas_df(df):
+        df[new_column_name] = df[op1_col_name] - df[op2_col_name]
+    elif spark_installed and _is_spark_df(df):
+        df = df.withColumn(new_column_name, df[op1_col_name] - df[op2_col_name])
     else:
         raise ValueError(
             "Function identity supports only Pandas dataframes or spark dataframes."
