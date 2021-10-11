@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import TYPE_CHECKING
+
 import lale.docstrings
 import lale.operators
 
 try:
+    import lightgbm
     import lightgbm.sklearn
 
     lightgbm_installed = True
 except ImportError:
     lightgbm_installed = False
+    if TYPE_CHECKING:
+        import lightgbm  # type: ignore
 
 
 class _LGBMRegressorImpl:
@@ -511,5 +516,16 @@ _combined_schemas = {
 
 
 LGBMRegressor = lale.operators.make_operator(_LGBMRegressorImpl, _combined_schemas)
+
+if lightgbm_installed and lightgbm.__version__ >= "3.3.0":  #
+    # https://lightgbm.readthedocs.io/en/latest/pythonapi/lightgbm.LGBMRegressor.html
+    LGBMRegressor = LGBMRegressor.customize_schema(
+        silent={
+            "description": "Whether to print messages while running boosting.",
+            "anyOf": [{"enum": ["warn"]}, {"type": "boolean"}],
+            "default": "warn",
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(LGBMRegressor)
