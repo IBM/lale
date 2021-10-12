@@ -212,6 +212,9 @@ class Expr:
     def __truediv__(self, other):
         return _make_call_expr("ratio", self, other)
 
+    def __sub__(self, other):
+        return _make_call_expr("subtract", self, other)
+
 
 def _make_ast_expr(arg: Union[Expr, int, float, str, AstExpr]) -> AstExpr:
     if isinstance(arg, Expr):
@@ -401,6 +404,10 @@ def desc(column: Union[Expr, str]) -> Expr:
 
 def ratio(num: Expr, denom: Expr) -> Expr:
     return _make_call_expr("ratio", num, denom)
+
+
+def subtract(op1: Expr, op2: Expr) -> Expr:
+    return _make_call_expr("subtract", op1, op2)
 
 
 it = Expr(ast.Name(id="it"))
