@@ -119,9 +119,11 @@ def hyperparams_to_string(
                 gen.imports.append("import numpy as np")
             return f"np.{value.__name__}"  # type: ignore
         elif isinstance(value, lale.expressions.Expr):
+            v: lale.expressions.Expr = value
+            e = v._expr
             if gen is not None:
                 gen.imports.append("from lale.expressions import it")
-                for node in ast.walk(value._expr):
+                for node in ast.walk(e):
                     if isinstance(node, ast.Call):
                         f: Any = node.func
                         gen.imports.append("from lale.expressions import " + f.id)
