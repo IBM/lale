@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import aif360.algorithms.inprocessing
-import sklearn.linear_model
+
+
 import pandas as pd
-import aix360
 from aix360.algorithms.rbm import LogisticRuleRegression, FeatureBinarizer
 
 import lale.docstrings
