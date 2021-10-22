@@ -18,29 +18,6 @@ import numpy as np
 import lale.docstrings
 import lale.operators
 
-
-class _CatImputerImpl:
-    def __init__(
-        self, strategy, missing_values, sklearn_version_family=None, activate_flag=True
-    ):
-        self._hyperparams = {
-            "strategy": strategy,
-            "missing_values": missing_values,
-            "sklearn_version_family": sklearn_version_family,
-            "activate_flag": activate_flag,
-        }
-        self._wrapped_model = autoai_libs.transformers.exportable.CatImputer(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -49,6 +26,8 @@ _hyperparams_schema = {
             "additionalProperties": False,
             "required": [
                 "strategy",
+                "fill_value",
+                "fill_values",
                 "missing_values",
                 "sklearn_version_family",
                 "activate_flag",
@@ -74,10 +53,37 @@ _hyperparams_schema = {
                             "enum": ["constant"],
                             "description": "Replace with fill_value. Can be used with strings or numeric data.",
                         },
+                        {
+                            "enum": ["constants"],
+                            "description": "Replace missing values in columsn with values in fill_values list. Can be used with list of strings or numeric data.",
+                        },
                     ],
                     "default": "mean",
                 },
-                "missing_values": {
+		"fill_value": {
+		   "description": "The placeholder for fill value used in constant strategy",
+                   "anyOf": [
+                   {"type": "number"},
+                   {"type": "string"},
+                   {"enum": [np.nan]},
+                  {"enum": [None]},
+                  ],
+                   "default": None,
+                },
+               "fill_values": {
+               "description": "The placeholder for fill values used in constants strategy",
+               "anyOf": [
+                  {"type": "array", "items": {"anyOf": [
+                  {"type": "number"},
+                  {"type": "string"},
+                  {"enum": [np.nan]},
+                  {"enum": [None]},
+                  ],}},
+                  {"enum": [None]},
+                 ],
+                  "default": None,
+                },                
+		"missing_values": {
                     "description": "The placeholder for the missing values. All occurrences of missing_values will be imputed.",
                     "anyOf": [
                         {"type": "number"},
@@ -89,7 +95,7 @@ _hyperparams_schema = {
                 },
                 "sklearn_version_family": {
                     "description": "The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.",
-                    "enum": ["20", "21", "22", "23", "24", None, "1"],
+                    "enum": ["20", "21", "22", "23", "24", None],
                     "default": None,
                 },
                 "activate_flag": {
@@ -164,6 +170,7 @@ _combined_schemas = {
 }
 
 
-CatImputer = lale.operators.make_operator(_CatImputerImpl, _combined_schemas)
+CatImputer = lale.operators.make_operator(autoai_libs.transformers.exportable.CatImputer, _combined_schemas)
+
 
 lale.docstrings.set_docstrings(CatImputer)

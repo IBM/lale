@@ -19,32 +19,13 @@ import lale.docstrings
 import lale.operators
 
 
-class _NumImputerImpl:
-    def __init__(self, strategy, missing_values, activate_flag=True):
-        self._hyperparams = {
-            "strategy": strategy,
-            "missing_values": missing_values,
-            "activate_flag": activate_flag,
-        }
-        self._wrapped_model = autoai_libs.transformers.exportable.NumImputer(
-            **self._hyperparams
-        )
-
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
-        return self
-
-    def transform(self, X):
-        return self._wrapped_model.transform(X)
-
-
 _hyperparams_schema = {
     "allOf": [
         {
             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["strategy", "missing_values", "activate_flag"],
+            "required": ["strategy", "missing_values", "sklearn_version_family", "activate_flag"],
             "relevantToOptimizer": ["strategy"],
             "properties": {
                 "strategy": {
@@ -52,6 +33,30 @@ _hyperparams_schema = {
                     "enum": ["mean", "median", "most_frequent"],
                     "default": "mean",
                 },
+		"fill_value": {
+		   "description": "The placeholder for fill value used in constant strategy",
+                   "anyOf": [
+                   {"type": "number"},
+                   {"type": "string"},
+                   {"enum": [np.nan]},
+                  {"enum": [None]},
+                  ],
+                   "default": None,
+                },
+               "fill_values": {
+               "description": "The placeholder for fill values used in constants strategy",
+               "anyOf": [
+                  {"type": "array", "items": {"anyOf": [
+                  {"type": "number"},
+                  {"type": "string"},
+                  {"enum": [np.nan]},
+                  {"enum": [None]},
+                  ],}},
+                  {"enum": [None]},
+                 ],
+                  "default": None,
+                },
+
                 "missing_values": {
                     "description": "The placeholder for the missing values. All occurrences of missing_values will be imputed.",
                     "anyOf": [
@@ -62,6 +67,11 @@ _hyperparams_schema = {
                         },
                     ],
                     "default": np.nan,
+                },
+                "sklearn_version_family": {
+                    "description": "The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.",
+                    "enum": ["20", "21", "22", "23", "24", None],
+                    "default": None,
                 },
                 "activate_flag": {
                     "description": "If False, transform(X) outputs the input numpy array X unmodified.",
@@ -135,6 +145,6 @@ _combined_schemas = {
 }
 
 
-NumImputer = lale.operators.make_operator(_NumImputerImpl, _combined_schemas)
+NumImputer = lale.operators.make_operator(autoai_libs.transformers.exportable.NumImputer, _combined_schemas)
 
 lale.docstrings.set_docstrings(NumImputer)
