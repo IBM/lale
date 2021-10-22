@@ -31,7 +31,6 @@ from .util import (
     _categorical_supervised_input_fit_schema,
 )
 
-
 class _logisticaix360Impl(_BaseInEstimatorImpl):
     def __init__(
         self,
