@@ -25,7 +25,7 @@ import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
 
-from lale.lib.aix360 import logisticaix360
+from lale.lib.logisticaix360 import logisticaix360
 
 try:
     import cvxpy  # noqa because the import is only done as a check and flake fails
