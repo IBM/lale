@@ -476,7 +476,7 @@ class _consistency_score:
         return consistency
 
     def scoring(self, y_true=None, y_pred=None, X=None):
-        return self.consistency(n_neighbors=5)
+        return self.consistency(X, y=None, n_neighbors=5)
 
     def scorer(self, estimator, X, y):
         return self.consistency(X, y, n_neighbors=5)
