@@ -24,6 +24,7 @@ import numpy as np
 import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
+
 from lale.lib.aix360 import logisticaix360
 
 try:
@@ -587,6 +588,7 @@ class TestAIF360Num(unittest.TestCase):
             max_iter=1000
         )
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.78, 0.88)
+
     def test_logisticaix360_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = logisticaix360(**fairness_info)
@@ -1140,7 +1142,7 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable_remi = PrejudiceRemover(**fairness_info, preparation=self.prep_pd_cat)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.70, 0.80)
-        
+
     def test_redacting_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
