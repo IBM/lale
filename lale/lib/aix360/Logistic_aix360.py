@@ -13,15 +13,13 @@
 # limitations under the License.
 
 
-
 import pandas as pd
-from aix360.algorithms.rbm import LogisticRuleRegression, FeatureBinarizer
+from aix360.algorithms.rbm import FeatureBinarizer, LogisticRuleRegression
 
 import lale.docstrings
 import lale.operators
 
 from .util import (
-    dataset_to_pandas,
     _BaseInEstimatorImpl,
     _categorical_fairness_properties,
     _categorical_input_predict_proba_schema,
@@ -29,7 +27,9 @@ from .util import (
     _categorical_output_predict_proba_schema,
     _categorical_output_predict_schema,
     _categorical_supervised_input_fit_schema,
+    dataset_to_pandas,
 )
+
 
 class _logisticaix360Impl(_BaseInEstimatorImpl):
     def __init__(
@@ -42,7 +42,9 @@ class _logisticaix360Impl(_BaseInEstimatorImpl):
         lambda0=0.05,
         lambda1=0.01,
     ):
-        mitigator = _LogisticAIXMitigatorImpl(lambda0=lambda0, lambda1=lambda1, encoding_func=self._prep_and_encode)
+        mitigator = _LogisticAIXMitigatorImpl(
+            lambda0=lambda0, lambda1=lambda1, encoding_func=self._prep_and_encode
+        )
         super(_logisticaix360Impl, self).__init__(
             favorable_labels=favorable_labels,
             protected_attributes=protected_attributes,
@@ -51,26 +53,31 @@ class _logisticaix360Impl(_BaseInEstimatorImpl):
             mitigator=mitigator,
         )
 
+
 class _LogisticAIXMitigatorImpl:
     def __init__(self, lambda0, lambda1, encoding_func):
         self._mitigator = LogisticRuleRegression(lambda0=lambda0, lambda1=lambda1)
         self._encoding_func = encoding_func
+
     def fit(self, encoded_data):
         X, y = dataset_to_pandas(encoded_data)
         fb = FeatureBinarizer(negations=True)
         X_fb = fb.fit_transform(X)
         self._mitigator.fit(X_fb, y)
+
     def predict(self, encoded_data):
         X, y = dataset_to_pandas(encoded_data)
-        #X, _ = dataset_to_pandas(encoded_data, return_only="X")
+        # X, _ = dataset_to_pandas(encoded_data, return_only="X")
         fb = FeatureBinarizer(negations=True)
         X_fb = fb.fit_transform(X)
         y_pred = self._mitigator.predict(X_fb)
-        y_pred = pd.Series(data=y_pred, index=X_fb.index,name=y.name)
-        #y_pred = pd.Series(data=y_pred, index=X.index)
+        if y is not None:
+
+            y_pred = pd.Series(data=y_pred, index=X_fb.index, name=y.name)
+        # y_pred = pd.Series(data=y_pred, index=X.index)
         encoded_result = self._encoding_func(X, y_pred)
         return encoded_result
-    
+
 
 _input_fit_schema = _categorical_supervised_input_fit_schema
 _input_predict_schema = _categorical_input_predict_schema
@@ -151,8 +158,6 @@ _combined_schemas = {
 }
 
 
-logisticaix360 = lale.operators.make_operator(
-    _logisticaix360Impl, _combined_schemas
-)
+logisticaix360 = lale.operators.make_operator(_logisticaix360Impl, _combined_schemas)
 
 lale.docstrings.set_docstrings(logisticaix360)
