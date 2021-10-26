@@ -16,13 +16,13 @@ import logging
 from typing import Optional, Tuple
 
 import aif360.algorithms.postprocessing
-from sklearn.neighbors import NearestNeighbors
 import aif360.datasets
 import aif360.metrics
 import numpy as np
 import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
+from sklearn.neighbors import NearestNeighbors
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
@@ -431,6 +431,8 @@ def accuracy_and_disparate_impact(favorable_labels, protected_attributes):
 accuracy_and_disparate_impact.__doc__ = (
     str(accuracy_and_disparate_impact.__doc__) + _SCORER_DOCSTRING
 )
+
+
 class _consistency_score:
     def __init__(self, favorable_labels, protected_attributes):
         self.accuracy_scorer = sklearn.metrics.make_scorer(
@@ -440,7 +442,7 @@ class _consistency_score:
             favorable_labels, protected_attributes
         )
 
-    def consistency(self,X,y, n_neighbors=5):
+    def consistency(self, X, y, n_neighbors=5):
         r"""Individual fairness metric from [1]_ that measures how similar the
         labels are for similar instances.
         .. math::
@@ -455,12 +457,12 @@ class _consistency_score:
                International Conference on Machine Learning, 2013.
         """
 
-        #X = protected_attributes
+        # X = protected_attributes
         num_samples = X.shape[0]
-        #y = favorable_labels
+        # y = favorable_labels
 
         # learn a KNN on the features
-        nbrs = NearestNeighbors(n_neighbors=n_neighbors, algorithm='ball_tree')
+        nbrs = NearestNeighbors(n_neighbors=n_neighbors, algorithm="ball_tree")
         nbrs.fit(X)
         _, indices = nbrs.kneighbors(X)
 
@@ -468,8 +470,8 @@ class _consistency_score:
         consistency = 0.0
         for i in range(num_samples):
             pass
-            #consistency += np.abs(y[i] - np.mean(y[indices[i]]))
-        consistency = 1.0 - consistency/num_samples
+            # consistency += np.abs(y[i] - np.mean(y[indices[i]]))
+        consistency = 1.0 - consistency / num_samples
 
         return consistency
 
@@ -477,10 +479,11 @@ class _consistency_score:
         return self.consistency(n_neighbors=5)
 
     def scorer(self, estimator, X, y):
-        return self.consistency(X,y,n_neighbors=5)
+        return self.consistency(X, y, n_neighbors=5)
 
     def __call__(self, estimator, X, y):
         return self.scorer(estimator, X, y)
+
 
 def consistency_score(favorable_labels, protected_attributes):
     r"""
@@ -498,9 +501,7 @@ def consistency_score(favorable_labels, protected_attributes):
     between -0.1 and 0.1.
 
     .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
-    return _consistency_score(
-         favorable_labels, protected_attributes
-    )
+    return _consistency_score(favorable_labels, protected_attributes)
 
 
 def average_odds_difference(favorable_labels, protected_attributes):
@@ -527,6 +528,7 @@ def average_odds_difference(favorable_labels, protected_attributes):
 average_odds_difference.__doc__ = (
     str(average_odds_difference.__doc__) + _SCORER_DOCSTRING
 )
+
 
 def average_abs_odds_difference(favorable_labels, protected_attributes):
     r"""
@@ -748,6 +750,8 @@ def symmetric_disparate_impact(favorable_labels, protected_attributes):
 symmetric_disparate_impact.__doc__ = (
     str(symmetric_disparate_impact.__doc__) + _SCORER_DOCSTRING
 )
+
+
 def false_omission_rate_difference(favorable_labels, protected_attributes):
     """
     Create a scikit-learn compatible scorer for symmetric `disparate impact`_ given the fairness info.
@@ -758,7 +762,9 @@ def false_omission_rate_difference(favorable_labels, protected_attributes):
     receiving a disparate benefit.
 
     .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact"""
-    return  _ScorerFactory("false_omission_rate_difference", favorable_labels, protected_attributes)
+    return _ScorerFactory(
+        "false_omission_rate_difference", favorable_labels, protected_attributes
+    )
 
 
 false_omission_rate_difference.__doc__ = (
