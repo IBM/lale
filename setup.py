@@ -73,7 +73,11 @@ extras_require = {
         "smac<=0.10.0",
         "numba==0.49.0",
         "aif360>=0.4.0",
+<<<<<<< HEAD
         "aix360>=0.1.0",
+=======
+        "aix360==0.1.0",
+>>>>>>> 967a737bab9decd8709d6b9520aaa418f1b199cf
         "torch>=1.0",
         "BlackBoxAuditing",
         "imbalanced-learn",
