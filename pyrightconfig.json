@@ -1,5 +1,5 @@
 {
     "executionEnvironments": [
-        {"root": "lale"}
+        {"root": [".", "lale"]}
     ]
 }
