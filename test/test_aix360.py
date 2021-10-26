@@ -12,18 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import traceback
 import unittest
-import urllib.request
-import zipfile
 
-from lale.lib import aif360
-import jsonschema
-import numpy as np
 import pandas as pd
-import sklearn.metrics
-import sklearn.model_selection
 
 try:
     import cvxpy  # noqa because the import is only done as a check and flake fails
@@ -49,31 +41,11 @@ except ImportError:
 import lale.helpers
 import lale.lib.aif360
 import lale.lib.aif360.util
-from lale.datasets.data_schemas import NDArrayWithSchema
-from lale.lib.aif360 import (
-    LFR,
-    AdversarialDebiasing,
-    CalibratedEqOddsPostprocessing,
-    DisparateImpactRemover,
-    EqOddsPostprocessing,
-    GerryFairClassifier,
-    MetaFairClassifier,
-    OptimPreproc,
-    PrejudiceRemover,
-    Redacting,
-    RejectOptionClassification,
-    Reweighing,
-    fair_stratified_train_test_split,
-)
-#from lale.lib.aix360 import Diffprivlib
+
+# from lale.lib.aix360 import Diffprivlib
 from lale.lib.logisticaix360 import logisticaix360
-from lale.lib.lale import ConcatFeatures, Project
-from lale.lib.sklearn import (
-    FunctionTransformer,
-    LinearRegression,
-    LogisticRegression,
-    OneHotEncoder,
-)
+from lale.lib.sklearn import LogisticRegression
+
 
 class TestAIF360Num(unittest.TestCase):
     @classmethod
@@ -99,13 +71,11 @@ class TestAIF360Num(unittest.TestCase):
             )
         result = {"splits": splits, "fairness_info": fairness_info}
         return result
-    @classmethod    
+
+    @classmethod
     def setUpClass(cls):
         cls.creditg_pd_num = cls._creditg_pd_num()
-        
-    
-        
-    
+
     def _attempt_remi_creditg_pd_num(
         self, fairness_info, trainable_remi, min_di, max_di
     ):
@@ -128,13 +98,13 @@ class TestAIF360Num(unittest.TestCase):
         if min_di > 0:
             self.assertLessEqual(min_di, di.mean())
             self.assertLessEqual(di.mean(), max_di)
-    
-#    def test_Diffprivlib_pd_num(self):
- #           fairness_info = self.creditg_pd_num["fairness_info"]
-  #          trainable_remi = Diffprivlib(**fairness_info)
-   #         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0, 1)
+
+    #    def test_Diffprivlib_pd_num(self):
+    #           fairness_info = self.creditg_pd_num["fairness_info"]
+    #          trainable_remi = Diffprivlib(**fairness_info)
+    #         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0, 1)
 
     def test_logisticaix360_pd_num(self):
-            fairness_info = self.creditg_pd_num["fairness_info"]
-            trainable_remi = logisticaix360(**fairness_info)
-            self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0, 1)
+        fairness_info = self.creditg_pd_num["fairness_info"]
+        trainable_remi = logisticaix360(**fairness_info)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0, 1)
