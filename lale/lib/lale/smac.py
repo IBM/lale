@@ -41,7 +41,7 @@ try:
     from smac.configspace import ConfigurationSpace
 
     # Import SMAC-utilities
-    from smac.facade.smac_ac_facade import SMAC as orig_SMAC
+    from smac.facade.smac_facade import SMAC as orig_SMAC
     from smac.scenario.scenario import Scenario
 
     # from smac.tae.execute_ta_run import BudgetExhaustedException
