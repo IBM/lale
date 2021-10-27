@@ -74,7 +74,7 @@ class TestPrettyPrint(unittest.TestCase):
 
         from lale.lib.sklearn import FeatureAgglomeration, LogisticRegression
 
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
+        with self.assertRaises(jsonschema.ValidationError):
             _ = (
                 FeatureAgglomeration(
                     distance_threshold=0.5, n_clusters=None, compute_full_tree=True

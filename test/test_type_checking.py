@@ -1550,6 +1550,6 @@ class TestDisablingSchemaValidation(unittest.TestCase):
         set_disable_hyperparams_schema_validation(True)
         PCA(n_components=True)
         set_disable_hyperparams_schema_validation(False)
-        with self.assertRaises(jsonschema.exceptions.ValidationError):
+        with self.assertRaises(jsonschema.ValidationError):
             PCA(n_components=True)
         set_disable_hyperparams_schema_validation(existing_flag)

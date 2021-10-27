@@ -23,7 +23,9 @@ import lale.operators
 
 class _AutoaiWindowedWrappedRegressorImpl:
     def __init__(self, regressor=None, n_jobs=None):
-        if isinstance(regressor, lale.operators.TrainableIndividualOp):
+        if regressor is None:
+            nested_op = None
+        elif isinstance(regressor, lale.operators.TrainableIndividualOp):
             nested_op = make_pipeline(regressor._impl._wrapped_model)
         elif isinstance(regressor, lale.operators.BasePipeline):
             nested_op = regressor.export_to_sklearn_pipeline()
