@@ -24,8 +24,11 @@ import numpy as np
 import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
+<<<<<<< HEAD
+=======
 
 from lale.lib.logisticaix360 import logisticaix360
+>>>>>>> a972c18deff3ca8225f48921108b04c526341371
 
 try:
     import cvxpy  # noqa because the import is only done as a check and flake fails
@@ -588,11 +591,14 @@ class TestAIF360Num(unittest.TestCase):
             max_iter=1000
         )
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.78, 0.88)
+<<<<<<< HEAD
+=======
 
     def test_logisticaix360_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
         trainable_remi = logisticaix360(**fairness_info)
         self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0, 1)
+>>>>>>> a972c18deff3ca8225f48921108b04c526341371
 
     def test_eq_odds_postprocessing_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
