@@ -24,11 +24,9 @@ import numpy as np
 import pandas as pd
 import sklearn.metrics
 import sklearn.model_selection
-<<<<<<< HEAD
-=======
 
 from lale.lib.logisticaix360 import logisticaix360
->>>>>>> a972c18deff3ca8225f48921108b04c526341371
+
 
 try:
     import cvxpy  # noqa because the import is only done as a check and flake fails
