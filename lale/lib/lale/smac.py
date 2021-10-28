@@ -43,9 +43,7 @@ try:
     # Import SMAC-utilities
     from smac.facade.smac_facade import SMAC as orig_SMAC
     from smac.scenario.scenario import Scenario
-
-    # from smac.tae.execute_ta_run import BudgetExhaustedException
-    from smac.tae.execute_ta_run_aclib import BudgetExhaustedException
+    from smac.tae.execute_ta_run import BudgetExhaustedException
 
     from lale.search.lale_smac import (
         get_smac_space,
