@@ -86,9 +86,11 @@ class _DisparateImpactRemoverImpl:
             "protected_attributes": self.protected_attributes,
             "unfavorable_labels": self.unfavorable_labels,
         }
-        redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
-        preparation = self.preparation
-        trainable_redact_and_prep = redacting >> preparation
+        if self.redact:
+            redacting = Redacting(**fairness_info)
+            trainable_redact_and_prep = redacting >> self.preparation
+        else:
+            trainable_redact_and_prep = self.preparation
         assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
         self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
@@ -120,8 +122,7 @@ class _DisparateImpactRemoverImpl:
             assert isinstance(encoded_X, np.ndarray)
             features = encoded_X.tolist()
         mitigated_X = self.mitigator.repair(features)
-        if isinstance(X, pd.DataFrame):
-            assert isinstance(encoded_X, pd.DataFrame)
+        if isinstance(encoded_X, pd.DataFrame):
             result = pd.DataFrame(mitigated_X, index=X.index, columns=columns)
         else:
             result = np.array(mitigated_X)
