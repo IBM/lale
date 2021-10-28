@@ -34,7 +34,7 @@ def _redaction_value(column_values):
         if all_numbers and len(value_to_count) > 10:
             break
     if all_numbers and len(value_to_count) > 10:
-        result = sum(column_values) / len(column_values)
+        result = np.median(column_values)
     else:
         result = None
         for val, count in value_to_count.items():
