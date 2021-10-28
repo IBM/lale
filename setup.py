@@ -70,7 +70,7 @@ extras_require = {
         "snapml>=1.7.0rc3",
         "liac-arff>=2.4.0",
         "tensorflow==2.4.0",
-        "smac<=0.10.0",
+        "smac==0.10.0",
         "numba==0.49.0",
         "aif360>=0.4.0",
         "aix360>=0.1.0",
@@ -96,6 +96,7 @@ extras_require = {
         "pytest",
         "pyspark",
         "func_timeout",
+        "smac==0.10.0",
     ],
     "fairness": [
         "liac-arff>=2.4.0",
