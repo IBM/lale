@@ -415,6 +415,8 @@ class _ScorerFactory:
                 logger.warning("there are 0 instances in the privileged group")
             if 0 == fairness_metrics.num_instances(privileged=False):
                 logger.warning("there are 0 instances in the unprivileged group")
+            if self.metric == "disparate_impact":
+                result = 0.0
             logger.warning(
                 f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration. The set of predicted labels is {set(y_pred_orig)}."
             )
@@ -563,6 +565,8 @@ class _AccuracyAndDisparateImpact:
             logger.warning(f"invalid accuracy {accuracy}")
         if np.isnan(disp_impact) or disp_impact < 0.0:
             logger.warning(f"invalid disp_impact {disp_impact}")
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return accuracy
         if disp_impact == 0.0:
             return 0.0
         elif disp_impact <= 1.0:
@@ -736,6 +740,8 @@ class _R2AndDisparateImpact:
             logger.warning(f"invalid r2 {r2}")
         if np.isnan(disp_impact) or disp_impact < 0.0:
             logger.warning(f"invalid disp_impact {disp_impact}")
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return r2
         if disp_impact == 0.0:
             return np.finfo(np.float32).min
         elif disp_impact <= 1.0:

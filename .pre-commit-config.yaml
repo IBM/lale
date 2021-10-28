@@ -15,18 +15,18 @@ repos:
       - id: debug-statements
   # Clean up imports in Python using isort
   - repo: https://github.com/pycqa/isort
-    rev: 5.9.1
+    rev: 5.9.3
     hooks:
       - id: isort
         args: [--filter-files]
   # Format the python code with black
   - repo: https://github.com/psf/black
-    rev: 21.6b0
+    rev: 21.9b0
     hooks:
       - id: black
   # Lint the yaml files
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.1
+    rev: v1.26.3
     hooks:
       - id: yamllint
   # Lint the python code with flake
@@ -36,7 +36,7 @@ repos:
       - id: flake8
   # Type check the Python code with MyPy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: 'v0.902'
+    rev: 'v0.910-1'
     hooks:
       - id: mypy
   - repo: local
@@ -47,4 +47,4 @@ repos:
         language: node
         pass_filenames: false
         types: [python]
-        additional_dependencies: ['pyright@1.1.151']
+        additional_dependencies: ['pyright@1.1.180']
