@@ -80,8 +80,6 @@ from lale.lib.lale import (
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 from lale.operators import make_pipeline_graph
 
-from lale.lib.rasl import MinMaxScaler
-
 # Testing '==' and '!=' operator with different types of expressions
 class TestExpressions(unittest.TestCase):
     def test_expr_1(self):
@@ -2764,12 +2762,3 @@ class TestTrainTestSplit(unittest.TestCase):
                 main_table_df = df
         self.assertEqual(main_table_df.count(), 54)
         self.assertEqual(test_y.count(), 54)
-
-class TestMinMaxScaler(unittest.TestCase):
-    def setUp(self):
-        self.go_sales = fetch_go_sales_dataset()
-        # self.go_sales_spark = fetch_go_sales_dataset("spark")
-
-    def test_fit(self):
-        o = MinMaxScaler()
-        trainned = o.fit(self.go_sales[0])
