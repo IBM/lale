@@ -101,7 +101,7 @@ class _AggregateImpl:
                     agg_expr[agg_col_func[0]] = [agg_col_func[1]]
             try:
                 aggregated_df = X.agg(agg_expr)
-                aggregated_df.columns = agg_info_sorted.keys()
+                # aggregated_df.columns = agg_info_sorted.keys()
             except KeyError as e:
                 raise KeyError(e)
         elif _is_spark_grouped_df(X):
