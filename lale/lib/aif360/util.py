@@ -561,8 +561,9 @@ class _AccuracyAndDisparateImpact:
     def _combine(self, accuracy, disp_impact):
         if accuracy < 0.0 or accuracy > 1.0:
             logger.warning(f"invalid accuracy {accuracy}")
-        if np.isnan(disp_impact) or disp_impact < 0.0:
+        if disp_impact < 0.0 or np.isinf(disp_impact) or np.isnan(disp_impact):
             logger.warning(f"invalid disp_impact {disp_impact}")
+            return accuracy
         if disp_impact == 0.0:
             return 0.0
         elif disp_impact <= 1.0:
@@ -734,8 +735,9 @@ class _R2AndDisparateImpact:
     def _combine(self, r2, disp_impact):
         if r2 > 1.0:
             logger.warning(f"invalid r2 {r2}")
-        if np.isnan(disp_impact) or disp_impact < 0.0:
+        if disp_impact < 0.0 or np.isinf(disp_impact) or np.isnan(disp_impact):
             logger.warning(f"invalid disp_impact {disp_impact}")
+            return r2
         if disp_impact == 0.0:
             return np.finfo(np.float32).min
         elif disp_impact <= 1.0:
