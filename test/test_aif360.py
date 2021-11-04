@@ -1170,3 +1170,18 @@ class TestAIF360Cat(unittest.TestCase):
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.85, 1.00)
+
+    def test_pd_cat_y_not_series(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        trainable_remi = DisparateImpactRemover(
+            **fairness_info, preparation=self.prep_pd_cat
+        ) >> LogisticRegression(max_iter=1000)
+        train_X = self.creditg_pd_cat["splits"][0]["train_X"]
+        train_y = self.creditg_pd_cat["splits"][0]["train_y"].to_frame()
+        trained_remi = trainable_remi.fit(train_X, train_y)
+        test_X = self.creditg_pd_cat["splits"][0]["test_X"]
+        test_y = self.creditg_pd_cat["splits"][0]["test_y"].to_frame()
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer(trained_remi, test_X, test_y)
+        self.assertLessEqual(0.8, di)
+        self.assertLessEqual(di, 1.0)
