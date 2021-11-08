@@ -1,6 +1,55 @@
 Papers
 ======
 
+
+"Pipeline Combinators for Gradual AutoML".
+Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar, and Jason Tsay.
+Conference on Neural Information Processing Systems (NeurIPS), December 2021.
+http://hirzels.com/martin/papers/neurips21-lale.pdf
+
+**This is the preferred citation for the Lale project.**
+
+.. code:: BibTeX
+
+    @InProceedings{baudart_et_al_2021,
+      title = "Pipeline Combinators for Gradual {AutoML}",
+      author = "Baudart, Guillaume and Hirzel, Martin and Kate, Kiran and Ram, Parikshit and Shinnar, Avraham and Tsay, Jason",
+      booktitle = "Advances in Neural Information Processing Systems (NeurIPS)",
+      year = 2021,
+      month = dec }
+
+"RASL: Relational Algebra in Scikit-Learn Pipelines".
+Chirag Sahni, Kiran Kate, Avraham Shinnar, Hoang Thanh Lam, and Martin Hirzel.
+Workshop on Databases and AI (DBAI@NeurIPS), December 2021.
+https://openreview.net/forum?id=u9ct1gjoDcn
+
+.. code:: BibTeX
+
+    @InProceedings{sahni_et_al_2021,
+      title = "{RASL}: Relational Algebra in Scikit-Learn Pipelines",
+      author = "Sahni, Chirag and Kate, Kiran and Shinnar, Avraham and Lam, Hoang Thanh and Hirzel, Martin",
+      booktitle = "Workshop on Databases and AI (DBAI@NeurIPS)",
+      year = 2021,
+      month = dec,
+      url = "https://openreview.net/forum?id=u9ct1gjoDcn" }
+
+"Finding Data Compatibility Bugs with JSON Subschema Checking".
+Andrew Habib, Avraham Shinnar, Martin Hirzel, and Michael Pradel.
+International Symposium on Software Testing and Analysis (ISSTA), pages 620-632, July 2021.
+https://doi.org/10.1145/3460319.3464796
+
+**Winner of a Distinguished Artifact Award at ISSTA 2021.**
+
+.. code:: BibTeX
+
+    @InProceedings{habib_et_al_2021,
+      title = "Finding Data Compatibility Bugs with {JSON} Subschema Checking",
+      author = "Habib, Andrew and Shinnar, Avraham and Hirzel, Martin and Pradel, Michael",
+      booktitle = "International Symposium on Software Testing and Analysis (ISSTA)",
+      year = 2021,
+      pages = "620--632",
+      url = "https://doi.org/10.1145/3460319.3464796" }
+
 "Engineering Fair Machine Learning Pipelines".
 Martin Hirzel, Kiran Kate, and Parikshit Ram.
 ICLR Workshop on Responsible AI (RAI@ICLR), May 2021. 
