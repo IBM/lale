@@ -160,7 +160,9 @@ def hyperparams_to_string(
             kwargs_string = hyperparams_to_string(non_defaults, steps, gen)
             printed = f"{module}.{value.__class__.__name__}({kwargs_string})"
             return printed
-        elif isinstance(value, sklearn.metrics._scorer._BaseScorer):
+        elif hasattr(sklearn.metrics, "_scorer") and isinstance(
+            value, sklearn.metrics._scorer._BaseScorer
+        ):
             if gen is not None:
                 gen.imports.append("import sklearn.metrics")
             func = value._score_func  # type: ignore

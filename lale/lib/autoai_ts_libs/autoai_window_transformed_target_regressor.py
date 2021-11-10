@@ -24,6 +24,8 @@ import lale.operators
 class _AutoaiWindowTransformedTargetRegressorImpl:
     def __init__(
         self,
+        feature_columns=None,
+        target_columns=None,
         regressor=None,
         lookback_window=10,
         prediction_horizon=1,
@@ -34,6 +36,8 @@ class _AutoaiWindowTransformedTargetRegressorImpl:
         one_shot=False,
         row_mean_center=False,
         estimator_prediction_type="forecast",
+        time_column=-1,
+        random_state=42,
     ):
         if regressor is None:
             nested_op = None
@@ -47,6 +51,8 @@ class _AutoaiWindowTransformedTargetRegressorImpl:
             # TODO: What is the best way to handle this case?
             nested_op = None
         self._hyperparams = {
+            "feature_columns": feature_columns,
+            "target_columns": target_columns,
             "regressor": nested_op,
             "lookback_window": lookback_window,
             "prediction_horizon": prediction_horizon,
@@ -57,6 +63,8 @@ class _AutoaiWindowTransformedTargetRegressorImpl:
             "one_shot": one_shot,
             "row_mean_center": row_mean_center,
             "estimator_prediction_type": estimator_prediction_type,
+            "time_column": time_column,
+            "random_state": random_state,
         }
         self._wrapped_model = model_to_be_wrapped(**self._hyperparams)
 
@@ -75,6 +83,8 @@ _hyperparams_schema = {
             "type": "object",
             "additionalProperties": False,
             "required": [
+                "feature_columns",
+                "target_columns",
                 "regressor",
                 "lookback_window",
                 "prediction_horizon",
@@ -85,9 +95,21 @@ _hyperparams_schema = {
                 "one_shot",
                 "row_mean_center",
                 "estimator_prediction_type",
+                "time_column",
+                "random_state",
             ],
             "relevantToOptimizer": ["lookback_window"],
             "properties": {
+                "feature_columns": {
+                    "description": "TODO: document and refine type",
+                    "laleType": "Any",
+                    "default": None,
+                },
+                "target_columns": {
+                    "description": "TODO: document and refine type",
+                    "laleType": "Any",
+                    "default": None,
+                },
                 "regressor": {
                     "description": """Regressor object.
 This regressor will automatically be cloned each time prior to fitting.
@@ -146,6 +168,16 @@ The inverse function is used to return predictions to the same space of the orig
                         "rowwise",
                     ],
                     "default": "forecast",
+                },
+                "time_column": {
+                    "description": "TODO: document and refine type",
+                    "laleType": "Any",
+                    "default": -1,
+                },
+                "random_state": {
+                    "description": "TODO: document and refine type",
+                    "laleType": "Any",
+                    "default": 42,
                 },
             },
         }
