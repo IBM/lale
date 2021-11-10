@@ -42,7 +42,7 @@ class _AutoaiWindowTransformedTargetRegressorImpl:
         if regressor is None:
             nested_op = None
         elif isinstance(regressor, lale.operators.TrainableIndividualOp):
-            nested_op = make_pipeline(regressor._impl._wrapped_model)
+            nested_op = make_pipeline(regressor.impl)
         elif isinstance(regressor, lale.operators.BasePipeline):
             nested_op = regressor.export_to_sklearn_pipeline()
         elif isinstance(regressor, Pipeline):
