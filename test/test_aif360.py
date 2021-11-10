@@ -510,21 +510,33 @@ class TestAIF360Num(unittest.TestCase):
         test_y = self.boston_np_num["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
-    def test_scorers_combine_pd_num(self):
-        fairness_info = self.boston_pd_num["fairness_info"]
-        combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fairness_info)
-        for r2 in [-2, 0, 0.5, 1]:
-            for disp_impact in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
-                score = combined_scorer._combine(r2, disp_impact)
-                print(f"r2 {r2:5.2f}, di {disp_impact:.2f}, score {score:5.2f}")
+    def test_scorers_combine_acc(self):
+        dummy_fairness_info = {
+            "favorable_labels": ["fav"],
+            "protected_attributes": [{"feature": "prot", "reference_group": ["ref"]}],
+        }
+        scorer = lale.lib.aif360.accuracy_and_disparate_impact(**dummy_fairness_info)
+        for acc in [0.2, 0.8, 1]:
+            for di in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
+                score = scorer._combine(acc, di)
+                print(f"acc {acc:5.2f}, di {di:.2f}, score {score:5.2f}")
+            for di in [float("inf"), float("-inf"), float("nan")]:
+                score = scorer._combine(acc, di)
+                self.assertEqual(score, acc)
 
-    def test_scorers_combine_np_num(self):
-        fairness_info = self.boston_np_num["fairness_info"]
-        combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fairness_info)
+    def test_scorers_combine_r2(self):
+        dummy_fairness_info = {
+            "favorable_labels": ["fav"],
+            "protected_attributes": [{"feature": "prot", "reference_group": ["ref"]}],
+        }
+        scorer = lale.lib.aif360.r2_and_disparate_impact(**dummy_fairness_info)
         for r2 in [-2, 0, 0.5, 1]:
-            for disp_impact in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
-                score = combined_scorer._combine(r2, disp_impact)
-                print(f"r2 {r2:5.2f}, di {disp_impact:.2f}, score {score:5.2f}")
+            for di in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
+                score = scorer._combine(r2, di)
+                print(f"r2 {r2:5.2f}, di {di:.2f}, score {score:5.2f}")
+            for di in [float("inf"), float("-inf"), float("nan")]:
+                score = scorer._combine(r2, di)
+                self.assertEqual(score, r2)
 
     def _attempt_remi_creditg_pd_num(
         self, fairness_info, trainable_remi, min_di, max_di
@@ -1158,3 +1170,18 @@ class TestAIF360Cat(unittest.TestCase):
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Reweighing(estimator=estim, **fairness_info)
         self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.85, 1.00)
+
+    def test_pd_cat_y_not_series(self):
+        fairness_info = self.creditg_pd_cat["fairness_info"]
+        trainable_remi = DisparateImpactRemover(
+            **fairness_info, preparation=self.prep_pd_cat
+        ) >> LogisticRegression(max_iter=1000)
+        train_X = self.creditg_pd_cat["splits"][0]["train_X"]
+        train_y = self.creditg_pd_cat["splits"][0]["train_y"].to_frame()
+        trained_remi = trainable_remi.fit(train_X, train_y)
+        test_X = self.creditg_pd_cat["splits"][0]["test_X"]
+        test_y = self.creditg_pd_cat["splits"][0]["test_y"].to_frame()
+        di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        di = di_scorer(trained_remi, test_X, test_y)
+        self.assertLessEqual(0.8, di)
+        self.assertLessEqual(di, 1.0)

@@ -27,20 +27,10 @@ from .util import (
 
 
 def _redaction_value(column_values):
-    all_numbers = all([isinstance(val, (int, float)) for val in column_values])
-    value_to_count = {}
-    for val in column_values:
-        value_to_count[val] = value_to_count.get(val, 0) + 1
-        if all_numbers and len(value_to_count) > 10:
-            break
-    if all_numbers and len(value_to_count) > 10:
-        result = sum(column_values) / len(column_values)
-    else:
-        result = None
-        for val, count in value_to_count.items():
-            if result is None or count > value_to_count[result]:
-                result = val
-    return result
+    unique_values, unique_counts = np.unique(column_values, return_counts=True)
+    most_frequent_index = np.argmax(unique_counts)
+    most_frequent_value = unique_values[most_frequent_index]
+    return most_frequent_value
 
 
 class _RedactingImpl:
@@ -122,9 +112,8 @@ _hyperparams_schema = {
 _combined_schemas = {
     "description": """Redacting preprocessor for fairness mitigation.
 
-This sets all the protected attributes to constants. For numbers that
-have more than 10 unique values in the column, use the arithmetic mean.
-Otherwise, use the most frequent value in the column.
+This sets all the protected attributes to constants,
+using the most frequent value in the column.
 This operator is used internally by various lale.lib.aif360 metrics
 and mitigators, so you often do not need to use it directly yourself.
 """,

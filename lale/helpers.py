@@ -473,7 +473,9 @@ def instantiate_from_hyperopt_search_space(obj_hyperparams, new_hyperparams):
         return None
 
 
-def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
+def create_instance_from_hyperopt_search_space(
+    lale_object, hyperparams
+) -> "lale.operators.Operator":
     """
     Hyperparams is a n-tuple of dictionaries of hyper-parameters, each
     dictionary corresponds to an operator in the pipeline
@@ -538,7 +540,7 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
                 "An edge was found with an endpoint that is not a step (" + str(e) + ")"
             )
 
-        return TrainablePipeline(op_instances, trainable_edges, ordered=True)
+        return TrainablePipeline(op_instances, trainable_edges, ordered=True)  # type: ignore
     elif isinstance(lale_object, OperatorChoice):
         # Hyperopt search space for an OperatorChoice is generated as a dictionary with a single element
         # corresponding to the choice made, the only key is the index of the step and the value is
@@ -553,6 +555,8 @@ def create_instance_from_hyperopt_search_space(lale_object, hyperparams):
             step_index = int(step_index_str)
         step_object = choices[step_index]
         return create_instance_from_hyperopt_search_space(step_object, hyperparams)
+    else:
+        assert False, f"Unknown operator type: {type(lale_object)}"
 
 
 def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):

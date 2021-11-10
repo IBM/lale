@@ -136,6 +136,7 @@ def _url_new_tab(jsn):
 
 def _json_to_graphviz_rec(uid, jsn, cluster2reps, is_root, dot_graph_attr):
     kind = lale.json_operator.json_op_kind(jsn)
+    dot: graphviz.Digraph
     if kind in ["Pipeline", "OperatorChoice"] or "steps" in jsn:
         dot = graphviz.Digraph(name=f"cluster:{uid}")
     else:

@@ -290,8 +290,9 @@ class _ProtectedAttributesEncoderImpl:
                 self.y_name = _ensure_str(X_pd.shape[1])
                 series_y = _ndarray_to_series(y, self.y_name, X_pd.index, y.dtype)
             else:
-                self.y_name = y.name
-                series_y = y
+                series_y = y.squeeze() if isinstance(y, pd.DataFrame) else y
+                assert isinstance(series_y, pd.Series), type(series_y)
+                self.y_name = series_y.name
             result_y = series_y.apply(
                 lambda v: _group_flag(v, self.favorable_labels, self.unfavorable_labels)
             )

@@ -310,7 +310,7 @@ class Operator(metaclass=AbstractVisitorMeta):
     def class_name(self) -> str:
         """Fully qualified Python class name of this operator."""
         cls = self.__class__
-        return cls.__module__ + "." + cls.__name__
+        return cls.__module__ + "." + cls.__name__  # type: ignore
 
     @abstractmethod
     def validate_schema(self, X, y=None):
@@ -3226,7 +3226,7 @@ class BasePipeline(Operator, Generic[OpType]):
                 needs_copy = True
             else:
                 pipeline_graph_class = _pipeline_graph_class(self.steps())
-                if pipeline_graph_class != self.__class__:
+                if pipeline_graph_class != self.__class__:  # type: ignore
                     needs_copy = True
             if needs_copy:
                 # it may be better practice to change the steps/edges ahead of time
@@ -3723,7 +3723,7 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
 
 
 TrainableOpType = TypeVar(
-    "TrainableOpType", bound=TrainableIndividualOp, covariant=True
+    "TrainableOpType", bound=TrainableIndividualOp, covariant=True  # type: ignore
 )
 
 
@@ -4289,7 +4289,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return all(all_transformers)
 
 
-TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)
+TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)  # type: ignore
 
 
 class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
@@ -5059,7 +5059,7 @@ def customize_schema(
 
         for arg in kwargs:
             value = kwargs[arg]
-            if isinstance(value, Schema):
+            if value is not None and isinstance(value, Schema):
                 value = value.schema
             if value is not None:
                 lale.type_checking.validate_is_schema(value)
