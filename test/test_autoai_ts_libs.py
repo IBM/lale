@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -370,6 +370,122 @@ class TestMT2RForecaster(unittest.TestCase):
         fitted_model = model.fit(X)
         ypred = fitted_model.predict()
         self.assertEqual(len(ypred), 1)
+
+
+class TestPrettyPrint(unittest.TestCase):
+    def test_param_grid(self):
+        printed1 = """from autoai_ts_libs.srom.estimators.time_series.models.srom_estimators import (
+    LocalizedFlattenAutoEnsembler,
+)
+from autoai_ts_libs.srom.estimators.regression.auto_ensemble_regressor import (
+    EnsembleRegressor,
+)
+from autoai_ts_libs.srom.joint_optimizers.auto.auto_regression import (
+    AutoRegression,
+)
+from sklearn.multioutput import MultiOutputRegressor
+from sklearn.linear_model import LinearRegression
+import autoai_ts_libs.srom.joint_optimizers.cv.time_series_splits
+import autoai_ts_libs.srom.joint_optimizers.pipeline.srom_param_grid
+import sklearn.metrics
+import autoai_ts_libs.srom.joint_optimizers.utils.no_op
+import sklearn.preprocessing
+import sklearn.multioutput
+import sklearn.linear_model
+import xgboost.sklearn
+import lale
+
+lale.wrap_imported_operators()
+linear_regression = LinearRegression(n_jobs=1)
+multi_output_regressor = MultiOutputRegressor(
+    estimator=linear_regression, n_jobs=5
+)
+auto_regression = AutoRegression(
+    cv=autoai_ts_libs.srom.joint_optimizers.cv.time_series_splits.TimeSeriesTrainTestSplit(
+        n_splits=1, n_test_size=423, overlap_len=0
+    ),
+    execution_time_per_pipeline=3,
+    level="default",
+    param_grid=autoai_ts_libs.srom.joint_optimizers.pipeline.srom_param_grid.SROMParamGrid(),
+    scoring=sklearn.metrics.make_scorer(
+        sklearn.metrics.mean_absolute_error, greater_is_better=False
+    ),
+    stages=[
+        [
+            (
+                "skipscaling",
+                autoai_ts_libs.srom.joint_optimizers.utils.no_op.NoOp(),
+            ),
+            ("minmaxscaler", sklearn.preprocessing.MinMaxScaler()),
+        ],
+        [
+            (
+                "molinearregression",
+                sklearn.multioutput.MultiOutputRegressor(
+                    estimator=sklearn.linear_model.LinearRegression(n_jobs=1),
+                    n_jobs=5,
+                ),
+            ),
+            (
+                "mosgdregressor",
+                sklearn.multioutput.MultiOutputRegressor(
+                    estimator=sklearn.linear_model.SGDRegressor(
+                        random_state=0
+                    ),
+                    n_jobs=5,
+                ),
+            ),
+            (
+                "moxgbregressor",
+                sklearn.multioutput.MultiOutputRegressor(
+                    estimator=xgboost.sklearn.XGBRegressor(
+                        missing=float("nan"), objective="reg:squarederror"
+                    ),
+                    n_jobs=5,
+                ),
+            ),
+        ],
+    ],
+    total_execution_time=3,
+    best_estimator_so_far=multi_output_regressor,
+)
+ensemble_regressor = EnsembleRegressor(
+    cv=None,
+    execution_platform=None,
+    execution_time_per_pipeline=None,
+    level=None,
+    n_estimators_for_pred_interval=1,
+    n_leaders_for_ensemble=1,
+    num_option_per_pipeline_for_intelligent_search=None,
+    num_options_per_pipeline_for_random_search=None,
+    save_prefix=None,
+    total_execution_time=None,
+    auto_regression=auto_regression,
+)
+pipeline = LocalizedFlattenAutoEnsembler(
+    feature_columns=[0, 1],
+    target_columns=[0, 1],
+    lookback_win=10,
+    pred_win=5,
+    dag_granularity="multioutput_flat",
+    execution_time_per_pipeline=3,
+    init_time_optimization=True,
+    multistep_prediction_strategy="multioutput",
+    multistep_prediction_win=5,
+    n_estimators_for_pred_interval=1,
+    n_jobs=5,
+    n_leaders_for_ensemble=1,
+    store_lookback_history=True,
+    total_execution_time=3,
+    estimator=ensemble_regressor,
+)"""
+        globals2 = {}
+        locals2 = {}
+        exec(printed1, globals2, locals2)
+        pipeline2 = locals2["pipeline"]
+        printed2 = pipeline2.pretty_print()
+        self.maxDiff = None
+        self.assertEqual(printed1, printed2)
 
 
 # class TestWatForeForecasters(unittest.TestCase):

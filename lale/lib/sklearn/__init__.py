@@ -53,6 +53,7 @@ Regressors:
 * lale.lib.sklearn. `KNeighborsRegressor`_
 * lale.lib.sklearn. `LinearRegression`_
 * lale.lib.sklearn. `LinearSVR`_
+* lale.lib.sklearn. `MultiOutputRegressor`_
 * lale.lib.sklearn. `RandomForestRegressor`_
 * lale.lib.sklearn. `Ridge`_
 * lale.lib.sklearn. `SGDRegressor`_
@@ -121,6 +122,7 @@ Clustering:
 .. _`MissingIndicator`: lale.lib.sklearn.missing_indicator.html
 .. _`MLPClassifier`: lale.lib.sklearn.mlp_classifier.html
 .. _`MultinomialNB`: lale.lib.sklearn.multinomial_nb.html
+.. _`MultiOutputRegressor`: lale.lib.sklearn.multi_output_regressor.html
 .. _`NMF`: lale.lib.sklearn.nmf.html
 .. _`Normalizer`: lale.lib.sklearn.normalizer.html
 .. _`Nystroem`: lale.lib.sklearn.nystroem.html
@@ -184,6 +186,7 @@ from .logistic_regression import LogisticRegression
 from .min_max_scaler import MinMaxScaler
 from .missing_indicator import MissingIndicator
 from .mlp_classifier import MLPClassifier
+from .multi_output_regressor import MultiOutputRegressor
 from .multinomial_nb import MultinomialNB
 from .nmf import NMF
 from .normalizer import Normalizer

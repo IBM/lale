@@ -20,6 +20,8 @@ import pandas as pd
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import schema_silent
+
 try:
     import xgboost  # type: ignore
 
@@ -319,18 +321,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     "description": "Value in the data which needs to be present as a missing value. If"
                     " If None, defaults to np.nan.",
                 },
-                "silent": {
-                    "anyOf": [
-                        {
-                            "type": "boolean",
-                        },
-                        {
-                            "enum": [None],
-                        },
-                    ],
-                    "default": None,
-                    "description": "deprecated and replaced with verbosity, but adding to be backward compatible. ",
-                },
+                "silent": schema_silent,
                 "seed": {
                     "default": None,
                     "description": "deprecated and replaced with random_state, but adding to be backward compatible. ",
