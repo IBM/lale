@@ -150,7 +150,7 @@ def hyperparams_to_string(
             module = sklearn_module(value)
             if gen is not None:
                 gen.imports.append(f"import {module}")
-            actuals = value.get_params(False)
+            actuals = value.get_params(False)  # type: ignore
             defaults = lale.type_checking.get_hyperparam_defaults(value)
             non_defaults = {
                 k: v
@@ -163,14 +163,14 @@ def hyperparams_to_string(
         elif isinstance(value, sklearn.metrics._scorer._BaseScorer):
             if gen is not None:
                 gen.imports.append("import sklearn.metrics")
-            func = value._score_func
+            func = value._score_func  # type: ignore
             module = sklearn_module(func)
             if gen is not None:
                 gen.imports.append(f"import {module}")
             func_string = f"{module}.{func.__name__}"
-            sign_strings = [] if value._sign > 0 else ["greater_is_better=False"]
+            sign_strings = [] if value._sign > 0 else ["greater_is_better=False"]  # type: ignore
             kwargs_strings = [
-                f"{k}={value_to_string(v)}" for k, v in value._kwargs.items()
+                f"{k}={value_to_string(v)}" for k, v in value._kwargs.items()  # type: ignore
             ]
             args_strings = [func_string, *sign_strings, *kwargs_strings]
             printed = f"sklearn.metrics.make_scorer({', '.join(args_strings)})"
