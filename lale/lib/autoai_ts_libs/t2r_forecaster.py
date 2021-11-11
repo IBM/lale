@@ -127,7 +127,7 @@ _combined_schemas = {
 
 .. _`autoai_ts_libs`: https://pypi.org/project/autoai-ts-libs""",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_ts_libs.t2r_forecaster.html",
-    "import_from": "ai4ml_ts.srom.estimators.time_series.models.T2RForecaster",
+    "import_from": "autoai_ts_libs.srom.estimators.time_series.models.T2RForecaster",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "forecaster"], "post": []},
     "properties": {
