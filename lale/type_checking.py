@@ -399,6 +399,16 @@ def _get_args_schema(fun):
     return result
 
 
+def get_hyperparam_defaults(impl):
+    result = {}
+    if hasattr(impl, "__init__"):
+        sig = inspect.signature(impl.__init__)
+        for name, param in sig.parameters.items():
+            if param.default != inspect.Parameter.empty:
+                result[name] = param.default
+    return result
+
+
 def get_default_schema(impl):
     """Creates combined schemas for a bare operator implementation class.
 

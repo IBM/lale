@@ -20,6 +20,8 @@ import pandas as pd
 import lale.docstrings
 import lale.operators
 
+from ._common_schemas import schema_silent
+
 try:
     import xgboost  # type: ignore
 
@@ -155,11 +157,7 @@ _hyperparams_schema = {
                     "minimum": 0,
                     "maximum": 3,
                 },
-                "silent": {
-                    "type": "boolean",
-                    "default": True,
-                    "description": "Whether to print messages while running boosting. Deprecated.",
-                },
+                "silent": schema_silent,
                 "objective": {
                     "description": "Specify the learning task and the corresponding "
                     "learning objective or a custom objective function to be used.",
