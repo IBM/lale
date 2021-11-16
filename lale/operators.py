@@ -3684,6 +3684,65 @@ class BasePipeline(Operator, Generic[OpType]):
         else:
             return op._final_individual_op
 
+    def replace(
+        self, original_op: Operator, replacement_op: Operator
+    ) -> "BasePipeline[OpType]":
+        """Replaces an original operator with a replacement operator for the pipeline.
+
+        Parameters
+        ----------
+        original_op :
+            Operator to replace within pipeline.
+
+        replacement_op :
+            Operator to replace the original with.
+
+        Returns
+        -------
+        modified_pipeline :
+            Modified pipeline where original operator is replaced with replacement.
+        """
+
+        new_steps: List[Operator] = []
+        new_edges: List[Tuple[Operator, Operator]] = []
+
+        replacements: Dict[Operator, Operator] = {}
+
+        # NOTE: needs to deal with multiple levels of nesting
+        for step in self.steps():
+            if step == original_op:
+                new_steps.append(replacement_op)
+            elif isinstance(step, OperatorChoice):
+                old_choice = step
+                new_choice = step
+                if original_op in step.steps():
+                    old_choice = step
+                    if step.steps().index(original_op) == 0:
+                        new_choice = make_choice(replacement_op, step.steps()[1])
+                    else:
+                        new_choice = make_choice(step.steps()[0], replacement_op)
+                replacements[old_choice] = new_choice
+                new_steps.append(new_choice)
+            else:
+                new_steps.append(step)
+
+        for edge in self.edges():
+            new_edge: List[Operator] = [edge[0], edge[1]]
+            if edge[0] == original_op:
+                new_edge[0] = replacement_op
+            if edge[1] == original_op:
+                new_edge[1] = replacement_op
+            if edge[0] in replacements:
+                new_edge[0] = replacements[edge[0]]
+            if edge[1] in replacements:
+                new_edge[1] = replacements[edge[1]]
+            new_tuple: Tuple[Operator, Operator] = (new_edge[0], new_edge[1])
+            new_edges.append(new_tuple)
+
+        modified_pipeline = make_pipeline_graph(new_steps, new_edges)
+
+        return modified_pipeline
+
 
 PlannedOpType = TypeVar("PlannedOpType", bound=PlannedOperator, covariant=True)
 
