@@ -146,6 +146,7 @@ Since lale supports richer structures, we conservatively extend this scheme as f
 """
 
 import copy
+import difflib
 import enum as enumeration
 import importlib
 import inspect
@@ -155,7 +156,6 @@ import os
 import shutil
 import sys
 import warnings
-import difflib
 from abc import abstractmethod
 from types import MappingProxyType
 from typing import (
@@ -453,7 +453,8 @@ class Operator(metaclass=AbstractVisitorMeta):
             markdown = IPython.display.Markdown(f"```python\n{result}\n```")
             return IPython.display.display(markdown)
 
-    def diff(self,
+    def diff(
+        self,
         other: Union[Any, "Operator"],
         show_imports: bool = True,
         customize_schema: bool = True,
@@ -483,11 +484,19 @@ class Operator(metaclass=AbstractVisitorMeta):
             If called with ipython_display=False, return pretty-printed diff as a Python string.
         """
 
-        self_str = self.pretty_print(customize_schema=customize_schema, show_imports=show_imports, ipython_display=False)
-        self_lines = self_str.splitlines()
+        self_str = self.pretty_print(
+            customize_schema=customize_schema,
+            show_imports=show_imports,
+            ipython_display=False,
+        )
+        self_lines = self_str.splitlines()  # type: ignore
 
-        other_str = other.pretty_print(customize_schema=customize_schema, show_imports=show_imports, ipython_display=False)
-        other_lines = other_str.splitlines()
+        other_str = other.pretty_print(
+            customize_schema=customize_schema,
+            show_imports=show_imports,
+            ipython_display=False,
+        )
+        other_lines = other_str.splitlines()  # type: ignore
 
         differ = difflib.Differ()
         compare = differ.compare(self_lines, other_lines)
@@ -500,7 +509,6 @@ class Operator(metaclass=AbstractVisitorMeta):
 
             markdown = IPython.display.Markdown(f"```diff\n{compare_str}\n```")
             return IPython.display.display(markdown)
-        return
 
     @abstractmethod
     def _has_same_impl(self, other: "Operator") -> bool:
