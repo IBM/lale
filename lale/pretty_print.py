@@ -103,6 +103,8 @@ def hyperparams_to_string(
         elif isinstance(value, list):
             sl = [value_to_string(v) for v in value]
             return "[" + ", ".join(sl) + "]"
+        elif isinstance(value, range):
+            return str(value)
         elif isinstance(value, (int, float)) and math.isnan(value):
             return "float('nan')"
         elif isinstance(value, np.dtype):

@@ -439,6 +439,30 @@ cat_encoder = CatEncoder(
 pipeline = cat_encoder >> LR()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
+    def test_autoai_libs_fs1(self):
+        from autoai_libs.cognito.transforms.transform_utils import FS1
+
+        from lale.lib.sklearn import LogisticRegression as LR
+
+        fs1 = FS1(
+            cols_ids_must_keep=range(0, 7),
+            additional_col_count_to_keep=8,
+            ptype="classification",
+        )
+        pipeline = fs1 >> LR()
+        expected = """from autoai_libs.cognito.transforms.transform_utils import FS1
+from sklearn.linear_model import LogisticRegression as LR
+import lale
+
+lale.wrap_imported_operators()
+fs1 = FS1(
+    cols_ids_must_keep=range(0, 7),
+    additional_col_count_to_keep=8,
+    ptype="classification",
+)
+pipeline = fs1 >> LR()"""
+        self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
+
     def test_autoai_libs_numpy_replace_missing_values(self):
         from autoai_libs.transformers.exportable import NumpyReplaceMissingValues
 

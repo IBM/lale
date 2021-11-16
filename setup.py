@@ -45,7 +45,7 @@ else:
         "numpy",
         "black==19.10b0",
         "graphviz",
-        "hyperopt",
+        "hyperopt<=0.2.5",
         "jsonschema",
         "jsonsubschema",
         "scikit-learn",
