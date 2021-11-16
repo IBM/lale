@@ -1309,3 +1309,118 @@ class TestToAndFromJSON(unittest.TestCase):
         operator_2 = from_json(json)
         json_2 = to_json(operator_2)
         self.assertEqual(json, json_2)
+
+class TestDiff(unittest.TestCase):
+
+    def test_single_op(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        single_op = LogisticRegression()
+        single_op_param = LogisticRegression(solver='saga')
+
+        expected_diff = ('  from sklearn.linear_model import LogisticRegression\n'
+        '  import lale\n'
+        '  \n'
+        '  lale.wrap_imported_operators()\n'
+        '- pipeline = LogisticRegression()\n'
+        '+ pipeline = LogisticRegression(solver="saga")\n'
+        '?                               +++++++++++++\n')
+        diff_str = single_op.diff(single_op_param, ipython_display=False)
+        self.assertEqual(diff_str, expected_diff)
+
+        expected_diff_reverse = ('  from sklearn.linear_model import LogisticRegression\n'
+        '  import lale\n'
+        '  \n'
+        '  lale.wrap_imported_operators()\n'
+        '- pipeline = LogisticRegression(solver="saga")\n'
+        '?                               -------------\n\n'
+        '+ pipeline = LogisticRegression()')
+        diff_str_reverse = single_op_param.diff(single_op, ipython_display=False)
+        self.assertEqual(diff_str_reverse, expected_diff_reverse)
+
+    def test_pipeline(self):
+        from lale.lib.sklearn import LogisticRegression
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import SelectKBest
+        from lale.lib.lale import NoOp
+
+        pipeline_simple = PCA >> SelectKBest >> LogisticRegression
+        pipeline_choice = (PCA| NoOp) >> SelectKBest >> LogisticRegression
+
+        expected_diff = ('  from sklearn.decomposition import PCA\n'
+        '+ from lale.lib.lale import NoOp\n'
+        '  from sklearn.feature_selection import SelectKBest\n'
+        '  from sklearn.linear_model import LogisticRegression\n'
+        '  import lale\n'
+        '  \n'
+        '  lale.wrap_imported_operators()\n'
+        '- pipeline = PCA >> SelectKBest >> LogisticRegression\n'
+        '+ pipeline = (PCA | NoOp) >> SelectKBest >> LogisticRegression\n'
+        '?            +   ++++++++\n')
+        diff_str = pipeline_simple.diff(pipeline_choice, ipython_display=False)
+        self.assertEqual(diff_str, expected_diff)
+
+        expected_diff_reverse = ('  from sklearn.decomposition import PCA\n'
+        '- from lale.lib.lale import NoOp\n'
+        '  from sklearn.feature_selection import SelectKBest\n'
+        '  from sklearn.linear_model import LogisticRegression\n'
+        '  import lale\n'
+        '  \n'
+        '  lale.wrap_imported_operators()\n'
+        '- pipeline = (PCA | NoOp) >> SelectKBest >> LogisticRegression\n'
+        '?            -   --------\n\n'
+        '+ pipeline = PCA >> SelectKBest >> LogisticRegression')
+        diff_str_reverse = pipeline_choice.diff(pipeline_simple, ipython_display=False)
+        self.assertEqual(diff_str_reverse, expected_diff_reverse)
+
+    def test_single_op_pipeline(self):
+        from lale.lib.sklearn import LogisticRegression
+        from lale.lib.sklearn import PCA
+        from lale.lib.sklearn import SelectKBest
+        from lale.lib.lale import NoOp
+
+        single_op = LogisticRegression()
+        pipeline = PCA >> SelectKBest >> LogisticRegression
+
+        expected_diff = ('+ from sklearn.decomposition import PCA\n'
+        '+ from sklearn.feature_selection import SelectKBest\n'
+        '  from sklearn.linear_model import LogisticRegression\n'
+        '  import lale\n'
+        '  \n'
+        '  lale.wrap_imported_operators()\n'
+        '- pipeline = LogisticRegression()\n'
+        '+ pipeline = PCA >> SelectKBest >> LogisticRegression')
+        diff_str = single_op.diff(pipeline, ipython_display=False)
+        self.assertEqual(expected_diff, diff_str)
+
+        expected_diff_reverse = ('- from sklearn.decomposition import PCA\n'
+        '- from sklearn.feature_selection import SelectKBest\n'
+        '  from sklearn.linear_model import LogisticRegression\n'
+        '  import lale\n'
+        '  \n'
+        '  lale.wrap_imported_operators()\n'
+        '- pipeline = PCA >> SelectKBest >> LogisticRegression\n'
+        '+ pipeline = LogisticRegression()')
+        diff_str_reverse = pipeline.diff(single_op, ipython_display=False)
+        self.assertEqual(expected_diff_reverse, diff_str_reverse)
+
+    def test_options(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        single_op = LogisticRegression()
+        single_op_schema = single_op.customize_schema(
+            solver={"enum": ["saga"]}
+        )
+
+        expected_diff_no_imports = ('- pipeline = LogisticRegression()\n'
+        '+ pipeline = LogisticRegression.customize_schema(solver={"enum": ["saga"]})()')
+        diff_str_no_imports = single_op.diff(single_op_schema, show_imports=False, ipython_display=False)
+        self.assertEqual(diff_str_no_imports, expected_diff_no_imports)
+
+        expected_diff_no_schema = ('  from sklearn.linear_model import LogisticRegression\n'
+        '  import lale\n'
+        '  \n'
+        '  lale.wrap_imported_operators()\n'
+        '  pipeline = LogisticRegression()')
+        diff_str_no_schema = single_op.diff(single_op_schema, customize_schema=False, ipython_display=False)
+        self.assertEqual(diff_str_no_schema, expected_diff_no_schema)

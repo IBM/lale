@@ -155,6 +155,7 @@ import os
 import shutil
 import sys
 import warnings
+import difflib
 from abc import abstractmethod
 from types import MappingProxyType
 from typing import (
@@ -451,6 +452,55 @@ class Operator(metaclass=AbstractVisitorMeta):
 
             markdown = IPython.display.Markdown(f"```python\n{result}\n```")
             return IPython.display.display(markdown)
+
+    def diff(self,
+        other: Union[Any, "Operator"],
+        show_imports: bool = True,
+        customize_schema: bool = True,
+        ipython_display: bool = True,
+    ):
+        """Displays a diff between this operator and the given other operator.
+
+        Parameters
+        ----------
+        other: Operator
+            Operator to diff against
+
+        show_imports : bool, default True
+            Whether to include import statements in the pretty-printed code.
+
+        customize_schema : bool, default False
+            If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
+
+        ipython_display : bool, default True
+            If True, proactively ask Jupyter to render the graph.
+            Otherwise, the graph will only be rendered when visualize()
+            was called in the last statement in a notebook cell.
+
+        Returns
+        -------
+        str or None
+            If called with ipython_display=False, return pretty-printed diff as a Python string.
+        """
+
+        self_str = self.pretty_print(customize_schema=customize_schema, show_imports=show_imports, ipython_display=False)
+        self_lines = self_str.splitlines()
+
+        other_str = other.pretty_print(customize_schema=customize_schema, show_imports=show_imports, ipython_display=False)
+        other_lines = other_str.splitlines()
+
+        differ = difflib.Differ()
+        compare = differ.compare(self_lines, other_lines)
+
+        compare_str = "\n".join(compare)
+        if ipython_display is False:
+            return compare_str
+        else:
+            import IPython.display
+
+            markdown = IPython.display.Markdown(f"```diff\n{compare_str}\n```")
+            return IPython.display.display(markdown)
+        return
 
     @abstractmethod
     def _has_same_impl(self, other: "Operator") -> bool:
