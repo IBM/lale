@@ -18,19 +18,46 @@ import numpy as np
 import lale.docstrings
 import lale.operators
 
-
 _hyperparams_schema = {
     "allOf": [
         {
             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["strategy", "missing_values", "sklearn_version_family", "activate_flag"],
+            "required": [
+                "strategy",
+                "fill_value",
+                "fill_values",
+                "missing_values",
+                "sklearn_version_family",
+                "activate_flag",
+            ],
             "relevantToOptimizer": ["strategy"],
             "properties": {
                 "strategy": {
                     "description": "The imputation strategy.",
-                    "enum": ["mean", "median", "most_frequent"],
+                    "anyOf": [
+                        {
+                            "enum": ["mean"],
+                            "description": "Replace using the mean along each column. Can only be used with numeric data.",
+                        },
+                        {
+                            "enum": ["median"],
+                            "description": "Replace using the median along each column. Can only be used with numeric data.",
+                        },
+                        {
+                            "enum": ["most_frequent"],
+                            "description": "Replace using most frequent value each column. Used with strings or numeric data.",
+                        },
+                        {
+                            "enum": ["constant"],
+                            "description": "Replace with fill_value. Can be used with strings or numeric data.",
+                        },
+                        {
+                            "enum": ["constants"],
+                            "description": "Replace missing values in columsn with values in fill_values list. Can be used with list of strings or numeric data.",
+                        },
+                    ],
                     "default": "mean",
                 },
 		"fill_value": {
@@ -56,15 +83,13 @@ _hyperparams_schema = {
                  ],
                   "default": None,
                 },
-
-                "missing_values": {
+		"missing_values": {
                     "description": "The placeholder for the missing values. All occurrences of missing_values will be imputed.",
                     "anyOf": [
-                        {"laleType": "Any"},
-                        {
-                            "description": "For missing values encoded as np.nan.",
-                            "enum": [np.nan],
-                        },
+                        {"type": "number"},
+                        {"type": "string"},
+                        {"enum": [np.nan]},
+                        {"enum": [None]},
                     ],
                     "default": np.nan,
                 },
@@ -100,7 +125,6 @@ _input_fit_schema = {
         "y": {"laleType": "Any"},
     },
 }
-
 _input_transform_schema = {
     "type": "object",
     "required": ["X"],
@@ -128,11 +152,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """Operator from `autoai_libs`_. Missing value imputation for numeric features, currently internally uses the sklearn Imputer_.
+    "description": """Operator from `autoai_libs`_. Missing value imputation for categorical features, currently internally uses the sklearn SimpleImputer_.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
-.. _Imputer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Imputer.html#sklearn-preprocessing-imputer""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.num_imputer.html",
+.. _SimpleImputer: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer""",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.cat_imputer.html",
     "import_from": "autoai_libs.transformers.exportable",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
@@ -143,6 +167,7 @@ _combined_schemas = {
         "output_transform": _output_transform_schema,
     },
 }
+
 
 
 NumImputer = lale.operators.make_operator(autoai_libs.transformers.exportable.NumImputer, _combined_schemas)
