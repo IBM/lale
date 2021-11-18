@@ -1417,10 +1417,7 @@ class TestDiff(unittest.TestCase):
         single_op = LogisticRegression()
         single_op_schema = single_op.customize_schema(solver={"enum": ["saga"]})
 
-        expected_diff_no_imports = (
-            "- pipeline = LogisticRegression()\n"
-            '+ pipeline = LogisticRegression.customize_schema(solver={"enum": ["saga"]})()'
-        )
+        expected_diff_no_imports = "  pipeline = LogisticRegression()"
         diff_str_no_imports = single_op.diff(
             single_op_schema, show_imports=False, ipython_display=False
         )
@@ -1431,9 +1428,10 @@ class TestDiff(unittest.TestCase):
             "  import lale\n"
             "  \n"
             "  lale.wrap_imported_operators()\n"
-            "  pipeline = LogisticRegression()"
+            "- pipeline = LogisticRegression()\n"
+            '+ pipeline = LogisticRegression.customize_schema(solver={"enum": ["saga"]})()'
         )
         diff_str_no_schema = single_op.diff(
-            single_op_schema, customize_schema=False, ipython_display=False
+            single_op_schema, customize_schema=True, ipython_display=False
         )
         self.assertEqual(diff_str_no_schema, expected_diff_no_schema)

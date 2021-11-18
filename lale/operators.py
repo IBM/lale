@@ -457,7 +457,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         self,
         other: "Operator",
         show_imports: bool = True,
-        customize_schema: bool = True,
+        customize_schema: bool = False,
         ipython_display: bool = False,
     ):
         """Displays a diff between this operator and the given other operator.
@@ -470,7 +470,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports : bool, default True
             Whether to include import statements in the pretty-printed code.
 
-        customize_schema : bool, default True
+        customize_schema : bool, default False
             If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
 
         ipython_display : bool, default False
