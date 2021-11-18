@@ -455,10 +455,10 @@ class Operator(metaclass=AbstractVisitorMeta):
 
     def diff(
         self,
-        other: Union[Any, "Operator"],
+        other: "Operator",
         show_imports: bool = True,
         customize_schema: bool = True,
-        ipython_display: bool = True,
+        ipython_display: bool = False,
     ):
         """Displays a diff between this operator and the given other operator.
 
@@ -470,13 +470,12 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports : bool, default True
             Whether to include import statements in the pretty-printed code.
 
-        customize_schema : bool, default False
+        customize_schema : bool, default True
             If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
 
-        ipython_display : bool, default True
-            If True, proactively ask Jupyter to render the graph.
-            Otherwise, the graph will only be rendered when visualize()
-            was called in the last statement in a notebook cell.
+        ipython_display : bool, default False
+            If True, will display Markdown-formatted diff string in Jupyter notebook.
+            If False, returns pretty-printing diff as Python string.
 
         Returns
         -------
@@ -502,7 +501,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         compare = differ.compare(self_lines, other_lines)
 
         compare_str = "\n".join(compare)
-        if ipython_display is False:
+        if not ipython_display:
             return compare_str
         else:
             import IPython.display
