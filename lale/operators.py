@@ -146,6 +146,7 @@ Since lale supports richer structures, we conservatively extend this scheme as f
 """
 
 import copy
+import difflib
 import enum as enumeration
 import importlib
 import inspect
@@ -450,6 +451,62 @@ class Operator(metaclass=AbstractVisitorMeta):
             import IPython.display
 
             markdown = IPython.display.Markdown(f"```python\n{result}\n```")
+            return IPython.display.display(markdown)
+
+    def diff(
+        self,
+        other: "Operator",
+        show_imports: bool = True,
+        customize_schema: bool = False,
+        ipython_display: bool = False,
+    ):
+        """Displays a diff between this operator and the given other operator.
+
+        Parameters
+        ----------
+        other: Operator
+            Operator to diff against
+
+        show_imports : bool, default True
+            Whether to include import statements in the pretty-printed code.
+
+        customize_schema : bool, default False
+            If True, then individual operators whose schema differs from the lale.lib version of the operator will be printed with calls to `customize_schema` that reproduce this difference.
+
+        ipython_display : bool, default False
+            If True, will display Markdown-formatted diff string in Jupyter notebook.
+            If False, returns pretty-printing diff as Python string.
+
+        Returns
+        -------
+        str or None
+            If called with ipython_display=False, return pretty-printed diff as a Python string.
+        """
+
+        self_str = self.pretty_print(
+            customize_schema=customize_schema,
+            show_imports=show_imports,
+            ipython_display=False,
+        )
+        self_lines = self_str.splitlines()  # type: ignore
+
+        other_str = other.pretty_print(
+            customize_schema=customize_schema,
+            show_imports=show_imports,
+            ipython_display=False,
+        )
+        other_lines = other_str.splitlines()  # type: ignore
+
+        differ = difflib.Differ()
+        compare = differ.compare(self_lines, other_lines)
+
+        compare_str = "\n".join(compare)
+        if not ipython_display:
+            return compare_str
+        else:
+            import IPython.display
+
+            markdown = IPython.display.Markdown(f"```diff\n{compare_str}\n```")
             return IPython.display.display(markdown)
 
     @abstractmethod
