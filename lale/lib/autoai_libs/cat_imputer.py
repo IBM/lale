@@ -60,30 +60,34 @@ _hyperparams_schema = {
                     ],
                     "default": "mean",
                 },
-		"fill_value": {
-		   "description": "The placeholder for fill value used in constant strategy",
-                   "anyOf": [
-                   {"type": "number"},
-                   {"type": "string"},
-                   {"enum": [np.nan]},
-                  {"enum": [None]},
-                  ],
-                   "default": None,
+                "fill_value": {
+                    "description": "The placeholder for fill value used in constant strategy",
+                    "anyOf": [
+                        {"type": "number"},
+                        {"type": "string"},
+                        {"enum": [np.nan]},
+                        {"enum": [None]},
+                    ],
+                    "default": None,
                 },
-               "fill_values": {
-               "description": "The placeholder for fill values used in constants strategy",
-               "anyOf": [
-                  {"type": "array", "items": {"anyOf": [
-                  {"type": "number"},
-                  {"type": "string"},
-                  {"enum": [np.nan]},
-                  {"enum": [None]},
-                  ],}},
-                  {"enum": [None]},
-                 ],
-                  "default": None,
-                },                
-		"missing_values": {
+                "fill_values": {
+                    "description": "The placeholder for fill values used in constants strategy",
+                    "anyOf": [
+                        {"type": "array",
+                         "items": {
+                             "anyOf": [
+                                 {"type": "number"},
+                                 {"type": "string"},
+                                 {"enum": [np.nan]},
+                                 {"enum": [None]},
+                             ],
+                         }
+                         },
+                        {"enum": [None]},
+                    ],
+                    "default": None,
+                },
+                "missing_values": {
                     "description": "The placeholder for the missing values. All occurrences of missing_values will be imputed.",
                     "anyOf": [
                         {"type": "number"},

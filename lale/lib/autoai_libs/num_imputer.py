@@ -60,30 +60,34 @@ _hyperparams_schema = {
                     ],
                     "default": "mean",
                 },
-		"fill_value": {
-		   "description": "The placeholder for fill value used in constant strategy",
-                   "anyOf": [
-                   {"type": "number"},
-                   {"type": "string"},
-                   {"enum": [np.nan]},
-                  {"enum": [None]},
-                  ],
+		        "fill_value": {
+		            "description": "The placeholder for fill value used in constant strategy",
+                    "anyOf": [
+                        {"type": "number"},
+                        {"type": "string"},
+                        {"enum": [np.nan]},
+                        {"enum": [None]},
+                    ],
                    "default": None,
                 },
                "fill_values": {
-               "description": "The placeholder for fill values used in constants strategy",
-               "anyOf": [
-                  {"type": "array", "items": {"anyOf": [
-                  {"type": "number"},
-                  {"type": "string"},
-                  {"enum": [np.nan]},
-                  {"enum": [None]},
-                  ],}},
-                  {"enum": [None]},
-                 ],
-                  "default": None,
+                   "description": "The placeholder for fill values used in constants strategy",
+                   "anyOf": [
+                      {"type": "array",
+                       "items": {
+                        "anyOf": [
+                            {"type": "number"},
+                            {"type": "string"},
+                            {"enum": [np.nan]},
+                            {"enum": [None]},
+                            ],
+                       }
+                    },
+                    {"enum": [None]},
+                   ],
+                    "default": None,
                 },
-		"missing_values": {
+                "missing_values": {
                     "description": "The placeholder for the missing values. All occurrences of missing_values will be imputed.",
                     "anyOf": [
                         {"type": "number"},
@@ -152,11 +156,11 @@ _output_transform_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """Operator from `autoai_libs`_. Missing value imputation for categorical features, currently internally uses the sklearn SimpleImputer_.
+    "description": """Operator from `autoai_libs`_. Missing value imputation for numerical features, currently internally uses the sklearn SimpleImputer_.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
 .. _SimpleImputer: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.cat_imputer.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.num_imputer.html",
     "import_from": "autoai_libs.transformers.exportable",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
