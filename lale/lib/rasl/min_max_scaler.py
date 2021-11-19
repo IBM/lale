@@ -72,14 +72,12 @@ class _MinMaxScalerImpl:
           X_max = self.data_min_max_[c]['max']
         elif _is_spark_df(X):
           # TODO
-          X_min = self.data_min_max_[c]['min']
-          X_max = self.data_min_max_[c]['max']
           pass
         else:
           raise ValueError(
             "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
           )
-        op = ratio(subtract(it[c], Expr(ast.Num(X_min))), Expr(ast.Num(X_max - X_min))) # TODO: the expression language is not expressive enough to handle this case
+        op = (it[c] - Expr(ast.Num(X_min))) / Expr(ast.Num(X_max - X_min)) # TODO: the expression language is not expressive enough to handle this case
         ops.update({ f'{c}_scaled': op  })
       transformer = Map(columns=ops).fit(X)
       X_transformed = transformer.transform(X)
