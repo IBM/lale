@@ -17,6 +17,7 @@ import traceback
 import typing
 import unittest
 
+import numpy as np
 import sklearn.datasets
 import sklearn.pipeline
 from sklearn.metrics import accuracy_score
@@ -1011,7 +1012,9 @@ class TestPartialFit(unittest.TestCase):
         trainable_pipeline = StandardScaler()
         trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
         new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
-        new_trained_pipeline = new_pipeline.partial_fit(self.X_train, self.y_train)
+        new_trained_pipeline = new_pipeline.partial_fit(
+            self.X_train, self.y_train, classes=[0, 1, 2]
+        )
         _ = new_trained_pipeline.predict(self.X_test)
 
     def test_multiple_calls_with_classes(self):
@@ -1049,7 +1052,19 @@ class TestPartialFit(unittest.TestCase):
         )
         # Once SGDClassifier is trained, it has a classes_ attribute.
         self.assertTrue(hasattr(new_trained_pipeline.get_last()._impl, "classes_"))
-        new_trained_pipeline = new_trained_pipeline.partial_fit(
-            self.X_test, self.y_test
-        )
+        subset_labels = self.y_test[np.where(self.y_test != 0)]
+        subset_X = self.X_test[0 : len(subset_labels)]
+        new_trained_pipeline = new_trained_pipeline.partial_fit(subset_X, subset_labels)
+        _ = new_trained_pipeline.predict(self.X_test)
+
+    def test_second_call_with_different_classes_trainable(self):
+        trainable_pipeline = StandardScaler()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
+        # Once SGDClassifier is trained, it has a classes_ attribute.
+        self.assertTrue(hasattr(new_pipeline._trained.get_last()._impl, "classes_"))
+        subset_labels = self.y_test[np.where(self.y_test != 0)]
+        subset_X = self.X_test[0 : len(subset_labels)]
+        new_trained_pipeline = new_pipeline.partial_fit(subset_X, subset_labels)
         _ = new_trained_pipeline.predict(self.X_test)

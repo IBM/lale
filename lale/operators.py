@@ -176,8 +176,6 @@ from typing import (
     overload,
 )
 
-import numpy as np
-
 if sys.version_info >= (3, 8):
     from typing import Literal  # raises a mypy error for <3.8
 else:
@@ -4337,7 +4335,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return TrainedPipeline(trained_steps, trained_edges, _lale_trained=True)
 
     def partial_fit(
-        self, X, y=None, unsafe=False, classes=None, **fit_params
+        self, X, y=None, unsafe=False, **fit_params
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """partial_fit for a pipeline.
         This method assumes that all but the last node of a pipeline are frozen_trained and
@@ -4354,8 +4352,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             This flag allows users to override the validation that throws an error when the
             the operators in the prefix of this pipeline are not tagged with `has_partial_transform`.
             Setting unsafe to True would perform the transform as if it was row-wise even in the case it may not be.
-        classes:
-
         fit_params:
             dict
             Additional keyword arguments to be passed to partial_fit of the estimator
@@ -4375,9 +4371,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
         only the last node needs to be fit using its partial_fit method."""
             )
-        if y is not None and classes is None:
-            classes = np.unique(y)
-
         if hasattr(self, "_trained"):
             # This is the case where partial_fit has been called before,
             # so the partially fit pipeline is stored in _trained.
@@ -4397,8 +4390,9 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             else:
                 transformed_X = transformed_output
                 transformed_y = y
+
             trained_sink_node = sink_node.partial_fit(
-                transformed_X, transformed_y, classes=classes, **fit_params
+                transformed_X, transformed_y, **fit_params
             )
             new_pipeline = trained_pipeline_prefix >> trained_sink_node
             self._trained = new_pipeline
@@ -4796,8 +4790,6 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
         only the last node needs to be fit using its partial_fit method."""
             )
-        if y is not None and classes is None:
-            classes = np.unique(y)
 
         sink_node = self._steps[-1]
         self.remove_last(inplace=True)
@@ -4808,8 +4800,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             transformed_X = transformed_output
             transformed_y = y
         trained_sink_node = sink_node.partial_fit(
-            transformed_X, transformed_y, classes=classes, **fit_params
-        )
+            transformed_X, transformed_y, **fit_params
+        )  # note: no classes being passed here as we assume the trained pipeline is obtained after a call to partial_fit
         new_pipeline = self >> trained_sink_node
         return new_pipeline
 
