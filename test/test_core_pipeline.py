@@ -25,7 +25,7 @@ import lale.datasets.openml
 import lale.helpers
 import lale.operators
 from lale.helpers import import_from_sklearn_pipeline
-from lale.lib.autogen import SGDClassifier
+from lale.lib.sklearn import SGDClassifier
 from lale.lib.lale import ConcatFeatures, NoOp
 from lale.lib.sklearn import (
     PCA,
@@ -994,3 +994,21 @@ class TestPredictLogProba(unittest.TestCase):
         trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
         with self.assertRaises(AttributeError):
             _ = trained_pipeline.predict_log_proba(self.X_test)
+
+class TestPartialFit(unittest.TestCase):
+    def setUp(self):
+        from sklearn.model_selection import train_test_split
+
+        data = sklearn.datasets.load_iris()
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+        import warnings
+
+        warnings.filterwarnings("ignore")
+
+    def test_trained_pipeline(self):
+        trainable_pipeline = StandardScaler()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
+        new_trained_pipeline = new_pipeline.partial_fit(self.X_train, self.y_train)
+        print(new_trained_pipeline.to_json())

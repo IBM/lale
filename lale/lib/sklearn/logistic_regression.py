@@ -401,7 +401,7 @@ _combined_schemas = {
     "type": "object",
     "tags": {
         "pre": ["~categoricals"],
-        "op": ["estimator", "classifier", "interpretable"],
+        "op": ["estimator", "classifier", "interpretable", "has_partial_transform"],
         "post": ["probabilities"],
     },
     "properties": {
