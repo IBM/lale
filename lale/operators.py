@@ -2464,8 +2464,11 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self._validate_hyperparam_data_constraints(X, y)
         filtered_fit_params = _fixup_hyperparams_dict(fit_params)
 
-        if isinstance(self, TrainedIndividualOp):
-            trainable_impl = self._impl_instance()
+        # if the operator is trainable but has been trained before, use the _trained to
+        # call partial fit, and update ._trained
+        if hasattr(self, "_trained"):
+            self._trained = self._trained.partial_fit(X, y, **fit_params)
+            return self._trained
         else:
             trainable_impl = self._clone_impl()
 
@@ -2735,6 +2738,17 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             set_as_available,
             **kwargs,
         )
+
+    def convert_to_trained(self) -> "TrainedIndividualOp":
+        trained_op = TrainedIndividualOp(
+            _lale_name=self._name,
+            _lale_impl=self.impl,
+            _lale_schemas=self._schemas,
+            _lale_frozen_hyperparameters=self.frozen_hyperparams(),
+            _lale_trained=True,
+        )
+        trained_op._frozen_trained = self._frozen_trained
+        return trained_op
 
 
 class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
@@ -3018,6 +3032,27 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             set_as_available,
             **kwargs,
         )
+
+    def partial_fit(self, X, y=None, **fit_params) -> "TrainedIndividualOp":
+        if not self.has_method("partial_fit"):
+            raise AttributeError(f"{self.name()} has no partial_fit implemented.")
+        X = self._validate_input_schema("X", X, "partial_fit")
+        y = self._validate_input_schema("y", y, "partial_fit")
+        self._validate_hyperparam_data_constraints(X, y)
+        filtered_fit_params = _fixup_hyperparams_dict(fit_params)
+
+        # Since this is a trained operator and we are calling partial_fit,
+        # we allow the trained op to be mutated by using the same impl to
+        # call partial_fit
+        trainable_impl = self.impl
+        if filtered_fit_params is None:
+            trained_impl = trainable_impl.partial_fit(X, y)
+        else:
+            trained_impl = trainable_impl.partial_fit(X, y, **filtered_fit_params)
+        if trained_impl is None:
+            trained_impl = trainable_impl
+        self._impl = trained_impl
+        return self
 
 
 _all_available_operators: List[PlannedOperator] = []
@@ -4345,6 +4380,81 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         ]
         return all(all_transformers)
 
+    def convert_to_trained(self) -> "TrainedPipeline[TrainedIndividualOp]":
+        trained_steps: List[TrainedIndividualOp] = []
+        trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
+        for step in self.steps():
+            trained_step = step.convert_to_trained()
+            trained_steps.append(trained_step)
+            trained_map[step] = trained_step
+
+        trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in self.edges()]
+        return TrainedPipeline(trained_steps, trained_edges, _lale_trained=True)
+
+    def partial_fit(
+        self, X, y=None, unsafe=False, **fit_params
+    ) -> "TrainedPipeline[TrainedIndividualOp]":
+        """partial_fit for a pipeline.
+        This method assumes that all but the last node of a pipeline are frozen_trained and
+        only the last node needs to be fit using its partial_fit method.
+
+        Parameters
+        ----------
+        X :
+            Features; see partial_fit schema of the last node.
+        y:
+            Labels/target
+        unsafe:
+            boolean.
+            This flag allows users to override the validation that throws an error when the
+            the operators in the prefix of this pipeline are not tagged with `has_partial_transform`.
+            Setting unsafe to True would perform the transform as if it was row-wise even in the case it may not be.
+        fit_params:
+            dict
+            Additional keyword arguments to be passed to partial_fit of the estimator
+        Returns
+        -------
+        TrainedPipeline :
+            A partially trained pipeline, which can be trained further by other calls to partial_fit
+
+        """
+        estimator_only = True
+
+        for operator in self._steps[:-1]:
+            if not operator.is_frozen_trained():
+                estimator_only = False
+        if not estimator_only:
+            raise ValueError(
+                """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
+        only the last node needs to be fit using its partial_fit method."""
+            )
+        if hasattr(self, "_trained"):
+            # This is the case where partial_fit has been called before,
+            # so the partially fit pipeline is stored in _trained.
+            # update that object
+            self._trained = self._trained.partial_fit(X, y, **fit_params)
+            return self._trained
+        else:
+            # if this is the first time partial_fit is called on this pipeline,
+            # we would not have a _trained obj, so convert the prefix to a trained pipeline
+            # explicitly and do a transform and partial_fit as expected.
+            sink_node = self._steps[-1]
+            pipeline_prefix = self.remove_last()
+            trained_pipeline_prefix = pipeline_prefix.convert_to_trained()
+            transformed_output = trained_pipeline_prefix.transform(X, y)
+            if isinstance(transformed_output, tuple):
+                transformed_X, transformed_y = transformed_output
+            else:
+                transformed_X = transformed_output
+                transformed_y = y
+
+            trained_sink_node = sink_node.partial_fit(
+                transformed_X, transformed_y, **fit_params
+            )
+            new_pipeline = trained_pipeline_prefix >> trained_sink_node
+            self._trained = new_pipeline
+            return new_pipeline
+
 
 TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)  # type: ignore
 
@@ -4697,6 +4807,60 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         )
         assert result.is_frozen_trained()
         return result
+
+    def partial_fit(
+        self, X, y=None, unsafe=False, classes=None, **fit_params
+    ) -> "TrainedPipeline[TrainedIndividualOp]":
+        """partial_fit for a pipeline.
+        This method assumes that all but the last node of a pipeline are frozen_trained and
+        only the last node needs to be fit using its partial_fit method.
+
+        Parameters
+        ----------
+        X :
+            Features; see partial_fit schema of the last node.
+        y:
+            Labels/target
+        unsafe:
+            boolean.
+            This flag allows users to override the validation that throws an error when the
+            the operators in the prefix of this pipeline are not tagged with `has_partial_transform`.
+            Setting unsafe to True would perform the transform as if it was row-wise even in the case it may not be.
+        fit_params:
+            dict
+            Additional keyword arguments to be passed to partial_fit of the estimator
+        classes:
+
+        Returns
+        -------
+        TrainedPipeline :
+            A partially trained pipeline, which can be trained further by other calls to partial_fit
+
+        """
+        estimator_only = True
+
+        for operator in self._steps[:-1]:
+            if not operator.is_frozen_trained():
+                estimator_only = False
+        if not estimator_only:
+            raise ValueError(
+                """partial_fit is only supported on pipelines when all but the last node are frozen_trained and
+        only the last node needs to be fit using its partial_fit method."""
+            )
+
+        sink_node = self._steps[-1]
+        self.remove_last(inplace=True)
+        transformed_output = self.transform(X, y)
+        if isinstance(transformed_output, tuple):
+            transformed_X, transformed_y = transformed_output
+        else:
+            transformed_X = transformed_output
+            transformed_y = y
+        trained_sink_node = sink_node.partial_fit(
+            transformed_X, transformed_y, **fit_params
+        )  # note: no classes being passed here as we assume the trained pipeline is obtained after a call to partial_fit
+        new_pipeline = self >> trained_sink_node
+        return new_pipeline
 
 
 OperatorChoiceType = TypeVar("OperatorChoiceType", bound=Operator, covariant=True)
