@@ -1018,16 +1018,38 @@ class TestPartialFit(unittest.TestCase):
         trainable_pipeline = StandardScaler()
         trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
         new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
-        new_trained_pipeline = new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0,1,2])
-        new_trained_pipeline = new_trained_pipeline.partial_fit(self.X_test, self.y_test, classes=[0,1,2])
+        new_trained_pipeline = new_pipeline.partial_fit(
+            self.X_train, self.y_train, classes=[0, 1, 2]
+        )
+        new_trained_pipeline = new_trained_pipeline.partial_fit(
+            self.X_test, self.y_test, classes=[0, 1, 2]
+        )
         _ = new_trained_pipeline.predict(self.X_test)
 
     def test_second_call_without_classes(self):
         trainable_pipeline = StandardScaler()
         trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
         new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
-        new_trained_pipeline = new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0,1,2])
-        #Once SGDClassifier is trained, it has a classes_ attribute.
+        new_trained_pipeline = new_pipeline.partial_fit(
+            self.X_train, self.y_train, classes=[0, 1, 2]
+        )
+        # Once SGDClassifier is trained, it has a classes_ attribute.
         self.assertTrue(hasattr(new_trained_pipeline.get_last()._impl, "classes_"))
-        new_trained_pipeline = new_trained_pipeline.partial_fit(self.X_test, self.y_test)
+        new_trained_pipeline = new_trained_pipeline.partial_fit(
+            self.X_test, self.y_test
+        )
+        _ = new_trained_pipeline.predict(self.X_test)
+
+    def test_second_call_with_different_classes(self):
+        trainable_pipeline = StandardScaler()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
+        new_trained_pipeline = new_pipeline.partial_fit(
+            self.X_train, self.y_train, classes=[0, 1, 2]
+        )
+        # Once SGDClassifier is trained, it has a classes_ attribute.
+        self.assertTrue(hasattr(new_trained_pipeline.get_last()._impl, "classes_"))
+        new_trained_pipeline = new_trained_pipeline.partial_fit(
+            self.X_test, self.y_test
+        )
         _ = new_trained_pipeline.predict(self.X_test)
