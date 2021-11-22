@@ -13,7 +13,9 @@
 # limitations under the License.
 
 import numpy as np
-from autoai_ts_libs.transforms.imputers import linear as model_to_be_wrapped # type: ignore # noqa
+from autoai_ts_libs.transforms.imputers import (  # type: ignore # noqa
+    linear as model_to_be_wrapped,
+)
 
 import lale.docstrings
 import lale.operators
