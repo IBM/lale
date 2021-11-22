@@ -923,7 +923,7 @@ class TestFlattenImputers(unittest.TestCase):
         multi_x = test_class.multi_x
 
         # Test univariate timeseries data
-        est=None
+        est = flatten_iterative()
         try:
             for est in test_class.imputers:
                 print("testing", est)
@@ -958,7 +958,7 @@ class TestFlattenImputers(unittest.TestCase):
                 "C": [51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
             }
         )
-        est=None
+        est = flatten_iterative()
         # Test univariate timeseries data
         try:
             for est in test_class.imputers:
@@ -992,7 +992,7 @@ class TestFlattenImputers(unittest.TestCase):
                 "base_imputer__random_state": 24,
             }
         }
-        est=None
+        est = flatten_iterative()
         try:
             for est in test_class.imputers[0:1]:
                 params = PARAMS[est]
@@ -1010,7 +1010,7 @@ class TestFlattenImputers(unittest.TestCase):
         Test get_params
         """
         test_class = self.__class__
-        est=None
+        est = flatten_iterative()
         try:
             for est in test_class.imputers[0:1]:
                 imputer = est()
@@ -1023,7 +1023,7 @@ class TestFlattenImputers(unittest.TestCase):
         Test Fit and transform flatten imputers with less data
         """
         test_class = self.__class__
-        est=None
+        est = flatten_iterative()
         multi_x = pd.DataFrame(
             {
                 "A": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -1077,7 +1077,7 @@ class TestFlattenImputers(unittest.TestCase):
                 "C": [51, 52, -999, 54, 55, 56, -999, 58, 59, 60],
             }
         )
-        est=None
+        est = flatten_iterative()
         # Test univariate timeseries data
         try:
             for est in test_class.imputers:
