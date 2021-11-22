@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import numpy as np
+from autoai_ts_libs.srom.imputers.interpolators import (  # type: ignore # noqa
+    PreMLImputer,
+)
 from autoai_ts_libs.transforms.imputers import (  # type: ignore # noqa
     flatten_iterative as model_to_be_wrapped,
 )
-from autoai_ts_libs.srom.imputers.interpolators import PreMLImputer
 from sklearn.impute import IterativeImputer
 
 import lale.docstrings
@@ -28,7 +30,14 @@ _hyperparams_schema = {
             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["ts_icol_loc", "missing_val_identifier", "enable_fillna", "order", "base_imputer", "model_imputer"],
+            "required": [
+                "ts_icol_loc",
+                "missing_val_identifier",
+                "enable_fillna",
+                "order",
+                "base_imputer",
+                "model_imputer",
+            ],
             "relevantToOptimizer": [],
             "properties": {
                 "ts_icol_loc": {
@@ -46,21 +55,21 @@ _hyperparams_schema = {
                     "type": "boolean",
                     "default": True,
                 },
-                "order":{
-                    "description":"Lookback window.",
-                    "type":"integer",
-                    "default": 5
+                "order": {
+                    "description": "Lookback window.",
+                    "type": "integer",
+                    "default": 5,
                 },
-                "base_imputer":{
-                    "description":"Base imputer object.",
-                    "laleType":"Any",
-                    "default":PreMLImputer()
+                "base_imputer": {
+                    "description": "Base imputer object.",
+                    "laleType": "Any",
+                    "default": PreMLImputer(),
                 },
-                "model_imputer":{
-                    "description":"Model imputer object.",
-                    "laleType":"Any",
-                    "default": IterativeImputer()
-                }
+                "model_imputer": {
+                    "description": "Model imputer object.",
+                    "laleType": "Any",
+                    "default": IterativeImputer(),
+                },
             },
         }
     ]
