@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from autoai_ts_libs.transforms.imputers import linear as model_to_be_wrapped # type: ignore # noqa
+from autoai_ts_libs.transforms.imputers import cubic as model_to_be_wrapped # type: ignore # noqa
 
 import lale.docstrings
 import lale.operators
@@ -95,7 +95,7 @@ _combined_schemas = {
     "description": """Operator from `autoai_ts_libs`_.
 
 .. _`autoai_ts_libs`: https://pypi.org/project/autoai-ts-libs""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_ts_libs.linear.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_ts_libs.cubic.html",
     "import_from": "autoai_ts_libs.transforms.imputers",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer", "imputer"], "post": []},
@@ -107,6 +107,6 @@ _combined_schemas = {
     },
 }
 
-linear = lale.operators.make_operator(model_to_be_wrapped, _combined_schemas)
+cubic = lale.operators.make_operator(model_to_be_wrapped, _combined_schemas)
 
-lale.docstrings.set_docstrings(linear)
+lale.docstrings.set_docstrings(cubic)

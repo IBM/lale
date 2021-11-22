@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from autoai_ts_libs.transforms.imputers import previous as model_to_be_wrapped
+from autoai_ts_libs.transforms.imputers import previous as model_to_be_wrapped # type: ignore # noqa
 
 import lale.docstrings
 import lale.operators

@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import numpy as np
-from autoai_ts_libs.transforms.imputers import linear as model_to_be_wrapped # type: ignore # noqa
+from autoai_ts_libs.transforms.imputers import next as model_to_be_wrapped # type: ignore # noqa
 
 import lale.docstrings
 import lale.operators
@@ -24,11 +24,51 @@ _hyperparams_schema = {
             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["ts_icol_loc", "missing_val_identifier", "enable_fillna"],
+            "required": [
+                "append_tranform",
+                "ts_icol_loc",
+                "ts_ocol_loc",
+                "missing_val_identifier",
+                "default_value",
+            ],
             "relevantToOptimizer": [],
             "properties": {
+                "append_tranform": {
+                    "description": """When set to True applies transformation on the last column and appends all
+original columns to the right of the transformed column. So output will have columns in order,
+                input:
+                timestamp, col_a
+                output
+                timestamp, transformed_col_a, col_a
+                input:
+                timestamp, col_a, col_b
+                output
+                timestamp, transformed_col_b, col_a, col_b
+If append_tranform is set to False, on transformed column along with timestamp will be returned and original columns
+will be dropped.
+                input:
+                timestamp, col_a
+                output
+                timestamp, transformed_col_a""",
+                    "type": "boolean",
+                    "default": False,
+                },
                 "ts_icol_loc": {
-                    "description": "Time column.",
+                    "description": """This parameter tells the forecasting modeling the absolute location of the timestamp column.
+For specifying time stamp location put value in array e.g., [0] if 0th column is time stamp. The array is to support
+multiple timestamps in future. If ts_icol_loc = -1 that means no timestamp is provided and all data is
+time series. With ts_icol_loc=-1, the model will assume all the data is ordered and equally sampled.""",
+                    "anyOf": [
+                        {"type": "array", "items": {"type": "integer"}},
+                        {"enum": [-1]},
+                    ],
+                    "default": -1,
+                },
+                "ts_ocol_loc": {
+                    "description": """This parameter tells the interpolator the absolute location of the timestamp column location in the output of the
+interpolator, if set to -1 then timestamp will not be includeded otherwise it will be included on specified column
+number. if ts_ocol_loc is specified outside range i.e., < 0 or > 'total number of columns' then timestamp is
+appended at 0 i.e., the first column in the output of the interpolator.""",
                     "type": "integer",
                     "default": -1,
                 },
@@ -37,10 +77,11 @@ _hyperparams_schema = {
                     "laleType": "Any",  # TODO:refine type
                     "default": np.nan,
                 },
-                "enable_fillna": {
-                    "description": "Fill na after interpolation if any.",
-                    "type": "boolean",
-                    "default": True,
+                "default_value": {
+                    "description": """This is the default value that will be used by interpolator in cases where it is needed,
+e.g., in case of fill interpolator it is filled with default_value.""",
+                    "type": "number",
+                    "default": 0.0,
                 },
             },
         }
@@ -95,7 +136,7 @@ _combined_schemas = {
     "description": """Operator from `autoai_ts_libs`_.
 
 .. _`autoai_ts_libs`: https://pypi.org/project/autoai-ts-libs""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_ts_libs.linear.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_ts_libs.next.html",
     "import_from": "autoai_ts_libs.transforms.imputers",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer", "imputer"], "post": []},
@@ -107,6 +148,6 @@ _combined_schemas = {
     },
 }
 
-linear = lale.operators.make_operator(model_to_be_wrapped, _combined_schemas)
+next = lale.operators.make_operator(model_to_be_wrapped, _combined_schemas)
 
-lale.docstrings.set_docstrings(linear)
+lale.docstrings.set_docstrings(next)
