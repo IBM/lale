@@ -26,6 +26,7 @@ Operators
 * lale.lib.autoai_ts_libs. `DifferenceFlattenAutoEnsembler`_
 * lale.lib.autoai_ts_libs. `FlattenAutoEnsembler`_
 * lale.lib.autoai_ts_libs. `LocalizedFlattenAutoEnsembler`_
+* lale.lib.autoai_ts_libs. `linear`_
 * lale.lib.autoai_ts_libs. `MT2RForecaster`_
 * lale.lib.autoai_ts_libs. `SmallDataWindowTargetTransformer`_
 * lale.lib.autoai_ts_libs. `StandardRowMeanCenter`_
@@ -43,6 +44,7 @@ Operators
 .. _`DifferenceFlattenAutoEnsembler`: lale.lib.autoai_ts_libs.difference_flatten_auto_ensembler.html
 .. _`FlattenAutoEnsembler`: lale.lib.autoai_ts_libs.flatten_auto_ensembler.html
 .. _`LocalizedFlattenAutoEnsembler`: lale.lib.autoai_ts_libs.localized_flatten_auto_ensembler.html
+.. _`linear`: lale.lib.autoai_ts_libs.linear.html
 .. _`MT2RForecaster`: lale.lib.autoai_ts_libs.mt2r_forecaster.html
 .. _`SmallDataWindowTargetTransformer`: lale.lib.autoai_ts_libs.small_data_window_target_transformer.html
 .. _`StandardRowMeanCenter`: lale.lib.autoai_ts_libs.standard_row_mean_center.html
@@ -62,6 +64,7 @@ from .autoai_windowed_wrapped_regressor import AutoaiWindowedWrappedRegressor
 from .difference_flatten_auto_ensembler import DifferenceFlattenAutoEnsembler
 from .flatten_auto_ensembler import FlattenAutoEnsembler
 from .localized_flatten_auto_ensembler import LocalizedFlattenAutoEnsembler
+from .linear import linear
 from .mt2r_forecaster import MT2RForecaster
 from .small_data_window_target_transformer import SmallDataWindowTargetTransformer
 from .small_data_window_transformer import SmallDataWindowTransformer
