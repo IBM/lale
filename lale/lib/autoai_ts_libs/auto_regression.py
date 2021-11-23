@@ -19,7 +19,6 @@ from autoai_ts_libs.srom.joint_optimizers.auto.auto_regression import (  # type:
 import lale.docstrings
 import lale.operators
 
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -121,8 +120,6 @@ _combined_schemas = {
     },
 }
 
-AutoRegression = lale.operators.make_operator(
-    model_to_be_wrapped, _combined_schemas
-)
+AutoRegression = lale.operators.make_operator(model_to_be_wrapped, _combined_schemas)
 
 lale.docstrings.set_docstrings(AutoRegression)

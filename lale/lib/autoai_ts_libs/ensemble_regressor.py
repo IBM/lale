@@ -19,7 +19,6 @@ from autoai_ts_libs.srom.estimators.regression.auto_ensemble_regressor import ( 
 import lale.docstrings
 import lale.operators
 
-
 _hyperparams_schema = {
     "allOf": [
         {
@@ -121,8 +120,6 @@ _combined_schemas = {
     },
 }
 
-EnsembleRegressor = lale.operators.make_operator(
-    model_to_be_wrapped, _combined_schemas
-)
+EnsembleRegressor = lale.operators.make_operator(model_to_be_wrapped, _combined_schemas)
 
 lale.docstrings.set_docstrings(EnsembleRegressor)

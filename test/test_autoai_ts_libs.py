@@ -1130,7 +1130,7 @@ def create_function_test_schemas(obj_name):
 
 
 objs = [
-    #"lale.lib.autoai_ts_libs.AutoaiTSPipeline",  # does not work as steps can be None or empty
+    # "lale.lib.autoai_ts_libs.AutoaiTSPipeline",  # does not work as steps can be None or empty
     "lale.lib.autoai_ts_libs.AutoaiWindowedWrappedRegressor",
     "lale.lib.autoai_ts_libs.AutoaiWindowTransformedTargetRegressor",
     "lale.lib.autoai_ts_libs.MT2RForecaster",
