@@ -1068,3 +1068,16 @@ class TestPartialFit(unittest.TestCase):
         subset_X = self.X_test[0 : len(subset_labels)]
         new_trained_pipeline = new_pipeline.partial_fit(subset_X, subset_labels)
         _ = new_trained_pipeline.predict(self.X_test)
+
+    def test_call_on_trainable(self):
+        trainable_pipeline = StandardScaler()
+        trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
+        new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
+        new_pipeline.pretty_print()
+        new_trained_pipeline = new_pipeline.partial_fit(
+            self.X_test, self.y_test, classes=[0, 1, 2]
+        )
+        self.assertEqual(new_trained_pipeline, new_pipeline._trained)
+        _ = new_trained_pipeline.predict(self.X_test)
+        new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
