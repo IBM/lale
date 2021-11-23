@@ -2747,7 +2747,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             _lale_frozen_hyperparameters=self.frozen_hyperparams(),
             _lale_trained=True,
         )
-        trained_op._frozen_trained = self._frozen_trained
+        if hasattr(self, "_frozen_trained"):
+            trained_op._frozen_trained = self._frozen_trained
         return trained_op
 
 

@@ -101,12 +101,12 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["lookback_window"],
             "properties": {
                 "feature_columns": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": None,
                 },
                 "target_columns": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": None,
                 },
@@ -170,12 +170,12 @@ The inverse function is used to return predictions to the same space of the orig
                     "default": "forecast",
                 },
                 "time_column": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": -1,
                 },
                 "random_state": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": 42,
                 },
