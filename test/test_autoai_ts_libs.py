@@ -24,6 +24,7 @@ from sklearn.datasets import make_regression
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import TimeSeriesSplit
 
+import lale.type_checking
 from lale.datasets.uci import fetch_household_power_consumption
 from lale.lib.autoai_ts_libs import (  # type: ignore # noqa; StandardRowMeanCenterMTS,; WindowTransformerMTS; DifferenceFlattenAutoEnsembler,; FlattenAutoEnsembler,; LocalizedFlattenAutoEnsembler,
     AutoaiTSPipeline,
@@ -1099,3 +1100,58 @@ class TestFlattenImputers(unittest.TestCase):
                 self.assertFalse(np.any(np.isnan(interpolated)))
         except Exception as e:
             self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+
+class TestSchemas(unittest.TestCase):
+    def setUp(self):
+        pass
+
+
+def create_function_test_schemas(obj_name):
+    def test_schemas(self):
+        import importlib
+
+        module_name = ".".join(obj_name.split(".")[0:-1])
+        class_name = obj_name.split(".")[-1]
+        module = importlib.import_module(module_name)
+
+        class_ = getattr(module, class_name)
+        if class_name == "MT2RForecaster":
+            obj = class_(target_columns=[0])
+        else:
+            obj = class_()
+
+        obj._check_schemas()
+        # test_schemas_are_schemas
+        lale.type_checking.validate_is_schema(obj.hyperparam_schema())
+
+    test_schemas.__name__ = "test_{0}".format(obj.split(".")[-1])
+    return test_schemas
+
+
+objs = [
+    #"lale.lib.autoai_ts_libs.AutoaiTSPipeline",  # does not work as steps can be None or empty
+    "lale.lib.autoai_ts_libs.AutoaiWindowedWrappedRegressor",
+    "lale.lib.autoai_ts_libs.AutoaiWindowTransformedTargetRegressor",
+    "lale.lib.autoai_ts_libs.MT2RForecaster",
+    "lale.lib.autoai_ts_libs.SmallDataWindowTargetTransformer",
+    "lale.lib.autoai_ts_libs.SmallDataWindowTransformer",
+    "lale.lib.autoai_ts_libs.StandardRowMeanCenter",
+    "lale.lib.autoai_ts_libs.T2RForecaster",
+    "lale.lib.autoai_ts_libs.WindowStandardRowMeanCenterMTS",
+    "lale.lib.autoai_ts_libs.cubic",
+    "lale.lib.autoai_ts_libs.flatten_iterative",
+    "lale.lib.autoai_ts_libs.linear",
+    "lale.lib.autoai_ts_libs.fill",
+    "lale.lib.autoai_ts_libs.previous",
+    "lale.lib.autoai_ts_libs.next",
+    "lale.lib.autoai_ts_libs.AutoRegression",
+    "lale.lib.autoai_ts_libs.EnsembleRegressor",
+    "lale.lib.autoai_ts_libs.WatForeForecaster",
+]
+for obj in objs:
+    setattr(
+        TestSchemas,
+        "test_{0}".format(obj.split(".")[-1]),
+        create_function_test_schemas(obj),
+    )

@@ -23,8 +23,10 @@ Operators
 * lale.lib.autoai_ts_libs. `AutoaiTSPipeline`_
 * lale.lib.autoai_ts_libs. `AutoaiWindowTransformedTargetRegressor`_
 * lale.lib.autoai_ts_libs. `AutoaiWindowedWrappedRegressor`_
+* lale.lib.autoai_ts_libs. `AutoRegression`_
 * lale.lib.autoai_ts_libs. `cubic`_
 * lale.lib.autoai_ts_libs. `DifferenceFlattenAutoEnsembler`_
+* lale.lib.autoai_ts_libs. `EnsembleRegressor`_
 * lale.lib.autoai_ts_libs. `fill`_
 * lale.lib.autoai_ts_libs. `flatten_iterative`_
 * lale.lib.autoai_ts_libs. `FlattenAutoEnsembler`_
@@ -46,8 +48,10 @@ Operators
 .. _`AutoaiTSPipeline`: lale.lib.autoai_ts_libs.autoai_ts_pipeline.html
 .. _`AutoaiWindowTransformedTargetRegressor`: lale.lib.autoai_ts_libs.autoai_window_transformed_target_regressor.html
 .. _`AutoaiWindowedWrappedRegressor`: lale.lib.autoai_ts_libs.autoai_windowed_wrapped_regressor.html
+.. _`AutoRegression`: lale.lib.autoai_ts_libs.auto_regression.html
 .. _`cubic`: lale.lib.autoai_ts_libs.cubic.html
 .. _`DifferenceFlattenAutoEnsembler`: lale.lib.autoai_ts_libs.difference_flatten_auto_ensembler.html
+.. _`EnsembleRegressor`: lale.lib.autoai_ts_libs.ensemble_regressor.html
 .. _`fill`: lale.lib.autoai_ts_libs.fill.html
 .. _`flatten_iterative`: lale.lib.autoai_ts_libs.flatten_iterative.html
 .. _`FlattenAutoEnsembler`: lale.lib.autoai_ts_libs.flatten_auto_ensembler.html
@@ -66,6 +70,7 @@ Operators
 .. _`WindowTransformerMTS`: lale.lib.autoai_ts_libs.window_transformer_mts.html
 """
 
+from .auto_regression import AutoRegression
 from .autoai_ts_pipeline import AutoaiTSPipeline
 from .autoai_window_transformed_target_regressor import (
     AutoaiWindowTransformedTargetRegressor,
@@ -73,6 +78,7 @@ from .autoai_window_transformed_target_regressor import (
 from .autoai_windowed_wrapped_regressor import AutoaiWindowedWrappedRegressor
 from .cubic import cubic
 from .difference_flatten_auto_ensembler import DifferenceFlattenAutoEnsembler
+from .ensemble_regressor import EnsembleRegressor
 from .fill import fill
 from .flatten_auto_ensembler import FlattenAutoEnsembler
 from .flatten_iterative import flatten_iterative

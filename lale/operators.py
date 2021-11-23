@@ -1189,7 +1189,6 @@ class IndividualOp(Operator):
             assert self.has_tag(
                 "estimator"
             ), f"{self.class_name()}: {json_to_string(self._schemas)}"
-
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1
 
@@ -3163,6 +3162,7 @@ def make_operator(
             )
 
     operatorObj._check_schemas()
+
     if set_as_available:
         _all_available_operators.append(operatorObj)
     return operatorObj

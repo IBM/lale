@@ -47,7 +47,6 @@ _hyperparams_schema = {
                     "description": "The pipeline steps.",
                     "type": "array",
                     "items": {"laleType": "Any"},
-                    "default": None,
                 },
                 "memory": {
                     "description": """str or object with the joblib.Memory interface.
