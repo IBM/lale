@@ -994,26 +994,3 @@ class TestPredictLogProba(unittest.TestCase):
         trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
         with self.assertRaises(AttributeError):
             _ = trained_pipeline.predict_log_proba(self.X_test)
-
-
-class TestReplace(unittest.TestCase):
-    def test_simple_pipeline(self):
-        from lale.lib.sklearn import PCA, LogisticRegression, SelectKBest, SimpleImputer
-
-        pipeline_simple = PCA >> SelectKBest >> LogisticRegression
-        simple_imputer = SimpleImputer
-        replaced_pipeline = pipeline_simple.replace(PCA, simple_imputer)
-        expected_pipeline = SimpleImputer >> SelectKBest >> LogisticRegression
-
-        self.assertEqual(replaced_pipeline.to_json(), expected_pipeline.to_json())
-
-    def test_choice_pipeline(self):
-        from lale.lib.lale import NoOp
-        from lale.lib.sklearn import PCA, LogisticRegression, SelectKBest, SimpleImputer
-
-        pipeline_choice = (PCA | NoOp) >> SelectKBest >> LogisticRegression
-        simple_imputer = SimpleImputer
-        replaced_pipeline = pipeline_choice.replace(PCA, simple_imputer)
-        expected_pipeline = (SimpleImputer | NoOp) >> SelectKBest >> LogisticRegression
-
-        self.assertEqual(replaced_pipeline.to_json(), expected_pipeline.to_json())

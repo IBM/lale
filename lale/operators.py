@@ -567,6 +567,89 @@ class Operator(metaclass=AbstractVisitorMeta):
         cp = clone(self)
         return cp
 
+    def replace(
+        self, original_op: "Operator", replacement_op: "Operator"
+    ) -> "Operator":
+        """Replaces an original operator with a replacement operator for the given operator.
+        Replacement also occurs for all operators within the given operator's steps (i.e. pipelines and
+        choices). If a planned operator is given as original_op, all downstream operators (including
+        trainable and trained versions) will be replaced. Otherwise, only the exact operator
+        instance will be replaced.
+
+        Parameters
+        ----------
+        original_op :
+            Operator to replace within given operator. If operator is a planned operator,
+            all downstream operators (including trainable and trained versions) will be
+            replaced. Otherwise, only the exact operator instance will be replaced.
+
+        replacement_op :
+            Operator to replace the original with.
+
+        Returns
+        -------
+        modified_operator :
+            Modified operator where original operator is replaced with replacement throughout.
+        """
+
+        # if operator has steps, recursively iterate through steps and recombine
+        if hasattr(self, "steps"):
+            new_steps: List[Operator] = []
+            if isinstance(self, BasePipeline):
+                # first convert pipeline edges to index-based representation
+                index_edges = []
+                for edge in self.edges():
+                    index_edges.append(
+                        (self.steps().index(edge[0]), self.steps().index(edge[1]))
+                    )
+
+                for step in self.steps():
+                    new_steps.append(step.replace(original_op, replacement_op))
+
+                # use previous index-based representation to reconstruct edges
+                new_edges: List[Tuple[Operator, Operator]] = []
+                for index_tuple in index_edges:
+                    new_edges.append(
+                        (new_steps[index_tuple[0]], new_steps[index_tuple[1]])
+                    )
+
+                return make_pipeline_graph(new_steps, new_edges)
+
+            elif isinstance(self, OperatorChoice):
+                for step in self.steps():
+                    new_steps.append(step.replace(original_op, replacement_op))
+                return make_choice(*new_steps)
+
+            else:
+                raise NotImplementedError(
+                    "replace() needs to implement recombining this operator with steps"
+                )
+        else:
+            # base case for recursion: operator with no steps, returns replacement if applicable, original otherwise
+            if not isinstance(original_op, TrainableOperator):
+                # is planned operator, so replace any matching downstream operator
+                if isinstance(self, original_op):  # type: ignore
+                    return replacement_op
+            else:
+                # is trainable or trained operator, only check exact instance match
+                if self == original_op:
+                    return replacement_op
+
+            # special case of operator containing "base_estimator" which refers to another estimator
+            if hasattr(self, "hyperparams"):
+                modified_hyperparams = self.hyperparams()
+                if "base_estimator" in modified_hyperparams:
+                    base_estimator = modified_hyperparams["base_estimator"]
+                    if not isinstance(original_op, TrainableOperator):
+                        if isinstance(base_estimator, original_op):  # type: ignore
+                            modified_hyperparams["base_estimator"] = replacement_op
+                    else:
+                        if base_estimator == original_op:
+                            modified_hyperparams["base_estimator"] = replacement_op
+                    return self(**modified_hyperparams)  # type: ignore
+
+            return self
+
     def with_params(self, **impl_params) -> "Operator":
         """This implements a functional version of set_params
         which returns a new operator instead of modifying the original
@@ -3683,65 +3766,6 @@ class BasePipeline(Operator, Generic[OpType]):
             return None
         else:
             return op._final_individual_op
-
-    def replace(
-        self, original_op: Operator, replacement_op: Operator
-    ) -> "BasePipeline[OpType]":
-        """Replaces an original operator with a replacement operator for the pipeline.
-
-        Parameters
-        ----------
-        original_op :
-            Operator to replace within pipeline.
-
-        replacement_op :
-            Operator to replace the original with.
-
-        Returns
-        -------
-        modified_pipeline :
-            Modified pipeline where original operator is replaced with replacement.
-        """
-
-        new_steps: List[Operator] = []
-        new_edges: List[Tuple[Operator, Operator]] = []
-
-        replacements: Dict[Operator, Operator] = {}
-
-        # NOTE: needs to deal with multiple levels of nesting
-        for step in self.steps():
-            if step == original_op:
-                new_steps.append(replacement_op)
-            elif isinstance(step, OperatorChoice):
-                old_choice = step
-                new_choice = step
-                if original_op in step.steps():
-                    old_choice = step
-                    if step.steps().index(original_op) == 0:
-                        new_choice = make_choice(replacement_op, step.steps()[1])
-                    else:
-                        new_choice = make_choice(step.steps()[0], replacement_op)
-                replacements[old_choice] = new_choice
-                new_steps.append(new_choice)
-            else:
-                new_steps.append(step)
-
-        for edge in self.edges():
-            new_edge: List[Operator] = [edge[0], edge[1]]
-            if edge[0] == original_op:
-                new_edge[0] = replacement_op
-            if edge[1] == original_op:
-                new_edge[1] = replacement_op
-            if edge[0] in replacements:
-                new_edge[0] = replacements[edge[0]]
-            if edge[1] in replacements:
-                new_edge[1] = replacements[edge[1]]
-            new_tuple: Tuple[Operator, Operator] = (new_edge[0], new_edge[1])
-            new_edges.append(new_tuple)
-
-        modified_pipeline = make_pipeline_graph(new_steps, new_edges)
-
-        return modified_pipeline
 
 
 PlannedOpType = TypeVar("PlannedOpType", bound=PlannedOperator, covariant=True)
