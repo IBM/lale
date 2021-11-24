@@ -2748,6 +2748,8 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         )
         if hasattr(self, "_frozen_trained"):
             trained_op._frozen_trained = self._frozen_trained
+        if hasattr(self, "_hyperparams"):
+            trained_op._hyperparams = self._hyperparams
         return trained_op
 
 
@@ -4413,6 +4415,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         fit_params:
             dict
             Additional keyword arguments to be passed to partial_fit of the estimator
+
         Returns
         -------
         TrainedPipeline :
