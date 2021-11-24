@@ -623,7 +623,7 @@ def get_srom_time_series_estimators(
         mode (string, optional) : The available modes are test, benchmark, benchmark_extended.
     """
     srom_estimators = []
-    from autoai_ts_libs.srom.estimators.regression.auto_ensemble_regressor import (
+    from lale.lib.autoai_ts_libs import (
         EnsembleRegressor,
     )
 
@@ -698,14 +698,6 @@ def get_srom_time_series_estimators(
 
 class TestSROMEnsemblers(unittest.TestCase):
     """Test various SROM Ensemblers classes"""
-
-    @classmethod
-    def setUpClass(test_class):
-        pass
-
-    @classmethod
-    def tearDownClass(test_class):
-        pass
 
     @unittest.skip(
         "Does not work as the fit complains that there is no best_estimator_so_far"
