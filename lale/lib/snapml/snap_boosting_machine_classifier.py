@@ -50,6 +50,7 @@ class _SnapBoostingMachineClassifierImpl:
         fit_intercept=False,
         gamma=1.0,
         n_components=10,
+        gpu_ids=[0],
     ):
         assert (
             snapml_installed
@@ -73,13 +74,17 @@ class _SnapBoostingMachineClassifierImpl:
             "use_histograms": use_histograms,
             "hist_nbins": hist_nbins,
             "use_gpu": use_gpu,
-            "gpu_id": gpu_id,
             "tree_select_probability": tree_select_probability,
             "regularizer": regularizer,
             "fit_intercept": fit_intercept,
             "gamma": gamma,
             "n_components": n_components,
         }
+        if snapml.__version__ > "1.7.7":
+            self._hyperparams["gpu_ids"] = gpu_ids
+        else:
+            self._hyperparams["gpu_id"] = gpu_id
+
         self._wrapped_model = snapml.SnapBoostingMachineClassifier(**self._hyperparams)
 
     def fit(self, X, y, **fit_params):
@@ -103,6 +108,32 @@ _hyperparams_schema = {
         {
             "description": "This first sub-object lists all constructor arguments with their types, one at a time, omitting cross-argument constraints.",
             "type": "object",
+            "required": [
+                "num_round",
+                "learning_rate",
+                "random_state",
+                "colsample_bytree",
+                "subsample",
+                "verbose",
+                "lambda_l2",
+                "early_stopping_rounds",
+                "compress_trees",
+                "base_score",
+                "class_weight",
+                "max_depth",
+                "min_max_depth",
+                "max_max_depth",
+                "n_jobs",
+                "use_histograms",
+                "hist_nbins",
+                "use_gpu",
+                "gpu_id",
+                "tree_select_probability",
+                "regularizer",
+                "fit_intercept",
+                "gamma",
+                "n_components",
+            ],
             "relevantToOptimizer": [
                 "num_round",
                 "learning_rate",
@@ -438,5 +469,19 @@ _combined_schemas = {
 SnapBoostingMachineClassifier = lale.operators.make_operator(
     _SnapBoostingMachineClassifierImpl, _combined_schemas
 )
+
+if snapml_installed and snapml.__version__ > "1.7.7":
+    from lale.schemas import Array, Int
+
+    SnapBoostingMachineClassifier = SnapBoostingMachineClassifier.customize_schema(
+        gpu_id=None,
+        gpu_ids=Array(
+            desc="""Device IDs of the GPUs which will be used when GPU acceleration is enabled.""",
+            items=Int(),
+            default=[0],
+            forOptimizer=False,
+        ),
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(SnapBoostingMachineClassifier)

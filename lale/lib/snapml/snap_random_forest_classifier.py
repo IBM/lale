@@ -39,6 +39,7 @@ class _SnapRandomForestClassifierImpl:
         hist_nbins=256,
         use_gpu=False,
         gpu_ids=None,
+        compress_trees=False,
     ):
         assert (
             snapml_installed
@@ -58,6 +59,8 @@ class _SnapRandomForestClassifierImpl:
             "use_gpu": use_gpu,
             "gpu_ids": gpu_ids,
         }
+        if snapml.__version__ > "1.7.7":
+            self._hyperparams["compress_trees"] = compress_trees
         modified_hps = {**self._hyperparams}
         if modified_hps["gpu_ids"] is None:
             modified_hps["gpu_ids"] = [0]  # TODO: support list as default
@@ -342,5 +345,17 @@ _combined_schemas = {
 SnapRandomForestClassifier = lale.operators.make_operator(
     _SnapRandomForestClassifierImpl, _combined_schemas
 )
+
+if snapml_installed and snapml.__version__ > "1.7.7":
+    from lale.schemas import Bool
+
+    SnapRandomForestClassifier = SnapRandomForestClassifier.customize_schema(
+        compress_trees=Bool(
+            desc="""Compress trees after training for fast inference.""",
+            default=False,
+            forOptimizer=False,
+        ),
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(SnapRandomForestClassifier)
