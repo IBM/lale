@@ -1228,9 +1228,9 @@ class TestMap(unittest.TestCase):
         )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.columns[0], "new_gender")
-        self.assertEqual(transformed_df.columns[2], "new_status")
-        self.assertEqual(len(transformed_df.columns), 3)
+        self.assertEqual(df["gender"][0], transformed_df["new_gender"][0])
+        self.assertEqual(df["status"][3], transformed_df["new_status"][3])
+        self.assertEqual(len(transformed_df.columns), 2)
 
     def test_transform_identity_map_error(self):
         d = {
@@ -1289,7 +1289,7 @@ class TestMap(unittest.TestCase):
         )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 3))
+        self.assertEqual(transformed_df.shape, (5, 2))
         self.assertEqual(transformed_df["gender"][0], "Male")
         self.assertEqual(transformed_df["state"][0], "New York")
 
@@ -1310,7 +1310,7 @@ class TestMap(unittest.TestCase):
         )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 3))
+        self.assertEqual(transformed_df.shape, (5, 2))
         self.assertEqual(transformed_df["new_gender"][0], "Male")
         self.assertEqual(transformed_df["new_state"][0], "New York")
 
@@ -1779,7 +1779,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"ratio_h_w": it.height / it.weight})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["ratio_h_w"][0], 0.1)
 
     def test_transform_ratio_map_subscript(self):
@@ -1792,7 +1792,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"ratio_h_w": it["height"] / it.weight})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["ratio_h_w"][0], 0.1)
 
     def test_transform_ratio_map_list(self):
@@ -1817,7 +1817,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"ratio_h_w": ratio(it.height, it.weight)})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["ratio_h_w"][0], 0.1)
 
     def test_transform_ratio_map_function_name_subscript(self):
@@ -1830,7 +1830,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"ratio_h_w": ratio(it["height"], it.weight)})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["ratio_h_w"][0], 0.1)
 
     def test_transform_subtract_map(self):
@@ -1843,7 +1843,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"subtract_h_w": it.height - it.weight})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["subtract_h_w"][0], -27)
 
     def test_transform_subtract_map_subscript(self):
@@ -1856,7 +1856,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"subtract_h_w": it["height"] - it.weight})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["subtract_h_w"][0], -27)
 
     def test_transform_subtract_map_list(self):
@@ -1881,7 +1881,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"subtract_h_w": subtract(it.height, it.weight)})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["subtract_h_w"][0], -27)
 
     def test_transform_subtract_map_function_name_subscript(self):
@@ -1894,7 +1894,7 @@ class TestMap(unittest.TestCase):
         trainable = Map(columns={"subtract_h_w": subtract(it["height"], it.weight)})
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 4))
+        self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["subtract_h_w"][0], -27)
 
     # new test with complex arimetic expressions
