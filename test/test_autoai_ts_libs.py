@@ -623,9 +623,7 @@ def get_srom_time_series_estimators(
         mode (string, optional) : The available modes are test, benchmark, benchmark_extended.
     """
     srom_estimators = []
-    from lale.lib.autoai_ts_libs import (
-        EnsembleRegressor,
-    )
+    from lale.lib.autoai_ts_libs import EnsembleRegressor
 
     # adding P21
     srom_estimators.append(
