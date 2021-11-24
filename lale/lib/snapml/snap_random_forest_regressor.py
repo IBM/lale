@@ -306,7 +306,7 @@ SnapRandomForestRegressor = lale.operators.make_operator(
     _SnapRandomForestRegressorImpl, _combined_schemas
 )
 
-if snapml_installed and snapml.__version__ > "1.7.7":
+if snapml_installed and snapml.__version__ > "1.7.7":  # type: ignore # noqa
     from lale.schemas import Bool
 
     SnapRandomForestRegressor = SnapRandomForestRegressor.customize_schema(

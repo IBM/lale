@@ -346,7 +346,7 @@ SnapRandomForestClassifier = lale.operators.make_operator(
     _SnapRandomForestClassifierImpl, _combined_schemas
 )
 
-if snapml_installed and snapml.__version__ > "1.7.7":
+if snapml_installed and snapml.__version__ > "1.7.7":  # type: ignore # noqa
     from lale.schemas import Bool
 
     SnapRandomForestClassifier = SnapRandomForestClassifier.customize_schema(
