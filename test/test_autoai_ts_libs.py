@@ -14,7 +14,6 @@
 
 import copy
 import unittest
-
 from multiprocessing import cpu_count
 from typing import cast
 
@@ -507,7 +506,6 @@ class TestWatForeForecasters(unittest.TestCase):
             "................................Watfore TSLIB Training and Pickle Write.................................."
         )
         # for this make sure sys.modules['ai4ml_ts.estimators'] = watfore is removed from init otherwise package is confused
-#        try:
         import pickle
 
         from lale.lib.autoai_ts_libs import WatForeForecaster
@@ -532,9 +530,7 @@ class TestWatForeForecasters(unittest.TestCase):
         pr_before = fr.predict(None)
         fr2 = None
         print("Predictions before saving", pr_before)
-        f_name = (
-            "./lale/datasets/autoai/watfore_pipeline.pickle"  # ./tests/watfore/watfore_pipeline.pickle
-        )
+        f_name = "./lale/datasets/autoai/watfore_pipeline.pickle"  # ./tests/watfore/watfore_pipeline.pickle
         with open(f_name, "wb") as pkl_dump:
             pickle.dump(ml, pkl_dump)
         pr2 = fr.predict(None)
@@ -598,8 +594,9 @@ class TestImportExport(unittest.TestCase):
         self.y = self.y.astype("float64").fillna(0).to_numpy()
 
 
-def train_test_split(inputX,split_size):
-    return inputX[:split_size],inputX[split_size:]
+def train_test_split(inputX, split_size):
+    return inputX[:split_size], inputX[split_size:]
+
 
 def get_srom_time_series_estimators(
     feature_column_indices,
@@ -629,6 +626,7 @@ def get_srom_time_series_estimators(
     from autoai_ts_libs.srom.estimators.regression.auto_ensemble_regressor import (
         EnsembleRegressor,
     )
+
     # adding P21
     srom_estimators.append(
         MT2RForecaster(
@@ -669,7 +667,7 @@ def get_srom_time_series_estimators(
         "execution_time_per_pipeline": 3,
         "store_lookback_history": True,
         "n_jobs": n_jobs,
-        "estimator":ensemble_regressor
+        "estimator": ensemble_regressor,
     }
 
     if prediction_horizon > 1:
@@ -697,6 +695,7 @@ def get_srom_time_series_estimators(
 
     return srom_estimators
 
+
 class TestSROMEnsemblers(unittest.TestCase):
     """Test various SROM Ensemblers classes"""
 
@@ -707,128 +706,148 @@ class TestSROMEnsemblers(unittest.TestCase):
     @classmethod
     def tearDownClass(test_class):
         pass
-    
-    @unittest.skip("Does not work as the fit complains that there is no best_estimator_so_far")
+
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
     def test_fit_predict_predict_sliding_window_univariate_single_step(self):
-        X = np.arange(1,441)
-        X = X.reshape(-1,1)
-        SIZE=len(X)
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        SIZE = len(X)
         target_columns = [0]
         number_rows = SIZE
         prediction_horizon = 1
         lookback_window = 10
-        run_mode = 'test'
+        run_mode = "test"
 
-        srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-                                                               target_column_indices=target_columns,
-                                                               lookback_window=lookback_window,
-                                                               prediction_horizon=prediction_horizon,
-                                                               optimization_stetagy='Once',
-                                                               mode=run_mode,
-                                                               number_rows=number_rows,
-                                                               )
-        for index,estimator in enumerate(srom_estimators[1:]):
-            X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
             estimator.fit(X_train)
             y_pred = estimator.predict(X_test)
-            assert(len(y_pred)==prediction_horizon)
-            assert(y_pred.shape[1]==len(target_columns))
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
             y_pred_win = estimator.predict_sliding_window(X_test)
-            assert(len(y_pred_win)==lookback_window+1)
-            assert(y_pred_win.shape[1]==len(target_columns))
+            assert len(y_pred_win) == lookback_window + 1
+            assert y_pred_win.shape[1] == len(target_columns)
 
-    @unittest.skip("Does not work as the fit complains that there is no best_estimator_so_far")
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
     def test_fit_predict_predict_sliding_window_univariate_multi_step(self):
-        X = np.arange(1,441)
-        X = X.reshape(-1,1)
-        SIZE=len(X)
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        SIZE = len(X)
         target_columns = [0]
         number_rows = SIZE
         prediction_horizon = 8
         lookback_window = 10
-        run_mode = 'test'
+        run_mode = "test"
 
-        srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-                                                               target_column_indices=target_columns,
-                                                               lookback_window=lookback_window,
-                                                               prediction_horizon=prediction_horizon,
-                                                               optimization_stetagy='Once',
-                                                               mode=run_mode,
-                                                               number_rows=number_rows,
-                                                               )
-        for index,estimator in enumerate(srom_estimators[1:]):
-            X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
             estimator.fit(X_train)
             y_pred = estimator.predict(X_test)
-            assert(len(y_pred)==prediction_horizon)
-            assert(y_pred.shape[1]==len(target_columns))
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
             y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
-            assert(y_pred_win.shape[1]==len(target_columns))
+            assert y_pred_win.shape[1] == len(target_columns)
 
-    @unittest.skip("Does not work as the fit complains that there is no best_estimator_so_far")
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
     def test_fit_predict_predict_sliding_window_multivariate_single_step(self):
-        X = np.arange(1,441)
-        X = X.reshape(-1,1)
-        X2 = np.arange(1001,1441)
-        X2 = X2.reshape(-1,1)
-        X3 = np.arange(10001,10441)
-        X3 = X3.reshape(-1,1)
-        X = np.hstack([X,X2,X3])
-        SIZE=len(X)
-        target_columns = [0,1,2]
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        X2 = np.arange(1001, 1441)
+        X2 = X2.reshape(-1, 1)
+        X3 = np.arange(10001, 10441)
+        X3 = X3.reshape(-1, 1)
+        X = np.hstack([X, X2, X3])
+        SIZE = len(X)
+        target_columns = [0, 1, 2]
         number_rows = SIZE
         prediction_horizon = 1
         lookback_window = 10
-        run_mode = 'test'
-        srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-                                                               target_column_indices=target_columns,
-                                                               lookback_window=lookback_window,
-                                                               prediction_horizon=prediction_horizon,
-                                                               optimization_stetagy='Once',
-                                                               mode=run_mode,
-                                                               number_rows=number_rows,
-                                                               )
-        for index,estimator in enumerate(srom_estimators[1:]):
-            X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+        run_mode = "test"
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
             estimator.fit(X_train)
             y_pred = estimator.predict(X_test)
-            assert(len(y_pred)==prediction_horizon)
-            assert(y_pred.shape[1]==len(target_columns))
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
             y_pred_win = estimator.predict_sliding_window(X_test)
-            assert(len(y_pred_win)==lookback_window+1)
-            assert(y_pred_win.shape[1]==len(target_columns))
+            assert len(y_pred_win) == lookback_window + 1
+            assert y_pred_win.shape[1] == len(target_columns)
 
-    @unittest.skip("Does not work as the fit complains that there is no best_estimator_so_far")
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
     def test_fit_predict_predict_sliding_window_multivariate_multi_step(self):
-        X = np.arange(1,441)
-        X = X.reshape(-1,1)
-        X2 = np.arange(1001,1441)
-        X2 = X2.reshape(-1,1)
-        X3 = np.arange(10001,10441)
-        X3 = X3.reshape(-1,1)
-        X = np.hstack([X,X2,X3])
-        SIZE=len(X)
-        target_columns = [0,1,2]
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        X2 = np.arange(1001, 1441)
+        X2 = X2.reshape(-1, 1)
+        X3 = np.arange(10001, 10441)
+        X3 = X3.reshape(-1, 1)
+        X = np.hstack([X, X2, X3])
+        SIZE = len(X)
+        target_columns = [0, 1, 2]
         number_rows = SIZE
         prediction_horizon = 8
         lookback_window = 10
-        run_mode = 'test'
-        srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-                                                               target_column_indices=target_columns,
-                                                               lookback_window=lookback_window,
-                                                               prediction_horizon=prediction_horizon,
-                                                               optimization_stetagy='Once',
-                                                               mode=run_mode,
-                                                               number_rows=number_rows,
-                                                               )
-        for index,estimator in enumerate(srom_estimators[1:]):
-            X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
+        run_mode = "test"
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
             estimator.fit(X_train)
             y_pred = estimator.predict(X_test)
-            assert(len(y_pred)==prediction_horizon)
-            assert(y_pred.shape[1]==len(target_columns))
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
             y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
-            assert(y_pred_win.shape[1]==len(target_columns))
+            assert y_pred_win.shape[1] == len(target_columns)
 
 
 class TestInterpolatorImputers(unittest.TestCase):
