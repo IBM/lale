@@ -56,6 +56,8 @@ class _MapImpl:
         self.remainder = remainder
 
     def transform(self, X):
+        is_pandas = False
+        is_spark = False
         table_name = lale.datasets.data_schemas.get_table_name(X)
         if _is_pandas_df(X):
             is_pandas = True

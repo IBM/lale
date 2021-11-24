@@ -1897,8 +1897,57 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df.shape, (5, 1))
         self.assertEqual(transformed_df["subtract_h_w"][0], -27)
 
-    # new test with complex arimetic expressions
+    def test_transform_binops(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        trainable = Map(columns={"add_h_w": it["height"] + it.weight,
+                                 "add_h_2": it["height"] + 2,
+                                 "sub_h_w": it["height"] - it.weight,
+                                 "sub_h_2": it["height"] - 2,
+                                 "mul_h_w": it["height"] * it.weight,
+                                 "mul_h_2": it["height"] * 2,
+                                 "div_h_w": it["height"] / it.weight,
+                                 "div_h_2": it["height"] / 2,
+                                 "floor_div_h_w": it["height"] // it.weight,
+                                 "floor_div_h_2": it["height"] // 2,
+                                 "mod_h_w": it["height"] % it.weight,
+                                 "mod_h_2": it["height"] % 2,
+                                 "pow_h_w": it["height"] ** it.weight,
+                                 "pow_h_2": it["height"] ** 2,})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (5, 14))
+        self.assertEqual(transformed_df["add_h_w"][1], df["height"][1] + df["weight"][1])
+        self.assertEqual(transformed_df["add_h_2"][1], df["height"][1] + 2)
+        self.assertEqual(transformed_df["sub_h_w"][1], df["height"][1] - df["weight"][1])
+        self.assertEqual(transformed_df["sub_h_2"][1], df["height"][1] - 2)
+        self.assertEqual(transformed_df["mul_h_w"][1], df["height"][1] * df["weight"][1])
+        self.assertEqual(transformed_df["mul_h_2"][1], df["height"][1] * 2)
+        self.assertEqual(transformed_df["div_h_w"][1], df["height"][1] / df["weight"][1])
+        self.assertEqual(transformed_df["div_h_2"][1], df["height"][1] / 2)
+        self.assertEqual(transformed_df["floor_div_h_w"][1], df["height"][1] // df["weight"][1])
+        self.assertEqual(transformed_df["floor_div_h_2"][1], df["height"][1] // 2)
+        self.assertEqual(transformed_df["mod_h_w"][1], df["height"][1] % df["weight"][1])
+        self.assertEqual(transformed_df["mod_h_2"][1], df["height"][1] % 2)
+        self.assertEqual(transformed_df["pow_h_w"][1], df["height"][1] ** df["weight"][1])
+        self.assertEqual(transformed_df["pow_h_2"][1], df["height"][1] ** 2)
 
+    def test_transform_arithmetic_expression(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        trainable = Map(columns={"expr": (it["height"] + it.weight * 10) / 2})
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df.shape, (5, 1))
+        self.assertEqual(transformed_df["expr"][2], (df["height"][2] + df["weight"][2] * 10) / 2)
 
 class TestRelationalOperator(unittest.TestCase):
     def setUp(self):
@@ -2484,6 +2533,61 @@ class TestMapSpark(unittest.TestCase):
         self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 4))
         self.assertEqual(transformed_df.collect()[0]["subtract_h_w"], -27)
 
+    def test_transform_binops(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns={"add_h_w": it["height"] + it.weight,
+                                 "add_h_2": it["height"] + 2,
+                                 "sub_h_w": it["height"] - it.weight,
+                                 "sub_h_2": it["height"] - 2,
+                                 "mul_h_w": it["height"] * it.weight,
+                                 "mul_h_2": it["height"] * 2,
+                                 "div_h_w": it["height"] / it.weight,
+                                 "div_h_2": it["height"] / 2,
+                                 "floor_div_h_w": it["height"] // it.weight,
+                                 "floor_div_h_2": it["height"] // 2,
+                                 "mod_h_w": it["height"] % it.weight,
+                                 "mod_h_2": it["height"] % 2,
+                                 "pow_h_w": it["height"] ** it.weight,
+                                 "pow_h_2": it["height"] ** 2,})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 14))
+        transformed_df = transformed_df.collect()
+        self.assertEqual(transformed_df["add_h_w"][1], df["height"][1] + df["weight"][1])
+        self.assertEqual(transformed_df["add_h_2"][1], df["height"][1] + 2)
+        self.assertEqual(transformed_df["sub_h_w"][1], df["height"][1] - df["weight"][1])
+        self.assertEqual(transformed_df["sub_h_2"][1], df["height"][1] - 2)
+        self.assertEqual(transformed_df["mul_h_w"][1], df["height"][1] * df["weight"][1])
+        self.assertEqual(transformed_df["mul_h_2"][1], df["height"][1] * 2)
+        self.assertEqual(transformed_df["div_h_w"][1], df["height"][1] / df["weight"][1])
+        self.assertEqual(transformed_df["div_h_2"][1], df["height"][1] / 2)
+        self.assertEqual(transformed_df["floor_div_h_w"][1], df["height"][1] // df["weight"][1])
+        self.assertEqual(transformed_df["floor_div_h_2"][1], df["height"][1] // 2)
+        self.assertEqual(transformed_df["mod_h_w"][1], df["height"][1] % df["weight"][1])
+        self.assertEqual(transformed_df["mod_h_2"][1], df["height"][1] % 2)
+        self.assertEqual(transformed_df["pow_h_w"][1], df["height"][1] ** df["weight"][1])
+        self.assertEqual(transformed_df["pow_h_2"][1], df["height"][1] ** 2)
+
+    def test_transform_arithmetic_expression(self):
+        d = {
+            "height": [3, 4, 6, 3, 5],
+            "weight": [30, 50, 170, 40, 130],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(columns={"expr": (it["height"] + it.weight * 10) / 2})
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 1))
+        transformed_df = transformed_df.collect()
+        self.assertEqual(transformed_df["expr"][2], (df["height"][2] + df["weight"][2] * 10) / 2)
 
 class TestOrderBy(unittest.TestCase):
     def setUp(self):
