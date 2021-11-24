@@ -13,8 +13,6 @@
 # limitations under the License.
 
 import ast
-import datetime
-from itertools import chain
 from typing import Any
 
 import numpy as np
@@ -26,8 +24,6 @@ from lale.expressions import AstExpr
 from lale.helpers import (
     _is_ast_attribute,
     _is_ast_subscript,
-    _is_pandas_df,
-    _is_spark_df,
 )
 
 

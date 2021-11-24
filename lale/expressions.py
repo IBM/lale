@@ -215,7 +215,7 @@ class Expr:
     def __sub__(self, other):
         return _make_binop(ast.Sub(), self._expr, other)
 
-    def __mult__(self, other):
+    def __mul__(self, other):
         return _make_binop(ast.Mult(), self._expr, other)
 
     def __truediv__(self, other):
