@@ -66,7 +66,7 @@ jobs:
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autoai_ts_libs.py
-          python-version: 3.7
+          python-version: 3.8
           setup-target: '.[test]'
         - test-case: test/test_autogen_lib.py
           python-version: 3.6

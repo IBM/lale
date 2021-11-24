@@ -35,6 +35,8 @@ import os
 import sys
 from typing import Dict
 
+from lale.settings import set_disable_hyperparams_schema_validation
+
 # -- Project information -----------------------------------------------------
 
 project = "LALE"
@@ -49,6 +51,11 @@ release = ""
 
 sys.path.append(os.path.join(os.path.dirname(__name__), "../lale"))
 import sphinx_rtd_theme  # isort:skip # noqa:E402
+
+# For packages with mock imports, if we have wrappers without our impl classes,
+# schema validation fails as the mocking adds methods such as `transform`, `predict` etc.
+# when the schema may not have those tags. So we disable schema validation during doc generation.
+set_disable_hyperparams_schema_validation(True)
 
 # This is so that we can detect if we are running a sphinx build
 # and so generate pseudo-classes for documentation

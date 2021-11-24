@@ -114,7 +114,7 @@ _hyperparams_schema = {
                     "description": """Regressor object.
 This regressor will automatically be cloned each time prior to fitting.
 If regressor is None, LinearRegression() is created and used.""",
-                    "laleType": "operator",
+                    "anyOf": [{"laleType": "operator"}, {"enum": [None]}],
                     "default": None,
                 },
                 "lookback_window": {
