@@ -60,31 +60,32 @@ _hyperparams_schema = {
                     ],
                     "default": "mean",
                 },
-		        "fill_value": {
-		            "description": "The placeholder for fill value used in constant strategy",
+                "fill_value": {
+                    "description": "The placeholder for fill value used in constant strategy",
                     "anyOf": [
                         {"type": "number"},
                         {"type": "string"},
                         {"enum": [np.nan]},
                         {"enum": [None]},
                     ],
-                   "default": None,
+                    "default": None,
                 },
-               "fill_values": {
-                   "description": "The placeholder for fill values used in constants strategy",
-                   "anyOf": [
-                      {"type": "array",
-                       "items": {
-                        "anyOf": [
-                            {"type": "number"},
-                            {"type": "string"},
-                            {"enum": [np.nan]},
-                            {"enum": [None]},
-                            ],
-                       }
-                    },
-                    {"enum": [None]},
-                   ],
+                "fill_values": {
+                    "description": "The placeholder for fill values used in constants strategy",
+                    "anyOf": [
+                        {
+                            "type": "array",
+                            "items": {
+                                "anyOf": [
+                                    {"type": "number"},
+                                    {"type": "string"},
+                                    {"enum": [np.nan]},
+                                    {"enum": [None]},
+                                ],
+                            },
+                        },
+                        {"enum": [None]},
+                    ],
                     "default": None,
                 },
                 "missing_values": {
@@ -173,7 +174,8 @@ _combined_schemas = {
 }
 
 
-
-NumImputer = lale.operators.make_operator(autoai_libs.transformers.exportable.NumImputer, _combined_schemas)
+NumImputer = lale.operators.make_operator(
+    autoai_libs.transformers.exportable.NumImputer, _combined_schemas
+)
 
 lale.docstrings.set_docstrings(NumImputer)

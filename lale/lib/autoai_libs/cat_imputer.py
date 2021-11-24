@@ -73,16 +73,17 @@ _hyperparams_schema = {
                 "fill_values": {
                     "description": "The placeholder for fill values used in constants strategy",
                     "anyOf": [
-                        {"type": "array",
-                         "items": {
-                             "anyOf": [
-                                 {"type": "number"},
-                                 {"type": "string"},
-                                 {"enum": [np.nan]},
-                                 {"enum": [None]},
-                             ],
-                         }
-                         },
+                        {
+                            "type": "array",
+                            "items": {
+                                "anyOf": [
+                                    {"type": "number"},
+                                    {"type": "string"},
+                                    {"enum": [np.nan]},
+                                    {"enum": [None]},
+                                ],
+                            },
+                        },
                         {"enum": [None]},
                     ],
                     "default": None,
@@ -174,7 +175,9 @@ _combined_schemas = {
 }
 
 
-CatImputer = lale.operators.make_operator(autoai_libs.transformers.exportable.CatImputer, _combined_schemas)
+CatImputer = lale.operators.make_operator(
+    autoai_libs.transformers.exportable.CatImputer, _combined_schemas
+)
 
 
 lale.docstrings.set_docstrings(CatImputer)
