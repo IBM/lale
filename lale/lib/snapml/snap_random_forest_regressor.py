@@ -59,7 +59,7 @@ class _SnapRandomForestRegressorImpl:
             "use_gpu": use_gpu,
             "gpu_ids": gpu_ids,
         }
-        if snapml.__version__ > "1.7.7":
+        if snapml.__version__ > "1.7.8":
             self._hyperparams["compress_trees"] = compress_trees
 
         modified_hps = {**self._hyperparams}
@@ -306,7 +306,7 @@ SnapRandomForestRegressor = lale.operators.make_operator(
     _SnapRandomForestRegressorImpl, _combined_schemas
 )
 
-if snapml_installed and snapml.__version__ > "1.7.7":  # type: ignore # noqa
+if snapml_installed and snapml.__version__ > "1.7.8":  # type: ignore # noqa
     from lale.schemas import Bool
 
     SnapRandomForestRegressor = SnapRandomForestRegressor.customize_schema(

@@ -80,7 +80,7 @@ class _SnapBoostingMachineClassifierImpl:
             "gamma": gamma,
             "n_components": n_components,
         }
-        if snapml.__version__ > "1.7.7":
+        if snapml.__version__ > "1.7.8":
             self._hyperparams["gpu_ids"] = gpu_ids
         else:
             self._hyperparams["gpu_id"] = gpu_id
@@ -470,7 +470,7 @@ SnapBoostingMachineClassifier = lale.operators.make_operator(
     _SnapBoostingMachineClassifierImpl, _combined_schemas
 )
 
-if snapml_installed and snapml.__version__ > "1.7.7":  # type: ignore # noqa
+if snapml_installed and snapml.__version__ > "1.7.8":  # type: ignore # noqa
     from lale.schemas import Array, Int
 
     SnapBoostingMachineClassifier = SnapBoostingMachineClassifier.customize_schema(
