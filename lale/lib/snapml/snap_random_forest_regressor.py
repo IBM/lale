@@ -39,6 +39,7 @@ class _SnapRandomForestRegressorImpl:
         hist_nbins=256,
         use_gpu=False,
         gpu_ids=None,
+        compress_trees=False,
     ):
         assert (
             snapml_installed
@@ -57,6 +58,7 @@ class _SnapRandomForestRegressorImpl:
             "hist_nbins": hist_nbins,
             "use_gpu": use_gpu,
             "gpu_ids": gpu_ids,
+            "compress_trees": compress_trees,
         }
         modified_hps = {**self._hyperparams}
         if modified_hps["gpu_ids"] is None:
@@ -205,6 +207,11 @@ _hyperparams_schema = {
                     ],
                     "default": None,
                     "description": "Device IDs of the GPUs which will be used when GPU acceleration is enabled.",
+                },
+                "compress_trees": {
+                    "type": "boolean",
+                    "default": False,
+                    "description": "Compress trees after training for fast inference.",
                 },
             },
         },

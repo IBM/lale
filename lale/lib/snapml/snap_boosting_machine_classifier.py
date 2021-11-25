@@ -44,7 +44,7 @@ class _SnapBoostingMachineClassifierImpl:
         use_histograms=True,
         hist_nbins=256,
         use_gpu=False,
-        gpu_id=0,
+        gpu_ids=None,
         tree_select_probability=1.0,
         regularizer=1.0,
         fit_intercept=False,
@@ -73,14 +73,18 @@ class _SnapBoostingMachineClassifierImpl:
             "use_histograms": use_histograms,
             "hist_nbins": hist_nbins,
             "use_gpu": use_gpu,
-            "gpu_id": gpu_id,
+            "gpu_ids": gpu_ids,
             "tree_select_probability": tree_select_probability,
             "regularizer": regularizer,
             "fit_intercept": fit_intercept,
             "gamma": gamma,
             "n_components": n_components,
         }
-        self._wrapped_model = snapml.SnapBoostingMachineClassifier(**self._hyperparams)
+        modified_hps = {**self._hyperparams}
+        if modified_hps["gpu_ids"] is None:
+            modified_hps["gpu_ids"] = [0]  # TODO: support list as default
+
+        self._wrapped_model = snapml.SnapBoostingMachineClassifier(**modified_hps)
 
     def fit(self, X, y, **fit_params):
         X = lale.datasets.data_schemas.strip_schema(X)
@@ -235,10 +239,13 @@ _hyperparams_schema = {
                     "default": False,
                     "description": "Use GPU for tree-building.",
                 },
-                "gpu_id": {
-                    "type": "integer",
-                    "default": 0,
-                    "description": "Device ID for GPU to use during training.",
+                "gpu_ids": {
+                    "anyOf": [
+                        {"description": "Use [0].", "enum": [None]},
+                        {"type": "array", "items": {"type": "integer"}},
+                    ],
+                    "default": None,
+                    "description": "Device IDs of the GPUs which will be used when GPU acceleration is enabled.",
                 },
                 "tree_select_probability": {
                     "type": "number",
