@@ -15,6 +15,7 @@
 import sklearn
 import sklearn.linear_model
 
+import lale.schemas as schemas
 import lale.docstrings
 import lale.operators
 
@@ -260,7 +261,60 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
             "default": False,
             "forOptimizer": False,
         },
+        positive={
+            "type": "boolean",
+            "description": """When set to True, forces the coefficients to be positive. Only ‘lbfgs’ solver is supported in this case.""",
+            "default": False,
+            "forOptimizer": False,
+        },
+        solver={
+            "enum":["auto",
+                    "svd",
+                    "cholesky",
+                    "lsqr",
+                    "sparse_cg",
+                    "sag",
+                    "saga",
+                    "lbfgs"
+                    ],
+                    "default": "auto",
+                    "description": """Solver to use in the computational routines:
+- 'auto' chooses the solver automatically based on the type of data.
+- 'svd' uses a Singular Value Decomposition of X to compute the Ridge
+    coefficients. More stable for singular matrices than 'cholesky'.
+- 'cholesky' uses the standard scipy.linalg.solve function to
+    obtain a closed-form solution.
+- 'sparse_cg' uses the conjugate gradient solver as found in
+    scipy.sparse.linalg.cg. As an iterative algorithm, this solver is
+    more appropriate than 'cholesky' for large-scale data
+    (possibility to set `tol` and `max_iter`).
+- 'lsqr' uses the dedicated regularized least-squares routine
+    scipy.sparse.linalg.lsqr. It is the fastest and uses an iterative
+    procedure.
+- 'sag' uses a Stochastic Average Gradient descent, and 'saga' uses
+    its improved, unbiased version named SAGA. Both methods also use an
+    iterative procedure, and are often faster than other solvers when
+    both n_samples and n_features are large. Note that 'sag' and
+    'saga' fast convergence is only guaranteed on features with
+    approximately the same scale. You can preprocess the data with a
+    scaler from sklearn.preprocessing.
+- 'lbfgs' uses L-BFGS-B algorithm implemented in
+    `scipy.optimize.minimize`. It can be used only when `positive`
+    is True.
+All last six solvers support both dense and sparse data. However, only
+'sag', 'sparse_cg', and 'lbfgs' support sparse input when `fit_intercept`
+is True.""",
+        "default":'auto',
+        "forOptimizer": True},
         set_as_available=True,
     )
+    Ridge = Ridge.customize_schema(
+        constraint=schemas.AnyOf(
+            [
+                schemas.Object(solver=schemas.Enum(["lbfgs", "auto"])),
+                schemas.Object(positive=schemas.Bool("False")),
+            ]
+        ))
 
+import pdb;pdb.set_trace()
 lale.docstrings.set_docstrings(Ridge)

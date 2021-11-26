@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from jsonschema import ValidationError
 import unittest
 
 import lale.lib.lale
@@ -22,6 +23,7 @@ from lale.lib.sklearn import (
     GradientBoostingRegressor,
     RandomForestRegressor,
     SGDRegressor,
+    Ridge
 )
 
 
@@ -213,5 +215,42 @@ class TestFriedmanMSE(unittest.TestCase):
                 random_state=33,
                 verbose=0,
                 warm_start=False,
+            )
+            reg.fit(self.X_train, self.y_train)
+
+class TestRidge(unittest.TestCase):
+    # This was prompted buy a bug, keeping it as it may help with support for other sklearn versions
+    def setUp(self):
+        from sklearn.datasets import make_regression
+        from sklearn.model_selection import train_test_split
+
+        X, y = make_regression(
+            n_features=4, n_informative=2, random_state=0, shuffle=False
+        )
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+
+    def test_positive(self):
+        import sklearn
+        from lale.settings import set_disable_data_schema_validation
+        set_disable_data_schema_validation(False)
+        if sklearn.__version__ > "1.0":
+            reg = Ridge(
+                solver = 'lbfgs',
+                positive=True
+            )
+            reg.fit(self.X_train, self.y_train)
+            
+            import pdb;pdb.set_trace()
+            with self.assertRaises(ValidationError):
+                reg = Ridge(
+                    solver = 'lbfgs',
+                    positive=False
+                )
+                reg.fit(self.X_train, self.y_train)
+
+            reg = Ridge(
+                solver = 'auto',
+                positive=True
             )
             reg.fit(self.X_train, self.y_train)
