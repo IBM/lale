@@ -15,9 +15,10 @@
 import sklearn
 import sklearn.linear_model
 
-import lale.schemas as schemas
 import lale.docstrings
 import lale.operators
+
+# import lale.schemas as schemas
 
 _hyperparams_schema = {
     "description": "Linear least squares with l2 regularization.",
@@ -244,6 +245,8 @@ Ridge = lale.operators.make_operator(sklearn.linear_model.Ridge, _combined_schem
 if sklearn.__version__ >= "1.0":
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.Ridge.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.Ridge.html
+    # from lale.schemas import AnyOf, Enum, Null, Object
+
     Ridge = Ridge.customize_schema(
         relevantToOptimizer=[
             "alpha",
@@ -268,17 +271,18 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
             "forOptimizer": False,
         },
         solver={
-            "enum":["auto",
-                    "svd",
-                    "cholesky",
-                    "lsqr",
-                    "sparse_cg",
-                    "sag",
-                    "saga",
-                    "lbfgs"
-                    ],
-                    "default": "auto",
-                    "description": """Solver to use in the computational routines:
+            "enum": [
+                "auto",
+                "svd",
+                "cholesky",
+                "lsqr",
+                "sparse_cg",
+                "sag",
+                "saga",
+                "lbfgs",
+            ],
+            "default": "auto",
+            "description": """Solver to use in the computational routines:
 - 'auto' chooses the solver automatically based on the type of data.
 - 'svd' uses a Singular Value Decomposition of X to compute the Ridge
     coefficients. More stable for singular matrices than 'cholesky'.
@@ -304,17 +308,19 @@ If you wish to standardize, please use StandardScaler before calling fit on an e
 All last six solvers support both dense and sparse data. However, only
 'sag', 'sparse_cg', and 'lbfgs' support sparse input when `fit_intercept`
 is True.""",
-        "default":'auto',
-        "forOptimizer": True},
+            "default": "auto",
+            "forOptimizer": True,
+        },
         set_as_available=True,
     )
-    Ridge = Ridge.customize_schema(
-        constraint=schemas.AnyOf(
-            [
-                schemas.Object(solver=schemas.Enum(["lbfgs", "auto"])),
-                schemas.Object(positive=schemas.Bool("False")),
-            ]
-        ))
+    # Ridge = Ridge.customize_schema(
+    #     constraint=AnyOf(
+    #         [
+    #             Object(positive=Enum(["False"])),
+    #             Object(solver=Enum(["lbfgs"])),
+    #         ],
+    #         desc="Only ‘lbfgs’ solver is supported when positive is True. `auto` works too when tested.",
+    #     ),
+    #     set_as_available=True)
 
-import pdb;pdb.set_trace()
 lale.docstrings.set_docstrings(Ridge)
