@@ -14,6 +14,8 @@
 
 import unittest
 
+from jsonschema.exceptions import ValidationError
+
 import lale.lib.lale
 import lale.type_checking
 from lale.lib.lale import NoOp
@@ -24,8 +26,6 @@ from lale.lib.sklearn import (
     Ridge,
     SGDRegressor,
 )
-
-# from jsonschema.exceptions import ValidationError
 
 
 class TestRegression(unittest.TestCase):
@@ -241,14 +241,14 @@ class TestRidge(unittest.TestCase):
             reg = Ridge(solver="lbfgs", positive=True)
             reg.fit(self.X_train, self.y_train)
 
-            # with self.assertRaises(ValidationError):
-            #     reg = Ridge(
-            #         solver = 'lbfgs',
-            #         positive=False
-            #     )
+            with self.assertRaises(ValidationError):
+                reg = Ridge(solver="saga", positive=True)
+
+            reg = Ridge(solver="auto", positive=True)
+            reg.fit(self.X_train, self.y_train)
 
             # reg = Ridge(
-            #     solver = 'auto',
-            #     positive=True
+            #     solver = 'lbfgs',
+            #     positive=False
             # )
             # reg.fit(self.X_train, self.y_train)

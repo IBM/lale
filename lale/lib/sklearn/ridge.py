@@ -18,8 +18,6 @@ import sklearn.linear_model
 import lale.docstrings
 import lale.operators
 
-# import lale.schemas as schemas
-
 _hyperparams_schema = {
     "description": "Linear least squares with l2 regularization.",
     "allOf": [
@@ -245,7 +243,6 @@ Ridge = lale.operators.make_operator(sklearn.linear_model.Ridge, _combined_schem
 if sklearn.__version__ >= "1.0":
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.Ridge.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.Ridge.html
-    # from lale.schemas import AnyOf, Enum, Null, Object
 
     Ridge = Ridge.customize_schema(
         relevantToOptimizer=[
@@ -313,14 +310,20 @@ is True.""",
         },
         set_as_available=True,
     )
-    # Ridge = Ridge.customize_schema(
-    #     constraint=AnyOf(
-    #         [
-    #             Object(positive=Enum(["False"])),
-    #             Object(solver=Enum(["lbfgs"])),
-    #         ],
-    #         desc="Only ‘lbfgs’ solver is supported when positive is True. `auto` works too when tested.",
-    #     ),
-    #     set_as_available=True)
+    Ridge = Ridge.customize_schema(
+        constraint={
+            "description": "Only ‘lbfgs’ solver is supported when positive is True. `auto` works too when tested.",
+            "anyOf": [
+                {"type": "object", "properties": {"positive": {"enum": [False]}}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "solver": {"enum": ["lbfgs", "auto"]},
+                    },
+                },
+            ],
+        },
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(Ridge)
