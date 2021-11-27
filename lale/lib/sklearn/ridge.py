@@ -243,6 +243,7 @@ Ridge = lale.operators.make_operator(sklearn.linear_model.Ridge, _combined_schem
 if sklearn.__version__ >= "1.0":
     # old: https://scikit-learn.org/0.24/modules/generated/sklearn.linear_model.Ridge.html
     # new: https://scikit-learn.org/1.0/modules/generated/sklearn.linear_model.Ridge.html
+
     Ridge = Ridge.customize_schema(
         relevantToOptimizer=[
             "alpha",
@@ -259,6 +260,84 @@ If True, the regressors X will be normalized before regression by subtracting th
 If you wish to standardize, please use StandardScaler before calling fit on an estimator with normalize=False.""",
             "default": False,
             "forOptimizer": False,
+        },
+        positive={
+            "type": "boolean",
+            "description": """When set to True, forces the coefficients to be positive. Only ‘lbfgs’ solver is supported in this case.""",
+            "default": False,
+            "forOptimizer": False,
+        },
+        solver={
+            "enum": [
+                "auto",
+                "svd",
+                "cholesky",
+                "lsqr",
+                "sparse_cg",
+                "sag",
+                "saga",
+                "lbfgs",
+            ],
+            "default": "auto",
+            "description": """Solver to use in the computational routines:
+- 'auto' chooses the solver automatically based on the type of data.
+- 'svd' uses a Singular Value Decomposition of X to compute the Ridge
+    coefficients. More stable for singular matrices than 'cholesky'.
+- 'cholesky' uses the standard scipy.linalg.solve function to
+    obtain a closed-form solution.
+- 'sparse_cg' uses the conjugate gradient solver as found in
+    scipy.sparse.linalg.cg. As an iterative algorithm, this solver is
+    more appropriate than 'cholesky' for large-scale data
+    (possibility to set `tol` and `max_iter`).
+- 'lsqr' uses the dedicated regularized least-squares routine
+    scipy.sparse.linalg.lsqr. It is the fastest and uses an iterative
+    procedure.
+- 'sag' uses a Stochastic Average Gradient descent, and 'saga' uses
+    its improved, unbiased version named SAGA. Both methods also use an
+    iterative procedure, and are often faster than other solvers when
+    both n_samples and n_features are large. Note that 'sag' and
+    'saga' fast convergence is only guaranteed on features with
+    approximately the same scale. You can preprocess the data with a
+    scaler from sklearn.preprocessing.
+- 'lbfgs' uses L-BFGS-B algorithm implemented in
+    `scipy.optimize.minimize`. It can be used only when `positive`
+    is True.
+All last six solvers support both dense and sparse data. However, only
+'sag', 'sparse_cg', and 'lbfgs' support sparse input when `fit_intercept`
+is True.""",
+            "default": "auto",
+            "forOptimizer": True,
+        },
+        set_as_available=True,
+    )
+    Ridge = Ridge.customize_schema(
+        constraint={
+            "description": "Only ‘lbfgs’ solver is supported when positive is True. `auto` works too when tested.",
+            "anyOf": [
+                {"type": "object", "properties": {"positive": {"enum": [False]}}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "solver": {"enum": ["lbfgs", "auto"]},
+                    },
+                },
+            ],
+        },
+        set_as_available=True,
+    )
+
+    Ridge = Ridge.customize_schema(
+        constraint={
+            "description": "`lbfgs` solver can be used only when positive=True.",
+            "anyOf": [
+                {"type": "object", "properties": {"positive": {"enum": [True]}}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "solver": {"not": {"enum": ["lbfgs"]}},
+                    },
+                },
+            ],
         },
         set_as_available=True,
     )
