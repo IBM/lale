@@ -38,13 +38,19 @@ class TestSnapMLClassifiers(unittest.TestCase):
             _ = scorer(clf, self.test_X, self.test_y)
 
     def test_decision_tree_classifier(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapDecisionTreeClassifier()
-        trained = trainable.fit(self.train_X, self.train_y)
-        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
-            scorer = sklearn.metrics.make_scorer(metric)
-            _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapDecisionTreeClassifier().get_params()]:
+            trainable = lale.lib.snapml.SnapDecisionTreeClassifier(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
 
     def test_random_forest_classifier(self):
         import lale.lib.snapml
