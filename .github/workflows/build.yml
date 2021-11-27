@@ -28,7 +28,7 @@ jobs:
           ${{ runner.os }}-pip-new2
           ${{ runner.os }}-new2
     - name: Install numpy
-      run: pip install -U numpy==1.19.2
+      run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
     - name: Install deps for test_autoai_ts_libs
