@@ -38,49 +38,79 @@ class TestSnapMLClassifiers(unittest.TestCase):
             _ = scorer(clf, self.test_X, self.test_y)
 
     def test_decision_tree_classifier(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapDecisionTreeClassifier()
-        trained = trainable.fit(self.train_X, self.train_y)
-        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
-            scorer = sklearn.metrics.make_scorer(metric)
-            _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapDecisionTreeClassifier().get_params()]:
+            trainable = lale.lib.snapml.SnapDecisionTreeClassifier(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
 
     def test_random_forest_classifier(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapRandomForestClassifier()
-        trained = trainable.fit(self.train_X, self.train_y)
-        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
-            scorer = sklearn.metrics.make_scorer(metric)
-            _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapRandomForestClassifier().get_params()]:
+            trainable = lale.lib.snapml.SnapRandomForestClassifier(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
 
     def test_boosting_machine_classifier(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapBoostingMachineClassifier()
-        trained = trainable.fit(self.train_X, self.train_y)
-        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
-            scorer = sklearn.metrics.make_scorer(metric)
-            _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapBoostingMachineClassifier().get_params()]:
+            trainable = lale.lib.snapml.SnapBoostingMachineClassifier(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
 
     def test_logistic_regression(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapLogisticRegression()
-        trained = trainable.fit(self.train_X, self.train_y)
-        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
-            scorer = sklearn.metrics.make_scorer(metric)
-            _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapLogisticRegression().get_params()]:
+            trainable = lale.lib.snapml.SnapLogisticRegression(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
 
     def test_support_vector_machine(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapSVMClassifier()
-        trained = trainable.fit(self.train_X, self.train_y)
-        for metric in [sklearn.metrics.accuracy_score, sklearn.metrics.roc_auc_score]:
-            scorer = sklearn.metrics.make_scorer(metric)
-            _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapSVMClassifier().get_params()]:
+            trainable = lale.lib.snapml.SnapSVMClassifier(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
 
 
 class TestSnapMLRegressors(unittest.TestCase):
@@ -92,33 +122,45 @@ class TestSnapMLRegressors(unittest.TestCase):
         self.train_X, self.test_X, self.train_y, self.test_y = train_test_split(X, y)
 
     def test_decision_tree_regressor(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapDecisionTreeRegressor()
-        trained = trainable.fit(self.train_X, self.train_y)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-        _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapDecisionTreeRegressor().get_params()]:
+            trainable = lale.lib.snapml.SnapDecisionTreeRegressor(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+            _ = scorer(trained, self.test_X, self.test_y)
 
     def test_linear_regression(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapLinearRegression()
-        trained = trainable.fit(self.train_X, self.train_y)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-        _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.LinearRegression().get_params()]:
+            trainable = lale.lib.snapml.SnapLinearRegression(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+            _ = scorer(trained, self.test_X, self.test_y)
 
     def test_random_forest_regressor(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapRandomForestRegressor()
-        trained = trainable.fit(self.train_X, self.train_y)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-        _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapRandomForestRegressor().get_params()]:
+            trainable = lale.lib.snapml.SnapRandomForestRegressor(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+            _ = scorer(trained, self.test_X, self.test_y)
 
     def test_boosting_machine_regressor(self):
+        import snapml
+
         import lale.lib.snapml
 
-        trainable = lale.lib.snapml.SnapBoostingMachineRegressor()
-        trained = trainable.fit(self.train_X, self.train_y)
-        scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-        _ = scorer(trained, self.test_X, self.test_y)
+        for params in [{}, snapml.SnapBoostingMachineRegressor().get_params()]:
+            trainable = lale.lib.snapml.SnapBoostingMachineRegressor(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+            _ = scorer(trained, self.test_X, self.test_y)
