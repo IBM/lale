@@ -326,4 +326,20 @@ is True.""",
         set_as_available=True,
     )
 
+    Ridge = Ridge.customize_schema(
+        constraint={
+            "description": "`lbfgs` solver can be used only when positive=True.",
+            "anyOf": [
+                {"type": "object", "properties": {"positive": {"enum": [True]}}},
+                {
+                    "type": "object",
+                    "properties": {
+                        "solver": {"not": {"enum": ["lbfgs"]}},
+                    },
+                },
+            ],
+        },
+        set_as_available=True,
+    )
+
 lale.docstrings.set_docstrings(Ridge)

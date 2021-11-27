@@ -247,8 +247,8 @@ class TestRidge(unittest.TestCase):
             reg = Ridge(solver="auto", positive=True)
             reg.fit(self.X_train, self.y_train)
 
-            # reg = Ridge(
-            #     solver = 'lbfgs',
-            #     positive=False
-            # )
-            # reg.fit(self.X_train, self.y_train)
+            with self.assertRaises(ValidationError):
+                reg = Ridge(solver="lbfgs", positive=False)
+
+            reg = Ridge(solver="auto", positive=False)
+            reg.fit(self.X_train, self.y_train)
