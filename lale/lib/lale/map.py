@@ -20,7 +20,8 @@ from lale.helpers import (
     _is_ast_name,
     _is_pandas_df,
     _is_spark_df,
-    pandas_df_eval,
+    eval_pandas_df,
+    eval_spark_df,
 )
 
 import pandas as pd
@@ -56,28 +57,20 @@ class _MapImpl:
         self.remainder = remainder
 
     def transform(self, X):
-        is_pandas = False
-        is_spark = False
-        table_name = lale.datasets.data_schemas.get_table_name(X)
         if _is_pandas_df(X):
-            is_pandas = True
-            mapped_df = pd.DataFrame()
+            return self.transform_pandas_df(X)
         elif _is_spark_df(X):
-            is_spark = True
-            mapped_df = None # TODO
+            return self.transform_spark_df(X)
         else:
             raise ValueError(
                 "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
             )
 
+    def transform_pandas_df(self, X):
+        mapped_df = pd.DataFrame()
         def get_map_function_output(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
-            if is_pandas:
-                new_column = pandas_df_eval(X, column)
-            elif is_spark:
-                new_column = None # XXX TODO XXX
-            else:
-                assert False
+            new_column = eval_pandas_df(X, column)
             mapped_df[new_column_name] = new_column
 
         if isinstance(self.columns, list):
@@ -90,19 +83,35 @@ class _MapImpl:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
             remainder_columns = [] # XXX TODO XXX
-            if _is_pandas_df(X):
-                for columns in remainder_columns:
-                    mapped_df[column] = X[column]
-            elif _is_spark_df(X):
-                for columns in remainder_columns:
-                    pass # XXX TODO XXX
-            else:
-                raise ValueError(
-                    "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
-                )
+            for column in remainder_columns:
+                mapped_df[column] = X[column]
+        table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
         return mapped_df
 
+    def transform_spark_df(self, X):
+        new_columns = []
+        def get_map_function_expr(column, new_column_name):
+            new_column_name = _new_column_name(new_column_name, column)
+            new_column = eval_spark_df(X, column)
+            new_columns.append(new_column.alias(new_column_name))
+
+        if isinstance(self.columns, list):
+            for column in self.columns:
+                get_map_function_expr(column, None)
+        elif isinstance(self.columns, dict):
+            for new_column_name, column in self.columns.items():
+                get_map_function_expr(column, new_column_name)
+        else:
+            raise ValueError("columns must be either a list or a dictionary.")
+        if self.remainder == "passthrough":
+            remainder_columns = [] # XXX TODO XXX
+            for column in remainder_columns:
+                pass # TODO
+        mapped_df = X.select(new_columns)        
+        table_name = lale.datasets.data_schemas.get_table_name(X)
+        mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
+        return mapped_df
 
 # class _MapImpl:
 #     def __init__(self, columns, remainder="passthrough"):

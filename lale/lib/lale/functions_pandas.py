@@ -18,7 +18,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from lale.helpers import pandas_df_eval
+from lale.helpers import eval_pandas_df
 
 from lale.expressions import AstExpr
 from lale.helpers import (
@@ -47,14 +47,14 @@ def identity(df: Any, column: AstExpr):
 
 
 def ratio(df: Any, expr: AstExpr):
-    numerator = pandas_df_eval(df, expr.args[0]) # type: ignore
-    denominator = pandas_df_eval(df, expr.args[1]) # type: ignore
+    numerator = eval_pandas_df(df, expr.args[0]) # type: ignore
+    denominator = eval_pandas_df(df, expr.args[1]) # type: ignore
     return numerator / denominator
 
 
 def subtract(df: Any, expr: AstExpr):
-    e1 = pandas_df_eval(df, expr.args[0]) # type: ignore
-    e2 = pandas_df_eval(df, expr.args[1]) # type: ignore
+    e1 = eval_pandas_df(df, expr.args[0]) # type: ignore
+    e2 = eval_pandas_df(df, expr.args[1]) # type: ignore
     return e1 / e2
 
 
