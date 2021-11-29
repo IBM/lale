@@ -13,19 +13,17 @@
 # limitations under the License.
 
 import ast
-from typing import Any
+import importlib
 from itertools import chain
-
-from lale.helpers import eval_spark_df
 
 from lale.expressions import AstExpr
 from lale.helpers import (
     _is_ast_attribute,
     _is_ast_subscript,
+    _is_ast_name,
 )
 
 try:
-    import pyspark.sql.functions as pysql
     from pyspark.ml.feature import StringIndexer
 
     # noqa in the imports here because those get used dynamically and flake fails.
@@ -46,6 +44,69 @@ try:
     spark_installed = True
 except ImportError:
     spark_installed = False
+
+
+def eval_spark_df(X, expr):
+    evaluator = _SparkEvaluator()
+    evaluator.visit(expr._expr)
+    return evaluator.result
+
+class _SparkEvaluator(ast.NodeVisitor):
+    def __init__(self):
+        self.result = None
+
+    def visit_Constant(self, node: ast.Constant):
+        self.result = lit(node.value)
+
+    def visit_Subscript(self, node: ast.Subscript):
+        if _is_ast_name (node.value) and node.value.id == "it":
+            column_name = node.slice.value.s  # type: ignore
+            if column_name is None or not column_name.strip():
+                raise ValueError("Name of the column cannot be None or empty.")
+            self.result = col(column_name)
+        else:
+            raise ValueError(
+                f"Unimplemented expression"
+            )
+
+    def visit_Attribute(self, node: ast.Attribute):
+        if _is_ast_name (node.value) and node.value.id == "it":
+            self.result = col(node.attr)
+        else:
+            raise ValueError(
+                f"Unimplemented expression"
+            )
+
+    def visit_BinOp(self, node: ast.BinOp):
+        self.visit(node.left)
+        v1 = self.result
+        self.visit(node.right)
+        v2 = self.result
+        if isinstance(node.op, ast.Add):
+            self.result = v1 + v2
+        elif isinstance(node.op, ast.Sub):
+            self.result = v1 - v2
+        elif isinstance(node.op, ast.Mult):
+            self.result = v1 * v2
+        elif isinstance(node.op, ast.Div):
+            self.result = v1 / v2
+        # elif isinstance(node.op, ast.FloorDiv):
+        #     self.result = v1 // v2
+        elif isinstance(node.op, ast.Mod):
+            self.result = v1 % v2
+        elif isinstance(node.op, ast.Pow):
+            self.result = v1 ** v2
+        else:
+            raise ValueError(
+                f"""Unimplemented operator {ast.dump(node.op)}"""
+            )
+
+    def visit_Call(self, node: ast.Call):
+        functions_module = importlib.import_module("lale.eval_spark_df")
+        function_name = node.func.id
+        map_func_to_be_called = getattr(functions_module, function_name)
+        self.result = map_func_to_be_called(node)
+
 
 def replace(replace_expr: AstExpr):
     column_name = replace_expr.args[0].attr
@@ -112,51 +173,12 @@ def month(dom_expr: AstExpr):
 
 def string_indexer(df, dom_expr: AstExpr):
     # XXX TODO XXX
-    column_name = dom_expr.args[0].attr
-    sorted_indices = df[column_name].value_counts().index
-    new_column = df[column_name].map(
-        dict(zip(sorted_indices, range(0, len(sorted_indices))))
-    )
-    return new_column
-
-
-# functions for aggregate
-def grouped_sum():
-    return pysql.sum
-
-
-def grouped_max():
-    return pysql.max
-
-
-def grouped_min():
-    return pysql.min
-
-
-def grouped_count():
-    return pysql.count
-
-
-def grouped_mean():
-    return pysql.mean
-
-
-def grouped_first():
-    return pysql.first
-
-
-# # functions for filter
-# def filter_isnan(column_name: str):
-#     return df[df[column_name].isnull()]
-
-
-# def filter_isnotnan(column_name: str):
-#     return df[df[column_name].notnull()]
-
-
-# def filter_isnull(column_name: str):
-#     return df[df[column_name].isnull()]
-
-
-# def filter_isnotnull(column_name: str):
-#     return df[df[column_name].notnull()]
+    # column_name = dom_expr.args[0].attr
+    # df = df.withColumnRenamed(
+    #     column_name, "newColName"
+    # )  # renaming because inputCol and outputCol can't be the same.
+    # indexer = StringIndexer(inputCol="newColName", outputCol=new_column_name)
+    # df = indexer.fit(df).transform(df)
+    # df = df.drop("newColName")
+    # return new_column_name, df
+    pass

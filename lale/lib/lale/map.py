@@ -20,9 +20,9 @@ from lale.helpers import (
     _is_ast_name,
     _is_pandas_df,
     _is_spark_df,
-    eval_pandas_df,
-    eval_spark_df,
 )
+from lale.eval_pandas_df import eval_pandas_df
+from lale.eval_spark_df import eval_spark_df
 
 import pandas as pd
 

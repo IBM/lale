@@ -13,19 +13,82 @@
 # limitations under the License.
 
 import ast
+import importlib
 from typing import Any
 
 import numpy as np
 import pandas as pd
 
-from lale.helpers import eval_pandas_df
-
 from lale.expressions import AstExpr
 from lale.helpers import (
     _is_ast_attribute,
     _is_ast_subscript,
+    _is_ast_name,
 )
 
+def eval_pandas_df(X, expr):
+    evaluator = _PandasEvaluator(X)
+    evaluator.visit(expr._expr)
+    return evaluator.result
+
+
+class _PandasEvaluator(ast.NodeVisitor):
+    def __init__(self, X):
+        self.result = None
+        self.df = X
+
+    def visit_Constant(self, node: ast.Constant):
+        self.result = node.value
+
+    def visit_Subscript(self, node: ast.Subscript):
+        if _is_ast_name (node.value) and node.value.id == "it":
+            self.visit(node.slice)
+            column_name = self.result
+            if column_name is None or not column_name.strip():
+                raise ValueError("Name of the column cannot be None or empty.")
+            self.result = self.df[column_name]
+        else:
+            raise ValueError(
+                f"Unimplemented expression"
+            )
+
+    def visit_Attribute(self, node: ast.Attribute):
+        if _is_ast_name (node.value) and node.value.id == "it":
+            self.result = self.df[node.attr]
+        else:
+            raise ValueError(
+                f"Unimplemented expression"
+            )
+
+    def visit_BinOp(self, node: ast.BinOp):
+        self.visit(node.left)
+        v1 = self.result
+        self.visit(node.right)
+        v2 = self.result
+        if isinstance(node.op, ast.Add):
+            self.result = v1 + v2
+        elif isinstance(node.op, ast.Sub):
+            self.result = v1 - v2
+        elif isinstance(node.op, ast.Mult):
+            self.result = v1 * v2
+        elif isinstance(node.op, ast.Div):
+            self.result = v1 / v2
+        elif isinstance(node.op, ast.FloorDiv):
+            self.result = v1 // v2
+        elif isinstance(node.op, ast.Mod):
+            self.result = v1 % v2
+        elif isinstance(node.op, ast.Pow):
+            self.result = v1 ** v2
+        else:
+            raise ValueError(
+                f"""Unimplemented operator {ast.dump(node.op)}"""
+            )
+
+    def visit_Call(self, node: ast.Call):
+        functions_module = importlib.import_module("lale.eval_pandas_df")
+        function_name = node.func.id
+        map_func_to_be_called = getattr(functions_module, function_name)
+        self.result = map_func_to_be_called(self.df, node)
 
 def replace(df: Any, replace_expr: AstExpr):
     column_name = replace_expr.args[0].attr
@@ -98,45 +161,3 @@ def string_indexer(df: pd.DataFrame, dom_expr: AstExpr):
         dict(zip(sorted_indices, range(0, len(sorted_indices))))
     )
     return new_column
-
-
-# functions for aggregate
-def grouped_sum():
-    return pysql.sum
-
-
-def grouped_max():
-    return pysql.max
-
-
-def grouped_min():
-    return pysql.min
-
-
-def grouped_count():
-    return pysql.count
-
-
-def grouped_mean():
-    return pysql.mean
-
-
-def grouped_first():
-    return pysql.first
-
-
-# functions for filter
-def filter_isnan(df: Any, column_name: str):
-    return df[df[column_name].isnull()]
-
-
-def filter_isnotnan(df: Any, column_name: str):
-    return df[df[column_name].notnull()]
-
-
-def filter_isnull(df: Any, column_name: str):
-    return df[df[column_name].isnull()]
-
-
-def filter_isnotnull(df: Any, column_name: str):
-    return df[df[column_name].notnull()]
