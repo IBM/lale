@@ -101,12 +101,12 @@ _hyperparams_schema = {
             "relevantToOptimizer": ["lookback_window"],
             "properties": {
                 "feature_columns": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": None,
                 },
                 "target_columns": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": None,
                 },
@@ -114,7 +114,7 @@ _hyperparams_schema = {
                     "description": """Regressor object.
 This regressor will automatically be cloned each time prior to fitting.
 If regressor is None, LinearRegression() is created and used.""",
-                    "laleType": "operator",
+                    "anyOf": [{"laleType": "operator"}, {"enum": [None]}],
                     "default": None,
                 },
                 "lookback_window": {
@@ -170,12 +170,12 @@ The inverse function is used to return predictions to the same space of the orig
                     "default": "forecast",
                 },
                 "time_column": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": -1,
                 },
                 "random_state": {
-                    "description": "TODO: document and refine type",
+                    "description": "",  # TODO: document and refine type
                     "laleType": "Any",
                     "default": 42,
                 },

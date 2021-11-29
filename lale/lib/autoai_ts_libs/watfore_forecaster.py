@@ -84,6 +84,9 @@ class _WatForeForecasterImpl:
     def predict_proba(self, X=None):
         return self._wrapped_model.predict_proba(X)
 
+    def viz_label(self) -> str:
+        return "WatForeForecaster_" + self._hyperparams["algorithm"]
+
 
 _hyperparams_schema = {
     "allOf": [

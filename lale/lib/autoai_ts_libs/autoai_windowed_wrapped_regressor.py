@@ -55,7 +55,7 @@ _hyperparams_schema = {
                 "regressor": {
                     "description": """Regressor object.
 For a multi-variate case, this is wrapped in sklearn.multioutput.MultiOutputRegressor.""",
-                    "laleType": "operator",
+                    "anyOf": [{"laleType": "operator"}, {"enum": [None]}],
                     "default": None,
                 },
                 "n_jobs": {
