@@ -11,59 +11,148 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import importlib
 
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.helpers import (
-    _is_ast_attribute,
-    _is_ast_subscript,
+    _is_ast_call,
+    _is_ast_name,
     _is_pandas_df,
     _is_spark_df,
 )
+from lale.eval_pandas_df import eval_pandas_df
+from lale.eval_spark_df import eval_spark_df
 
+import pandas as pd
+
+def _new_column_name(name, expr):
+    def infer_new_name(expr):
+        if (
+            _is_ast_call(expr._expr) and
+            _is_ast_name(expr._expr.func) and
+            expr._expr.func.id in [ "replace",
+                                    "day_of_month",
+                                    "day_of_week",
+                                    "day_of_year",
+                                    "hour",
+                                    "minute",
+                                    "month",
+                                    "string_indexer" ]
+        ):
+            return expr._expr.args[0].attr
+        else: 
+            raise ValueError(
+                """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
+                to specify the new column name as the key, and the expression as the value."""
+            )
+    if name is None or not name.strip():
+        return infer_new_name(expr)
+    else:
+        return name
 
 class _MapImpl:
-    def __init__(self, columns, remainder="passthrough"):
+    def __init__(self, columns, remainder="drop"):
         self.columns = columns
         self.remainder = remainder
 
     def transform(self, X):
-        table_name = lale.datasets.data_schemas.get_table_name(X)
-        columns_to_keep = []
+        if _is_pandas_df(X):
+            return self.transform_pandas_df(X)
+        elif _is_spark_df(X):
+            return self.transform_spark_df(X)
+        else:
+            raise ValueError(
+                "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
+            )
 
+    def transform_pandas_df(self, X):
+        mapped_df = pd.DataFrame()
         def get_map_function_output(column, new_column_name):
-            functions_module = importlib.import_module("lale.lib.lale.functions")
-            if _is_ast_subscript(column._expr) or _is_ast_attribute(column._expr):
-                function_name = "identity"
-            else:
-                function_name = column._expr.func.id
-            map_func_to_be_called = getattr(functions_module, function_name)
-            return map_func_to_be_called(X, column, new_column_name)
+            new_column_name = _new_column_name(new_column_name, column)
+            new_column = eval_pandas_df(X, column)
+            mapped_df[new_column_name] = new_column
 
         if isinstance(self.columns, list):
             for column in self.columns:
-                new_column_name, X = get_map_function_output(column, None)
-                columns_to_keep.append(new_column_name)
+                get_map_function_output(column, None)
         elif isinstance(self.columns, dict):
             for new_column_name, column in self.columns.items():
-                new_column_name, X = get_map_function_output(column, new_column_name)
-                columns_to_keep.append(new_column_name)
+                get_map_function_output(column, new_column_name)
         else:
             raise ValueError("columns must be either a list or a dictionary.")
-        mapped_df = X  # Do nothing as X already has the right columns
-        if self.remainder == "drop":
-            if _is_pandas_df(X):
-                mapped_df = X[columns_to_keep]
-            elif _is_spark_df(X):
-                mapped_df = X.select(columns_to_keep)
-            else:
-                raise ValueError(
-                    "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
-                )
+        if self.remainder == "passthrough":
+            remainder_columns = [] # XXX TODO XXX
+            for column in remainder_columns:
+                mapped_df[column] = X[column]
+        table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
         return mapped_df
+
+    def transform_spark_df(self, X):
+        new_columns = []
+        def get_map_function_expr(column, new_column_name):
+            new_column_name = _new_column_name(new_column_name, column)
+            new_column = eval_spark_df(X, column)
+            new_columns.append(new_column.alias(new_column_name))
+
+        if isinstance(self.columns, list):
+            for column in self.columns:
+                get_map_function_expr(column, None)
+        elif isinstance(self.columns, dict):
+            for new_column_name, column in self.columns.items():
+                get_map_function_expr(column, new_column_name)
+        else:
+            raise ValueError("columns must be either a list or a dictionary.")
+        if self.remainder == "passthrough":
+            remainder_columns = [] # XXX TODO XXX
+            for column in remainder_columns:
+                pass # TODO
+        mapped_df = X.select(new_columns)        
+        table_name = lale.datasets.data_schemas.get_table_name(X)
+        mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
+        return mapped_df
+
+# class _MapImpl:
+#     def __init__(self, columns, remainder="passthrough"):
+#         self.columns = columns
+#         self.remainder = remainder
+
+#     def transform(self, X):
+#         table_name = lale.datasets.data_schemas.get_table_name(X)
+#         columns_to_keep = []
+
+#         def get_map_function_output(column, new_column_name):
+#             functions_module = importlib.import_module("lale.lib.lale.functions")
+#             if _is_ast_subscript(column._expr) or _is_ast_attribute(column._expr):
+#                 function_name = "identity"
+#             else:
+#                 function_name = column._expr.func.id
+#             map_func_to_be_called = getattr(functions_module, function_name)
+#             return map_func_to_be_called(X, column, new_column_name)
+
+#         if isinstance(self.columns, list):
+#             for column in self.columns:
+#                 new_column_name, X = get_map_function_output(column, None)
+#                 columns_to_keep.append(new_column_name)
+#         elif isinstance(self.columns, dict):
+#             for new_column_name, column in self.columns.items():
+#                 new_column_name, X = get_map_function_output(column, new_column_name)
+#                 columns_to_keep.append(new_column_name)
+#         else:
+#             raise ValueError("columns must be either a list or a dictionary.")
+#         mapped_df = X  # Do nothing as X already has the right columns
+#         if self.remainder == "drop":
+#             if _is_pandas_df(X):
+#                 mapped_df = X[columns_to_keep]
+#             elif _is_spark_df(X):
+#                 mapped_df = X.select(columns_to_keep)
+#             else:
+#                 raise ValueError(
+#                     "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
+#                 )
+#         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
+#         return mapped_df
 
 
 _hyperparams_schema = {

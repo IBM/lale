@@ -24,6 +24,7 @@ from typing import Any, Dict, List, Optional, Set, Tuple, Union, cast
 
 import black
 import numpy as np
+import sklearn.metrics
 
 import lale.expressions
 import lale.json_operator
@@ -80,6 +81,14 @@ class _CodeGenState:
 def hyperparams_to_string(
     hps: JSON_TYPE, steps: Optional[Dict[str, str]] = None, gen: _CodeGenState = None
 ) -> str:
+    def sklearn_module(value):
+        module = value.__module__
+        if module.startswith("sklearn."):
+            i = module.rfind(".")
+            if module[i + 1] == "_":
+                module = module[:i]
+        return module
+
     def value_to_string(value):
         if isinstance(value, dict):
             if "$ref" in value and steps is not None:
@@ -94,6 +103,8 @@ def hyperparams_to_string(
         elif isinstance(value, list):
             sl = [value_to_string(v) for v in value]
             return "[" + ", ".join(sl) + "]"
+        elif isinstance(value, range):
+            return str(value)
         elif isinstance(value, (int, float)) and math.isnan(value):
             return "float('nan')"
         elif isinstance(value, np.dtype):
@@ -138,18 +149,54 @@ def hyperparams_to_string(
                     gen.imports.append(f"import {value.__module__} as {module}")
             return f"{module}.{value.__name__}"  # type: ignore
         elif hasattr(value, "get_params"):
-            module = value.__module__
-            if module.startswith("sklearn."):
-                i = module.rfind(".")
-                if module[i + 1] == "_":
-                    module = module[:i]
+            module = sklearn_module(value)
             if gen is not None:
                 gen.imports.append(f"import {module}")
-            printed = pprint.pformat(value, width=10000, compact=True)
-            compacted = printed.replace("\n", " ")
-            return f"{module}.{compacted}"
+            actuals = value.get_params(False)  # type: ignore
+            defaults = lale.type_checking.get_hyperparam_defaults(value)
+            non_defaults = {
+                k: v
+                for k, v in actuals.items()
+                if k not in defaults or defaults[k] != v
+            }
+            kwargs_string = hyperparams_to_string(non_defaults, steps, gen)
+            printed = f"{module}.{value.__class__.__name__}({kwargs_string})"
+            return printed
+        elif hasattr(sklearn.metrics, "_scorer") and isinstance(
+            value, sklearn.metrics._scorer._BaseScorer
+        ):
+            if gen is not None:
+                gen.imports.append("import sklearn.metrics")
+            func = value._score_func  # type: ignore
+            module = sklearn_module(func)
+            if gen is not None:
+                gen.imports.append(f"import {module}")
+            func_string = f"{module}.{func.__name__}"
+            sign_strings = [] if value._sign > 0 else ["greater_is_better=False"]  # type: ignore
+            kwargs_strings = [
+                f"{k}={value_to_string(v)}" for k, v in value._kwargs.items()  # type: ignore
+            ]
+            args_strings = [func_string, *sign_strings, *kwargs_strings]
+            printed = f"sklearn.metrics.make_scorer({', '.join(args_strings)})"
+            return printed
         else:
-            return pprint.pformat(value, width=10000, compact=True)
+            printed = pprint.pformat(value, width=10000, compact=True)
+            if printed.endswith(")"):
+                m = re.match(r"(\w+)\(", printed)
+                if m:
+                    module = value.__module__
+                    if gen is not None:
+                        gen.imports.append(f"import {module}")
+                    printed = f"{module}.{printed}"
+            if printed.startswith("<"):
+                m = re.match(r"<(\w[\w.]*)\.(\w+) object at 0x[0-9a-f]+>$", printed)
+                if m:
+                    module, clazz = m.group(1), m.group(2)
+                    if gen is not None:
+                        gen.imports.append(f"import {module}")
+                    # logger.warning(f"bare {clazz} with unknown constructor")
+                    printed = f"{module}.{clazz}()"
+            return printed
 
     strings = [f"{k}={value_to_string(v)}" for k, v in hps.items()]
     return ", ".join(strings)

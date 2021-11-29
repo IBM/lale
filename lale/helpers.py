@@ -53,6 +53,10 @@ except ImportError:
 
 try:
     from pyspark.sql.dataframe import DataFrame as spark_df
+    from pyspark.sql.functions import (  
+        lit as spark_lit,
+        col as spark_col,
+    )
 
     spark_installed = True
 
@@ -1090,6 +1094,11 @@ def _is_ast_constant(expr):
 def _is_ast_subs_or_attr(expr):
     return isinstance(expr, ast.Subscript) or isinstance(expr, ast.Attribute)
 
+def _is_ast_call(expr):
+    return isinstance(expr, ast.Call)
+
+def _is_ast_name(expr):
+    return isinstance(expr, ast.Name)
 
 def _is_df(d):
     return isinstance(d, pd.DataFrame) or isinstance(d, spark_df)
