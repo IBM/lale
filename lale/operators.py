@@ -572,7 +572,7 @@ class Operator(metaclass=AbstractVisitorMeta):
     ) -> "Operator":
         """Replaces an original operator with a replacement operator for the given operator.
         Replacement also occurs for all operators within the given operator's steps (i.e. pipelines and
-        choices). If a planned operator is given as original_op, all downstream operators (including
+        choices). If a planned operator is given as original_op, all derived operators (including
         trainable and trained versions) will be replaced. Otherwise, only the exact operator
         instance will be replaced.
 
@@ -580,7 +580,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         ----------
         original_op :
             Operator to replace within given operator. If operator is a planned operator,
-            all downstream operators (including trainable and trained versions) will be
+            all derived operators (including trainable and trained versions) will be
             replaced. Otherwise, only the exact operator instance will be replaced.
 
         replacement_op :
@@ -592,63 +592,80 @@ class Operator(metaclass=AbstractVisitorMeta):
             Modified operator where original operator is replaced with replacement throughout.
         """
 
-        # if operator has steps, recursively iterate through steps and recombine
-        if hasattr(self, "steps"):
-            new_steps: List[Operator] = []
-            if isinstance(self, BasePipeline):
-                # first convert pipeline edges to index-based representation
-                index_edges = []
-                for edge in self.edges():
-                    index_edges.append(
-                        (self.steps().index(edge[0]), self.steps().index(edge[1]))
+        def _replace(subject, original_op, replacement_op):
+
+            # if operator has steps, recursively iterate through steps and recombine
+            if hasattr(subject, "steps"):
+                new_steps: List[Operator] = []
+                if isinstance(subject, BasePipeline):
+                    # first convert pipeline edges to index-based representation
+                    index_edges = []
+                    for edge in subject.edges():
+                        index_edges.append(
+                            (
+                                subject.steps().index(edge[0]),
+                                subject.steps().index(edge[1]),
+                            )
+                        )
+
+                    for step in subject.steps():
+                        new_steps.append(_replace(step, original_op, replacement_op))
+
+                    # use previous index-based representation to reconstruct edges
+                    new_edges: List[Tuple[Operator, Operator]] = []
+                    for index_tuple in index_edges:
+                        new_edges.append(
+                            (new_steps[index_tuple[0]], new_steps[index_tuple[1]])
+                        )
+
+                    return make_pipeline_graph(new_steps, new_edges)
+
+                elif isinstance(subject, OperatorChoice):
+                    for step in subject.steps():
+                        new_steps.append(_replace(step, original_op, replacement_op))
+                    return make_choice(*new_steps)
+
+                else:
+                    raise NotImplementedError(
+                        "replace() needs to implement recombining this operator with steps"
                     )
+            else:
+                # base case for recursion: operator with no steps, returns replacement if applicable, original otherwise
+                if not isinstance(original_op, TrainableOperator):
+                    # is planned operator, so replace any matching downstream operator
+                    if isinstance(subject, original_op):  # type: ignore
+                        return replacement_op
+                else:
+                    # is trainable or trained operator, only check exact instance match
+                    if subject == original_op:
+                        return replacement_op
 
-                for step in self.steps():
-                    new_steps.append(step.replace(original_op, replacement_op))
-
-                # use previous index-based representation to reconstruct edges
-                new_edges: List[Tuple[Operator, Operator]] = []
-                for index_tuple in index_edges:
-                    new_edges.append(
-                        (new_steps[index_tuple[0]], new_steps[index_tuple[1]])
+                # special case of subject being in a collection
+                if isinstance(subject, list):
+                    return [_replace(s, original_op, replacement_op) for s in subject]
+                elif isinstance(subject, tuple):
+                    return tuple(
+                        [_replace(s, original_op, replacement_op) for s in subject]
                     )
+                elif isinstance(subject, dict):
+                    return {
+                        k: _replace(v, original_op, replacement_op)
+                        for k, v in subject.items()
+                    }
 
-                return make_pipeline_graph(new_steps, new_edges)
+                # special case of hyperparams containing operators, usually referring to an estimator
+                if hasattr(subject, "hyperparams") and subject.hyperparams():
+                    modified_hyperparams = subject.hyperparams().copy()
+                    for hyperparam, param_value in modified_hyperparams.items():
+                        modified_hyperparams[hyperparam] = _replace(
+                            param_value, original_op, replacement_op
+                        )
 
-            elif isinstance(self, OperatorChoice):
-                for step in self.steps():
-                    new_steps.append(step.replace(original_op, replacement_op))
-                return make_choice(*new_steps)
+                    return subject(**modified_hyperparams)
 
-            else:
-                raise NotImplementedError(
-                    "replace() needs to implement recombining this operator with steps"
-                )
-        else:
-            # base case for recursion: operator with no steps, returns replacement if applicable, original otherwise
-            if not isinstance(original_op, TrainableOperator):
-                # is planned operator, so replace any matching downstream operator
-                if isinstance(self, original_op):  # type: ignore
-                    return replacement_op
-            else:
-                # is trainable or trained operator, only check exact instance match
-                if self == original_op:
-                    return replacement_op
+            return subject
 
-            # special case of operator containing "base_estimator" which refers to another estimator
-            if hasattr(self, "hyperparams"):
-                modified_hyperparams = self.hyperparams()
-                if "base_estimator" in modified_hyperparams:
-                    base_estimator = modified_hyperparams["base_estimator"]
-                    if not isinstance(original_op, TrainableOperator):
-                        if isinstance(base_estimator, original_op):  # type: ignore
-                            modified_hyperparams["base_estimator"] = replacement_op
-                    else:
-                        if base_estimator == original_op:
-                            modified_hyperparams["base_estimator"] = replacement_op
-                    return self(**modified_hyperparams)  # type: ignore
-
-            return self
+        return _replace(self, original_op, replacement_op)  # type: ignore
 
     def with_params(self, **impl_params) -> "Operator":
         """This implements a functional version of set_params

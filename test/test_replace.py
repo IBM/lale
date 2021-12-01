@@ -17,11 +17,14 @@ import unittest
 from lale.lib.lale import NoOp
 from lale.lib.sklearn import (
     PCA,
+    RFE,
     AdaBoostRegressor,
+    DecisionTreeClassifier,
     LinearRegression,
     LogisticRegression,
     SelectKBest,
     SimpleImputer,
+    VotingClassifier,
 )
 
 
@@ -120,7 +123,7 @@ class TestReplace(unittest.TestCase):
         )
         self.assertEqual(replaced_pipeline.to_json(), expected_pipeline.to_json())
 
-    def test_base_estimator(self):
+    def test_hyperparam_estimator(self):
         lr = LogisticRegression()
         linear_reg = LinearRegression()
         ada = AdaBoostRegressor(base_estimator=lr)
@@ -144,3 +147,21 @@ class TestReplace(unittest.TestCase):
         replaced_choice = ada_choice.replace(lr, linear_reg)
         expected_choice = PCA | AdaBoostRegressor(base_estimator=linear_reg)
         self.assertEqual(replaced_choice.to_json(), expected_choice.to_json())
+
+        rfe = RFE(estimator=lr)
+        replaced_rfe = rfe.replace(lr, linear_reg)
+        expected_rfe = RFE(estimator=linear_reg)
+        self.assertEqual(replaced_rfe.to_json(), expected_rfe.to_json())
+
+    def test_hyperparam_estimator_list(self):
+        lr = LogisticRegression()
+        linear_reg = LinearRegression()
+        dtc = DecisionTreeClassifier()
+
+        cls_list = [("lr", lr), ("linear_reg", linear_reg)]
+        vc = VotingClassifier(estimators=cls_list)
+
+        replaced_vc = vc.replace(linear_reg, dtc)
+        new_cls_list = [("lr", lr), ("linear_reg", dtc)]
+        expected_vc = VotingClassifier(estimators=new_cls_list)
+        self.assertEqual(replaced_vc.to_json(), expected_vc.to_json())
