@@ -587,14 +587,18 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
     if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
         nested_pipeline_steps = sklearn_pipeline.named_steps.values()
         nested_pipeline_lale_objects = [
-            import_from_sklearn_pipeline(nested_pipeline_step, fitted=fitted, is_hyperparam=is_hyperparam)
+            import_from_sklearn_pipeline(
+                nested_pipeline_step, fitted=fitted, is_hyperparam=is_hyperparam
+            )
             for nested_pipeline_step in nested_pipeline_steps
         ]
         lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
     elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
         transformer_list = sklearn_pipeline.transformer_list
         concat_predecessors = [
-            import_from_sklearn_pipeline(transformer[1], fitted=fitted, is_hyperparam=is_hyperparam)
+            import_from_sklearn_pipeline(
+                transformer[1], fitted=fitted, is_hyperparam=is_hyperparam
+            )
             for transformer in transformer_list
         ]
         lale_op_obj = lale.operators.make_union(*concat_predecessors)
@@ -612,7 +616,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             hyperparams = {}
             for hp_name, hp_val in orig_hyperparams.items():
                 if hasattr(hp_val, "get_params"):
-                    nested_op = import_from_sklearn_pipeline(hp_val, fitted, is_hyperparam=True)#allow nested_op to be trainable
+                    nested_op = import_from_sklearn_pipeline(
+                        hp_val, fitted, is_hyperparam=True
+                    )  # allow nested_op to be trainable
                     hyperparams[hp_name] = nested_op
                 else:
                     hyperparams[hp_name] = hp_val
