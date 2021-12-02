@@ -302,6 +302,84 @@ class TestCustomSchema(unittest.TestCase):
         lale.type_checking.validate_is_schema(foo._schemas)
         self.assertEqual(self.sk_pca.hyperparam_schema(), init)
 
+    def test_add_multiple_constraints(self):
+        init = self.sk_pca.hyperparam_schema()
+        init_expected = {
+            "allOf": [
+                {
+                    "type": "object",
+                    "relevantToOptimizer": [],
+                    "additionalProperties": False,
+                    "properties": {
+                        "n_components": {"default": None},
+                        "copy": {"default": True},
+                        "whiten": {"default": False},
+                        "svd_solver": {"default": "auto"},
+                        "tol": {"default": 0.0},
+                        "iterated_power": {"default": "auto"},
+                        "random_state": {"default": None},
+                    },
+                }
+            ]
+        }
+        self.assertEqual(init, init_expected)
+        expected = {
+            "allOf": [
+                init_expected["allOf"][0],
+                {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "n_components": {
+                                    "not": {"enum": ["mle"]},
+                                }
+                            },
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "svd_solver": {"enum": ["full", "auto"]},
+                            },
+                        },
+                    ]
+                },
+                {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {"copy": {"enum": [False]}},
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "whiten": {"enum": [False]},
+                            },
+                        },
+                    ]
+                },
+            ]
+        }
+        foo = self.sk_pca.customize_schema(
+            constraint=[
+                schemas.AnyOf(
+                    [
+                        schemas.Object(n_components=schemas.Not(schemas.Enum(["mle"]))),
+                        schemas.Object(svd_solver=schemas.Enum(["full", "auto"])),
+                    ]
+                ),
+                schemas.AnyOf(
+                    [
+                        schemas.Object(copy=schemas.Enum([False])),
+                        schemas.Object(whiten=schemas.Enum([False])),
+                    ]
+                ),
+            ]
+        )
+        self.assertEqual(foo.hyperparam_schema(), expected)
+        lale.type_checking.validate_is_schema(foo._schemas)
+        self.assertEqual(self.sk_pca.hyperparam_schema(), init)
+
     def test_override_relevant(self):
         init = self.ll_pca.hyperparam_schema()["allOf"][0]["relevantToOptimizer"]
         expected = ["svd_solver"]
