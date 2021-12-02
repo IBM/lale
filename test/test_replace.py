@@ -24,6 +24,7 @@ from lale.lib.sklearn import (
     LogisticRegression,
     SelectKBest,
     SimpleImputer,
+    StackingClassifier,
     VotingClassifier,
 )
 
@@ -165,3 +166,11 @@ class TestReplace(unittest.TestCase):
         new_cls_list = [("lr", lr), ("linear_reg", dtc)]
         expected_vc = VotingClassifier(estimators=new_cls_list)
         self.assertEqual(replaced_vc.to_json(), expected_vc.to_json())
+
+        sc = StackingClassifier(estimators=cls_list, final_estimator=vc)
+        replaced_sc = sc.replace(linear_reg, dtc)
+        new_cls_list = [("lr", lr), ("linear_reg", dtc)]
+        expected_sc = StackingClassifier(
+            estimators=new_cls_list, final_estimator=expected_vc
+        )
+        self.assertEqual(replaced_sc.to_json(), expected_sc.to_json())
