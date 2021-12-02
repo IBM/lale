@@ -1937,18 +1937,6 @@ class IndividualOp(Operator):
             return False
         return self._impl_class() == other._impl_class()
 
-    # def customize_schema(
-    #     self,
-    #     schemas: Optional[Schema] = None,
-    #     relevantToOptimizer: Optional[List[str]] = None,
-    #     constraint: Union[Schema, JSON_TYPE, None] = None,
-    #     tags: Optional[Dict] = None,
-    #     **kwargs: Union[Schema, JSON_TYPE, None],
-    # ) -> "IndividualOp":
-    #     return customize_schema(
-    #         self, schemas, relevantToOptimizer, constraint, tags, **kwargs
-    #     )
-
     def _propose_fixed_hyperparams(
         self, key_candidates, hp_all, hp_schema, max_depth=2
     ):
@@ -2294,7 +2282,9 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Union[Schema, JSON_TYPE, None] = None,
+        constraint: Union[
+            Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
+        ] = None,
         tags: Optional[Dict] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
@@ -2723,7 +2713,9 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Union[Schema, JSON_TYPE, None] = None,
+        constraint: Union[
+            Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
+        ] = None,
         tags: Optional[Dict] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
@@ -3020,7 +3012,9 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Union[Schema, JSON_TYPE, None] = None,
+        constraint: Union[
+            Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
+        ] = None,
         tags: Optional[Dict] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
@@ -5211,7 +5205,7 @@ def customize_schema(
     op: CustomizeOpType,
     schemas: Optional[Schema] = None,
     relevantToOptimizer: Optional[List[str]] = None,
-    constraint: Union[Schema, JSON_TYPE, None] = None,
+    constraint: Union[Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None] = None,
     tags: Optional[Dict] = None,
     set_as_available: bool = False,
     **kwargs: Union[Schema, JSON_TYPE, None],
@@ -5275,9 +5269,16 @@ def customize_schema(
                 "relevantToOptimizer"
             ] = relevantToOptimizer
         if constraint is not None:
-            if isinstance(constraint, Schema):
-                constraint = constraint.schema
-            op._schemas["properties"]["hyperparams"]["allOf"].append(constraint)
+            cl: List[Union[Schema, JSON_TYPE]]
+            if isinstance(constraint, list):
+                cl = constraint
+            else:
+                cl = [constraint]
+
+            for c in cl:
+                if isinstance(c, Schema):
+                    c = c.schema
+                op._schemas["properties"]["hyperparams"]["allOf"].append(c)
         if tags is not None:
             assert isinstance(tags, dict)
             op._schemas["tags"] = tags
