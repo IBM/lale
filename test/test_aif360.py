@@ -589,7 +589,7 @@ class TestAIF360Num(unittest.TestCase):
         fairness_info = self.creditg_pd_num["fairness_info"]
         estim = LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.87, 0.97)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.82, 1.02)
 
     def test_gerry_fair_classifier_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -618,7 +618,7 @@ class TestAIF360Num(unittest.TestCase):
         redacting = Redacting(**fairness_info)
         logistic_regression = LogisticRegression(max_iter=1000)
         trainable_remi = redacting >> logistic_regression
-        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.80, 0.90)
+        self._attempt_remi_creditg_pd_num(fairness_info, trainable_remi, 0.78, 0.94)
 
     def test_reject_option_classification_pd_num(self):
         fairness_info = self.creditg_pd_num["fairness_info"]
@@ -1091,7 +1091,7 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = EqOddsPostprocessing(**fairness_info, estimator=estim)
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.88, 0.98)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.82, 1.02)
 
     def test_gerry_fair_classifier_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
@@ -1134,7 +1134,7 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         estim = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
         trainable_remi = Redacting(**fairness_info) >> estim
-        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.81, 0.91)
+        self._attempt_remi_creditg_pd_cat(fairness_info, trainable_remi, 0.78, 0.94)
 
     def test_reject_option_classification_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
