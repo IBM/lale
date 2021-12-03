@@ -534,9 +534,9 @@ _COMBINED_SCORER_DOCSTRING = (
     _SCORER_DOCSTRING_ARGS
     + """
 
-    fairness_weight : number, >1.0, default=4.0
+    fairness_weight : number, >=0, <=1, default=0.5
 
-      Higher fairness weight yields lower combined score when unfair.
+      At the default weight of 0.5, the two metrics contribute equally to the combined result. Above 0.5, fairness influences the combination more, and below 0.5, fairness influences the combination less. In the extreme, at 1, the outcome is only determined by fairness, and at 0, the outcome ignores fairness.
 """
     + _SCORER_DOCSTRING_RETURNS
 )
@@ -550,69 +550,62 @@ class _AccuracyAndDisparateImpact:
         unfavorable_labels,
         fairness_weight,
     ):
+        if fairness_weight < 0.0 or fairness_weight > 1.0:
+            logger.warning(
+                f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
+            )
+            fairness_weight = 0.5
         self.accuracy_scorer = sklearn.metrics.make_scorer(
             sklearn.metrics.accuracy_score
         )
-        self.disparate_impact_scorer = disparate_impact(
+        self.symm_di_scorer = symmetric_disparate_impact(
             favorable_labels, protected_attributes, unfavorable_labels
         )
         self.fairness_weight = fairness_weight
 
-    def _combine(self, accuracy, disp_impact):
+    def _combine(self, accuracy, symm_di):
         if accuracy < 0.0 or accuracy > 1.0:
-            logger.warning(f"invalid accuracy {accuracy}")
-        if disp_impact < 0.0 or np.isinf(disp_impact) or np.isnan(disp_impact):
-            logger.warning(f"invalid disp_impact {disp_impact}")
-            return accuracy
-        if disp_impact == 0.0:
-            return 0.0
-        elif disp_impact <= 1.0:
-            symmetric_impact = disp_impact
-        else:
-            symmetric_impact = 1.0 / disp_impact
-        disp_impact_treshold = 0.9  # impact above threshold is considered fair
-        if symmetric_impact < disp_impact_treshold:
-            scaling_factor = symmetric_impact / disp_impact_treshold
-        else:
-            scaling_factor = 1.0
-        result = accuracy * scaling_factor ** self.fairness_weight
-        if result < 0.0 or result > accuracy:
-            logger.warning(f"unexpected result {result} for accuracy {accuracy}")
-        if symmetric_impact < 0.9 and result >= accuracy:
+            logger.warning(f"invalid accuracy {accuracy}, setting it to zero")
+            accuracy = 0.0
+        if symm_di < 0.0 or symm_di > 1.0 or np.isinf(symm_di) or np.isnan(symm_di):
+            logger.warning(f"invalid symm_di {symm_di}, setting it to zero")
+            symm_di = 0.0
+        result = (1 - self.fairness_weight) * accuracy + self.fairness_weight * symm_di
+        if result < 0.0 or result > 1.0:
             logger.warning(
-                f"unexpected result {result} for symmetric_impact {symmetric_impact} and accuracy {accuracy}"
+                f"unexpected result {result} for accuracy {accuracy} and symm_di {symm_di}"
             )
         return result
 
     def score_data(self, y_true=None, y_pred=None, X=None):
         accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
-        disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
-        return self._combine(accuracy, disp_impact)
+        symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
+        return self._combine(accuracy, symm_di)
 
     def score_estimator(self, estimator, X, y):
         accuracy = self.accuracy_scorer(estimator, X, y)
-        disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
-        return self._combine(accuracy, disp_impact)
+        symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
+        return self._combine(accuracy, symm_di)
 
     def __call__(self, estimator, X, y):
         return self.score_estimator(estimator, X, y)
 
 
 def accuracy_and_disparate_impact(
-    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=4.0
+    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=0.5
 ):
     """
     Create a scikit-learn compatible combined scorer for `accuracy`_
-    and `disparate impact`_ given the fairness info. The scorer is
-    suitable for classification problems, with higher resulting scores
-    indicating better outcomes. If the disparate impact is between 0.9
-    and 1.111, return the accuracy. Otherwise, return a value less
-    than the accuracy, the more unfair the lower. The result is
-    between 0 and 1. This metric can be used as the `scoring` argument
+    and `symmetric disparate impact`_ given the fairness info.
+    The scorer is suitable for classification problems,
+    with higher resulting scores indicating better outcomes.
+    The result is a linear combination of accuracy and
+    symmetric disparate impact, and is between 0 and 1.
+    This metric can be used as the `scoring` argument
     of an optimizer such as `Hyperopt`_, as shown in this `demo`_.
 
     .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
-    .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
     .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
     return _AccuracyAndDisparateImpact(
@@ -726,70 +719,62 @@ class _R2AndDisparateImpact:
         unfavorable_labels,
         fairness_weight,
     ):
+        if fairness_weight < 0.0 or fairness_weight > 1.0:
+            logger.warning(
+                f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
+            )
+            fairness_weight = 0.5
         self.r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-        self.disparate_impact_scorer = disparate_impact(
+        self.symm_di_scorer = symmetric_disparate_impact(
             favorable_labels, protected_attributes, unfavorable_labels
         )
         self.fairness_weight = fairness_weight
 
-    def _combine(self, r2, disp_impact):
+    def _combine(self, r2, symm_di):
         if r2 > 1.0:
-            logger.warning(f"invalid r2 {r2}")
-        if disp_impact < 0.0 or np.isinf(disp_impact) or np.isnan(disp_impact):
-            logger.warning(f"invalid disp_impact {disp_impact}")
-            return r2
-        if disp_impact == 0.0:
-            return np.finfo(np.float32).min
-        elif disp_impact <= 1.0:
-            symmetric_impact = disp_impact
-        else:
-            symmetric_impact = 1.0 / disp_impact
-        disp_impact_treshold = 0.9  # impact above threshold is considered fair
-        if symmetric_impact < disp_impact_treshold:
-            scaling_factor = symmetric_impact / disp_impact_treshold
-        else:
-            scaling_factor = 1.0
-        positive_r2 = 1 / (2.0 - r2)
-        scaled_r2 = positive_r2 * scaling_factor ** self.fairness_weight
-        result = 2.0 - 1 / scaled_r2
-        if result > r2:
-            logger.warning(f"unexpected result {result} for r2 {r2}")
-        if symmetric_impact < 0.9 and result >= r2:
+            logger.warning(f"invalid r2 {r2}, setting it to float min")
+            r2 = np.finfo(np.float32).min
+        if symm_di < 0.0 or symm_di > 1.0 or np.isinf(symm_di) or np.isnan(symm_di):
+            logger.warning(f"invalid symm_di {symm_di}, setting it to zero")
+            symm_di = 0.0
+        pos_r2 = 1 / (2.0 - r2)
+        result = (1 - self.fairness_weight) * pos_r2 + self.fairness_weight * symm_di
+        if result < 0.0 or result > 1.0:
             logger.warning(
-                f"unexpected result {result} for symmetric_impact {symmetric_impact} and r2 {r2}"
+                f"unexpected result {result} for r2 {r2} and symm_di {symm_di}"
             )
         return result
 
     def score_data(self, y_true=None, y_pred=None, X=None):
         r2 = sklearn.metrics.r2_score(y_true, y_pred)
-        disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
-        return self._combine(r2, disp_impact)
+        symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
+        return self._combine(r2, symm_di)
 
     def score_estimator(self, estimator, X, y):
         r2 = self.r2_scorer(estimator, X, y)
-        disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
-        return self._combine(r2, disp_impact)
+        symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
+        return self._combine(r2, symm_di)
 
     def __call__(self, estimator, X, y):
         return self.score_estimator(estimator, X, y)
 
 
 def r2_and_disparate_impact(
-    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=4.0
+    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=0.5
 ):
     """
     Create a scikit-learn compatible combined scorer for `R2 score`_
-    and `disparate impact`_ given the fairness info. The scorer is
-    suitable for regression problems, with higher resulting scores
-    indicating better outcomes. If the disparate impact is between 0.9
-    and 1.111, return the R2 score. Otherwise, return a value less
-    than the R2 score, the more unfair the lower. The result is at
-    most 1 and, just like R2 score, can be negative. This metric can
-    be used as the `scoring` argument of an optimizer such as
-    `Hyperopt`_.
+    and `symmetric disparate impact`_ given the fairness info.
+    The scorer is suitable for regression problems,
+    with higher resulting scores indicating better outcomes.
+    It first scales R2, which might be negative, to be between 0 and 1.
+    Then, the result is a linear combination of the scaled R2 and
+    symmetric disparate impact, and is also between 0 and 1.
+    This metric can be used as the `scoring` argument
+    of an optimizer such as `Hyperopt`_.
 
     .. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
-    .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
+    .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
     .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt"""
     return _R2AndDisparateImpact(
         favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
