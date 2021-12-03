@@ -20,11 +20,8 @@ import numpy as np
 import pandas as pd
 
 from lale.expressions import AstExpr
-from lale.helpers import (
-    _is_ast_attribute,
-    _is_ast_subscript,
-    _is_ast_name,
-)
+from lale.helpers import _is_ast_attribute, _is_ast_name, _is_ast_subscript
+
 
 def eval_pandas_df(X, expr):
     evaluator = _PandasEvaluator(X)
@@ -41,24 +38,20 @@ class _PandasEvaluator(ast.NodeVisitor):
         self.result = node.value
 
     def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name (node.value) and node.value.id == "it":
+        if _is_ast_name(node.value) and node.value.id == "it":
             self.visit(node.slice)
             column_name = self.result
             if column_name is None or not column_name.strip():
                 raise ValueError("Name of the column cannot be None or empty.")
             self.result = self.df[column_name]
         else:
-            raise ValueError(
-                f"Unimplemented expression"
-            )
+            raise ValueError(f"Unimplemented expression")
 
     def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name (node.value) and node.value.id == "it":
+        if _is_ast_name(node.value) and node.value.id == "it":
             self.result = self.df[node.attr]
         else:
-            raise ValueError(
-                f"Unimplemented expression"
-            )
+            raise ValueError(f"Unimplemented expression")
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)
@@ -80,15 +73,14 @@ class _PandasEvaluator(ast.NodeVisitor):
         elif isinstance(node.op, ast.Pow):
             self.result = v1 ** v2
         else:
-            raise ValueError(
-                f"""Unimplemented operator {ast.dump(node.op)}"""
-            )
+            raise ValueError(f"""Unimplemented operator {ast.dump(node.op)}""")
 
     def visit_Call(self, node: ast.Call):
         functions_module = importlib.import_module("lale.eval_pandas_df")
         function_name = node.func.id
         map_func_to_be_called = getattr(functions_module, function_name)
         self.result = map_func_to_be_called(self.df, node)
+
 
 def replace(df: Any, replace_expr: AstExpr):
     column_name = replace_expr.args[0].attr
@@ -110,14 +102,14 @@ def identity(df: Any, column: AstExpr):
 
 
 def ratio(df: Any, expr: AstExpr):
-    numerator = eval_pandas_df(df, expr.args[0]) # type: ignore
-    denominator = eval_pandas_df(df, expr.args[1]) # type: ignore
+    numerator = eval_pandas_df(df, expr.args[0])  # type: ignore
+    denominator = eval_pandas_df(df, expr.args[1])  # type: ignore
     return numerator / denominator
 
 
 def subtract(df: Any, expr: AstExpr):
-    e1 = eval_pandas_df(df, expr.args[0]) # type: ignore
-    e2 = eval_pandas_df(df, expr.args[1]) # type: ignore
+    e1 = eval_pandas_df(df, expr.args[0])  # type: ignore
+    e2 = eval_pandas_df(df, expr.args[1])  # type: ignore
     return e1 / e2
 
 

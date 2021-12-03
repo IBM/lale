@@ -233,14 +233,10 @@ class Expr:
 
 def _make_binop(op, left, other):
     if isinstance(other, Expr):
-        e = ast.BinOp(
-            left=left, op=op, right=other._expr
-        )
+        e = ast.BinOp(left=left, op=op, right=other._expr)
         return Expr(e)
     elif other is not None:
-        e = ast.BinOp(
-            left=left, op=op, right=ast.Constant(value=other)
-        )
+        e = ast.BinOp(left=left, op=op, right=ast.Constant(value=other))
         return Expr(e)
     else:
         return False

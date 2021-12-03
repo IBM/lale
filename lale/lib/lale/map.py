@@ -12,44 +12,45 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
+
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.helpers import (
-    _is_ast_call,
-    _is_ast_name,
-    _is_pandas_df,
-    _is_spark_df,
-)
 from lale.eval_pandas_df import eval_pandas_df
 from lale.eval_spark_df import eval_spark_df
+from lale.helpers import _is_ast_call, _is_ast_name, _is_pandas_df, _is_spark_df
 
-import pandas as pd
 
 def _new_column_name(name, expr):
     def infer_new_name(expr):
         if (
-            _is_ast_call(expr._expr) and
-            _is_ast_name(expr._expr.func) and
-            expr._expr.func.id in [ "replace",
-                                    "day_of_month",
-                                    "day_of_week",
-                                    "day_of_year",
-                                    "hour",
-                                    "minute",
-                                    "month",
-                                    "string_indexer" ]
+            _is_ast_call(expr._expr)
+            and _is_ast_name(expr._expr.func)
+            and expr._expr.func.id
+            in [
+                "replace",
+                "day_of_month",
+                "day_of_week",
+                "day_of_year",
+                "hour",
+                "minute",
+                "month",
+                "string_indexer",
+            ]
         ):
             return expr._expr.args[0].attr
-        else: 
+        else:
             raise ValueError(
                 """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
                 to specify the new column name as the key, and the expression as the value."""
             )
+
     if name is None or not name.strip():
         return infer_new_name(expr)
     else:
         return name
+
 
 class _MapImpl:
     def __init__(self, columns, remainder="drop"):
@@ -68,6 +69,7 @@ class _MapImpl:
 
     def transform_pandas_df(self, X):
         mapped_df = pd.DataFrame()
+
         def get_map_function_output(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
             new_column = eval_pandas_df(X, column)
@@ -82,7 +84,7 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns = [] # XXX TODO XXX
+            remainder_columns = []  # XXX TODO XXX
             for column in remainder_columns:
                 mapped_df[column] = X[column]
         table_name = lale.datasets.data_schemas.get_table_name(X)
@@ -91,6 +93,7 @@ class _MapImpl:
 
     def transform_spark_df(self, X):
         new_columns = []
+
         def get_map_function_expr(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
             new_column = eval_spark_df(X, column)
@@ -105,13 +108,14 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns = [] # XXX TODO XXX
+            remainder_columns = []  # XXX TODO XXX
             for column in remainder_columns:
-                pass # TODO
-        mapped_df = X.select(new_columns)        
+                pass  # TODO
+        mapped_df = X.select(new_columns)
         table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
         return mapped_df
+
 
 # class _MapImpl:
 #     def __init__(self, columns, remainder="passthrough"):
