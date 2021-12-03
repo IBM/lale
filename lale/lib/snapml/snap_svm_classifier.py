@@ -42,7 +42,7 @@ class _SnapSVMClassifierImpl:
         gamma=1.0,
         n_components=100,
         random_state=None,
-        loss='hinge',
+        loss="hinge",
     ):
 
         assert (
