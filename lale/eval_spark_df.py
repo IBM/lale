@@ -158,16 +158,3 @@ def minute(dom_expr: AstExpr):
 
 def month(dom_expr: AstExpr):
     return time_functions(dom_expr, spark_month)
-
-
-def string_indexer(df, dom_expr: AstExpr):
-    # XXX TODO XXX
-    # column_name = dom_expr.args[0].attr
-    # df = df.withColumnRenamed(
-    #     column_name, "newColName"
-    # )  # renaming because inputCol and outputCol can't be the same.
-    # indexer = StringIndexer(inputCol="newColName", outputCol=new_column_name)
-    # df = indexer.fit(df).transform(df)
-    # df = df.drop("newColName")
-    # return new_column_name, df
-    pass

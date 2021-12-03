@@ -143,12 +143,3 @@ def minute(df: Any, dom_expr: AstExpr):
 
 def month(df: Any, dom_expr: AstExpr):
     return time_functions(df, dom_expr, "month")
-
-
-def string_indexer(df: pd.DataFrame, dom_expr: AstExpr):
-    column_name = dom_expr.args[0].attr
-    sorted_indices = df[column_name].value_counts().index
-    new_column = df[column_name].map(
-        dict(zip(sorted_indices, range(0, len(sorted_indices))))
-    )
-    return new_column
