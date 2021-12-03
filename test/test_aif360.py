@@ -431,29 +431,13 @@ class TestAIF360Num(unittest.TestCase):
         if estimator.is_classifier():
             combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
             combined = combined_scorer(estimator, test_X, test_y)
-            accuracy_scorer = sklearn.metrics.make_scorer(
-                sklearn.metrics.accuracy_score
-            )
-            accuracy = accuracy_scorer(estimator, test_X, test_y)
-            self.assertLess(combined, accuracy)
-            combined_scorer_2 = lale.lib.aif360.accuracy_and_disparate_impact(
-                **fi, fairness_weight=2.0
-            )
-            combined_2 = combined_scorer_2(estimator, test_X, test_y)
-            self.assertLess(combined, combined_2)
-            self.assertLess(combined_2, accuracy)
+            self.assertLess(0.0, combined)
+            self.assertLess(combined, 1.0)
         else:
             combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
             combined = combined_scorer(estimator, test_X, test_y)
-            r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-            r2 = r2_scorer(estimator, test_X, test_y)
-            self.assertLess(combined, r2)
-            combined_scorer_2 = lale.lib.aif360.r2_and_disparate_impact(
-                **fi, fairness_weight=2.0
-            )
-            combined_2 = combined_scorer_2(estimator, test_X, test_y)
-            self.assertLess(combined, combined_2)
-            self.assertLess(combined_2, r2)
+            self.assertLess(0.0, combined)
+            self.assertLess(combined, 1.0)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, 0.0)
@@ -517,12 +501,13 @@ class TestAIF360Num(unittest.TestCase):
         }
         scorer = lale.lib.aif360.accuracy_and_disparate_impact(**dummy_fairness_info)
         for acc in [0.2, 0.8, 1]:
-            for di in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
+            for di in [0.7, 0.9, 1.0]:
                 score = scorer._combine(acc, di)
-                print(f"acc {acc:5.2f}, di {di:.2f}, score {score:5.2f}")
-            for di in [float("inf"), float("-inf"), float("nan")]:
+                self.assertLess(0.0, score)
+                self.assertLessEqual(score, 1.0)
+            for di in [0.0, float("inf"), float("-inf"), float("nan")]:
                 score = scorer._combine(acc, di)
-                self.assertEqual(score, acc)
+                self.assertEqual(score, 0.5 * acc)
 
     def test_scorers_combine_r2(self):
         dummy_fairness_info = {
@@ -531,12 +516,13 @@ class TestAIF360Num(unittest.TestCase):
         }
         scorer = lale.lib.aif360.r2_and_disparate_impact(**dummy_fairness_info)
         for r2 in [-2, 0, 0.5, 1]:
-            for di in [0.7, 0.9, 1.0, (1 / 0.9), (1 / 0.7)]:
+            for di in [0.7, 0.9, 1.0]:
                 score = scorer._combine(r2, di)
-                print(f"r2 {r2:5.2f}, di {di:.2f}, score {score:5.2f}")
-            for di in [float("inf"), float("-inf"), float("nan")]:
+                self.assertLess(0.0, score)
+                self.assertLessEqual(score, 1.0)
+            for di in [0.0, float("inf"), float("-inf"), float("nan")]:
                 score = scorer._combine(r2, di)
-                self.assertEqual(score, r2)
+                self.assertEqual(score, 0.5 / (2.0 - r2))
 
     def _attempt_remi_creditg_pd_num(
         self, fairness_info, trainable_remi, min_di, max_di
@@ -890,17 +876,13 @@ class TestAIF360Cat(unittest.TestCase):
         if estimator.is_classifier():
             combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
             combined = combined_scorer(estimator, test_X, test_y)
-            accuracy_scorer = sklearn.metrics.make_scorer(
-                sklearn.metrics.accuracy_score
-            )
-            accuracy = accuracy_scorer(estimator, test_X, test_y)
-            self.assertLess(combined, accuracy)
+            self.assertLess(0.0, combined)
+            self.assertLess(combined, 1.0)
         else:
             combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
             combined = combined_scorer(estimator, test_X, test_y)
-            r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
-            r2 = r2_scorer(estimator, test_X, test_y)
-            self.assertLess(combined, r2)
+            self.assertLess(0.0, combined)
+            self.assertLess(combined, 1.0)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, 0.0)
@@ -1047,7 +1029,7 @@ class TestAIF360Cat(unittest.TestCase):
         self.assertAlmostEqual(sdi_measured, 0.461, places=3)
         adi_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fairness_info)
         adi_measured = adi_scorer.score_data(X=X, y_pred=y, y_true=y)
-        self.assertAlmostEqual(adi_measured, 0.069, places=3)
+        self.assertAlmostEqual(adi_measured, 0.731, places=3)
         ao_scorer = lale.lib.aif360.average_odds_difference(**fairness_info)
         with self.assertRaisesRegex(ValueError, "unexpected labels"):
             _ = ao_scorer.score_data(X=X, y_pred=y)
