@@ -42,6 +42,7 @@ class _SnapSVMClassifierImpl:
         gamma=1.0,
         n_components=100,
         random_state=None,
+        loss="hinge",
     ):
 
         assert (
@@ -65,6 +66,8 @@ class _SnapSVMClassifierImpl:
             "n_components": n_components,
             "random_state": random_state,
         }
+        if snapml.__version__ > "1.8.0":
+            self._hyperparams["loss"] = loss
         modified_hps = {**self._hyperparams}
         if modified_hps["device_ids"] is None:
             modified_hps["device_ids"] = [0]  # TODO: support list as default
@@ -328,5 +331,18 @@ _combined_schemas = {
 SnapSVMClassifier = lale.operators.make_operator(
     _SnapSVMClassifierImpl, _combined_schemas
 )
+
+if snapml_installed and snapml.__version__ > "1.8.0":  # type: ignore # noqa
+    from lale.schemas import Enum
+
+    SnapSVMClassifier = SnapSVMClassifier.customize_schema(
+        loss=Enum(
+            desc="""The loss function that will be used for training.""",
+            values=["hinge", "squared_hinge"],
+            default="hinge",
+            forOptimizer=True,
+        ),
+        set_as_available=True,
+    )
 
 lale.docstrings.set_docstrings(SnapSVMClassifier)
