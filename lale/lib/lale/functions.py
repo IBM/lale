@@ -12,44 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
 import datetime
-from itertools import chain
 from typing import Any
 
 import numpy as np
-import pandas as pd
 
 try:
     import pyspark.sql.functions as pysql
-    from pyspark.ml.feature import StringIndexer
-
-    # noqa in the imports here because those get used dynamically and flake fails.
-    from pyspark.sql.functions import hour as spark_hour  # noqa
-    from pyspark.sql.functions import lit  # noqa
-    from pyspark.sql.functions import to_timestamp  # noqa
-    from pyspark.sql.functions import minute as spark_minute  # noqa
-    from pyspark.sql.functions import month as spark_month  # noqa
-
-    from pyspark.sql.functions import (  # noqa; isort: skip
-        create_map,
-        dayofmonth,
-        dayofweek,
-        dayofyear,
-    )
 
     spark_installed = True
 except ImportError:
     spark_installed = False
 
 
-from lale.expressions import Expr
-from lale.helpers import (
-    _is_ast_attribute,
-    _is_ast_subscript,
-    _is_pandas_df,
-    _is_spark_df,
-)
+from lale.helpers import _is_pandas_df, _is_spark_df
 
 
 class categorical:

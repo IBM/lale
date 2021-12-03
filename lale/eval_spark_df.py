@@ -20,8 +20,6 @@ from lale.expressions import AstExpr
 from lale.helpers import _is_ast_attribute, _is_ast_name, _is_ast_subscript
 
 try:
-    from pyspark.ml.feature import StringIndexer
-
     # noqa in the imports here because those get used dynamically and flake fails.
     from pyspark.sql.functions import col  # noqa
     from pyspark.sql.functions import lit  # noqa
@@ -62,13 +60,13 @@ class _SparkEvaluator(ast.NodeVisitor):
                 raise ValueError("Name of the column cannot be None or empty.")
             self.result = col(column_name)
         else:
-            raise ValueError(f"Unimplemented expression")
+            raise ValueError("Unimplemented expression")
 
     def visit_Attribute(self, node: ast.Attribute):
         if _is_ast_name(node.value) and node.value.id == "it":
             self.result = col(node.attr)
         else:
-            raise ValueError(f"Unimplemented expression")
+            raise ValueError("Unimplemented expression")
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)

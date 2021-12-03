@@ -16,7 +16,6 @@ import ast
 import importlib
 from typing import Any
 
-import numpy as np
 import pandas as pd
 
 from lale.expressions import AstExpr
@@ -45,13 +44,13 @@ class _PandasEvaluator(ast.NodeVisitor):
                 raise ValueError("Name of the column cannot be None or empty.")
             self.result = self.df[column_name]
         else:
-            raise ValueError(f"Unimplemented expression")
+            raise ValueError("Unimplemented expression")
 
     def visit_Attribute(self, node: ast.Attribute):
         if _is_ast_name(node.value) and node.value.id == "it":
             self.result = self.df[node.attr]
         else:
-            raise ValueError(f"Unimplemented expression")
+            raise ValueError("Unimplemented expression")
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)
