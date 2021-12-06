@@ -424,11 +424,11 @@ def desc(column: Union[Expr, str]) -> Expr:
     return _make_call_expr("desc", column)
 
 
-def ratio(num: Expr, denom: Expr) -> Expr:
+def ratio(num: Expr, denom: Expr):
     return num / denom
 
 
-def subtract(op1: Expr, op2: Expr) -> Expr:
+def subtract(op1: Expr, op2: Expr):
     return op1 - op2
 
 

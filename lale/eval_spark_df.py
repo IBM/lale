@@ -136,11 +136,11 @@ def subtract(expr: AstExpr):
 
 
 def time_functions(dom_expr, spark_func):
-    fmt = None
     column_name = dom_expr.args[0].attr
     if len(dom_expr.args) > 1:
         fmt = ast.literal_eval(dom_expr.args[1])
-    return spark_func(to_timestamp(col(column_name), fmt))
+        return spark_func(to_timestamp(col(column_name), format=fmt))
+    return spark_func(to_timestamp(col(column_name)))
 
 
 def day_of_month(dom_expr: AstExpr):
