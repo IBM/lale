@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+
 import pandas as pd
 
 import lale.datasets.data_schemas
@@ -29,6 +30,7 @@ try:
     spark_installed = True
 except ImportError:
     spark_installed = False
+
 
 def _new_column_name(name, expr):
     def infer_new_name(expr):
@@ -59,6 +61,7 @@ def _new_column_name(name, expr):
     else:
         return name
 
+
 class _AccessedColumns(ast.NodeVisitor):
     def __init__(self):
         self.accessed = set()
@@ -75,10 +78,12 @@ class _AccessedColumns(ast.NodeVisitor):
         else:
             raise ValueError("Unimplemented expression")
 
+
 def accessed_columns(expr):
     visitor = _AccessedColumns()
     visitor.visit(expr._expr)
     return visitor.accessed
+
 
 class _MapImpl:
     def __init__(self, columns, remainder="drop"):
@@ -115,7 +120,7 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns =  [ x for x in X.columns if x not in accessed_column_names ]
+            remainder_columns = [x for x in X.columns if x not in accessed_column_names]
             mapped_df[remainder_columns] = X[remainder_columns]
         table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
@@ -141,7 +146,9 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns =  [ spark_col(x) for x in X.columns if x not in accessed_column_names ]
+            remainder_columns = [
+                spark_col(x) for x in X.columns if x not in accessed_column_names
+            ]
             new_columns.extend(remainder_columns)
         mapped_df = X.select(new_columns)
         table_name = lale.datasets.data_schemas.get_table_name(X)

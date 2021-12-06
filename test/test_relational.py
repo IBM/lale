@@ -1240,7 +1240,7 @@ class TestMap(unittest.TestCase):
                 "new_gender": it.gender,
                 "new_status": it["status"],
             },
-            remainder="passthrough"
+            remainder="passthrough",
         )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
@@ -2083,7 +2083,7 @@ class TestMapSpark(unittest.TestCase):
                 "new_gender": it.gender,
                 "new_status": it["status"],
             },
-            remainder="passthrough"
+            remainder="passthrough",
         )
         trained = trainable.fit(sdf)
         transformed_df = trained.transform(sdf)
