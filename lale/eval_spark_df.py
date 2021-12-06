@@ -17,7 +17,12 @@ import importlib
 from itertools import chain
 
 from lale.expressions import AstExpr
-from lale.helpers import _is_ast_attribute, _is_ast_name, _is_ast_subscript
+from lale.helpers import (
+    _ast_func_id,
+    _is_ast_attribute,
+    _is_ast_name_it,
+    _is_ast_subscript,
+)
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.
@@ -54,7 +59,7 @@ class _SparkEvaluator(ast.NodeVisitor):
         self.result = lit(node.value)
 
     def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name(node.value) and node.value.id == "it":
+        if _is_ast_name_it(node.value):
             column_name = node.slice.value.s  # type: ignore
             if column_name is None or not column_name.strip():
                 raise ValueError("Name of the column cannot be None or empty.")
@@ -63,7 +68,7 @@ class _SparkEvaluator(ast.NodeVisitor):
             raise ValueError("Unimplemented expression")
 
     def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name(node.value) and node.value.id == "it":
+        if _is_ast_name_it(node.value):
             self.result = col(node.attr)
         else:
             raise ValueError("Unimplemented expression")
@@ -73,6 +78,8 @@ class _SparkEvaluator(ast.NodeVisitor):
         v1 = self.result
         self.visit(node.right)
         v2 = self.result
+        assert v1 is not None
+        assert v2 is not None
         if isinstance(node.op, ast.Add):
             self.result = v1 + v2
         elif isinstance(node.op, ast.Sub):
@@ -92,12 +99,12 @@ class _SparkEvaluator(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call):
         functions_module = importlib.import_module("lale.eval_spark_df")
-        function_name = node.func.id
+        function_name = _ast_func_id(node.func)
         map_func_to_be_called = getattr(functions_module, function_name)
         self.result = map_func_to_be_called(node)
 
 
-def replace(replace_expr: AstExpr):
+def replace(replace_expr):
     column_name = replace_expr.args[0].attr
     mapping_dict = ast.literal_eval(replace_expr.args[1].value)
     mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])  # type: ignore
@@ -128,7 +135,7 @@ def subtract(expr: AstExpr):
     return e1 / e2
 
 
-def time_functions(dom_expr: AstExpr, spark_func):
+def time_functions(dom_expr, spark_func):
     fmt = None
     column_name = dom_expr.args[0].attr
     if len(dom_expr.args) > 1:

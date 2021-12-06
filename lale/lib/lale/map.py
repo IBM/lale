@@ -21,7 +21,13 @@ import lale.docstrings
 import lale.operators
 from lale.eval_pandas_df import eval_pandas_df
 from lale.eval_spark_df import eval_spark_df
-from lale.helpers import _is_ast_call, _is_ast_name, _is_pandas_df, _is_spark_df
+from lale.helpers import (
+    _is_ast_call,
+    _is_ast_name,
+    _is_ast_name_it,
+    _is_pandas_df,
+    _is_spark_df,
+)
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.
@@ -67,13 +73,17 @@ class _AccessedColumns(ast.NodeVisitor):
         self.accessed = set()
 
     def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name(node.value) and node.value.id == "it":
+        if _is_ast_name_it(node.value):
             self.accessed.add(node.attr)
         else:
             raise ValueError("Unimplemented expression")
 
     def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name(node.value) and node.value.id == "it":
+        if (
+            _is_ast_name_it(node.value)
+            and isinstance(node.slice, ast.Index)
+            and isinstance(node.slice.value, ast.Constant)
+        ):
             self.accessed.add(node.slice.value.value)
         else:
             raise ValueError("Unimplemented expression")

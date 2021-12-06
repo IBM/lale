@@ -19,7 +19,12 @@ from typing import Any
 import pandas as pd
 
 from lale.expressions import AstExpr
-from lale.helpers import _is_ast_attribute, _is_ast_name, _is_ast_subscript
+from lale.helpers import (
+    _ast_func_id,
+    _is_ast_attribute,
+    _is_ast_name_it,
+    _is_ast_subscript,
+)
 
 
 def eval_pandas_df(X, expr):
@@ -37,7 +42,7 @@ class _PandasEvaluator(ast.NodeVisitor):
         self.result = node.value
 
     def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name(node.value) and node.value.id == "it":
+        if _is_ast_name_it(node.value):
             self.visit(node.slice)
             column_name = self.result
             if column_name is None or not column_name.strip():
@@ -47,7 +52,7 @@ class _PandasEvaluator(ast.NodeVisitor):
             raise ValueError("Unimplemented expression")
 
     def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name(node.value) and node.value.id == "it":
+        if _is_ast_name_it(node.value):
             self.result = self.df[node.attr]
         else:
             raise ValueError("Unimplemented expression")
@@ -57,6 +62,7 @@ class _PandasEvaluator(ast.NodeVisitor):
         v1 = self.result
         self.visit(node.right)
         v2 = self.result
+        assert v2 is not None
         if isinstance(node.op, ast.Add):
             self.result = v1 + v2
         elif isinstance(node.op, ast.Sub):
@@ -76,12 +82,12 @@ class _PandasEvaluator(ast.NodeVisitor):
 
     def visit_Call(self, node: ast.Call):
         functions_module = importlib.import_module("lale.eval_pandas_df")
-        function_name = node.func.id
+        function_name = _ast_func_id(node.func)
         map_func_to_be_called = getattr(functions_module, function_name)
         self.result = map_func_to_be_called(self.df, node)
 
 
-def replace(df: Any, replace_expr: AstExpr):
+def replace(df: Any, replace_expr):
     column_name = replace_expr.args[0].attr
     mapping_dict = ast.literal_eval(replace_expr.args[1].value)
     new_column = df[column_name].replace(mapping_dict)
@@ -100,19 +106,21 @@ def identity(df: Any, column: AstExpr):
     return df[column_name]
 
 
-def ratio(df: Any, expr: AstExpr):
-    numerator = eval_pandas_df(df, expr.args[0])  # type: ignore
-    denominator = eval_pandas_df(df, expr.args[1])  # type: ignore
-    return numerator / denominator
-
-
-def subtract(df: Any, expr: AstExpr):
+def ratio(df: Any, expr):
     e1 = eval_pandas_df(df, expr.args[0])  # type: ignore
     e2 = eval_pandas_df(df, expr.args[1])  # type: ignore
+    assert e1 is not None and e2 is not None
     return e1 / e2
 
 
-def time_functions(df: Any, dom_expr: AstExpr, pandas_func: str):
+def subtract(df: Any, expr):
+    e1 = eval_pandas_df(df, expr.args[0])  # type: ignore
+    e2 = eval_pandas_df(df, expr.args[1])  # type: ignore
+    assert e1 is not None and e2 is not None
+    return e1 / e2
+
+
+def time_functions(df: Any, dom_expr, pandas_func: str):
     fmt = None
     column_name = dom_expr.args[0].attr
     if len(dom_expr.args) > 1:
