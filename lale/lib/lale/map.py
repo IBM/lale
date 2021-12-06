@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import pandas as pd
 
 import lale.datasets.data_schemas
@@ -21,6 +22,13 @@ from lale.eval_pandas_df import eval_pandas_df
 from lale.eval_spark_df import eval_spark_df
 from lale.helpers import _is_ast_call, _is_ast_name, _is_pandas_df, _is_spark_df
 
+try:
+    # noqa in the imports here because those get used dynamically and flake fails.
+    from pyspark.sql.functions import col as spark_col  # noqa
+
+    spark_installed = True
+except ImportError:
+    spark_installed = False
 
 def _new_column_name(name, expr):
     def infer_new_name(expr):
@@ -51,6 +59,26 @@ def _new_column_name(name, expr):
     else:
         return name
 
+class _AccessedColumns(ast.NodeVisitor):
+    def __init__(self):
+        self.accessed = set()
+
+    def visit_Attribute(self, node: ast.Attribute):
+        if _is_ast_name(node.value) and node.value.id == "it":
+            self.accessed.add(node.attr)
+        else:
+            raise ValueError("Unimplemented expression")
+
+    def visit_Subscript(self, node: ast.Subscript):
+        if _is_ast_name(node.value) and node.value.id == "it":
+            self.accessed.add(node.slice.value.value)
+        else:
+            raise ValueError("Unimplemented expression")
+
+def accessed_columns(expr):
+    visitor = _AccessedColumns()
+    visitor.visit(expr._expr)
+    return visitor.accessed
 
 class _MapImpl:
     def __init__(self, columns, remainder="drop"):
@@ -69,11 +97,14 @@ class _MapImpl:
 
     def transform_pandas_df(self, X):
         mapped_df = pd.DataFrame()
+        accessed_column_names = set()
 
         def get_map_function_output(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
             new_column = eval_pandas_df(X, column)
             mapped_df[new_column_name] = new_column
+            accessed_column_names.add(new_column_name)
+            accessed_column_names.update(accessed_columns(column))
 
         if isinstance(self.columns, list):
             for column in self.columns:
@@ -84,20 +115,22 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns = []  # XXX TODO XXX
-            for column in remainder_columns:
-                mapped_df[column] = X[column]
+            remainder_columns =  [ x for x in X.columns if x not in accessed_column_names ]
+            mapped_df[remainder_columns] = X[remainder_columns]
         table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
         return mapped_df
 
     def transform_spark_df(self, X):
         new_columns = []
+        accessed_column_names = set()
 
         def get_map_function_expr(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
             new_column = eval_spark_df(X, column)
             new_columns.append(new_column.alias(new_column_name))
+            accessed_column_names.add(new_column_name)
+            accessed_column_names.update(accessed_columns(column))
 
         if isinstance(self.columns, list):
             for column in self.columns:
@@ -108,9 +141,8 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns = []  # XXX TODO XXX
-            for column in remainder_columns:
-                pass  # TODO
+            remainder_columns =  [ spark_col(x) for x in X.columns if x not in accessed_column_names ]
+            new_columns.extend(remainder_columns)
         mapped_df = X.select(new_columns)
         table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
@@ -189,7 +221,7 @@ _hyperparams_schema = {
                         {"enum": ["passthrough", "drop"]},
                         {"description": "Mapping expression.", "laleType": "operator"},
                     ],
-                    "default": "passthrough",
+                    "default": "drop",
                 },
             },
         }

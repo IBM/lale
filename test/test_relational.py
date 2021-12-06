@@ -1228,6 +1228,27 @@ class TestMap(unittest.TestCase):
         self.assertEqual(df["status"][3], transformed_df["new_status"][3])
         self.assertEqual(len(transformed_df.columns), 2)
 
+    def test_transform_identity_map_passthrough(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        trainable = Map(
+            columns={
+                "new_gender": it.gender,
+                "new_status": it["status"],
+            },
+            remainder="passthrough"
+        )
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(df["gender"][0], transformed_df["new_gender"][0])
+        self.assertEqual(df["status"][3], transformed_df["new_status"][3])
+        self.assertEqual(df["state"][3], transformed_df["state"][3])
+        self.assertEqual(len(transformed_df.columns), 3)
+
     def test_transform_identity_map_error(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
@@ -1263,13 +1284,14 @@ class TestMap(unittest.TestCase):
         state_map = {"NY": "New York", "CA": "California"}
         trainable = Map(
             columns=[replace(it.gender, gender_map), replace(it.state, state_map)],
-            remainder="drop",
+            remainder="passthrough",
         )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 2))
+        self.assertEqual(transformed_df.shape, (5, 3))
         self.assertEqual(transformed_df["gender"][0], "Male")
         self.assertEqual(transformed_df["state"][0], "New York")
+        self.assertEqual(transformed_df["status"][0], 0)
 
     def test_transform_replace_list(self):
         d = {
@@ -2047,6 +2069,28 @@ class TestMapSpark(unittest.TestCase):
         self.assertEqual(df["gender"][0], transformed_df.collect()[0]["new_gender"])
         self.assertEqual(df["status"][3], transformed_df.collect()[3]["new_status"])
         self.assertEqual(len(transformed_df.columns), 2)
+
+    def test_transform_identity_map_passthrough(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(
+            columns={
+                "new_gender": it.gender,
+                "new_status": it["status"],
+            },
+            remainder="passthrough"
+        )
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(df["gender"][0], transformed_df.collect()[0]["new_gender"])
+        self.assertEqual(df["status"][3], transformed_df.collect()[3]["new_status"])
+        self.assertEqual(df["state"][2], transformed_df.collect()[2]["state"])
+        self.assertEqual(len(transformed_df.columns), 3)
 
     def test_transform_spark_replace_list(self):
         if spark_installed:
