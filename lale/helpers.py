@@ -654,7 +654,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
             except AttributeError:
                 continue
         else:
-            class_ = lale.operators.make_operator(sklearn_obj, name=class_name)
+            return sklearn_obj
 
         if (
             not fitted
