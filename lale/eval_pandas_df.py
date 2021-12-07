@@ -51,7 +51,11 @@ class _PandasEvaluator(ast.NodeVisitor):
         if _is_ast_name_it(node.value):
             self.visit(node.slice)
             column_name = self.result
-            if column_name is None or not column_name.strip():
+            if (
+                column_name is None
+                or isinstance(column_name, str)
+                and not column_name.strip()
+            ):
                 raise ValueError("Name of the column cannot be None or empty.")
             self.result = self.df[column_name]
         else:
@@ -68,21 +72,21 @@ class _PandasEvaluator(ast.NodeVisitor):
         v1 = self.result
         self.visit(node.right)
         v2 = self.result
-        assert v2 is not None
+        # assert v1 is not None and v2 is not None
         if isinstance(node.op, ast.Add):
-            self.result = v1 + v2
+            self.result = v1 + v2  # type: ignore
         elif isinstance(node.op, ast.Sub):
-            self.result = v1 - v2
+            self.result = v1 - v2  # type: ignore
         elif isinstance(node.op, ast.Mult):
-            self.result = v1 * v2
+            self.result = v1 * v2  # type: ignore
         elif isinstance(node.op, ast.Div):
-            self.result = v1 / v2
+            self.result = v1 / v2  # type: ignore
         elif isinstance(node.op, ast.FloorDiv):
-            self.result = v1 // v2
+            self.result = v1 // v2  # type: ignore
         elif isinstance(node.op, ast.Mod):
-            self.result = v1 % v2
+            self.result = v1 % v2  # type: ignore
         elif isinstance(node.op, ast.Pow):
-            self.result = v1 ** v2
+            self.result = v1 ** v2  # type: ignore
         else:
             raise ValueError(f"""Unimplemented operator {ast.dump(node.op)}""")
 
@@ -113,17 +117,15 @@ def identity(df: Any, column: AstExpr):
 
 
 def ratio(df: Any, expr):
-    e1 = eval_pandas_df(df, expr.args[0])  # type: ignore
-    e2 = eval_pandas_df(df, expr.args[1])  # type: ignore
-    assert e1 is not None and e2 is not None
-    return e1 / e2
+    e1 = eval_pandas_df(df, expr.args[0])
+    e2 = eval_pandas_df(df, expr.args[1])
+    return e1 / e2  # type: ignore
 
 
 def subtract(df: Any, expr):
-    e1 = eval_pandas_df(df, expr.args[0])  # type: ignore
-    e2 = eval_pandas_df(df, expr.args[1])  # type: ignore
-    assert e1 is not None and e2 is not None
-    return e1 / e2
+    e1 = eval_pandas_df(df, expr.args[0])
+    e2 = eval_pandas_df(df, expr.args[1])
+    return e1 / e2  # type: ignore
 
 
 def time_functions(df: Any, dom_expr, pandas_func: str):
