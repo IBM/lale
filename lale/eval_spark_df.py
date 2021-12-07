@@ -55,6 +55,12 @@ class _SparkEvaluator(ast.NodeVisitor):
     def __init__(self):
         self.result = None
 
+    def visit_Num(self, node: ast.Num):
+        self.result = lit(node.n)
+
+    def visit_Str(self, node: ast.Str):
+        self.result = lit(node.s)
+
     def visit_Constant(self, node: ast.Constant):
         self.result = lit(node.value)
 

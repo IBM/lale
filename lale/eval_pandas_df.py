@@ -38,6 +38,12 @@ class _PandasEvaluator(ast.NodeVisitor):
         self.result = None
         self.df = X
 
+    def visit_Num(self, node: ast.Num):
+        self.result = node.n
+
+    def visit_Str(self, node: ast.Str):
+        self.result = node.s
+
     def visit_Constant(self, node: ast.Constant):
         self.result = node.value
 

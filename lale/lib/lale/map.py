@@ -79,12 +79,11 @@ class _AccessedColumns(ast.NodeVisitor):
             raise ValueError("Unimplemented expression")
 
     def visit_Subscript(self, node: ast.Subscript):
-        if (
-            _is_ast_name_it(node.value)
-            and isinstance(node.slice, ast.Index)
-            and isinstance(node.slice.value, ast.Constant)
-        ):
-            self.accessed.add(node.slice.value.value)
+        if _is_ast_name_it(node.value) and isinstance(node.slice, ast.Index):
+            if isinstance(node.slice.value, ast.Constant):
+                self.accessed.add(node.slice.value.value)
+            elif isinstance(node.slice.value, ast.Str):
+                self.accessed.add(node.slice.value.s)
         else:
             raise ValueError("Unimplemented expression")
 
