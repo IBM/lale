@@ -18,7 +18,6 @@ from typing import Any
 
 import pandas as pd
 
-from lale.expressions import AstExpr
 from lale.helpers import _ast_func_id, _is_ast_name_it
 
 
@@ -96,57 +95,57 @@ class _PandasEvaluator(ast.NodeVisitor):
         self.result = map_func_to_be_called(self.df, node)
 
 
-def replace(df: Any, replace_expr):
-    column = eval_ast_expr_pandas_df(df, replace_expr.args[0])
-    mapping_dict = ast.literal_eval(replace_expr.args[1].value)
+def replace(df: Any, call: ast.Call):
+    column = eval_ast_expr_pandas_df(df, call.args[0])
+    mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
     new_column = column.replace(mapping_dict)  # type: ignore
     return new_column
 
 
-def identity(df: Any, expr: AstExpr):
-    return eval_ast_expr_pandas_df(df, expr.args[0])  # type: ignore
+def identity(df: Any, call: ast.Call):
+    return eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
 
 
-def ratio(df: Any, expr):
-    e1 = eval_expr_pandas_df(df, expr.args[0])
-    e2 = eval_expr_pandas_df(df, expr.args[1])
+def ratio(df: Any, call):
+    e1 = eval_expr_pandas_df(df, call.args[0])
+    e2 = eval_expr_pandas_df(df, call.args[1])
     return e1 / e2  # type: ignore
 
 
-def subtract(df: Any, expr):
-    e1 = eval_expr_pandas_df(df, expr.args[0])
-    e2 = eval_expr_pandas_df(df, expr.args[1])
+def subtract(df: Any, call):
+    e1 = eval_expr_pandas_df(df, call.args[0])
+    e2 = eval_expr_pandas_df(df, call.args[1])
     return e1 / e2  # type: ignore
 
 
-def time_functions(df: Any, dom_expr, pandas_func: str):
+def time_functions(df: Any, call, pandas_func: str):
     fmt = None
-    column = eval_ast_expr_pandas_df(df, dom_expr.args[0])
-    if len(dom_expr.args) > 1:
-        fmt = ast.literal_eval(dom_expr.args[1])
+    column = eval_ast_expr_pandas_df(df, call.args[0])
+    if len(call.args) > 1:
+        fmt = ast.literal_eval(call.args[1])
     new_column = pd.to_datetime(column, format=fmt)
     return getattr(getattr(new_column, "dt"), pandas_func)
 
 
-def day_of_month(df: Any, dom_expr: AstExpr):
-    return time_functions(df, dom_expr, "day")
+def day_of_month(df: Any, call: ast.Call):
+    return time_functions(df, call, "day")
 
 
-def day_of_week(df: Any, dom_expr: AstExpr):
-    return time_functions(df, dom_expr, "weekday")
+def day_of_week(df: Any, call: ast.Call):
+    return time_functions(df, call, "weekday")
 
 
-def day_of_year(df: Any, dom_expr: AstExpr):
-    return time_functions(df, dom_expr, "dayofyear")
+def day_of_year(df: Any, call: ast.Call):
+    return time_functions(df, call, "dayofyear")
 
 
-def hour(df: Any, dom_expr: AstExpr):
-    return time_functions(df, dom_expr, "hour")
+def hour(df: Any, call: ast.Call):
+    return time_functions(df, call, "hour")
 
 
-def minute(df: Any, dom_expr: AstExpr):
-    return time_functions(df, dom_expr, "minute")
+def minute(df: Any, call: ast.Call):
+    return time_functions(df, call, "minute")
 
 
-def month(df: Any, dom_expr: AstExpr):
-    return time_functions(df, dom_expr, "month")
+def month(df: Any, call: ast.Call):
+    return time_functions(df, call, "month")

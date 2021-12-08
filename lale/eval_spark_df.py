@@ -16,7 +16,6 @@ import ast
 import importlib
 from itertools import chain
 
-from lale.expressions import AstExpr
 from lale.helpers import _ast_func_id, _is_ast_name_it
 
 try:
@@ -109,56 +108,56 @@ class _SparkEvaluator(ast.NodeVisitor):
         self.result = map_func_to_be_called(node)
 
 
-def replace(replace_expr):
-    column = eval_ast_expr_spark_df(replace_expr.args[0])
-    mapping_dict = ast.literal_eval(replace_expr.args[1].value)
+def replace(call: ast.Call):
+    column = eval_ast_expr_spark_df(call.args[0])
+    mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
     mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])  # type: ignore
     return mapping_expr[column]  # type: ignore
 
 
-def identity(expr: AstExpr):
-    return eval_ast_expr_spark_df(expr.args[0])  # type: ignore
+def identity(call: ast.Call):
+    return eval_ast_expr_spark_df(call.args[0])  # type: ignore
 
 
-def ratio(expr: AstExpr):
-    numerator = eval_expr_spark_df(expr.args[0])  # type: ignore
-    denominator = eval_expr_spark_df(expr.args[1])  # type: ignore
+def ratio(call: ast.Call):
+    numerator = eval_expr_spark_df(call.args[0])  # type: ignore
+    denominator = eval_expr_spark_df(call.args[1])  # type: ignore
     return numerator / denominator  # type: ignore
 
 
-def subtract(expr: AstExpr):
-    e1 = eval_expr_spark_df(expr.args[0])  # type: ignore
-    e2 = eval_expr_spark_df(expr.args[1])  # type: ignore
+def subtract(call: ast.Call):
+    e1 = eval_expr_spark_df(call.args[0])  # type: ignore
+    e2 = eval_expr_spark_df(call.args[1])  # type: ignore
     return e1 / e2  # type: ignore
 
 
-def time_functions(dom_expr, spark_func):
-    column = eval_ast_expr_spark_df(dom_expr.args[0])
-    if len(dom_expr.args) > 1:
-        fmt = ast.literal_eval(dom_expr.args[1])
+def time_functions(call, spark_func):
+    column = eval_ast_expr_spark_df(call.args[0])
+    if len(call.args) > 1:
+        fmt = ast.literal_eval(call.args[1])
         return spark_func(to_timestamp(column, format=fmt))  # type: ignore
     return spark_func(to_timestamp(column))  # type: ignore
 
 
-def day_of_month(dom_expr: AstExpr):
-    return time_functions(dom_expr, dayofmonth)
+def day_of_month(call: ast.Call):
+    return time_functions(call, dayofmonth)
 
 
-def day_of_week(dom_expr: AstExpr):
-    return time_functions(dom_expr, dayofweek)
+def day_of_week(call: ast.Call):
+    return time_functions(call, dayofweek)
 
 
-def day_of_year(dom_expr: AstExpr):
-    return time_functions(dom_expr, dayofyear)
+def day_of_year(call: ast.Call):
+    return time_functions(call, dayofyear)
 
 
-def hour(dom_expr: AstExpr):
-    return time_functions(dom_expr, spark_hour)
+def hour(call: ast.Call):
+    return time_functions(call, spark_hour)
 
 
-def minute(dom_expr: AstExpr):
-    return time_functions(dom_expr, spark_minute)
+def minute(call: ast.Call):
+    return time_functions(call, spark_minute)
 
 
-def month(dom_expr: AstExpr):
-    return time_functions(dom_expr, spark_month)
+def month(call: ast.Call):
+    return time_functions(call, spark_month)
