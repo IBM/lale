@@ -1973,25 +1973,29 @@ class TestMap(unittest.TestCase):
             "month": ["jan", "feb", "mar", "may", "aug"],
         }
         df = pd.DataFrame(data=d)
-        month_map = {"jan": "2021-01-01",
-                     "feb": "2021-02-01",
-                     "mar": "2021-03-01",
-                     "arp": "2021-04-01",
-                     "may": "2021-05-01",
-                     "jun": "2021-06-01",
-                     "jul": "2021-07-01",
-                     "aug": "2021-08-01",
-                     "sep": "2021-09-01",
-                     "oct": "2021-10-01",
-                     "nov": "2021-11-01",
-                     "dec": "2021-12-01",
-                    }
+        month_map = {
+            "jan": "2021-01-01",
+            "feb": "2021-02-01",
+            "mar": "2021-03-01",
+            "arp": "2021-04-01",
+            "may": "2021-05-01",
+            "jun": "2021-06-01",
+            "jul": "2021-07-01",
+            "aug": "2021-08-01",
+            "sep": "2021-09-01",
+            "oct": "2021-10-01",
+            "nov": "2021-11-01",
+            "dec": "2021-12-01",
+        }
         trainable = Map(
             columns={
                 "date": replace(it.month, month_map),
                 "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
-                "next_month_id": identity(month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1),
-            })
+                "next_month_id": identity(
+                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1
+                ),
+            }
+        )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df["date"][0], "2021-01-01")
@@ -2001,6 +2005,7 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["next_month_id"][0], 2)
         self.assertEqual(transformed_df["next_month_id"][3], 6)
         self.assertEqual(transformed_df["next_month_id"][4], 9)
+
 
 class TestRelationalOperator(unittest.TestCase):
     def setUp(self):
@@ -2665,25 +2670,29 @@ class TestMapSpark(unittest.TestCase):
             "month": ["jan", "feb", "mar", "may", "aug"],
         }
         df = pd.DataFrame(data=d)
-        month_map = {"jan": "2021-01-01",
-                     "feb": "2021-02-01",
-                     "mar": "2021-03-01",
-                     "arp": "2021-04-01",
-                     "may": "2021-05-01",
-                     "jun": "2021-06-01",
-                     "jul": "2021-07-01",
-                     "aug": "2021-08-01",
-                     "sep": "2021-09-01",
-                     "oct": "2021-10-01",
-                     "nov": "2021-11-01",
-                     "dec": "2021-12-01",
-                    }
+        month_map = {
+            "jan": "2021-01-01",
+            "feb": "2021-02-01",
+            "mar": "2021-03-01",
+            "arp": "2021-04-01",
+            "may": "2021-05-01",
+            "jun": "2021-06-01",
+            "jul": "2021-07-01",
+            "aug": "2021-08-01",
+            "sep": "2021-09-01",
+            "oct": "2021-10-01",
+            "nov": "2021-11-01",
+            "dec": "2021-12-01",
+        }
         trainable = Map(
             columns={
                 "date": replace(it.month, month_map),
                 "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
-                "next_month_id": identity(month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1),
-            })
+                "next_month_id": identity(
+                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1
+                ),
+            }
+        )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df[0]["date"], "2021-01-01")

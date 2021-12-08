@@ -30,10 +30,12 @@ from lale.helpers import (
 def eval_expr_pandas_df(X, expr):
     return eval_ast_expr_pandas_df(X, expr._expr)
 
+
 def eval_ast_expr_pandas_df(X, expr):
     evaluator = _PandasEvaluator(X)
     evaluator.visit(expr)
     return evaluator.result
+
 
 class _PandasEvaluator(ast.NodeVisitor):
     def __init__(self, X):
@@ -108,6 +110,7 @@ def replace(df: Any, replace_expr):
 
 def identity(df: Any, column: AstExpr):
     return eval_ast_expr_pandas_df(df, column)
+
 
 def ratio(df: Any, expr):
     e1 = eval_expr_pandas_df(df, expr.args[0])

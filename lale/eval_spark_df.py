@@ -48,10 +48,12 @@ except ImportError:
 def eval_expr_spark_df(expr):
     return eval_ast_expr_spark_df(expr._expr)
 
+
 def eval_ast_expr_spark_df(expr):
     evaluator = _SparkEvaluator()
     evaluator.visit(expr)
     return evaluator.result
+
 
 class _SparkEvaluator(ast.NodeVisitor):
     def __init__(self):
