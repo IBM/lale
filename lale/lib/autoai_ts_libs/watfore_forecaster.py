@@ -47,6 +47,11 @@ class _WatForeForecasterImpl:
         debug=False,
         **kwargs
     ):
+        # code from Wes to fix a specific handling in autoai_ts:
+        if "_" in algorithm:
+            algorithm_parts = algorithm.split("_")
+            algorithm = algorithm_parts[0]
+            algorithm_type = algorithm_parts[1]
         self._hyperparams = {
             "algorithm": algorithm,
             "use_full_error_history": use_full_error_history,
