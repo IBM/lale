@@ -5,7 +5,7 @@ Papers
 "Pipeline Combinators for Gradual AutoML".
 Guillaume Baudart, Martin Hirzel, Kiran Kate, Parikshit Ram, Avraham Shinnar, and Jason Tsay.
 Conference on Neural Information Processing Systems (NeurIPS), December 2021.
-http://hirzels.com/martin/papers/neurips21-lale.pdf
+https://papers.nips.cc/paper/2021/hash/a3b36cb25e2e0b93b5f334ffb4e4064e-Abstract.html
 
 **This is the preferred citation for the Lale project.**
 
