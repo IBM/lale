@@ -588,7 +588,7 @@ class TestWrapUnknownOps(unittest.TestCase):
 
             self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
             lale.wrap_imported_operators()
-            self.assertTrue(isinstance(UnknownOp, UnknownOp.__class__))
+            self.assertFalse(isinstance(UnknownOp, PlannedIndividualOp))
         finally:
             for sym, obj in old_globals.items():
                 globals()[sym] = obj
