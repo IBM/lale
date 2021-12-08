@@ -15,7 +15,7 @@
 import inspect
 import logging
 
-from lale.operators import Operator, clone_op, get_op_from_lale_lib, make_operator
+from lale.operators import Operator, clone_op, get_op_from_lale_lib
 
 logger = logging.getLogger(__name__)
 
@@ -29,8 +29,8 @@ def _wrap_operators_in_symtab(symtab):
         ):
             operator = get_op_from_lale_lib(impl)
             if operator is None:
-                symtab[name] = make_operator(impl=impl, name=name)
-                logger.info(f"Lale:Wrapped unkwnown operator:{name}")
+                # symtab[name] = make_operator(impl=impl, name=name)
+                logger.info(f"Lale:Not wrapping unknown operator:{name}")
             else:
                 symtab[name] = clone_op(operator, name)
                 if operator.class_name().startswith("lale.lib.autogen"):
