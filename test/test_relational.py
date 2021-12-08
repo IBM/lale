@@ -76,6 +76,7 @@ from lale.lib.lale import (
 )
 from lale.lib.sklearn import PCA, LogisticRegression
 
+
 # Testing '==' and '!=' operator with different types of expressions
 class TestExpressions(unittest.TestCase):
     def test_expr_1(self):
