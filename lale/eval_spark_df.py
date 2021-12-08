@@ -45,11 +45,13 @@ except ImportError:
     spark_installed = False
 
 
-def eval_spark_df(X, expr):
-    evaluator = _SparkEvaluator()
-    evaluator.visit(expr._expr)
-    return evaluator.result
+def eval_expr_spark_df(expr):
+    return eval_ast_expr_spark_df(expr._expr)
 
+def eval_ast_expr_spark_df(expr):
+    evaluator = _SparkEvaluator()
+    evaluator.visit(expr)
+    return evaluator.result
 
 class _SparkEvaluator(ast.NodeVisitor):
     def __init__(self):
@@ -111,42 +113,34 @@ class _SparkEvaluator(ast.NodeVisitor):
 
 
 def replace(replace_expr):
-    column_name = replace_expr.args[0].attr
+    column = eval_ast_expr_spark_df(replace_expr.args[0])
     mapping_dict = ast.literal_eval(replace_expr.args[1].value)
     mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])  # type: ignore
-    return mapping_expr[col(column_name)]  # type: ignore
+    return mapping_expr[column]  # type: ignore
 
 
 def identity(column: AstExpr):
-    if _is_ast_subscript(column):  # type: ignore
-        column_name = column.slice.value.s  # type: ignore
-    elif _is_ast_attribute(column):  # type: ignore
-        column_name = column.attr  # type: ignore
-    else:
-        raise ValueError(
-            "Expression type not supported. Formats supported: it.column_name or it['column_name']."
-        )
-    return col(column_name)
+    return eval_ast_expr_spark_df(column)
 
 
 def ratio(expr: AstExpr):
-    numerator = eval_spark_df(expr.args[0])  # type: ignore
-    denominator = eval_spark_df(expr.args[1])  # type: ignore
+    numerator = eval_expr_spark_df(expr.args[0])  # type: ignore
+    denominator = eval_expr_spark_df(expr.args[1])  # type: ignore
     return numerator / denominator
 
 
 def subtract(expr: AstExpr):
-    e1 = eval_spark_df(expr.args[0])  # type: ignore
-    e2 = eval_spark_df(expr.args[1])  # type: ignore
+    e1 = eval_expr_spark_df(expr.args[0])  # type: ignore
+    e2 = eval_expr_spark_df(expr.args[1])  # type: ignore
     return e1 / e2
 
 
 def time_functions(dom_expr, spark_func):
-    column_name = dom_expr.args[0].attr
+    column = eval_ast_expr_spark_df(dom_expr.args[0])
     if len(dom_expr.args) > 1:
         fmt = ast.literal_eval(dom_expr.args[1])
-        return spark_func(to_timestamp(col(column_name), format=fmt))
-    return spark_func(to_timestamp(col(column_name)))
+        return spark_func(to_timestamp(column, format=fmt))
+    return spark_func(to_timestamp(column))
 
 
 def day_of_month(dom_expr: AstExpr):

@@ -19,8 +19,8 @@ import pandas as pd
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.eval_pandas_df import eval_pandas_df
-from lale.eval_spark_df import eval_spark_df
+from lale.eval_pandas_df import eval_expr_pandas_df
+from lale.eval_spark_df import eval_expr_spark_df
 from lale.helpers import (
     _is_ast_call,
     _is_ast_name,
@@ -115,7 +115,7 @@ class _MapImpl:
 
         def get_map_function_output(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
-            new_column = eval_pandas_df(X, column)
+            new_column = eval_expr_pandas_df(X, column)
             mapped_df[new_column_name] = new_column
             accessed_column_names.add(new_column_name)
             accessed_column_names.update(accessed_columns(column))
@@ -141,7 +141,7 @@ class _MapImpl:
 
         def get_map_function_expr(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
-            new_column = eval_spark_df(X, column)
+            new_column = eval_expr_spark_df(column)
             assert new_column is not None, "Internal error"
             new_columns.append(new_column.alias(new_column_name))
             accessed_column_names.add(new_column_name)

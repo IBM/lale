@@ -27,11 +27,13 @@ from lale.helpers import (
 )
 
 
-def eval_pandas_df(X, expr):
-    evaluator = _PandasEvaluator(X)
-    evaluator.visit(expr._expr)
-    return evaluator.result
+def eval_expr_pandas_df(X, expr):
+    return eval_ast_expr_pandas_df(X, expr._expr)
 
+def eval_ast_expr_pandas_df(X, expr):
+    evaluator = _PandasEvaluator(X)
+    evaluator.visit(expr)
+    return evaluator.result
 
 class _PandasEvaluator(ast.NodeVisitor):
     def __init__(self, X):
@@ -98,42 +100,33 @@ class _PandasEvaluator(ast.NodeVisitor):
 
 
 def replace(df: Any, replace_expr):
-    column_name = replace_expr.args[0].attr
+    column = eval_ast_expr_pandas_df(df, replace_expr.args[0])
     mapping_dict = ast.literal_eval(replace_expr.args[1].value)
-    new_column = df[column_name].replace(mapping_dict)
+    new_column = column.replace(mapping_dict)
     return new_column
 
 
 def identity(df: Any, column: AstExpr):
-    if _is_ast_subscript(column):  # type: ignore
-        column_name = column.slice.value.s  # type: ignore
-    elif _is_ast_attribute(column):  # type: ignore
-        column_name = column.attr  # type: ignore
-    else:
-        raise ValueError(
-            "Expression type not supported. Formats supported: it.column_name or it['column_name']."
-        )
-    return df[column_name]
-
+    return eval_ast_expr_pandas_df(df, column)
 
 def ratio(df: Any, expr):
-    e1 = eval_pandas_df(df, expr.args[0])
-    e2 = eval_pandas_df(df, expr.args[1])
+    e1 = eval_expr_pandas_df(df, expr.args[0])
+    e2 = eval_expr_pandas_df(df, expr.args[1])
     return e1 / e2  # type: ignore
 
 
 def subtract(df: Any, expr):
-    e1 = eval_pandas_df(df, expr.args[0])
-    e2 = eval_pandas_df(df, expr.args[1])
+    e1 = eval_expr_pandas_df(df, expr.args[0])
+    e2 = eval_expr_pandas_df(df, expr.args[1])
     return e1 / e2  # type: ignore
 
 
 def time_functions(df: Any, dom_expr, pandas_func: str):
     fmt = None
-    column_name = dom_expr.args[0].attr
+    column = eval_ast_expr_pandas_df(df, dom_expr.args[0])
     if len(dom_expr.args) > 1:
         fmt = ast.literal_eval(dom_expr.args[1])
-    new_column = pd.to_datetime(df[column_name], format=fmt)
+    new_column = pd.to_datetime(column, format=fmt)
     return getattr(getattr(new_column, "dt"), pandas_func)
 
 
