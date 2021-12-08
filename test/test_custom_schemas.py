@@ -15,7 +15,6 @@
 import unittest
 from test import EnableSchemaValidation
 from test.mock_module import UnknownOp
-from typing import Any
 
 import numpy as np
 from lightgbm import LGBMClassifier as baz
