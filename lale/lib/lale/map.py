@@ -12,44 +12,87 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
+
+import pandas as pd
+
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+from lale.eval_pandas_df import eval_expr_pandas_df
+from lale.eval_spark_df import eval_expr_spark_df
 from lale.helpers import (
     _is_ast_call,
     _is_ast_name,
+    _is_ast_name_it,
     _is_pandas_df,
     _is_spark_df,
 )
-from lale.eval_pandas_df import eval_pandas_df
-from lale.eval_spark_df import eval_spark_df
 
-import pandas as pd
+try:
+    # noqa in the imports here because those get used dynamically and flake fails.
+    from pyspark.sql.functions import col as spark_col  # noqa
+
+    spark_installed = True
+except ImportError:
+    spark_installed = False
+
 
 def _new_column_name(name, expr):
     def infer_new_name(expr):
         if (
-            _is_ast_call(expr._expr) and
-            _is_ast_name(expr._expr.func) and
-            expr._expr.func.id in [ "replace",
-                                    "day_of_month",
-                                    "day_of_week",
-                                    "day_of_year",
-                                    "hour",
-                                    "minute",
-                                    "month",
-                                    "string_indexer" ]
+            _is_ast_call(expr._expr)
+            and _is_ast_name(expr._expr.func)
+            and expr._expr.func.id
+            in [
+                "replace",
+                "day_of_month",
+                "day_of_week",
+                "day_of_year",
+                "hour",
+                "minute",
+                "month",
+                "string_indexer",
+            ]
         ):
             return expr._expr.args[0].attr
-        else: 
+        else:
             raise ValueError(
                 """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
                 to specify the new column name as the key, and the expression as the value."""
             )
+
     if name is None or not name.strip():
         return infer_new_name(expr)
     else:
         return name
+
+
+class _AccessedColumns(ast.NodeVisitor):
+    def __init__(self):
+        self.accessed = set()
+
+    def visit_Attribute(self, node: ast.Attribute):
+        if _is_ast_name_it(node.value):
+            self.accessed.add(node.attr)
+        else:
+            raise ValueError("Unimplemented expression")
+
+    def visit_Subscript(self, node: ast.Subscript):
+        if _is_ast_name_it(node.value) and isinstance(node.slice, ast.Index):
+            if isinstance(node.slice.value, ast.Constant):
+                self.accessed.add(node.slice.value.value)
+            elif isinstance(node.slice.value, ast.Str):
+                self.accessed.add(node.slice.value.s)
+        else:
+            raise ValueError("Unimplemented expression")
+
+
+def accessed_columns(expr):
+    visitor = _AccessedColumns()
+    visitor.visit(expr._expr)
+    return visitor.accessed
+
 
 class _MapImpl:
     def __init__(self, columns, remainder="drop"):
@@ -68,10 +111,14 @@ class _MapImpl:
 
     def transform_pandas_df(self, X):
         mapped_df = pd.DataFrame()
+        accessed_column_names = set()
+
         def get_map_function_output(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
-            new_column = eval_pandas_df(X, column)
+            new_column = eval_expr_pandas_df(X, column)
             mapped_df[new_column_name] = new_column
+            accessed_column_names.add(new_column_name)
+            accessed_column_names.update(accessed_columns(column))
 
         if isinstance(self.columns, list):
             for column in self.columns:
@@ -82,19 +129,22 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns = [] # XXX TODO XXX
-            for column in remainder_columns:
-                mapped_df[column] = X[column]
+            remainder_columns = [x for x in X.columns if x not in accessed_column_names]
+            mapped_df[remainder_columns] = X[remainder_columns]
         table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
         return mapped_df
 
     def transform_spark_df(self, X):
         new_columns = []
+        accessed_column_names = set()
+
         def get_map_function_expr(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
-            new_column = eval_spark_df(X, column)
-            new_columns.append(new_column.alias(new_column_name))
+            new_column = eval_expr_spark_df(column)  # type: ignore
+            new_columns.append(new_column.alias(new_column_name))  # type: ignore
+            accessed_column_names.add(new_column_name)
+            accessed_column_names.update(accessed_columns(column))
 
         if isinstance(self.columns, list):
             for column in self.columns:
@@ -105,54 +155,14 @@ class _MapImpl:
         else:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
-            remainder_columns = [] # XXX TODO XXX
-            for column in remainder_columns:
-                pass # TODO
-        mapped_df = X.select(new_columns)        
+            remainder_columns = [
+                spark_col(x) for x in X.columns if x not in accessed_column_names
+            ]
+            new_columns.extend(remainder_columns)
+        mapped_df = X.select(new_columns)
         table_name = lale.datasets.data_schemas.get_table_name(X)
         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
         return mapped_df
-
-# class _MapImpl:
-#     def __init__(self, columns, remainder="passthrough"):
-#         self.columns = columns
-#         self.remainder = remainder
-
-#     def transform(self, X):
-#         table_name = lale.datasets.data_schemas.get_table_name(X)
-#         columns_to_keep = []
-
-#         def get_map_function_output(column, new_column_name):
-#             functions_module = importlib.import_module("lale.lib.lale.functions")
-#             if _is_ast_subscript(column._expr) or _is_ast_attribute(column._expr):
-#                 function_name = "identity"
-#             else:
-#                 function_name = column._expr.func.id
-#             map_func_to_be_called = getattr(functions_module, function_name)
-#             return map_func_to_be_called(X, column, new_column_name)
-
-#         if isinstance(self.columns, list):
-#             for column in self.columns:
-#                 new_column_name, X = get_map_function_output(column, None)
-#                 columns_to_keep.append(new_column_name)
-#         elif isinstance(self.columns, dict):
-#             for new_column_name, column in self.columns.items():
-#                 new_column_name, X = get_map_function_output(column, new_column_name)
-#                 columns_to_keep.append(new_column_name)
-#         else:
-#             raise ValueError("columns must be either a list or a dictionary.")
-#         mapped_df = X  # Do nothing as X already has the right columns
-#         if self.remainder == "drop":
-#             if _is_pandas_df(X):
-#                 mapped_df = X[columns_to_keep]
-#             elif _is_spark_df(X):
-#                 mapped_df = X.select(columns_to_keep)
-#             else:
-#                 raise ValueError(
-#                     "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
-#                 )
-#         mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
-#         return mapped_df
 
 
 _hyperparams_schema = {
@@ -185,7 +195,7 @@ _hyperparams_schema = {
                         {"enum": ["passthrough", "drop"]},
                         {"description": "Mapping expression.", "laleType": "operator"},
                     ],
-                    "default": "passthrough",
+                    "default": "drop",
                 },
             },
         }

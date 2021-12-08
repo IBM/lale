@@ -32,7 +32,6 @@ from test import EnableSchemaValidation
 from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
-from lale import wrap_imported_operators
 from lale.datasets.data_schemas import add_table_name, get_table_name
 from lale.datasets.multitable import multitable_train_test_split
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
@@ -58,7 +57,6 @@ from lale.expressions import (
     month,
     ratio,
     replace,
-    string_indexer,
     subtract,
     sum,
 )
@@ -66,7 +64,6 @@ from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.lale import (
     Aggregate,
     Alias,
-    ConcatFeatures,
     Filter,
     GroupBy,
     Hyperopt,
@@ -77,8 +74,7 @@ from lale.lib.lale import (
     Scan,
     SplitXy,
 )
-from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
-from lale.operators import make_pipeline_graph
+from lale.lib.sklearn import PCA, LogisticRegression
 
 # Testing '==' and '!=' operator with different types of expressions
 class TestExpressions(unittest.TestCase):
@@ -1231,6 +1227,27 @@ class TestMap(unittest.TestCase):
         self.assertEqual(df["status"][3], transformed_df["new_status"][3])
         self.assertEqual(len(transformed_df.columns), 2)
 
+    def test_transform_identity_map_passthrough(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        trainable = Map(
+            columns={
+                "new_gender": it.gender,
+                "new_status": it["status"],
+            },
+            remainder="passthrough",
+        )
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(df["gender"][0], transformed_df["new_gender"][0])
+        self.assertEqual(df["status"][3], transformed_df["new_status"][3])
+        self.assertEqual(df["state"][3], transformed_df["state"][3])
+        self.assertEqual(len(transformed_df.columns), 3)
+
     def test_transform_identity_map_error(self):
         d = {
             "gender": ["m", "f", "m", "m", "f"],
@@ -1238,10 +1255,6 @@ class TestMap(unittest.TestCase):
             "status": [0, 1, 1, 0, 1],
         }
         df = pd.DataFrame(data=d)
-        with self.assertRaises(ValueError):
-            trainable = Map(columns={"new_name": identity(it.gender)})
-            trained = trainable.fit(df)
-            _ = trained.transform(df)
         with self.assertRaises(ValueError):
             trainable = Map(columns={"   ": it.gender})
             trained = trainable.fit(df)
@@ -1266,13 +1279,14 @@ class TestMap(unittest.TestCase):
         state_map = {"NY": "New York", "CA": "California"}
         trainable = Map(
             columns=[replace(it.gender, gender_map), replace(it.state, state_map)],
-            remainder="drop",
+            remainder="passthrough",
         )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 2))
+        self.assertEqual(transformed_df.shape, (5, 3))
         self.assertEqual(transformed_df["gender"][0], "Male")
         self.assertEqual(transformed_df["state"][0], "New York")
+        self.assertEqual(transformed_df["status"][0], 0)
 
     def test_transform_replace_list(self):
         d = {
@@ -1553,25 +1567,6 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["month"][1], 6)
         self.assertEqual(transformed_df["month"][2], 7)
 
-    def test_transform_string_indexer_list(self):
-        df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
-        trainable = Map(columns=[string_indexer(it.cat_column)])
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df["cat_column"][0], 1)
-        self.assertEqual(transformed_df["cat_column"][1], 0)
-        self.assertEqual(transformed_df["cat_column"][2], 0)
-
-    def test_transform_string_indexer_map(self):
-        df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
-        trainable = Map(columns={"string_indexed": string_indexer(it.cat_column)})
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (3, 1))
-        self.assertEqual(transformed_df["string_indexed"][0], 1)
-        self.assertEqual(transformed_df["string_indexed"][1], 0)
-        self.assertEqual(transformed_df["string_indexed"][2], 0)
-
     def test_not_expression(self):
         with EnableSchemaValidation():
             with self.assertRaises(jsonschema.ValidationError):
@@ -1597,176 +1592,176 @@ class TestMap(unittest.TestCase):
         trained = opt.fit(X, y)
         _ = trained
 
-    def test_with_hyperopt2(self):
-        from lale.expressions import (
-            count,
-            it,
-            max,
-            mean,
-            min,
-            string_indexer,
-            sum,
-            variance,
-        )
+    # XXX Removed because it uses `string_indexer`
+    # def test_with_hyperopt2(self):
+    #     from lale.expressions import (
+    #         count,
+    #         it,
+    #         max,
+    #         mean,
+    #         min,
+    #         sum,
+    #         variance,
+    #     )
 
-        wrap_imported_operators()
-        scan = Scan(table=it["main"])
-        scan_0 = Scan(table=it["customers"])
-        join = Join(
-            pred=[
-                (
-                    it["main"]["group_customer_id"]
-                    == it["customers"]["group_customer_id"]
-                )
-            ]
-        )
-        map = Map(
-            columns={
-                "[main](group_customer_id)[customers]|number_children|identity": it[
-                    "number_children"
-                ],
-                "[main](group_customer_id)[customers]|name|identity": it["name"],
-                "[main](group_customer_id)[customers]|income|identity": it["income"],
-                "[main](group_customer_id)[customers]|address|identity": it["address"],
-                "[main](group_customer_id)[customers]|age|identity": it["age"],
-            },
-            remainder="drop",
-        )
-        pipeline_4 = join >> map
-        scan_1 = Scan(table=it["purchase"])
-        join_0 = Join(
-            pred=[(it["main"]["group_id"] == it["purchase"]["group_id"])],
-            join_limit=50.0,
-        )
-        aggregate = Aggregate(
-            columns={
-                "[main](group_id)[purchase]|price|variance": variance(it["price"]),
-                "[main](group_id)[purchase]|time|sum": sum(it["time"]),
-                "[main](group_id)[purchase]|time|mean": mean(it["time"]),
-                "[main](group_id)[purchase]|time|min": min(it["time"]),
-                "[main](group_id)[purchase]|price|sum": sum(it["price"]),
-                "[main](group_id)[purchase]|price|count": count(it["price"]),
-                "[main](group_id)[purchase]|price|mean": mean(it["price"]),
-                "[main](group_id)[purchase]|price|min": min(it["price"]),
-                "[main](group_id)[purchase]|price|max": max(it["price"]),
-                "[main](group_id)[purchase]|time|max": max(it["time"]),
-                "[main](group_id)[purchase]|time|variance": variance(it["time"]),
-            },
-            group_by=it["row_id"],
-        )
-        pipeline_5 = join_0 >> aggregate
-        map_0 = Map(
-            columns={
-                "[main]|group_customer_id|identity": it["group_customer_id"],
-                "[main]|transaction_id|identity": it["transaction_id"],
-                "[main]|group_id|identity": it["group_id"],
-                "[main]|comments|identity": it["comments"],
-                "[main]|id|identity": it["id"],
-                "prefix_0_id": it["prefix_0_id"],
-                "next_purchase": it["next_purchase"],
-                "[main]|time|identity": it["time"],
-            },
-            remainder="drop",
-        )
-        scan_2 = Scan(table=it["transactions"])
-        scan_3 = Scan(table=it["products"])
-        join_1 = Join(
-            pred=[
-                (it["main"]["transaction_id"] == it["transactions"]["transaction_id"]),
-                (it["transactions"]["product_id"] == it["products"]["product_id"]),
-            ]
-        )
-        map_1 = Map(
-            columns={
-                "[main](transaction_id)[transactions](product_id)[products]|price|identity": it[
-                    "price"
-                ],
-                "[main](transaction_id)[transactions](product_id)[products]|type|identity": it[
-                    "type"
-                ],
-            },
-            remainder="drop",
-        )
-        pipeline_6 = join_1 >> map_1
-        join_2 = Join(
-            pred=[
-                (it["main"]["transaction_id"] == it["transactions"]["transaction_id"])
-            ]
-        )
-        map_2 = Map(
-            columns={
-                "[main](transaction_id)[transactions]|description|identity": it[
-                    "description"
-                ],
-                "[main](transaction_id)[transactions]|product_id|identity": it[
-                    "product_id"
-                ],
-            },
-            remainder="drop",
-        )
-        pipeline_7 = join_2 >> map_2
-        map_3 = Map(
-            columns=[
-                string_indexer(it["[main]|comments|identity"]),
-                string_indexer(
-                    it["[main](transaction_id)[transactions]|description|identity"]
-                ),
-                string_indexer(
-                    it[
-                        "[main](transaction_id)[transactions](product_id)[products]|type|identity"
-                    ]
-                ),
-                string_indexer(
-                    it["[main](group_customer_id)[customers]|name|identity"]
-                ),
-                string_indexer(
-                    it["[main](group_customer_id)[customers]|address|identity"]
-                ),
-            ]
-        )
-        pipeline_8 = ConcatFeatures() >> map_3
-        relational = Relational(
-            operator=make_pipeline_graph(
-                steps=[
-                    scan,
-                    scan_0,
-                    pipeline_4,
-                    scan_1,
-                    pipeline_5,
-                    map_0,
-                    scan_2,
-                    scan_3,
-                    pipeline_6,
-                    pipeline_7,
-                    pipeline_8,
-                ],
-                edges=[
-                    (scan, pipeline_4),
-                    (scan, pipeline_5),
-                    (scan, map_0),
-                    (scan, pipeline_6),
-                    (scan, pipeline_7),
-                    (scan_0, pipeline_4),
-                    (pipeline_4, pipeline_8),
-                    (scan_1, pipeline_5),
-                    (pipeline_5, pipeline_8),
-                    (map_0, pipeline_8),
-                    (scan_2, pipeline_6),
-                    (scan_2, pipeline_7),
-                    (scan_3, pipeline_6),
-                    (pipeline_6, pipeline_8),
-                    (pipeline_7, pipeline_8),
-                ],
-            )
-        )
-        pipeline = relational >> (KNeighborsClassifier | LogisticRegression)
-        from sklearn.datasets import load_iris
+    #     wrap_imported_operators()
+    #     scan = Scan(table=it["main"])
+    #     scan_0 = Scan(table=it["customers"])
+    #     join = Join(
+    #         pred=[
+    #             (
+    #                 it["main"]["group_customer_id"]
+    #                 == it["customers"]["group_customer_id"]
+    #             )
+    #         ]
+    #     )
+    #     map = Map(
+    #         columns={
+    #             "[main](group_customer_id)[customers]|number_children|identity": it[
+    #                 "number_children"
+    #             ],
+    #             "[main](group_customer_id)[customers]|name|identity": it["name"],
+    #             "[main](group_customer_id)[customers]|income|identity": it["income"],
+    #             "[main](group_customer_id)[customers]|address|identity": it["address"],
+    #             "[main](group_customer_id)[customers]|age|identity": it["age"],
+    #         },
+    #         remainder="drop",
+    #     )
+    #     pipeline_4 = join >> map
+    #     scan_1 = Scan(table=it["purchase"])
+    #     join_0 = Join(
+    #         pred=[(it["main"]["group_id"] == it["purchase"]["group_id"])],
+    #         join_limit=50.0,
+    #     )
+    #     aggregate = Aggregate(
+    #         columns={
+    #             "[main](group_id)[purchase]|price|variance": variance(it["price"]),
+    #             "[main](group_id)[purchase]|time|sum": sum(it["time"]),
+    #             "[main](group_id)[purchase]|time|mean": mean(it["time"]),
+    #             "[main](group_id)[purchase]|time|min": min(it["time"]),
+    #             "[main](group_id)[purchase]|price|sum": sum(it["price"]),
+    #             "[main](group_id)[purchase]|price|count": count(it["price"]),
+    #             "[main](group_id)[purchase]|price|mean": mean(it["price"]),
+    #             "[main](group_id)[purchase]|price|min": min(it["price"]),
+    #             "[main](group_id)[purchase]|price|max": max(it["price"]),
+    #             "[main](group_id)[purchase]|time|max": max(it["time"]),
+    #             "[main](group_id)[purchase]|time|variance": variance(it["time"]),
+    #         },
+    #         group_by=it["row_id"],
+    #     )
+    #     pipeline_5 = join_0 >> aggregate
+    #     map_0 = Map(
+    #         columns={
+    #             "[main]|group_customer_id|identity": it["group_customer_id"],
+    #             "[main]|transaction_id|identity": it["transaction_id"],
+    #             "[main]|group_id|identity": it["group_id"],
+    #             "[main]|comments|identity": it["comments"],
+    #             "[main]|id|identity": it["id"],
+    #             "prefix_0_id": it["prefix_0_id"],
+    #             "next_purchase": it["next_purchase"],
+    #             "[main]|time|identity": it["time"],
+    #         },
+    #         remainder="drop",
+    #     )
+    #     scan_2 = Scan(table=it["transactions"])
+    #     scan_3 = Scan(table=it["products"])
+    #     join_1 = Join(
+    #         pred=[
+    #             (it["main"]["transaction_id"] == it["transactions"]["transaction_id"]),
+    #             (it["transactions"]["product_id"] == it["products"]["product_id"]),
+    #         ]
+    #     )
+    #     map_1 = Map(
+    #         columns={
+    #             "[main](transaction_id)[transactions](product_id)[products]|price|identity": it[
+    #                 "price"
+    #             ],
+    #             "[main](transaction_id)[transactions](product_id)[products]|type|identity": it[
+    #                 "type"
+    #             ],
+    #         },
+    #         remainder="drop",
+    #     )
+    #     pipeline_6 = join_1 >> map_1
+    #     join_2 = Join(
+    #         pred=[
+    #             (it["main"]["transaction_id"] == it["transactions"]["transaction_id"])
+    #         ]
+    #     )
+    #     map_2 = Map(
+    #         columns={
+    #             "[main](transaction_id)[transactions]|description|identity": it[
+    #                 "description"
+    #             ],
+    #             "[main](transaction_id)[transactions]|product_id|identity": it[
+    #                 "product_id"
+    #             ],
+    #         },
+    #         remainder="drop",
+    #     )
+    #     pipeline_7 = join_2 >> map_2
+    #     map_3 = Map(
+    #         columns=[
+    #             string_indexer(it["[main]|comments|identity"]),
+    #             string_indexer(
+    #                 it["[main](transaction_id)[transactions]|description|identity"]
+    #             ),
+    #             string_indexer(
+    #                 it[
+    #                     "[main](transaction_id)[transactions](product_id)[products]|type|identity"
+    #                 ]
+    #             ),
+    #             string_indexer(
+    #                 it["[main](group_customer_id)[customers]|name|identity"]
+    #             ),
+    #             string_indexer(
+    #                 it["[main](group_customer_id)[customers]|address|identity"]
+    #             ),
+    #         ]
+    #     )
+    #     pipeline_8 = ConcatFeatures() >> map_3
+    #     relational = Relational(
+    #         operator=make_pipeline_graph(
+    #             steps=[
+    #                 scan,
+    #                 scan_0,
+    #                 pipeline_4,
+    #                 scan_1,
+    #                 pipeline_5,
+    #                 map_0,
+    #                 scan_2,
+    #                 scan_3,
+    #                 pipeline_6,
+    #                 pipeline_7,
+    #                 pipeline_8,
+    #             ],
+    #             edges=[
+    #                 (scan, pipeline_4),
+    #                 (scan, pipeline_5),
+    #                 (scan, map_0),
+    #                 (scan, pipeline_6),
+    #                 (scan, pipeline_7),
+    #                 (scan_0, pipeline_4),
+    #                 (pipeline_4, pipeline_8),
+    #                 (scan_1, pipeline_5),
+    #                 (pipeline_5, pipeline_8),
+    #                 (map_0, pipeline_8),
+    #                 (scan_2, pipeline_6),
+    #                 (scan_2, pipeline_7),
+    #                 (scan_3, pipeline_6),
+    #                 (pipeline_6, pipeline_8),
+    #                 (pipeline_7, pipeline_8),
+    #             ],
+    #         )
+    #     )
+    #     pipeline = relational >> (KNeighborsClassifier | LogisticRegression)
+    #     from sklearn.datasets import load_iris
 
-        X, y = load_iris(return_X_y=True)
-        from lale.lib.lale import Hyperopt
+    #     X, y = load_iris(return_X_y=True)
+    #     from lale.lib.lale import Hyperopt
 
-        opt = Hyperopt(estimator=pipeline, max_evals=2)
-        opt.fit(X, y)
+    #     opt = Hyperopt(estimator=pipeline, max_evals=2)
+    #     opt.fit(X, y)
 
     def test_transform_ratio_map(self):
         d = {
@@ -1903,36 +1898,54 @@ class TestMap(unittest.TestCase):
             "status": [0, 1, 1, 0, 1],
         }
         df = pd.DataFrame(data=d)
-        trainable = Map(columns={"add_h_w": it["height"] + it.weight,
-                                 "add_h_2": it["height"] + 2,
-                                 "sub_h_w": it["height"] - it.weight,
-                                 "sub_h_2": it["height"] - 2,
-                                 "mul_h_w": it["height"] * it.weight,
-                                 "mul_h_2": it["height"] * 2,
-                                 "div_h_w": it["height"] / it.weight,
-                                 "div_h_2": it["height"] / 2,
-                                 "floor_div_h_w": it["height"] // it.weight,
-                                 "floor_div_h_2": it["height"] // 2,
-                                 "mod_h_w": it["height"] % it.weight,
-                                 "mod_h_2": it["height"] % 2,
-                                 "pow_h_w": it["height"] ** it.weight,
-                                 "pow_h_2": it["height"] ** 2,})
+        trainable = Map(
+            columns={
+                "add_h_w": it["height"] + it.weight,
+                "add_h_2": it["height"] + 2,
+                "sub_h_w": it["height"] - it.weight,
+                "sub_h_2": it["height"] - 2,
+                "mul_h_w": it["height"] * it.weight,
+                "mul_h_2": it["height"] * 2,
+                "div_h_w": it["height"] / it.weight,
+                "div_h_2": it["height"] / 2,
+                "floor_div_h_w": it["height"] // it.weight,
+                "floor_div_h_2": it["height"] // 2,
+                "mod_h_w": it["height"] % it.weight,
+                "mod_h_2": it["height"] % 2,
+                "pow_h_w": it["height"] ** it.weight,
+                "pow_h_2": it["height"] ** 2,
+            }
+        )
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df.shape, (5, 14))
-        self.assertEqual(transformed_df["add_h_w"][1], df["height"][1] + df["weight"][1])
+        self.assertEqual(
+            transformed_df["add_h_w"][1], df["height"][1] + df["weight"][1]
+        )
         self.assertEqual(transformed_df["add_h_2"][1], df["height"][1] + 2)
-        self.assertEqual(transformed_df["sub_h_w"][1], df["height"][1] - df["weight"][1])
+        self.assertEqual(
+            transformed_df["sub_h_w"][1], df["height"][1] - df["weight"][1]
+        )
         self.assertEqual(transformed_df["sub_h_2"][1], df["height"][1] - 2)
-        self.assertEqual(transformed_df["mul_h_w"][1], df["height"][1] * df["weight"][1])
+        self.assertEqual(
+            transformed_df["mul_h_w"][1], df["height"][1] * df["weight"][1]
+        )
         self.assertEqual(transformed_df["mul_h_2"][1], df["height"][1] * 2)
-        self.assertEqual(transformed_df["div_h_w"][1], df["height"][1] / df["weight"][1])
+        self.assertEqual(
+            transformed_df["div_h_w"][1], df["height"][1] / df["weight"][1]
+        )
         self.assertEqual(transformed_df["div_h_2"][1], df["height"][1] / 2)
-        self.assertEqual(transformed_df["floor_div_h_w"][1], df["height"][1] // df["weight"][1])
+        self.assertEqual(
+            transformed_df["floor_div_h_w"][1], df["height"][1] // df["weight"][1]
+        )
         self.assertEqual(transformed_df["floor_div_h_2"][1], df["height"][1] // 2)
-        self.assertEqual(transformed_df["mod_h_w"][1], df["height"][1] % df["weight"][1])
+        self.assertEqual(
+            transformed_df["mod_h_w"][1], df["height"][1] % df["weight"][1]
+        )
         self.assertEqual(transformed_df["mod_h_2"][1], df["height"][1] % 2)
-        self.assertEqual(transformed_df["pow_h_w"][1], df["height"][1] ** df["weight"][1])
+        self.assertEqual(
+            transformed_df["pow_h_w"][1], df["height"][1] ** df["weight"][1]
+        )
         self.assertEqual(transformed_df["pow_h_2"][1], df["height"][1] ** 2)
 
     def test_transform_arithmetic_expression(self):
@@ -1946,7 +1959,48 @@ class TestMap(unittest.TestCase):
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df.shape, (5, 1))
-        self.assertEqual(transformed_df["expr"][2], (df["height"][2] + df["weight"][2] * 10) / 2)
+        self.assertEqual(
+            transformed_df["expr"][2], (df["height"][2] + df["weight"][2] * 10) / 2
+        )
+
+    def test_transform_nested_expressions(self):
+        d = {
+            "month": ["jan", "feb", "mar", "may", "aug"],
+        }
+        df = pd.DataFrame(data=d)
+        month_map = {
+            "jan": "2021-01-01",
+            "feb": "2021-02-01",
+            "mar": "2021-03-01",
+            "arp": "2021-04-01",
+            "may": "2021-05-01",
+            "jun": "2021-06-01",
+            "jul": "2021-07-01",
+            "aug": "2021-08-01",
+            "sep": "2021-09-01",
+            "oct": "2021-10-01",
+            "nov": "2021-11-01",
+            "dec": "2021-12-01",
+        }
+        trainable = Map(
+            columns={
+                "date": replace(it.month, month_map),
+                "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
+                "next_month_id": identity(
+                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1  # type: ignore
+                ),
+            }
+        )
+        trained = trainable.fit(df)
+        transformed_df = trained.transform(df)
+        self.assertEqual(transformed_df["date"][0], "2021-01-01")
+        self.assertEqual(transformed_df["date"][1], "2021-02-01")
+        self.assertEqual(transformed_df["month_id"][2], 3)
+        self.assertEqual(transformed_df["month_id"][3], 5)
+        self.assertEqual(transformed_df["next_month_id"][0], 2)
+        self.assertEqual(transformed_df["next_month_id"][3], 6)
+        self.assertEqual(transformed_df["next_month_id"][4], 9)
+
 
 class TestRelationalOperator(unittest.TestCase):
     def setUp(self):
@@ -2048,6 +2102,28 @@ class TestMapSpark(unittest.TestCase):
         self.assertEqual(df["gender"][0], transformed_df.collect()[0]["new_gender"])
         self.assertEqual(df["status"][3], transformed_df.collect()[3]["new_status"])
         self.assertEqual(len(transformed_df.columns), 2)
+
+    def test_transform_identity_map_passthrough(self):
+        d = {
+            "gender": ["m", "f", "m", "m", "f"],
+            "state": ["NY", "NY", "CA", "NY", "CA"],
+            "status": [0, 1, 1, 0, 1],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        trainable = Map(
+            columns={
+                "new_gender": it.gender,
+                "new_status": it["status"],
+            },
+            remainder="passthrough",
+        )
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        self.assertEqual(df["gender"][0], transformed_df.collect()[0]["new_gender"])
+        self.assertEqual(df["status"][3], transformed_df.collect()[3]["new_status"])
+        self.assertEqual(df["state"][2], transformed_df.collect()[2]["state"])
+        self.assertEqual(len(transformed_df.columns), 3)
 
     def test_transform_spark_replace_list(self):
         if spark_installed:
@@ -2373,27 +2449,6 @@ class TestMapSpark(unittest.TestCase):
         self.assertEqual(transformed_df.collect()[1]["month"], 6)
         self.assertEqual(transformed_df.collect()[2]["month"], 7)
 
-    def test_transform_string_indexer_list(self):
-        df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
-        sdf = self.sqlCtx.createDataFrame(df)
-        trainable = Map(columns=[string_indexer(it.cat_column)])
-        trained = trainable.fit(sdf)
-        transformed_df = trained.transform(sdf)
-        self.assertEqual(transformed_df.collect()[0]["cat_column"], 1)
-        self.assertEqual(transformed_df.collect()[1]["cat_column"], 0)
-        self.assertEqual(transformed_df.collect()[2]["cat_column"], 0)
-
-    def test_transform_string_indexer_map(self):
-        df = pd.DataFrame({"cat_column": ["a", "b", "b"]})
-        sdf = self.sqlCtx.createDataFrame(df)
-        trainable = Map(columns={"string_indexed": string_indexer(it.cat_column)})
-        trained = trainable.fit(sdf)
-        transformed_df = trained.transform(sdf)
-        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (3, 1))
-        self.assertEqual(transformed_df.collect()[0]["string_indexed"], 1)
-        self.assertEqual(transformed_df.collect()[1]["string_indexed"], 0)
-        self.assertEqual(transformed_df.collect()[2]["string_indexed"], 0)
-
     def test_transform_ratio_map(self):
         d = {
             "height": [3, 4, 6, 3, 5],
@@ -2540,35 +2595,49 @@ class TestMapSpark(unittest.TestCase):
         }
         df = pd.DataFrame(data=d)
         sdf = self.sqlCtx.createDataFrame(df)
-        trainable = Map(columns={"add_h_w": it["height"] + it.weight,
-                                 "add_h_2": it["height"] + 2,
-                                 "sub_h_w": it["height"] - it.weight,
-                                 "sub_h_2": it["height"] - 2,
-                                 "mul_h_w": it["height"] * it.weight,
-                                 "mul_h_2": it["height"] * 2,
-                                 "div_h_w": it["height"] / it.weight,
-                                 "div_h_2": it["height"] / 2,
-                                #  "floor_div_h_w": it["height"] // it.weight,
-                                #  "floor_div_h_2": it["height"] // 2,
-                                 "mod_h_w": it["height"] % it.weight,
-                                 "mod_h_2": it["height"] % 2,
-                                 "pow_h_w": it["height"] ** it.weight,
-                                 "pow_h_2": it["height"] ** 2,})
+        trainable = Map(
+            columns={
+                "add_h_w": it["height"] + it.weight,
+                "add_h_2": it["height"] + 2,
+                "sub_h_w": it["height"] - it.weight,
+                "sub_h_2": it["height"] - 2,
+                "mul_h_w": it["height"] * it.weight,
+                "mul_h_2": it["height"] * 2,
+                "div_h_w": it["height"] / it.weight,
+                "div_h_2": it["height"] / 2,
+                #  "floor_div_h_w": it["height"] // it.weight,
+                #  "floor_div_h_2": it["height"] // 2,
+                "mod_h_w": it["height"] % it.weight,
+                "mod_h_2": it["height"] % 2,
+                "pow_h_w": it["height"] ** it.weight,
+                "pow_h_2": it["height"] ** 2,
+            }
+        )
         trained = trainable.fit(sdf)
         transformed_df = trained.transform(sdf)
         self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 12))
         transformed_df = transformed_df.toPandas()
-        self.assertEqual(transformed_df["add_h_w"][1], df["height"][1] + df["weight"][1])
+        self.assertEqual(
+            transformed_df["add_h_w"][1], df["height"][1] + df["weight"][1]
+        )
         self.assertEqual(transformed_df["add_h_2"][1], df["height"][1] + 2)
-        self.assertEqual(transformed_df["sub_h_w"][1], df["height"][1] - df["weight"][1])
+        self.assertEqual(
+            transformed_df["sub_h_w"][1], df["height"][1] - df["weight"][1]
+        )
         self.assertEqual(transformed_df["sub_h_2"][1], df["height"][1] - 2)
-        self.assertEqual(transformed_df["mul_h_w"][1], df["height"][1] * df["weight"][1])
+        self.assertEqual(
+            transformed_df["mul_h_w"][1], df["height"][1] * df["weight"][1]
+        )
         self.assertEqual(transformed_df["mul_h_2"][1], df["height"][1] * 2)
-        self.assertEqual(transformed_df["div_h_w"][1], df["height"][1] / df["weight"][1])
+        self.assertEqual(
+            transformed_df["div_h_w"][1], df["height"][1] / df["weight"][1]
+        )
         self.assertEqual(transformed_df["div_h_2"][1], df["height"][1] / 2)
         # self.assertEqual(transformed_df["floor_div_h_w"][1], df["height"][1] // df["weight"][1])
         # self.assertEqual(transformed_df["floor_div_h_2"][1], df["height"][1] // 2)
-        self.assertEqual(transformed_df["mod_h_w"][1], df["height"][1] % df["weight"][1])
+        self.assertEqual(
+            transformed_df["mod_h_w"][1], df["height"][1] % df["weight"][1]
+        )
         self.assertEqual(transformed_df["mod_h_2"][1], df["height"][1] % 2)
         # self.assertEqual(transformed_df["pow_h_w"][1], df["height"][1] ** df["weight"][1]) # TODO: choose semantics
         self.assertEqual(transformed_df["pow_h_w"][1], 4 ** 50)
@@ -2587,7 +2656,50 @@ class TestMapSpark(unittest.TestCase):
         transformed_df = trained.transform(sdf)
         self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 1))
         transformed_df = transformed_df.collect()
-        self.assertEqual(transformed_df[2]["expr"], (df["height"][2] + df["weight"][2] * 10) / 2)
+        self.assertEqual(
+            transformed_df[2]["expr"], (df["height"][2] + df["weight"][2] * 10) / 2
+        )
+
+    def test_transform_nested_expressions(self):
+        d = {
+            "month": ["jan", "feb", "mar", "may", "aug"],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        month_map = {
+            "jan": "2021-01-01",
+            "feb": "2021-02-01",
+            "mar": "2021-03-01",
+            "arp": "2021-04-01",
+            "may": "2021-05-01",
+            "jun": "2021-06-01",
+            "jul": "2021-07-01",
+            "aug": "2021-08-01",
+            "sep": "2021-09-01",
+            "oct": "2021-10-01",
+            "nov": "2021-11-01",
+            "dec": "2021-12-01",
+        }
+        trainable = Map(
+            columns={
+                "date": replace(it.month, month_map),
+                "month_id": month(replace(it.month, month_map)),
+                "next_month_id": identity(
+                    month(replace(it.month, month_map)) % 12 + 1  # type: ignore
+                ),
+            }
+        )  # type: ignore
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        transformed_df = transformed_df.collect()
+        self.assertEqual(transformed_df[0]["date"], "2021-01-01")
+        self.assertEqual(transformed_df[1]["date"], "2021-02-01")
+        self.assertEqual(transformed_df[2]["month_id"], 3)
+        self.assertEqual(transformed_df[3]["month_id"], 5)
+        self.assertEqual(transformed_df[0]["next_month_id"], 2)
+        self.assertEqual(transformed_df[3]["next_month_id"], 6)
+        self.assertEqual(transformed_df[4]["next_month_id"], 9)
+
 
 class TestOrderBy(unittest.TestCase):
     def setUp(self):

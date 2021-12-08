@@ -233,14 +233,10 @@ class Expr:
 
 def _make_binop(op, left, other):
     if isinstance(other, Expr):
-        e = ast.BinOp(
-            left=left, op=op, right=other._expr
-        )
+        e = ast.BinOp(left=left, op=op, right=other._expr)
         return Expr(e)
     elif other is not None:
-        e = ast.BinOp(
-            left=left, op=op, right=ast.Constant(value=other)
-        )
+        e = ast.BinOp(left=left, op=op, right=ast.Constant(value=other))
         return Expr(e)
     else:
         return False
@@ -400,10 +396,6 @@ def window_variance_trend(series: Expr, size: int) -> Expr:
     return _make_call_expr("window_variance_trend", series, size)
 
 
-def string_indexer(subject: Expr) -> Expr:
-    return _make_call_expr("string_indexer", subject)
-
-
 def first(group: Expr) -> Expr:
     return _make_call_expr("first", group)
 
@@ -432,11 +424,11 @@ def desc(column: Union[Expr, str]) -> Expr:
     return _make_call_expr("desc", column)
 
 
-def ratio(num: Expr, denom: Expr) -> Expr:
+def ratio(num: Expr, denom: Expr):
     return num / denom
 
 
-def subtract(op1: Expr, op2: Expr) -> Expr:
+def subtract(op1: Expr, op2: Expr):
     return op1 - op2
 
 

@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# import copy
+import copy
 import unittest
-
-# from multiprocessing import cpu_count
+from multiprocessing import cpu_count
 from typing import cast
 
 import numpy as np
@@ -24,11 +23,15 @@ from sklearn.datasets import make_regression
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import TimeSeriesSplit
 
+import lale.type_checking
 from lale.datasets.uci import fetch_household_power_consumption
 from lale.lib.autoai_ts_libs import (  # type: ignore # noqa; StandardRowMeanCenterMTS,; WindowTransformerMTS; DifferenceFlattenAutoEnsembler,; FlattenAutoEnsembler,; LocalizedFlattenAutoEnsembler,
     AutoaiTSPipeline,
     AutoaiWindowedWrappedRegressor,
     AutoaiWindowTransformedTargetRegressor,
+    DifferenceFlattenAutoEnsembler,
+    FlattenAutoEnsembler,
+    LocalizedFlattenAutoEnsembler,
     MT2RForecaster,
     SmallDataWindowTargetTransformer,
     SmallDataWindowTransformer,
@@ -36,6 +39,9 @@ from lale.lib.autoai_ts_libs import (  # type: ignore # noqa; StandardRowMeanCen
     T2RForecaster,
     WindowStandardRowMeanCenterMTS,
     WindowStandardRowMeanCenterUTS,
+    cubic,
+    flatten_iterative,
+    linear,
 )
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import RandomForestRegressor, SimpleImputer
@@ -488,336 +494,677 @@ pipeline = LocalizedFlattenAutoEnsembler(
         self.assertEqual(printed1, printed2)
 
 
-# class TestWatForeForecasters(unittest.TestCase):
-#     def setUp(self):
-#         print(
-#             "..................................Watfore TSLIB tests.................................."
-#         )
+class TestWatForeForecasters(unittest.TestCase):
+    def setUp(self):
+        print(
+            "..................................Watfore TSLIB tests.................................."
+        )
 
-#     def test_watfore_pickle_write(self):
-#         print(
-#             "................................Watfore TSLIB Training and Pickle Write.................................."
-#         )
-#         # for this make sure sys.modules['ai4ml_ts.estimators'] = watfore is removed from init otherwise package is confused
-# #        try:
-#         import pickle
+    @unittest.skip("Does not work, not sure if it is supposed to work.")
+    def test_watfore_pickle_write(self):
+        print(
+            "................................Watfore TSLIB Training and Pickle Write.................................."
+        )
+        # for this make sure sys.modules['ai4ml_ts.estimators'] = watfore is removed from init otherwise package is confused
+        import pickle
 
-#         from lale.lib.autoai_ts_libs import WatForeForecaster
+        from lale.lib.autoai_ts_libs import WatForeForecaster
 
-#         fr = WatForeForecaster(
-#             algorithm="hw", samples_per_season=0.6
-#         )  # , initial_training_seasons=3
-#         ts_val = [
-#             [0, 10.0],
-#             [1, 20.0],
-#             [2, 30.0],
-#             [3, 40.0],
-#             [4, 50.0],
-#             [5, 60.0],
-#             [6, 70.0],
-#             [7, 31.0],
-#             [8, 80.0],
-#             [9, 90.0],
-#         ]
+        fr = WatForeForecaster(
+            algorithm="hw", samples_per_season=0.6
+        )  # , initial_training_seasons=3
+        ts_val = [
+            [0, 10.0],
+            [1, 20.0],
+            [2, 30.0],
+            [3, 40.0],
+            [4, 50.0],
+            [5, 60.0],
+            [6, 70.0],
+            [7, 31.0],
+            [8, 80.0],
+            [9, 90.0],
+        ]
 
-#         ml = fr.fit(ts_val, None)
-#         pr_before = fr.predict(None)
-#         fr2 = None
-#         print("Predictions before saving", pr_before)
-#         f_name = (
-#             "./lale/datasets/autoai/watfore_pipeline.pickle"  # ./tests/watfore/watfore_pipeline.pickle
-#         )
-#         with open(f_name, "wb") as pkl_dump:
-#             pickle.dump(ml, pkl_dump)
-#         pr2 = fr.predict(None)
-#         print("Predictions after pikcle dump", pr2)
-#         self.assertTrue(
-#             (np.asarray(pr2).ravel() == np.asarray(pr_before).ravel()).all()
-#         )
-#         print("Pickle Done. Now loading...")
-#         with open(f_name, "rb") as pkl_dump:
-#             fr2 = pickle.load(pkl_dump)
-#         if fr2 is not None:
-#             preds = fr2.predict(None)
-#             print("Predictions after loading", preds)
-#             self.assertTrue(len(preds) == 1)
-#             self.assertTrue(
-#                 (np.asarray(preds).ravel() == np.asarray(pr_before).ravel()).all()
-#             )
-#         else:
-#             print("Failed to Load model(s) from location" + f_name)
-#             self.fail("Failed to Load model(s) from location" + f_name)
-#         print(
-#             "................................Watfor TSLIB Pickle Write Done........................."
-#         )
+        ml = fr.fit(ts_val, None)
+        pr_before = fr.predict(None)
+        fr2 = None
+        print("Predictions before saving", pr_before)
+        f_name = "./lale/datasets/autoai/watfore_pipeline.pickle"  # ./tests/watfore/watfore_pipeline.pickle
+        with open(f_name, "wb") as pkl_dump:
+            pickle.dump(ml, pkl_dump)
+        pr2 = fr.predict(None)
+        print("Predictions after pikcle dump", pr2)
+        self.assertTrue(
+            (np.asarray(pr2).ravel() == np.asarray(pr_before).ravel()).all()
+        )
+        print("Pickle Done. Now loading...")
+        with open(f_name, "rb") as pkl_dump:
+            fr2 = pickle.load(pkl_dump)
+        if fr2 is not None:
+            preds = fr2.predict(None)
+            print("Predictions after loading", preds)
+            self.assertTrue(len(preds) == 1)
+            self.assertTrue(
+                (np.asarray(preds).ravel() == np.asarray(pr_before).ravel()).all()
+            )
+        else:
+            print("Failed to Load model(s) from location" + f_name)
+            self.fail("Failed to Load model(s) from location" + f_name)
+        print(
+            "................................Watfor TSLIB Pickle Write Done........................."
+        )
 
-#         # except Exception as e:
-#         #     print("Failed to Load model(s)")
-#         #     self.fail(e)
+    @unittest.skip("Does not work, not sure if it is supposed to work.")
+    def test_load_watfore_pipeline(self):
 
-#     def test_load_watfore_pipeline(self):
+        print(
+            "..................................Watfore TSLIB Pickle load and Predict................................."
+        )
+        import pickle
 
-#         print(
-#             "..................................Watfore TSLIB Pickle load and Predict................................."
-#         )
-#         import pickle
+        # f_name = './tests/watfore/watfore_pipeline.pickle'
+        f_name = "watfore_pipeline.pickle"
+        print("Pickle Done. Now loading...")
+        with open(f_name, "rb") as pkl_dump:
+            fr2 = pickle.load(pkl_dump)
 
-#         # f_name = './tests/watfore/watfore_pipeline.pickle'
-#         f_name = "watfore_pipeline.pickle"
-#         print("Pickle Done. Now loading...")
-#         with open(f_name, "rb") as pkl_dump:
-#             fr2 = pickle.load(pkl_dump)
+        if fr2 is not None:
+            preds = fr2.predict(None)
+            print("Predictions after loading", preds)
+            self.assertTrue(len(preds) == 1)
 
-#         if fr2 is not None:
-#             preds = fr2.predict(None)
-#             print("Predictions after loading", preds)
-#             self.assertTrue(len(preds) == 1)
-
-#             # self.assertTrue((np.asarray(preds).ravel() == np.asarray(pr_before).ravel()).all())
-#         else:
-#             print("Failed to Load model(s) from location" + f_name)
-#             self.fail("Failed to Load model(s) from location" + f_name)
-#         print(
-#             "................................Watfore TSLIB Read and predict Done........................."
-#         )
+            # self.assertTrue((np.asarray(preds).ravel() == np.asarray(pr_before).ravel()).all())
+        else:
+            print("Failed to Load model(s) from location" + f_name)
+            self.fail("Failed to Load model(s) from location" + f_name)
+        print(
+            "................................Watfore TSLIB Read and predict Done........................."
+        )
 
 
-# class TestImportExport(unittest.TestCase):
-#     def setUp(self):
-#         self.data = fetch_household_power_consumption()
-#         self.data = self.data.iloc[1::5000, :]
-#         self.X = self.data["Date"].to_numpy()
-#         self.y = self.data.drop(columns=["Date", "Time"]).applymap(
-#             lambda x: 0 if x == "?" else x
-#         )
-#         self.y = self.y.astype("float64").fillna(0).to_numpy()
+class TestImportExport(unittest.TestCase):
+    def setUp(self):
+        self.data = fetch_household_power_consumption()
+        self.data = self.data.iloc[1::5000, :]
+        self.X = self.data["Date"].to_numpy()
+        self.y = self.data.drop(columns=["Date", "Time"]).applymap(
+            lambda x: 0 if x == "?" else x
+        )
+        self.y = self.y.astype("float64").fillna(0).to_numpy()
 
 
-# def train_test_split(inputX,split_size):
-#     return inputX[:split_size],inputX[split_size:]
+def train_test_split(inputX, split_size):
+    return inputX[:split_size], inputX[split_size:]
 
-# def get_srom_time_series_estimators(
-#     feature_column_indices,
-#     target_column_indices,
-#     lookback_window,
-#     prediction_horizon,
-#     time_column_index=-1,
-#     optimization_stetagy="Once",
-#     mode="Test",
-#     number_rows=None,
-#     n_jobs=cpu_count() - 1,
-# ):
-#     """
-#     This method returns the best performing time_series estimators in SROM. The no. of estiamtors
-#     depend upon the mode of operation. The mode available are 'Test', 'Benchmark' and
-#     'benchmark_extended'.
-#     Parameters:
-#         feature_column_indices (list): feature indices.
-#         target_column_indices (list): target indices.
-#         time_column_index (int): time column index.
-#         lookback_window (int): Look-back window for the models returned.
-#         prediction_horizon (int): Look-ahead window for the models returned.
-#         init_time_optimization (string , optional): whether to optimize at the start of automation.
-#         mode (string, optional) : The available modes are test, benchmark, benchmark_extended.
-#     """
-#     srom_estimators = []
-#     from autoai_ts_libs.srom.estimators.regression.auto_ensemble_regressor import (
-#         EnsembleRegressor,
-#     )
-#     # adding P21
-#     srom_estimators.append(
-#         MT2RForecaster(
-#             target_columns=target_column_indices,
-#             trend="Linear",
-#             lookback_win=lookback_window,
-#             prediction_win=prediction_horizon,
-#             n_jobs=n_jobs,
-#         )
-#     )
 
-#     ensemble_regressor = EnsembleRegressor(
-#         cv=None,
-#         execution_platform=None,
-#         execution_time_per_pipeline=None,
-#         level=None,
-#         n_estimators_for_pred_interval=1,
-#         n_leaders_for_ensemble=1,
-#         num_option_per_pipeline_for_intelligent_search=None,
-#         num_options_per_pipeline_for_random_search=None,
-#         save_prefix=None,
-#         total_execution_time=None,
-#     )
-#     # Setting commong parameters
-#     auto_est_params = {
-#         "feature_columns": feature_column_indices,
-#         "target_columns": target_column_indices,
-#         "lookback_win": lookback_window,
-#         "pred_win": prediction_horizon,
-#         "time_column": time_column_index,
-#         "execution_platform": "spark_node_random_search",
-#         "n_leaders_for_ensemble": 1,
-#         "n_estimators_for_pred_interval": 1,
-#         "max_samples_for_pred_interval": 1.0,
-#         "init_time_optimization": True,
-#         "dag_granularity": "flat",
-#         "total_execution_time": 3,
-#         "execution_time_per_pipeline": 3,
-#         "store_lookback_history": True,
-#         "n_jobs": n_jobs,
-#         "estimator":ensemble_regressor
-#     }
+def get_srom_time_series_estimators(
+    feature_column_indices,
+    target_column_indices,
+    lookback_window,
+    prediction_horizon,
+    time_column_index=-1,
+    optimization_stetagy="Once",
+    mode="Test",
+    number_rows=None,
+    n_jobs=cpu_count() - 1,
+):
+    """
+    This method returns the best performing time_series estimators in SROM. The no. of estiamtors
+    depend upon the mode of operation. The mode available are 'Test', 'Benchmark' and
+    'benchmark_extended'.
+    Parameters:
+        feature_column_indices (list): feature indices.
+        target_column_indices (list): target indices.
+        time_column_index (int): time column index.
+        lookback_window (int): Look-back window for the models returned.
+        prediction_horizon (int): Look-ahead window for the models returned.
+        init_time_optimization (string , optional): whether to optimize at the start of automation.
+        mode (string, optional) : The available modes are test, benchmark, benchmark_extended.
+    """
+    srom_estimators = []
+    from lale.lib.autoai_ts_libs import EnsembleRegressor
 
-#     if prediction_horizon > 1:
-#         auto_est_params["multistep_prediction_win"] = prediction_horizon
-#         auto_est_params["multistep_prediction_strategy"] = "multioutput"
-#         auto_est_params["dag_granularity"] = "multioutput_flat"
-#     elif len(target_column_indices) > 1:
-#         auto_est_params["dag_granularity"] = "multioutput_flat"
-#     else:
-#         pass
-#     auto_est_params["data_transformation_scheme"] = "log"
+    # adding P21
+    srom_estimators.append(
+        MT2RForecaster(
+            target_columns=target_column_indices,
+            trend="Linear",
+            lookback_win=lookback_window,
+            prediction_win=prediction_horizon,
+            n_jobs=n_jobs,
+        )
+    )
 
-#     # adding P18
-#     P18_params = copy.deepcopy(auto_est_params)
-#     srom_estimators.append(FlattenAutoEnsembler(**P18_params))
+    ensemble_regressor = EnsembleRegressor(
+        cv=None,
+        execution_platform=None,
+        execution_time_per_pipeline=None,
+        level=None,
+        n_estimators_for_pred_interval=1,
+        n_leaders_for_ensemble=1,
+        num_option_per_pipeline_for_intelligent_search=None,
+        num_options_per_pipeline_for_random_search=None,
+        save_prefix=None,
+        total_execution_time=None,
+    )
+    # Setting commong parameters
+    auto_est_params = {
+        "feature_columns": feature_column_indices,
+        "target_columns": target_column_indices,
+        "lookback_win": lookback_window,
+        "pred_win": prediction_horizon,
+        "time_column": time_column_index,
+        "execution_platform": "spark_node_random_search",
+        "n_leaders_for_ensemble": 1,
+        "n_estimators_for_pred_interval": 1,
+        "max_samples_for_pred_interval": 1.0,
+        "init_time_optimization": True,
+        "dag_granularity": "flat",
+        "total_execution_time": 3,
+        "execution_time_per_pipeline": 3,
+        "store_lookback_history": True,
+        "n_jobs": n_jobs,
+        "estimator": ensemble_regressor,
+    }
 
-#     # adding P17, Local Model
-#     P17_params = copy.deepcopy(auto_est_params)
-#     srom_estimators.append(DifferenceFlattenAutoEnsembler(**P17_params))
+    if prediction_horizon > 1:
+        auto_est_params["multistep_prediction_win"] = prediction_horizon
+        auto_est_params["multistep_prediction_strategy"] = "multioutput"
+        auto_est_params["dag_granularity"] = "multioutput_flat"
+    elif len(target_column_indices) > 1:
+        auto_est_params["dag_granularity"] = "multioutput_flat"
+    else:
+        pass
+    auto_est_params["data_transformation_scheme"] = "log"
 
-#     # adding P14m Local Model
-#     auto_est_params["data_transformation_scheme"] = None
-#     P14_params = copy.deepcopy(auto_est_params)
-#     srom_estimators.append(LocalizedFlattenAutoEnsembler(**P14_params))
+    # adding P18
+    P18_params = copy.deepcopy(auto_est_params)
+    srom_estimators.append(FlattenAutoEnsembler(**P18_params))
 
-#     return srom_estimators
+    # adding P17, Local Model
+    P17_params = copy.deepcopy(auto_est_params)
+    srom_estimators.append(DifferenceFlattenAutoEnsembler(**P17_params))
 
-# class TestSROMEnsemblers(unittest.TestCase):
-#     """Test various SROM Ensemblers classes"""
+    # adding P14m Local Model
+    auto_est_params["data_transformation_scheme"] = None
+    P14_params = copy.deepcopy(auto_est_params)
+    srom_estimators.append(LocalizedFlattenAutoEnsembler(**P14_params))
 
-#     @classmethod
-#     def setUpClass(test_class):
-#         pass
+    return srom_estimators
 
-#     @classmethod
-#     def tearDownClass(test_class):
-#         pass
 
-#     def test_fit_predict_predict_sliding_window_univariate_single_step(self):
-#         X = np.arange(1,441)
-#         X = X.reshape(-1,1)
-#         SIZE=len(X)
-#         target_columns = [0]
-#         number_rows = SIZE
-#         prediction_horizon = 1
-#         lookback_window = 10
-#         run_mode = 'test'
+class TestSROMEnsemblers(unittest.TestCase):
+    """Test various SROM Ensemblers classes"""
 
-#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-#                                                                target_column_indices=target_columns,
-#                                                                lookback_window=lookback_window,
-#                                                                prediction_horizon=prediction_horizon,
-#                                                                optimization_stetagy='Once',
-#                                                                mode=run_mode,
-#                                                                number_rows=number_rows,
-#                                                                )
-#         for index,estimator in enumerate(srom_estimators[1:]):
-#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
-#             import pdb;pdb.set_trace()
-#             estimator.fit(X_train)
-#             y_pred = estimator.predict(X_test)
-#             assert(len(y_pred)==prediction_horizon)
-#             assert(y_pred.shape[1]==len(target_columns))
-#             y_pred_win = estimator.predict_sliding_window(X_test)
-#             assert(len(y_pred_win)==lookback_window+1)
-#             assert(y_pred_win.shape[1]==len(target_columns))
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
+    def test_fit_predict_predict_sliding_window_univariate_single_step(self):
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        SIZE = len(X)
+        target_columns = [0]
+        number_rows = SIZE
+        prediction_horizon = 1
+        lookback_window = 10
+        run_mode = "test"
 
-#     def test_fit_predict_predict_sliding_window_univariate_multi_step(self):
-#         X = np.arange(1,441)
-#         X = X.reshape(-1,1)
-#         SIZE=len(X)
-#         target_columns = [0]
-#         number_rows = SIZE
-#         prediction_horizon = 8
-#         lookback_window = 10
-#         run_mode = 'test'
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
+            estimator.fit(X_train)
+            y_pred = estimator.predict(X_test)
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
+            y_pred_win = estimator.predict_sliding_window(X_test)
+            assert len(y_pred_win) == lookback_window + 1
+            assert y_pred_win.shape[1] == len(target_columns)
 
-#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-#                                                                target_column_indices=target_columns,
-#                                                                lookback_window=lookback_window,
-#                                                                prediction_horizon=prediction_horizon,
-#                                                                optimization_stetagy='Once',
-#                                                                mode=run_mode,
-#                                                                number_rows=number_rows,
-#                                                                )
-#         for index,estimator in enumerate(srom_estimators[1:]):
-#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
-#             estimator.fit(X_train)
-#             y_pred = estimator.predict(X_test)
-#             assert(len(y_pred)==prediction_horizon)
-#             assert(y_pred.shape[1]==len(target_columns))
-#             y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
-#             assert(y_pred_win.shape[1]==len(target_columns))
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
+    def test_fit_predict_predict_sliding_window_univariate_multi_step(self):
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        SIZE = len(X)
+        target_columns = [0]
+        number_rows = SIZE
+        prediction_horizon = 8
+        lookback_window = 10
+        run_mode = "test"
 
-#     def test_fit_predict_predict_sliding_window_multivariate_single_step(self):
-#         X = np.arange(1,441)
-#         X = X.reshape(-1,1)
-#         X2 = np.arange(1001,1441)
-#         X2 = X2.reshape(-1,1)
-#         X3 = np.arange(10001,10441)
-#         X3 = X3.reshape(-1,1)
-#         X = np.hstack([X,X2,X3])
-#         SIZE=len(X)
-#         target_columns = [0,1,2]
-#         number_rows = SIZE
-#         prediction_horizon = 1
-#         lookback_window = 10
-#         run_mode = 'test'
-#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-#                                                                target_column_indices=target_columns,
-#                                                                lookback_window=lookback_window,
-#                                                                prediction_horizon=prediction_horizon,
-#                                                                optimization_stetagy='Once',
-#                                                                mode=run_mode,
-#                                                                number_rows=number_rows,
-#                                                                )
-#         for index,estimator in enumerate(srom_estimators[1:]):
-#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
-#             estimator.fit(X_train)
-#             y_pred = estimator.predict(X_test)
-#             assert(len(y_pred)==prediction_horizon)
-#             assert(y_pred.shape[1]==len(target_columns))
-#             y_pred_win = estimator.predict_sliding_window(X_test)
-#             assert(len(y_pred_win)==lookback_window+1)
-#             assert(y_pred_win.shape[1]==len(target_columns))
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
+            estimator.fit(X_train)
+            y_pred = estimator.predict(X_test)
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
+            y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
+            assert y_pred_win.shape[1] == len(target_columns)
 
-#     def test_fit_predict_predict_sliding_window_multivariate_multi_step(self):
-#         X = np.arange(1,441)
-#         X = X.reshape(-1,1)
-#         X2 = np.arange(1001,1441)
-#         X2 = X2.reshape(-1,1)
-#         X3 = np.arange(10001,10441)
-#         X3 = X3.reshape(-1,1)
-#         X = np.hstack([X,X2,X3])
-#         SIZE=len(X)
-#         target_columns = [0,1,2]
-#         number_rows = SIZE
-#         prediction_horizon = 8
-#         lookback_window = 10
-#         run_mode = 'test'
-#         srom_estimators = get_srom_time_series_estimators(feature_column_indices=target_columns,
-#                                                                target_column_indices=target_columns,
-#                                                                lookback_window=lookback_window,
-#                                                                prediction_horizon=prediction_horizon,
-#                                                                optimization_stetagy='Once',
-#                                                                mode=run_mode,
-#                                                                number_rows=number_rows,
-#                                                                )
-#         for index,estimator in enumerate(srom_estimators[1:]):
-#             X_train,X_test = train_test_split(X,SIZE-(prediction_horizon+lookback_window))
-#             estimator.fit(X_train)
-#             y_pred = estimator.predict(X_test)
-#             assert(len(y_pred)==prediction_horizon)
-#             assert(y_pred.shape[1]==len(target_columns))
-#             y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
-#             assert(y_pred_win.shape[1]==len(target_columns))
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
+    def test_fit_predict_predict_sliding_window_multivariate_single_step(self):
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        X2 = np.arange(1001, 1441)
+        X2 = X2.reshape(-1, 1)
+        X3 = np.arange(10001, 10441)
+        X3 = X3.reshape(-1, 1)
+        X = np.hstack([X, X2, X3])
+        SIZE = len(X)
+        target_columns = [0, 1, 2]
+        number_rows = SIZE
+        prediction_horizon = 1
+        lookback_window = 10
+        run_mode = "test"
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
+            estimator.fit(X_train)
+            y_pred = estimator.predict(X_test)
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
+            y_pred_win = estimator.predict_sliding_window(X_test)
+            assert len(y_pred_win) == lookback_window + 1
+            assert y_pred_win.shape[1] == len(target_columns)
+
+    @unittest.skip(
+        "Does not work as the fit complains that there is no best_estimator_so_far"
+    )
+    def test_fit_predict_predict_sliding_window_multivariate_multi_step(self):
+        X = np.arange(1, 441)
+        X = X.reshape(-1, 1)
+        X2 = np.arange(1001, 1441)
+        X2 = X2.reshape(-1, 1)
+        X3 = np.arange(10001, 10441)
+        X3 = X3.reshape(-1, 1)
+        X = np.hstack([X, X2, X3])
+        SIZE = len(X)
+        target_columns = [0, 1, 2]
+        number_rows = SIZE
+        prediction_horizon = 8
+        lookback_window = 10
+        run_mode = "test"
+        srom_estimators = get_srom_time_series_estimators(
+            feature_column_indices=target_columns,
+            target_column_indices=target_columns,
+            lookback_window=lookback_window,
+            prediction_horizon=prediction_horizon,
+            optimization_stetagy="Once",
+            mode=run_mode,
+            number_rows=number_rows,
+        )
+        for index, estimator in enumerate(srom_estimators[1:]):
+            X_train, X_test = train_test_split(
+                X, SIZE - (prediction_horizon + lookback_window)
+            )
+            estimator.fit(X_train)
+            y_pred = estimator.predict(X_test)
+            assert len(y_pred) == prediction_horizon
+            assert y_pred.shape[1] == len(target_columns)
+            y_pred_win = estimator.predict_multi_step_sliding_window(X_test)
+            assert y_pred_win.shape[1] == len(target_columns)
+
+
+class TestInterpolatorImputers(unittest.TestCase):
+    """class for testing different time-series imputers."""
+
+    @classmethod
+    def setUp(cls):
+        uni_x = pd.DataFrame({"A": [12, 4, 5, None, 1]})
+        multi_x = pd.DataFrame(
+            {
+                "A": [12, 4, 5, None, 1],
+                "B": [None, 2, 54, 3, None],
+                "C": [20, 16, None, 3, 8],
+                "D": [14, 3, None, None, 6],
+            }
+        )
+        cls.uni_x = uni_x
+        cls.multi_x = multi_x
+
+    def test_linear_imputer(self):
+        """Test  LinearImputer"""
+        test_class = self.__class__
+        uni_x = test_class.uni_x
+        multi_x = test_class.multi_x
+
+        # Test univariate
+        imputer = linear().convert_to_trained()
+        X_tf = imputer.transform(uni_x)
+        self.assertAlmostEqual(np.mean(X_tf), 5.0, 2)
+
+        # Test multivariate
+        imputer = linear().convert_to_trained()
+        X_tf = imputer.transform(multi_x)
+        self.assertAlmostEqual(np.mean(X_tf), 8.875, 2)
+
+        # Test numpy
+        imputer = linear().convert_to_trained()
+        X_tf = imputer.transform(uni_x.values)
+        self.assertAlmostEqual(np.mean(X_tf), 5.0, 2)
+
+        # Test numpy
+        imputer = linear().convert_to_trained()
+        X_tf = imputer.transform(multi_x.values)
+        self.assertAlmostEqual(np.mean(X_tf), 8.875, 2)
+
+    def test_cubic_imputer(self):
+        """Test  CubicImputer"""
+        test_class = self.__class__
+        uni_x = test_class.uni_x
+        multi_x = test_class.multi_x[["A", "C"]]
+
+        # Test univariate
+        imputer = cubic().convert_to_trained()
+        X_tf = imputer.transform(uni_x)
+        self.assertAlmostEqual(np.mean(X_tf), 5.75, 2)
+
+        # Test multivariate
+        imputer = cubic().convert_to_trained()
+        X_tf = imputer.transform(multi_x)
+        self.assertAlmostEqual(np.mean(X_tf), 8.375, 2)
+
+        # Test numpy
+        imputer = cubic().convert_to_trained()
+        X_tf = imputer.transform(uni_x.values)
+        self.assertAlmostEqual(np.mean(X_tf), 5.75, 2)
+
+        # Test numpy
+        imputer = cubic().convert_to_trained()
+        X_tf = imputer.transform(multi_x.values)
+        self.assertAlmostEqual(np.mean(X_tf), 8.375, 2)
+
+
+class TestFlattenImputers(unittest.TestCase):
+    """class for testing different Flatten imputers"""
+
+    @classmethod
+    def setUp(cls):
+        uni_x = pd.DataFrame({"A": [1, 2, 3, 4, 5, None, 7, 8, 9]})
+        multi_x = pd.DataFrame(
+            {
+                "A": [1, 2, 3, 4, 5, None, 7, 8, 9, 10],
+                "B": [101, 102, None, 104, 105, 106, 107, 108, 109, 110],
+                "C": [51, 52, None, 54, 55, 56, None, 58, 59, 60],
+            }
+        )
+        imputers = [flatten_iterative]
+        cls.uni_x = uni_x
+        cls.multi_x = multi_x
+        cls.imputers = imputers
+
+    def test_fit_transform_flatten_imputers(self):
+        """
+        Test Fit and transform flatten imputers
+        """
+        test_class = self.__class__
+        uni_x = test_class.uni_x
+        multi_x = test_class.multi_x
+
+        # Test univariate timeseries data
+        est = flatten_iterative()
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5)
+                imputer.fit(uni_x)
+                interpolated = imputer.transform(uni_x)
+                self.assertFalse(np.any(np.isnan(interpolated)))
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+        # Test multivariate timeseries data
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5)
+                imputer.fit(multi_x)
+                interpolated = imputer.transform(multi_x)
+                self.assertFalse(np.any(np.isnan(interpolated)))
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+    def test_fit_transform_flatten_imputers_without_nan(self):
+        """
+        Test Fit and transform flatten imputers with nan
+        """
+        test_class = self.__class__
+        uni_x = pd.DataFrame({"A": [1, 2, 3, 4, 5, 6, 7, 8, 9]})
+        multi_x = pd.DataFrame(
+            {
+                "A": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "B": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+                "C": [51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
+            }
+        )
+        est = flatten_iterative()
+        # Test univariate timeseries data
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5)
+                imputer.fit(uni_x)
+                interpolated = imputer.transform(uni_x)
+                self.assertFalse(np.any(np.isnan(interpolated)))
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+        # Test multivariate timeseries data
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5)
+                imputer.fit(multi_x)
+                interpolated = imputer.transform(multi_x)
+                self.assertFalse(np.any(np.isnan(interpolated)))
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+    @unittest.skip("Need to fix.")
+    def test_set_params(self):
+        """
+        Test set_params
+        """
+        test_class = self.__class__
+        PARAMS = {
+            flatten_iterative: {
+                "base_imputer__random_state": 24,
+            }
+        }
+        est = flatten_iterative()
+        try:
+            for est in test_class.imputers[0:1]:
+                params = PARAMS[est]
+                imputer = est()
+                imputer.set_params(**params)
+                self.assertEqual(
+                    PARAMS[est]["base_imputer__random_state"],
+                    imputer.base_imputer.get_params()["random_state"],
+                )
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+    def test_get_params(self):
+        """
+        Test get_params
+        """
+        test_class = self.__class__
+        est = flatten_iterative()
+        try:
+            for est in test_class.imputers[0:1]:
+                imputer = est()
+                self.assertIsNotNone(imputer.get_params())
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+    def test_fit_transform_flatten_imputers_with_less_data(self):
+        """
+        Test Fit and transform flatten imputers with less data
+        """
+        test_class = self.__class__
+        est = flatten_iterative()
+        multi_x = pd.DataFrame(
+            {
+                "A": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                "B": [101, 102, 103, 104, 105, 106, 107, 108, 109, 110],
+                "C": [51, 52, 53, 54, 55, 56, 57, 58, 59, 60],
+            }
+        )
+        test_x = pd.DataFrame(
+            {
+                "A": [7, 8, 9, 10],
+                "B": [107, 108, 109, 110],
+                "C": [57, 58, 59, 60],
+            }
+        )
+        # Test multivariate timeseries data
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5)
+                imputer.fit(multi_x)
+                interpolated = imputer.transform(test_x)
+                self.assertFalse(np.any(np.isnan(interpolated)))
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+        test_x = pd.DataFrame(
+            {
+                "A": [7, None, 9, 10],
+                "B": [107, None, 109, 110],
+                "C": [57, 58, 59, 60],
+            }
+        )
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5)
+                imputer.fit(multi_x)
+                self.assertRaises(Exception, imputer, "transform", test_x)
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+    def test_fit_transform_flatten_imputers_with_other_missing_value(self):
+        """
+        Test Fit and transform flatten imputers
+        """
+        test_class = self.__class__
+        uni_x = pd.DataFrame({"A": [1, 2, 3, 4, 5, -999, 7, 8, 9]})
+        multi_x = pd.DataFrame(
+            {
+                "A": [1, 2, 3, 4, 5, -999, 7, 8, 9, 10],
+                "B": [101, 102, -999, 104, 105, 106, 107, 108, 109, 110],
+                "C": [51, 52, -999, 54, 55, 56, -999, 58, 59, 60],
+            }
+        )
+        est = flatten_iterative()
+        # Test univariate timeseries data
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5, missing_val_identifier=-999)
+                imputer.fit(uni_x)
+                interpolated = imputer.transform(uni_x)
+                self.assertFalse(np.any(np.isnan(interpolated)))
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+        # Test multivariate timeseries data
+        try:
+            for est in test_class.imputers:
+                print("testing", est)
+                imputer = est(order=5, missing_val_identifier=-999)
+                imputer.fit(multi_x)
+                interpolated = imputer.transform(multi_x)
+                self.assertFalse(np.any(np.isnan(interpolated)))
+        except Exception as e:
+            self.fail("Failed : " + str(est.name()) + " " + str(e))
+
+
+class TestSchemas(unittest.TestCase):
+    def setUp(self):
+        pass
+
+
+def create_function_test_schemas(obj_name):
+    def test_schemas(self):
+        import importlib
+
+        module_name = ".".join(obj_name.split(".")[0:-1])
+        class_name = obj_name.split(".")[-1]
+        module = importlib.import_module(module_name)
+
+        class_ = getattr(module, class_name)
+        if class_name == "MT2RForecaster":
+            obj = class_(target_columns=[0])
+        else:
+            obj = class_()
+
+        obj._check_schemas()
+        # test_schemas_are_schemas
+        lale.type_checking.validate_is_schema(obj.hyperparam_schema())
+
+    test_schemas.__name__ = "test_{0}".format(obj.split(".")[-1])
+    return test_schemas
+
+
+objs = [
+    # "lale.lib.autoai_ts_libs.AutoaiTSPipeline",  # does not work as steps can be None or empty
+    "lale.lib.autoai_ts_libs.AutoaiWindowedWrappedRegressor",
+    "lale.lib.autoai_ts_libs.AutoaiWindowTransformedTargetRegressor",
+    "lale.lib.autoai_ts_libs.MT2RForecaster",
+    "lale.lib.autoai_ts_libs.SmallDataWindowTargetTransformer",
+    "lale.lib.autoai_ts_libs.SmallDataWindowTransformer",
+    "lale.lib.autoai_ts_libs.StandardRowMeanCenter",
+    "lale.lib.autoai_ts_libs.T2RForecaster",
+    "lale.lib.autoai_ts_libs.WindowStandardRowMeanCenterMTS",
+    "lale.lib.autoai_ts_libs.cubic",
+    "lale.lib.autoai_ts_libs.flatten_iterative",
+    "lale.lib.autoai_ts_libs.linear",
+    "lale.lib.autoai_ts_libs.fill",
+    "lale.lib.autoai_ts_libs.previous",
+    "lale.lib.autoai_ts_libs.next",
+    "lale.lib.autoai_ts_libs.AutoRegression",
+    "lale.lib.autoai_ts_libs.EnsembleRegressor",
+    "lale.lib.autoai_ts_libs.WatForeForecaster",
+]
+for obj in objs:
+    setattr(
+        TestSchemas,
+        "test_{0}".format(obj.split(".")[-1]),
+        create_function_test_schemas(obj),
+    )
