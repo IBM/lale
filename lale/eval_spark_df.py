@@ -17,12 +17,7 @@ import importlib
 from itertools import chain
 
 from lale.expressions import AstExpr
-from lale.helpers import (
-    _ast_func_id,
-    _is_ast_attribute,
-    _is_ast_name_it,
-    _is_ast_subscript,
-)
+from lale.helpers import _ast_func_id, _is_ast_name_it
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.
@@ -128,21 +123,21 @@ def identity(column: AstExpr):
 def ratio(expr: AstExpr):
     numerator = eval_expr_spark_df(expr.args[0])  # type: ignore
     denominator = eval_expr_spark_df(expr.args[1])  # type: ignore
-    return numerator / denominator
+    return numerator / denominator  # type: ignore
 
 
 def subtract(expr: AstExpr):
     e1 = eval_expr_spark_df(expr.args[0])  # type: ignore
     e2 = eval_expr_spark_df(expr.args[1])  # type: ignore
-    return e1 / e2
+    return e1 / e2  # type: ignore
 
 
 def time_functions(dom_expr, spark_func):
     column = eval_ast_expr_spark_df(dom_expr.args[0])
     if len(dom_expr.args) > 1:
         fmt = ast.literal_eval(dom_expr.args[1])
-        return spark_func(to_timestamp(column, format=fmt))
-    return spark_func(to_timestamp(column))
+        return spark_func(to_timestamp(column, format=fmt))  # type: ignore
+    return spark_func(to_timestamp(column))  # type: ignore
 
 
 def day_of_month(dom_expr: AstExpr):

@@ -19,12 +19,7 @@ from typing import Any
 import pandas as pd
 
 from lale.expressions import AstExpr
-from lale.helpers import (
-    _ast_func_id,
-    _is_ast_attribute,
-    _is_ast_name_it,
-    _is_ast_subscript,
-)
+from lale.helpers import _ast_func_id, _is_ast_name_it
 
 
 def eval_expr_pandas_df(X, expr):
@@ -104,7 +99,7 @@ class _PandasEvaluator(ast.NodeVisitor):
 def replace(df: Any, replace_expr):
     column = eval_ast_expr_pandas_df(df, replace_expr.args[0])
     mapping_dict = ast.literal_eval(replace_expr.args[1].value)
-    new_column = column.replace(mapping_dict)
+    new_column = column.replace(mapping_dict)  # type: ignore
     return new_column
 
 

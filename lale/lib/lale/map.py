@@ -141,9 +141,8 @@ class _MapImpl:
 
         def get_map_function_expr(column, new_column_name):
             new_column_name = _new_column_name(new_column_name, column)
-            new_column = eval_expr_spark_df(column)
-            assert new_column is not None, "Internal error"
-            new_columns.append(new_column.alias(new_column_name))
+            new_column = eval_expr_spark_df(column)  # type: ignore
+            new_columns.append(new_column.alias(new_column_name))  # type: ignore
             accessed_column_names.add(new_column_name)
             accessed_column_names.update(accessed_columns(column))
 

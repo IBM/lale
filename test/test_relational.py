@@ -1992,7 +1992,7 @@ class TestMap(unittest.TestCase):
                 "date": replace(it.month, month_map),
                 "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
                 "next_month_id": identity(
-                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1
+                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1  # type: ignore
                 ),
             }
         )
@@ -2689,10 +2689,10 @@ class TestMapSpark(unittest.TestCase):
                 "date": replace(it.month, month_map),
                 "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
                 "next_month_id": identity(
-                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1
+                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1  # type: ignore
                 ),
             }
-        )
+        )  # type: ignore
         trained = trainable.fit(df)
         transformed_df = trained.transform(df)
         self.assertEqual(transformed_df[0]["date"], "2021-01-01")
