@@ -1257,10 +1257,6 @@ class TestMap(unittest.TestCase):
         }
         df = pd.DataFrame(data=d)
         with self.assertRaises(ValueError):
-            trainable = Map(columns={"new_name": identity(it.gender)})
-            trained = trainable.fit(df)
-            _ = trained.transform(df)
-        with self.assertRaises(ValueError):
             trainable = Map(columns={"   ": it.gender})
             trained = trainable.fit(df)
             _ = trained.transform(df)
@@ -2670,6 +2666,7 @@ class TestMapSpark(unittest.TestCase):
             "month": ["jan", "feb", "mar", "may", "aug"],
         }
         df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
         month_map = {
             "jan": "2021-01-01",
             "feb": "2021-02-01",
@@ -2687,14 +2684,15 @@ class TestMapSpark(unittest.TestCase):
         trainable = Map(
             columns={
                 "date": replace(it.month, month_map),
-                "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
+                "month_id": month(replace(it.month, month_map)),
                 "next_month_id": identity(
-                    month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1  # type: ignore
+                    month(replace(it.month, month_map)) % 12 + 1  # type: ignore
                 ),
             }
         )  # type: ignore
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        transformed_df = transformed_df.collect()
         self.assertEqual(transformed_df[0]["date"], "2021-01-01")
         self.assertEqual(transformed_df[1]["date"], "2021-02-01")
         self.assertEqual(transformed_df[2]["month_id"], 3)

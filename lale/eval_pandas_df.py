@@ -103,8 +103,8 @@ def replace(df: Any, replace_expr):
     return new_column
 
 
-def identity(df: Any, column: AstExpr):
-    return eval_ast_expr_pandas_df(df, column)
+def identity(df: Any, expr: AstExpr):
+    return eval_ast_expr_pandas_df(df, expr.args[0])  # type: ignore
 
 
 def ratio(df: Any, expr):

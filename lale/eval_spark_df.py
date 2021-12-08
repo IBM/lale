@@ -116,8 +116,8 @@ def replace(replace_expr):
     return mapping_expr[column]  # type: ignore
 
 
-def identity(column: AstExpr):
-    return eval_ast_expr_spark_df(column)
+def identity(expr: AstExpr):
+    return eval_ast_expr_spark_df(expr.args[0])  # type: ignore
 
 
 def ratio(expr: AstExpr):
