@@ -18,14 +18,15 @@ from typing import Any
 
 import pandas as pd
 
+from lale.expressions import AstExpr, Expr
 from lale.helpers import _ast_func_id, _is_ast_name_it
 
 
-def eval_expr_pandas_df(X, expr):
-    return eval_ast_expr_pandas_df(X, expr._expr)
+def eval_expr_pandas_df(X, expr: Expr) -> pd.Series:
+    return _eval_ast_expr_pandas_df(X, expr._expr)
 
 
-def eval_ast_expr_pandas_df(X, expr):
+def _eval_ast_expr_pandas_df(X, expr: AstExpr) -> pd.Series:
     evaluator = _PandasEvaluator(X)
     evaluator.visit(expr)
     return evaluator.result
@@ -70,7 +71,6 @@ class _PandasEvaluator(ast.NodeVisitor):
         v1 = self.result
         self.visit(node.right)
         v2 = self.result
-        # assert v1 is not None and v2 is not None
         if isinstance(node.op, ast.Add):
             self.result = v1 + v2  # type: ignore
         elif isinstance(node.op, ast.Sub):
@@ -96,31 +96,19 @@ class _PandasEvaluator(ast.NodeVisitor):
 
 
 def replace(df: Any, call: ast.Call):
-    column = eval_ast_expr_pandas_df(df, call.args[0])
+    column = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
     mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
     new_column = column.replace(mapping_dict)  # type: ignore
     return new_column
 
 
 def identity(df: Any, call: ast.Call):
-    return eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
-
-
-def ratio(df: Any, call):
-    e1 = eval_expr_pandas_df(df, call.args[0])
-    e2 = eval_expr_pandas_df(df, call.args[1])
-    return e1 / e2  # type: ignore
-
-
-def subtract(df: Any, call):
-    e1 = eval_expr_pandas_df(df, call.args[0])
-    e2 = eval_expr_pandas_df(df, call.args[1])
-    return e1 / e2  # type: ignore
+    return _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
 
 
 def time_functions(df: Any, call, pandas_func: str):
     fmt = None
-    column = eval_ast_expr_pandas_df(df, call.args[0])
+    column = _eval_ast_expr_pandas_df(df, call.args[0])
     if len(call.args) > 1:
         fmt = ast.literal_eval(call.args[1])
     new_column = pd.to_datetime(column, format=fmt)

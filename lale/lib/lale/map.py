@@ -52,9 +52,9 @@ def _new_column_name(name, expr):
                 "hour",
                 "minute",
                 "month",
-                "string_indexer",
             ]
         ):
+            # XXX TODO XXX
             return expr._expr.args[0].attr
         else:
             raise ValueError(

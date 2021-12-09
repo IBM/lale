@@ -16,10 +16,12 @@ import ast
 import importlib
 from itertools import chain
 
+from lale.expressions import AstExpr, Expr
 from lale.helpers import _ast_func_id, _is_ast_name_it
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.
+    from pyspark.sql import Column  # noqa
     from pyspark.sql.functions import col  # noqa
     from pyspark.sql.functions import lit  # noqa
     from pyspark.sql.functions import to_timestamp  # noqa
@@ -32,6 +34,7 @@ try:
         dayofmonth,
         dayofweek,
         dayofyear,
+        floor as spark_floor,
     )
 
     spark_installed = True
@@ -39,11 +42,11 @@ except ImportError:
     spark_installed = False
 
 
-def eval_expr_spark_df(expr):
-    return eval_ast_expr_spark_df(expr._expr)
+def eval_expr_spark_df(expr: Expr) -> Column:
+    return _eval_ast_expr_spark_df(expr._expr)
 
 
-def eval_ast_expr_spark_df(expr):
+def _eval_ast_expr_spark_df(expr: AstExpr) -> Column:
     evaluator = _SparkEvaluator()
     evaluator.visit(expr)
     return evaluator.result
@@ -92,8 +95,8 @@ class _SparkEvaluator(ast.NodeVisitor):
             self.result = v1 * v2
         elif isinstance(node.op, ast.Div):
             self.result = v1 / v2
-        # elif isinstance(node.op, ast.FloorDiv):
-        #     self.result = v1 // v2
+        elif isinstance(node.op, ast.FloorDiv):
+            self.result = spark_floor(v1 / v2)
         elif isinstance(node.op, ast.Mod):
             self.result = v1 % v2
         elif isinstance(node.op, ast.Pow):
@@ -109,34 +112,22 @@ class _SparkEvaluator(ast.NodeVisitor):
 
 
 def replace(call: ast.Call):
-    column = eval_ast_expr_spark_df(call.args[0])
+    column = _eval_ast_expr_spark_df(call.args[0])  # type: ignore
     mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
     mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])  # type: ignore
-    return mapping_expr[column]  # type: ignore
+    return mapping_expr[column]
 
 
 def identity(call: ast.Call):
-    return eval_ast_expr_spark_df(call.args[0])  # type: ignore
-
-
-def ratio(call: ast.Call):
-    numerator = eval_expr_spark_df(call.args[0])  # type: ignore
-    denominator = eval_expr_spark_df(call.args[1])  # type: ignore
-    return numerator / denominator  # type: ignore
-
-
-def subtract(call: ast.Call):
-    e1 = eval_expr_spark_df(call.args[0])  # type: ignore
-    e2 = eval_expr_spark_df(call.args[1])  # type: ignore
-    return e1 / e2  # type: ignore
+    return _eval_ast_expr_spark_df(call.args[0])  # type: ignore
 
 
 def time_functions(call, spark_func):
-    column = eval_ast_expr_spark_df(call.args[0])
+    column = _eval_ast_expr_spark_df(call.args[0])
     if len(call.args) > 1:
         fmt = ast.literal_eval(call.args[1])
-        return spark_func(to_timestamp(column, format=fmt))  # type: ignore
-    return spark_func(to_timestamp(column))  # type: ignore
+        return spark_func(to_timestamp(column, format=fmt))
+    return spark_func(to_timestamp(column))
 
 
 def day_of_month(call: ast.Call):
