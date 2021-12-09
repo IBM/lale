@@ -46,7 +46,7 @@ _hyperparams_schema = {
                     "type": "array",
                     "items": {"laleType": "Any"},
                 }
-            }
+            },
         }
     ]
 }
@@ -113,7 +113,5 @@ _combined_schemas = {
     },
 }
 
-TSPipeline = lale.operators.make_operator(
-    _TSPipelineImpl, _combined_schemas
-)
+TSPipeline = lale.operators.make_operator(_TSPipelineImpl, _combined_schemas)
 lale.docstrings.set_docstrings(TSPipeline)

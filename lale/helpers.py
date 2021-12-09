@@ -621,23 +621,28 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
     if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
         nested_pipeline_steps = sklearn_pipeline.named_steps
         nested_pipeline_lale_named_steps = [
-            (nested_pipeline_step[0], import_from_sklearn_pipeline(
-                nested_pipeline_step[1], fitted=fitted, is_hyperparam=is_hyperparam
-            ))
+            (
+                nested_pipeline_step[0],
+                import_from_sklearn_pipeline(
+                    nested_pipeline_step[1], fitted=fitted, is_hyperparam=is_hyperparam
+                ),
+            )
             for nested_pipeline_step in nested_pipeline_steps.items()
         ]
         if type(sklearn_pipeline) == "sklearn.pipeline.Pipeline":
-            nested_pipeline_lale_objects = [nested_pipeline_lale_named_step[1]
-                        for nested_pipeline_lale_named_step in nested_pipeline_lale_named_steps]
+            nested_pipeline_lale_objects = [
+                nested_pipeline_lale_named_step[1]
+                for nested_pipeline_lale_named_step in nested_pipeline_lale_named_steps
+            ]
             lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
         else:
             lale_wrapper_found, wrapper_class = find_lale_wrapper(sklearn_pipeline)
             if lale_wrapper_found:
-                #This is a custom subclass of sklearn pipeline, so use the wrapper class
-                #instead of creating a lale pipeline
-                #We assume it has a hyperparameter `steps`.
+                # This is a custom subclass of sklearn pipeline, so use the wrapper class
+                # instead of creating a lale pipeline
+                # We assume it has a hyperparameter `steps`.
                 lale_op_obj = wrapper_class(steps=nested_pipeline_lale_named_steps)
-            else:#no conversion to lale if a wrapper is not found for a subclass of pipeline
+            else:  # no conversion to lale if a wrapper is not found for a subclass of pipeline
                 return sklearn_pipeline
     elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
         transformer_list = sklearn_pipeline.transformer_list
@@ -673,7 +678,7 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
 
         lale_wrapper_found, class_ = find_lale_wrapper(sklearn_obj)
         if not lale_wrapper_found:
-            return class_ #Return the original object
+            return class_  # Return the original object
 
         if (
             not fitted
