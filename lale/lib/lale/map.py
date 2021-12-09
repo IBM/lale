@@ -20,6 +20,7 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.helpers import (
+    _is_ast_attribute,
     _is_ast_call,
     _is_ast_name,
     _is_ast_name_it,
@@ -53,8 +54,8 @@ def _new_column_name(name, expr):
                 "minute",
                 "month",
             ]
+            and _is_ast_attribute(expr._expr.args[0])
         ):
-            # XXX TODO XXX
             return expr._expr.args[0].attr
         else:
             raise ValueError(

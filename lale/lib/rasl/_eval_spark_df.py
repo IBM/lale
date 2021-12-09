@@ -40,6 +40,7 @@ try:
 except ImportError:
     spark_installed = False
 
+
 def eval_expr_spark_df(expr: Expr):
     return _eval_ast_expr_spark_df(expr._expr)
 
@@ -124,8 +125,8 @@ def time_functions(call, spark_func):
     column = _eval_ast_expr_spark_df(call.args[0])
     if len(call.args) > 1:
         fmt = ast.literal_eval(call.args[1])
-        return spark_func(to_timestamp(column, format=fmt))
-    return spark_func(to_timestamp(column))
+        return spark_func(to_timestamp(column, format=fmt))  # type: ignore
+    return spark_func(to_timestamp(column))  # type: ignore
 
 
 def day_of_month(call: ast.Call):
