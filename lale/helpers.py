@@ -564,6 +564,40 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
     # if not, call make operator on sklearn classes and create a lale pipeline.
     # For higher order operators, we allow hyperparameters to be trainable even with
     # fitted is True. This is achieved using the is_hyperparam flag.
+
+    def find_lale_wrapper(sklearn_obj):
+        module_names = [
+            "lale.lib.sklearn",
+            "lale.lib.autoai_libs",
+            "lale.lib.xgboost",
+            "lale.lib.lightgbm",
+            "lale.lib.snapml",
+        ]
+
+        try:
+            import autoai_ts_libs  # type: ignore # noqa
+
+            module_names.append("lale.lib.autoai_ts_libs")
+        except ImportError:
+            pass
+
+        lale_wrapper_found = False
+        class_name = sklearn_obj.__class__.__name__
+        for module_name in module_names:
+            try:
+                module = importlib.import_module(module_name)
+            except ModuleNotFoundError:
+                continue
+            try:
+                class_ = getattr(module, class_name)
+                lale_wrapper_found = True
+                break
+            except AttributeError:
+                continue
+        else:
+            return lale_wrapper_found, sklearn_obj
+        return lale_wrapper_found, class_
+
     import lale.operators
     import lale.type_checking
 
@@ -585,14 +619,31 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
         return sklearn_obj
 
     if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
-        nested_pipeline_steps = sklearn_pipeline.named_steps.values()
-        nested_pipeline_lale_objects = [
-            import_from_sklearn_pipeline(
-                nested_pipeline_step, fitted=fitted, is_hyperparam=is_hyperparam
+        nested_pipeline_steps = sklearn_pipeline.named_steps
+        nested_pipeline_lale_named_steps = [
+            (
+                nested_pipeline_step[0],
+                import_from_sklearn_pipeline(
+                    nested_pipeline_step[1], fitted=fitted, is_hyperparam=is_hyperparam
+                ),
             )
-            for nested_pipeline_step in nested_pipeline_steps
+            for nested_pipeline_step in nested_pipeline_steps.items()
         ]
-        lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
+        if type(sklearn_pipeline) == sklearn.pipeline.Pipeline:
+            nested_pipeline_lale_objects = [
+                nested_pipeline_lale_named_step[1]
+                for nested_pipeline_lale_named_step in nested_pipeline_lale_named_steps
+            ]
+            lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
+        else:
+            lale_wrapper_found, wrapper_class = find_lale_wrapper(sklearn_pipeline)
+            if lale_wrapper_found:
+                # This is a custom subclass of sklearn pipeline, so use the wrapper class
+                # instead of creating a lale pipeline
+                # We assume it has a hyperparameter `steps`.
+                lale_op_obj = wrapper_class(steps=nested_pipeline_lale_named_steps)
+            else:  # no conversion to lale if a wrapper is not found for a subclass of pipeline
+                return sklearn_pipeline
     elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
         transformer_list = sklearn_pipeline.transformer_list
         concat_predecessors = [
@@ -625,36 +676,9 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
         else:
             hyperparams = orig_hyperparams
 
-        module_names = [
-            "lale.lib.sklearn",
-            "lale.lib.autoai_libs",
-            "lale.lib.xgboost",
-            "lale.lib.lightgbm",
-            "lale.lib.snapml",
-        ]
-
-        try:
-            import autoai_ts_libs  # type: ignore # noqa
-
-            module_names.append("lale.lib.autoai_ts_libs")
-        except ImportError:
-            pass
-
-        lale_wrapper_found = False
-        class_name = sklearn_obj.__class__.__name__
-        for module_name in module_names:
-            try:
-                module = importlib.import_module(module_name)
-            except ModuleNotFoundError:
-                continue
-            try:
-                class_ = getattr(module, class_name)
-                lale_wrapper_found = True
-                break
-            except AttributeError:
-                continue
-        else:
-            return sklearn_obj
+        lale_wrapper_found, class_ = find_lale_wrapper(sklearn_obj)
+        if not lale_wrapper_found:
+            return class_  # Return the original object
 
         if (
             not fitted

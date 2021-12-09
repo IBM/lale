@@ -39,6 +39,7 @@ Operators
 * lale.lib.autoai_ts_libs. `StandardRowMeanCenter`_
 * lale.lib.autoai_ts_libs. `StandardRowMeanCenterMTS`_
 * lale.lib.autoai_ts_libs. `T2RForecaster`_
+* lale.lib.autoai_ts_libs. `TSPipeline`_
 * lale.lib.autoai_ts_libs. `WatForeForecaster`_
 * lale.lib.autoai_ts_libs. `WindowStandardRowMeanCenterMTS`_
 * lale.lib.autoai_ts_libs. `WindowStandardRowMeanCenterUTS`_
@@ -64,6 +65,7 @@ Operators
 .. _`StandardRowMeanCenter`: lale.lib.autoai_ts_libs.standard_row_mean_center.html
 .. _`StandardRowMeanCenterMTS`: lale.lib.autoai_ts_libs.standard_row_mean_center_mts.html
 .. _`T2RForecaster`: lale.lib.autoai_ts_libs.t2r_forecaster.html
+.. _`TSPipeline`: lale.lib.autoai_ts_libs.ts_pipeline.html
 .. _`WatForeForecaster`: lale.lib.autoai_ts_libs.watfore_forecaster.html
 .. _`WindowStandardRowMeanCenterMTS`: lale.lib.autoai_ts_libs.window_standard_row_mean_center_mts.html
 .. _`WindowStandardRowMeanCenterUTS`: lale.lib.autoai_ts_libs.window_standard_row_mean_center_uts.html
@@ -93,6 +95,7 @@ from .small_data_window_transformer import SmallDataWindowTransformer
 from .standard_row_mean_center import StandardRowMeanCenter
 from .standard_row_mean_center_mts import StandardRowMeanCenterMTS
 from .t2r_forecaster import T2RForecaster
+from .ts_pipeline import TSPipeline
 from .watfore_forecaster import WatForeForecaster
 from .window_standard_row_mean_center_mts import WindowStandardRowMeanCenterMTS
 from .window_standard_row_mean_center_uts import WindowStandardRowMeanCenterUTS
