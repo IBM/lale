@@ -19,8 +19,6 @@ import pandas as pd
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.eval_pandas_df import eval_expr_pandas_df
-from lale.eval_spark_df import eval_expr_spark_df
 from lale.helpers import (
     _is_ast_call,
     _is_ast_name,
@@ -28,6 +26,8 @@ from lale.helpers import (
     _is_pandas_df,
     _is_spark_df,
 )
+from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
+from lale.lib.rasl._eval_spark_df import eval_expr_spark_df
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.

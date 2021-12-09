@@ -21,7 +21,6 @@ from lale.helpers import _ast_func_id, _is_ast_name_it
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.
-    from pyspark.sql import Column  # noqa
     from pyspark.sql.functions import col  # noqa
     from pyspark.sql.functions import lit  # noqa
     from pyspark.sql.functions import to_timestamp  # noqa
@@ -41,12 +40,11 @@ try:
 except ImportError:
     spark_installed = False
 
-
-def eval_expr_spark_df(expr: Expr) -> Column:
+def eval_expr_spark_df(expr: Expr):
     return _eval_ast_expr_spark_df(expr._expr)
 
 
-def _eval_ast_expr_spark_df(expr: AstExpr) -> Column:
+def _eval_ast_expr_spark_df(expr: AstExpr):
     evaluator = _SparkEvaluator()
     evaluator.visit(expr)
     return evaluator.result
@@ -105,7 +103,7 @@ class _SparkEvaluator(ast.NodeVisitor):
             raise ValueError(f"""Unimplemented operator {ast.dump(node.op)}""")
 
     def visit_Call(self, node: ast.Call):
-        functions_module = importlib.import_module("lale.eval_spark_df")
+        functions_module = importlib.import_module("lale.lib.rasl._eval_spark_df")
         function_name = _ast_func_id(node.func)
         map_func_to_be_called = getattr(functions_module, function_name)
         self.result = map_func_to_be_called(node)

@@ -89,7 +89,7 @@ class _PandasEvaluator(ast.NodeVisitor):
             raise ValueError(f"""Unimplemented operator {ast.dump(node.op)}""")
 
     def visit_Call(self, node: ast.Call):
-        functions_module = importlib.import_module("lale.eval_pandas_df")
+        functions_module = importlib.import_module("lale.lib.rasl._eval_pandas_df")
         function_name = _ast_func_id(node.func)
         map_func_to_be_called = getattr(functions_module, function_name)
         self.result = map_func_to_be_called(self.df, node)
