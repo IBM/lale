@@ -1131,10 +1131,6 @@ def _is_ast_name(expr):
     return isinstance(expr, ast.Name)
 
 
-def _is_ast_name_it(expr):
-    return isinstance(expr, ast.Name) and expr.id == "it"
-
-
 def _ast_func_id(expr):
     if isinstance(expr, ast.Name):
         return expr.id

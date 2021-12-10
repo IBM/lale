@@ -425,3 +425,31 @@ def desc(column: Union[Expr, str]) -> Expr:
 
 
 it = Expr(ast.Name(id="it"))
+
+
+def _it_column(expr):
+    if isinstance(expr, ast.Attribute):
+        if _is_ast_name_it(expr.value):
+            return expr.attr
+        else:
+            raise ValueError(
+                f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+            )
+    elif isinstance(expr, ast.Subscript):
+        if _is_ast_name_it(expr.value) and isinstance(expr.slice, ast.Index):
+            if isinstance(expr.slice.value, ast.Constant):
+                return expr.slice.value.value
+            elif isinstance(expr.slice.value, ast.Str):
+                return expr.slice.value.s
+        else:
+            raise ValueError(
+                f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+            )
+    else:
+        raise ValueError(
+            f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
+        )
+
+
+def _is_ast_name_it(expr):
+    return isinstance(expr, ast.Name) and expr.id == "it"
