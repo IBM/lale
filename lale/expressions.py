@@ -209,11 +209,37 @@ class Expr:
                 result = result[1:-1]
         return result
 
-    def __truediv__(self, other):
-        return _make_call_expr("ratio", self, other)
+    def __add__(self, other):
+        return _make_binop(ast.Add(), self._expr, other)
 
     def __sub__(self, other):
-        return _make_call_expr("subtract", self, other)
+        return _make_binop(ast.Sub(), self._expr, other)
+
+    def __mul__(self, other):
+        return _make_binop(ast.Mult(), self._expr, other)
+
+    def __truediv__(self, other):
+        return _make_binop(ast.Div(), self._expr, other)
+
+    def __floordiv__(self, other):
+        return _make_binop(ast.FloorDiv(), self._expr, other)
+
+    def __mod__(self, other):
+        return _make_binop(ast.Mod(), self._expr, other)
+
+    def __pow__(self, other):
+        return _make_binop(ast.Pow(), self._expr, other)
+
+
+def _make_binop(op, left, other):
+    if isinstance(other, Expr):
+        e = ast.BinOp(left=left, op=op, right=other._expr)
+        return Expr(e)
+    elif other is not None:
+        e = ast.BinOp(left=left, op=op, right=ast.Constant(value=other))
+        return Expr(e)
+    else:
+        return False
 
 
 def _make_ast_expr(arg: Union[Expr, int, float, str, AstExpr]) -> AstExpr:
@@ -370,10 +396,6 @@ def window_variance_trend(series: Expr, size: int) -> Expr:
     return _make_call_expr("window_variance_trend", series, size)
 
 
-def string_indexer(subject: Expr) -> Expr:
-    return _make_call_expr("string_indexer", subject)
-
-
 def first(group: Expr) -> Expr:
     return _make_call_expr("first", group)
 
@@ -400,14 +422,6 @@ def asc(column: Union[Expr, str]) -> Expr:
 
 def desc(column: Union[Expr, str]) -> Expr:
     return _make_call_expr("desc", column)
-
-
-def ratio(num: Expr, denom: Expr) -> Expr:
-    return _make_call_expr("ratio", num, denom)
-
-
-def subtract(op1: Expr, op2: Expr) -> Expr:
-    return _make_call_expr("subtract", op1, op2)
 
 
 it = Expr(ast.Name(id="it"))

@@ -1123,6 +1123,25 @@ def _is_ast_subs_or_attr(expr):
     return isinstance(expr, ast.Subscript) or isinstance(expr, ast.Attribute)
 
 
+def _is_ast_call(expr):
+    return isinstance(expr, ast.Call)
+
+
+def _is_ast_name(expr):
+    return isinstance(expr, ast.Name)
+
+
+def _is_ast_name_it(expr):
+    return isinstance(expr, ast.Name) and expr.id == "it"
+
+
+def _ast_func_id(expr):
+    if isinstance(expr, ast.Name):
+        return expr.id
+    else:
+        raise ValueError("function name expected")
+
+
 def _is_df(d):
     return isinstance(d, pd.DataFrame) or isinstance(d, spark_df)
 
