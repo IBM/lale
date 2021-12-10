@@ -55,9 +55,7 @@ from lale.expressions import (
     min,
     minute,
     month,
-    ratio,
     replace,
-    subtract,
     sum,
 )
 from lale.helpers import _is_pandas_df, _is_spark_df
@@ -1802,32 +1800,6 @@ class TestMap(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = trained.transform(df)
 
-    def test_transform_ratio_map_function_name(self):
-        d = {
-            "height": [3, 4, 6, 3, 5],
-            "weight": [30, 50, 170, 40, 130],
-            "status": [0, 1, 1, 0, 1],
-        }
-        df = pd.DataFrame(data=d)
-        trainable = Map(columns={"ratio_h_w": ratio(it.height, it.weight)})
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 1))
-        self.assertEqual(transformed_df["ratio_h_w"][0], 0.1)
-
-    def test_transform_ratio_map_function_name_subscript(self):
-        d = {
-            "height": [3, 4, 6, 3, 5],
-            "weight": [30, 50, 170, 40, 130],
-            "status": [0, 1, 1, 0, 1],
-        }
-        df = pd.DataFrame(data=d)
-        trainable = Map(columns={"ratio_h_w": ratio(it["height"], it.weight)})
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 1))
-        self.assertEqual(transformed_df["ratio_h_w"][0], 0.1)
-
     def test_transform_subtract_map(self):
         d = {
             "height": [3, 4, 6, 3, 5],
@@ -1865,32 +1837,6 @@ class TestMap(unittest.TestCase):
         trained = trainable.fit(df)
         with self.assertRaises(ValueError):
             _ = trained.transform(df)
-
-    def test_transform_subtract_map_function_name(self):
-        d = {
-            "height": [3, 4, 6, 3, 5],
-            "weight": [30, 50, 170, 40, 130],
-            "status": [0, 1, 1, 0, 1],
-        }
-        df = pd.DataFrame(data=d)
-        trainable = Map(columns={"subtract_h_w": subtract(it.height, it.weight)})
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 1))
-        self.assertEqual(transformed_df["subtract_h_w"][0], -27)
-
-    def test_transform_subtract_map_function_name_subscript(self):
-        d = {
-            "height": [3, 4, 6, 3, 5],
-            "weight": [30, 50, 170, 40, 130],
-            "status": [0, 1, 1, 0, 1],
-        }
-        df = pd.DataFrame(data=d)
-        trainable = Map(columns={"subtract_h_w": subtract(it["height"], it.weight)})
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-        self.assertEqual(transformed_df.shape, (5, 1))
-        self.assertEqual(transformed_df["subtract_h_w"][0], -27)
 
     def test_transform_binops(self):
         d = {
@@ -2491,34 +2437,6 @@ class TestMapSpark(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = trained.transform(df)
 
-    def test_transform_ratio_map_function_name(self):
-        d = {
-            "height": [3, 4, 6, 3, 5],
-            "weight": [30, 50, 170, 40, 130],
-            "status": [0, 1, 1, 0, 1],
-        }
-        df = pd.DataFrame(data=d)
-        sdf = self.sqlCtx.createDataFrame(df)
-        trainable = Map(columns={"ratio_h_w": ratio(it.height, it.weight)})
-        trained = trainable.fit(sdf)
-        transformed_df = trained.transform(sdf)
-        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 1))
-        self.assertEqual(transformed_df.collect()[0]["ratio_h_w"], 0.1)
-
-    def test_transform_ratio_map_function_name_subscript(self):
-        d = {
-            "height": [3, 4, 6, 3, 5],
-            "weight": [30, 50, 170, 40, 130],
-            "status": [0, 1, 1, 0, 1],
-        }
-        df = pd.DataFrame(data=d)
-        sdf = self.sqlCtx.createDataFrame(df)
-        trainable = Map(columns={"ratio_h_w": ratio(it["height"], it.weight)})
-        trained = trainable.fit(sdf)
-        transformed_df = trained.transform(sdf)
-        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 1))
-        self.assertEqual(transformed_df.collect()[0]["ratio_h_w"], 0.1)
-
     def test_transform_subtract_map(self):
         d = {
             "height": [3, 4, 6, 3, 5],
@@ -2560,7 +2478,7 @@ class TestMapSpark(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = trained.transform(df)
 
-    def test_transform_subtract_map_function_name(self):
+    def test_transform_binops(self):
         d = {
             "height": [3, 4, 6, 3, 5],
             "weight": [30, 50, 170, 40, 130],
@@ -2568,13 +2486,58 @@ class TestMapSpark(unittest.TestCase):
         }
         df = pd.DataFrame(data=d)
         sdf = self.sqlCtx.createDataFrame(df)
-        trainable = Map(columns={"subtraction_h_w": subtract(it.height, it.weight)})
+        trainable = Map(
+            columns={
+                "add_h_w": it["height"] + it.weight,
+                "add_h_2": it["height"] + 2,
+                "sub_h_w": it["height"] - it.weight,
+                "sub_h_2": it["height"] - 2,
+                "mul_h_w": it["height"] * it.weight,
+                "mul_h_2": it["height"] * 2,
+                "div_h_w": it["height"] / it.weight,
+                "div_h_2": it["height"] / 2,
+                "floor_div_h_w": it["height"] // it.weight,
+                "floor_div_h_2": it["height"] // 2,
+                "mod_h_w": it["height"] % it.weight,
+                "mod_h_2": it["height"] % 2,
+                "pow_h_w": it["height"] ** it.weight,
+                "pow_h_2": it["height"] ** 2,
+            }
+        )
         trained = trainable.fit(sdf)
         transformed_df = trained.transform(sdf)
-        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 1))
-        self.assertEqual(transformed_df.collect()[0]["subtraction_h_w"], -27)
+        self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 14))
+        transformed_df = transformed_df.toPandas()
+        self.assertEqual(
+            transformed_df["add_h_w"][1], df["height"][1] + df["weight"][1]
+        )
+        self.assertEqual(transformed_df["add_h_2"][1], df["height"][1] + 2)
+        self.assertEqual(
+            transformed_df["sub_h_w"][1], df["height"][1] - df["weight"][1]
+        )
+        self.assertEqual(transformed_df["sub_h_2"][1], df["height"][1] - 2)
+        self.assertEqual(
+            transformed_df["mul_h_w"][1], df["height"][1] * df["weight"][1]
+        )
+        self.assertEqual(transformed_df["mul_h_2"][1], df["height"][1] * 2)
+        self.assertEqual(
+            transformed_df["div_h_w"][1], df["height"][1] / df["weight"][1]
+        )
+        self.assertEqual(transformed_df["div_h_2"][1], df["height"][1] / 2)
+        self.assertEqual(
+            transformed_df["floor_div_h_w"][1], df["height"][1] // df["weight"][1]
+        )
+        self.assertEqual(transformed_df["floor_div_h_2"][1], df["height"][1] // 2)
+        self.assertEqual(
+            transformed_df["mod_h_w"][1], df["height"][1] % df["weight"][1]
+        )
+        self.assertEqual(transformed_df["mod_h_2"][1], df["height"][1] % 2)
+        # Spark and Python have a different semantics
+        # self.assertEqual(transformed_df["pow_h_w"][1], df["height"][1] ** df["weight"][1])
+        self.assertEqual(transformed_df["pow_h_w"][1], 4 ** 50)
+        self.assertEqual(transformed_df["pow_h_2"][1], df["height"][1] ** 2)
 
-    def test_transform_subtract_map_function_name_subscript(self):
+    def test_transform_arithmetic_expression(self):
         d = {
             "height": [3, 4, 6, 3, 5],
             "weight": [30, 50, 170, 40, 130],
@@ -2582,11 +2545,54 @@ class TestMapSpark(unittest.TestCase):
         }
         df = pd.DataFrame(data=d)
         sdf = self.sqlCtx.createDataFrame(df)
-        trainable = Map(columns={"subtract_h_w": subtract(it["height"], it.weight)})
+        trainable = Map(columns={"expr": (it["height"] + it.weight * 10) / 2})
         trained = trainable.fit(sdf)
         transformed_df = trained.transform(sdf)
         self.assertEqual((transformed_df.count(), len(transformed_df.columns)), (5, 1))
-        self.assertEqual(transformed_df.collect()[0]["subtract_h_w"], -27)
+        transformed_df = transformed_df.collect()
+        self.assertEqual(
+            transformed_df[2]["expr"], (df["height"][2] + df["weight"][2] * 10) / 2
+        )
+
+    def test_transform_nested_expressions(self):
+        d = {
+            "month": ["jan", "feb", "mar", "may", "aug"],
+        }
+        df = pd.DataFrame(data=d)
+        sdf = self.sqlCtx.createDataFrame(df)
+        month_map = {
+            "jan": "2021-01-01",
+            "feb": "2021-02-01",
+            "mar": "2021-03-01",
+            "arp": "2021-04-01",
+            "may": "2021-05-01",
+            "jun": "2021-06-01",
+            "jul": "2021-07-01",
+            "aug": "2021-08-01",
+            "sep": "2021-09-01",
+            "oct": "2021-10-01",
+            "nov": "2021-11-01",
+            "dec": "2021-12-01",
+        }
+        trainable = Map(
+            columns={
+                "date": replace(it.month, month_map),
+                "month_id": month(replace(it.month, month_map)),
+                "next_month_id": identity(
+                    month(replace(it.month, month_map)) % 12 + 1  # type: ignore
+                ),
+            }
+        )  # type: ignore
+        trained = trainable.fit(sdf)
+        transformed_df = trained.transform(sdf)
+        transformed_df = transformed_df.collect()
+        self.assertEqual(transformed_df[0]["date"], "2021-01-01")
+        self.assertEqual(transformed_df[1]["date"], "2021-02-01")
+        self.assertEqual(transformed_df[2]["month_id"], 3)
+        self.assertEqual(transformed_df[3]["month_id"], 5)
+        self.assertEqual(transformed_df[0]["next_month_id"], 2)
+        self.assertEqual(transformed_df[3]["next_month_id"], 6)
+        self.assertEqual(transformed_df[4]["next_month_id"], 9)
 
     def test_transform_binops(self):
         d = {

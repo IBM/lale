@@ -624,6 +624,106 @@ class Operator(metaclass=AbstractVisitorMeta):
         cp = clone(self)
         return cp
 
+    def replace(
+        self, original_op: "Operator", replacement_op: "Operator"
+    ) -> "Operator":
+        """Replaces an original operator with a replacement operator for the given operator.
+        Replacement also occurs for all operators within the given operator's steps (i.e. pipelines and
+        choices). If a planned operator is given as original_op, all derived operators (including
+        trainable and trained versions) will be replaced. Otherwise, only the exact operator
+        instance will be replaced.
+
+        Parameters
+        ----------
+        original_op :
+            Operator to replace within given operator. If operator is a planned operator,
+            all derived operators (including trainable and trained versions) will be
+            replaced. Otherwise, only the exact operator instance will be replaced.
+
+        replacement_op :
+            Operator to replace the original with.
+
+        Returns
+        -------
+        modified_operator :
+            Modified operator where original operator is replaced with replacement throughout.
+        """
+
+        def _replace(subject, original_op, replacement_op):
+
+            # if operator has steps, recursively iterate through steps and recombine
+            if hasattr(subject, "steps"):
+                new_steps: List[Operator] = []
+                if isinstance(subject, BasePipeline):
+                    # first convert pipeline edges to index-based representation
+                    index_edges = []
+                    for edge in subject.edges():
+                        index_edges.append(
+                            (
+                                subject.steps().index(edge[0]),
+                                subject.steps().index(edge[1]),
+                            )
+                        )
+
+                    for step in subject.steps():
+                        new_steps.append(_replace(step, original_op, replacement_op))
+
+                    # use previous index-based representation to reconstruct edges
+                    new_edges: List[Tuple[Operator, Operator]] = []
+                    for index_tuple in index_edges:
+                        new_edges.append(
+                            (new_steps[index_tuple[0]], new_steps[index_tuple[1]])
+                        )
+
+                    return make_pipeline_graph(new_steps, new_edges)
+
+                elif isinstance(subject, OperatorChoice):
+                    for step in subject.steps():
+                        new_steps.append(_replace(step, original_op, replacement_op))
+                    return make_choice(*new_steps)
+
+                else:
+                    raise NotImplementedError(
+                        "replace() needs to implement recombining this operator with steps"
+                    )
+            else:
+                # base case for recursion: operator with no steps, returns replacement if applicable, original otherwise
+                if not isinstance(original_op, TrainableOperator):
+                    # is planned operator, so replace any matching downstream operator
+                    if isinstance(subject, original_op):  # type: ignore
+                        return replacement_op
+                else:
+                    # is trainable or trained operator, only check exact instance match
+                    if subject == original_op:
+                        return replacement_op
+
+                # special case of subject being in a collection
+                if isinstance(subject, list):
+                    return [_replace(s, original_op, replacement_op) for s in subject]
+                elif isinstance(subject, tuple):
+                    return tuple(
+                        [_replace(s, original_op, replacement_op) for s in subject]
+                    )
+                elif isinstance(subject, dict):
+                    return {
+                        k: _replace(v, original_op, replacement_op)
+                        for k, v in subject.items()
+                    }
+
+                # special case of hyperparams containing operators, usually referring to an estimator
+                if hasattr(subject, "hyperparams") and subject.hyperparams():
+                    modified_hyperparams = subject.hyperparams().copy()
+                    for hyperparam, param_value in modified_hyperparams.items():
+                        modified_hyperparams[hyperparam] = _replace(
+                            param_value, original_op, replacement_op
+                        )
+
+                    return subject(**modified_hyperparams)
+
+            return subject
+
+        return _replace(self, original_op, replacement_op)  # type: ignore
+
     def with_params(self, **impl_params) -> "Operator":
         """This implements a functional version of set_params
         which returns a new operator instead of modifying the original
@@ -1937,18 +2037,6 @@ class IndividualOp(Operator):
             return False
         return self._impl_class() == other._impl_class()
 
-    # def customize_schema(
-    #     self,
-    #     schemas: Optional[Schema] = None,
-    #     relevantToOptimizer: Optional[List[str]] = None,
-    #     constraint: Union[Schema, JSON_TYPE, None] = None,
-    #     tags: Optional[Dict] = None,
-    #     **kwargs: Union[Schema, JSON_TYPE, None],
-    # ) -> "IndividualOp":
-    #     return customize_schema(
-    #         self, schemas, relevantToOptimizer, constraint, tags, **kwargs
-    #     )
-
     def _propose_fixed_hyperparams(
         self, key_candidates, hp_all, hp_schema, max_depth=2
     ):
@@ -2294,7 +2382,9 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Union[Schema, JSON_TYPE, None] = None,
+        constraint: Union[
+            Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
+        ] = None,
         tags: Optional[Dict] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
@@ -2723,7 +2813,9 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Union[Schema, JSON_TYPE, None] = None,
+        constraint: Union[
+            Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
+        ] = None,
         tags: Optional[Dict] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
@@ -3020,7 +3112,9 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         self,
         schemas: Optional[Schema] = None,
         relevantToOptimizer: Optional[List[str]] = None,
-        constraint: Union[Schema, JSON_TYPE, None] = None,
+        constraint: Union[
+            Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
+        ] = None,
         tags: Optional[Dict] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
@@ -5211,7 +5305,7 @@ def customize_schema(
     op: CustomizeOpType,
     schemas: Optional[Schema] = None,
     relevantToOptimizer: Optional[List[str]] = None,
-    constraint: Union[Schema, JSON_TYPE, None] = None,
+    constraint: Union[Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None] = None,
     tags: Optional[Dict] = None,
     set_as_available: bool = False,
     **kwargs: Union[Schema, JSON_TYPE, None],
@@ -5275,9 +5369,16 @@ def customize_schema(
                 "relevantToOptimizer"
             ] = relevantToOptimizer
         if constraint is not None:
-            if isinstance(constraint, Schema):
-                constraint = constraint.schema
-            op._schemas["properties"]["hyperparams"]["allOf"].append(constraint)
+            cl: List[Union[Schema, JSON_TYPE]]
+            if isinstance(constraint, list):
+                cl = constraint
+            else:
+                cl = [constraint]
+
+            for c in cl:
+                if isinstance(c, Schema):
+                    c = c.schema
+                op._schemas["properties"]["hyperparams"]["allOf"].append(c)
         if tags is not None:
             assert isinstance(tags, dict)
             op._schemas["tags"] = tags

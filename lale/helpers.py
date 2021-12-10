@@ -559,64 +559,13 @@ def create_instance_from_hyperopt_search_space(
         assert False, f"Unknown operator type: {type(lale_object)}"
 
 
-def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
+def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=False):
     # For all pipeline steps, identify equivalent lale wrappers if present,
     # if not, call make operator on sklearn classes and create a lale pipeline.
-    # def get_equivalent_lale_op(sklearn_obj, fitted):
-    import lale.operators
-    import lale.type_checking
+    # For higher order operators, we allow hyperparameters to be trainable even with
+    # fitted is True. This is achieved using the is_hyperparam flag.
 
-    sklearn_obj = sklearn_pipeline
-    if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and fitted:
-        if hasattr(sklearn_obj, "_trained"):
-            return sklearn_obj._trained
-        elif not hasattr(
-            sklearn_obj._impl_instance(), "fit"
-        ):  # Operators such as NoOp do not have a fit, so return them as is.
-            return sklearn_obj
-        else:
-            raise ValueError(
-                """The input pipeline has an operator that is not trained and fitted is set to True,
-                please pass fitted=False if you want a trainable pipeline as output."""
-            )
-    elif isinstance(sklearn_obj, lale.operators.Operator):
-        return sklearn_obj
-
-    if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
-        nested_pipeline_steps = sklearn_pipeline.named_steps.values()
-        nested_pipeline_lale_objects = [
-            import_from_sklearn_pipeline(nested_pipeline_step, fitted=fitted)
-            for nested_pipeline_step in nested_pipeline_steps
-        ]
-        lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
-    elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
-        transformer_list = sklearn_pipeline.transformer_list
-        concat_predecessors = [
-            import_from_sklearn_pipeline(transformer[1], fitted=fitted)
-            for transformer in transformer_list
-        ]
-        lale_op_obj = lale.operators.make_union(*concat_predecessors)
-    else:
-        # Validate that the sklearn_obj is a valid sklearn-compatible object
-        if sklearn_obj is None or not hasattr(sklearn_obj, "get_params"):
-            raise ValueError(
-                f"The input pipeline has a step {sklearn_obj} that is not scikit-learn compatible."
-            )
-        orig_hyperparams = sklearn_obj.get_params(deep=False)
-        higher_order = False
-        for hp_name, hp_val in orig_hyperparams.items():
-            higher_order = higher_order or hasattr(hp_val, "get_params")
-        if higher_order:
-            hyperparams = {}
-            for hp_name, hp_val in orig_hyperparams.items():
-                if hasattr(hp_val, "get_params"):
-                    nested_op = import_from_sklearn_pipeline(hp_val, fitted)
-                    hyperparams[hp_name] = nested_op
-                else:
-                    hyperparams[hp_name] = hp_val
-        else:
-            hyperparams = orig_hyperparams
-
+    def find_lale_wrapper(sklearn_obj):
         module_names = [
             "lale.lib.sklearn",
             "lale.lib.autoai_libs",
@@ -646,7 +595,90 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True):
             except AttributeError:
                 continue
         else:
-            class_ = lale.operators.make_operator(sklearn_obj, name=class_name)
+            return lale_wrapper_found, sklearn_obj
+        return lale_wrapper_found, class_
+
+    import lale.operators
+    import lale.type_checking
+
+    sklearn_obj = sklearn_pipeline
+
+    if isinstance(sklearn_obj, lale.operators.TrainableIndividualOp) and fitted:
+        if hasattr(sklearn_obj, "_trained"):
+            return sklearn_obj._trained
+        elif is_hyperparam or not hasattr(
+            sklearn_obj._impl_instance(), "fit"
+        ):  # Operators such as NoOp do not have a fit, so return them as is.
+            return sklearn_obj
+        else:
+            raise ValueError(
+                f"""The input pipeline has an operator {sklearn_obj} that is not trained and fitted is set to True,
+                please pass fitted=False if you want a trainable pipeline as output."""
+            )
+    elif isinstance(sklearn_obj, lale.operators.Operator):
+        return sklearn_obj
+
+    if isinstance(sklearn_pipeline, sklearn.pipeline.Pipeline):
+        nested_pipeline_steps = sklearn_pipeline.named_steps
+        nested_pipeline_lale_named_steps = [
+            (
+                nested_pipeline_step[0],
+                import_from_sklearn_pipeline(
+                    nested_pipeline_step[1], fitted=fitted, is_hyperparam=is_hyperparam
+                ),
+            )
+            for nested_pipeline_step in nested_pipeline_steps.items()
+        ]
+        if type(sklearn_pipeline) == sklearn.pipeline.Pipeline:
+            nested_pipeline_lale_objects = [
+                nested_pipeline_lale_named_step[1]
+                for nested_pipeline_lale_named_step in nested_pipeline_lale_named_steps
+            ]
+            lale_op_obj = lale.operators.make_pipeline(*nested_pipeline_lale_objects)
+        else:
+            lale_wrapper_found, wrapper_class = find_lale_wrapper(sklearn_pipeline)
+            if lale_wrapper_found:
+                # This is a custom subclass of sklearn pipeline, so use the wrapper class
+                # instead of creating a lale pipeline
+                # We assume it has a hyperparameter `steps`.
+                lale_op_obj = wrapper_class(steps=nested_pipeline_lale_named_steps)
+            else:  # no conversion to lale if a wrapper is not found for a subclass of pipeline
+                return sklearn_pipeline
+    elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
+        transformer_list = sklearn_pipeline.transformer_list
+        concat_predecessors = [
+            import_from_sklearn_pipeline(
+                transformer[1], fitted=fitted, is_hyperparam=is_hyperparam
+            )
+            for transformer in transformer_list
+        ]
+        lale_op_obj = lale.operators.make_union(*concat_predecessors)
+    else:
+        # Validate that the sklearn_obj is a valid sklearn-compatible object
+        if sklearn_obj is None or not hasattr(sklearn_obj, "get_params"):
+            raise ValueError(
+                f"The input pipeline has a step {sklearn_obj} that is not scikit-learn compatible."
+            )
+        orig_hyperparams = sklearn_obj.get_params(deep=False)
+        higher_order = False
+        for hp_name, hp_val in orig_hyperparams.items():
+            higher_order = higher_order or hasattr(hp_val, "get_params")
+        if higher_order:
+            hyperparams = {}
+            for hp_name, hp_val in orig_hyperparams.items():
+                if hasattr(hp_val, "get_params"):
+                    nested_op = import_from_sklearn_pipeline(
+                        hp_val, fitted, is_hyperparam=True
+                    )  # allow nested_op to be trainable
+                    hyperparams[hp_name] = nested_op
+                else:
+                    hyperparams[hp_name] = hp_val
+        else:
+            hyperparams = orig_hyperparams
+
+        lale_wrapper_found, class_ = find_lale_wrapper(sklearn_obj)
+        if not lale_wrapper_found:
+            return class_  # Return the original object
 
         if (
             not fitted

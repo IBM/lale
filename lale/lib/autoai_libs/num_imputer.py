@@ -20,18 +20,13 @@ import lale.operators
 
 
 class _NumImputerImpl:
-    def __init__(self, strategy, missing_values, activate_flag=True):
-        self._hyperparams = {
-            "strategy": strategy,
-            "missing_values": missing_values,
-            "activate_flag": activate_flag,
-        }
+    def __init__(self, *args, **kwargs):
         self._wrapped_model = autoai_libs.transformers.exportable.NumImputer(
-            **self._hyperparams
+            *args, **kwargs
         )
 
-    def fit(self, X, y=None):
-        self._wrapped_model.fit(X, y)
+    def fit(self, X, y=None, **fit_params):
+        self._wrapped_model.fit(X, y, **fit_params)
         return self
 
     def transform(self, X):
@@ -118,10 +113,10 @@ _output_transform_schema = {
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": """Operator from `autoai_libs`_. Missing value imputation for numeric features, currently internally uses the sklearn Imputer_.
+    "description": """Operator from `autoai_libs`_. Missing value imputation for numerical features, currently internally uses the sklearn SimpleImputer_.
 
 .. _`autoai_libs`: https://pypi.org/project/autoai-libs
-.. _Imputer: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.Imputer.html#sklearn-preprocessing-imputer""",
+.. _SimpleImputer: https://scikit-learn.org/0.20/modules/generated/sklearn.impute.SimpleImputer.html#sklearn-impute-simpleimputer""",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.autoai_libs.num_imputer.html",
     "import_from": "autoai_libs.transformers.exportable",
     "type": "object",
@@ -134,7 +129,92 @@ _combined_schemas = {
     },
 }
 
-
 NumImputer = lale.operators.make_operator(_NumImputerImpl, _combined_schemas)
+
+autoai_libs_version_str = getattr(autoai_libs, "__version__", None)
+if autoai_libs_version_str is not None:
+    import typing
+
+    from packaging import version
+
+    from lale.schemas import AnyOf, Array, Enum, Float, Not, Null, Object, String
+
+    autoai_libs_version = version.parse(autoai_libs_version_str)
+
+    if autoai_libs_version >= version.Version("1.12.18"):
+        NumImputer = typing.cast(
+            lale.operators.PlannedIndividualOp,
+            NumImputer.customize_schema(
+                set_as_available=True,
+                constraint=[
+                    AnyOf(
+                        desc="fill_value and fill_values cannot both be specified",
+                        forOptimizer=False,
+                        types=[Object(fill_value=Null()), Object(fill_values=Null())],
+                    ),
+                    AnyOf(
+                        desc="if strategy=constants, the fill_values cannot be None",
+                        forOptimizer=False,
+                        types=[
+                            Object(strategy=Not(Enum(["constants"]))),
+                            Not(Object(fill_values=Null())),
+                        ],
+                    ),
+                ],
+                fill_value=AnyOf(
+                    types=[Float(), String(), Enum(values=[np.nan]), Null()],
+                    desc="The placeholder for fill value used in constant strategy",
+                    default=None,
+                ),
+                fill_values=AnyOf(
+                    types=[
+                        Array(
+                            items=AnyOf(
+                                types=[Float(), String(), Enum(values=[np.nan]), Null()]
+                            )
+                        ),
+                        Null(),
+                    ],
+                    desc="The placeholder for fill values used in constants strategy",
+                    default=None,
+                ),
+                missing_values=AnyOf(
+                    types=[Float(), String(), Enum(values=[np.nan]), Null()],
+                    desc="The placeholder for the missing values. All occurrences of missing_values will be imputed.",
+                    default=np.nan,
+                ),
+                sklearn_version_family=Enum(
+                    desc="The sklearn version for backward compatibiity with versions 019 and 020dev. Currently unused.",
+                    values=["20", "21", "22", "23", "24", None, "1"],
+                    default=None,
+                ),
+                strategy=AnyOf(
+                    types=[
+                        Enum(
+                            values=["mean"],
+                            desc="Replace using the mean along each column. Can only be used with numeric data.",
+                        ),
+                        Enum(
+                            values=["median"],
+                            desc="Replace using the median along each column. Can only be used with numeric data.",
+                        ),
+                        Enum(
+                            values=["most_frequent"],
+                            desc="Replace using most frequent value each column. Used with strings or numeric data.",
+                        ),
+                        Enum(
+                            values=["constant"],
+                            desc="Replace with fill_value. Can be used with strings or numeric data.",
+                        ),
+                        Enum(
+                            values=["constants"],
+                            desc="Replace missing values in columns with values in fill_values list. Can be used with list of strings or numeric data.",
+                        ),
+                    ],
+                    desc="The imputation strategy.",
+                    default="mean",
+                ),
+            ),
+        )
 
 lale.docstrings.set_docstrings(NumImputer)
