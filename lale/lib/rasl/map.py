@@ -19,8 +19,6 @@ import pandas as pd
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.eval_pandas_df import eval_expr_pandas_df
-from lale.eval_spark_df import eval_expr_spark_df
 from lale.helpers import (
     _is_ast_call,
     _is_ast_name,
@@ -30,70 +28,6 @@ from lale.helpers import (
 )
 from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
 from lale.lib.rasl._eval_spark_df import eval_expr_spark_df
-
-try:
-    # noqa in the imports here because those get used dynamically and flake fails.
-    from pyspark.sql.functions import col as spark_col  # noqa
-
-    spark_installed = True
-except ImportError:
-    spark_installed = False
-
-
-def _new_column_name(name, expr):
-    def infer_new_name(expr):
-        if (
-            _is_ast_call(expr._expr)
-            and _is_ast_name(expr._expr.func)
-            and expr._expr.func.id
-            in [
-                "replace",
-                "day_of_month",
-                "day_of_week",
-                "day_of_year",
-                "hour",
-                "minute",
-                "month",
-            ]
-            and _is_ast_attribute(expr._expr.args[0])
-        ):
-            return expr._expr.args[0].attr
-        else:
-            raise ValueError(
-                """New name of the column to be renamed cannot be None or empty. You may want to use a dictionary
-                to specify the new column name as the key, and the expression as the value."""
-            )
-
-    if name is None or not name.strip():
-        return infer_new_name(expr)
-    else:
-        return name
-
-
-class _AccessedColumns(ast.NodeVisitor):
-    def __init__(self):
-        self.accessed = set()
-
-    def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name_it(node.value):
-            self.accessed.add(node.attr)
-        else:
-            raise ValueError("Unimplemented expression")
-
-    def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name_it(node.value) and isinstance(node.slice, ast.Index):
-            if isinstance(node.slice.value, ast.Constant):
-                self.accessed.add(node.slice.value.value)
-            elif isinstance(node.slice.value, ast.Str):
-                self.accessed.add(node.slice.value.s)
-        else:
-            raise ValueError("Unimplemented expression")
-
-
-def accessed_columns(expr):
-    visitor = _AccessedColumns()
-    visitor.visit(expr._expr)
-    return visitor.accessed
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.
@@ -308,7 +242,7 @@ _output_transform_schema = {
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Relational algebra map operator.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.map.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.map.html",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

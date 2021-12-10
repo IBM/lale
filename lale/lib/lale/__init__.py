@@ -95,6 +95,8 @@ Functions:
 .. _`spark_explainer`: lale.lib.lale.spark_explainer.html
 """
 
+from lale.lib.rasl import Map
+
 from .aggregate import Aggregate
 from .alias import Alias
 
@@ -117,7 +119,6 @@ from .halving_grid_search_cv import HalvingGridSearchCV
 from .hyperopt import Hyperopt
 from .identity_wrapper import IdentityWrapper
 from .join import Join
-from .map import Map
 from .no_op import NoOp
 from .observing import Observing
 from .optimize_last import OptimizeLast

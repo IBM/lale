@@ -18,7 +18,8 @@ import lale.docstrings
 import lale.operators
 from lale.expressions import Expr, it, max, min
 from lale.helpers import _is_pandas_df, _is_spark_df
-from lale.lib.lale import Aggregate, Map
+from lale.lib.lale.aggregate import Aggregate
+from lale.lib.rasl.map import Map
 from lale.lib.sklearn import min_max_scaler
 
 
@@ -67,9 +68,7 @@ class _MinMaxScalerImpl:
                 raise ValueError(
                     "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
                 )
-            op = (it[c] - Expr(ast.Num(X_min))) / Expr(
-                ast.Num(X_max - X_min)
-            )  # TODO: the expression language is not expressive enough to handle this case
+            op = (it[c] - Expr(ast.Num(X_min))) / Expr(ast.Num(X_max - X_min))
             ops.update({f"{c}_scaled": op})
         transformer = Map(columns=ops).fit(X)
         X_transformed = transformer.transform(X)

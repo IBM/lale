@@ -12,4 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from .map import Map
 from .min_max_scaler import MinMaxScaler
