@@ -66,11 +66,11 @@ class _SparkEvaluator(ast.NodeVisitor):
 
     def visit_Attribute(self, node: ast.Attribute):
         column_name = _it_column(node)
-        self.result = col(column_name)
+        self.result = col(column_name)  # type: ignore
 
     def visit_Subscript(self, node: ast.Subscript):
         column_name = _it_column(node)
-        self.result = col(column_name)
+        self.result = col(column_name)  # type: ignore
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)
