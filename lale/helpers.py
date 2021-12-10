@@ -51,13 +51,10 @@ try:
 except ImportError:
     torch_installed = False
 
-try:
+spark_loader = importlib.util.find_spec("pyspark")
+spark_installed = spark_loader is not None
+if spark_installed:
     from pyspark.sql.dataframe import DataFrame as spark_df
-
-    spark_installed = True
-
-except ImportError:
-    spark_installed = False
 
 logger = logging.getLogger(__name__)
 
