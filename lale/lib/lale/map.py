@@ -19,7 +19,7 @@ import pandas as pd
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.expressions import AstExpr, _it_column
+from lale.expressions import _it_column
 from lale.helpers import (
     _is_ast_attribute,
     _is_ast_call,
