@@ -23,7 +23,6 @@ from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 class TestMinMaxScaler(unittest.TestCase):
     def setUp(self):
         self.go_sales = fetch_go_sales_dataset()
-        # self.go_sales_spark = fetch_go_sales_dataset("spark")
 
     def test_fit(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -32,6 +31,47 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_trainned = sk_scaler.fit(data)
         rasl_trainned = rasl_scaler.fit(data)
+        self.assertTrue((sk_trainned.data_min_ == rasl_trainned.impl.data_min_).all())
+        self.assertTrue((sk_trainned.data_max_ == rasl_trainned.impl.data_max_).all())
+        self.assertTrue(
+            (sk_trainned.data_range_ == rasl_trainned.impl.data_range_).all()
+        )
+        self.assertEqual(sk_trainned.n_features_in_, rasl_trainned.impl.n_features_in_)
+        # self.assertEqual(sk_trainned.feature_names_in_, rasl_trainned.impl.feature_names_in_)
+
+    def test_transform(self):
+        columns = ["Product number", "Quantity", "Retailer code"]
+        data = self.go_sales[0][columns]
+        sk_scaler = SkMinMaxScaler()
+        rasl_scaler = RaslMinMaxScaler()
+        sk_trainned = sk_scaler.fit(data)
+        rasl_trainned = rasl_scaler.fit(data)
+        sk_transformed = sk_trainned.transform(data)
+        rasl_transformed = rasl_trainned.transform(data)
+        self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
+        self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
+        self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
+        self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
+        self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
+        self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
+        self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
+        self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
+        self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
+
+
+class TestMinMaxScalerSpark(unittest.TestCase):
+    def setUp(self):
+        self.go_sales = fetch_go_sales_dataset()
+        self.go_sales_spark = fetch_go_sales_dataset("spark")
+
+    def test_fit(self):
+        columns = ["Product number", "Quantity", "Retailer code"]
+        data = self.go_sales[0][columns]
+        data_spark = self.go_sales_spark[0][columns]
+        sk_scaler = SkMinMaxScaler()
+        rasl_scaler = RaslMinMaxScaler()
+        sk_trainned = sk_scaler.fit(data)
+        rasl_trainned = rasl_scaler.fit(data_spark)
         self.assertTrue((sk_trainned.data_min_ == rasl_trainned.impl.data_min_).all())
         self.assertTrue((sk_trainned.data_max_ == rasl_trainned.impl.data_max_).all())
         self.assertTrue(
