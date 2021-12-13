@@ -20,7 +20,13 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.expressions import _it_column
-from lale.helpers import _is_ast_call, _is_ast_name, _is_pandas_df, _is_spark_df
+from lale.helpers import (
+    _is_ast_attribute,
+    _is_ast_call,
+    _is_ast_name,
+    _is_pandas_df,
+    _is_spark_df,
+)
 from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
 from lale.lib.rasl._eval_spark_df import eval_expr_spark_df
 
@@ -48,6 +54,7 @@ def _new_column_name(name, expr):
                 "minute",
                 "month",
             ]
+            and _is_ast_attribute(expr._expr.args[0])
         ):
             return expr._expr.args[0].attr
         else:
