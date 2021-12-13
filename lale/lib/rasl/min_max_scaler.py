@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import numpy as np
+
 import lale.docstrings
 import lale.operators
 from lale.expressions import it, max, min
-from lale.helpers import _is_pandas_df, _is_spark_df
+from lale.helpers import _is_spark_df
 from lale.lib.lale.aggregate import Aggregate
 from lale.lib.rasl.map import Map
 from lale.lib.sklearn import min_max_scaler
@@ -34,38 +36,32 @@ class _MinMaxScalerImpl:
         agg.update({f"{c}_max": max(it[c]) for c in X.columns})
         aggregate = Aggregate(columns=agg)
         data_min_max = aggregate.transform(X)
-        self.data_min_max_ = data_min_max
-        if _is_pandas_df(X):
-            self.data_min_ = data_min_max.loc["min"].values
-            self.data_max_ = data_min_max.loc["max"].values
-        elif _is_spark_df(X):
-            # TODO
-            pass
-        else:
-            raise ValueError(
-                "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
-            )
-        self.data_range_ = self.data_max_ - self.data_min_  # type: ignore
+        if _is_spark_df(X):
+            data_min_max = data_min_max.toPandas()
         self.n_features_in_ = len(X.columns)
         self.feature_names_in_ = X.columns
-        return self  # should it be a copy?
+        data_min_ = np.zeros(shape=(self.n_features_in_))
+        data_max_ = np.zeros(shape=(self.n_features_in_))
+        for i, c in enumerate(X.columns):
+            data_min_[i] = data_min_max[f"{c}_min"]
+            data_max_[i] = data_min_max[f"{c}_max"]
+        self.data_min_ = np.array(data_min_)
+        self.data_max_ = np.array(data_max_)
+        self.data_range_ = self.data_max_ - self.data_min_
+        range_min, range_max = self.feature_range
+        self.scale_ = (range_max - range_min) / (data_max_ - data_min_)
+        self.min_ = range_min - data_min_ * self.scale_
+        return self
 
     def transform(self, X):
+        range_min, range_max = self.feature_range
         ops = {}
-        for c in X.columns:
-            min, max = self.feature_range
-            if _is_pandas_df(X):
-                X_min = self.data_min_max_[c]["min"]
-                X_max = self.data_min_max_[c]["max"]
-            elif _is_spark_df(X):
-                # TODO
-                pass
-            else:
-                raise ValueError(
-                    "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
-                )
-            op = (it[c] - X_min) / (X_max - X_min)
-            ops.update({f"{c}_scaled": op})
+        for i, c in enumerate(X.columns):
+            c_std = (it[c] - self.data_min_[i]) / (  # type: ignore
+                self.data_max_[i] - self.data_min_[i]  # type: ignore
+            )
+            c_scaled = c_std * (range_max - range_min) + range_min
+            ops.update({c: c_scaled})
         transformer = Map(columns=ops).fit(X)
         X_transformed = transformer.transform(X)
         return X_transformed
