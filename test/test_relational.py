@@ -586,180 +586,152 @@ class TestGroupBy(unittest.TestCase):
             _ = trainable.transform(go_products)
 
 
-# Testing aggregate operator for pandas dataframes
+# Testing Aggregate operator for both pandas and Spark
 class TestAggregate(unittest.TestCase):
-    # Get go_sales dataset in pandas dataframe
-    def setUp(self):
-        self.go_sales = fetch_go_sales_dataset()
-        trainable = GroupBy(by=[it["Product number"]])
-        self.go_daily_sales = self.go_sales[1]
-        assert get_table_name(self.go_daily_sales) == "go_daily_sales"
-        self.grouped_df_err = trainable.transform(self.go_daily_sales)
-        self.assertEqual(self.grouped_df_err.ngroups, 244)
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark"]
+        cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
-    def test_aggregate_1(self):
-        trainable = GroupBy(by=[it["Retailer code"]])
-        grouped_df = trainable.transform(self.go_daily_sales)
-        self.assertEqual(grouped_df.ngroups, 289)
-        trainable = Aggregate(columns={"min_quantity": min(it["Quantity"])})
-        aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.shape, (289, 1))
-        self.assertEqual(aggregated_df.loc[1698, "min_quantity"], 4)
-        self.assertEqual(aggregated_df.loc[1196, "min_quantity"], 1)
-
-    def test_aggregate_2(self):
-        trainable = GroupBy(by=[it["Product number"], it["Retailer code"]])
-        grouped_df = trainable.transform(self.go_daily_sales)
-        self.assertEqual(grouped_df.ngroups, 5000)
-        trainable = Aggregate(
+    def test_sales_not_grouped(self):
+        pipeline = Scan(table=it.go_daily_sales) >> Aggregate(
             columns={
-                "mean_quantity": mean(it["Quantity"]),
-                "max_usp": max(it["Unit sale price"]),
-                "count_quantity": count(it["Quantity"]),
+                "min_method_code": min(it["Order method code"]),
+                "max_method_code": max(it["Order method code"]),
             }
         )
-        aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.shape, (5000, 3))
-        self.assertEqual(
-            round(aggregated_df.loc[(130130, 1137), "mean_quantity"], 2), 8.74
-        )
-        self.assertEqual(aggregated_df.loc[(147160, 1192), "max_usp"], 32.85)
-        self.assertEqual(aggregated_df.loc[(147120, 1216), "count_quantity"], 52)
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(result.shape, (1, 2), tgt)
+            self.assertEqual(result.loc[0, "min_method_code"], 1, tgt)
+            self.assertEqual(result.loc[0, "max_method_code"], 7, tgt)
 
-    def test_aggregate_3(self):
-        trainable = GroupBy(by=[it["Product line"], it["Product brand"]])
-        go_products = self.go_sales[3]
-        assert get_table_name(go_products) == "go_products"
-        grouped_df = trainable.transform(go_products)
-        self.assertEqual(grouped_df.ngroups, 30)
-        trainable = Aggregate(
-            columns={
-                "sum_uc": sum(it["Unit cost"]),
-                "max_up": max(it["Unit price"]),
-                "max_uc": max(it["Unit cost"]),
-                "min_uc": min(it["Unit cost"]),
-                "min_up": min(it["Unit price"]),
-                "first_uc": first(it["Unit cost"]),
-            }
+    def test_sales_onekey_grouped(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Retailer code"]])
+            >> Aggregate(
+                columns={
+                    "retailer_code": first(it["Retailer code"]),
+                    "min_method_code": min(it["Order method code"]),
+                    "max_method_code": max(it["Order method code"]),
+                    "min_quantity": min(it["Quantity"]),
+                }
+            )
         )
-        aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.shape, (30, 6))
-        self.assertEqual(
-            aggregated_df.loc[("Golf Equipment", "Blue Steel"), "first_uc"], 41.2
-        )
-        self.assertEqual(
-            aggregated_df.loc[("Golf Equipment", "Blue Steel"), "max_uc"], 89.41
-        )
-        self.assertEqual(
-            aggregated_df.loc[("Outdoor Protection", "Sun"), "min_uc"], 1.79
-        )
-        self.assertEqual(
-            aggregated_df.loc[("Personal Accessories", "Edge"), "sum_uc"], 89.22
-        )
-        self.assertEqual(
-            aggregated_df.loc[("Mountaineering Equipment", "Granite"), "max_up"], 80
-        )
-        self.assertEqual(
-            aggregated_df.loc[("Personal Accessories", "Xray"), "min_up"], 125.4
-        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(result.shape, (289, 4))
+            row = result[result.retailer_code == 1201]
+            self.assertEqual(row.loc[row.index[0], "retailer_code"], 1201, tgt)
+            self.assertEqual(row.loc[row.index[0], "min_method_code"], 2, tgt)
+            self.assertEqual(row.loc[row.index[0], "max_method_code"], 6, tgt)
+            self.assertEqual(row.loc[row.index[0], "min_quantity"], 1, tgt)
 
-    def test_aggregate_no_col_error(self):
-        trainable = Aggregate(columns={"mean_quantity": mean(it["Quantity_1"])})
+    def test_products_onekey_grouped(self):
+        pipeline = (
+            Scan(table=it.go_products)
+            >> GroupBy(by=[it["Product line"]])
+            >> Aggregate(
+                columns={
+                    "line": first(it["Product line"]),
+                    "mean_uc": mean(it["Unit cost"]),
+                    "min_up": min(it["Unit price"]),
+                    "count_pc": count(it["Product color"]),
+                }
+            )
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(result.shape, (5, 4))
+            row = result[result.line == "Camping Equipment"]
+            self.assertEqual(row.loc[row.index[0], "line"], "Camping Equipment", tgt)
+            self.assertAlmostEqual(row.loc[row.index[0], "mean_uc"], 89.0, 1, tgt)
+            self.assertEqual(row.loc[row.index[0], "min_up"], 2.06, tgt)
+            self.assertEqual(row.loc[row.index[0], "count_pc"], 41, tgt)
+
+    def test_sales_twokeys_grouped(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Product number"], it["Retailer code"]])
+            >> Aggregate(
+                columns={
+                    "product": first(it["Product number"]),
+                    "retailer": first(it["Retailer code"]),
+                    "mean_quantity": mean(it.Quantity),
+                    "max_usp": max(it["Unit sale price"]),
+                    "count_quantity": count(it.Quantity),
+                }
+            )
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(result.shape, (5000, 5))
+            row = result[(result["product"] == 70240) & (result["retailer"] == 1205)]
+            self.assertEqual(row.loc[row.index[0], "product"], 70240, tgt)
+            self.assertEqual(row.loc[row.index[0], "retailer"], 1205, tgt)
+            self.assertAlmostEqual(
+                row.loc[row.index[0], "mean_quantity"], 48.39, 2, tgt
+            )
+            self.assertEqual(row.loc[row.index[0], "max_usp"], 122.70, tgt)
+            self.assertEqual(row.loc[row.index[0], "count_quantity"], 41, tgt)
+
+    def test_products_twokeys_grouped(self):
+        pipeline = (
+            Scan(table=it.go_products)
+            >> GroupBy(by=[it["Product line"], it["Product brand"]])
+            >> Aggregate(
+                columns={
+                    "sum_uc": sum(it["Unit cost"]),
+                    "max_uc": max(it["Unit cost"]),
+                    "line": first(it["Product line"]),
+                    "brand": first(it["Product brand"]),
+                }
+            )
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(result.shape, (30, 4))
+            row = result[
+                (result.line == "Camping Equipment") & (result.brand == "Star")
+            ]
+            self.assertEqual(row.loc[row.index[0], "sum_uc"], 1968.19, tgt)
+            self.assertEqual(row.loc[row.index[0], "max_uc"], 490.00, tgt)
+            self.assertEqual(row.loc[row.index[0], "line"], "Camping Equipment", tgt)
+            self.assertEqual(row.loc[row.index[0], "brand"], "Star", tgt)
+
+    def test_error_unknown_column(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Product number"]])
+            >> Aggregate(columns={"mean_quantity": mean(it["Quantity_1"])})
+        )
         with self.assertRaises(KeyError):
-            _ = trainable.transform(self.grouped_df_err)
+            _ = pipeline.transform(self.tgt2datasets["pandas"])
 
-    def test_aggregate_col_not_dict(self):
-        trainable = Aggregate(columns=[mean(it["Quantity_1"])])
+    def test_error_columns_not_dict(self):
+        pipeline = (
+            Scan(table=it.go_daily_sales)
+            >> GroupBy(by=[it["Product number"]])
+            >> Aggregate(columns=[mean(it["Quantity_1"])])
+        )
         with self.assertRaises(ValueError):
-            _ = trainable.transform(self.grouped_df_err)
+            _ = pipeline.transform(self.tgt2datasets["pandas"])
 
-    def test_aggregate_x_not_pd_pysp(self):
+    def test_error_X_not_pandas_or_Spark(self):
         trainable = Aggregate(columns={"mean_quantity": mean(it["Quantity_1"])})
         with self.assertRaises(ValueError):
             _ = trainable.transform(pd.Series([1, 2, 3]))
-
-
-# Testing aggregate operator for spark dataframes
-class TestAggregateSpark(unittest.TestCase):
-    # Get go_sales dataset in spark dataframe
-    def setUp(self):
-        self.go_sales_spark = fetch_go_sales_dataset("spark")
-
-    def test_aggregate_1(self):
-        trainable = GroupBy(by=[it["Product line"], it["Product brand"]])
-        go_products_spark = self.go_sales_spark[3]
-        assert get_table_name(go_products_spark) == "go_products"
-        grouped_df = trainable.transform(go_products_spark)
-        trainable = Aggregate(
-            columns={
-                "sum_uc": sum(it["Unit cost"]),
-                "max_uc": max(it["Unit cost"]),
-                "first_uc": first(it["Unit cost"]),
-            }
-        )
-        aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.count(), 30)
-        self.assertEqual(len(aggregated_df.columns), 5)
-        self.assertEqual(
-            round(
-                aggregated_df.filter(
-                    (aggregated_df["Product line"] == "Personal Accessories")
-                    & (aggregated_df["Product brand"] == "Edge")
-                ).collect()[0]["sum_uc"],
-                2,
-            ),
-            89.22,
-        )
-        self.assertEqual(
-            round(
-                aggregated_df.filter(
-                    (aggregated_df["Product line"] == "Golf Equipment")
-                    & (aggregated_df["Product brand"] == "Blue Steel")
-                ).collect()[0]["first_uc"],
-                2,
-            ),
-            41.2,
-        )
-
-    def test_aggregate_2(self):
-        trainable = GroupBy(by=[it["Product line"]])
-        go_products_spark = self.go_sales_spark[3]
-        assert get_table_name(go_products_spark) == "go_products"
-        grouped_df = trainable.transform(go_products_spark)
-        trainable = Aggregate(
-            columns={
-                "mean_uc": mean(it["Unit cost"]),
-                "min_up": min(it["Unit price"]),
-                "count_pc": count(it["Product color"]),
-            }
-        )
-        aggregated_df = trainable.transform(grouped_df)
-        self.assertEqual(aggregated_df.count(), 5)
-        self.assertEqual(len(aggregated_df.columns), 4)
-        self.assertEqual(
-            round(
-                aggregated_df.filter(
-                    (aggregated_df["Product line"] == "Camping Equipment")
-                ).collect()[0]["mean_uc"],
-                2,
-            ),
-            89.01,
-        )
-        self.assertEqual(
-            round(
-                aggregated_df.filter(
-                    (aggregated_df["Product line"] == "Golf Equipment")
-                ).collect()[0]["min_up"],
-                2,
-            ),
-            10.64,
-        )
-        self.assertEqual(
-            aggregated_df.filter(
-                (aggregated_df["Product line"] == "Personal Accessories")
-            ).collect()[0]["count_pc"],
-            182,
-        )
 
 
 # Testing join operator for pandas dataframes
@@ -1264,6 +1236,10 @@ class TestMap(unittest.TestCase):
             _ = trained.transform(df)
         with self.assertRaises(ValueError):
             trainable = Map(columns=[it.gender])
+            trained = trainable.fit(df)
+            _ = trained.transform(df)
+        with self.assertRaises(ValueError):
+            trainable = Map(columns=[it.dummy])
             trained = trainable.fit(df)
             _ = trained.transform(df)
 

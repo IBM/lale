@@ -21,8 +21,7 @@ import lale.docstrings
 import lale.operators
 
 try:
-    import pyspark.sql as pysql
-    from pyspark.sql.dataframe import DataFrame as spark_df
+    import pyspark.sql
 
     spark_installed = True
 
@@ -30,17 +29,6 @@ except ImportError:
     spark_installed = False
 
 from lale.helpers import _is_ast_attribute, _is_ast_subscript
-
-
-def _is_pandas_grouped_df(df):
-    return isinstance(df, pd.core.groupby.generic.DataFrameGroupBy) or isinstance(
-        df, pd.DataFrame
-    )
-
-
-def _is_spark_grouped_df(df):
-    if spark_installed:
-        return isinstance(df, pysql.GroupedData) or isinstance(df, spark_df)  # type: ignore
 
 
 class _AggregateImpl:
@@ -58,69 +46,83 @@ class _AggregateImpl:
     #         )
 
     def transform(self, X):
-        agg_info = {}
-        agg_expr = {}
-
-        def create_spark_agg_expr(new_col_name, agg_col_func):
-            functions_module = importlib.import_module("lale.lib.lale.functions")
-
-            def get_spark_agg_method(agg_method_name):
-                return getattr(functions_module, "grouped_" + agg_method_name)
-
-            agg_method = get_spark_agg_method(agg_col_func[1])()  # type: ignore
-            return agg_method(agg_col_func[0]).alias(new_col_name)
-
         if not isinstance(self.columns, dict):
             raise ValueError(
                 "Aggregate 'columns' parameter should be of dictionary type."
             )
 
-        for new_col_name, expr in (
-            self.columns.items() if self.columns is not None else []
-        ):
-            agg_func = expr._expr.func.id
+        agg_info = []
+        for new_col_name, expr in self.columns.items():
+            agg_func_name = expr._expr.func.id
             expr_to_parse = expr._expr.args[0]
             if _is_ast_subscript(expr_to_parse):
-                agg_col = expr_to_parse.slice.value.s  # type: ignore
+                old_col_name = expr_to_parse.slice.value.s  # type: ignore
             elif _is_ast_attribute(expr_to_parse):
-                agg_col = expr_to_parse.attr
+                old_col_name = expr_to_parse.attr
             else:
                 raise ValueError(
                     "Aggregate 'columns' parameter only supports subscript or dot notation for the key columns. For example, it.col_name or it['col_name']."
                 )
-            agg_info[new_col_name] = (agg_col, agg_func)
-        agg_info_sorted = {
-            k: v for k, v in sorted(agg_info.items(), key=lambda item: item[1])
-        }
-
-        if _is_pandas_grouped_df(X):
-            for agg_col_func in agg_info_sorted.values():
-                if agg_col_func[0] in agg_expr:
-                    agg_expr[agg_col_func[0]].append(agg_col_func[1])
-                else:
-                    agg_expr[agg_col_func[0]] = [agg_col_func[1]]
-            try:
-                aggregated_df = X.agg(agg_expr)
-                # aggregated_df.columns = agg_info_sorted.keys()
-            except KeyError as e:
-                raise KeyError(e)
-        elif _is_spark_grouped_df(X):
-            agg_expr = [
-                create_spark_agg_expr(new_col_name, agg_col_func)
-                for new_col_name, agg_col_func in agg_info_sorted.items()
-            ]
-            try:
-                aggregated_df = X.agg(*agg_expr)
-            except Exception as e:
-                raise Exception(e)
+            agg_info.append((new_col_name, old_col_name, agg_func_name))
+        if isinstance(X, (pd.DataFrame, pd.core.groupby.generic.DataFrameGroupBy)):
+            aggregated_df = self._transform_pandas(X, agg_info)
+        elif isinstance(X, (pyspark.sql.DataFrame, pyspark.sql.GroupedData)):  # type: ignore
+            aggregated_df = self._transform_spark(X, agg_info)
         else:
-            raise ValueError(
-                "Only pandas and spark dataframes are supported by the Aggregate operator."
-            )
+            raise ValueError(f"Unsupported type(X) {type(X)} for Aggregate.")
         named_aggregated_df = lale.datasets.data_schemas.add_table_name(
             aggregated_df, lale.datasets.data_schemas.get_table_name(X)
         )
         return named_aggregated_df
+
+    def _transform_pandas(self, X, agg_info):
+        is_grouped = isinstance(X, pd.core.groupby.generic.DataFrameGroupBy)
+        if is_grouped:
+            _, first_group = next(X.__iter__())  # TODO: what if zero groups?
+            value_columns = first_group.columns
+        else:
+            value_columns = X.columns
+
+        def eval_agg_pandas(old_col_name, agg_func_name):
+            if is_grouped and old_col_name not in value_columns:
+                idx = X.count().index
+                if old_col_name not in idx.names:
+                    raise KeyError(old_col_name, value_columns, idx.names)
+                if agg_func_name != "first":
+                    raise ValueError(
+                        "Expected aggregation using 'first' for group-by column '{old_col_name}', found '{agg_func_name}'"
+                    )
+                return idx.get_level_values(old_col_name)
+            return X[old_col_name].agg(agg_func_name)
+
+        aggregated_columns = {
+            new_col_name: eval_agg_pandas(old_col_name, agg_func_name)
+            for new_col_name, old_col_name, agg_func_name in agg_info
+        }
+        if is_grouped:
+            aggregated_df = pd.DataFrame(aggregated_columns)
+        else:
+            aggregated_df = pd.DataFrame.from_records([aggregated_columns])
+        return aggregated_df
+
+    def _transform_spark(self, X, agg_info):
+        functions_module = importlib.import_module("lale.lib.lale.functions")
+
+        def create_spark_agg_expr(new_col_name, old_col_name, agg_func_name):
+            func1 = getattr(functions_module, "grouped_" + agg_func_name)
+            func2 = func1()  # type: ignore
+            result = func2(old_col_name).alias(new_col_name)
+            return result
+
+        agg_expr = [
+            create_spark_agg_expr(new_col_name, old_col_name, agg_func_name)
+            for new_col_name, old_col_name, agg_func_name in agg_info
+        ]
+        aggregated_df = X.agg(*agg_expr)
+        keep_columns = [new_col_name for new_col_name, _, _ in agg_info]
+        drop_columns = list(set(aggregated_df.columns) - set(keep_columns))
+        aggregated_df = aggregated_df.drop(*drop_columns)
+        return aggregated_df
 
 
 _hyperparams_schema = {

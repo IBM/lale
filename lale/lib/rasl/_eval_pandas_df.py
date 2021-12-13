@@ -18,8 +18,8 @@ from typing import Any
 
 import pandas as pd
 
-from lale.expressions import AstExpr, Expr
-from lale.helpers import _ast_func_id, _is_ast_name_it
+from lale.expressions import AstExpr, Expr, _it_column
+from lale.helpers import _ast_func_id
 
 
 def eval_expr_pandas_df(X, expr: Expr) -> pd.Series:
@@ -46,25 +46,13 @@ class _PandasEvaluator(ast.NodeVisitor):
     def visit_Constant(self, node: ast.Constant):
         self.result = node.value
 
-    def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name_it(node.value):
-            self.visit(node.slice)
-            column_name = self.result
-            if (
-                column_name is None
-                or isinstance(column_name, str)
-                and not column_name.strip()
-            ):
-                raise ValueError("Name of the column cannot be None or empty.")
-            self.result = self.df[column_name]
-        else:
-            raise ValueError("Unimplemented expression")
-
     def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name_it(node.value):
-            self.result = self.df[node.attr]
-        else:
-            raise ValueError("Unimplemented expression")
+        column_name = _it_column(node)
+        self.result = self.df[column_name]
+
+    def visit_Subscript(self, node: ast.Subscript):
+        column_name = _it_column(node)
+        self.result = self.df[column_name]
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)

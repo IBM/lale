@@ -51,13 +51,12 @@ try:
 except ImportError:
     torch_installed = False
 
-try:
+from importlib import util
+
+spark_loader = util.find_spec("pyspark")
+spark_installed = spark_loader is not None
+if spark_installed:
     from pyspark.sql.dataframe import DataFrame as spark_df
-
-    spark_installed = True
-
-except ImportError:
-    spark_installed = False
 
 logger = logging.getLogger(__name__)
 
@@ -1129,10 +1128,6 @@ def _is_ast_call(expr):
 
 def _is_ast_name(expr):
     return isinstance(expr, ast.Name)
-
-
-def _is_ast_name_it(expr):
-    return isinstance(expr, ast.Name) and expr.id == "it"
 
 
 def _ast_func_id(expr):
