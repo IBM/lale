@@ -19,11 +19,11 @@ import pandas as pd
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+from lale.expressions import _it_column
 from lale.helpers import (
     _is_ast_attribute,
     _is_ast_call,
     _is_ast_name,
-    _is_ast_name_it,
     _is_pandas_df,
     _is_spark_df,
 )
@@ -69,30 +69,47 @@ def _new_column_name(name, expr):
         return name
 
 
+def _accessed_columns(expr):
+    visitor = _AccessedColumns()
+    visitor.visit(expr._expr)
+    return visitor.accessed
+
+
 class _AccessedColumns(ast.NodeVisitor):
     def __init__(self):
         self.accessed = set()
 
     def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name_it(node.value):
-            self.accessed.add(node.attr)
-        else:
-            raise ValueError("Unimplemented expression")
+        self.accessed.add(_it_column(node))
 
     def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name_it(node.value) and isinstance(node.slice, ast.Index):
-            if isinstance(node.slice.value, ast.Constant):
-                self.accessed.add(node.slice.value.value)
-            elif isinstance(node.slice.value, ast.Str):
-                self.accessed.add(node.slice.value.s)
-        else:
-            raise ValueError("Unimplemented expression")
+        self.accessed.add(_it_column(node))
 
 
-def accessed_columns(expr):
-    visitor = _AccessedColumns()
+def _validate(X, expr):
+    visitor = _Validate(X)
     visitor.visit(expr._expr)
-    return visitor.accessed
+
+
+class _Validate(ast.NodeVisitor):
+    def __init__(self, X):
+        self.df = X
+
+    def visit_Attribute(self, node: ast.Attribute):
+        column_name = _it_column(node)
+        if column_name not in self.df.columns:
+            raise ValueError(
+                f"The column {column_name} is not present in the dataframe"
+            )
+
+    def visit_Subscript(self, node: ast.Subscript):
+        column_name = _it_column(node)
+        if column_name is None or not column_name.strip():
+            raise ValueError("Name of the column cannot be None or empty.")
+        if column_name not in self.df.columns:
+            raise ValueError(
+                f"The column {column_name} is not present in the dataframe"
+            )
 
 
 class _MapImpl:
@@ -115,11 +132,12 @@ class _MapImpl:
         accessed_column_names = set()
 
         def get_map_function_output(column, new_column_name):
+            _validate(X, column)
             new_column_name = _new_column_name(new_column_name, column)
             new_column = eval_expr_pandas_df(X, column)
             mapped_df[new_column_name] = new_column
             accessed_column_names.add(new_column_name)
-            accessed_column_names.update(accessed_columns(column))
+            accessed_column_names.update(_accessed_columns(column))
 
         if isinstance(self.columns, list):
             for column in self.columns:
@@ -141,11 +159,12 @@ class _MapImpl:
         accessed_column_names = set()
 
         def get_map_function_expr(column, new_column_name):
+            _validate(X, column)
             new_column_name = _new_column_name(new_column_name, column)
             new_column = eval_expr_spark_df(column)  # type: ignore
             new_columns.append(new_column.alias(new_column_name))  # type: ignore
             accessed_column_names.add(new_column_name)
-            accessed_column_names.update(accessed_columns(column))
+            accessed_column_names.update(_accessed_columns(column))
 
         if isinstance(self.columns, list):
             for column in self.columns:

@@ -16,8 +16,8 @@ import ast
 import importlib
 from itertools import chain
 
-from lale.expressions import AstExpr, Expr
-from lale.helpers import _ast_func_id, _is_ast_name_it
+from lale.expressions import AstExpr, Expr, _it_column
+from lale.helpers import _ast_func_id
 
 try:
     # noqa in the imports here because those get used dynamically and flake fails.
@@ -64,20 +64,13 @@ class _SparkEvaluator(ast.NodeVisitor):
     def visit_Constant(self, node: ast.Constant):
         self.result = lit(node.value)
 
-    def visit_Subscript(self, node: ast.Subscript):
-        if _is_ast_name_it(node.value):
-            column_name = node.slice.value.s  # type: ignore
-            if column_name is None or not column_name.strip():
-                raise ValueError("Name of the column cannot be None or empty.")
-            self.result = col(column_name)
-        else:
-            raise ValueError("Unimplemented expression")
-
     def visit_Attribute(self, node: ast.Attribute):
-        if _is_ast_name_it(node.value):
-            self.result = col(node.attr)
-        else:
-            raise ValueError("Unimplemented expression")
+        column_name = _it_column(node)
+        self.result = col(column_name)  # type: ignore
+
+    def visit_Subscript(self, node: ast.Subscript):
+        column_name = _it_column(node)
+        self.result = col(column_name)  # type: ignore
 
     def visit_BinOp(self, node: ast.BinOp):
         self.visit(node.left)
