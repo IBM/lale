@@ -12,11 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import ast
-
 import lale.docstrings
 import lale.operators
-from lale.expressions import Expr, it, max, min
+from lale.expressions import it, max, min
 from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.lale.aggregate import Aggregate
 from lale.lib.rasl.map import Map
@@ -38,9 +36,7 @@ class _MinMaxScalerImpl:
         data_min_max = aggregate.transform(X)
         self.data_min_max_ = data_min_max
         if _is_pandas_df(X):
-            self.data_min_ = data_min_max.loc[
-                "min"
-            ].values  # how to make that attribute of the outer object?
+            self.data_min_ = data_min_max.loc["min"].values
             self.data_max_ = data_min_max.loc["max"].values
         elif _is_spark_df(X):
             # TODO
@@ -68,7 +64,7 @@ class _MinMaxScalerImpl:
                 raise ValueError(
                     "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
                 )
-            op = (it[c] - Expr(ast.Num(X_min))) / Expr(ast.Num(X_max - X_min))
+            op = (it[c] - X_min) / (X_max - X_min)
             ops.update({f"{c}_scaled": op})
         transformer = Map(columns=ops).fit(X)
         X_transformed = transformer.transform(X)

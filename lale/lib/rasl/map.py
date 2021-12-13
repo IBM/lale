@@ -52,7 +52,6 @@ def _new_column_name(name, expr):
                 "hour",
                 "minute",
                 "month",
-                "string_indexer",
             ]
         ):
             return expr._expr.args[0].attr
