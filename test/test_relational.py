@@ -37,6 +37,7 @@ from lale.datasets.multitable import multitable_train_test_split
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import (
     asc,
+    collect_set,
     count,
     day_of_month,
     day_of_week,
@@ -598,15 +599,23 @@ class TestAggregate(unittest.TestCase):
             columns={
                 "min_method_code": min(it["Order method code"]),
                 "max_method_code": max(it["Order method code"]),
+                "collect_set('Order method code')": collect_set(
+                    it["Order method code"]
+                ),
             }
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
             if tgt == "spark":
                 result = result.toPandas()
-            self.assertEqual(result.shape, (1, 2), tgt)
+            self.assertEqual(result.shape, (1, 3), tgt)
             self.assertEqual(result.loc[0, "min_method_code"], 1, tgt)
             self.assertEqual(result.loc[0, "max_method_code"], 7, tgt)
+            self.assertEqual(
+                sorted(result.loc[0, "collect_set('Order method code')"]),
+                [1, 2, 3, 4, 5, 6, 7],
+                tgt,
+            )
 
     def test_sales_onekey_grouped(self):
         pipeline = (
@@ -614,10 +623,11 @@ class TestAggregate(unittest.TestCase):
             >> GroupBy(by=[it["Retailer code"]])
             >> Aggregate(
                 columns={
-                    "retailer_code": first(it["Retailer code"]),
+                    "retailer_code": it["Retailer code"],
                     "min_method_code": min(it["Order method code"]),
                     "max_method_code": max(it["Order method code"]),
                     "min_quantity": min(it["Quantity"]),
+                    "method_codes": collect_set(it["Order method code"]),
                 }
             )
         )
@@ -625,12 +635,15 @@ class TestAggregate(unittest.TestCase):
             result = pipeline.transform(datasets)
             if tgt == "spark":
                 result = result.toPandas()
-            self.assertEqual(result.shape, (289, 4))
+            self.assertEqual(result.shape, (289, 5))
             row = result[result.retailer_code == 1201]
             self.assertEqual(row.loc[row.index[0], "retailer_code"], 1201, tgt)
             self.assertEqual(row.loc[row.index[0], "min_method_code"], 2, tgt)
             self.assertEqual(row.loc[row.index[0], "max_method_code"], 6, tgt)
             self.assertEqual(row.loc[row.index[0], "min_quantity"], 1, tgt)
+            self.assertEqual(
+                sorted(row.loc[row.index[0], "method_codes"]), [2, 3, 4, 5, 6], tgt
+            )
 
     def test_products_onekey_grouped(self):
         pipeline = (
@@ -662,8 +675,8 @@ class TestAggregate(unittest.TestCase):
             >> GroupBy(by=[it["Product number"], it["Retailer code"]])
             >> Aggregate(
                 columns={
-                    "product": first(it["Product number"]),
-                    "retailer": first(it["Retailer code"]),
+                    "product": it["Product number"],
+                    "retailer": it["Retailer code"],
                     "mean_quantity": mean(it.Quantity),
                     "max_usp": max(it["Unit sale price"]),
                     "count_quantity": count(it.Quantity),
