@@ -54,7 +54,7 @@ class _AggregateImpl:
         agg_info = []
         for new_col_name, expr in self.columns.items():
             if isinstance(expr._expr, ast.Call):
-                agg_func_name = expr._expr.func.id
+                agg_func_name = expr._expr.func.id  # type: ignore
                 old_col_name = lale.expressions._it_column(expr._expr.args[0])
             else:
                 agg_func_name = "first"
