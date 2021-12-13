@@ -66,12 +66,12 @@ from lale.lib.lale import (
     GroupBy,
     Hyperopt,
     Join,
-    Map,
     OrderBy,
     Relational,
     Scan,
     SplitXy,
 )
+from lale.lib.rasl import Map
 from lale.lib.sklearn import PCA, LogisticRegression
 
 
