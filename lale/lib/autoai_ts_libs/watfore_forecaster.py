@@ -224,7 +224,7 @@ S(t+h) = is the seasonal component at time t + h.
 method. The multiplicative variant has the seasonal and trend/slope components enter the forecasting function
 in a multiplicative manner (see ref. 1, Brockwell, pp. 329).
 y(t+h) = (L(t) + t* H(t)) * S(t+h)""",
-                    "enum": ["additive", "multiplicative"],
+                    "enum": ["additive", "multiplicative", None],
                     "default": "additive",
                 },
                 "samples_per_season": {
