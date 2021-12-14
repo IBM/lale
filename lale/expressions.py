@@ -261,6 +261,10 @@ def _make_call_expr(name: str, *args: Union[Expr, AstExpr, int, str]) -> Expr:
     return Expr(call_ast)
 
 
+def collect_set(group: Expr) -> Expr:
+    return _make_call_expr("collect_set", group)
+
+
 def count(group: Expr) -> Expr:
     return _make_call_expr("count", group)
 

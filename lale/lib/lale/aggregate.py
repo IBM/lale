@@ -12,23 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import importlib
+import ast
 
 import pandas as pd
 
 import lale.datasets.data_schemas
 import lale.docstrings
+import lale.expressions
 import lale.operators
 
 try:
     import pyspark.sql
+    import pyspark.sql.functions
 
     spark_installed = True
 
 except ImportError:
     spark_installed = False
-
-from lale.helpers import _is_ast_attribute, _is_ast_subscript
 
 
 class _AggregateImpl:
@@ -53,16 +53,12 @@ class _AggregateImpl:
 
         agg_info = []
         for new_col_name, expr in self.columns.items():
-            agg_func_name = expr._expr.func.id
-            expr_to_parse = expr._expr.args[0]
-            if _is_ast_subscript(expr_to_parse):
-                old_col_name = expr_to_parse.slice.value.s  # type: ignore
-            elif _is_ast_attribute(expr_to_parse):
-                old_col_name = expr_to_parse.attr
+            if isinstance(expr._expr, ast.Call):
+                agg_func_name = expr._expr.func.id  # type: ignore
+                old_col_name = lale.expressions._it_column(expr._expr.args[0])
             else:
-                raise ValueError(
-                    "Aggregate 'columns' parameter only supports subscript or dot notation for the key columns. For example, it.col_name or it['col_name']."
-                )
+                agg_func_name = "first"
+                old_col_name = lale.expressions._it_column(expr._expr)
             agg_info.append((new_col_name, old_col_name, agg_func_name))
         if isinstance(X, (pd.DataFrame, pd.core.groupby.generic.DataFrameGroupBy)):
             aggregated_df = self._transform_pandas(X, agg_info)
@@ -84,13 +80,15 @@ class _AggregateImpl:
             value_columns = X.columns
 
         def eval_agg_pandas(old_col_name, agg_func_name):
+            if agg_func_name == "collect_set":
+                agg_func_name = "unique"
             if is_grouped and old_col_name not in value_columns:
                 idx = X.count().index
                 if old_col_name not in idx.names:
                     raise KeyError(old_col_name, value_columns, idx.names)
                 if agg_func_name != "first":
                     raise ValueError(
-                        "Expected aggregation using 'first' for group-by column '{old_col_name}', found '{agg_func_name}'"
+                        "Expected plain group-by column access it['{old_col_name}'], found function '{agg_func_name}'"
                     )
                 return idx.get_level_values(old_col_name)
             return X[old_col_name].agg(agg_func_name)
@@ -106,12 +104,9 @@ class _AggregateImpl:
         return aggregated_df
 
     def _transform_spark(self, X, agg_info):
-        functions_module = importlib.import_module("lale.lib.lale.functions")
-
         def create_spark_agg_expr(new_col_name, old_col_name, agg_func_name):
-            func1 = getattr(functions_module, "grouped_" + agg_func_name)
-            func2 = func1()  # type: ignore
-            result = func2(old_col_name).alias(new_col_name)
+            func = getattr(pyspark.sql.functions, agg_func_name)
+            result = func(old_col_name).alias(new_col_name)
             return result
 
         agg_expr = [
