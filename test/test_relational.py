@@ -1938,6 +1938,59 @@ class TestMap(unittest.TestCase):
         self.assertEqual(transformed_df["next_month_id"][4], 9)
 
 
+class TestMapOnBothPandasAndSpark(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark"]
+        cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
+
+    def test_replace_unknown_identity(self):
+        pipeline = Scan(table=it.go_products) >> Map(
+            columns={
+                "prod": it["Product number"],
+                "line": replace(
+                    it["Product line"],
+                    {"Camping Equipment": "C", "Personal Accessories": "P"},
+                ),
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(result.shape, (274, 2))
+            self.assertEqual(result.loc[0, "prod"], 1110, tgt)
+            self.assertEqual(result.loc[0, "line"], "C", tgt)
+            self.assertEqual(result.loc[117, "prod"], 101110, tgt)
+            self.assertEqual(result.loc[117, "line"], "Golf Equipment", tgt)
+            self.assertEqual(result.loc[273, "prod"], 154150, tgt)
+            self.assertEqual(result.loc[273, "line"], "P", tgt)
+
+    def test_replace_unknown_encoded(self):
+        pipeline = Scan(table=it.go_products) >> Map(
+            columns={
+                "prod": it["Product number"],
+                "line": replace(
+                    it["Product line"],
+                    {"Camping Equipment": "C", "Personal Accessories": "P"},
+                    handle_unknown="use_encoded_value",
+                    unknown_value="U",
+                ),
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(result.shape, (274, 2))
+            self.assertEqual(result.loc[0, "prod"], 1110, tgt)
+            self.assertEqual(result.loc[0, "line"], "C", tgt)
+            self.assertEqual(result.loc[117, "prod"], 101110, tgt)
+            self.assertEqual(result.loc[117, "line"], "U", tgt)
+            self.assertEqual(result.loc[273, "prod"], 154150, tgt)
+            self.assertEqual(result.loc[273, "line"], "P", tgt)
+
+
 class TestRelationalOperator(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_iris

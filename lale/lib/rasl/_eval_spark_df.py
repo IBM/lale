@@ -14,12 +14,13 @@
 
 import ast
 import importlib
-from itertools import chain
 
 from lale.expressions import AstExpr, Expr, _it_column
 from lale.helpers import _ast_func_id
 
 try:
+    import pyspark.sql.functions
+
     # noqa in the imports here because those get used dynamically and flake fails.
     from pyspark.sql.functions import col  # noqa
     from pyspark.sql.functions import lit  # noqa
@@ -29,7 +30,6 @@ try:
     from pyspark.sql.functions import month as spark_month  # noqa
 
     from pyspark.sql.functions import (  # noqa; isort: skip
-        create_map,
         dayofmonth,
         dayofweek,
         dayofyear,
@@ -106,8 +106,22 @@ class _SparkEvaluator(ast.NodeVisitor):
 def replace(call: ast.Call):
     column = _eval_ast_expr_spark_df(call.args[0])  # type: ignore
     mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
-    mapping_expr = create_map([lit(x) for x in chain(*mapping_dict.items())])  # type: ignore
-    return mapping_expr[column]
+    handle_unknown = ast.literal_eval(call.args[2])
+    chain_of_whens = None
+    for key, value in mapping_dict.items():
+        if chain_of_whens is None:
+            chain_of_whens = pyspark.sql.functions.when(column == key, value)
+        else:
+            chain_of_whens = chain_of_whens.when(column == key, value)
+    if handle_unknown == "use_encoded_value":
+        fallback = lit(ast.literal_eval(call.args[3]))
+    else:
+        fallback = column
+    if chain_of_whens is None:
+        result = fallback
+    else:
+        result = chain_of_whens.otherwise(fallback)
+    return result
 
 
 def identity(call: ast.Call):
