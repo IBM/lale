@@ -29,26 +29,24 @@ class TestMinMaxScaler(unittest.TestCase):
         data = self.go_sales[0][columns]
         sk_scaler = SkMinMaxScaler()
         rasl_scaler = RaslMinMaxScaler()
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data)
-        self.assertTrue((sk_trainned.data_min_ == rasl_trainned.impl.data_min_).all())
-        self.assertTrue((sk_trainned.data_max_ == rasl_trainned.impl.data_max_).all())
-        self.assertTrue(
-            (sk_trainned.data_range_ == rasl_trainned.impl.data_range_).all()
-        )
-        self.assertTrue((sk_trainned.scale_ == rasl_trainned.impl.scale_).all())
-        self.assertTrue((sk_trainned.min_ == rasl_trainned.impl.min_).all())
-        self.assertEqual(sk_trainned.n_features_in_, rasl_trainned.impl.n_features_in_)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data)
+        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
+        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
+        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
+        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
+        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
         sk_scaler = SkMinMaxScaler()
         rasl_scaler = RaslMinMaxScaler()
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data)
-        sk_transformed = sk_trainned.transform(data)
-        rasl_transformed = rasl_trainned.transform(data)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data)
+        sk_transformed = sk_trained.transform(data)
+        rasl_transformed = rasl_trained.transform(data)
         self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
         self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
         self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
@@ -64,26 +62,24 @@ class TestMinMaxScaler(unittest.TestCase):
         data = self.go_sales[0][columns]
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data)
-        self.assertTrue((sk_trainned.data_min_ == rasl_trainned.impl.data_min_).all())
-        self.assertTrue((sk_trainned.data_max_ == rasl_trainned.impl.data_max_).all())
-        self.assertTrue(
-            (sk_trainned.data_range_ == rasl_trainned.impl.data_range_).all()
-        )
-        self.assertTrue((sk_trainned.scale_ == rasl_trainned.impl.scale_).all())
-        self.assertTrue((sk_trainned.min_ == rasl_trainned.impl.min_).all())
-        self.assertEqual(sk_trainned.n_features_in_, rasl_trainned.impl.n_features_in_)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data)
+        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
+        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
+        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
+        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
+        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data)
-        sk_transformed = sk_trainned.transform(data)
-        rasl_transformed = rasl_trainned.transform(data)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data)
+        sk_transformed = sk_trained.transform(data)
+        rasl_transformed = rasl_trained.transform(data)
         self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
         self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
         self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
@@ -106,16 +102,14 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         data_spark = self.go_sales_spark[0][columns]
         sk_scaler = SkMinMaxScaler()
         rasl_scaler = RaslMinMaxScaler()
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data_spark)
-        self.assertTrue((sk_trainned.data_min_ == rasl_trainned.impl.data_min_).all())
-        self.assertTrue((sk_trainned.data_max_ == rasl_trainned.impl.data_max_).all())
-        self.assertTrue(
-            (sk_trainned.data_range_ == rasl_trainned.impl.data_range_).all()
-        )
-        self.assertTrue((sk_trainned.scale_ == rasl_trainned.impl.scale_).all())
-        self.assertTrue((sk_trainned.min_ == rasl_trainned.impl.min_).all())
-        self.assertEqual(sk_trainned.n_features_in_, rasl_trainned.impl.n_features_in_)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data_spark)
+        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
+        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
+        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
+        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
+        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -123,10 +117,10 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         data_spark = self.go_sales_spark[0][columns]
         sk_scaler = SkMinMaxScaler()
         rasl_scaler = RaslMinMaxScaler()
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data_spark)
-        sk_transformed = sk_trainned.transform(data)
-        rasl_transformed = rasl_trainned.transform(data_spark)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data_spark)
+        sk_transformed = sk_trained.transform(data)
+        rasl_transformed = rasl_trained.transform(data_spark)
         rasl_transformed = rasl_transformed.toPandas()
         self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
         self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
@@ -144,16 +138,14 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         data_spark = self.go_sales_spark[0][columns]
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data_spark)
-        self.assertTrue((sk_trainned.data_min_ == rasl_trainned.impl.data_min_).all())
-        self.assertTrue((sk_trainned.data_max_ == rasl_trainned.impl.data_max_).all())
-        self.assertTrue(
-            (sk_trainned.data_range_ == rasl_trainned.impl.data_range_).all()
-        )
-        self.assertTrue((sk_trainned.scale_ == rasl_trainned.impl.scale_).all())
-        self.assertTrue((sk_trainned.min_ == rasl_trainned.impl.min_).all())
-        self.assertEqual(sk_trainned.n_features_in_, rasl_trainned.impl.n_features_in_)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data_spark)
+        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
+        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
+        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
+        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
+        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -161,10 +153,10 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         data_spark = self.go_sales_spark[0][columns]
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trainned = sk_scaler.fit(data)
-        rasl_trainned = rasl_scaler.fit(data_spark)
-        sk_transformed = sk_trainned.transform(data)
-        rasl_transformed = rasl_trainned.transform(data_spark)
+        sk_trained = sk_scaler.fit(data)
+        rasl_trained = rasl_scaler.fit(data_spark)
+        sk_transformed = sk_trained.transform(data)
+        rasl_transformed = rasl_trained.transform(data_spark)
         rasl_transformed = rasl_transformed.toPandas()
         self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
         self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
@@ -175,3 +167,27 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
         self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
         self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
+
+
+class TestPipeline(unittest.TestCase):
+    def setUp(self):
+        from sklearn.datasets import load_iris
+        from sklearn.model_selection import train_test_split
+
+        data = load_iris(as_frame=True)
+        X, y = data.data, data.target
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+
+    def test_pipeline_pandas(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        pipeline = RaslMinMaxScaler() >> LogisticRegression()
+        trained = pipeline.fit(self.X_train, self.y_train)
+        _ = trained.predict(self.X_test)
+
+    def test_pipeline_spark(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        pipeline = RaslMinMaxScaler() >> LogisticRegression()
+        trained = pipeline.fit(self.X_train, self.y_train)
+        _ = trained.predict(self.X_test)
