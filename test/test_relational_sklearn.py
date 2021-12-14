@@ -24,7 +24,7 @@ from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 try:
     from pyspark import SparkConf, SparkContext
     from pyspark.sql import SQLContext
-    from pyspark.sql.types import IntegerType, StructField, StructType
+    from pyspark.sql.types import IntegerType
 
     spark_installed = True
 except ImportError:
