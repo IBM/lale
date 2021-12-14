@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+import collections
 import importlib
 from typing import Any
 
@@ -86,7 +87,13 @@ class _PandasEvaluator(ast.NodeVisitor):
 def replace(df: Any, call: ast.Call):
     column = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
     mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
-    new_column = column.replace(mapping_dict)  # type: ignore
+    handle_unknown = ast.literal_eval(call.args[2])
+    if handle_unknown == "use_encoded_value":
+        unknown_value = ast.literal_eval(call.args[3])
+        mapping2 = collections.defaultdict(lambda: unknown_value, mapping_dict)
+        new_column = column.map(mapping2)  # type: ignore
+    else:
+        new_column = column.replace(mapping_dict)
     return new_column
 
 

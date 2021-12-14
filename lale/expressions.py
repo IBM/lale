@@ -21,8 +21,8 @@ from typing import Any, Dict, Optional, Union
 
 import astunparse
 
-AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict)
-AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict]
+AstLits = (ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant)
+AstLit = Union[ast.Num, ast.Str, ast.List, ast.Tuple, ast.Set, ast.Dict, ast.Constant]
 AstExprs = (
     *AstLits,
     ast.Name,
@@ -242,8 +242,10 @@ def _make_binop(op, left, other):
         return False
 
 
-def _make_ast_expr(arg: Union[Expr, int, float, str, AstExpr]) -> AstExpr:
-    if isinstance(arg, Expr):
+def _make_ast_expr(arg: Union[None, Expr, int, float, str, AstExpr]) -> AstExpr:
+    if arg is None:
+        return ast.Constant(value=None)
+    elif isinstance(arg, Expr):
         return arg._expr
     elif isinstance(arg, (int, float)):
         return ast.Num(n=arg)
@@ -345,11 +347,23 @@ def recent_gap_to_cutoff(series: Expr, cutoff: Expr, age: int) -> Expr:
     return _make_call_expr("recent_gap_to_cutoff", series, cutoff, age)
 
 
-def replace(subject: Expr, old2new: Dict[Any, Any]) -> Expr:
+def replace(
+    subject: Expr,
+    old2new: Dict[Any, Any],
+    handle_unknown="identity",
+    unknown_value=None,
+) -> Expr:
     old2new_str = pprint.pformat(old2new)
     module_ast = ast.parse(old2new_str)
     old2new_ast = typing.cast(ast.Expr, module_ast.body[0])
-    return _make_call_expr("replace", subject, old2new_ast)
+    assert handle_unknown in ["identity", "use_encoded_value"]
+    return _make_call_expr(
+        "replace",
+        subject,
+        old2new_ast,
+        handle_unknown,
+        unknown_value,
+    )
 
 
 def identity(subject: Expr) -> Expr:
