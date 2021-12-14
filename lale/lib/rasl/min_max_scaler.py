@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import typing
+
 import numpy as np
 
 import lale.docstrings
@@ -21,6 +23,7 @@ from lale.helpers import _is_spark_df
 from lale.lib.lale.aggregate import Aggregate
 from lale.lib.rasl import Map
 from lale.lib.sklearn import min_max_scaler
+from lale.schemas import Enum
 
 
 class _MinMaxScalerImpl:
@@ -87,5 +90,21 @@ _combined_schemas = {
 }
 
 MinMaxScaler = lale.operators.make_operator(_MinMaxScalerImpl, _combined_schemas)
+
+MinMaxScaler = typing.cast(
+    lale.operators.PlannedIndividualOp,
+    MinMaxScaler.customize_schema(
+        copy=Enum(
+            values=[True],
+            desc="`copy=True` is the only value currently supported by this implementation",
+            default=True,
+        ),
+        clip=Enum(
+            values=[False],
+            desc="`clip=False` is the only value currently supported by this implementation",
+            default=False,
+        ),
+    ),
+)
 
 lale.docstrings.set_docstrings(MinMaxScaler)

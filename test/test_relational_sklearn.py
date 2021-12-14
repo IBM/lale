@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import unittest
 
+import jsonschema
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
@@ -24,6 +26,18 @@ class TestMinMaxScaler(unittest.TestCase):
     def setUp(self):
         self.go_sales = fetch_go_sales_dataset()
 
+    def test_error(self):
+        with self.assertRaisesRegex(
+            jsonschema.ValidationError,
+            re.compile(r"MinMaxScaler\(copy=False\)", re.MULTILINE | re.DOTALL),
+        ):
+            _ = RaslMinMaxScaler(copy=False)
+        with self.assertRaisesRegex(
+            jsonschema.ValidationError,
+            re.compile(r"MinMaxScaler\(clip=True\)", re.MULTILINE | re.DOTALL),
+        ):
+            _ = RaslMinMaxScaler(clip=True)
+
     def test_fit(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
@@ -33,7 +47,9 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_trained = rasl_scaler.fit(data)
         self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
         self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
-        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(
+            list(sk_trained.data_range_), list(rasl_trained.impl.data_range_)
+        )
         self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
         self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
@@ -66,7 +82,9 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_trained = rasl_scaler.fit(data)
         self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
         self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
-        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(
+            list(sk_trained.data_range_), list(rasl_trained.impl.data_range_)
+        )
         self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
         self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
@@ -106,7 +124,9 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         rasl_trained = rasl_scaler.fit(data_spark)
         self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
         self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
-        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(
+            list(sk_trained.data_range_), list(rasl_trained.impl.data_range_)
+        )
         self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
         self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
@@ -142,7 +162,9 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         rasl_trained = rasl_scaler.fit(data_spark)
         self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
         self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
-        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(
+            list(sk_trained.data_range_), list(rasl_trained.impl.data_range_)
+        )
         self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
         self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
