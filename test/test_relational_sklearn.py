@@ -31,11 +31,11 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data)
-        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
-        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
-        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
-        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
-        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
+        self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
+        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
+        self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform(self):
@@ -64,11 +64,11 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data)
-        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
-        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
-        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
-        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
-        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
+        self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
+        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
+        self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform_range(self):
@@ -104,11 +104,11 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data_spark)
-        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
-        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
-        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
-        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
-        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
+        self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
+        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
+        self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform(self):
@@ -140,11 +140,11 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data_spark)
-        self.assertTrue((sk_trained.data_min_ == rasl_trained.impl.data_min_).all())
-        self.assertTrue((sk_trained.data_max_ == rasl_trained.impl.data_max_).all())
-        self.assertTrue((sk_trained.data_range_ == rasl_trained.impl.data_range_).all())
-        self.assertTrue((sk_trained.scale_ == rasl_trained.impl.scale_).all())
-        self.assertTrue((sk_trained.min_ == rasl_trained.impl.min_).all())
+        self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
+        self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
+        self.assertEqual(list(sk_trained.data_range_), list(rasl_trained.impl.data_range_))
+        self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
+        self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
         self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_transform_range(self):
@@ -179,13 +179,6 @@ class TestPipeline(unittest.TestCase):
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
     def test_pipeline_pandas(self):
-        from lale.lib.sklearn import LogisticRegression
-
-        pipeline = RaslMinMaxScaler() >> LogisticRegression()
-        trained = pipeline.fit(self.X_train, self.y_train)
-        _ = trained.predict(self.X_test)
-
-    def test_pipeline_spark(self):
         from lale.lib.sklearn import LogisticRegression
 
         pipeline = RaslMinMaxScaler() >> LogisticRegression()
