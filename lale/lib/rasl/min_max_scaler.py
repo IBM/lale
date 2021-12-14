@@ -26,18 +26,20 @@ from lale.lib.sklearn import min_max_scaler
 class _MinMaxScalerImpl:
     def __init__(self, feature_range=(0, 1), *, copy=True, clip=False):
         self.feature_range = feature_range
-        self.copy = copy
-        self.clip = clip
-        self.data_min_ = None
-        self.data_max_ = None
+        if not copy:
+            raise ValueError("`copy=False` is not supported by this implementation")
+        if clip:
+            raise ValueError("`clip=True` is not supported by this implementation")
 
     def fit(self, X, y=None):
+        # Compute the min and max
         agg = {f"{c}_min": min(it[c]) for c in X.columns}
         agg.update({f"{c}_max": max(it[c]) for c in X.columns})
         aggregate = Aggregate(columns=agg)
         data_min_max = aggregate.transform(X)
         if _is_spark_df(X):
             data_min_max = data_min_max.toPandas()
+        # Set the state of the operator
         self.n_features_in_ = len(X.columns)
         self.feature_names_in_ = X.columns
         data_min_ = np.zeros(shape=(self.n_features_in_))
