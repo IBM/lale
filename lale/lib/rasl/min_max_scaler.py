@@ -53,10 +53,7 @@ class _MinMaxScalerImpl:
         range_min, range_max = self.feature_range
         self.scale_ = (range_max - range_min) / (data_max_ - data_min_)
         self.min_ = range_min - data_min_ * self.scale_
-        return self
-
-    def transform(self, X):
-        range_min, range_max = self.feature_range
+        # Prepare the transformer
         ops = {}
         for i, c in enumerate(X.columns):
             c_std = (it[c] - self.data_min_[i]) / (  # type: ignore
@@ -64,9 +61,11 @@ class _MinMaxScalerImpl:
             )
             c_scaled = c_std * (range_max - range_min) + range_min
             ops.update({c: c_scaled})
-        transformer = Map(columns=ops).fit(X)
-        X_transformed = transformer.transform(X)
-        return X_transformed
+        self.transformer = Map(columns=ops).fit(X)
+        return self
+
+    def transform(self, X):
+        return self.transformer.transform(X)
 
 
 _combined_schemas = {
