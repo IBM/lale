@@ -21,6 +21,15 @@ from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 
+try:
+    from pyspark import SparkConf, SparkContext
+    from pyspark.sql import SQLContext
+    from pyspark.sql.types import IntegerType, StructField, StructType
+
+    spark_installed = True
+except ImportError:
+    spark_installed = False
+
 
 class TestMinMaxScaler(unittest.TestCase):
     def setUp(self):
@@ -200,9 +209,31 @@ class TestPipeline(unittest.TestCase):
         X, y = data.data, data.target
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
 
+        if spark_installed:
+            conf = (
+                SparkConf()
+                .setMaster("local[2]")
+                .set("spark.driver.bindAddress", "127.0.0.1")
+            )
+            sc = SparkContext.getOrCreate(conf=conf)
+            self.sqlCtx = SQLContext(sc)
+            self.X_train_spark = self.sqlCtx.createDataFrame(self.X_train)
+            self.X_test_spark = self.sqlCtx.createDataFrame(self.X_test)
+            self.y_train_spark = self.sqlCtx.createDataFrame(
+                self.y_train, IntegerType()
+            )
+
     def test_pipeline_pandas(self):
         from lale.lib.sklearn import LogisticRegression
 
         pipeline = RaslMinMaxScaler() >> LogisticRegression()
         trained = pipeline.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
+
+    # def test_pipeline_spark(self):
+    #     from lale.lib.sklearn import LogisticRegression
+
+    #     if spark_installed:
+    #         pipeline = RaslMinMaxScaler() >> LogisticRegression()
+    #         trained = pipeline.fit(self.X_train_spark, self.y_train_spark)
+    #         _ = trained.predict(self.X_test_spark)
