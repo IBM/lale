@@ -12,5 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+RASL operators.
+
+Relational Algebra Operators
+============================
+
+* lale.lib.rasl. `Map`_
+
+
+Scikit-learn Operators
+======================
+
+* lale.lib.rasl. `MinMaxScaler`_
+"""
+
 from .map import Map
 from .min_max_scaler import MinMaxScaler
