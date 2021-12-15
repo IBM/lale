@@ -24,7 +24,6 @@ from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 try:
     from pyspark import SparkConf, SparkContext
     from pyspark.sql import SQLContext
-    from pyspark.sql.types import IntegerType
 
     spark_installed = True
 except ImportError:
@@ -219,9 +218,6 @@ class TestPipeline(unittest.TestCase):
             self.sqlCtx = SQLContext(sc)
             self.X_train_spark = self.sqlCtx.createDataFrame(self.X_train)
             self.X_test_spark = self.sqlCtx.createDataFrame(self.X_test)
-            self.y_train_spark = self.sqlCtx.createDataFrame(
-                self.y_train, IntegerType()
-            )
 
     def test_pipeline_pandas(self):
         from lale.lib.sklearn import LogisticRegression
@@ -230,10 +226,14 @@ class TestPipeline(unittest.TestCase):
         trained = pipeline.fit(self.X_train, self.y_train)
         _ = trained.predict(self.X_test)
 
-    # def test_pipeline_spark(self):
-    #     from lale.lib.sklearn import LogisticRegression
+    def test_pipeline_spark(self):
+        from lale.lib.sklearn import FunctionTransformer, LogisticRegression
 
-    #     if spark_installed:
-    #         pipeline = RaslMinMaxScaler() >> LogisticRegression()
-    #         trained = pipeline.fit(self.X_train_spark, self.y_train_spark)
-    #         _ = trained.predict(self.X_test_spark)
+        if spark_installed:
+            pipeline = (
+                RaslMinMaxScaler()
+                >> FunctionTransformer(func=lambda X: X.toPandas())
+                >> LogisticRegression()
+            )
+            trained = pipeline.fit(self.X_train_spark, self.y_train)
+            _ = trained.predict(self.X_test_spark)
