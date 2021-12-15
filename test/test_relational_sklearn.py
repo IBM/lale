@@ -116,6 +116,13 @@ class TestMinMaxScaler(unittest.TestCase):
         self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
         self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
+    def test_get_params(self):
+        sk_scaler = SkMinMaxScaler()
+        rasl_scaler = RaslMinMaxScaler()
+        sk_params = sk_scaler.get_params()
+        rasl_params = rasl_scaler.get_params()
+        self.assertDictContainsSubset(sk_params, rasl_params)
+
 
 class TestMinMaxScalerSpark(unittest.TestCase):
     def setUp(self):
