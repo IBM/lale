@@ -70,6 +70,9 @@ class _MinMaxScalerImpl:
     def transform(self, X):
         return self.transformer.transform(X)
 
+    def fit_transform(self, X, y=None):
+        scaler = self.fit(X, y)
+        return scaler.transform(X)
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",

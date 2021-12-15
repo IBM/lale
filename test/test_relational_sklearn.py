@@ -123,6 +123,22 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_params = rasl_scaler.get_params()
         self.assertDictContainsSubset(sk_params, rasl_params)
 
+    def test_fit_transform(self):
+        columns = ["Product number", "Quantity", "Retailer code"]
+        data = self.go_sales[0][columns]
+        sk_scaler = SkMinMaxScaler(feature_range=(-1, 15))
+        rasl_scaler = RaslMinMaxScaler(feature_range=(-1, 15))
+        sk_transformed = sk_scaler.fit_transform(data)
+        rasl_transformed = rasl_scaler.fit_transform(data)
+        self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
+        self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
+        self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
+        self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
+        self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
+        self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
+        self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
+        self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
+        self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
 class TestMinMaxScalerSpark(unittest.TestCase):
     def setUp(self):
@@ -205,6 +221,24 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
         self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
+    def test_fit_transform_range(self):
+        columns = ["Product number", "Quantity", "Retailer code"]
+        data = self.go_sales[0][columns]
+        data_spark = self.go_sales_spark[0][columns]
+        sk_scaler = SkMinMaxScaler(feature_range=(-1, 15))
+        rasl_scaler = RaslMinMaxScaler(feature_range=(-1, 15))
+        sk_transformed = sk_scaler.fit_transform(data)
+        rasl_transformed = rasl_scaler.fit_transform(data_spark)
+        rasl_transformed = rasl_transformed.toPandas()
+        self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
+        self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
+        self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
+        self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
+        self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
+        self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
+        self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
+        self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
+        self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
 class TestPipeline(unittest.TestCase):
     def setUp(self):
