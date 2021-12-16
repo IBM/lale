@@ -174,3 +174,16 @@ class TestReplace(unittest.TestCase):
             estimators=new_cls_list, final_estimator=expected_vc
         )
         self.assertEqual(replaced_sc.to_json(), expected_sc.to_json())
+
+    def test_replace_choice(self):
+        choice = PCA | SelectKBest
+        choice_pipeline = choice >> LogisticRegression
+
+        replaced_pipeline = choice_pipeline.replace(choice, SelectKBest)
+        expected_pipeline = SelectKBest >> LogisticRegression
+        self.assertEqual(replaced_pipeline.to_json(), expected_pipeline.to_json())
+
+        choice2 = NoOp | LinearRegression
+        replaced_pipeline = choice_pipeline.replace(LogisticRegression, choice2)
+        expected_pipeline = choice >> choice2
+        self.assertEqual(replaced_pipeline.to_json(), expected_pipeline.to_json())

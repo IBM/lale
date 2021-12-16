@@ -649,10 +649,31 @@ class Operator(metaclass=AbstractVisitorMeta):
             Modified operator where original operator is replaced with replacement throughout.
         """
 
+        def _check_match(subject, original_op):
+            if (
+                not isinstance(original_op, TrainableOperator)
+                and isinstance(subject, IndividualOp)
+                and isinstance(original_op, IndividualOp)
+            ):
+                # is planned operator, so replace any matching downstream operator
+                if isinstance(subject, original_op):  # type: ignore
+                    return True
+            else:
+                # is trainable or trained operator, only check exact instance match
+                if subject == original_op:
+                    return True
+            return False
+
         def _replace(subject, original_op, replacement_op):
 
             # if operator has steps, recursively iterate through steps and recombine
             if hasattr(subject, "steps"):
+
+                # special case if original_op has steps, check if it matches subject first
+                if hasattr(original_op, "steps"):
+                    if _check_match(subject, original_op):
+                        return replacement_op
+
                 new_steps: List[Operator] = []
                 if isinstance(subject, BasePipeline):
                     # first convert pipeline edges to index-based representation
@@ -688,14 +709,8 @@ class Operator(metaclass=AbstractVisitorMeta):
                     )
             else:
                 # base case for recursion: operator with no steps, returns replacement if applicable, original otherwise
-                if not isinstance(original_op, TrainableOperator):
-                    # is planned operator, so replace any matching downstream operator
-                    if isinstance(subject, original_op):  # type: ignore
-                        return replacement_op
-                else:
-                    # is trainable or trained operator, only check exact instance match
-                    if subject == original_op:
-                        return replacement_op
+                if _check_match(subject, original_op):
+                    return replacement_op
 
                 # special case of subject being in a collection
                 if isinstance(subject, list):
