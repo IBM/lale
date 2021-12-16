@@ -61,7 +61,6 @@ from lale.expressions import (
 )
 from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.lale import (
-    Aggregate,
     Alias,
     Filter,
     GroupBy,
@@ -72,7 +71,7 @@ from lale.lib.lale import (
     Scan,
     SplitXy,
 )
-from lale.lib.rasl import Map
+from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import PCA, LogisticRegression
 
 

@@ -22,8 +22,7 @@ from lale.expressions import it
 from lale.expressions import max as agg_max
 from lale.expressions import min as agg_min
 from lale.helpers import _is_pandas_df, _is_spark_df
-from lale.lib.lale.aggregate import Aggregate
-from lale.lib.rasl import Map
+from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import min_max_scaler
 from lale.schemas import Enum
 

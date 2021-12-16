@@ -191,7 +191,7 @@ _output_transform_schema = {
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Relational algebra aggregate operator.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.aggregate.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.aggregate.html",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

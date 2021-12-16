@@ -45,6 +45,7 @@ Operator libraries
 * `lale.lib.imblearn`_ based on `imbalanced-learn`_
 * `lale.lib.lightgbm`_ based on `LightGBM`_
 * `lale.lib.pytorch`_ based on `PyTorch`_
+* `lale.lib.rasl`_ relational algebra in scikit-learn
 * `lale.lib.snapml`_ based on `Snap ML`_
 * `lale.lib.spacy`_ based on `spaCy`_
 * `lale.lib.tensorflow`_ based on `TensorFlow`_
@@ -66,6 +67,7 @@ Operator libraries
 .. _`LightGBM`: https://lightgbm.readthedocs.io/en/latest/Python-API.html
 .. _`lale.lib.snapml`: modules/lale.lib.snapml.html#module-lale.lib.snapml
 .. _`Snap ML`: https://www.zurich.ibm.com/snapml/
+.. _`lale.lib.rasl`: modules/lale.lib.rasl.html#module-lale.lib.rasl
 .. _`lale.lib.pytorch`: modules/lale.lib.pytorch.html#module-lale.lib.pytorch
 .. _`PyTorch`: https://pytorch.org/
 .. _`lale.lib.spacy`: modules/lale.lib.spacy.html#module-lale.lib.spacy

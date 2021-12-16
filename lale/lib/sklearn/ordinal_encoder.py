@@ -122,65 +122,6 @@ class _OrdinalEncoderImpl:
                             X_tr[j, i] = self.unknown_categories_mapping[i][label]
             return X_tr
 
-    # _hyperparams_schema = {
-    #     "description": "Hyperparameter schema for the OrdinalEncoder model from scikit-learn.",
-    #     "allOf": [
-    #         {
-    #             "type": "object",
-    #             "additionalProperties": False,
-    #             "required": ["categories", "dtype"],
-    #             "relevantToOptimizer": [],
-    #             "properties": {
-    #                 "categories": {
-    #                     "anyOf": [
-    #                         {
-    #                             "description": "Determine categories automatically from training data.",
-    #                             "enum": ["auto", None],
-    #                         },
-    #                         {
-    #                             "description": "The ith list element holds the categories expected in the ith column.",
-    #                             "type": "array",
-    #                             "items": {
-    #                                 "anyOf": [
-    #                                     {
-    #                                         "type": "array",
-    #                                         "items": {"type": "string"},
-    #                                     },
-    #                                     {
-    #                                         "type": "array",
-    #                                         "items": {"type": "number"},
-    #                                         "description": "Should be sorted.",
-    #                                     },
-    #                                 ]
-    #                             },
-    #                         },
-    #                     ],
-    #                     "default": "auto",
-    #                 },
-    #                 "dtype": {
-    #                     "description": "Desired dtype of output, must be number. See https://docs.scipy.org/doc/numpy-1.14.0/reference/arrays.scalars.html#arrays-scalars-built-in",
-    #                     "laleType": "Any",
-    #                     "default": "float64",
-    #                 },
-    #                 "handle_unknown": {
-    #                     "description": """When set to ‘error’ an error will be raised in case an unknown categorical feature is present during transform.
-    # When set to ‘use_encoded_value’, the encoded value of unknown categories will be set to the value given for the parameter unknown_value.
-    # In inverse_transform, an unknown category will be denoted as None.""",
-    #                     "enum": ["error", "use_encoded_value"],
-    #                     "default": "error",
-    #                 },
-    #                 "unknown_value": {
-    #                     "description": """When the parameter handle_unknown is set to ‘use_encoded_value’, this parameter is required and will set the encoded value of unknown categories.
-    # It has to be distinct from the values used to encode any of the categories in fit.
-    # """,
-    #                     "anyOf": [{"type": "integer"}, {"enum": [None, np.nan]}],
-    #                     "default": None,
-    #                 },
-    #             },
-    #         }
-    #     ],
-    # }
-
 
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the OrdinalEncoder model from scikit-learn.",
@@ -243,7 +184,6 @@ n is the maximum encoding value based on known categories.""",
 }
 
 _input_fit_schema = {
-    "description": "Input data schema for training the OrdinalEncoder model from scikit-learn.",
     "type": "object",
     "required": ["X"],
     "additionalProperties": False,
@@ -263,7 +203,6 @@ _input_fit_schema = {
 }
 
 _input_transform_schema = {
-    "description": "Input data schema for predictions using the OrdinalEncoder model from scikit-learn.",
     "type": "object",
     "required": ["X"],
     "additionalProperties": False,
@@ -282,7 +221,7 @@ _input_transform_schema = {
 }
 
 _output_transform_schema = {
-    "description": "Output data schema for predictions (projected data) using the OrdinalEncoder model from scikit-learn.",
+    "description": "Ordinal codes.",
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }
