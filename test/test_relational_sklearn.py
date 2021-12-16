@@ -144,14 +144,6 @@ class TestMinMaxScaler(unittest.TestCase):
 class TestMinMaxScalerSpark(unittest.TestCase):
     def setUp(self):
         self.go_sales = fetch_go_sales_dataset()
-        if spark_installed:
-            conf = (
-                SparkConf()
-                .setMaster("local[2]")
-                .set("spark.driver.bindAddress", "127.0.0.1")
-            )
-            sc = SparkContext.getOrCreate(conf=conf)
-            self.sqlCtx = SQLContext(sc)
 
     def _check_trained(self, sk_trained, rasl_trained):
         self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
@@ -167,7 +159,7 @@ class TestMinMaxScalerSpark(unittest.TestCase):
     def test_fit(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
-        data_spark = self.sqlCtx.createDataFrame(data)
+        data_spark = lale.datasets.pandas2spark(data)
         sk_scaler = SkMinMaxScaler()
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.fit(data)
@@ -177,7 +169,7 @@ class TestMinMaxScalerSpark(unittest.TestCase):
     def test_transform(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
-        data_spark = self.sqlCtx.createDataFrame(data)
+        data_spark = lale.datasets.pandas2spark(data)
         sk_scaler = SkMinMaxScaler()
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.fit(data)
@@ -198,7 +190,7 @@ class TestMinMaxScalerSpark(unittest.TestCase):
     def test_fit_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
-        data_spark = self.sqlCtx.createDataFrame(data)
+        data_spark = lale.datasets.pandas2spark(data)
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
         sk_trained = sk_scaler.fit(data)
@@ -208,7 +200,7 @@ class TestMinMaxScalerSpark(unittest.TestCase):
     def test_transform_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
-        data_spark = self.sqlCtx.createDataFrame(data)
+        data_spark = lale.datasets.pandas2spark(data)
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
         sk_trained = sk_scaler.fit(data)
@@ -230,11 +222,11 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         columns = ["Product number", "Quantity", "Retailer code"]
         data = self.go_sales[0][columns]
         data1 = data[:10]
-        data1_spark = self.sqlCtx.createDataFrame(data1)
+        data1_spark = lale.datasets.pandas2spark(data1)
         data2 = data[10:100]
-        data2_spark = self.sqlCtx.createDataFrame(data2)
+        data2_spark = lale.datasets.pandas2spark(data2)
         data3 = data[100:]
-        data3_spark = self.sqlCtx.createDataFrame(data3)
+        data3_spark = lale.datasets.pandas2spark(data3)
         sk_scaler = SkMinMaxScaler()
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.partial_fit(data1)
