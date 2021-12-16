@@ -31,14 +31,14 @@ Estimators:
 
 Transformers:
 
-* lale.lib.lale. `Aggregate`_
+* lale.lib.rasl. `Aggregate`_
 * lale.lib.lale. `Alias`_
 * lale.lib.lale. `Batching`_
 * lale.lib.lale. `ConcatFeatures`_
 * lale.lib.lale. `Filter`_
 * lale.lib.lale. `GroupBy`_
 * lale.lib.lale. `Join`_
-* lale.lib.lale. `Map`_
+* lale.lib.rasl. `Map`_
 * lale.lib.lale. `NoOp`_
 * lale.lib.lale. `OrderBy`_
 * lale.lib.lale. `Project`_
@@ -68,10 +68,10 @@ Estimators and transformers:
 .. _`NoOp`: lale.lib.lale.no_op.html
 .. _`Project`: lale.lib.lale.project.html
 .. _`SampleBasedVoting`: lale.lib.lale.sample_based_voting.html
-.. _`Aggregate`: lale.lib.lale.aggregate.html
+.. _`Aggregate`: lale.lib.rasl.aggregate.html
 .. _`Filter`: lale.lib.lale.filter.html
 .. _`GroupBy`: lale.lib.lale.group_by.html
-.. _`Map`: lale.lib.lale.map.html
+.. _`Map`: lale.lib.rasl.map.html
 .. _`OrderBy`: lale.lib.lale.orderby.html
 .. _`Join`: lale.lib.lale.join.html
 .. _`Alias`: lale.lib.lale.alias.html
@@ -95,9 +95,8 @@ Functions:
 .. _`spark_explainer`: lale.lib.lale.spark_explainer.html
 """
 
-from lale.lib.rasl import Map
+from lale.lib.rasl import Aggregate, Map
 
-from .aggregate import Aggregate
 from .alias import Alias
 
 # estimators

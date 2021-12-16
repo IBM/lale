@@ -751,7 +751,7 @@ def fetch(
         if verbose:
             print(f"shape of X after preprocessing: {X.shape}")
 
-        if astype == "pandas":
+        if astype in ["pandas", "spark"]:
             cat_col_names = [attributes[i][0].lower() for i in categorical_cols]
             one_hot_encoder = preprocessing.steps[1][1].named_transformers_["ohe"]
             encoded_names = one_hot_encoder.get_feature_names(cat_col_names)
@@ -773,7 +773,7 @@ def fetch(
     if preprocess:
         labelencoder = LabelEncoder()
         y = labelencoder.fit_transform(y)
-    if astype == "pandas" and not isinstance(y, pd.Series):
+    if astype in ["pandas", "spark"] and not isinstance(y, pd.Series):
         y = pd.Series(y, name=target_col)
 
     X_train, X_test, y_train, y_test = train_test_split(
@@ -793,4 +793,10 @@ def fetch(
         X_train, X_test, y_train, y_test = add_schemas(
             schema_orig, target_col, X_train, X_test, y_train, y_test
         )
+    if astype == "spark":
+        from lale.datasets import pandas2spark
+
+        X_train = pandas2spark(X_train)
+        X_test = pandas2spark(X_test)
+
     return (X_train, y_train), (X_test, y_test)

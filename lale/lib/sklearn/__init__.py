@@ -98,6 +98,7 @@ Clustering:
 .. _`AdaBoostClassifier`: lale.lib.sklearn.ada_boost_classifier.html
 .. _`AdaBoostRegressor`: lale.lib.sklearn.ada_boost_regressor.html
 .. _`BaggingClassifier`: lale.lib.sklearn.bagging_classifier.html
+.. _`BaggingRegressor`: lale.lib.sklearn.bagging_regressor.html
 .. _`ColumnTransformer`: lale.lib.sklearn.column_transformer.html
 .. _`DecisionTreeClassifier`: lale.lib.sklearn.decision_tree_classifier.html
 .. _`DecisionTreeRegressor`: lale.lib.sklearn.decision_tree_regressor.html
