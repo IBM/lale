@@ -20,7 +20,7 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 from lale.expressions import collect_set, it, replace
-from lale.lib.sklearn import OrdinalEncoder as SkOrdinalEncoder
+from lale.lib.sklearn import ordinal_encoder
 
 from .aggregate import Aggregate
 from .map import Map
@@ -76,9 +76,27 @@ class _OrdinalEncoderImpl:
 
 
 _combined_schemas = {
-    **SkOrdinalEncoder._schemas,
-    "description": "Relational algebra implementation of OrdinalEncoder.",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": """Relational algebra reimplementation of scikit-learn's `OrdinalEncoder`_ transformer that encodes categorical features as numbers.
+Works on both pandas and Spark dataframes by using `Aggregate`_ for `fit` and `Map`_ for `transform`, which in turn use the appropriate backend.
+
+.. _`OrdinalEncoder`: https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OrdinalEncoder.html
+.. _`Aggregate`: https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.aggregate.html
+.. _`Map`: https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.map.html
+""",
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.ordinal_encoder.html",
+    "type": "object",
+    "tags": {
+        "pre": ["~categoricals"],
+        "op": ["transformer", "interpretable"],
+        "post": [],
+    },
+    "properties": {
+        "hyperparams": ordinal_encoder._hyperparams_schema,
+        "input_fit": ordinal_encoder._input_fit_schema,
+        "input_transform": ordinal_encoder._input_transform_schema,
+        "output_transform": ordinal_encoder._output_transform_schema,
+    },
 }
 
 OrdinalEncoder = lale.operators.make_operator(_OrdinalEncoderImpl, _combined_schemas)
@@ -96,6 +114,13 @@ OrdinalEncoder = typing.cast(
             "enum": ["use_encoded_value"],
             "description": "This implementation only supports `handle_unknown='use_encoded_value'`.",
             "default": "use_encoded_value",
+        },
+        unknown_value={
+            "anyOf": [
+                {"type": "integer"},
+                {"enum": [np.nan, None]},
+            ],
+            "description": "The encoded value of unknown categories to use when `handle_unknown='use_encoded_value'`. It has to be distinct from the values used to encode any of the categories in fit. If set to np.nan, the dtype hyperparameter must be a float dtype.",
         },
     ),
 )
