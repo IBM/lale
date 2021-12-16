@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,3 +20,4 @@ from .sklearn_to_pandas import (
     digits_df,
     load_iris_df,
 )
+from .util import pandas2spark

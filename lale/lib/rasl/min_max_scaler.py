@@ -20,8 +20,7 @@ import lale.docstrings
 import lale.operators
 from lale.expressions import it, max, min
 from lale.helpers import _is_spark_df
-from lale.lib.lale.aggregate import Aggregate
-from lale.lib.rasl import Map
+from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import min_max_scaler
 from lale.schemas import Enum
 

@@ -18,6 +18,7 @@ RASL operators.
 Relational Algebra Operators
 ============================
 
+* lale.lib.rasl. `Aggregate`_
 * lale.lib.rasl. `Map`_
 
 
@@ -25,7 +26,17 @@ Scikit-learn Operators
 ======================
 
 * lale.lib.rasl. `MinMaxScaler`_
+* lale.lib.rasl. `OrdinalEncoder`_
+
+
+.. _`Aggregate`: lale.lib.rasl.aggregate.html
+.. _`Map`: lale.lib.rasl.map.html
+.. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
+.. _`OrdinalEncoder`: lale.lib.rasl.ordinal_encoder.html
+
 """
 
+from .aggregate import Aggregate
 from .map import Map
 from .min_max_scaler import MinMaxScaler
+from .ordinal_encoder import OrdinalEncoder
