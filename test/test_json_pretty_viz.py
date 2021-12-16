@@ -853,7 +853,8 @@ pipeline = numpy_column_selector >> compress_strings"""
 
     def test_expression(self):
         from lale.expressions import it, mean
-        from lale.lib.lale import Aggregate, Join, Scan  # type: ignore
+        from lale.lib.lale import Join, Scan
+        from lale.lib.rasl import Aggregate
 
         scan1 = Scan(table=it["table1.csv"])
         scan2 = Scan(table=it["table2.csv"])
@@ -863,7 +864,7 @@ pipeline = numpy_column_selector >> compress_strings"""
         expected = """from lale.lib.lale import Scan
 from lale.expressions import it
 from lale.lib.lale import Join
-from lale.lib.lale import Aggregate
+from lale.lib.rasl import Aggregate
 from lale.expressions import mean
 import lale
 
