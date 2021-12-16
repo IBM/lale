@@ -230,7 +230,6 @@ class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         targets = ["pandas", "spark"]
-        # targets = ["pandas"]
         cls.tgt2gosales = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
         cls.tgt2creditg = {
             tgt: lale.datasets.openml.fetch(
