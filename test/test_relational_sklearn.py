@@ -19,6 +19,7 @@ import jsonschema
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
+from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
 
 import lale.datasets
@@ -28,6 +29,7 @@ from lale.expressions import it
 from lale.lib.lale import Scan, categorical
 from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
+from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
 from lale.lib.sklearn import FunctionTransformer, LogisticRegression
 
@@ -293,6 +295,79 @@ class TestOrdinalEncoder(unittest.TestCase):
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslOrdinalEncoder(**encoder_args) >> to_pd >> lr
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            rasl_predicted = rasl_trained.predict(test_X)
+            self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
+            self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+
+
+class TestOneHotEncoder(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark"]
+        cls.tgt2creditg = {
+            tgt: lale.datasets.openml.fetch(
+                "credit-g",
+                "classification",
+                preprocess=False,
+                astype=tgt,
+            )
+            for tgt in targets
+        }
+
+    def test_fit(self):
+        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        cat_columns = categorical()(train_X_pd)
+        prefix = Map(columns={c: it[c] for c in cat_columns})
+        rasl_trainable = prefix >> RaslOneHotEncoder()
+        sk_trainable = prefix >> SkOneHotEncoder()
+        sk_trained = sk_trainable.fit(train_X_pd)
+        sk_categories = sk_trained.get_last().impl.categories_
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X)
+            rasl_categories = rasl_trained.get_last().impl.categories_
+            self.assertEqual(len(sk_categories), len(rasl_categories), tgt)
+            for i in range(len(sk_categories)):
+                self.assertEqual(list(sk_categories[i]), list(rasl_categories[i]), tgt)
+
+    def test_transform(self):
+        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        cat_columns = categorical()(train_X_pd)
+        prefix = Map(columns={c: it[c] for c in cat_columns})
+        rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False)
+        sk_trainable = prefix >> SkOneHotEncoder(sparse=False)
+        sk_trained = sk_trainable.fit(train_X_pd)
+        sk_transformed = sk_trained.transform(test_X_pd)
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X)
+            rasl_transformed = rasl_trained.transform(test_X)
+            if tgt == "spark":
+                rasl_transformed = rasl_transformed.toPandas()
+            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            for row_idx in range(sk_transformed.shape[0]):
+                for col_idx in range(sk_transformed.shape[1]):
+                    self.assertEqual(
+                        sk_transformed[row_idx, col_idx],
+                        rasl_transformed.iloc[row_idx, col_idx],
+                        (row_idx, col_idx, tgt),
+                    )
+
+    def test_predict(self):
+        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        cat_columns = categorical()(train_X_pd)
+        prefix = Map(columns={c: it[c] for c in cat_columns})
+        to_pd = FunctionTransformer(
+            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
+        )
+        lr = LogisticRegression()
+        sk_trainable = prefix >> SkOneHotEncoder(sparse=False) >> lr
+        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+        sk_predicted = sk_trained.predict(test_X_pd)
+        rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False) >> to_pd >> lr
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)

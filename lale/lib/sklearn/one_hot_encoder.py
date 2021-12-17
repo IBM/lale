@@ -77,7 +77,6 @@ _hyperparams_schema = {
 }
 
 _input_fit_schema = {
-    "description": "Input data schema for training the OneHotEncoder model from scikit-learn.",
     "type": "object",
     "required": ["X"],
     "additionalProperties": False,
@@ -95,7 +94,6 @@ _input_fit_schema = {
 }
 
 _input_transform_schema = {
-    "description": "Input data schema for predictions using the OneHotEncoder model from scikit-learn.",
     "type": "object",
     "required": ["X"],
     "additionalProperties": False,
@@ -112,7 +110,7 @@ _input_transform_schema = {
 }
 
 _output_transform_schema = {
-    "description": "Output data schema for predictions (projected data) using the OneHotEncoder model from scikit-learn. See the official documentation for details: https://scikit-learn.org/0.20/modules/generated/sklearn.preprocessing.OneHotEncoder.html\n",
+    "description": "One-hot codes.",
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }
