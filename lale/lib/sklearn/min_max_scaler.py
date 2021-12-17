@@ -82,7 +82,7 @@ _hyperparams_schema = {
                             "maximumForOptimizer": 1,
                         },
                     ],
-                    "default": [0, 1],
+                    "default": (0, 1),
                 },
                 "copy": {
                     "description": "Set to False to perform inplace row normalization and avoid "
