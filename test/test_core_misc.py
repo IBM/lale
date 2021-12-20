@@ -935,6 +935,26 @@ class TestHyperparamRanges(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
 
+    def test_lgbclassifier(self):
+        from lale.lib.lightgbm import LGBMClassifier
+
+        ranges, dists = LGBMClassifier.get_param_ranges()
+        expected_ranges = {
+            "boosting_type": ["dart", "gbdt"],
+            "num_leaves": [4, 8, 32, 64, 128, 16, 2],
+            "learning_rate": (0.02, 1.0, 0.1),
+            "n_estimators": (50, 1000, 200),
+            "min_child_weight": (0.0001, 0.01, 0.001),
+            "min_child_samples": (5, 30, 20),
+            "subsample": (0.01, 1.0, 1.0),
+            "subsample_freq": (0, 5, 0),
+            "colsample_bytree": (0.01, 1.0, 1.0),
+            "reg_alpha": (0.0, 1.0, 0.0),
+            "reg_lambda": (0.0, 1.0, 0.0),
+        }
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+
 
 class TestScoreIndividualOp(unittest.TestCase):
     def setUp(self):
