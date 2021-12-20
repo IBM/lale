@@ -1807,10 +1807,32 @@ class IndividualOp(Operator):
                     if s:
                         return s
                 if s is None:
+                    enums = []
                     for s in schema["anyOf"]:
                         if "enum" in s:
                             if ("forOptimizer" not in s) or s["forOptimizer"]:
-                                return s
+                                enums.append(s)
+                    if len(enums) == 1:
+                        return enums[0]
+                    elif enums:
+                        # combine them, and see if there is an anyOf default that we want to use as well
+                        vals = [item for s in enums for item in s["enum"]]
+                        d = None
+                        sch_d = schema.get("default", None)
+                        if sch_d and sch_d in vals:
+                            d = sch_d
+                        else:
+                            for s in enums:
+                                if "default" in s:
+                                    d = s["default"]
+                                    break
+                        new_s = {
+                            "enum": vals,
+                        }
+                        if d is not None:
+                            new_s["default"] = d
+                        return new_s
+
                 return schema["anyOf"][0]
             return schema
 
