@@ -955,6 +955,31 @@ class TestHyperparamRanges(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
 
+    def test_bool_enum(self):
+        from lale.lib.sklearn import SVR
+        from lale.schemas import AnyOf, Bool, Null
+
+        SVR = SVR.customize_schema(
+            shrinking=AnyOf(
+                types=[Bool(), Null()],
+                default=None,
+                desc="Whether to use the shrinking heuristic.",
+            )
+        )
+
+        ranges, dists = SVR.get_param_ranges()
+        expected_ranges = {
+            "kernel": ["poly", "rbf", "sigmoid", "linear"],
+            "degree": (2, 5, 3),
+            "gamma": (3.0517578125e-05, 8, None),
+            "tol": (0.0, 0.01, 0.001),
+            "C": (0.03125, 32768, 1.0),
+            "shrinking": [False, True, None],
+        }
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+
 
 class TestScoreIndividualOp(unittest.TestCase):
     def setUp(self):
