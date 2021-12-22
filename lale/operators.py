@@ -360,6 +360,13 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         return lale.json_operator.to_json(self, call_depth=2)
 
+    def get_forwards(self) -> Union[bool, List[str]]:
+        """Returns the list of attributes (methods/properties)
+        the schema has asked to be forwarded.  A boolean value is a blanket
+        opt-in or out of forwarding
+        """
+        return False
+
     @abstractmethod
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
         """For scikit-learn compatibility"""
@@ -1322,6 +1329,7 @@ class IndividualOp(Operator):
                 "score",
                 "score_samples",
                 "predict_log_proba",
+                "_schemas",
                 "_impl",
                 "_impl_class",
                 "_hyperparams",
@@ -1331,6 +1339,7 @@ class IndividualOp(Operator):
                 "_cached_trained_op_list",
             ]
             found_ops.extend(dir(TrainedIndividualOp))
+            found_ops.extend(dir(self))
             self._cached_trained_op_list = found_ops
             return found_ops
 
@@ -1700,7 +1709,7 @@ class IndividualOp(Operator):
 
     def get_forwards(self) -> Union[bool, List[str]]:
         """Returns the list of attributes (methods/properties)
-        the schemas has asked to be forwarded.  A boolean value is a blanket
+        the schema has asked to be forwarded.  A boolean value is a blanket
         opt-in or out of forwarding
         """
         forwards = self._schemas.get("forwards", False)
