@@ -1330,7 +1330,7 @@ class IndividualOp(Operator):
                 "_enum_attributes",
                 "_cached_trained_op_list",
             ]
-            found_ops.extend(TrainedIndividualOp.__dir__(self))
+            found_ops.extend(dir(TrainedIndividualOp))
             self._cached_trained_op_list = found_ops
             return found_ops
 
