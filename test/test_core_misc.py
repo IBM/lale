@@ -1114,3 +1114,162 @@ Fix [A]: You can make the following changes in the pipeline in order to make it 
 Fix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
 to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
             )
+
+
+class _OperatorForwardingTestWrappedImpl:
+    def __init__(self):
+        pass
+
+    def fshadow(self):
+        return False
+
+    def finner(self):
+        return True
+
+
+class _OperatorForwardingTestImpl:
+    def __init__(self):
+        self._wrapped_model = _OperatorForwardingTestWrappedImpl()
+
+    def fit(self, X, y=None):
+        return self
+
+    def f(self):
+        return True
+
+    def fshadow(self):
+        return True
+
+    def fnotforward(self):
+        return True
+
+    @property
+    def p(self):
+        return True
+
+
+_operator_forwarding_test_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "allOf": [{}],
+}
+
+_operator_forwarding_test_combined_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters.",
+    "type": "object",
+    "tags": {"pre": [], "op": [""], "post": []},
+    "forwards": ["f", "p", "fshadow", "finner"],
+    "properties": {
+        "hyperparams": _operator_forwarding_test_schema,
+        # "input_fit": None,
+        # "input_transform": ,
+        # "output_transform": _output_transform_schema,
+    },
+}
+
+
+_OperatorForwardingTest = Ops.make_operator(
+    _OperatorForwardingTestImpl, _operator_forwarding_test_combined_schema
+)
+
+
+class TestOperatorFowarding(unittest.TestCase):
+    def test_fowards_method_list(self):
+        self.assertEquals(
+            _OperatorForwardingTest.get_forwards(),
+            _operator_forwarding_test_combined_schema["forwards"],
+        )
+
+    def test_fowards_method_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.f())
+
+    # test that the outer impl method is given priority over the inner impl method
+    def test_fowards_method_shadow_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.fshadow())
+
+    def test_fowards_method_wrapped_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.finner())
+
+    def test_fowards_property_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.p)
+
+    def test_not_fowards_method(self):
+        with self.assertRaises(AttributeError):
+            self.assertTrue(_OperatorForwardingTest.fnotforward())
+
+    def test_bad_forwards_decl(self):
+        from test import EnableSchemaValidation
+
+        _operator_forwarding_test_combined_schema2 = {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "Combined schema for expected data and hyperparameters.",
+            "type": "object",
+            "tags": {"pre": [], "op": [""], "post": []},
+            "forwards": ["f", "p", "fshadow", "finner", "predict"],
+            "properties": {
+                "hyperparams": _operator_forwarding_test_schema,
+                # "input_fit": None,
+                # "input_transform": ,
+                # "output_transform": _output_transform_schema,
+            },
+        }
+
+        with self.assertRaises(AssertionError):
+            with EnableSchemaValidation():
+                Ops.make_operator(
+                    _OperatorForwardingTestImpl,
+                    _operator_forwarding_test_combined_schema2,
+                )
+
+    def test_bad_forwards_false_decl(self):
+
+        _operator_forwarding_test_combined_schema2 = {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "Combined schema for expected data and hyperparameters.",
+            "type": "object",
+            "tags": {"pre": [], "op": [""], "post": []},
+            "properties": {
+                "hyperparams": _operator_forwarding_test_schema,
+                # "input_fit": None,
+                # "input_transform": ,
+                # "output_transform": _output_transform_schema,
+            },
+        }
+        _OperatorForwardingTest2 = Ops.make_operator(
+            _OperatorForwardingTestImpl, _operator_forwarding_test_combined_schema2
+        )
+        with self.assertRaises(AttributeError):
+            _OperatorForwardingTest2.f()
+
+    def test_bad_forwards_true_decl(self):
+
+        _operator_forwarding_test_combined_schema2 = {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "Combined schema for expected data and hyperparameters.",
+            "type": "object",
+            "tags": {"pre": [], "op": [""], "post": []},
+            "forwards": True,
+            "properties": {
+                "hyperparams": _operator_forwarding_test_schema,
+                # "input_fit": None,
+                # "input_transform": ,
+                # "output_transform": _output_transform_schema,
+            },
+        }
+        _OperatorForwardingTest2 = Ops.make_operator(
+            _OperatorForwardingTestImpl, _operator_forwarding_test_combined_schema2
+        )
+        _OperatorForwardingTest2.f()
+        _OperatorForwardingTest2.fnotforward()
+
+        with self.assertRaises(AttributeError):
+            _OperatorForwardingTest2.unknown()
+
+    def test_customize_schema_forward_success(self):
+        Op = _OperatorForwardingTest.customize_schema(forwards=["fnotforward"])
+        self.assertTrue(Op.fnotforward())
+
+    def test_customize_schema_forward_failure(self):
+        Op = _OperatorForwardingTest.customize_schema(forwards=["fnotforward"])
+        with self.assertRaises(AttributeError):
+            self.assertTrue(Op.f()())
