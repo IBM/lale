@@ -871,7 +871,7 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
             # we should try forwarding it.
             # first, a sanity check to prevent confusing behaviour where
             # forwarding works on a plannedoperator and then fails on a trainedoperator
-            trained_ops = self._get_trained_op_list()
+            trained_ops = self._get_masked_attr_list()
 
             if name not in trained_ops:
                 # ok, let us try to forward it
@@ -1315,9 +1315,9 @@ class IndividualOp(Operator):
     def _is_instantiated(self):
         return not inspect.isclass(self._impl)
 
-    def _get_trained_op_list(self):
-        if hasattr(self, "_cached_trained_op_list"):
-            return self._cached_trained_op_list
+    def _get_masked_attr_list(self):
+        if hasattr(self, "_cached_masked_attr_list"):
+            return self._cached_masked_attr_list
         else:
             found_ops = [
                 "get_pipeline",
@@ -1336,11 +1336,11 @@ class IndividualOp(Operator):
                 "_frozen_hyperparams",
                 "_trained",
                 "_enum_attributes",
-                "_cached_trained_op_list",
+                "_cached_masked_attr_list",
             ]
             found_ops.extend(dir(TrainedIndividualOp))
             found_ops.extend(dir(self))
-            self._cached_trained_op_list = found_ops
+            self._cached_masked_attr_list = found_ops
             return found_ops
 
     def _check_schemas(self):
@@ -1366,7 +1366,7 @@ class IndividualOp(Operator):
         forwards = self.get_forwards()
         # if it is a boolean, there is nothing to check
         if isinstance(forwards, list):
-            trained_ops = self._get_trained_op_list()
+            trained_ops = self._get_masked_attr_list()
             for f in forwards:
                 assert (
                     f not in trained_ops
