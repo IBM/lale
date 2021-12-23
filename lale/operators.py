@@ -770,7 +770,7 @@ class Operator(metaclass=AbstractVisitorMeta):
         return self
 
     def __getattr__(self, name: str) -> Any:
-        if name == "_cached_trained_op_list":
+        if name == "_cached_masked_attr_list":
             raise AttributeError()
 
         predict_methods = [
