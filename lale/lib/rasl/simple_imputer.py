@@ -106,10 +106,10 @@ class _SimpleImputerImpl:
             agg_data = pd.DataFrame(agg_data, columns=X.columns)
         if agg_data is None and agg_op is not None:
             agg_data = agg_op.transform(X)
-        if agg_op is not None and _is_spark_df(agg_data):
+        if agg_data is not None and _is_spark_df(agg_data):
             agg_data = agg_data.toPandas()
 
-        if agg_op is not None and _is_pandas_df(agg_data):
+        if agg_data is not None and _is_pandas_df(agg_data):
             self.statistics_ = agg_data.to_numpy()[
                 0
             ]  # Converting from a 2-d array to 1-d
