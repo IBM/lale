@@ -17,6 +17,7 @@ import collections
 import importlib
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
 from lale.expressions import AstExpr, Expr, _it_column
@@ -86,7 +87,20 @@ class _PandasEvaluator(ast.NodeVisitor):
 
 def replace(df: Any, call: ast.Call):
     column = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
-    mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
+    mapping_dict = {}
+    try:
+        mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
+    except ValueError:
+        mapping_dict_ast = call.args[1].value  # type: ignore
+        # ast.literal_eval fails for `nan` with ValueError, we handle the case when
+        # one of the keys is a `nan`, for example used in missing value imputation.
+        for i, key in enumerate(mapping_dict_ast.keys):
+            if key.id == "nan":
+                mapping_dict[np.nan] = ast.literal_eval(mapping_dict_ast.values[i])
+            else:
+                mapping_dict[
+                    ast.literal_eval(ast.literal_eval(mapping_dict_ast.keys[i]))
+                ] = ast.literal_eval(mapping_dict_ast.values[i])
     handle_unknown = ast.literal_eval(call.args[2])
     if handle_unknown == "use_encoded_value":
         unknown_value = ast.literal_eval(call.args[3])

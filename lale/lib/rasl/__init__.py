@@ -28,14 +28,14 @@ Scikit-learn Operators
 * lale.lib.rasl. `MinMaxScaler`_
 * lale.lib.rasl. `OneHotEncoder`_
 * lale.lib.rasl. `OrdinalEncoder`_
-
+* lale.lib.rasl. `SimpleImputer`_
 
 .. _`Aggregate`: lale.lib.rasl.aggregate.html
 .. _`Map`: lale.lib.rasl.map.html
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
 .. _`OneHotEncoder`: lale.lib.rasl.one_hot_encoder.html
 .. _`OrdinalEncoder`: lale.lib.rasl.ordinal_encoder.html
-
+.. _`SimpleImputer`: lale.lib.rasl.simple_imputer.html
 """
 
 from .aggregate import Aggregate
@@ -43,3 +43,4 @@ from .map import Map
 from .min_max_scaler import MinMaxScaler
 from .one_hot_encoder import OneHotEncoder
 from .ordinal_encoder import OrdinalEncoder
+from .simple_imputer import SimpleImputer

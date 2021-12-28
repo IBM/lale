@@ -14,6 +14,7 @@
 
 import ast
 
+import numpy as np
 import pandas as pd
 
 import lale.datasets.data_schemas
@@ -24,6 +25,7 @@ import lale.operators
 try:
     import pyspark.sql
     import pyspark.sql.functions
+    from pyspark.sql.functions import col, isnan, when
 
     spark_installed = True
 
@@ -32,9 +34,10 @@ except ImportError:
 
 
 class _AggregateImpl:
-    def __init__(self, columns, group_by=[]):
+    def __init__(self, columns, group_by=[], exclude_value=None):
         self.columns = columns
         self.group_by = group_by
+        self.exclude_value = exclude_value
 
     # Commented the validation for now to pass the OBM test cases.
     # We can uncomment this when OBM starts supporting the new format of Aggregate operator.
@@ -82,6 +85,8 @@ class _AggregateImpl:
         def eval_agg_pandas(old_col_name, agg_func_name):
             if agg_func_name == "collect_set":
                 agg_func_name = "unique"
+            if agg_func_name == "mode":
+                agg_func_name = lambda x: x.value_counts().index[0]  # noqa
             if is_grouped and old_col_name not in value_columns:
                 idx = X.count().index
                 if old_col_name not in idx.names:
@@ -91,7 +96,12 @@ class _AggregateImpl:
                         "Expected plain group-by column access it['{old_col_name}'], found function '{agg_func_name}'"
                     )
                 return idx.get_level_values(old_col_name)
-            return X[old_col_name].agg(agg_func_name)
+            if self.exclude_value is not None:
+                return X[~X[old_col_name].isin([self.exclude_value])][old_col_name].agg(
+                    agg_func_name
+                )
+            else:
+                return X[old_col_name].agg(agg_func_name)
 
         aggregated_columns = {
             new_col_name: eval_agg_pandas(old_col_name, agg_func_name)
@@ -105,15 +115,99 @@ class _AggregateImpl:
 
     def _transform_spark(self, X, agg_info):
         def create_spark_agg_expr(new_col_name, old_col_name, agg_func_name):
+            if agg_func_name == "median":
+                agg_func_name = "percentile_approx"
             func = getattr(pyspark.sql.functions, agg_func_name)
-            result = func(old_col_name).alias(new_col_name)
+            if agg_func_name == "percentile_approx":
+                if self.exclude_value is not None:
+                    if self.exclude_value in [np.nan, "nan"]:
+                        result = func(
+                            when(~isnan(old_col_name), col(old_col_name)), 0.5
+                        ).alias(new_col_name)
+                    else:
+                        result = func(
+                            when(
+                                col(old_col_name) != self.exclude_value,
+                                col(old_col_name),
+                            ),
+                            0.5,
+                        ).alias(new_col_name)
+                else:
+                    result = func(old_col_name, 0.5).alias(new_col_name)
+            else:
+                if self.exclude_value is not None:
+                    if self.exclude_value in [np.nan, "nan"]:
+                        result = func(
+                            when(~isnan(old_col_name), col(old_col_name))
+                        ).alias(new_col_name)
+                    else:
+                        result = func(
+                            when(
+                                col(old_col_name) != self.exclude_value,
+                                col(old_col_name),
+                            )
+                        ).alias(new_col_name)
+                else:
+                    result = func(old_col_name).alias(new_col_name)
             return result
 
-        agg_expr = [
-            create_spark_agg_expr(new_col_name, old_col_name, agg_func_name)
-            for new_col_name, old_col_name, agg_func_name in agg_info
-        ]
+        agg_expr = []
+        mode_column_names = []
+        for new_col_name, old_col_name, agg_func_name in agg_info:
+            if agg_func_name != "mode":
+                agg_expr.append(
+                    create_spark_agg_expr(new_col_name, old_col_name, agg_func_name)
+                )
+            else:
+                mode_column_names.append((new_col_name, old_col_name))
+        if len(agg_expr) == 0:
+            # This means that all the aggregate expressions were mode.
+            # For that case, compute the mean first, so that the dataframe has the right shape
+            # and replace the mean with mode next
+            agg_expr = [
+                create_spark_agg_expr(new_col_name, old_col_name, "mean")
+                for new_col_name, old_col_name, _ in agg_info
+            ]
+
         aggregated_df = X.agg(*agg_expr)
+        if len(mode_column_names) > 0:
+            from pyspark.sql.functions import lit
+
+            for (new_col_name, old_col_name) in mode_column_names:
+                if self.exclude_value is not None:
+                    if self.exclude_value in [np.nan, "nan"]:
+                        aggregated_df = aggregated_df.withColumn(
+                            new_col_name,
+                            lit(
+                                X.filter(~isnan(old_col_name))
+                                .groupby(old_col_name)
+                                .count()
+                                .orderBy("count", ascending=False)
+                                .first()[0]
+                            ),
+                        )
+                    else:
+                        aggregated_df = aggregated_df.withColumn(
+                            new_col_name,
+                            lit(
+                                X.filter(col(old_col_name) != self.exclude_value)
+                                .groupby(old_col_name)
+                                .count()
+                                .orderBy("count", ascending=False)
+                                .first()[0]
+                            ),
+                        )
+                else:
+                    aggregated_df = aggregated_df.withColumn(
+                        new_col_name,
+                        lit(
+                            X.groupby(old_col_name)
+                            .count()
+                            .orderBy("count", ascending=False)
+                            .first()[0]
+                        ),
+                    )
+
         keep_columns = [new_col_name for new_col_name, _, _ in agg_info]
         drop_columns = list(set(aggregated_df.columns) - set(keep_columns))
         aggregated_df = aggregated_df.drop(*drop_columns)
@@ -158,6 +252,11 @@ _hyperparams_schema = {
                         },
                     ],
                     "default": [],
+                },
+                "exclude_value": {
+                    "description": "Exclude this value in computation of aggregates. Useful for missing value imputation.",
+                    "laleType": "Any",
+                    "default": None,
                 },
             },
         }

@@ -18,6 +18,7 @@ import unittest
 import jsonschema
 import numpy as np
 import pandas as pd
+from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
@@ -31,6 +32,7 @@ from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
+from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.sklearn import FunctionTransformer, LogisticRegression
 
 
@@ -408,6 +410,156 @@ class TestOneHotEncoder(unittest.TestCase):
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False) >> to_pd >> lr
         for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            rasl_predicted = rasl_trained.predict(test_X)
+            self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
+            self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+
+
+class TestSimpleImputer(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark"]
+        cls.tgt2adult = {
+            tgt: lale.datasets.openml.fetch(
+                "adult",
+                "classification",
+                preprocess=False,
+                astype=tgt,
+            )
+            for tgt in targets
+        }
+
+        for tgt, datasets in cls.tgt2adult.items():
+            (train_X, train_y), (test_X, test_y) = datasets
+            if tgt == "pandas":
+                train_X.loc[train_X["age"] == 36.0, "age"] = np.nan
+                test_X.loc[test_X["age"] == 36.0, "age"] = np.nan
+            elif tgt == "spark":
+                from pyspark.sql.functions import when
+
+                train_X = train_X.withColumn(
+                    "age", when(train_X.age == 36.0, np.nan).otherwise(train_X.age)
+                )
+                test_X = test_X.withColumn(
+                    "age", when(test_X.age == 36.0, np.nan).otherwise(test_X.age)
+                )
+            cls.tgt2adult[tgt] = (train_X, train_y), (test_X, test_y)
+
+    def test_fit_transform_numeric_nan_missing(self):
+        num_columns = ["age", "fnlwgt", "education-num"]
+        prefix = Map(columns={c: it[c] for c in num_columns})
+
+        hyperparams = [
+            {"strategy": "mean"},
+            {"strategy": "median"},
+            {"strategy": "most_frequent"},
+            {"strategy": "constant", "fill_value": 99},
+        ]
+        for hyperparam in hyperparams:
+            rasl_trainable = prefix >> RaslSimpleImputer(**hyperparam)
+            sk_trainable = prefix >> SkSimpleImputer(**hyperparam)
+            sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
+            sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
+            sk_statistics_ = sk_trained.steps()[-1].impl.statistics_
+            for tgt, dataset in self.tgt2adult.items():
+                (train_X, _), (test_X, _) = dataset
+                rasl_trained = rasl_trainable.fit(train_X)
+                # test the fit succeeded.
+                rasl_statistics_ = rasl_trained.steps()[-1].impl.statistics_
+
+                self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
+                self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
+
+                # even though we did not project columns from test_X, since the map transformer
+                # created internally only had a map for the columns seen during training
+                # the statement below works.
+                rasl_transformed = rasl_trained.transform(test_X)
+                if tgt == "spark":
+                    rasl_transformed = rasl_transformed.toPandas()
+                self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+                for row_idx in range(sk_transformed.shape[0]):
+                    for col_idx in range(sk_transformed.shape[1]):
+                        self.assertEqual(
+                            sk_transformed[row_idx, col_idx],
+                            rasl_transformed.iloc[row_idx, col_idx],
+                            (row_idx, col_idx, tgt),
+                        )
+
+    def test_fit_transform_numeric_nonan_missing(self):
+        # First, use a constant fill_value to fill all nans by another indicative missing value, -1.
+        rasl_trainable_pre = RaslSimpleImputer(strategy="constant", fill_value=-1)
+        for tgt, dataset in self.tgt2adult.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            if tgt == "pandas":
+                train_X = train_X[["age", "fnlwgt", "education-num"]]
+            else:
+                from pyspark.sql.functions import col
+
+                train_X = train_X.select(
+                    col("age"), col("fnlwgt"), col("education-num")
+                )
+            rasl_trained_pre = rasl_trainable_pre.fit(train_X)
+            self.tgt2adult[tgt] = (rasl_trained_pre.transform(train_X), train_y), (
+                rasl_trained_pre.transform(test_X),
+                test_y,
+            )
+        num_columns = ["age", "fnlwgt", "education-num"]
+        prefix = Map(columns={c: it[c] for c in num_columns})
+
+        hyperparams = [
+            {"strategy": "mean"},
+            {"strategy": "median"},
+            {"strategy": "most_frequent"},
+            {"strategy": "constant", "fill_value": 99},
+        ]
+        for hyperparam in hyperparams:
+            rasl_trainable = prefix >> RaslSimpleImputer(
+                missing_values=-1, **hyperparam
+            )
+            sk_trainable = prefix >> SkSimpleImputer(missing_values=-1, **hyperparam)
+            sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
+            sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
+            sk_statistics_ = sk_trained.get_last().impl.statistics_
+            for tgt, dataset in self.tgt2adult.items():
+                (train_X, _), (test_X, _) = dataset
+                rasl_trained = rasl_trainable.fit(train_X)
+                # test the fit succeeded.
+                rasl_statistics_ = rasl_trained.get_last().impl.statistics_
+
+                self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
+                self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
+
+                # even though we did not project columns from test_X, since the map transformer
+                # created internally only had a map for the columns seen during training
+                # the statement below works.
+                rasl_transformed = rasl_trained.transform(test_X)
+                if tgt == "spark":
+                    rasl_transformed = rasl_transformed.toPandas()
+                self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+                for row_idx in range(sk_transformed.shape[0]):
+                    for col_idx in range(sk_transformed.shape[1]):
+                        self.assertEqual(
+                            sk_transformed[row_idx, col_idx],
+                            rasl_transformed.iloc[row_idx, col_idx],
+                            (row_idx, col_idx, tgt),
+                        )
+
+    def test_predict(self):
+        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2adult["pandas"]
+        num_columns = ["age", "fnlwgt", "education-num"]
+        prefix = Map(columns={c: it[c] for c in num_columns})
+        to_pd = FunctionTransformer(
+            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
+        )
+        lr = LogisticRegression()
+        imputer_args = {"strategy": "mean"}
+        sk_trainable = prefix >> SkSimpleImputer(**imputer_args) >> lr
+        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+        sk_predicted = sk_trained.predict(test_X_pd)
+        rasl_trainable = prefix >> RaslSimpleImputer(**imputer_args) >> to_pd >> lr
+        for tgt, dataset in self.tgt2adult.items():
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)
             rasl_predicted = rasl_trained.predict(test_X)
