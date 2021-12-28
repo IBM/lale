@@ -125,9 +125,9 @@ def replace(call: ast.Call):
     chain_of_whens = None
     for key, value in mapping_dict.items():
         if key == "nan":
-            when_expr = isnan(column) # type: ignore
+            when_expr = isnan(column)  # type: ignore
         else:
-            when_expr = column == key # type: ignore
+            when_expr = column == key  # type: ignore
         if chain_of_whens is None:
             chain_of_whens = pyspark.sql.functions.when(when_expr, value)
         else:
