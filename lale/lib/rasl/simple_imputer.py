@@ -106,22 +106,23 @@ class _SimpleImputerImpl:
             agg_data = pd.DataFrame(agg_data, columns=X.columns)
         if agg_op is not None:
             agg_data = agg_op.transform(X)
-        if lale.helpers._is_spark_df(agg_data):
+        if agg_op is not None and _is_spark_df(agg_data):
             agg_data = agg_data.toPandas()
 
-        if lale.helpers._is_pandas_df(agg_data):
+        if agg_op is not None and _is_pandas_df(agg_data):
             self.statistics_ = agg_data.to_numpy()[
                 0
             ]  # Converting from a 2-d array to 1-d
         # prepare the transformer
-        self.transformer = Map(
-            columns={
-                col_name: replace(
-                    it[col_name], {self.missing_values: agg_data.iloc[0, col_idx]}
-                )
-                for col_idx, col_name in enumerate(X.columns)
-            }
-        )
+        if agg_data is not None:
+            self.transformer = Map(
+                columns={
+                    col_name: replace(
+                        it[col_name], {self.missing_values: agg_data.iloc[0, col_idx]}
+                    )
+                    for col_idx, col_name in enumerate(X.columns)
+                }
+            )
         return self
 
     def transform(self, X):
