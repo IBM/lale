@@ -104,7 +104,7 @@ class _SimpleImputerImpl:
         elif self.strategy == "constant":
             agg_data = [[fill_value for col in X.columns]]
             agg_data = pd.DataFrame(agg_data, columns=X.columns)
-        if agg_data is None:
+        if agg_data is None and agg_op is not None:
             agg_data = agg_op.transform(X)
         if agg_op is not None and _is_spark_df(agg_data):
             agg_data = agg_data.toPandas()
