@@ -154,32 +154,28 @@ class _AggregateImpl:
 
         aggregated_df = X.agg(*agg_expr)
         if len(mode_column_names) > 0:
+            if isinstance(X, pyspark.sql.GroupedData):
+                raise ValueError(
+                    "Mode is not supported as an aggregate immediately after GroupBy for Spark dataframes."
+                )
             from pyspark.sql.functions import lit
 
             for (new_col_name, old_col_name) in mode_column_names:
                 if self.exclude_value is not None:
                     if self.exclude_value in [np.nan, "nan"]:
-                        aggregated_df = aggregated_df.withColumn(
-                            new_col_name,
-                            lit(
-                                X.filter(~isnan(old_col_name))
-                                .groupby(old_col_name)
-                                .count()
-                                .orderBy("count", ascending=False)
-                                .first()[0]
-                            ),
-                        )
+                        filter_expr = ~isnan(old_col_name)
                     else:
-                        aggregated_df = aggregated_df.withColumn(
-                            new_col_name,
-                            lit(
-                                X.filter(col(old_col_name) != self.exclude_value)
-                                .groupby(old_col_name)
-                                .count()
-                                .orderBy("count", ascending=False)
-                                .first()[0]
-                            ),
-                        )
+                        filter_expr = col(old_col_name) != self.exclude_value
+                    aggregated_df = aggregated_df.withColumn(
+                        new_col_name,
+                        lit(
+                            X.filter(filter_expr)
+                            .groupby(old_col_name)
+                            .count()
+                            .orderBy("count", ascending=False)
+                            .first()[0]
+                        ),
+                    )
                 else:
                     aggregated_df = aggregated_df.withColumn(
                         new_col_name,
