@@ -625,3 +625,53 @@ class TestSimpleImputer(unittest.TestCase):
                 # Sklearn which uses numpy does not replace a None.
                 # So we just test that `missing_value` is the default assigned.
                 self.assertEqual(rasl_transformed.iloc[1, 1], "missing_value")
+
+    def test_multiple_modes_numeric(self):
+        # Sklearn SimpleImputer says: for strategy `most_frequent`,
+        # if there is more than one such value, only the smallest is returned.
+        data = [[1, 10], [2, 15], [3, 14], [4, 15], [5, 14], [6, np.nan]]
+        df = pd.DataFrame(data, columns=["Id", "Age"])
+        hyperparam = {"strategy": "most_frequent"}
+        sk_trainable = SkSimpleImputer(**hyperparam)
+        rasl_trainable = RaslSimpleImputer(**hyperparam)
+        sk_trained = sk_trainable.fit(df)
+        rasl_trained = rasl_trainable.fit(df)
+        self.assertEqual(
+            len(sk_trained.statistics_), len(rasl_trained.impl.statistics_), "pandas"
+        )
+        self.assertEqual(
+            list(sk_trained.statistics_), list(rasl_trained.impl.statistics_), "pandas"
+        )
+
+        # Ideally, we should test this for spark too, but the order of multiple modes
+        # is different in spark and hence the statistics_ does not match.
+        # Both are correct as per the definition of mode.
+
+    @unittest.skip("skipping because the output does not match. Should we handle this?")
+    def test_multiple_modes_string(self):
+        # Sklearn SimpleImputer says: for strategy `most_frequent`,
+        # if there is more than one such value, only the smallest is returned.
+        data = [
+            ["a", "t"],
+            ["b", "f"],
+            ["b", "m"],
+            ["c", "f"],
+            ["c", "m"],
+            ["f", "missing"],
+        ]
+        df = pd.DataFrame(data, columns=["Id", "Gender"])
+        hyperparam = {"strategy": "most_frequent", "missing_values": "missing"}
+        sk_trainable = SkSimpleImputer(**hyperparam)
+        rasl_trainable = RaslSimpleImputer(**hyperparam)
+        sk_trained = sk_trainable.fit(df)
+        rasl_trained = rasl_trainable.fit(df)
+        self.assertEqual(
+            len(sk_trained.statistics_), len(rasl_trained.impl.statistics_), "pandas"
+        )
+        self.assertEqual(
+            list(sk_trained.statistics_), list(rasl_trained.impl.statistics_), "pandas"
+        )
+
+        # Ideally, we should test this for spark too, but the order of multiple modes
+        # is different in spark and hence the statistics_ does not match.
+        # Both are correct as per the definition of mode.
