@@ -132,12 +132,16 @@ class _SimpleImputerImpl:
         # validate that the dataset is either a pandas dataframe or spark.
         # For example, sparse matrix is not allowed.
         if not _is_df(X):
-            ValueError(
+            raise ValueError(
                 f"""Unsupported type(X) {type(X)} for SimpleImputer.
             Only pandas.DataFrame or pyspark.sql.DataFrame are allowed."""
             )
         # validate input to check the correct dtype and strategy
         # `mean` and `median` are not applicable to string inputs
+        if not self.is_numeric_df(X) and self.strategy in ["mean", "median"]:
+            raise ValueError(
+                "Cannot use {} strategy with non-numeric data.".format(self.strategy)
+            )
 
         # Check that missing_values are the right type
         if self.is_numeric_df(X) and not isinstance(self.missing_values, numbers.Real):
@@ -145,16 +149,6 @@ class _SimpleImputerImpl:
                 "'X' and 'missing_values' types are expected to be"
                 " both numerical. Got X.dtypes={} and "
                 " type(missing_values)={}.".format(X.dtypes, type(self.missing_values))
-            )
-
-        # general check to make sure the data in the dataframe is either
-        # numeric or strings
-        if not (self.is_numeric_df(X) or self.is_string_df(X)):
-            raise ValueError(
-                "SimpleImputer does not support DataFrames with dtypes "
-                "other than numeric ("
-                " a floating point or integer dtype) or "
-                "categorical (integer dtype or string values) "
             )
 
     def is_numeric_df(self, X):
@@ -196,7 +190,7 @@ Works on both pandas and Spark dataframes by using `Aggregate`_ for `fit` and `M
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.simple_imputer.html",
     "type": "object",
     "tags": {
-        "pre": ["~categoricals"],
+        "pre": [],
         "op": ["transformer", "interpretable"],
         "post": [],
     },

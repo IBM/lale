@@ -93,7 +93,8 @@ def replace(df: Any, call: ast.Call):
     except ValueError:
         mapping_dict_ast = call.args[1].value  # type: ignore
         # ast.literal_eval fails for `nan` with ValueError, we handle the case when
-        # one of the keys is a `nan`, for example used in missing value imputation.
+        # one of the keys is a `nan`. This is the case when using map with replace
+        # in missing value imputation.
         for i, key in enumerate(mapping_dict_ast.keys):
             if key.id == "nan":
                 mapping_dict[np.nan] = ast.literal_eval(mapping_dict_ast.values[i])

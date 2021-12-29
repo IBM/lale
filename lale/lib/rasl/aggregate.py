@@ -120,33 +120,16 @@ class _AggregateImpl:
             func = getattr(pyspark.sql.functions, agg_func_name)
             if agg_func_name == "percentile_approx":
                 if self.exclude_value is not None:
-                    if self.exclude_value in [np.nan, "nan"]:
-                        result = func(
-                            when(~isnan(old_col_name), col(old_col_name)), 0.5
-                        ).alias(new_col_name)
-                    else:
-                        result = func(
-                            when(
-                                col(old_col_name) != self.exclude_value,
-                                col(old_col_name),
-                            ),
-                            0.5,
-                        ).alias(new_col_name)
+                    result = func(self._get_exclude_when_expr(old_col_name), 0.5).alias(
+                        new_col_name
+                    )
                 else:
                     result = func(old_col_name, 0.5).alias(new_col_name)
             else:
                 if self.exclude_value is not None:
-                    if self.exclude_value in [np.nan, "nan"]:
-                        result = func(
-                            when(~isnan(old_col_name), col(old_col_name))
-                        ).alias(new_col_name)
-                    else:
-                        result = func(
-                            when(
-                                col(old_col_name) != self.exclude_value,
-                                col(old_col_name),
-                            )
-                        ).alias(new_col_name)
+                    result = func(self._get_exclude_when_expr(old_col_name)).alias(
+                        new_col_name
+                    )
                 else:
                     result = func(old_col_name).alias(new_col_name)
             return result
@@ -212,6 +195,19 @@ class _AggregateImpl:
         drop_columns = list(set(aggregated_df.columns) - set(keep_columns))
         aggregated_df = aggregated_df.drop(*drop_columns)
         return aggregated_df
+
+    def _get_exclude_when_expr(self, col_name):
+        if self.exclude_value is not None:
+            if self.exclude_value in [np.nan, "nan"]:
+                when_expr = when(~isnan(col_name), col(col_name))
+            else:
+                when_expr = when(
+                    col(col_name) != self.exclude_value,
+                    col(col_name),
+                )
+        else:
+            when_expr = None
+        return when_expr
 
 
 _hyperparams_schema = {
