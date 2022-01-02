@@ -282,6 +282,12 @@ class TestOrdinalEncoder(unittest.TestCase):
             for tgt in targets
         }
 
+    def _check_trained(self, op1, op2, msg):
+        self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+        self.assertEqual(len(op1.categories_), len(op2.categories_), msg)
+        for i in range(len(op1.categories_)):
+            self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+
     def test_fit(self):
         prefix = Scan(table=it.go_daily_sales) >> Map(
             columns={"retailer": it["Retailer code"], "method": it["Order method code"]}
@@ -290,13 +296,30 @@ class TestOrdinalEncoder(unittest.TestCase):
         rasl_trainable = prefix >> RaslOrdinalEncoder(**encoder_args)
         sk_trainable = prefix >> SkOrdinalEncoder(**encoder_args)
         sk_trained = sk_trainable.fit(self.tgt2gosales["pandas"])
-        sk_categories = sk_trained.get_last().impl.categories_
         for tgt, datasets in self.tgt2gosales.items():
             rasl_trained = rasl_trainable.fit(datasets)
-            rasl_categories = rasl_trained.get_last().impl.categories_
-            self.assertEqual(len(sk_categories), len(rasl_categories), tgt)
-            for i in range(len(sk_categories)):
-                self.assertEqual(list(sk_categories[i]), list(rasl_categories[i]), tgt)
+            self._check_trained(
+                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
+            )
+
+    def test_partial_fit(self):
+        prefix = Scan(table=it.go_daily_sales) >> Map(
+            columns={"retailer": it["Retailer code"], "method": it["Order method code"]}
+        )
+        pandas_data = prefix.transform(self.tgt2gosales["pandas"])
+        encoder_args = {"handle_unknown": "use_encoded_value", "unknown_value": np.nan}
+        for tgt in self.tgt2gosales.keys():
+            rasl_op = RaslOrdinalEncoder(**encoder_args)
+            for lower, upper in [[0, 10], [10, 100], [100, pandas_data.shape[0]]]:
+                data_so_far = pandas_data[0:upper]
+                sk_op = SkOrdinalEncoder(**encoder_args).fit(data_so_far)
+                data_delta = pandas_data[lower:upper]
+                if tgt == "spark":
+                    data_delta = lale.datasets.pandas2spark(data_delta)
+                rasl_op = rasl_op.partial_fit(data_delta)
+                self._check_trained(
+                    sk_op, rasl_op.impl, f"tgt {tgt}, lower {lower}, upper {upper}"
+                )
 
     def test_transform(self):
         prefix = Scan(table=it.go_daily_sales) >> Map(
@@ -309,6 +332,9 @@ class TestOrdinalEncoder(unittest.TestCase):
         sk_transformed = sk_trained.transform(self.tgt2gosales["pandas"])
         for tgt, datasets in self.tgt2gosales.items():
             rasl_trained = rasl_trainable.fit(datasets)
+            self._check_trained(
+                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
+            )
             rasl_transformed = rasl_trained.transform(datasets)
             if tgt == "spark":
                 rasl_transformed = rasl_transformed.toPandas()
@@ -356,21 +382,45 @@ class TestOneHotEncoder(unittest.TestCase):
             for tgt in targets
         }
 
+    def _check_trained(self, op1, op2, msg):
+        self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+        self.assertEqual(len(op1.categories_), len(op2.categories_), msg)
+        for i in range(len(op1.categories_)):
+            self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+
     def test_fit(self):
-        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
         rasl_trainable = prefix >> RaslOneHotEncoder()
         sk_trainable = prefix >> SkOneHotEncoder()
         sk_trained = sk_trainable.fit(train_X_pd)
-        sk_categories = sk_trained.get_last().impl.categories_
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
-            rasl_categories = rasl_trained.get_last().impl.categories_
-            self.assertEqual(len(sk_categories), len(rasl_categories), tgt)
-            for i in range(len(sk_categories)):
-                self.assertEqual(list(sk_categories[i]), list(rasl_categories[i]), tgt)
+            self._check_trained(
+                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
+            )
+
+    def test_partial_fit(self):
+        (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
+        cat_columns = categorical()(train_X_pd)
+        prefix = Map(columns={c: it[c] for c in cat_columns})
+        for tgt in self.tgt2creditg.keys():
+            rasl_pipe = prefix >> RaslOneHotEncoder()
+            for lower, upper in [[0, 10], [10, 100], [100, train_X_pd.shape[0]]]:
+                data_so_far = train_X_pd[0:upper]
+                sk_pipe = prefix >> SkOrdinalEncoder()
+                sk_pipe = sk_pipe.fit(data_so_far)
+                data_delta = train_X_pd[lower:upper]
+                if tgt == "spark":
+                    data_delta = lale.datasets.pandas2spark(data_delta)
+                rasl_pipe = rasl_pipe.partial_fit(data_delta)
+                self._check_trained(
+                    sk_pipe.get_last().impl,
+                    rasl_pipe.get_last().impl,
+                    f"tgt {tgt}, lower {lower}, upper {upper}",
+                )
 
     def test_transform(self):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
@@ -383,6 +433,9 @@ class TestOneHotEncoder(unittest.TestCase):
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
+            self._check_trained(
+                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
+            )
             rasl_transformed = rasl_trained.transform(test_X)
             if tgt == "spark":
                 rasl_transformed = rasl_transformed.toPandas()
