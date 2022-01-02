@@ -48,17 +48,55 @@ class _OneHotEncoderImpl:
             raise ValueError(
                 "This implementation only supports `handle_unknown='ignore'`."
             )
+        self._transformer = None
 
     def fit(self, X, y=None):
-        # learn the coefficients
         if self.categories == "auto":
-            agg_op = Aggregate(columns={c: collect_set(it[c]) for c in X.columns})
-            agg_data = agg_op.transform(X)
-            if lale.helpers._is_spark_df(agg_data):
-                agg_data = agg_data.toPandas()
-            self.categories_ = [np.sort(agg_data.loc[0, c]) for c in agg_data.columns]
-        # prepare the transformer
-        self.transformer = Map(
+            self.feature_names_in_, self.categories_ = self._lift(X)
+            self._transformer = None
+        return self
+
+    def partial_fit(self, X, y=None):
+        if not hasattr(self, "categories_"):  # first fit
+            return self.fit(X)
+        if self.categories == "auto":
+            lifted1 = self.feature_names_in_, self.categories_
+            lifted2 = self._lift(X)
+            self.feature_names_in_, self.categories_ = self._combine(lifted1, lifted2)
+            self._transformer = None
+        return self
+
+    def transform(self, X):
+        if self._transformer is None:
+            self._transformer = self._lower((self.feature_names_in_, self.categories_))
+        return self._transformer.transform(X)
+
+    @staticmethod
+    def _lift(X):
+        feature_names_in = X.columns
+        agg_op = Aggregate(columns={c: collect_set(it[c]) for c in feature_names_in})
+        agg_data = agg_op.transform(X)
+        if lale.helpers._is_spark_df(agg_data):
+            agg_data = agg_data.toPandas()
+        categories = [np.sort(agg_data.loc[0, c]) for c in feature_names_in]
+        return feature_names_in, categories
+
+    @staticmethod
+    def _combine(lifted1, lifted2):
+        feature_names_in1, categories1 = lifted1
+        feature_names_in2, categories2 = lifted2
+        assert list(feature_names_in1) == list(feature_names_in2)
+        assert len(categories1) == len(categories2)
+        combined_categories = [
+            np.sort(np.unique(np.concatenate([categories1[i], categories2[i]])))
+            for i in range(len(categories1))
+        ]
+        return feature_names_in1, combined_categories
+
+    @staticmethod
+    def _lower(lifted):
+        feature_names_in, categories = lifted
+        result = Map(
             columns={
                 f"{col_name}_{cat_value}": replace(
                     it[col_name],
@@ -66,14 +104,11 @@ class _OneHotEncoderImpl:
                     handle_unknown="use_encoded_value",
                     unknown_value=0,
                 )
-                for col_idx, col_name in enumerate(X.columns)
-                for cat_value in self.categories_[col_idx]
+                for col_idx, col_name in enumerate(feature_names_in)
+                for cat_value in categories[col_idx]
             }
         )
-        return self
-
-    def transform(self, X):
-        return self.transformer.transform(X)
+        return result
 
 
 _combined_schemas = {
