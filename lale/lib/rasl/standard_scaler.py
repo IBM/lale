@@ -19,7 +19,7 @@ import numpy as np
 import lale.docstrings
 import lale.helpers
 import lale.operators
-from lale.expressions import it
+from lale.expressions import count, it
 from lale.expressions import sum as agg_sum
 from lale.lib.sklearn import standard_scaler
 
@@ -73,14 +73,11 @@ class _StandardScalerImpl:
         self._transformer = None
 
     def _build_transformer(self):
-        with_mean = self._hyperparams["with_mean"]
-        with_std = self._hyperparams["with_std"]
-
         def scale_expr(col_idx, col_name):
             expr = it[col_name]
-            if with_mean:
+            if self.mean_ is not None:
                 expr = expr - self.mean_[col_idx]
-            if with_std:
+            if self.scale_ is not None:
                 expr = expr / self.scale_[col_idx]
             return expr
 
@@ -95,9 +92,7 @@ class _StandardScalerImpl:
     @staticmethod
     def _lift(X, hyperparams):
         feature_names_in = X.columns
-        count_op = Aggregate(
-            columns={"count": lale.expressions.count(it[feature_names_in[0]])}
-        )
+        count_op = Aggregate(columns={"count": count(it[feature_names_in[0]])})
         count_data = lale.helpers._ensure_pandas(count_op.transform(X))
         n_samples_seen = count_data.loc[0, "count"]
         if hyperparams["with_mean"] or hyperparams["with_std"]:

@@ -1151,7 +1151,7 @@ def _is_spark_df(df):
 
 
 def _ensure_pandas(df):
-    if lale.helpers._is_spark_df(df):
+    if _is_spark_df(df):
         return df.toPandas()
-    assert lale.helpers._is_pandas_df, type(df)
+    assert _is_pandas_df, type(df)
     return df
