@@ -21,6 +21,7 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
+from sklearn.preprocessing import StandardScaler as SkStandardScaler
 
 import lale.datasets
 import lale.datasets.openml
@@ -31,6 +32,7 @@ from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
+from lale.lib.rasl import StandardScaler as RaslStandardScaler
 from lale.lib.sklearn import FunctionTransformer, LogisticRegression
 
 
@@ -419,7 +421,7 @@ class TestOneHotEncoder(unittest.TestCase):
                 self._check_trained(
                     sk_pipe.get_last().impl,
                     rasl_pipe.get_last().impl,
-                    f"tgt {tgt}, lower {lower}, upper {upper}",
+                    (tgt, lower, upper),
                 )
 
     def test_transform(self):
@@ -460,6 +462,110 @@ class TestOneHotEncoder(unittest.TestCase):
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
         sk_predicted = sk_trained.predict(test_X_pd)
         rasl_trainable = prefix >> RaslOneHotEncoder(sparse=False) >> to_pd >> lr
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            rasl_predicted = rasl_trained.predict(test_X)
+            self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
+            self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+
+
+class TestStandardScaler(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark"]
+        cls.tgt2creditg = {
+            tgt: lale.datasets.openml.fetch(
+                "credit-g",
+                "classification",
+                preprocess=True,
+                astype=tgt,
+            )
+            for tgt in targets
+        }
+
+    def _check_trained(self, op1, op2, msg):
+        self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+        self.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
+        self.assertEqual(op1.n_samples_seen_, op2.n_samples_seen_, msg)
+        if op1.mean_ is None:
+            self.assertIsNone(op2.mean_, msg)
+        else:
+            self.assertIsNotNone(op2.mean_, msg)
+            self.assertEqual(len(op1.mean_), len(op2.mean_), msg)
+            for i in range(len(op1.mean_)):
+                self.assertAlmostEqual(op1.mean_[i], op2.mean_[i], msg=msg)
+        if op1.var_ is None:
+            self.assertIsNone(op2.var_, msg)
+        else:
+            self.assertIsNotNone(op2.var_, msg)
+            self.assertEqual(len(op1.var_), len(op2.var_), msg)
+            for i in range(len(op1.var_)):
+                self.assertAlmostEqual(op1.var_[i], op2.var_[i], msg=msg)
+        if op1.scale_ is None:
+            self.assertIsNone(op2.scale_, msg)
+        else:
+            self.assertIsNotNone(op2.scale_, msg)
+            self.assertEqual(len(op1.scale_), len(op2.scale_), msg)
+            for i in range(len(op1.scale_)):
+                self.assertAlmostEqual(op1.scale_[i], op2.scale_[i], msg=msg)
+
+    def test_fit(self):
+        (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
+        sk_trainable = SkStandardScaler()
+        sk_trained = sk_trainable.fit(train_X_pd)
+        rasl_trainable = RaslStandardScaler()
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, _), (_, _) = dataset
+            rasl_trained = rasl_trainable.fit(train_X)
+            self._check_trained(sk_trained, rasl_trained.impl, tgt)
+
+    def test_partial_fit(self):
+        (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
+        for tgt in self.tgt2creditg.keys():
+            rasl_op = RaslStandardScaler()
+            for lower, upper in [[0, 10], [10, 100], [100, train_X_pd.shape[0]]]:
+                data_so_far = train_X_pd[0:upper]
+                sk_op = SkStandardScaler()
+                sk_op = sk_op.fit(data_so_far)
+                data_delta = train_X_pd[lower:upper]
+                if tgt == "spark":
+                    data_delta = lale.datasets.pandas2spark(data_delta)
+                rasl_op = rasl_op.partial_fit(data_delta)
+                self._check_trained(sk_op, rasl_op.impl, (tgt, lower, upper))
+
+    def test_transform(self):
+        (train_X_pd, _), (test_X_pd, _) = self.tgt2creditg["pandas"]
+        sk_trainable = SkStandardScaler()
+        sk_trained = sk_trainable.fit(train_X_pd)
+        sk_transformed = sk_trained.transform(test_X_pd)
+        rasl_trainable = RaslStandardScaler()
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, _), (test_X, _) = dataset
+            rasl_trained = rasl_trainable.fit(train_X)
+            self._check_trained(sk_trained, rasl_trained.impl, tgt)
+            rasl_transformed = rasl_trained.transform(test_X)
+            if tgt == "spark":
+                rasl_transformed = rasl_transformed.toPandas()
+            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            for row_idx in range(sk_transformed.shape[0]):
+                for col_idx in range(sk_transformed.shape[1]):
+                    self.assertAlmostEqual(
+                        sk_transformed[row_idx, col_idx],
+                        rasl_transformed.iloc[row_idx, col_idx],
+                        msg=(row_idx, col_idx, tgt),
+                    )
+
+    def test_predict(self):
+        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        to_pd = FunctionTransformer(
+            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
+        )
+        lr = LogisticRegression()
+        sk_trainable = SkStandardScaler() >> lr
+        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+        sk_predicted = sk_trained.predict(test_X_pd)
+        rasl_trainable = RaslStandardScaler() >> to_pd >> lr
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X, train_y)

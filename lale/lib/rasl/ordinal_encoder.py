@@ -29,87 +29,84 @@ from .map import Map
 class _OrdinalEncoderImpl:
     def __init__(
         self,
+        *,
         categories="auto",
         dtype="float64",
         handle_unknown="error",
         unknown_value=None,
     ):
-        self.categories = categories
-        if categories != "auto":
-            self.categories_ = categories
-        if dtype != "float64":
-            raise ValueError("This implementation only supports `dtype='float64'`.")
-        self.dtype = dtype
-        if handle_unknown != "use_encoded_value":
-            raise ValueError(
-                "This implementation only supports `handle_unknown='use_encoded_value'`."
-            )
-        self.unknown_value = unknown_value
-        self._transformer = None
+        self._hyperparams = {
+            "categories": categories,
+            "dtype": dtype,
+            "handle_unknown": handle_unknown,
+            "unknown_value": unknown_value,
+        }
 
     def fit(self, X, y=None):
-        if self.categories == "auto":
-            self.feature_names_in_, self.categories_ = self._lift(X)
-            self._transformer = None
+        self._set_fit_attributes(self._lift(X, self._hyperparams))
         return self
 
     def partial_fit(self, X, y=None):
         if not hasattr(self, "categories_"):  # first fit
             return self.fit(X)
-        if self.categories == "auto":
-            lifted1 = self.feature_names_in_, self.categories_
-            lifted2 = self._lift(X)
-            self.feature_names_in_, self.categories_ = self._combine(lifted1, lifted2)
-            self._transformer = None
+        lifted_a = self.feature_names_in_, self.categories_
+        lifted_b = self._lift(X, self._hyperparams)
+        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
         return self
 
     def transform(self, X):
         if self._transformer is None:
-            self._transformer = self._lower(
-                (self.feature_names_in_, self.categories_), self.unknown_value
-            )
+            self._transformer = self._build_transformer()
         return self._transformer.transform(X)
 
-    @staticmethod
-    def _lift(X):
-        feature_names_in = X.columns
-        agg_op = Aggregate(columns={c: collect_set(it[c]) for c in feature_names_in})
-        agg_data = agg_op.transform(X)
-        if lale.helpers._is_spark_df(agg_data):
-            agg_data = agg_data.toPandas()
-        categories = [np.sort(agg_data.loc[0, c]) for c in feature_names_in]
-        return feature_names_in, categories
+    def _set_fit_attributes(self, lifted):
+        self.feature_names_in_, self.categories_ = lifted
+        self.n_features_in_ = len(self.feature_names_in_)
+        self._transformer = None
 
-    @staticmethod
-    def _combine(lifted1, lifted2):
-        feature_names_in1, categories1 = lifted1
-        feature_names_in2, categories2 = lifted2
-        assert list(feature_names_in1) == list(feature_names_in2)
-        assert len(categories1) == len(categories2)
-        combined_categories = [
-            np.sort(np.unique(np.concatenate([categories1[i], categories2[i]])))
-            for i in range(len(categories1))
-        ]
-        return feature_names_in1, combined_categories
-
-    @staticmethod
-    def _lower(lifted, unknown_value):
-        feature_names_in, categories = lifted
+    def _build_transformer(self):
         result = Map(
             columns={
                 col_name: replace(
                     it[col_name],
                     {
                         cat_value: cat_idx
-                        for cat_idx, cat_value in enumerate(categories[col_idx])
+                        for cat_idx, cat_value in enumerate(self.categories_[col_idx])
                     },
                     handle_unknown="use_encoded_value",
-                    unknown_value=unknown_value,
+                    unknown_value=self._hyperparams["unknown_value"],
                 )
-                for col_idx, col_name in enumerate(feature_names_in)
+                for col_idx, col_name in enumerate(self.feature_names_in_)
             }
         )
         return result
+
+    @staticmethod
+    def _lift(X, hyperparams):
+        feature_names_in = X.columns
+        if hyperparams["categories"] == "auto":
+            agg_op = Aggregate(
+                columns={c: collect_set(it[c]) for c in feature_names_in}
+            )
+            agg_data = agg_op.transform(X)
+            if lale.helpers._is_spark_df(agg_data):
+                agg_data = agg_data.toPandas()
+            categories = [np.sort(agg_data.loc[0, c]) for c in feature_names_in]
+        else:
+            categories = hyperparams["categories"]
+        return feature_names_in, categories
+
+    @staticmethod
+    def _combine(lifted_a, lifted_b):
+        feature_names_in_a, categories_a = lifted_a
+        feature_names_in_b, categories_b = lifted_b
+        assert list(feature_names_in_a) == list(feature_names_in_b)
+        assert len(categories_a) == len(categories_b)
+        combined_categories = [
+            np.sort(np.unique(np.concatenate([categories_a[i], categories_b[i]])))
+            for i in range(len(categories_a))
+        ]
+        return feature_names_in_a, combined_categories
 
 
 _combined_schemas = {
@@ -124,7 +121,7 @@ Works on both pandas and Spark dataframes by using `Aggregate`_ for `fit` and `M
     "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.ordinal_encoder.html",
     "type": "object",
     "tags": {
-        "pre": ["~categoricals"],
+        "pre": ["categoricals"],
         "op": ["transformer", "interpretable"],
         "post": [],
     },

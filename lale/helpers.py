@@ -1148,3 +1148,10 @@ def _is_pandas_df(df):
 def _is_spark_df(df):
     if spark_installed:
         return isinstance(df, spark_df)
+
+
+def _ensure_pandas(df):
+    if _is_spark_df(df):
+        return df.toPandas()
+    assert _is_pandas_df, type(df)
+    return df
