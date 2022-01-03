@@ -360,6 +360,13 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         return lale.json_operator.to_json(self, call_depth=2)
 
+    def get_forwards(self) -> Union[bool, List[str]]:
+        """Returns the list of attributes (methods/properties)
+        the schema has asked to be forwarded.  A boolean value is a blanket
+        opt-in or out of forwarding
+        """
+        return False
+
     @abstractmethod
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
         """For scikit-learn compatibility"""
@@ -763,6 +770,9 @@ class Operator(metaclass=AbstractVisitorMeta):
         return self
 
     def __getattr__(self, name: str) -> Any:
+        if name == "_cached_masked_attr_list":
+            raise AttributeError()
+
         predict_methods = [
             "get_pipeline",
             "summary",
@@ -855,6 +865,26 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
                 )
                 error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
+
+        forwards = self.get_forwards()
+        if forwards is True or isinstance(forwards, list) and name in forwards:
+            # we should try forwarding it.
+            # first, a sanity check to prevent confusing behaviour where
+            # forwarding works on a plannedoperator and then fails on a trainedoperator
+            trained_ops = self._get_masked_attr_list()
+
+            if name not in trained_ops:
+                # ok, let us try to forward it
+                # first we try the "shallow" wrapper,
+                # and then we try each successive wrapped model
+                model = self.shallow_impl
+                while model is not None:
+                    if hasattr(model, name):
+                        return getattr(model, name)
+                    old_model = model
+                    model = getattr(model, "_wrapped_model", None)
+                    if model is old_model:
+                        model = None
 
         raise AttributeError(f"Attribute {name} not found for {self}")
 
@@ -1285,6 +1315,34 @@ class IndividualOp(Operator):
     def _is_instantiated(self):
         return not inspect.isclass(self._impl)
 
+    def _get_masked_attr_list(self):
+        if hasattr(self, "_cached_masked_attr_list"):
+            return self._cached_masked_attr_list
+        else:
+            found_ops = [
+                "get_pipeline",
+                "summary",
+                "transform",
+                "predict",
+                "predict_proba",
+                "decision_function",
+                "score",
+                "score_samples",
+                "predict_log_proba",
+                "_schemas",
+                "_impl",
+                "_impl_class",
+                "_hyperparams",
+                "_frozen_hyperparams",
+                "_trained",
+                "_enum_attributes",
+                "_cached_masked_attr_list",
+            ]
+            found_ops.extend(dir(TrainedIndividualOp))
+            found_ops.extend(dir(self))
+            self._cached_masked_attr_list = found_ops
+            return found_ops
+
     def _check_schemas(self):
         from lale.settings import disable_hyperparams_schema_validation
 
@@ -1304,6 +1362,23 @@ class IndividualOp(Operator):
             assert self.has_tag(
                 "estimator"
             ), f"{self.class_name()}: {json_to_string(self._schemas)}"
+
+        forwards = self.get_forwards()
+        # if it is a boolean, there is nothing to check
+        if isinstance(forwards, list):
+            trained_ops = self._get_masked_attr_list()
+            for f in forwards:
+                assert (
+                    f not in trained_ops
+                ), f"""This operator specified the {f} attribute to be forwarded.
+                Unfortunately, this method is also provided for some lale operator wrapper classes, so this
+                is invalid.
+                It is possible that this method/property is new to lale, and an older version of lale supported
+                forwarding this method/property, however, to be compatible with this version of lale, the attribute needs
+                to be removed from the forwards list, and code that calls this method/property (on an object op)
+                need to be changed from op.{f} to op.impl.{f}
+                """
+
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1
 
@@ -1632,6 +1707,17 @@ class IndividualOp(Operator):
             return self._schemas["documentation_url"]
         return None
 
+    def get_forwards(self) -> Union[bool, List[str]]:
+        """Returns the list of attributes (methods/properties)
+        the schema has asked to be forwarded.  A boolean value is a blanket
+        opt-in or out of forwarding
+        """
+        forwards = self._schemas.get("forwards", False)
+        assert isinstance(
+            forwards, (bool, list)
+        ), f"the schema forward declaration {forwards} must be either a boolean or a list of strings"
+        return forwards
+
     def get_tags(self) -> Dict[str, List[str]]:
         """Return the tags of an operator.
 
@@ -1812,25 +1898,30 @@ class IndividualOp(Operator):
                         if "enum" in s:
                             if ("forOptimizer" not in s) or s["forOptimizer"]:
                                 enums.append(s)
+                        elif s.get("type", None) == "boolean":
+                            if ("forOptimizer" not in s) or s["forOptimizer"]:
+                                bool_s = {"enum": [False, True]}
+                                d = s.get("default", None)
+                                if d is not None:
+                                    bool_s["default"] = d
+
+                                enums.append(bool_s)
                     if len(enums) == 1:
                         return enums[0]
                     elif enums:
                         # combine them, and see if there is an anyOf default that we want to use as well
                         vals = [item for s in enums for item in s["enum"]]
-                        d = None
-                        sch_d = schema.get("default", None)
-                        if sch_d and sch_d in vals:
-                            d = sch_d
-                        else:
-                            for s in enums:
-                                if "default" in s:
-                                    d = s["default"]
-                                    break
                         new_s = {
                             "enum": vals,
                         }
-                        if d is not None:
-                            new_s["default"] = d
+
+                        if "default" in schema and schema["default"] in vals:
+                            new_s["default"] = schema["default"]
+                        else:
+                            for s in enums:
+                                if "default" in s:
+                                    new_s["default"] = s["default"]
+                                    break
                         return new_s
 
                 return schema["anyOf"][0]
@@ -1871,8 +1962,6 @@ class IndividualOp(Operator):
                 default = schema["default"]
                 non_default = [v for v in schema["enum"] if v != default]
                 return [*non_default, default]
-            elif schema["type"] == "boolean":
-                return (False, True, schema["default"])
             else:
 
                 def get(schema, key):
@@ -2423,6 +2512,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
         ] = None,
         tags: Optional[Dict] = None,
+        forwards: Union[bool, List[str], None] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "PlannedIndividualOp":
@@ -2432,6 +2522,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             relevantToOptimizer,
             constraint,
             tags,
+            forwards,
             set_as_available,
             **kwargs,
         )
@@ -2854,6 +2945,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
         ] = None,
         tags: Optional[Dict] = None,
+        forwards: Union[bool, List[str], None] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainableIndividualOp":
@@ -2863,6 +2955,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             relevantToOptimizer,
             constraint,
             tags,
+            forwards,
             set_as_available,
             **kwargs,
         )
@@ -3153,6 +3246,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
         ] = None,
         tags: Optional[Dict] = None,
+        forwards: Union[bool, List[str], None] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainedIndividualOp":
@@ -3162,6 +3256,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             relevantToOptimizer,
             constraint,
             tags,
+            forwards,
             set_as_available,
             **kwargs,
         )
@@ -5344,6 +5439,7 @@ def customize_schema(
     relevantToOptimizer: Optional[List[str]] = None,
     constraint: Union[Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None] = None,
     tags: Optional[Dict] = None,
+    forwards: Union[bool, List[str], None] = None,
     set_as_available: bool = False,
     **kwargs: Union[Schema, JSON_TYPE, None],
 ) -> CustomizeOpType:
@@ -5368,6 +5464,8 @@ def customize_schema(
         `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
     tags : Dict
         Override the tags of the operator.
+    forwards: boolean or a list of strings
+        Which methods/properties to forward to the underlying impl.  (False for none, True for all).
     set_as_available: bool
         Override the list of available operators so `get_available_operators` returns this customized operator.
 
@@ -5419,6 +5517,9 @@ def customize_schema(
         if tags is not None:
             assert isinstance(tags, dict)
             op._schemas["tags"] = tags
+        if forwards is not None:
+            assert isinstance(forwards, (bool, list))
+            op._schemas["forwards"] = forwards
 
         for arg in kwargs:
             value = kwargs[arg]
