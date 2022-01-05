@@ -36,31 +36,63 @@ def _df_count(X):
 
 class _MinMaxScalerImpl:
     def __init__(self, feature_range=(0, 1), *, copy=True, clip=False):
-        self.feature_range = feature_range
         if not copy:
             raise ValueError("`copy=False` is not supported by this implementation")
         if clip:
             raise ValueError("`clip=True` is not supported by this implementation")
-        self._first_fit = True
+        self._hyperparams = {"feature_range": feature_range, "copy": copy, "clip": clip}
+        self.n_samples_seen_ = 0
+        self._transformer = None
 
     def fit(self, X, y=None):
-        data_min_, data_max_ = self._get_min_max(X)
-        n_samples_seen_ = _df_count(X)
-        self._set_fit_attributes(X, data_min_, data_max_, n_samples_seen_)
-        self.transformer = self._build_transformer(X)
+        self._set_fit_attributes(self._lift(X, self._hyperparams))
+        return self
 
     def partial_fit(self, X, y=None):
-        data_min_, data_max_ = self._get_min_max(X)
-        if self._first_fit:
-            n_samples_seen_ = _df_count(X)
-        else:
-            data_min_ = np.minimum(data_min_, self.data_min_)
-            data_max_ = np.maximum(data_max_, self.data_max_)
-            n_samples_seen_ = _df_count(X) + self.n_samples_seen_
-        self._set_fit_attributes(X, data_min_, data_max_, n_samples_seen_)
-        self.transformer = self._build_transformer(X)
+        if self.n_samples_seen_ == 0:  # first fit
+            return self.fit(X)
+        lifted_a = (
+            self.data_min_,
+            self.data_max_,
+            self.n_samples_seen_,
+            self.n_features_in_,
+            self.feature_names_in_,
+        )
+        lifted_b = self._lift(X, self._hyperparams)
+        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
+        return self
 
-    def _get_min_max(self, X):
+    def transform(self, X):
+        if self._transformer is None:
+            self._transformer = self._build_transformer(X)
+        return self._transformer.transform(X)
+
+    def _set_fit_attributes(self, lifted):
+        (
+            self.data_min_,
+            self.data_max_,
+            self.n_samples_seen_,
+            self.n_features_in_,
+            self.feature_names_in_,
+        ) = lifted
+        self.data_range_ = self.data_max_ - self.data_min_
+        range_min, range_max = self._hyperparams["feature_range"]
+        self.scale_ = (range_max - range_min) / (self.data_max_ - self.data_min_)
+        self.min_ = range_min - self.data_min_ * self.scale_
+
+    def _build_transformer(self, X):
+        range_min, range_max = self._hyperparams["feature_range"]
+        ops = {}
+        for i, c in enumerate(X.columns):
+            c_std = (it[c] - self.data_min_[i]) / (  # type: ignore
+                self.data_max_[i] - self.data_min_[i]  # type: ignore
+            )
+            c_scaled = c_std * (range_max - range_min) + range_min
+            ops.update({c: c_scaled})
+        return Map(columns=ops)
+
+    @staticmethod
+    def _lift(X, hyperparams):
         agg = {f"{c}_min": agg_min(it[c]) for c in X.columns}
         agg.update({f"{c}_max": agg_max(it[c]) for c in X.columns})
         aggregate = Aggregate(columns=agg)
@@ -75,33 +107,35 @@ class _MinMaxScalerImpl:
             data_max_[i] = data_min_max[f"{c}_max"]
         data_min_ = np.array(data_min_)
         data_max_ = np.array(data_max_)
-        return data_min_, data_max_
+        n_samples_seen_ = _df_count(X)
+        n_features_in_ = len(X.columns)
+        feature_names_in_ = X.columns
+        return data_min_, data_max_, n_samples_seen_, n_features_in_, feature_names_in_
 
-    def _set_fit_attributes(self, X, data_min_, data_max_, n_samples_seen_):
-        self._first_fit = False
-        self.data_min_ = data_min_
-        self.data_max_ = data_max_
-        self.n_samples_seen_ = n_samples_seen_
-        self.n_features_in_ = len(X.columns)
-        self.feature_names_in_ = X.columns
-        self.data_range_ = self.data_max_ - self.data_min_
-        range_min, range_max = self.feature_range
-        self.scale_ = (range_max - range_min) / (data_max_ - data_min_)
-        self.min_ = range_min - data_min_ * self.scale_
-
-    def _build_transformer(self, X):
-        range_min, range_max = self.feature_range
-        ops = {}
-        for i, c in enumerate(X.columns):
-            c_std = (it[c] - self.data_min_[i]) / (  # type: ignore
-                self.data_max_[i] - self.data_min_[i]  # type: ignore
-            )
-            c_scaled = c_std * (range_max - range_min) + range_min
-            ops.update({c: c_scaled})
-        return Map(columns=ops).fit(X)
-
-    def transform(self, X):
-        return self.transformer.transform(X)
+    @staticmethod
+    def _combine(lifted_a, lifted_b):
+        (
+            data_min_a,
+            data_max_a,
+            n_samples_seen_a,
+            n_features_in_a,
+            feature_names_in_a,
+        ) = lifted_a
+        (
+            data_min_b,
+            data_max_b,
+            n_samples_seen_b,
+            n_features_in_b,
+            feature_names_in_b,
+        ) = lifted_b
+        data_min_ = np.minimum(data_min_a, data_min_b)
+        data_max_ = np.maximum(data_max_a, data_max_b)
+        n_samples_seen_ = n_samples_seen_a + n_samples_seen_b
+        assert n_features_in_a == n_features_in_b
+        n_features_in_ = n_features_in_a
+        assert list(feature_names_in_a) == list(feature_names_in_b)
+        feature_names_in_ = feature_names_in_a
+        return data_min_, data_max_, n_samples_seen_, n_features_in_, feature_names_in_
 
 
 _combined_schemas = {
