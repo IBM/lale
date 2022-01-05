@@ -36,13 +36,12 @@ def _df_count(X):
 
 class _MinMaxScalerImpl:
     def __init__(self, feature_range=(0, 1), *, copy=True, clip=False):
-        self.feature_range = feature_range
         if not copy:
             raise ValueError("`copy=False` is not supported by this implementation")
         if clip:
             raise ValueError("`clip=True` is not supported by this implementation")
+        self._hyperparams = {"feature_range": feature_range, "copy": copy, "clip": clip}
         self.n_samples_seen_ = 0
-        self._hyperparams = None
         self._transformer = None
 
     def fit(self, X, y=None):
@@ -77,12 +76,12 @@ class _MinMaxScalerImpl:
             self.feature_names_in_,
         ) = lifted
         self.data_range_ = self.data_max_ - self.data_min_
-        range_min, range_max = self.feature_range
+        range_min, range_max = self._hyperparams["feature_range"]
         self.scale_ = (range_max - range_min) / (self.data_max_ - self.data_min_)
         self.min_ = range_min - self.data_min_ * self.scale_
 
     def _build_transformer(self, X):
-        range_min, range_max = self.feature_range
+        range_min, range_max = self._hyperparams["feature_range"]
         ops = {}
         for i, c in enumerate(X.columns):
             c_std = (it[c] - self.data_min_[i]) / (  # type: ignore
