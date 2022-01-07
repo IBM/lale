@@ -62,8 +62,7 @@ def cross_val_score_for_monoid(
     if isinstance(cv, int):
         cv = sklearn.model_selection.StratifiedKFold(cv)
     folds = FoldsForMonoid(estimator, X, y, cv)
-    if return_estimators:
-        estimators = []
+    estimators = []
     cv_results = []
     for i in range(folds.get_n_splits()):
         trained_estimator = estimator.fit(folds.train_Xs[i], folds.train_ys[i])
