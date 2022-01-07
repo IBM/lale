@@ -33,6 +33,7 @@ from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
+from lale.lib.rasl._folds_for_monoid import cross_val_score_for_monoid
 from lale.lib.sklearn import FunctionTransformer, LogisticRegression
 
 
@@ -572,3 +573,44 @@ class TestStandardScaler(unittest.TestCase):
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+
+
+class TestCrossValForMonoid(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.creditg = lale.datasets.openml.fetch(
+            "credit-g",
+            "classification",
+            preprocess=True,
+            astype="pandas",
+        )
+
+    def _check_trained(self, op1, op2, msg):
+        self.assertEqual(list(op1.data_min_), list(op2.data_min_), msg)
+        self.assertEqual(list(op1.data_max_), list(op2.data_max_), msg)
+        self.assertEqual(list(op1.data_range_), list(op2.data_range_), msg)
+        self.assertEqual(list(op1.scale_), list(op2.scale_), msg)
+        self.assertEqual(list(op1.min_), list(op2.min_), msg)
+        self.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
+        self.assertEqual(op1.n_samples_seen_, op2.n_samples_seen_, msg)
+
+    def test_cross_val(self):
+        (X, y), _ = self.creditg
+        trainable = RaslMinMaxScaler() >> LogisticRegression()
+
+        import sklearn.model_selection
+        from sklearn.utils.metaestimators import _safe_split
+
+        cv = sklearn.model_selection.StratifiedKFold(5)
+        regular_estimators = [
+            trainable.fit(*_safe_split(trainable, X, y, train))
+            for train, test in cv.split(X, y)
+        ]
+        monoid_estimators, _ = cross_val_score_for_monoid(
+            trainable, X, y, cv=cv, return_estimators=True
+        )
+        self.assertEqual(len(monoid_estimators), len(regular_estimators))
+        for split_id in range(cv.get_n_splits()):
+            regular_op = regular_estimators[split_id].steps()[0].impl
+            monoid_op = monoid_estimators[split_id].steps()[0].impl
+            self._check_trained(regular_op, monoid_op, split_id)

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 import typing
 
 import numpy as np
@@ -45,7 +46,25 @@ class _MinMaxScalerImpl:
         self._transformer = None
 
     def fit(self, X, y=None):
-        self._set_fit_attributes(self._lift(X, self._hyperparams))
+        split_id, folds = getattr(X, "folds_for_monoid", (-1, None))
+        if folds is None:
+            self._set_fit_attributes(self._lift(X, self._hyperparams))
+        else:
+            assert X is folds.train_Xs[split_id]
+            op_id = f"lale.lib.rasl.MinMaxScaler({self._hyperparams['feature_range']})"
+            lifteds = []
+            for j in range(folds.get_n_splits()):
+                if j != split_id:
+                    if folds.has_lifted(j, op_id):
+                        # print(f"reusing split_id {split_id} j {j}")
+                        lifted_j = folds.get_lifted(j, op_id)
+                    else:
+                        # print(f"lifting split_id {split_id} j {j}")
+                        lifted_j = self._lift(folds.test_Xs[j], self._hyperparams)
+                        folds.set_lifted(j, op_id, lifted_j)
+                    lifteds.append(lifted_j)
+            combined = functools.reduce(self._combine, lifteds)
+            self._set_fit_attributes(combined)
         return self
 
     def partial_fit(self, X, y=None):
