@@ -34,6 +34,9 @@ jobs:
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
+    - name: Install deps for test_autoai_libs
+      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
+      run: pip install --upgrade --upgrade-strategy eager 'autoai-libs'
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -65,6 +68,9 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
         include:
+        - test-case: test/test_autoai_libs.py
+          python-version: 3.8
+          setup-target: '.[test]'
         - test-case: test/test_autoai_ts_libs.py
           python-version: 3.8
           setup-target: '.[test]'
@@ -115,6 +121,9 @@ jobs:
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
       run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
+    - name: Install deps for test_autoai_libs
+      if: ${{ matrix.test-case == 'test/test_autoai_libs.py' }}
+      run: pip install 'autoai-libs'
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 

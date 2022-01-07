@@ -82,7 +82,6 @@ extras_require = {
     ],
     "dev": ["pre-commit"],
     "test": [
-        "autoai-libs @ https://test.pypi.org/simple/",
         "joblib",
         "jupyter",
         "numpydoc",
