@@ -141,9 +141,9 @@ class Grammar(Operator):
         Optional[Operator]
         """
         if isinstance(op, BasePipeline):
-            steps = op.steps()
+            steps = op.steps_list()
             new_maybe_steps: List[Optional[Operator]] = [
-                self._unfold(sop, n) for sop in op.steps()
+                self._unfold(sop, n) for sop in op.steps_list()
             ]
             if None not in new_maybe_steps:
                 new_steps: List[Operator] = cast(List[Operator], new_maybe_steps)
@@ -153,7 +153,7 @@ class Grammar(Operator):
             else:
                 return None
         if isinstance(op, OperatorChoice):
-            steps = [s for s in (self._unfold(sop, n) for sop in op.steps()) if s]
+            steps = [s for s in (self._unfold(sop, n) for sop in op.steps_list()) if s]
             return make_choice(*steps) if steps else None
         if isinstance(op, NonTerminal):
             return self._unfold(self._variables[op.name()], n - 1) if n > 0 else None
@@ -196,9 +196,9 @@ class Grammar(Operator):
         Optional[Operator]
         """
         if isinstance(op, BasePipeline):
-            steps = op.steps()
+            steps = op.steps_list()
             new_maybe_steps: List[Optional[Operator]] = [
-                self._sample(sop, n) for sop in op.steps()
+                self._sample(sop, n) for sop in op.steps_list()
             ]
             if None not in new_maybe_steps:
                 new_steps: List[Operator] = cast(List[Operator], new_maybe_steps)
@@ -208,7 +208,7 @@ class Grammar(Operator):
             else:
                 return None
         if isinstance(op, OperatorChoice):
-            return self._sample(random.choice(op.steps()), n)
+            return self._sample(random.choice(op.steps_list()), n)
         if isinstance(op, NonTerminal):
             return self._sample(getattr(self, op.name()), n - 1) if n > 0 else None
         if isinstance(op, IndividualOp):

@@ -280,11 +280,11 @@ class _GenSym:
             if isinstance(op, lale.operators.IndividualOp):
                 label = cls2label.get(op.class_name(), op.name())
             elif isinstance(op, lale.operators.BasePipeline):
-                for s in op.steps():
+                for s in op.steps_list():
                     populate_label2count(s)
                 label = "pipeline"
             elif isinstance(op, lale.operators.OperatorChoice):
-                for s in op.steps():
+                for s in op.steps_list():
                     populate_label2count(s)
                 label = "choice"
             else:
@@ -430,18 +430,18 @@ def _op_to_json_rec(
         uid = gensym("pipeline")
         child2uid: Dict[lale.operators.Operator, str] = {}
         child2jsn: Dict[lale.operators.Operator, JSON_TYPE] = {}
-        for idx, child in enumerate(op.steps()):
+        for idx, child in enumerate(op.steps_list()):
             child_uid, child_jsn = _op_to_json_rec(child, cls2label, gensym)
             child2uid[child] = child_uid
             child2jsn[child] = child_jsn
         jsn["edges"] = [[child2uid[x], child2uid[y]] for x, y in op.edges()]
-        jsn["steps"] = {child2uid[z]: child2jsn[z] for z in op.steps()}
+        jsn["steps"] = {child2uid[z]: child2jsn[z] for z in op.steps_list()}
     elif isinstance(op, lale.operators.OperatorChoice):
         jsn["operator"] = "OperatorChoice"
         uid = gensym("choice")
         jsn["state"] = "planned"
         jsn["steps"] = {}
-        for step in op.steps():
+        for step in op.steps_list():
             child_uid, child_jsn = _op_to_json_rec(step, cls2label, gensym)
             jsn["steps"][child_uid] = child_jsn
     else:
