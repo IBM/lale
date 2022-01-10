@@ -16,6 +16,7 @@ import pandas as pd
 import scipy.sparse.csr
 import sklearn
 import sklearn.preprocessing
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -185,11 +186,9 @@ class _OneHotEncoderImpl:
 
 OneHotEncoder = lale.operators.make_operator(_OneHotEncoderImpl, _combined_schemas)
 
-from packaging import version
-
 sklearn_version_str = getattr(sklearn, "__version__")
 
-if sklearn_version_str >=  version.Version("0.21"):
+if sklearn_version_str >= version.Version("0.21"):
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.preprocessing.OneHotEncoder.html
     OneHotEncoder = OneHotEncoder.customize_schema(
         drop={
@@ -221,7 +220,7 @@ if sklearn_version_str >=  version.Version("0.21"):
         set_as_available=True,
     )
 
-if sklearn_version_str >=  version.Version("0.23"):
+if sklearn_version_str >= version.Version("0.23"):
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.OneHotEncoder.html
     OneHotEncoder = OneHotEncoder.customize_schema(
         drop={
