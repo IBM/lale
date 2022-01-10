@@ -45,12 +45,12 @@ class _OptimizeLast:
             last_estimator = estimator.clone()
         else:
             assert isinstance(estimator, lale.operators.TrainedPipeline)
-            steps = estimator.steps()
+            steps = estimator.steps_list()
             num_steps = len(steps)
             if num_steps == 0:
                 last_estimator = None
             else:
-                last_estimator = estimator.steps()[-1].clone()
+                last_estimator = estimator.steps_list()[-1].clone()
             lale_prefix = estimator.remove_last()
 
         self._suffix_optimizer = OptimizeSuffix(

@@ -949,7 +949,7 @@ class TestHigherOrderOperators(unittest.TestCase):
         # Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
         self.assertNotEqual(
             trained.hyperparams()["base_estimator"]
-            .steps()[1]
+            .steps_list()[1]
             .hyperparams()["min_samples_leaf"],
             1,
         )
@@ -994,7 +994,7 @@ class TestHigherOrderOperators(unittest.TestCase):
         # Checking that the inner decision tree does not get the default value for min_samples_leaf, not sure if this will always pass
         self.assertNotEqual(
             trained.hyperparams()["base_estimator"]
-            .steps()[1]
+            .steps_list()[1]
             .hyperparams()["min_samples_leaf"],
             1,
         )

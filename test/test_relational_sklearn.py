@@ -611,6 +611,6 @@ class TestCrossValForMonoid(unittest.TestCase):
         )
         self.assertEqual(len(monoid_estimators), len(regular_estimators))
         for split_id in range(cv.get_n_splits()):
-            regular_op = regular_estimators[split_id].steps()[0].impl
-            monoid_op = monoid_estimators[split_id].steps()[0].impl
+            regular_op = regular_estimators[split_id].steps_list()[0].impl
+            monoid_op = monoid_estimators[split_id].steps_list()[0].impl
             self._check_trained(regular_op, monoid_op, split_id)

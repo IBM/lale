@@ -25,7 +25,7 @@ def wrap_pipeline_segments(orig_pipeline):
     engineering."""
     from lale.lib.autoai_libs.numpy_permute_array import NumpyPermuteArray
 
-    if len(orig_pipeline.steps()) <= 2:
+    if len(orig_pipeline.steps_list()) <= 2:
         return orig_pipeline
     estimator = orig_pipeline.get_last()
     prep = orig_pipeline.remove_last()

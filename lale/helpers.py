@@ -511,7 +511,7 @@ def create_instance_from_hyperopt_search_space(
         all_hyperparams = {**obj_hyperparams, **new_hyperparams}
         return lale_object(**all_hyperparams)
     elif isinstance(lale_object, BasePipeline):
-        steps = lale_object.steps()
+        steps = lale_object.steps_list()
         if len(hyperparams) != len(steps):
             raise ValueError(
                 "The number of steps in the hyper-parameter space does not match the number of steps in the pipeline."
@@ -545,7 +545,7 @@ def create_instance_from_hyperopt_search_space(
         # corresponding to the choice made, the only key is the index of the step and the value is
         # the params corresponding to that step.
         step_index: int
-        choices = lale_object.steps()
+        choices = lale_object.steps_list()
 
         if len(choices) == 1:
             step_index = 0

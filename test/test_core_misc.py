@@ -212,7 +212,7 @@ class TestMethodParameters(unittest.TestCase):
         _ = trained.predict([3, 4], predict_version=6)
 
         self.assertEqual(
-            trained.steps()[1].impl._predict_params.get("predict_version", None), 6
+            trained.steps_list()[1].impl._predict_params.get("predict_version", None), 6
         )
 
 
