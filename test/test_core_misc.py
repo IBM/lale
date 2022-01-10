@@ -1131,6 +1131,8 @@ class _OperatorForwardingTestImpl:
     def __init__(self):
         self._wrapped_model = _OperatorForwardingTestWrappedImpl()
 
+        self.prop_ = True
+
     def fit(self, X, y=None):
         return self
 
@@ -1145,6 +1147,9 @@ class _OperatorForwardingTestImpl:
 
     @property
     def p(self):
+        return True
+
+    def auto_(self):
         return True
 
 
@@ -1182,6 +1187,12 @@ class TestOperatorFowarding(unittest.TestCase):
 
     def test_fowards_method_succeeds(self):
         self.assertTrue(_OperatorForwardingTest.f())
+
+    def test_fowards_underscore_method_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.auto_())
+
+    def test_fowards_underscore_prop_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.prop_)
 
     # test that the outer impl method is given priority over the inner impl method
     def test_fowards_method_shadow_succeeds(self):

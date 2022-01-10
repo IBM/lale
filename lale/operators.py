@@ -867,7 +867,14 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
                 raise AttributeError(error_msg)
 
         forwards = self.get_forwards()
-        if forwards is True or isinstance(forwards, list) and name in forwards:
+        if (
+            forwards is True
+            or (
+                name.endswith("_")
+                and not (name.startswith("__") and name.endswith("__"))
+            )
+            or (isinstance(forwards, list) and name in forwards)
+        ):
             # we should try forwarding it.
             # first, a sanity check to prevent confusing behaviour where
             # forwarding works on a plannedoperator and then fails on a trainedoperator
