@@ -405,6 +405,8 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         return result
 
     def find_and_replace(graph: JSON_TYPE) -> JSON_TYPE:
+        if len(graph["steps"]) == 1:  # singleton
+            return {"kind": "Seq", "steps": graph["steps"]}
         progress = True
         while progress:
             seq = find_seq(graph)
