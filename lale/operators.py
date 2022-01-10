@@ -3723,6 +3723,13 @@ class BasePipeline(Operator, Generic[OpType]):
     def steps_list(self) -> List[OpType]:
         return self._steps
 
+    @property
+    def steps(self) -> List[Tuple[str, OpType]]:
+        """This is meant to function similarly to the scikit-learn steps property
+        and for linear pipelines, should behave the same
+        """
+        return [(s.name(), s) for s in self._steps]
+
     def _subst_steps(self, m: Dict[OpType, OpType]) -> None:
         if dict:
             # for i, s in enumerate(self._steps):

@@ -1284,3 +1284,13 @@ class TestOperatorFowarding(unittest.TestCase):
         Op = _OperatorForwardingTest.customize_schema(forwards=["fnotforward"])
         with self.assertRaises(AttributeError):
             self.assertTrue(Op.f()())
+
+
+class TestSteps(unittest.TestCase):
+    def test_pipeline(self):
+        pca = PCA()
+        op: Ops.PlannedPipeline = pca >> LogisticRegression
+
+        self.assertEqual(len(op.steps), 2)
+        self.assertEquals(op.steps[0][0], "PCA")
+        self.assertEquals(op.steps[0][1], pca)
