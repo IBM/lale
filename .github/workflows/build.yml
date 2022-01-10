@@ -31,6 +31,8 @@ jobs:
       run: pip install -U numpy
     - name: Install dependencies
       run: pip install --upgrade --upgrade-strategy eager .[full,test]
+    - name: Install autoai-libs
+      run: pip install --index-url https://test.pypi.org/simple/ 'autoai-libs'
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
