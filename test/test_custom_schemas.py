@@ -413,11 +413,13 @@ class TestCustomSchema(unittest.TestCase):
         try:
             from lale.lib.autogen import Lars
             from lale.lib.lightgbm import LGBMClassifier
-            from lale.lib.sklearn import PCA
             from lale.lib.xgboost import XGBClassifier
 
-            lale.wrap_imported_operators()
-            self.assertEqual(foo._schemas, PCA._schemas)  # type: ignore
+            lale.wrap_imported_operators(exclude_classes=["foo"])
+            from sklearn.decomposition import PCA as sklearn_pca
+
+            op_obj = foo()
+            self.assertIsInstance(op_obj, sklearn_pca)
             self.assertEqual(bar._schemas, XGBClassifier._schemas)  # type: ignore
             self.assertEqual(baz._schemas, LGBMClassifier._schemas)  # type: ignore
             self.assertEqual(foobar._schemas, Lars._schemas)
