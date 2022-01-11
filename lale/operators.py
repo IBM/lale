@@ -5182,6 +5182,13 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
     def steps_list(self) -> List[OperatorChoiceType]:
         return self._steps
 
+    @property
+    def steps(self) -> List[Tuple[str, OperatorChoiceType]]:
+        """This is meant to function similarly to the scikit-learn steps property
+        and for linear pipelines, should behave the same
+        """
+        return [(s.name(), s) for s in self._steps]
+
     def fit(self, X, y=None, **fit_params):
         if len(self.steps_list()) == 1:
             s = self.steps_list()[0]
