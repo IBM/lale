@@ -69,11 +69,7 @@ class NDArrayWithSchema(np.ndarray):
 # See instructions for subclassing pandas DataFrame:
 # https://pandas.pydata.org/pandas-docs/stable/development/extending.html#extending-subclassing-pandas
 class DataFrameWithSchema(pd.DataFrame):
-    _internal_names = pd.DataFrame._internal_names + [
-        "json_schema",
-        "table_name",
-        "folds_for_monoid",
-    ]
+    _internal_names = pd.DataFrame._internal_names + ["json_schema", "table_name"]
     _internal_names_set = set(_internal_names)
 
     @property
@@ -82,7 +78,7 @@ class DataFrameWithSchema(pd.DataFrame):
 
 
 class SeriesWithSchema(pd.Series):
-    _internal_names = pd.Series._internal_names + [
+    _internal_names = pd.DataFrame._internal_names + [
         "json_schema",
         "table_name",
         "folds_for_monoid",
@@ -211,19 +207,6 @@ def get_table_name(obj):
     ):
         return getattr(obj, "table_name", None)
     return None
-
-
-def add_folds_for_monoid(obj, folds):
-    if isinstance(obj, (DataFrameWithSchema, SeriesWithSchema)):
-        result = obj
-    elif isinstance(obj, pd.DataFrame):
-        result = DataFrameWithSchema(obj)
-    elif isinstance(obj, pd.Series):
-        result = SeriesWithSchema(obj)
-    else:
-        raise TypeError(f"unexpected type(obj) {type(obj)}")
-    setattr(result, "folds_for_monoid", folds)
-    return result
 
 
 def strip_schema(obj):
