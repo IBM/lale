@@ -86,7 +86,7 @@ Possible choices are:
 ``'all'``: resample all classes;
 ``'auto'``: equivalent to ``'not majority'``.""",
                             "enum": [
-                                "minority",
+                                "majority",
                                 "not minority",
                                 "not majority",
                                 "all",
