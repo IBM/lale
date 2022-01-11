@@ -1989,6 +1989,57 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
             self.assertEqual(result.loc[273, "prod"], 154150, tgt)
             self.assertEqual(result.loc[273, "line"], "P", tgt)
 
+    def test_dynamic_rename(self):
+        def expr(cols):
+            return {("new_" + c): it[c] for c in cols}
+
+        pipeline = Scan(table=it.go_products) >> Map(columns=expr)
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            for c in result.columns:
+                self.assertRegex(c, "new_.*")
+
+    def test_dynamic_rename_lambda(self):
+        pipeline = Scan(table=it.go_products) >> Map(
+            columns=lambda cols: {("new_" + c): it[c] for c in cols}
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            for c in result.columns:
+                self.assertRegex(c, "new_.*")
+
+    def test_dynamic_schema_num(self):
+        from lale import type_checking
+
+        def expr(cols):
+            ret = {}
+            for c, s in cols.items():
+                if s is None:
+                    ret["unknown_" + c] = it[c]
+                elif type_checking.is_subschema(s, {"type": "number"}):
+                    ret["num_" + c] = it[c]
+                    ret["shifted_" + c] = it[c] + 5
+                else:
+                    ret["other_" + c] = it[c]
+            return ret
+
+        pipeline = Scan(table=it.go_products) >> Map(columns=expr)
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertIn("num_Product number", result.columns)
+            self.assertIn("shifted_Product number", result.columns)
+            self.assertIn("other_Product line", result.columns)
+
+            self.assertEqual(
+                result["num_Product number"][0] + 5, result["shifted_Product number"][0]
+            )
+
 
 class TestRelationalOperator(unittest.TestCase):
     def setUp(self):
