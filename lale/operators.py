@@ -1,4 +1,4 @@
-# Copyright 2019, 2020, 2021 IBM Corporation
+# Copyright  2021,2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -587,6 +587,12 @@ class Operator(metaclass=AbstractVisitorMeta):
     def feature_importances_(self):
         return self._final_estimator.feature_importances_
 
+    def explain(self):
+        if hasattr(self, "explain") and callable(getattr(self, "explain")):
+            return self._final_estimator.explain()
+        else:
+            raise Exception("Explain method is not supported")
+
     def get_param_ranges(self) -> Tuple[Dict[str, Any], Dict[str, Any]]:
         """Returns two dictionaries, ranges and cat_idx, for hyperparameters.
 
@@ -688,12 +694,14 @@ class Operator(metaclass=AbstractVisitorMeta):
                     for edge in subject.edges():
                         index_edges.append(
                             (
+
                                 subject.steps_list().index(edge[0]),
                                 subject.steps_list().index(edge[1]),
                             )
                         )
 
                     for step in subject.steps_list():
+
                         new_steps.append(_replace(step, original_op, replacement_op))
 
                     # use previous index-based representation to reconstruct edges
@@ -707,6 +715,7 @@ class Operator(metaclass=AbstractVisitorMeta):
 
                 elif isinstance(subject, OperatorChoice):
                     for step in subject.steps_list():
+
                         new_steps.append(_replace(step, original_op, replacement_op))
                     return make_choice(*new_steps)
 
@@ -716,6 +725,7 @@ class Operator(metaclass=AbstractVisitorMeta):
                     )
             else:
                 # base case for recursion: operator with no steps, returns replacement if applicable, original otherwise
+
                 if _check_match(subject, original_op):
                     return replacement_op
 
@@ -4628,6 +4638,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         trained_steps: List[TrainedIndividualOp] = []
         trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
         for step in self.steps_list():
+
             trained_step = step.convert_to_trained()
             trained_steps.append(trained_step)
             trained_map[step] = trained_step
@@ -4699,6 +4710,8 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             new_pipeline = trained_pipeline_prefix >> trained_sink_node
             self._trained = new_pipeline
             return new_pipeline
+
+
 
 
 TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)  # type: ignore

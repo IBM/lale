@@ -77,8 +77,10 @@ extras_require = {
         "BlackBoxAuditing",
         "imbalanced-learn",
         "cvxpy>=1.0",
+        "aix360>=0.1.0",
         "fairlearn",
         "h5py",
+        "mypy",
     ],
     "dev": ["pre-commit"],
     "test": [
