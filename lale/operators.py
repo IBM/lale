@@ -694,7 +694,6 @@ class Operator(metaclass=AbstractVisitorMeta):
                     for edge in subject.edges():
                         index_edges.append(
                             (
-
                                 subject.steps_list().index(edge[0]),
                                 subject.steps_list().index(edge[1]),
                             )
@@ -4710,8 +4709,6 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
             new_pipeline = trained_pipeline_prefix >> trained_sink_node
             self._trained = new_pipeline
             return new_pipeline
-
-
 
 
 TrainedOpType = TypeVar("TrainedOpType", bound=TrainedIndividualOp, covariant=True)  # type: ignore
