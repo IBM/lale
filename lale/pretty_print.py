@@ -476,6 +476,10 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 for step_uid, step_val in jsn["steps"].items()
             }
             combinator = _OP_KIND_TO_COMBINATOR[_op_kind(jsn)]
+            if len(printed_steps.values()) == 1 and combinator == ">>":
+                gen.imports.append("from lale.operators import make_pipeline")
+                op_expr = "make_pipeline({})".format(", ".join(printed_steps.values()))
+                return op_expr
             return f" {combinator} ".join(printed_steps.values())
         else:
             printed_steps = {
