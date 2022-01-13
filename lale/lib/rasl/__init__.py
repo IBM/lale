@@ -28,6 +28,7 @@ Scikit-learn Operators
 * lale.lib.rasl. `MinMaxScaler`_
 * lale.lib.rasl. `OneHotEncoder`_
 * lale.lib.rasl. `OrdinalEncoder`_
+* lale.lib.rasl. `SelectKBest`_
 * lale.lib.rasl. `StandardScaler`_
 
 
@@ -36,6 +37,7 @@ Scikit-learn Operators
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
 .. _`OneHotEncoder`: lale.lib.rasl.one_hot_encoder.html
 .. _`OrdinalEncoder`: lale.lib.rasl.ordinal_encoder.html
+.. _`SelectKBest`: lale.lib.rasl.select_k_best.html
 .. _`StandardScaler`: lale.lib.rasl.standard_scaler.html
 
 """
@@ -45,4 +47,5 @@ from .map import Map
 from .min_max_scaler import MinMaxScaler
 from .one_hot_encoder import OneHotEncoder
 from .ordinal_encoder import OrdinalEncoder
+from .select_k_best import SelectKBest
 from .standard_scaler import StandardScaler

@@ -17,9 +17,9 @@ import unittest
 
 import jsonschema
 import numpy as np
-from numpy.lib.function_base import select
 import pandas as pd
-from sklearn.feature_selection import SelectKBest as SkSelectKBest, chi2
+from sklearn.feature_selection import SelectKBest as SkSelectKBest
+from sklearn.feature_selection import chi2
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
@@ -34,6 +34,7 @@ from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
+from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
 from lale.lib.sklearn import FunctionTransformer, LogisticRegression
 
@@ -270,20 +271,42 @@ class TestPipeline(unittest.TestCase):
         trained = pipeline.fit(self.X_train_spark, self.y_train)
         _ = trained.predict(self.X_test_spark)
 
+
 class TestSelectKBest(unittest.TestCase):
     def setUp(self):
         from sklearn.datasets import load_digits
-        self.X, self.y = load_digits(return_X_y=True)
+
+        self.X, self.y = load_digits(return_X_y=True, as_frame=True)
 
     def _check_trained(self, sk_trained, rasl_trained):
-        np.testing.assert_equal(sk_trained.scores_, rasl_trained.scores_)
-        np.testing.assert_equal(sk_trained.pvalues_, rasl_trained.pvalues_)
-        self.assertEqual(sk_trained.n_features_in_, rasl_trained.n_features_in_)
+        np.testing.assert_equal(sk_trained.scores_, rasl_trained.impl.scores_)
+        np.testing.assert_equal(sk_trained.pvalues_, rasl_trained.impl.pvalues_)
+        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
 
     def test_fit(self):
-        sk_trainable = SkSelectKBest(chi2, k=20)
+        sk_trainable = SkSelectKBest(score_func=chi2, k=20)
+        rasl_trainable = RaslSelectKBest(score_func=chi2, k=20)
         sk_trained = sk_trainable.fit(self.X, self.y)
-        self._check_trained(sk_trained, sk_trained)
+        rasl_trained = rasl_trainable.fit(self.X, self.y)
+        self._check_trained(sk_trained, rasl_trained)
+
+    def test_transform(self):
+        sk_trainable = SkSelectKBest(score_func=chi2, k=20)
+        rasl_trainable = RaslSelectKBest(score_func=chi2, k=20)
+        sk_trained = sk_trainable.fit(self.X, self.y)
+        rasl_trained = rasl_trainable.fit(self.X, self.y)
+        sk_transformed = sk_trained.transform(self.X)
+        rasl_transformed = rasl_trained.transform(self.X)
+        self._check_trained(sk_trained, rasl_trained)
+        self.assertEqual(sk_transformed.shape, rasl_transformed.shape)
+        for row_idx in range(sk_transformed.shape[0]):
+            for col_idx in range(sk_transformed.shape[1]):
+                self.assertAlmostEqual(
+                    sk_transformed[row_idx, col_idx],
+                    rasl_transformed.iloc[row_idx, col_idx],
+                    msg=(row_idx, col_idx),
+                )
+
 
 class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
