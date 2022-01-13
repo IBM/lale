@@ -77,7 +77,6 @@ extras_require = {
         "BlackBoxAuditing",
         "imbalanced-learn",
         "cvxpy>=1.0",
-        "aix360>=0.1.0",
         "fairlearn",
         "h5py",
         "mypy",
@@ -100,6 +99,11 @@ extras_require = {
         "liac-arff>=2.4.0",
         "aif360<0.4.0",
         "BlackBoxAuditing",
+        "aix360>=0.1.0",
+    ],
+    "exlainability": [
+        "aix360==0.2.1",
+        "aif360<0.4.0",
     ],
 }
 
