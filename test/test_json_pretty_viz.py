@@ -946,7 +946,7 @@ pipeline = LogisticRegression.customize_schema(
                 ],
                 "default": 33,
             },
-        )
+        )(n_estimators=50)
         expected = """from sklearn.ensemble import RandomForestRegressor
 import lale
 
@@ -961,8 +961,30 @@ pipeline = RandomForestRegressor.customize_schema(
         ],
         "default": 33,
     },
-)"""
+)(n_estimators=50, random_state=33)"""
         self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
+
+    def test_customize_schema_print_defaults(self):
+        from lale.lib.sklearn import RandomForestRegressor
+
+        pipeline = RandomForestRegressor.customize_schema(
+            bootstrap={"type": "boolean", "default": True},  # default unchanged
+            random_state={
+                "anyOf": [
+                    {"laleType": "numpy.random.RandomState"},
+                    {"enum": [None]},
+                    {"type": "integer"},
+                ],
+                "default": 33,  # default changed
+            },
+        )(n_estimators=50)
+        expected = """from sklearn.ensemble import RandomForestRegressor
+import lale
+
+lale.wrap_imported_operators()
+pipeline = RandomForestRegressor(n_estimators=50, random_state=33)"""
+        # print exactly those defaults that changed
+        self._roundtrip(expected, pipeline.pretty_print(customize_schema=False))
 
     def test_user_operator_in_toplevel_module(self):
         import importlib

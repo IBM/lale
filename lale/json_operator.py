@@ -426,6 +426,27 @@ def _op_to_json_rec(
         orig_schemas = lale.operators.get_lib_schemas(op.impl_class)
         if op._schemas is not orig_schemas:
             jsn["customize_schema"] = _get_customize_schema(op._schemas, orig_schemas)
+            if isinstance(jsn.get("customize_schema", None), dict):
+                if isinstance(jsn.get("hyperparams", None), dict):
+                    if isinstance(orig_schemas, dict):
+                        orig = orig_schemas["properties"]["hyperparams"]["allOf"][0][
+                            "properties"
+                        ]
+                    else:
+                        orig = {}
+                    cust = jsn["customize_schema"]["properties"]["hyperparams"][
+                        "allOf"
+                    ][0]
+                    for hp_name, hp_schema in cust.items():
+                        if "default" in hp_schema:
+                            if hp_name not in jsn["hyperparams"]:
+                                cust_default = hp_schema["default"]
+                                if hp_name in orig and "default" in orig[hp_name]:
+                                    orig_default = orig[hp_name]["default"]
+                                    if cust_default != orig_default:
+                                        jsn["hyperparams"][hp_name] = cust_default
+                                else:
+                                    jsn["hyperparams"][hp_name] = cust_default
     elif isinstance(op, lale.operators.BasePipeline):
         uid = gensym("pipeline")
         child2uid: Dict[lale.operators.Operator, str] = {}
