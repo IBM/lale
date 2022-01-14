@@ -388,22 +388,18 @@ def _get_customize_schema(after, before):
 
 def _top_schemas_to_hparams(top_level_schemas):
     if not isinstance(top_level_schemas, dict):
-        return None
-    hparams = top_level_schemas.get("properties", {}).get("hyperparams", None)
-    return hparams
+        return {}
+    return top_level_schemas.get("properties", {}).get("hyperparams", {})
 
 
 def _hparams_schemas_to_props(hparams_schemas):
-    if hparams_schemas is None:
-        return None
-    props = hparams_schemas.get("allOf", [{}])[0].get("properties", None)
-    return props
+    if not isinstance(hparams_schemas, dict):
+        return {}
+    return hparams_schemas.get("allOf", [{}])[0].get("properties", {})
 
 
 def _top_schemas_to_hp_props(top_level_schemas):
     hparams = _top_schemas_to_hparams(top_level_schemas)
-    if hparams is None:
-        return None
     props = _hparams_schemas_to_props(hparams)
     return props
 
