@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021, 2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 
 import ast
 import importlib
-import json
 import keyword
 import logging
 import math
@@ -616,8 +615,30 @@ def _operator_jsn_to_string(
     return formatted
 
 
-def json_to_string(schema: JSON_TYPE) -> str:
-    s1 = json.dumps(schema, default=lambda o: f"<<{type(o).__qualname__}>>")
+def json_to_string(jsn: JSON_TYPE) -> str:
+    def _inner(value):
+        if value is None:
+            return "None"
+        elif isinstance(value, (bool, str)):
+            return pprint.pformat(value, width=10000, compact=True)
+        elif isinstance(value, (int, float)):
+            if math.isnan(value):
+                return "float('nan')"
+            else:
+                return pprint.pformat(value, width=10000, compact=True)
+        elif isinstance(value, list):
+            sl = [_inner(v) for v in value]
+            return "[" + ", ".join(sl) + "]"
+        elif isinstance(value, tuple):
+            sl = [_inner(v) for v in value]
+            return "(" + ", ".join(sl) + ")"
+        elif isinstance(value, dict):
+            sl = [f"'{k}': {_inner(v)}" for k, v in value.items()]
+            return "{" + ", ".join(sl) + "}"
+        else:
+            return f"<<{type(value).__qualname__}>>"
+
+    s1 = _inner(jsn)
     s2 = _format_code(s1)
     return s2
 

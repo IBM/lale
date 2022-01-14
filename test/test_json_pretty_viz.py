@@ -903,7 +903,7 @@ pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
         printed = lale.pretty_print.to_string(pipeline, astype="sklearn")
         self._roundtrip(expected, printed)
 
-    def test_customize_schema(self):
+    def test_customize_schema_enum_and_number(self):
         from lale.lib.sklearn import LogisticRegression
 
         pipeline = LogisticRegression.customize_schema(
@@ -928,6 +928,40 @@ pipeline = LogisticRegression.customize_schema(
         "default": 0.0001,
     },
 )(solver="lbfgs")"""
+        self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
+
+    def test_customize_schema_none_and_boolean(self):
+        from lale.lib.sklearn import RandomForestRegressor
+
+        pipeline = RandomForestRegressor.customize_schema(
+            bootstrap={"type": "boolean", "default": True},
+            random_state={
+                "anyOf": [
+                    {"laleType": "numpy.random.RandomState"},
+                    {
+                        "description": "RandomState used by np.random",
+                        "enum": [None],
+                    },
+                    {"description": "Explicit seed.", "type": "integer"},
+                ],
+                "default": 33,
+            },
+        )
+        expected = """from sklearn.ensemble import RandomForestRegressor
+import lale
+
+lale.wrap_imported_operators()
+pipeline = RandomForestRegressor.customize_schema(
+    bootstrap={"type": "boolean", "default": True},
+    random_state={
+        "anyOf": [
+            {"laleType": "numpy.random.RandomState"},
+            {"description": "RandomState used by np.random", "enum": [None]},
+            {"description": "Explicit seed.", "type": "integer"},
+        ],
+        "default": 33,
+    },
+)"""
         self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
 
     def test_user_operator_in_toplevel_module(self):
