@@ -471,6 +471,7 @@ def _op_to_json_rec(
                 jsn.get("customize_schema", None), dict
             ):
                 if isinstance(jsn.get("hyperparams", None), dict):
+                    assert jsn["hyperparams"] is not None  # to help pyright
                     orig = _top_schemas_to_hp_props(orig_schemas)
                     cust = _top_schemas_to_hp_props(jsn["customize_schema"])
                     for hp_name, hp_schema in cust.items():
