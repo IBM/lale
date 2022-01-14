@@ -429,9 +429,8 @@ def _op_to_json_rec(
             if isinstance(jsn.get("customize_schema", None), dict):
                 if isinstance(jsn.get("hyperparams", None), dict):
                     if isinstance(orig_schemas, dict):
-                        orig = orig_schemas["properties"]["hyperparams"]["allOf"][0][
-                            "properties"
-                        ]
+                        orig_hp_schemas = orig_schemas["properties"]["hyperparams"]
+                        orig = orig_hp_schemas["allOf"][0]["properties"]
                     else:
                         orig = {}
                     cust = jsn["customize_schema"]["properties"]["hyperparams"][
