@@ -961,7 +961,9 @@ pipeline = RandomForestRegressor.customize_schema(
         ],
         "default": 33,
     },
-)(n_estimators=50, random_state=33)"""
+)(n_estimators=50)"""
+        # this should not include "random_state=33" because that would be
+        # redundant with the schema, and would prevent automated search
         self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
 
     def test_customize_schema_print_defaults(self):

@@ -313,22 +313,40 @@ class _GenSym:
         return result
 
 
-def _hps_to_json_rec(hps, cls2label: Dict[str, str], gensym: _GenSym, steps) -> Any:
+def _hps_to_json_rec(
+    hps,
+    cls2label: Dict[str, str],
+    gensym: _GenSym,
+    steps,
+    add_customized_default: bool,
+) -> Any:
     if isinstance(hps, lale.operators.Operator):
-        step_uid, step_jsn = _op_to_json_rec(hps, cls2label, gensym)
+        step_uid, step_jsn = _op_to_json_rec(
+            hps, cls2label, gensym, add_customized_default
+        )
         steps[step_uid] = step_jsn
         return {"$ref": f"../steps/{step_uid}"}
     elif isinstance(hps, dict):
         return {
-            hp_name: _hps_to_json_rec(hp_val, cls2label, gensym, steps)
+            hp_name: _hps_to_json_rec(
+                hp_val, cls2label, gensym, steps, add_customized_default
+            )
             for hp_name, hp_val in hps.items()
         }
     elif isinstance(hps, tuple):
         return tuple(
-            [_hps_to_json_rec(hp_val, cls2label, gensym, steps) for hp_val in hps]
+            [
+                _hps_to_json_rec(
+                    hp_val, cls2label, gensym, steps, add_customized_default
+                )
+                for hp_val in hps
+            ]
         )
     elif isinstance(hps, list):
-        return [_hps_to_json_rec(hp_val, cls2label, gensym, steps) for hp_val in hps]
+        return [
+            _hps_to_json_rec(hp_val, cls2label, gensym, steps, add_customized_default)
+            for hp_val in hps
+        ]
     else:
         return hps
 
@@ -386,26 +404,29 @@ def _get_customize_schema(after, before):
     return result
 
 
-def _top_schemas_to_hparams(top_level_schemas):
+def _top_schemas_to_hparams(top_level_schemas) -> JSON_TYPE:
     if not isinstance(top_level_schemas, dict):
         return {}
     return top_level_schemas.get("properties", {}).get("hyperparams", {})
 
 
-def _hparams_schemas_to_props(hparams_schemas):
+def _hparams_schemas_to_props(hparams_schemas) -> JSON_TYPE:
     if not isinstance(hparams_schemas, dict):
         return {}
     return hparams_schemas.get("allOf", [{}])[0].get("properties", {})
 
 
-def _top_schemas_to_hp_props(top_level_schemas):
+def _top_schemas_to_hp_props(top_level_schemas) -> JSON_TYPE:
     hparams = _top_schemas_to_hparams(top_level_schemas)
     props = _hparams_schemas_to_props(hparams)
     return props
 
 
 def _op_to_json_rec(
-    op: "lale.operators.Operator", cls2label: Dict[str, str], gensym: _GenSym
+    op: "lale.operators.Operator",
+    cls2label: Dict[str, str],
+    gensym: _GenSym,
+    add_customized_default: bool,
 ) -> Tuple[str, JSON_TYPE]:
     jsn: JSON_TYPE = {}
     jsn["class"] = op.class_name()
@@ -432,7 +453,7 @@ def _op_to_json_rec(
                 }
                 steps: Dict[str, JSON_TYPE] = {}
                 jsn["hyperparams"] = _hps_to_json_rec(
-                    hyperparams, cls2label, gensym, steps
+                    hyperparams, cls2label, gensym, steps, add_customized_default
                 )
                 if len(steps) > 0:
                     jsn["steps"] = steps
@@ -446,7 +467,9 @@ def _op_to_json_rec(
         orig_schemas = lale.operators.get_lib_schemas(op.impl_class)
         if op._schemas is not orig_schemas:
             jsn["customize_schema"] = _get_customize_schema(op._schemas, orig_schemas)
-            if isinstance(jsn.get("customize_schema", None), dict):
+            if add_customized_default and isinstance(
+                jsn.get("customize_schema", None), dict
+            ):
                 if isinstance(jsn.get("hyperparams", None), dict):
                     orig = _top_schemas_to_hp_props(orig_schemas)
                     cust = _top_schemas_to_hp_props(jsn["customize_schema"])
@@ -465,7 +488,9 @@ def _op_to_json_rec(
         child2uid: Dict[lale.operators.Operator, str] = {}
         child2jsn: Dict[lale.operators.Operator, JSON_TYPE] = {}
         for idx, child in enumerate(op.steps_list()):
-            child_uid, child_jsn = _op_to_json_rec(child, cls2label, gensym)
+            child_uid, child_jsn = _op_to_json_rec(
+                child, cls2label, gensym, add_customized_default
+            )
             child2uid[child] = child_uid
             child2jsn[child] = child_jsn
         jsn["edges"] = [[child2uid[x], child2uid[y]] for x, y in op.edges()]
@@ -476,19 +501,25 @@ def _op_to_json_rec(
         jsn["state"] = "planned"
         jsn["steps"] = {}
         for step in op.steps_list():
-            child_uid, child_jsn = _op_to_json_rec(step, cls2label, gensym)
+            child_uid, child_jsn = _op_to_json_rec(
+                step, cls2label, gensym, add_customized_default
+            )
             jsn["steps"][child_uid] = child_jsn
     else:
         raise ValueError(f"Unexpected argument of type: {type(op)}")
     return uid, jsn
 
 
-def to_json(op: "lale.operators.Operator", call_depth: int = 1) -> JSON_TYPE:
+def to_json(
+    op: "lale.operators.Operator",
+    call_depth: int = 1,
+    add_customized_default: bool = False,
+) -> JSON_TYPE:
     from lale.settings import disable_hyperparams_schema_validation
 
     cls2label = _get_cls2label(call_depth + 1)
     gensym = _GenSym(op, cls2label)
-    uid, jsn = _op_to_json_rec(op, cls2label, gensym)
+    uid, jsn = _op_to_json_rec(op, cls2label, gensym, add_customized_default)
     if not disable_hyperparams_schema_validation:
         jsonschema.validate(jsn, SCHEMA, jsonschema.Draft4Validator)
     return jsn

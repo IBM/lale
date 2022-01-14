@@ -657,7 +657,11 @@ def to_string(
     if lale.type_checking.is_schema(arg):
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
-        jsn = lale.json_operator.to_json(arg, call_depth=call_depth + 1)
+        jsn = lale.json_operator.to_json(
+            arg,
+            call_depth=call_depth + 1,
+            add_customized_default=not customize_schema,
+        )
         return _operator_jsn_to_string(
             jsn, show_imports, combinators, customize_schema, astype
         )
