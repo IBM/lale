@@ -640,7 +640,19 @@ def import_from_sklearn_pipeline(sklearn_pipeline, fitted=True, is_hyperparam=Fa
                 # This is a custom subclass of sklearn pipeline, so use the wrapper class
                 # instead of creating a lale pipeline
                 # We assume it has a hyperparameter `steps`.
-                lale_op_obj = wrapper_class(steps=nested_pipeline_lale_named_steps)
+                if (
+                    not fitted
+                ):  # If fitted is False, we do not want to return a Trained operator.
+                    lale_op = wrapper_class
+                else:
+                    lale_op = lale.operators.TrainedIndividualOp(
+                        wrapper_class._name,
+                        wrapper_class._impl,
+                        wrapper_class._schemas,
+                        None,
+                        _lale_trained=True,
+                    )
+                lale_op_obj = lale_op(steps=nested_pipeline_lale_named_steps)
             else:  # no conversion to lale if a wrapper is not found for a subclass of pipeline
                 return sklearn_pipeline
     elif isinstance(sklearn_pipeline, sklearn.pipeline.FeatureUnion):
