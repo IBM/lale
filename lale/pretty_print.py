@@ -188,7 +188,7 @@ def hyperparams_to_string(
                         gen.imports.append(f"import {module}")
                     printed = f"{module}.{printed}"
             if printed.startswith("<"):
-                m = re.match(r"<(\w[\w.]*)\.(\w+) object at 0x[0-9a-f]+>$", printed)
+                m = re.match(r"<(\w[\w.]*)\.(\w+) object at 0x[0-9a-fA-F]+>$", printed)
                 if m:
                     module, clazz = m.group(1), m.group(2)
                     if gen is not None:
@@ -519,9 +519,9 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             if jsn["customize_schema"] == "not_available":
                 logger.warning(f"missing {label}.customize_schema(..) call")
             elif jsn["customize_schema"] != {}:
-                new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][
-                    0
-                ]
+                new_hps = lale.json_operator._top_schemas_to_hp_props(
+                    jsn["customize_schema"]
+                )
                 customize_schema_string = ",".join(
                     [
                         f"{hp_name}={json_to_string(hp_schema)}"
@@ -657,7 +657,11 @@ def to_string(
     if lale.type_checking.is_schema(arg):
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
-        jsn = lale.json_operator.to_json(arg, call_depth=call_depth + 1)
+        jsn = lale.json_operator.to_json(
+            arg,
+            call_depth=call_depth + 1,
+            add_custom_default=not customize_schema,
+        )
         return _operator_jsn_to_string(
             jsn, show_imports, combinators, customize_schema, astype
         )
