@@ -378,8 +378,34 @@ def _get_customize_schema(after, before):
         for hp_name, hp_schema in after.items()
         if hp_name not in before or hp_schema != before[hp_name]
     }
-    result = {"properties": {"hyperparams": {"allOf": [hp_diff]}}}
+    result = {
+        "properties": {
+            "hyperparams": {"allOf": [{"type": "object", "properties": hp_diff}]}
+        }
+    }
     return result
+
+
+def _top_schemas_to_hparams(top_level_schemas):
+    if not isinstance(top_level_schemas, dict):
+        return None
+    hparams = top_level_schemas.get("properties", {}).get("hyperparams", None)
+    return hparams
+
+
+def _hparams_schemas_to_props(hparams_schemas):
+    if hparams_schemas is None:
+        return None
+    props = hparams_schemas.get("allOf", [{}])[0].get("properties", None)
+    return props
+
+
+def _top_schemas_to_hp_props(top_level_schemas):
+    hparams = _top_schemas_to_hparams(top_level_schemas)
+    if hparams is None:
+        return None
+    props = _hparams_schemas_to_props(hparams)
+    return props
 
 
 def _op_to_json_rec(
@@ -402,9 +428,7 @@ def _op_to_json_rec(
             if hyperparams is None:
                 jsn["hyperparams"] = None
             else:
-                hp_schema = (
-                    op.hyperparam_schema().get("allOf", [{}])[0].get("properties", {})
-                )
+                hp_schema = _hparams_schemas_to_props(op.hyperparam_schema())
                 hyperparams = {
                     k: v
                     for k, v in hyperparams.items()
@@ -428,14 +452,8 @@ def _op_to_json_rec(
             jsn["customize_schema"] = _get_customize_schema(op._schemas, orig_schemas)
             if isinstance(jsn.get("customize_schema", None), dict):
                 if isinstance(jsn.get("hyperparams", None), dict):
-                    if isinstance(orig_schemas, dict):
-                        orig_hp_schemas = orig_schemas["properties"]["hyperparams"]
-                        orig = orig_hp_schemas["allOf"][0]["properties"]
-                    else:
-                        orig = {}
-                    cust = jsn["customize_schema"]["properties"]["hyperparams"][
-                        "allOf"
-                    ][0]
+                    orig = _top_schemas_to_hp_props(orig_schemas)
+                    cust = _top_schemas_to_hp_props(jsn["customize_schema"])
                     for hp_name, hp_schema in cust.items():
                         if "default" in hp_schema:
                             if hp_name not in jsn["hyperparams"]:
@@ -517,7 +535,7 @@ def _op_from_json_rec(jsn: JSON_TYPE) -> "lale.operators.Operator":
         name = jsn["operator"]
         result = lale.operators.make_operator(impl, schemas, name)
         if jsn.get("customize_schema", {}) != {}:
-            new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][0]
+            new_hps = _top_schemas_to_hp_props(jsn["customize_schema"])
             result = result.customize_schema(**new_hps)
         if jsn["state"] in ["trainable", "trained"]:
             if _get_state(result) == "planned":

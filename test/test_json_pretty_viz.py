@@ -1368,15 +1368,18 @@ class TestToAndFromJSON(unittest.TestCase):
                     "hyperparams": {
                         "allOf": [
                             {
-                                "solver": {
-                                    "default": "liblinear",
-                                    "enum": ["lbfgs", "liblinear"],
-                                },
-                                "tol": {
-                                    "type": "number",
-                                    "minimum": 0.00001,
-                                    "maximum": 0.1,
-                                    "default": 0.0001,
+                                "type": "object",
+                                "properties": {
+                                    "solver": {
+                                        "default": "liblinear",
+                                        "enum": ["lbfgs", "liblinear"],
+                                    },
+                                    "tol": {
+                                        "type": "number",
+                                        "minimum": 0.00001,
+                                        "maximum": 0.1,
+                                        "default": 0.0001,
+                                    },
                                 },
                             }
                         ]

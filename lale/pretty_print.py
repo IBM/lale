@@ -519,9 +519,9 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             if jsn["customize_schema"] == "not_available":
                 logger.warning(f"missing {label}.customize_schema(..) call")
             elif jsn["customize_schema"] != {}:
-                new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][
-                    0
-                ]
+                new_hps = lale.json_operator._top_schemas_to_hp_props(
+                    jsn["customize_schema"]
+                )
                 customize_schema_string = ",".join(
                     [
                         f"{hp_name}={json_to_string(hp_schema)}"
