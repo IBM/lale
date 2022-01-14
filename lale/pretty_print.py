@@ -188,7 +188,7 @@ def hyperparams_to_string(
                         gen.imports.append(f"import {module}")
                     printed = f"{module}.{printed}"
             if printed.startswith("<"):
-                m = re.match(r"<(\w[\w.]*)\.(\w+) object at 0x[0-9a-f]+>$", printed)
+                m = re.match(r"<(\w[\w.]*)\.(\w+) object at 0x[0-9a-fA-F]+>$", printed)
                 if m:
                     module, clazz = m.group(1), m.group(2)
                     if gen is not None:
@@ -660,7 +660,7 @@ def to_string(
         jsn = lale.json_operator.to_json(
             arg,
             call_depth=call_depth + 1,
-            add_customized_default=not customize_schema,
+            add_custom_default=not customize_schema,
         )
         return _operator_jsn_to_string(
             jsn, show_imports, combinators, customize_schema, astype
