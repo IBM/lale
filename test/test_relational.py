@@ -18,6 +18,8 @@ import jsonschema
 import numpy as np
 import pandas as pd
 
+import lale.operators
+
 try:
     from pyspark import SparkConf, SparkContext
     from pyspark.sql import Row, SQLContext
@@ -2095,6 +2097,22 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
                 result = result.toPandas()
             self.assertEqual(len(result.columns), 1)
             self.assertIn("Product line", result.columns)
+
+    def test_static_trained(self):
+        op = Map(columns=[it.col])
+        self.assertIsInstance(op, lale.operators.TrainedOperator)
+
+    def test_dynamic_trainable(self):
+        op = Map(columns=lambda X: [it.col])
+        self.assertIsInstance(op, lale.operators.TrainableOperator)
+        self.assertNotIsInstance(op, lale.operators.TrainedOperator)
+
+        pipeline = Scan(table=it.go_products) >> op
+        pd = self.tgt2datasets["pandas"]
+        trained = pipeline.fit(pd)
+        trained_map = trained.steps_list()[1]
+        self.assertIsInstance(trained_map, Map)  # type: ignore
+        self.assertIsInstance(trained_map, lale.operators.TrainedOperator)
 
 
 class TestRelationalOperator(unittest.TestCase):

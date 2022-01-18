@@ -117,6 +117,29 @@ class _MapImpl:
         self.columns = columns
         self.remainder = remainder
 
+    def fit(self, X, y=None):
+        if callable(self.columns):
+            self.columns = self.columns(X)
+        return self
+
+    def __getattribute__(self, item):
+        # we want to remove fit if a static column is available
+        # since it should be considered already trained
+        omit_fit = False
+        if item == "fit":
+            try:
+                cols = super().__getattribute__("columns")
+                if not callable(cols):
+                    omit_fit = True
+            except AttributeError:
+                pass
+        if omit_fit:
+            raise AttributeError(
+                "fit cannot be called on a Map that has a static expression or has already been fit"
+            )
+        else:
+            return super().__getattribute__(item)
+
     def transform(self, X):
         if _is_pandas_df(X):
             return self.transform_pandas_df(X)
@@ -281,6 +304,7 @@ _combined_schemas = {
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_transform": _input_transform_schema,
+        "input_fit": _input_transform_schema,
         "output_transform": _output_transform_schema,
     },
 }
