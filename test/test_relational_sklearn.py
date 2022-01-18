@@ -378,16 +378,22 @@ class TestOrdinalEncoder(unittest.TestCase):
 class TestOneHotEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import typing
+        from typing import Any, Dict
+
         targets = ["pandas", "spark"]
-        cls.tgt2creditg = {
-            tgt: lale.datasets.openml.fetch(
-                "credit-g",
-                "classification",
-                preprocess=False,
-                astype=tgt,
-            )
-            for tgt in targets
-        }
+        cls.tgt2creditg = typing.cast(
+            Dict[str, Any],
+            {
+                tgt: lale.datasets.openml.fetch(
+                    "credit-g",
+                    "classification",
+                    preprocess=False,
+                    astype=tgt,
+                )
+                for tgt in targets
+            },
+        )
 
     def _check_trained(self, op1, op2, msg):
         self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
@@ -483,16 +489,22 @@ class TestOneHotEncoder(unittest.TestCase):
 class TestStandardScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import typing
+        from typing import Any, Dict
+
         targets = ["pandas", "spark"]
-        cls.tgt2creditg = {
-            tgt: lale.datasets.openml.fetch(
-                "credit-g",
-                "classification",
-                preprocess=True,
-                astype=tgt,
-            )
-            for tgt in targets
-        }
+        cls.tgt2creditg = typing.cast(
+            Dict[str, Any],
+            {
+                tgt: lale.datasets.openml.fetch(
+                    "credit-g",
+                    "classification",
+                    preprocess=True,
+                    astype=tgt,
+                )
+                for tgt in targets
+            },
+        )
 
     def _check_trained(self, op1, op2, msg):
         self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
