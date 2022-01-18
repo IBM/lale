@@ -75,7 +75,10 @@ class set_with_str_for_keys(Generic[VV]):
 
     def __init__(self, elems: Union[Dict[str, VV], Iterable[VV]]):
         if isinstance(elems, dict):
-            self._elems = elems
+            # The type hint is needed since technically a Dict[str, something_else]
+            # is an Iterable[str], which could match the latter type,
+            # but pass this type guard
+            self._elems = elems  # type: ignore
         else:
             self._elems = {str(v): v for v in elems}
 

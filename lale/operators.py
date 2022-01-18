@@ -3378,8 +3378,9 @@ def make_operator(
     else:
         hps: Dict[str, Any] = {}
         frozen: Optional[List[str]] = None
-        if hasattr(impl, "get_params"):
-            hps = impl.get_params(deep=False)
+        impl_get_params = getattr(impl, "get_params", None)
+        if impl_get_params is not None:
+            hps = impl_get_params(deep=False)
             frozen = list(hps.keys())
 
         if hasattr(impl, "fit"):
@@ -3588,7 +3589,9 @@ class BasePipeline(Operator, Generic[OpType]):
             self._steps = steps
             if _lale_preds:
                 # TODO: improve typing situation
-                if isinstance(list(_lale_preds.keys())[0], int):
+                keys: Iterable[Any] = _lale_preds.keys()
+                first_key = next(iter(keys))
+                if isinstance(first_key, int):
                     self._preds = self._indices_to_preds(steps, _lale_preds)  # type: ignore
                     self._cached_preds = _lale_preds  # type: ignore
                 else:
@@ -3631,7 +3634,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     ]
                     sink_nodes = tstep._find_sink_nodes()
                     # Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
-                    new_edges = tstep.edges()
+                    new_edges: List[Tuple[OpType, OpType]] = tstep.edges()
                     # list comprehension at the cost of iterating edges thrice
                     new_edges.extend(
                         [
@@ -3661,7 +3664,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     self._steps.append(step)
             self._preds = {step: [] for step in self._steps}
             for (src, dst) in edges:
-                self._preds[dst].append(src)
+                self._preds[dst].append(src)  # type: ignore
             if not ordered:
                 self.__sort_topologically()
             assert self.__is_in_topological_order()
