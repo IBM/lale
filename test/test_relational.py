@@ -1997,7 +1997,7 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
 
         pipeline = Scan(table=it.go_products) >> Map(columns=expr)
         for tgt, datasets in self.tgt2datasets.items():
-            result = pipeline.transform(datasets)
+            result = pipeline.fit(datasets).transform(datasets)
             if tgt == "spark":
                 result = result.toPandas()
             for c in result.columns:
@@ -2008,7 +2008,7 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
             columns=lambda X: {("new_" + c): it[c] for c in X.columns}
         )
         for tgt, datasets in self.tgt2datasets.items():
-            result = pipeline.transform(datasets)
+            result = pipeline.fit(datasets).transform(datasets)
             if tgt == "spark":
                 result = result.toPandas()
             for c in result.columns:
@@ -2052,7 +2052,7 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
 
         pipeline = Scan(table=it.go_products) >> Map(columns=expr)
         for tgt, datasets in self.tgt2datasets.items():
-            result = pipeline.transform(datasets)
+            result = pipeline.fit(datasets).transform(datasets)
             if tgt == "spark":
                 result = result.toPandas()
             self.assertIn("num_Product number", result.columns)
@@ -2078,7 +2078,7 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
 
         pipeline = Scan(table=it.go_products) >> Map(columns=expr)
         for tgt, datasets in self.tgt2datasets.items():
-            result = pipeline.transform(datasets)
+            result = pipeline.fit(datasets).transform(datasets)
             if tgt == "spark":
                 result = result.toPandas()
             self.assertIn("cat_Product line", result.columns)
@@ -2092,7 +2092,7 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
             }
         )
         for tgt, datasets in self.tgt2datasets.items():
-            result = pipeline.transform(datasets)
+            result = pipeline.fit(datasets).transform(datasets)
             if tgt == "spark":
                 result = result.toPandas()
             self.assertEqual(len(result.columns), 1)
