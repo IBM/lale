@@ -19,7 +19,6 @@ import pandas as pd
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.datasets import data_schemas
 from lale.expressions import _it_column
 from lale.helpers import (
     _is_ast_attribute,
@@ -113,25 +112,6 @@ class _Validate(ast.NodeVisitor):
             )
 
 
-def _get_col_schemas(cols, X):
-    props = {}
-
-    s = data_schemas.to_schema(X)
-    if s is not None:
-        inner = s.get("items", {})
-        if inner is not None and isinstance(inner, dict):
-            col_pairs = inner.get("items", [])
-            if col_pairs is not None and isinstance(col_pairs, list):
-                for cp in col_pairs:
-                    d = cp.get("description", None)
-                    if d is not None and isinstance(d, str):
-                        props[d] = cp
-    for k in cols:
-        if k not in props:
-            props[k] = None
-    return props
-
-
 class _MapImpl:
     def __init__(self, columns, remainder="drop"):
         self.columns = columns
@@ -161,7 +141,7 @@ class _MapImpl:
 
         columns = self.columns
         if callable(columns):
-            columns = columns(_get_col_schemas(X.columns, X))
+            columns = columns(X)
 
         if isinstance(columns, list):
             for column in columns:
@@ -192,7 +172,7 @@ class _MapImpl:
 
         columns = self.columns
         if callable(columns):
-            columns = columns(_get_col_schemas(X.columns, X))
+            columns = columns(X)
 
         if isinstance(columns, list):
             for column in columns:
@@ -235,7 +215,7 @@ _hyperparams_schema = {
                             "items": {"laleType": "expression"},
                         },
                         {
-                            "description": "A callable which, when given a map from column names to their schemas (None if the schemas is unknown), returns either a list or dictionary of mapping expressions, as above.",
+                            "description": "A callable which, when given the input data, returns either a list or dictionary of mapping expressions, as above.",
                             "laleType": "callable",
                             "forOptimizer": False,
                         },

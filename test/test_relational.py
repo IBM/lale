@@ -1990,8 +1990,8 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
             self.assertEqual(result.loc[273, "line"], "P", tgt)
 
     def test_dynamic_rename(self):
-        def expr(cols):
-            return {("new_" + c): it[c] for c in cols}
+        def expr(X):
+            return {("new_" + c): it[c] for c in X.columns}
 
         pipeline = Scan(table=it.go_products) >> Map(columns=expr)
         for tgt, datasets in self.tgt2datasets.items():
@@ -2003,7 +2003,7 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
 
     def test_dynamic_rename_lambda(self):
         pipeline = Scan(table=it.go_products) >> Map(
-            columns=lambda cols: {("new_" + c): it[c] for c in cols}
+            columns=lambda X: {("new_" + c): it[c] for c in X.columns}
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
@@ -2012,12 +2012,33 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
             for c in result.columns:
                 self.assertRegex(c, "new_.*")
 
+    def _get_col_schemas(self, cols, X):
+        from lale.datasets import data_schemas
+
+        props = {}
+        s = data_schemas.to_schema(X)
+        if s is not None:
+            inner = s.get("items", {})
+            if inner is not None and isinstance(inner, dict):
+                col_pairs = inner.get("items", [])
+                if col_pairs is not None and isinstance(col_pairs, list):
+                    for cp in col_pairs:
+                        d = cp.get("description", None)
+                        if d is not None and isinstance(d, str):
+                            props[d] = cp
+        for k in cols:
+            if k not in props:
+                props[k] = None
+        return props
+
     def test_dynamic_schema_num(self):
         from lale import type_checking
 
-        def expr(cols):
+        def expr(X):
             ret = {}
-            for c, s in cols.items():
+            schemas = self._get_col_schemas(X.columns, X)
+            for c, s in schemas.items():
+
                 if s is None:
                     ret["unknown_" + c] = it[c]
                 elif type_checking.is_subschema(s, {"type": "number"}):
@@ -2039,6 +2060,41 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
             self.assertEqual(
                 result["num_Product number"][0] + 5, result["shifted_Product number"][0]
             )
+
+    def test_dynamic_categorical(self):
+        from lale.lib.lale import categorical
+
+        def expr(X):
+            ret = {}
+            cats = categorical()(X.toPandas() if tgt == "spark" else X)
+            for c in X.columns:
+                if c in cats:
+                    ret["cat_" + c] = it[c]
+                else:
+                    ret["other_" + c] = it[c]
+            return ret
+
+        pipeline = Scan(table=it.go_products) >> Map(columns=expr)
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertIn("cat_Product line", result.columns)
+
+    def test_dynamic_lambda_categorical_drop(self):
+        from lale.lib.lale import categorical
+
+        pipeline = Scan(table=it.go_products) >> Map(
+            columns=lambda X: {
+                c: it[c] for c in categorical()(X.toPandas() if tgt == "spark" else X)
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertEqual(len(result.columns), 1)
+            self.assertIn("Product line", result.columns)
 
 
 class TestRelationalOperator(unittest.TestCase):
