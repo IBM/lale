@@ -21,17 +21,12 @@ import lale.operators
 from lale.expressions import it
 from lale.expressions import max as agg_max
 from lale.expressions import min as agg_min
-from lale.helpers import _is_pandas_df, _is_spark_df
+from lale.helpers import _is_spark_df
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import min_max_scaler
 from lale.schemas import Enum
 
-
-def _df_count(X):
-    if _is_pandas_df(X):
-        return len(X)
-    elif _is_spark_df(X):
-        return X.count()
+from ._utils import df_count
 
 
 class _MinMaxScalerImpl:
@@ -107,7 +102,7 @@ class _MinMaxScalerImpl:
             data_max_[i] = data_min_max[f"{c}_max"]
         data_min_ = np.array(data_min_)
         data_max_ = np.array(data_max_)
-        n_samples_seen_ = _df_count(X)
+        n_samples_seen_ = df_count(X)
         feature_names_in_ = X.columns
         return data_min_, data_max_, n_samples_seen_, feature_names_in_
 

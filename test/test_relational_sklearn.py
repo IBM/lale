@@ -278,10 +278,12 @@ class TestSelectKBest(unittest.TestCase):
 
         self.X, self.y = load_digits(return_X_y=True, as_frame=True)
 
-    def _check_trained(self, sk_trained, rasl_trained):
-        np.testing.assert_equal(sk_trained.scores_, rasl_trained.impl.scores_)
-        np.testing.assert_equal(sk_trained.pvalues_, rasl_trained.impl.pvalues_)
-        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
+    def _check_trained(self, sk_trained, rasl_trained, msg=""):
+        np.testing.assert_equal(sk_trained.scores_, rasl_trained.impl.scores_, msg)
+        np.testing.assert_equal(sk_trained.pvalues_, rasl_trained.impl.pvalues_, msg)
+        self.assertEqual(
+            sk_trained.n_features_in_, rasl_trained.impl.n_features_in_, msg
+        )
 
     def test_fit(self):
         sk_trainable = SkSelectKBest(score_func=chi2, k=20)
@@ -291,8 +293,8 @@ class TestSelectKBest(unittest.TestCase):
         self._check_trained(sk_trained, rasl_trained)
 
     def test_transform(self):
-        sk_trainable = SkSelectKBest(score_func=chi2, k=20)
-        rasl_trainable = RaslSelectKBest(score_func=chi2, k=20)
+        sk_trainable = SkSelectKBest(k=20)
+        rasl_trainable = RaslSelectKBest(k=20)
         sk_trained = sk_trainable.fit(self.X, self.y)
         rasl_trained = rasl_trainable.fit(self.X, self.y)
         sk_transformed = sk_trained.transform(self.X)
@@ -306,6 +308,18 @@ class TestSelectKBest(unittest.TestCase):
                     rasl_transformed.iloc[row_idx, col_idx],
                     msg=(row_idx, col_idx),
                 )
+
+    def test_partial_fit(self):
+        rasl_trainable = RaslSelectKBest(k=20)
+        for lower, upper in [[0, 100], [100, 200], [200, self.X.shape[0]]]:
+            X_so_far, y_so_far = self.X[0:upper], self.y[0:upper]
+            sk_trainable = SkSelectKBest(k=20)
+            sk_trained = sk_trainable.fit(X_so_far, y_so_far)
+            X_delta, y_delta = self.X[lower:upper], self.y[lower:upper]
+            rasl_trained = rasl_trainable.partial_fit(X_delta, y_delta)
+            self._check_trained(
+                sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"
+            )
 
 
 class TestOrdinalEncoder(unittest.TestCase):
