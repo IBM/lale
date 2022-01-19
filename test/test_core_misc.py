@@ -212,7 +212,7 @@ class TestMethodParameters(unittest.TestCase):
         _ = trained.predict([3, 4], predict_version=6)
 
         self.assertEqual(
-            trained.steps()[1].impl._predict_params.get("predict_version", None), 6
+            trained.steps_list()[1].impl._predict_params.get("predict_version", None), 6
         )
 
 
@@ -1131,6 +1131,8 @@ class _OperatorForwardingTestImpl:
     def __init__(self):
         self._wrapped_model = _OperatorForwardingTestWrappedImpl()
 
+        self.prop_ = True
+
     def fit(self, X, y=None):
         return self
 
@@ -1145,6 +1147,9 @@ class _OperatorForwardingTestImpl:
 
     @property
     def p(self):
+        return True
+
+    def auto_(self):
         return True
 
 
@@ -1182,6 +1187,12 @@ class TestOperatorFowarding(unittest.TestCase):
 
     def test_fowards_method_succeeds(self):
         self.assertTrue(_OperatorForwardingTest.f())
+
+    def test_fowards_underscore_method_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.auto_())
+
+    def test_fowards_underscore_prop_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.prop_)
 
     # test that the outer impl method is given priority over the inner impl method
     def test_fowards_method_shadow_succeeds(self):
@@ -1273,3 +1284,13 @@ class TestOperatorFowarding(unittest.TestCase):
         Op = _OperatorForwardingTest.customize_schema(forwards=["fnotforward"])
         with self.assertRaises(AttributeError):
             self.assertTrue(Op.f()())
+
+
+class TestSteps(unittest.TestCase):
+    def test_pipeline(self):
+        pca = PCA()
+        op: Ops.PlannedPipeline = pca >> LogisticRegression
+
+        self.assertEqual(len(op.steps), 2)
+        self.assertEquals(op.steps[0][0], "PCA")
+        self.assertEquals(op.steps[0][1], pca)

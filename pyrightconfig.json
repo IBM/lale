@@ -1,5 +1,3 @@
 {
-    "executionEnvironments": [
-        {"root": "lale"}
-    ]
+  "exclude": ["build"]
 }

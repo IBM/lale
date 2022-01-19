@@ -903,7 +903,7 @@ pipeline = Pipeline(steps=[("pca", PCA), ("lr", logistic_regression)])"""
         printed = lale.pretty_print.to_string(pipeline, astype="sklearn")
         self._roundtrip(expected, printed)
 
-    def test_customize_schema(self):
+    def test_customize_schema_enum_and_number(self):
         from lale.lib.sklearn import LogisticRegression
 
         pipeline = LogisticRegression.customize_schema(
@@ -929,6 +929,64 @@ pipeline = LogisticRegression.customize_schema(
     },
 )(solver="lbfgs")"""
         self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
+
+    def test_customize_schema_none_and_boolean(self):
+        from lale.lib.sklearn import RandomForestRegressor
+
+        pipeline = RandomForestRegressor.customize_schema(
+            bootstrap={"type": "boolean", "default": True},
+            random_state={
+                "anyOf": [
+                    {"laleType": "numpy.random.RandomState"},
+                    {
+                        "description": "RandomState used by np.random",
+                        "enum": [None],
+                    },
+                    {"description": "Explicit seed.", "type": "integer"},
+                ],
+                "default": 33,
+            },
+        )(n_estimators=50)
+        expected = """from sklearn.ensemble import RandomForestRegressor
+import lale
+
+lale.wrap_imported_operators()
+pipeline = RandomForestRegressor.customize_schema(
+    bootstrap={"type": "boolean", "default": True},
+    random_state={
+        "anyOf": [
+            {"laleType": "numpy.random.RandomState"},
+            {"description": "RandomState used by np.random", "enum": [None]},
+            {"description": "Explicit seed.", "type": "integer"},
+        ],
+        "default": 33,
+    },
+)(n_estimators=50)"""
+        # this should not include "random_state=33" because that would be
+        # redundant with the schema, and would prevent automated search
+        self._roundtrip(expected, pipeline.pretty_print(customize_schema=True))
+
+    def test_customize_schema_print_defaults(self):
+        from lale.lib.sklearn import RandomForestRegressor
+
+        pipeline = RandomForestRegressor.customize_schema(
+            bootstrap={"type": "boolean", "default": True},  # default unchanged
+            random_state={
+                "anyOf": [
+                    {"laleType": "numpy.random.RandomState"},
+                    {"enum": [None]},
+                    {"type": "integer"},
+                ],
+                "default": 33,  # default changed
+            },
+        )(n_estimators=50)
+        expected = """from sklearn.ensemble import RandomForestRegressor
+import lale
+
+lale.wrap_imported_operators()
+pipeline = RandomForestRegressor(n_estimators=50, random_state=33)"""
+        # print exactly those defaults that changed
+        self._roundtrip(expected, pipeline.pretty_print(customize_schema=False))
 
     def test_user_operator_in_toplevel_module(self):
         import importlib
@@ -1312,15 +1370,18 @@ class TestToAndFromJSON(unittest.TestCase):
                     "hyperparams": {
                         "allOf": [
                             {
-                                "solver": {
-                                    "default": "liblinear",
-                                    "enum": ["lbfgs", "liblinear"],
-                                },
-                                "tol": {
-                                    "type": "number",
-                                    "minimum": 0.00001,
-                                    "maximum": 0.1,
-                                    "default": 0.0001,
+                                "type": "object",
+                                "properties": {
+                                    "solver": {
+                                        "default": "liblinear",
+                                        "enum": ["lbfgs", "liblinear"],
+                                    },
+                                    "tol": {
+                                        "type": "number",
+                                        "minimum": 0.00001,
+                                        "maximum": 0.1,
+                                        "default": 0.0001,
+                                    },
                                 },
                             }
                         ]

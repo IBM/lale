@@ -343,6 +343,15 @@ class TestOrdinalEncoder(unittest.TestCase):
         for i in range(len(op1.categories_)):
             self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
 
+    def _check_last_trained(self, op1, op2, msg):
+        last1 = op1.get_last().impl
+        last2 = op2.get_last().impl
+
+        assert last1 is not None
+        assert last2 is not None
+
+        self._check_trained(last1.impl, last2.impl, msg)
+
     def test_fit(self):
         prefix = Scan(table=it.go_daily_sales) >> Map(
             columns={"retailer": it["Retailer code"], "method": it["Order method code"]}
@@ -353,9 +362,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         sk_trained = sk_trainable.fit(self.tgt2gosales["pandas"])
         for tgt, datasets in self.tgt2gosales.items():
             rasl_trained = rasl_trainable.fit(datasets)
-            self._check_trained(
-                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
-            )
+            self._check_last_trained(sk_trained, rasl_trained, tgt)
 
     def test_partial_fit(self):
         prefix = Scan(table=it.go_daily_sales) >> Map(
@@ -387,9 +394,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         sk_transformed = sk_trained.transform(self.tgt2gosales["pandas"])
         for tgt, datasets in self.tgt2gosales.items():
             rasl_trained = rasl_trainable.fit(datasets)
-            self._check_trained(
-                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
-            )
+            self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(datasets)
             if tgt == "spark":
                 rasl_transformed = rasl_transformed.toPandas()
@@ -426,22 +431,37 @@ class TestOrdinalEncoder(unittest.TestCase):
 class TestOneHotEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import typing
+        from typing import Any, Dict
+
         targets = ["pandas", "spark"]
-        cls.tgt2creditg = {
-            tgt: lale.datasets.openml.fetch(
-                "credit-g",
-                "classification",
-                preprocess=False,
-                astype=tgt,
-            )
-            for tgt in targets
-        }
+        cls.tgt2creditg = typing.cast(
+            Dict[str, Any],
+            {
+                tgt: lale.datasets.openml.fetch(
+                    "credit-g",
+                    "classification",
+                    preprocess=False,
+                    astype=tgt,
+                )
+                for tgt in targets
+            },
+        )
 
     def _check_trained(self, op1, op2, msg):
         self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
         self.assertEqual(len(op1.categories_), len(op2.categories_), msg)
         for i in range(len(op1.categories_)):
             self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+
+    def _check_last_trained(self, op1, op2, msg):
+        last1 = op1.get_last().impl
+        last2 = op2.get_last().impl
+
+        assert last1 is not None
+        assert last2 is not None
+
+        self._check_trained(last1.impl, last2.impl, msg)
 
     def test_fit(self):
         (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
@@ -453,9 +473,7 @@ class TestOneHotEncoder(unittest.TestCase):
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
-            self._check_trained(
-                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
-            )
+            self._check_last_trained(sk_trained, rasl_trained, tgt)
 
     def test_partial_fit(self):
         (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
@@ -471,9 +489,9 @@ class TestOneHotEncoder(unittest.TestCase):
                 if tgt == "spark":
                     data_delta = lale.datasets.pandas2spark(data_delta)
                 rasl_pipe = rasl_pipe.partial_fit(data_delta)
-                self._check_trained(
-                    sk_pipe.get_last().impl,
-                    rasl_pipe.get_last().impl,
+                self._check_last_trained(
+                    sk_pipe,
+                    rasl_pipe,
                     (tgt, lower, upper),
                 )
 
@@ -488,9 +506,7 @@ class TestOneHotEncoder(unittest.TestCase):
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
-            self._check_trained(
-                sk_trained.get_last().impl, rasl_trained.get_last().impl, tgt
-            )
+            self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
             if tgt == "spark":
                 rasl_transformed = rasl_transformed.toPandas()
@@ -526,16 +542,22 @@ class TestOneHotEncoder(unittest.TestCase):
 class TestStandardScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        import typing
+        from typing import Any, Dict
+
         targets = ["pandas", "spark"]
-        cls.tgt2creditg = {
-            tgt: lale.datasets.openml.fetch(
-                "credit-g",
-                "classification",
-                preprocess=True,
-                astype=tgt,
-            )
-            for tgt in targets
-        }
+        cls.tgt2creditg = typing.cast(
+            Dict[str, Any],
+            {
+                tgt: lale.datasets.openml.fetch(
+                    "credit-g",
+                    "classification",
+                    preprocess=True,
+                    astype=tgt,
+                )
+                for tgt in targets
+            },
+        )
 
     def _check_trained(self, op1, op2, msg):
         self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
