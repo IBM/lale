@@ -360,6 +360,13 @@ class Operator(metaclass=AbstractVisitorMeta):
         """
         return lale.json_operator.to_json(self, call_depth=2)
 
+    def get_forwards(self) -> Union[bool, List[str]]:
+        """Returns the list of attributes (methods/properties)
+        the schema has asked to be forwarded.  A boolean value is a blanket
+        opt-in or out of forwarding
+        """
+        return False
+
     @abstractmethod
     def get_params(self, deep: bool = True) -> Dict[str, Any]:
         """For scikit-learn compatibility"""
@@ -681,12 +688,12 @@ class Operator(metaclass=AbstractVisitorMeta):
                     for edge in subject.edges():
                         index_edges.append(
                             (
-                                subject.steps().index(edge[0]),
-                                subject.steps().index(edge[1]),
+                                subject.steps_list().index(edge[0]),
+                                subject.steps_list().index(edge[1]),
                             )
                         )
 
-                    for step in subject.steps():
+                    for step in subject.steps_list():
                         new_steps.append(_replace(step, original_op, replacement_op))
 
                     # use previous index-based representation to reconstruct edges
@@ -699,7 +706,7 @@ class Operator(metaclass=AbstractVisitorMeta):
                     return make_pipeline_graph(new_steps, new_edges)
 
                 elif isinstance(subject, OperatorChoice):
-                    for step in subject.steps():
+                    for step in subject.steps_list():
                         new_steps.append(_replace(step, original_op, replacement_op))
                     return make_choice(*new_steps)
 
@@ -763,6 +770,9 @@ class Operator(metaclass=AbstractVisitorMeta):
         return self
 
     def __getattr__(self, name: str) -> Any:
+        if name == "_cached_masked_attr_list":
+            raise AttributeError()
+
         predict_methods = [
             "get_pipeline",
             "summary",
@@ -840,7 +850,7 @@ Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on th
 Suggested fixes:\nFix [A]: You can make the following changes in the pipeline in order to make it trainable:\n"""
                 i = 1
                 if isinstance(self, PlannedPipeline):
-                    for step in self.steps():
+                    for step in self.steps_list():
                         step_err = get_error_msg(step, i)
                         if step_err != "":
                             error_msg = error_msg + step_err
@@ -855,6 +865,33 @@ to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt`
                 )
                 error_msg = add_error_msg_for_predict_methods(self, error_msg)
                 raise AttributeError(error_msg)
+
+        forwards = self.get_forwards()
+        if (
+            forwards is True
+            or (
+                name.endswith("_")
+                and not (name.startswith("__") and name.endswith("__"))
+            )
+            or (isinstance(forwards, list) and name in forwards)
+        ):
+            # we should try forwarding it.
+            # first, a sanity check to prevent confusing behaviour where
+            # forwarding works on a plannedoperator and then fails on a trainedoperator
+            trained_ops = self._get_masked_attr_list()
+
+            if name not in trained_ops:
+                # ok, let us try to forward it
+                # first we try the "shallow" wrapper,
+                # and then we try each successive wrapped model
+                model = self.shallow_impl
+                while model is not None:
+                    if hasattr(model, name):
+                        return getattr(model, name)
+                    old_model = model
+                    model = getattr(model, "_wrapped_model", None)
+                    if model is old_model:
+                        model = None
 
         raise AttributeError(f"Attribute {name} not found for {self}")
 
@@ -1285,6 +1322,34 @@ class IndividualOp(Operator):
     def _is_instantiated(self):
         return not inspect.isclass(self._impl)
 
+    def _get_masked_attr_list(self):
+        if hasattr(self, "_cached_masked_attr_list"):
+            return self._cached_masked_attr_list
+        else:
+            found_ops = [
+                "get_pipeline",
+                "summary",
+                "transform",
+                "predict",
+                "predict_proba",
+                "decision_function",
+                "score",
+                "score_samples",
+                "predict_log_proba",
+                "_schemas",
+                "_impl",
+                "_impl_class",
+                "_hyperparams",
+                "_frozen_hyperparams",
+                "_trained",
+                "_enum_attributes",
+                "_cached_masked_attr_list",
+            ]
+            found_ops.extend(dir(TrainedIndividualOp))
+            found_ops.extend(dir(self))
+            self._cached_masked_attr_list = found_ops
+            return found_ops
+
     def _check_schemas(self):
         from lale.settings import disable_hyperparams_schema_validation
 
@@ -1304,6 +1369,23 @@ class IndividualOp(Operator):
             assert self.has_tag(
                 "estimator"
             ), f"{self.class_name()}: {json_to_string(self._schemas)}"
+
+        forwards = self.get_forwards()
+        # if it is a boolean, there is nothing to check
+        if isinstance(forwards, list):
+            trained_ops = self._get_masked_attr_list()
+            for f in forwards:
+                assert (
+                    f not in trained_ops
+                ), f"""This operator specified the {f} attribute to be forwarded.
+                Unfortunately, this method is also provided for some lale operator wrapper classes, so this
+                is invalid.
+                It is possible that this method/property is new to lale, and an older version of lale supported
+                forwarding this method/property, however, to be compatible with this version of lale, the attribute needs
+                to be removed from the forwards list, and code that calls this method/property (on an object op)
+                need to be changed from op.{f} to op.impl.{f}
+                """
+
         # Add enums from the hyperparameter schema to the object as fields
         # so that their usage looks like LogisticRegression.penalty.l1
 
@@ -1632,6 +1714,17 @@ class IndividualOp(Operator):
             return self._schemas["documentation_url"]
         return None
 
+    def get_forwards(self) -> Union[bool, List[str]]:
+        """Returns the list of attributes (methods/properties)
+        the schema has asked to be forwarded.  A boolean value is a blanket
+        opt-in or out of forwarding
+        """
+        forwards = self._schemas.get("forwards", False)
+        assert isinstance(
+            forwards, (bool, list)
+        ), f"the schema forward declaration {forwards} must be either a boolean or a list of strings"
+        return forwards
+
     def get_tags(self) -> Dict[str, List[str]]:
         """Return the tags of an operator.
 
@@ -1807,10 +1900,37 @@ class IndividualOp(Operator):
                     if s:
                         return s
                 if s is None:
+                    enums = []
                     for s in schema["anyOf"]:
                         if "enum" in s:
                             if ("forOptimizer" not in s) or s["forOptimizer"]:
-                                return s
+                                enums.append(s)
+                        elif s.get("type", None) == "boolean":
+                            if ("forOptimizer" not in s) or s["forOptimizer"]:
+                                bool_s = {"enum": [False, True]}
+                                d = s.get("default", None)
+                                if d is not None:
+                                    bool_s["default"] = d
+
+                                enums.append(bool_s)
+                    if len(enums) == 1:
+                        return enums[0]
+                    elif enums:
+                        # combine them, and see if there is an anyOf default that we want to use as well
+                        vals = [item for s in enums for item in s["enum"]]
+                        new_s = {
+                            "enum": vals,
+                        }
+
+                        if "default" in schema and schema["default"] in vals:
+                            new_s["default"] = schema["default"]
+                        else:
+                            for s in enums:
+                                if "default" in s:
+                                    new_s["default"] = s["default"]
+                                    break
+                        return new_s
+
                 return schema["anyOf"][0]
             return schema
 
@@ -1849,8 +1969,6 @@ class IndividualOp(Operator):
                 default = schema["default"]
                 non_default = [v for v in schema["enum"] if v != default]
                 return [*non_default, default]
-            elif schema["type"] == "boolean":
-                return (False, True, schema["default"])
             else:
 
                 def get(schema, key):
@@ -2337,9 +2455,10 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
 
     def _should_configure_trained(self, impl):
         # TODO: may also want to do this for other higher-order operators
-        if self.class_name() != _LALE_SKL_PIPELINE:
-            return False
-        return isinstance(impl._pipeline, TrainedPipeline)
+        if self.class_name() == _LALE_SKL_PIPELINE:
+            return isinstance(impl._pipeline, TrainedPipeline)
+        else:
+            return not hasattr(impl, "fit")
 
     # give it a more precise type: if the input is an individual op, the output is as well
     def auto_configure(
@@ -2401,6 +2520,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
         ] = None,
         tags: Optional[Dict] = None,
+        forwards: Union[bool, List[str], None] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "PlannedIndividualOp":
@@ -2410,6 +2530,7 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
             relevantToOptimizer,
             constraint,
             tags,
+            forwards,
             set_as_available,
             **kwargs,
         )
@@ -2498,7 +2619,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
         if self.class_name() != _LALE_SKL_PIPELINE:
             return hp
         names_list = [name for name, op in hp["steps"]]
-        steps_list = trained_impl._pipeline.steps()
+        steps_list = trained_impl._pipeline.steps_list()
         trained_steps = list(zip(names_list, steps_list))
         result = {**hp, "steps": trained_steps}
         return result
@@ -2832,6 +2953,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
         ] = None,
         tags: Optional[Dict] = None,
+        forwards: Union[bool, List[str], None] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainableIndividualOp":
@@ -2841,6 +2963,7 @@ class TrainableIndividualOp(PlannedIndividualOp, TrainableOperator):
             relevantToOptimizer,
             constraint,
             tags,
+            forwards,
             set_as_available,
             **kwargs,
         )
@@ -3131,6 +3254,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None
         ] = None,
         tags: Optional[Dict] = None,
+        forwards: Union[bool, List[str], None] = None,
         set_as_available: bool = False,
         **kwargs: Union[Schema, JSON_TYPE, None],
     ) -> "TrainedIndividualOp":
@@ -3140,6 +3264,7 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
             relevantToOptimizer,
             constraint,
             tags,
+            forwards,
             set_as_available,
             **kwargs,
         )
@@ -3254,8 +3379,9 @@ def make_operator(
     else:
         hps: Dict[str, Any] = {}
         frozen: Optional[List[str]] = None
-        if hasattr(impl, "get_params"):
-            hps = impl.get_params(deep=False)
+        impl_get_params = getattr(impl, "get_params", None)
+        if impl_get_params is not None:
+            hps = impl_get_params(deep=False)
             frozen = list(hps.keys())
 
         if hasattr(impl, "fit"):
@@ -3383,7 +3509,7 @@ class BasePipeline(Operator, Generic[OpType]):
         return self._with_params(True, **impl_params)
 
     def _with_params(self, try_mutate: bool, **impl_params) -> "BasePipeline[OpType]":
-        steps = self.steps()
+        steps = self.steps_list()
         main_params, partitioned_sub_params = partition_sklearn_params(impl_params)
         assert not main_params, f"Unexpected non-nested arguments {main_params}"
         found_names: Dict[str, int] = {}
@@ -3421,7 +3547,7 @@ class BasePipeline(Operator, Generic[OpType]):
             if step_map:
                 self._subst_steps(step_map)
 
-            pipeline_graph_class = _pipeline_graph_class(self.steps())
+            pipeline_graph_class = _pipeline_graph_class(self.steps_list())
             self.__class__ = pipeline_graph_class  # type: ignore
             return self
         else:
@@ -3429,16 +3555,16 @@ class BasePipeline(Operator, Generic[OpType]):
             if step_map:
                 needs_copy = True
             else:
-                pipeline_graph_class = _pipeline_graph_class(self.steps())
+                pipeline_graph_class = _pipeline_graph_class(self.steps_list())
                 if pipeline_graph_class != self.__class__:  # type: ignore
                     needs_copy = True
             if needs_copy:
                 # it may be better practice to change the steps/edges ahead of time
                 # and then create the correct class
-                op_copy = make_pipeline_graph(self.steps(), self.edges(), ordered=True)  # type: ignore
+                op_copy = make_pipeline_graph(self.steps_list(), self.edges(), ordered=True)  # type: ignore
                 op_copy._subst_steps(step_map)
 
-                pipeline_graph_class = _pipeline_graph_class(op_copy.steps())
+                pipeline_graph_class = _pipeline_graph_class(op_copy.steps_list())
                 op_copy.__class__ = pipeline_graph_class  # type: ignore
                 return op_copy
             else:
@@ -3464,7 +3590,9 @@ class BasePipeline(Operator, Generic[OpType]):
             self._steps = steps
             if _lale_preds:
                 # TODO: improve typing situation
-                if isinstance(list(_lale_preds.keys())[0], int):
+                keys: Iterable[Any] = _lale_preds.keys()
+                first_key = next(iter(keys))
+                if isinstance(first_key, int):
                     self._preds = self._indices_to_preds(steps, _lale_preds)  # type: ignore
                     self._cached_preds = _lale_preds  # type: ignore
                 else:
@@ -3498,16 +3626,16 @@ class BasePipeline(Operator, Generic[OpType]):
                     tstep: BasePipeline[OpType] = step
 
                     # Flatten out the steps and edges
-                    self._steps.extend(tstep.steps())
+                    self._steps.extend(tstep.steps_list())
                     # from step's edges, find out all the source and sink nodes
                     source_nodes = [
                         dst
-                        for dst in tstep.steps()
+                        for dst in tstep.steps_list()
                         if (step._preds[dst] is None or step._preds[dst] == [])
                     ]
                     sink_nodes = tstep._find_sink_nodes()
                     # Now replace the edges to and from the inner pipeline to to and from source and sink nodes respectively
-                    new_edges = tstep.edges()
+                    new_edges: List[Tuple[OpType, OpType]] = tstep.edges()
                     # list comprehension at the cost of iterating edges thrice
                     new_edges.extend(
                         [
@@ -3537,7 +3665,7 @@ class BasePipeline(Operator, Generic[OpType]):
                     self._steps.append(step)
             self._preds = {step: [] for step in self._steps}
             for (src, dst) in edges:
-                self._preds[dst].append(src)
+                self._preds[dst].append(src)  # type: ignore
             if not ordered:
                 self.__sort_topologically()
             assert self.__is_in_topological_order()
@@ -3563,7 +3691,7 @@ class BasePipeline(Operator, Generic[OpType]):
                 # using tcurr_op as per PIPELINE_TYPE_INVARIANT_NOTE above
                 tcurr_op: BasePipeline[OpType] = curr_op
                 curr_roots = tcurr_op._find_source_nodes()
-                self._steps.extend(tcurr_op.steps())
+                self._steps.extend(tcurr_op.steps_list())
                 edges.extend(tcurr_op.edges())
             else:
                 curr_roots = [curr_op]
@@ -3596,8 +3724,15 @@ class BasePipeline(Operator, Generic[OpType]):
             seen[operator] = True
         return True
 
-    def steps(self) -> List[OpType]:
+    def steps_list(self) -> List[OpType]:
         return self._steps
+
+    @property
+    def steps(self) -> List[Tuple[str, OpType]]:
+        """This is meant to function similarly to the scikit-learn steps property
+        and for linear pipelines, should behave the same
+        """
+        return [(s.name(), s) for s in self._steps]
 
     def _subst_steps(self, m: Dict[OpType, OpType]) -> None:
         if dict:
@@ -3640,8 +3775,8 @@ class BasePipeline(Operator, Generic[OpType]):
         """Checks if the type of the operator imnplementations are compatible"""
         if not isinstance(other, BasePipeline):
             return False
-        my_steps = self.steps()
-        other_steps = other.steps()
+        my_steps = self.steps_list()
+        other_steps = other.steps_list()
         if len(my_steps) != len(other_steps):
             return False
 
@@ -3651,17 +3786,17 @@ class BasePipeline(Operator, Generic[OpType]):
         return True
 
     def _find_sink_nodes(self) -> List[OpType]:
-        is_sink = {s: True for s in self.steps()}
+        is_sink = {s: True for s in self.steps_list()}
         for src, _ in self.edges():
             is_sink[src] = False
-        result = [s for s in self.steps() if is_sink[s]]
+        result = [s for s in self.steps_list() if is_sink[s]]
         return result
 
     def _find_source_nodes(self) -> List[OpType]:
-        is_source = {s: True for s in self.steps()}
+        is_source = {s: True for s in self.steps_list()}
         for _, dst in self.edges():
             is_source[dst] = False
-        result = [s for s in self.steps() if is_source[s]]
+        result = [s for s in self.steps_list() if is_source[s]]
         return result
 
     def _validate_or_transform_schema(self, X, y=None, validate=True):
@@ -3712,10 +3847,10 @@ class BasePipeline(Operator, Generic[OpType]):
         return result
 
     def is_supervised(self) -> bool:
-        s = self.steps()
+        s = self.steps_list()
         if len(s) == 0:
             return False
-        return self.steps()[-1].is_supervised()
+        return self.steps_list()[-1].is_supervised()
 
     def remove_last(self, inplace: bool = False) -> "BasePipeline[OpType]":
         sink_nodes = self._find_sink_nodes()
@@ -3870,7 +4005,8 @@ class BasePipeline(Operator, Generic[OpType]):
     def get_defaults(self) -> Dict[str, Any]:
 
         defaults_list: Iterable[Dict[str, Any]] = (
-            lale.helpers.nest_HPparams(s.name(), s.get_defaults()) for s in self.steps()
+            lale.helpers.nest_HPparams(s.name(), s.get_defaults())
+            for s in self.steps_list()
         )
 
         # TODO: could this just be dict(defaults_list)
@@ -3920,10 +4056,10 @@ class PlannedPipeline(BasePipeline[PlannedOpType], PlannedOperator):
         return pipe
 
     def is_frozen_trainable(self) -> bool:
-        return all([step.is_frozen_trainable() for step in self.steps()])
+        return all([step.is_frozen_trainable() for step in self.steps_list()])
 
     def is_frozen_trained(self) -> bool:
-        return all([step.is_frozen_trained() for step in self.steps()])
+        return all([step.is_frozen_trained() for step in self.steps_list()])
 
 
 TrainableOpType = TypeVar(
@@ -4495,7 +4631,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
     def convert_to_trained(self) -> "TrainedPipeline[TrainedIndividualOp]":
         trained_steps: List[TrainedIndividualOp] = []
         trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
-        for step in self.steps():
+        for step in self.steps_list():
             trained_step = step.convert_to_trained()
             trained_steps.append(trained_step)
             trained_map[step] = trained_step
@@ -5020,7 +5156,7 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         If try_mutate is set, it will attempt to update the operator in place
         this may not always be possible
         """
-        choices = self.steps()
+        choices = self.steps_list()
         choice_index: int
         choice_params: Dict[str, Any]
         if len(choices) == 1:
@@ -5047,12 +5183,19 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         self._name = name
         self._steps = steps
 
-    def steps(self) -> List[OperatorChoiceType]:
+    def steps_list(self) -> List[OperatorChoiceType]:
         return self._steps
 
+    @property
+    def steps(self) -> List[Tuple[str, OperatorChoiceType]]:
+        """This is meant to function similarly to the scikit-learn steps property
+        and for linear pipelines, should behave the same
+        """
+        return [(s.name(), s) for s in self._steps]
+
     def fit(self, X, y=None, **fit_params):
-        if len(self.steps()) == 1:
-            s = self.steps()[0]
+        if len(self.steps_list()) == 1:
+            s = self.steps_list()[0]
             if s is not None:
                 f = getattr(s, "fit", None)
                 if f is not None:
@@ -5064,8 +5207,8 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         """Checks if the type of the operator imnplementations are compatible"""
         if not isinstance(other, OperatorChoice):
             return False
-        my_steps = self.steps()
-        other_steps = other.steps()
+        my_steps = self.steps_list()
+        other_steps = other.steps_list()
         if len(my_steps) != len(other_steps):
             return False
 
@@ -5075,13 +5218,13 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         return True
 
     def is_supervised(self) -> bool:
-        s = self.steps()
+        s = self.steps_list()
         if len(s) == 0:
             return False
-        return self.steps()[-1].is_supervised()
+        return self.steps_list()[-1].is_supervised()
 
     def validate_schema(self, X, y=None):
-        for step in self.steps():
+        for step in self.steps_list():
             step.validate_schema(X, y)
 
     def transform_schema(self, s_X):
@@ -5090,27 +5233,27 @@ class OperatorChoice(PlannedOperator, Generic[OperatorChoiceType]):
         if disable_data_schema_validation:
             return {}
         else:
-            transformed_schemas = [st.transform_schema(s_X) for st in self.steps()]
+            transformed_schemas = [st.transform_schema(s_X) for st in self.steps_list()]
             result = lale.type_checking.join_schemas(*transformed_schemas)
             return result
 
     def input_schema_fit(self) -> JSON_TYPE:
-        pipeline_inputs = [s.input_schema_fit() for s in self.steps()]
+        pipeline_inputs = [s.input_schema_fit() for s in self.steps_list()]
         result = lale.type_checking.join_schemas(*pipeline_inputs)
         return result
 
     def is_frozen_trainable(self) -> bool:
-        return all([step.is_frozen_trainable() for step in self.steps()])
+        return all([step.is_frozen_trainable() for step in self.steps_list()])
 
     def is_classifier(self) -> bool:
-        for op in self.steps():
+        for op in self.steps_list():
             if not op.is_classifier():
                 return False
         return True
 
     def get_defaults(self) -> Mapping[str, Any]:
         defaults_list: Iterable[Mapping[str, Any]] = (
-            s.get_defaults() for s in self.steps()
+            s.get_defaults() for s in self.steps_list()
         )
 
         defaults: Dict[str, Any] = {}
@@ -5228,7 +5371,7 @@ def make_pipeline(*orig_steps):
             prev_leaves = [] if prev_op is None else [prev_op]
         if isinstance(curr_op, BasePipeline):
             curr_roots: List[Operator] = curr_op._find_source_nodes()
-            steps.extend(curr_op.steps())
+            steps.extend(curr_op.steps_list())
             edges.extend(curr_op.edges())
         else:
             if not isinstance(curr_op, Operator):
@@ -5298,7 +5441,7 @@ def make_choice(
     steps: List[Operator] = []
     for operator in orig_steps:
         if isinstance(operator, OperatorChoice):
-            steps.extend(operator.steps())
+            steps.extend(operator.steps_list())
         else:
             if not isinstance(operator, Operator):
                 operator = make_operator(operator, name=operator.__class__.__name__)
@@ -5322,6 +5465,7 @@ def customize_schema(
     relevantToOptimizer: Optional[List[str]] = None,
     constraint: Union[Schema, JSON_TYPE, List[Union[Schema, JSON_TYPE]], None] = None,
     tags: Optional[Dict] = None,
+    forwards: Union[bool, List[str], None] = None,
     set_as_available: bool = False,
     **kwargs: Union[Schema, JSON_TYPE, None],
 ) -> CustomizeOpType:
@@ -5346,6 +5490,8 @@ def customize_schema(
         `param` must be an existing parameter (already defined in the schema for lale operators, __init__ parameter for external operators)
     tags : Dict
         Override the tags of the operator.
+    forwards: boolean or a list of strings
+        Which methods/properties to forward to the underlying impl.  (False for none, True for all).
     set_as_available: bool
         Override the list of available operators so `get_available_operators` returns this customized operator.
 
@@ -5397,6 +5543,9 @@ def customize_schema(
         if tags is not None:
             assert isinstance(tags, dict)
             op._schemas["tags"] = tags
+        if forwards is not None:
+            assert isinstance(forwards, (bool, list))
+            op._schemas["forwards"] = forwards
 
         for arg in kwargs:
             value = kwargs[arg]

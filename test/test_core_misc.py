@@ -212,7 +212,7 @@ class TestMethodParameters(unittest.TestCase):
         _ = trained.predict([3, 4], predict_version=6)
 
         self.assertEqual(
-            trained.steps()[1].impl._predict_params.get("predict_version", None), 6
+            trained.steps_list()[1].impl._predict_params.get("predict_version", None), 6
         )
 
 
@@ -935,6 +935,51 @@ class TestHyperparamRanges(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
 
+    def test_lgbclassifier(self):
+        from lale.lib.lightgbm import LGBMClassifier
+
+        ranges, dists = LGBMClassifier.get_param_ranges()
+        expected_ranges = {
+            "boosting_type": ["dart", "gbdt"],
+            "num_leaves": [4, 8, 32, 64, 128, 16, 2],
+            "learning_rate": (0.02, 1.0, 0.1),
+            "n_estimators": (50, 1000, 200),
+            "min_child_weight": (0.0001, 0.01, 0.001),
+            "min_child_samples": (5, 30, 20),
+            "subsample": (0.01, 1.0, 1.0),
+            "subsample_freq": (0, 5, 0),
+            "colsample_bytree": (0.01, 1.0, 1.0),
+            "reg_alpha": (0.0, 1.0, 0.0),
+            "reg_lambda": (0.0, 1.0, 0.0),
+        }
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+
+    def test_bool_enum(self):
+        from lale.lib.sklearn import SVR
+        from lale.schemas import AnyOf, Bool, Null
+
+        SVR = SVR.customize_schema(
+            shrinking=AnyOf(
+                types=[Bool(), Null()],
+                default=None,
+                desc="Whether to use the shrinking heuristic.",
+            )
+        )
+
+        ranges, dists = SVR.get_param_ranges()
+        expected_ranges = {
+            "kernel": ["poly", "rbf", "sigmoid", "linear"],
+            "degree": (2, 5, 3),
+            "gamma": (3.0517578125e-05, 8, None),
+            "tol": (0.0, 0.01, 0.001),
+            "C": (0.03125, 32768, 1.0),
+            "shrinking": [False, True, None],
+        }
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+
 
 class TestScoreIndividualOp(unittest.TestCase):
     def setUp(self):
@@ -1069,3 +1114,183 @@ Fix [A]: You can make the following changes in the pipeline in order to make it 
 Fix [B]: Alternatively, you could use `auto_configure(X, y, Hyperopt, max_evals=5)` on the pipeline
 to use Hyperopt for `max_evals` iterations for hyperparameter tuning. `Hyperopt` can be imported as `from lale.lib.lale import Hyperopt`.""",
             )
+
+
+class _OperatorForwardingTestWrappedImpl:
+    def __init__(self):
+        pass
+
+    def fshadow(self):
+        return False
+
+    def finner(self):
+        return True
+
+
+class _OperatorForwardingTestImpl:
+    def __init__(self):
+        self._wrapped_model = _OperatorForwardingTestWrappedImpl()
+
+        self.prop_ = True
+
+    def fit(self, X, y=None):
+        return self
+
+    def f(self):
+        return True
+
+    def fshadow(self):
+        return True
+
+    def fnotforward(self):
+        return True
+
+    @property
+    def p(self):
+        return True
+
+    def auto_(self):
+        return True
+
+
+_operator_forwarding_test_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "allOf": [{}],
+}
+
+_operator_forwarding_test_combined_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "description": "Combined schema for expected data and hyperparameters.",
+    "type": "object",
+    "tags": {"pre": [], "op": [""], "post": []},
+    "forwards": ["f", "p", "fshadow", "finner"],
+    "properties": {
+        "hyperparams": _operator_forwarding_test_schema,
+        # "input_fit": None,
+        # "input_transform": ,
+        # "output_transform": _output_transform_schema,
+    },
+}
+
+
+_OperatorForwardingTest = Ops.make_operator(
+    _OperatorForwardingTestImpl, _operator_forwarding_test_combined_schema
+)
+
+
+class TestOperatorFowarding(unittest.TestCase):
+    def test_fowards_method_list(self):
+        self.assertEquals(
+            _OperatorForwardingTest.get_forwards(),
+            _operator_forwarding_test_combined_schema["forwards"],
+        )
+
+    def test_fowards_method_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.f())
+
+    def test_fowards_underscore_method_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.auto_())
+
+    def test_fowards_underscore_prop_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.prop_)
+
+    # test that the outer impl method is given priority over the inner impl method
+    def test_fowards_method_shadow_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.fshadow())
+
+    def test_fowards_method_wrapped_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.finner())
+
+    def test_fowards_property_succeeds(self):
+        self.assertTrue(_OperatorForwardingTest.p)
+
+    def test_not_fowards_method(self):
+        with self.assertRaises(AttributeError):
+            self.assertTrue(_OperatorForwardingTest.fnotforward())
+
+    def test_bad_forwards_decl(self):
+        from test import EnableSchemaValidation
+
+        _operator_forwarding_test_combined_schema2 = {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "Combined schema for expected data and hyperparameters.",
+            "type": "object",
+            "tags": {"pre": [], "op": [""], "post": []},
+            "forwards": ["f", "p", "fshadow", "finner", "predict"],
+            "properties": {
+                "hyperparams": _operator_forwarding_test_schema,
+                # "input_fit": None,
+                # "input_transform": ,
+                # "output_transform": _output_transform_schema,
+            },
+        }
+
+        with self.assertRaises(AssertionError):
+            with EnableSchemaValidation():
+                Ops.make_operator(
+                    _OperatorForwardingTestImpl,
+                    _operator_forwarding_test_combined_schema2,
+                )
+
+    def test_bad_forwards_false_decl(self):
+
+        _operator_forwarding_test_combined_schema2 = {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "Combined schema for expected data and hyperparameters.",
+            "type": "object",
+            "tags": {"pre": [], "op": [""], "post": []},
+            "properties": {
+                "hyperparams": _operator_forwarding_test_schema,
+                # "input_fit": None,
+                # "input_transform": ,
+                # "output_transform": _output_transform_schema,
+            },
+        }
+        _OperatorForwardingTest2 = Ops.make_operator(
+            _OperatorForwardingTestImpl, _operator_forwarding_test_combined_schema2
+        )
+        with self.assertRaises(AttributeError):
+            _OperatorForwardingTest2.f()
+
+    def test_bad_forwards_true_decl(self):
+
+        _operator_forwarding_test_combined_schema2 = {
+            "$schema": "http://json-schema.org/draft-04/schema#",
+            "description": "Combined schema for expected data and hyperparameters.",
+            "type": "object",
+            "tags": {"pre": [], "op": [""], "post": []},
+            "forwards": True,
+            "properties": {
+                "hyperparams": _operator_forwarding_test_schema,
+                # "input_fit": None,
+                # "input_transform": ,
+                # "output_transform": _output_transform_schema,
+            },
+        }
+        _OperatorForwardingTest2 = Ops.make_operator(
+            _OperatorForwardingTestImpl, _operator_forwarding_test_combined_schema2
+        )
+        _OperatorForwardingTest2.f()
+        _OperatorForwardingTest2.fnotforward()
+
+        with self.assertRaises(AttributeError):
+            _OperatorForwardingTest2.unknown()
+
+    def test_customize_schema_forward_success(self):
+        Op = _OperatorForwardingTest.customize_schema(forwards=["fnotforward"])
+        self.assertTrue(Op.fnotforward())
+
+    def test_customize_schema_forward_failure(self):
+        Op = _OperatorForwardingTest.customize_schema(forwards=["fnotforward"])
+        with self.assertRaises(AttributeError):
+            self.assertTrue(Op.f()())
+
+
+class TestSteps(unittest.TestCase):
+    def test_pipeline(self):
+        pca = PCA()
+        op: Ops.PlannedPipeline = pca >> LogisticRegression
+
+        self.assertEqual(len(op.steps), 2)
+        self.assertEquals(op.steps[0][0], "PCA")
+        self.assertEquals(op.steps[0][1], pca)

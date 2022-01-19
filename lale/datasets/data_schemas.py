@@ -78,7 +78,11 @@ class DataFrameWithSchema(pd.DataFrame):
 
 
 class SeriesWithSchema(pd.Series):
-    _internal_names = pd.Series._internal_names + ["json_schema", "table_name"]
+    _internal_names = pd.DataFrame._internal_names + [
+        "json_schema",
+        "table_name",
+        "folds_for_monoid",
+    ]
     _internal_names_set = set(_internal_names)
 
     @property

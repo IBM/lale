@@ -83,7 +83,7 @@ class TestCreation(unittest.TestCase):
         orig_trainable = PCA() >> LogisticRegression()
         orig_trained = orig_trainable.fit(self.X_train, self.y_train)
         self.assertIsInstance(orig_trained, lale.operators.TrainedPipeline)
-        pca_trained, lr_trained = orig_trained.steps()
+        pca_trained, lr_trained = orig_trained.steps_list()
         pre_trained = lale.lib.sklearn.Pipeline(
             steps=[("pca1", pca_trained), ("lr1", lr_trained)]
         )
@@ -235,7 +235,7 @@ class TestImportExport(unittest.TestCase):
             sklearn_step_params = sklearn_pipeline.named_steps[
                 pipeline_step
             ].get_params()
-            lale_sklearn_params = self.get_sklearn_params(lale_pipeline.steps()[i])
+            lale_sklearn_params = self.get_sklearn_params(lale_pipeline.steps_list()[i])
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
@@ -254,7 +254,7 @@ class TestImportExport(unittest.TestCase):
             sklearn_step_params = sklearn_pipeline.named_steps[
                 pipeline_step
             ].get_params()
-            lale_sklearn_params = self.get_sklearn_params(lale_pipeline.steps()[i])
+            lale_sklearn_params = self.get_sklearn_params(lale_pipeline.steps_list()[i])
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, lale_pipeline)
 
@@ -469,7 +469,7 @@ class TestImportExport(unittest.TestCase):
                 pipeline_step
             ].get_params()
             lale_sklearn_params = self.get_sklearn_params(
-                trained_lale_pipeline.steps()[i]
+                trained_lale_pipeline.steps_list()[i]
             )
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
@@ -483,9 +483,11 @@ class TestImportExport(unittest.TestCase):
         for i, pipeline_step in enumerate(sklearn_pipeline.named_steps):
             sklearn_step_params = type(sklearn_pipeline.named_steps[pipeline_step])
             lale_sklearn_params = (
-                type(trained_lale_pipeline.steps()[i]._impl._wrapped_model)
-                if hasattr(trained_lale_pipeline.steps()[i]._impl, "_wrapped_model")
-                else type(trained_lale_pipeline.steps()[i]._impl)
+                type(trained_lale_pipeline.steps_list()[i]._impl._wrapped_model)
+                if hasattr(
+                    trained_lale_pipeline.steps_list()[i]._impl, "_wrapped_model"
+                )
+                else type(trained_lale_pipeline.steps_list()[i]._impl)
             )
             self.assertEqual(sklearn_step_params, lale_sklearn_params)
         self.assert_equal_predictions(sklearn_pipeline, trained_lale_pipeline)
@@ -1029,6 +1031,11 @@ class TestPartialFit(unittest.TestCase):
         )
         _ = new_trained_pipeline.predict(self.X_test)
 
+    def _last_impl_has(self, op, attr):
+        last = op.get_last()
+        assert last is not None
+        return hasattr(last._impl, attr)
+
     def test_second_call_without_classes(self):
         trainable_pipeline = StandardScaler()
         trained_pipeline = trainable_pipeline.fit(self.X_train, self.y_train)
@@ -1037,7 +1044,7 @@ class TestPartialFit(unittest.TestCase):
             self.X_train, self.y_train, classes=[0, 1, 2]
         )
         # Once SGDClassifier is trained, it has a classes_ attribute.
-        self.assertTrue(hasattr(new_trained_pipeline.get_last()._impl, "classes_"))
+        self.assertTrue(self._last_impl_has(new_trained_pipeline, "classes_"))
         new_trained_pipeline = new_trained_pipeline.partial_fit(
             self.X_test, self.y_test
         )
@@ -1051,7 +1058,7 @@ class TestPartialFit(unittest.TestCase):
             self.X_train, self.y_train, classes=[0, 1, 2]
         )
         # Once SGDClassifier is trained, it has a classes_ attribute.
-        self.assertTrue(hasattr(new_trained_pipeline.get_last()._impl, "classes_"))
+        self.assertTrue(self._last_impl_has(new_trained_pipeline, "classes_"))
         subset_labels = self.y_test[np.where(self.y_test != 0)]
         subset_X = self.X_test[0 : len(subset_labels)]
         new_trained_pipeline = new_trained_pipeline.partial_fit(subset_X, subset_labels)
@@ -1063,7 +1070,7 @@ class TestPartialFit(unittest.TestCase):
         new_pipeline = trained_pipeline.freeze_trained() >> SGDClassifier()
         new_pipeline.partial_fit(self.X_train, self.y_train, classes=[0, 1, 2])
         # Once SGDClassifier is trained, it has a classes_ attribute.
-        self.assertTrue(hasattr(new_pipeline._trained.get_last()._impl, "classes_"))
+        self.assertTrue(self._last_impl_has(new_pipeline._trained, "classes_"))
         subset_labels = self.y_test[np.where(self.y_test != 0)]
         subset_X = self.X_test[0 : len(subset_labels)]
         new_trained_pipeline = new_pipeline.partial_fit(subset_X, subset_labels)

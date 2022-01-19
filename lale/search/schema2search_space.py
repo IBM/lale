@@ -203,7 +203,7 @@ class SearchSpaceOperatorVisitor(Visitor):
 
     def visitPlannedPipeline(self, op: "PlannedPipeline") -> SearchSpace:
         spaces: List[Tuple[str, SearchSpace]] = [
-            (s.name(), accept(s, self)) for s in op.steps()
+            (s.name(), accept(s, self)) for s in op.steps_list()
         ]
         return SearchSpaceProduct(spaces)
 
@@ -211,7 +211,7 @@ class SearchSpaceOperatorVisitor(Visitor):
     visitTrainedPipeline = visitPlannedPipeline
 
     def visitOperatorChoice(self, op: "OperatorChoice") -> SearchSpace:
-        spaces: List[SearchSpace] = [accept(s, self) for s in op.steps()]
+        spaces: List[SearchSpace] = [accept(s, self) for s in op.steps_list()]
 
         return SearchSpaceSum(spaces)
 

@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019, 2020, 2021, 2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 
 import ast
 import importlib
-import json
 import keyword
 import logging
 import math
@@ -189,7 +188,7 @@ def hyperparams_to_string(
                         gen.imports.append(f"import {module}")
                     printed = f"{module}.{printed}"
             if printed.startswith("<"):
-                m = re.match(r"<(\w[\w.]*)\.(\w+) object at 0x[0-9a-f]+>$", printed)
+                m = re.match(r"<(\w[\w.]*)\.(\w+) object at 0x[0-9a-fA-F]+>$", printed)
                 if m:
                     module, clazz = m.group(1), m.group(2)
                     if gen is not None:
@@ -405,6 +404,8 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
         return result
 
     def find_and_replace(graph: JSON_TYPE) -> JSON_TYPE:
+        if len(graph["steps"]) == 1:  # singleton
+            return {"kind": "Seq", "steps": graph["steps"]}
         progress = True
         while progress:
             seq = find_seq(graph)
@@ -474,6 +475,10 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
                 for step_uid, step_val in jsn["steps"].items()
             }
             combinator = _OP_KIND_TO_COMBINATOR[_op_kind(jsn)]
+            if len(printed_steps.values()) == 1 and combinator == ">>":
+                gen.imports.append("from lale.operators import make_pipeline")
+                op_expr = "make_pipeline({})".format(", ".join(printed_steps.values()))
+                return op_expr
             return f" {combinator} ".join(printed_steps.values())
         else:
             printed_steps = {
@@ -514,9 +519,9 @@ def _operator_jsn_to_string_rec(uid: str, jsn: JSON_TYPE, gen: _CodeGenState) ->
             if jsn["customize_schema"] == "not_available":
                 logger.warning(f"missing {label}.customize_schema(..) call")
             elif jsn["customize_schema"] != {}:
-                new_hps = jsn["customize_schema"]["properties"]["hyperparams"]["allOf"][
-                    0
-                ]
+                new_hps = lale.json_operator._top_schemas_to_hp_props(
+                    jsn["customize_schema"]
+                )
                 customize_schema_string = ",".join(
                     [
                         f"{hp_name}={json_to_string(hp_schema)}"
@@ -610,8 +615,30 @@ def _operator_jsn_to_string(
     return formatted
 
 
-def json_to_string(schema: JSON_TYPE) -> str:
-    s1 = json.dumps(schema, default=lambda o: f"<<{type(o).__qualname__}>>")
+def json_to_string(jsn: JSON_TYPE) -> str:
+    def _inner(value):
+        if value is None:
+            return "None"
+        elif isinstance(value, (bool, str)):
+            return pprint.pformat(value, width=10000, compact=True)
+        elif isinstance(value, (int, float)):
+            if math.isnan(value):
+                return "float('nan')"
+            else:
+                return pprint.pformat(value, width=10000, compact=True)
+        elif isinstance(value, list):
+            sl = [_inner(v) for v in value]
+            return "[" + ", ".join(sl) + "]"
+        elif isinstance(value, tuple):
+            sl = [_inner(v) for v in value]
+            return "(" + ", ".join(sl) + ")"
+        elif isinstance(value, dict):
+            sl = [f"'{k}': {_inner(v)}" for k, v in value.items()]
+            return "{" + ", ".join(sl) + "}"
+        else:
+            return f"<<{type(value).__qualname__}>>"
+
+    s1 = _inner(jsn)
     s2 = _format_code(s1)
     return s2
 
@@ -630,7 +657,11 @@ def to_string(
     if lale.type_checking.is_schema(arg):
         return json_to_string(cast(JSON_TYPE, arg))
     elif isinstance(arg, lale.operators.Operator):
-        jsn = lale.json_operator.to_json(arg, call_depth=call_depth + 1)
+        jsn = lale.json_operator.to_json(
+            arg,
+            call_depth=call_depth + 1,
+            add_custom_default=not customize_schema,
+        )
         return _operator_jsn_to_string(
             jsn, show_imports, combinators, customize_schema, astype
         )
