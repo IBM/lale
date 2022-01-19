@@ -2455,9 +2455,10 @@ class PlannedIndividualOp(IndividualOp, PlannedOperator):
 
     def _should_configure_trained(self, impl):
         # TODO: may also want to do this for other higher-order operators
-        if self.class_name() != _LALE_SKL_PIPELINE:
-            return False
-        return isinstance(impl._pipeline, TrainedPipeline)
+        if self.class_name() == _LALE_SKL_PIPELINE:
+            return isinstance(impl._pipeline, TrainedPipeline)
+        else:
+            return not hasattr(impl, "fit")
 
     # give it a more precise type: if the input is an individual op, the output is as well
     def auto_configure(
