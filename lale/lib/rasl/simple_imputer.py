@@ -28,6 +28,31 @@ from lale.schemas import Enum
 from .aggregate import Aggregate
 from .map import Map
 
+def _is_numeric_df(X):
+    if _is_pandas_df(X):
+        return X.shape[1] == X.select_dtypes(include=np.number).shape[1]
+    elif _is_spark_df(X):
+        from pyspark.sql.types import NumericType
+
+        numeric_cols = [
+            f.name for f in X.schema.fields if isinstance(f.dataType, NumericType)
+        ]
+        return len(X.columns) == len(numeric_cols)
+    else:
+        return False
+
+def _is_string_df(X):
+    if _is_pandas_df(X):
+        return X.shape[1] == X.select_dtypes(include="object").shape[1]
+    elif _is_spark_df(X):
+        from pyspark.sql.types import StringType
+
+        numeric_cols = [
+            f.name for f in X.schema.fields if isinstance(f.dataType, StringType)
+        ]
+        return len(X.columns) == len(numeric_cols)
+    else:
+        return False
 
 class _SimpleImputerImpl:
     def __init__(
@@ -60,7 +85,7 @@ class _SimpleImputerImpl:
         # default fill_value is 0 for numerical input and "missing_value"
         # otherwise
         if self.fill_value is None:
-            if self.is_numeric_df(X):
+            if _is_numeric_df(X):
                 fill_value = 0
             else:
                 fill_value = "missing_value"
@@ -70,7 +95,7 @@ class _SimpleImputerImpl:
         # validate that fill_value is numerical for numerical data
         if (
             self.strategy == "constant"
-            and self.is_numeric_df(X)
+            and _is_numeric_df(X)
             and not isinstance(fill_value, numbers.Real)
         ):
             raise ValueError(
@@ -138,45 +163,18 @@ class _SimpleImputerImpl:
             )
         # validate input to check the correct dtype and strategy
         # `mean` and `median` are not applicable to string inputs
-        if not self.is_numeric_df(X) and self.strategy in ["mean", "median"]:
+        if not _is_numeric_df(X) and self.strategy in ["mean", "median"]:
             raise ValueError(
                 "Cannot use {} strategy with non-numeric data.".format(self.strategy)
             )
 
         # Check that missing_values are the right type
-        if self.is_numeric_df(X) and not isinstance(self.missing_values, numbers.Real):
+        if _is_numeric_df(X) and not isinstance(self.missing_values, numbers.Real):
             raise ValueError(
                 "'X' and 'missing_values' types are expected to be"
                 " both numerical. Got X.dtypes={} and "
                 " type(missing_values)={}.".format(X.dtypes, type(self.missing_values))
             )
-
-    def is_numeric_df(self, X):
-        if _is_pandas_df(X):
-            return X.shape[1] == X.select_dtypes(include=np.number).shape[1]
-        elif _is_spark_df(X):
-            from pyspark.sql.types import NumericType
-
-            numeric_cols = [
-                f.name for f in X.schema.fields if isinstance(f.dataType, NumericType)
-            ]
-            return len(X.columns) == len(numeric_cols)
-        else:
-            return False
-
-    def is_string_df(self, X):
-        if _is_pandas_df(X):
-            return X.shape[1] == X.select_dtypes(include="object").shape[1]
-        elif _is_spark_df(X):
-            from pyspark.sql.types import StringType
-
-            numeric_cols = [
-                f.name for f in X.schema.fields if isinstance(f.dataType, StringType)
-            ]
-            return len(X.columns) == len(numeric_cols)
-        else:
-            return False
-
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
