@@ -14,6 +14,7 @@
 
 from lale.helpers import _is_pandas_df, _is_spark_df
 
+
 def df_count(X):
     if _is_pandas_df(X):
         return len(X)
