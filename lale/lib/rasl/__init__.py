@@ -43,6 +43,7 @@ Scikit-learn Operators
 """
 
 from .aggregate import Aggregate
+from .filter import Filter
 from .map import Map
 from .min_max_scaler import MinMaxScaler
 from .one_hot_encoder import OneHotEncoder
