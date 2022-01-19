@@ -164,15 +164,15 @@ def f_classif_combine(lifted_a, lifted_b):
 class _SelectKBestImpl:
     def __init__(
         self,
-        score_func_prep=f_classif_prep,
-        score_func=f_classif,
-        score_func_combine=f_classif_combine,
+        score_funcs=(f_classif_prep, f_classif, f_classif_combine),
+        score_func=None,
         *,
         k=10
     ):
+        score_func_prep, score_func, score_func_combine = score_funcs
         self._hyperparams = {
             "score_func_prep": score_func_prep,
-            "score_func": f_classif,
+            "score_func": score_func,
             "score_func_combine": score_func_combine,
             "k": k,
         }

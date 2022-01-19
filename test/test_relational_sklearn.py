@@ -19,7 +19,6 @@ import jsonschema
 import numpy as np
 import pandas as pd
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
-from sklearn.feature_selection import chi2
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
@@ -286,8 +285,8 @@ class TestSelectKBest(unittest.TestCase):
         )
 
     def test_fit(self):
-        sk_trainable = SkSelectKBest(score_func=chi2, k=20)
-        rasl_trainable = RaslSelectKBest(score_func=chi2, k=20)
+        sk_trainable = SkSelectKBest(k=20)
+        rasl_trainable = RaslSelectKBest(k=20)
         sk_trained = sk_trainable.fit(self.X, self.y)
         rasl_trained = rasl_trainable.fit(self.X, self.y)
         self._check_trained(sk_trained, rasl_trained)
