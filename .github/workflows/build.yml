@@ -119,6 +119,8 @@ jobs:
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
       run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
+    - name: Install autoai-libs from test pypi.
+      run: pip install --index-url https://test.pypi.org/simple/ autoai-libs==1.13.2
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
