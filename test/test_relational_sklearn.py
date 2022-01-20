@@ -506,8 +506,12 @@ class TestSimpleImputer(unittest.TestCase):
         for tgt, datasets in self.tgt2adult.items():
             (train_X, train_y), (test_X, test_y) = datasets
             if tgt == "pandas":
-                train_X.loc[train_X[col_name] == value, col_name] = missing_value
-                test_X.loc[test_X[col_name] == value, col_name] = missing_value
+                train_X.loc[
+                    train_X[col_name] == value, col_name
+                ] = missing_value  # type:ignore
+                test_X.loc[
+                    test_X[col_name] == value, col_name
+                ] = missing_value  # type:ignore
             elif tgt == "spark":
                 from pyspark.sql.functions import col, when
 
@@ -541,12 +545,12 @@ class TestSimpleImputer(unittest.TestCase):
             sk_trainable = prefix >> SkSimpleImputer(**hyperparam)
             sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
             sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
-            sk_statistics_ = sk_trained.steps()[-1].impl.statistics_
+            sk_statistics_ = sk_trained.steps[-1][1].impl.statistics_
             for tgt, dataset in self.tgt2adult.items():
                 (train_X, _), (test_X, _) = dataset
                 rasl_trained = rasl_trainable.fit(train_X)
                 # test the fit succeeded.
-                rasl_statistics_ = rasl_trained.steps()[-1].impl.statistics_
+                rasl_statistics_ = rasl_trained.steps[-1][1].impl.statistics_
 
                 self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
                 self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
@@ -586,7 +590,7 @@ class TestSimpleImputer(unittest.TestCase):
                 (train_X, _), (test_X, _) = dataset
                 rasl_trained = rasl_trainable.fit(train_X)
                 # test the fit succeeded.
-                rasl_statistics_ = rasl_trained.get_last().impl.statistics_
+                rasl_statistics_ = rasl_trained.get_last().impl.statistics_  # type: ignore
 
                 self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
                 self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
@@ -650,7 +654,7 @@ class TestSimpleImputer(unittest.TestCase):
                 (train_X, _), (test_X, _) = dataset
                 rasl_trained = rasl_trainable.fit(train_X)
                 # test the fit succeeded.
-                rasl_statistics_ = rasl_trained.steps()[-1].impl.statistics_
+                rasl_statistics_ = rasl_trained.steps[-1][1].impl.statistics_
                 print(sk_statistics_, rasl_statistics_)
                 self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
                 self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
@@ -683,7 +687,7 @@ class TestSimpleImputer(unittest.TestCase):
                 (train_X, _), (test_X, _) = dataset
                 rasl_trained = rasl_trainable.fit(train_X)
                 # test the fit succeeded.
-                rasl_statistics_ = rasl_trained.steps()[-1].impl.statistics_
+                rasl_statistics_ = rasl_trained.steps[-1][1].impl.statistics_
                 self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
                 self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
 
