@@ -71,6 +71,7 @@ extras_require = {
         "liac-arff>=2.4.0",
         "tensorflow>=2.4.0",
         "smac<=0.10.0",
+        "numba",
         "aif360>=0.4.0",
         "torch>=1.0",
         "BlackBoxAuditing",
