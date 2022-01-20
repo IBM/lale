@@ -34,6 +34,8 @@ jobs:
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
+    - name: Install autoai-libs from test pypi.
+      run: pip install --index-url https://test.pypi.org/simple/ autoai-libs==1.13.2
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
