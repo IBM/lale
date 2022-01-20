@@ -301,7 +301,14 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
                     " If None, defaults to np.nan.",
                 },
                 "importance_type": {
-                    "enum": ["gain", "weight", "cover", "total_gain", "total_cover"],
+                    "enum": [
+                        "gain",
+                        "weight",
+                        "cover",
+                        "total_gain",
+                        "total_cover",
+                        None,
+                    ],
                     "default": "gain",
                     "description": "The feature importance type for the `feature_importances_` property.",
                 },
@@ -733,5 +740,22 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         set_as_available=True,
     )
 
+if xgboost_installed and xgboost.__version__ >= "1.5":
+    # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+    XGBRegressor = XGBRegressor.customize_schema(
+        enable_categorical={
+            "type": "boolean",
+            "description": """Experimental support for categorical data.
+Do not set to true unless you are interested in development.
+Only valid when gpu_hist and dataframe are used.""",
+            "default": False,
+        },
+        predictor={
+            "anyOf": [{"type": "array", "items": {"type": "string"}}, {"enum": [None]}],
+            "description": """Force XGBoost to use specific predictor,
+available choices are [cpu_predictor, gpu_predictor].""",
+            "default": None,
+        },
+    )
 
 lale.docstrings.set_docstrings(XGBRegressor)
