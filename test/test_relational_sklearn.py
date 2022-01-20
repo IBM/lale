@@ -608,6 +608,10 @@ class TestSimpleImputer(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2adult["pandas"]
         num_columns = ["age", "fnlwgt", "education-num"]
         prefix = Map(columns={c: it[c] for c in num_columns})
+        to_pd = FunctionTransformer(
+            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
+        )
+        lr = LogisticRegression()
         imputer_args = {"strategy": "mean"}
         sk_trainable = prefix >> SkSimpleImputer(**imputer_args) >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
@@ -742,6 +746,7 @@ class TestSimpleImputer(unittest.TestCase):
         # Ideally, we should test this for spark too, but the order of multiple modes
         # is different in spark and hence the statistics_ does not match.
         # Both are correct as per the definition of mode.
+
 
 class TestStandardScaler(unittest.TestCase):
     @classmethod

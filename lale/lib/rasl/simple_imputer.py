@@ -28,6 +28,7 @@ from lale.schemas import Enum
 from .aggregate import Aggregate
 from .map import Map
 
+
 def _is_numeric_df(X):
     if _is_pandas_df(X):
         return X.shape[1] == X.select_dtypes(include=np.number).shape[1]
@@ -41,6 +42,7 @@ def _is_numeric_df(X):
     else:
         return False
 
+
 def _is_string_df(X):
     if _is_pandas_df(X):
         return X.shape[1] == X.select_dtypes(include="object").shape[1]
@@ -53,6 +55,7 @@ def _is_string_df(X):
         return len(X.columns) == len(numeric_cols)
     else:
         return False
+
 
 class _SimpleImputerImpl:
     def __init__(
@@ -175,6 +178,7 @@ class _SimpleImputerImpl:
                 " both numerical. Got X.dtypes={} and "
                 " type(missing_values)={}.".format(X.dtypes, type(self.missing_values))
             )
+
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
