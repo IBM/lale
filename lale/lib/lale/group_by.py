@@ -18,6 +18,7 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.helpers import (
+    _get_subscript_value,
     _is_ast_attribute,
     _is_ast_subscript,
     _is_pandas_df,
@@ -32,7 +33,7 @@ class _GroupByImpl:
     # Parse the 'by' element passed as input
     def _get_group_key(self, expr_to_parse):
         if _is_ast_subscript(expr_to_parse):
-            return expr_to_parse.slice.value.s  # type: ignore
+            return _get_subscript_value(expr_to_parse)
         elif _is_ast_attribute(expr_to_parse):
             return expr_to_parse.attr
         else:

@@ -24,6 +24,10 @@ class _ScanImpl:
         assert table is not None
         if isinstance(table._expr, ast.Attribute):
             self.table_name = table._expr.attr
+        elif isinstance(table._expr, ast.Subscript) and isinstance(
+            table._expr.slice, ast.Constant
+        ):
+            self.table_name = table._expr.slice.value
         else:
             self.table_name = table._expr.slice.value.s
 
@@ -35,7 +39,9 @@ class _ScanImpl:
             valid = isinstance(base, ast.Name) and base.id == "it"
         if valid and isinstance(table._expr, ast.Subscript):
             sub = table._expr.slice
-            valid = isinstance(sub, ast.Index) and isinstance(sub.value, ast.Str)
+            valid = isinstance(sub, ast.Constant) or (
+                isinstance(sub, ast.Index) and isinstance(sub.value, ast.Str)
+            )
         if not valid:
             raise ValueError("expected `it.table_name` or `it['table name']`")
 
