@@ -17,6 +17,7 @@ import ast
 import lale.docstrings
 import lale.operators
 from lale.datasets.data_schemas import get_table_name
+from lale.helpers import _get_subscript_value
 
 
 class _ScanImpl:
@@ -24,12 +25,8 @@ class _ScanImpl:
         assert table is not None
         if isinstance(table._expr, ast.Attribute):
             self.table_name = table._expr.attr
-        elif isinstance(table._expr, ast.Subscript) and isinstance(
-            table._expr.slice, ast.Constant
-        ):
-            self.table_name = table._expr.slice.value
-        else:
-            self.table_name = table._expr.slice.value.s
+        elif isinstance(table._expr, ast.Subscript):
+            self.table_name = _get_subscript_value(table._expr)
 
     @classmethod
     def validate_hyperparams(cls, table=None, X=None, **hyperparams):
