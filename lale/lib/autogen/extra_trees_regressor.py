@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.ensemble import ExtraTreesRegressor as Op
 
@@ -275,5 +276,76 @@ _combined_schemas = {
     },
 }
 ExtraTreesRegressor = make_operator(_ExtraTreesRegressorImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.22":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.ExtraTreesRegressor.html
+    from lale.schemas import AnyOf, Float, Int, Null
+
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        n_estimators=Int(
+            desc="The number of trees in the forest.",
+            default=100,
+            forOptimizer=True,
+            minimumForOptimizer=10,
+            maximumForOptimizer=100,
+        ),
+        ccp_alpha=Float(
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
+            default=0.0,
+            forOptimizer=False,
+            minimum=0.0,
+            maximumForOptimizer=0.1,
+        ),
+        max_samples=AnyOf(
+            types=[
+                Null(desc="Draw X.shape[0] samples."),
+                Int(desc="Draw max_samples samples.", minimum=1),
+                Float(
+                    desc="Draw max_samples * X.shape[0] samples.",
+                    minimum=0.0,
+                    exclusiveMinimum=True,
+                    maximum=1.0,
+                    exclusiveMaximum=True,
+                ),
+            ],
+            desc="If bootstrap is True, the number of samples to draw from X to train each base estimator.",
+            default=None,
+        ),
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {"enum": ["mse", "friedman_mse", "poisson"]},
+                {"enum": ["mae"], "forOptimizer": False},
+            ],
+            "default": "mse",
+        },
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.tree.ExtraTreesRegressor.html
+    ExtraTreesRegressor = ExtraTreesRegressor.customize_schema(
+        criterion={
+            "description": """The function to measure the quality of a split.
+Supported criteria are “squared_error” for the mean squared error, which is equal to variance reduction as feature selection criterion,
+and “absolute_error” for the mean absolute error.""",
+            "anyOf": [
+                {"enum": ["squared_error", "absolute_error"]},
+                {"enum": ["mae", "mse"], "forOptimizer": False},
+            ],
+            "default": "squared_error",
+        },
+        min_impurity_split=None,
+        set_as_available=True,
+    )
 
 set_docstrings(ExtraTreesRegressor)
