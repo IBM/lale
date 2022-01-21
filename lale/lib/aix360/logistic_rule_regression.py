@@ -11,12 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import aix360
+import aix360.algorithms.rbm.beam_search
 import numpy as np
 import pandas as pd
 from aix360.algorithms.rbm import LogisticRuleRegression
-
-# from aix360.algorithms.rbm.beam_search import beam_search, beam_search_K1
 from sklearn.linear_model import LogisticRegression
 
 import lale
@@ -30,12 +28,10 @@ from lale.lib.aif360.util import (
     _categorical_supervised_input_fit_schema,
 )
 
-from .beam_search import beam_search_aix360, beam_search_K1_aix360
+from .beam_search import beam_search, beam_search_K1
 
-aix360.algorithms.rbm.beam_search.beam_search = beam_search_aix360
-aix360.algorithms.rbm.beam_search.beam_search_K1 = beam_search_K1_aix360
-# beam_search = beam_search_aix360
-# beam_search_K1 = beam_search_K1_aix360
+aix360.algorithms.rbm.beam_search.beam_search = beam_search
+aix360.algorithms.rbm.beam_search.beam_search_K1 = beam_search_K1
 
 
 def add_method(cls):
