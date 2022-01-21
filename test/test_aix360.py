@@ -19,8 +19,11 @@ import pandas as pd
 from aix360.algorithms.rbm import FeatureBinarizer
 
 import lale
-from lale.lib.aif360 import fair_stratified_train_test_split, fetch_creditg_df
-from lale.lib.aix360 import logisticruleregression
+from lale.lib.aix360 import (
+    fair_stratified_train_test_split,
+    fetch_creditg_df,
+    logisticruleregression,
+)
 
 
 class TestAIX360Datasets(unittest.TestCase):
