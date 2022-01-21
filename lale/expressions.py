@@ -263,6 +263,10 @@ def _make_call_expr(name: str, *args: Union[Expr, AstExpr, int, str]) -> Expr:
     return Expr(call_ast)
 
 
+def string_indexer(subject: Expr) -> Expr:
+    return _make_call_expr("string_indexer", subject)
+
+
 def collect_set(group: Expr) -> Expr:
     return _make_call_expr("collect_set", group)
 
