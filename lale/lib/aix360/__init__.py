@@ -11,8 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
+# from   aix360.algorithms.rbm.beam_search import PricingInstance as pi
+# from .beam_search import PricingInstance
+# import aix360
+# aix360.algorithms.rbm.beam_search.PricingInstance=PricingInstance
 from lale.lib.aif360.util import fair_stratified_train_test_split
 
 from .datasets import fetch_creditg_df

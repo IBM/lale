@@ -99,10 +99,9 @@ extras_require = {
         "liac-arff>=2.4.0",
         "aif360<0.4.0",
         "BlackBoxAuditing",
-        "aix360>=0.1.0",
     ],
-    "exlainability": [
-        "aix360==0.2.1",
+    "explainability": [
+        "aix360==0.1.0",
         "aif360<0.4.0",
     ],
 }
