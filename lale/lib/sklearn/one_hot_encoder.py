@@ -206,6 +206,10 @@ if sklearn_version >= version.Version("0.21"):
         },
         set_as_available=True,
     )
+if sklearn_version >= version.Version("0.21") and sklearn_version < version.Version(
+    "1.0"
+):
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.preprocessing.OneHotEncoder.html
     OneHotEncoder = OneHotEncoder.customize_schema(
         constraint={
             "description": "'handle_unknown' must be 'error' when the drop parameter is specified, as both would create categories that are all zero.",
