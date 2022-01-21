@@ -442,6 +442,14 @@ def desc(column: Union[Expr, str]) -> Expr:
     return _make_call_expr("desc", column)
 
 
+def median(group: Expr) -> Expr:
+    return _make_call_expr("median", group)
+
+
+def mode(group: Expr) -> Expr:
+    return _make_call_expr("mode", group)
+
+
 it = Expr(ast.Name(id="it"))
 
 

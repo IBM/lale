@@ -23,6 +23,7 @@ try:
 
     # noqa in the imports here because those get used dynamically and flake fails.
     from pyspark.sql.functions import col  # noqa
+    from pyspark.sql.functions import isnan  # noqa
     from pyspark.sql.functions import lit  # noqa
     from pyspark.sql.functions import to_timestamp  # noqa
     from pyspark.sql.functions import hour as spark_hour  # noqa
@@ -105,14 +106,33 @@ class _SparkEvaluator(ast.NodeVisitor):
 
 def replace(call: ast.Call):
     column = _eval_ast_expr_spark_df(call.args[0])  # type: ignore
-    mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
+    mapping_dict = {}
+    try:
+        mapping_dict = ast.literal_eval(call.args[1].value)  # type: ignore
+    except ValueError:
+        mapping_dict_ast = call.args[1].value  # type: ignore
+        # ast.literal_eval fails for `nan` with ValueError, we handle the case when
+        # one of the keys is a `nan`. This is the case when using map with replace
+        # in missing value imputation.
+        for i, key in enumerate(mapping_dict_ast.keys):
+            if key.id == "nan":
+                mapping_dict["nan"] = ast.literal_eval(mapping_dict_ast.values[i])
+            else:
+                mapping_dict[
+                    ast.literal_eval(ast.literal_eval(mapping_dict_ast.keys[i]))
+                ] = ast.literal_eval(mapping_dict_ast.values[i])
+
     handle_unknown = ast.literal_eval(call.args[2])
     chain_of_whens = None
     for key, value in mapping_dict.items():
-        if chain_of_whens is None:
-            chain_of_whens = pyspark.sql.functions.when(column == key, value)
+        if key == "nan":
+            when_expr = isnan(column)  # type: ignore
         else:
-            chain_of_whens = chain_of_whens.when(column == key, value)
+            when_expr = column == key  # type: ignore
+        if chain_of_whens is None:
+            chain_of_whens = pyspark.sql.functions.when(when_expr, value)
+        else:
+            chain_of_whens = chain_of_whens.when(when_expr, value)
     if handle_unknown == "use_encoded_value":
         fallback = lit(ast.literal_eval(call.args[3]))
     else:
