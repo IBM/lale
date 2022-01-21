@@ -13,12 +13,16 @@
 # limitations under the License.
 
 import numpy as np
+import pandas as pd
 from scipy import special
 
 import lale.docstrings
 import lale.operators
+from lale.expressions import count as agg_count
 from lale.expressions import it
-from lale.lib.rasl import Map
+from lale.expressions import sum as agg_sum
+from lale.lib.lale.group_by import GroupBy
+from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import select_k_best
 
 from ._utils import df_count
@@ -28,7 +32,7 @@ from ._utils import df_count
 # Contrary to the sklearn.feature_selection.f_oneway implementation it
 # takes as input a dictionary that associate to each class its sample
 # and the function is splitted into two parts.
-def f_oneway_prep(samples_dict):
+def f_oneway_prep(X, X_by_y):
     """Performs a 1-way ANOVA.
 
     Parameters
@@ -43,12 +47,21 @@ def f_oneway_prep(samples_dict):
     p-value : float
         The associated p-value from the F-distribution.
     """
-    classes = list(samples_dict.keys())
-    n_samples_per_class = {k: a.shape[0] for k, a in samples_dict.items()}
-    n_samples = sum(n_samples_per_class.values())
-    ss_alldata = sum((a ** 2).sum(axis=0) for a in samples_dict.values())
-    sums_samples = {k: np.asarray(a.sum(axis=0)) for k, a in samples_dict.items()}
-    sums_alldata = sum(sums_samples.values())
+    agg_sum_cols = Aggregate(columns={col: agg_sum(it[col]) for col in X.columns})
+    sums_samples = agg_sum_cols.transform(X_by_y)
+    n_samples_per_class = Aggregate(
+        columns={"n_samples_per_class": agg_count(it[X.columns[0]])}
+    ).transform(X_by_y)
+    n_samples = Aggregate(
+        columns={"sum": agg_sum(it["n_samples_per_class"])}
+    ).transform(n_samples_per_class)["sum"][0]
+    sqr_cols = Map(columns={col: it[col] ** 2 for col in X.columns})
+    ss_alldata = (sqr_cols >> agg_sum_cols).transform(X).loc[0]
+    sums_alldata = agg_sum_cols.transform(X).to_numpy()[0]
+    n_samples_per_class = n_samples_per_class.to_dict()["n_samples_per_class"]
+    classes = list(n_samples_per_class.keys())
+    sums_samples = {k: sums_samples.loc[k].to_numpy() for k in classes}
+
     return (
         classes,
         n_samples_per_class,
@@ -148,8 +161,9 @@ def f_oneway(lifted):
 
 
 def f_classif_prep(X, y):
-    samples_dict = {k: X[y == k] for k in np.unique(y)}
-    lifted = f_oneway_prep(samples_dict)
+    Xy = pd.concat([X, y], axis=1)  # TODO: sparkify
+    X_by_y = GroupBy(by=[it[y.name]]).transform(Xy)
+    lifted = f_oneway_prep(X, X_by_y)
     return lifted
 
 
