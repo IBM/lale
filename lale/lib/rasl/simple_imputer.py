@@ -67,16 +67,17 @@ class _SimpleImputerImpl:
         copy=True,
         add_indicator=False,
     ):
-
-        self.missing_values = missing_values
-        self.strategy = strategy
-        self.fill_value = fill_value
-        self.verbose = verbose
+        self._hyperparams = {}
+        self._hyperparams["missing_values"] = missing_values
+        self._hyperparams["strategy"] = strategy
+        self._hyperparams["fill_value"] = fill_value
+        self._hyperparams["verbose"] = verbose
         if not copy:
             raise ValueError("This implementation only supports `copy=True`.")
-
+        self._hyperparams["copy"] = copy
         if add_indicator:
             raise ValueError("This implementation only supports `add_indicator=False`.")
+        self._hyperparams["add_indicator"] = add_indicator
         # the `indicator_`` property is always None as we do not support `add_indictor=True`
         self.indicator_ = None
 
@@ -87,17 +88,17 @@ class _SimpleImputerImpl:
         # assign appropriate value to fill_value depending on the datatype.
         # default fill_value is 0 for numerical input and "missing_value"
         # otherwise
-        if self.fill_value is None:
+        if self._hyperparams["fill_value"] is None:
             if _is_numeric_df(X):
                 fill_value = 0
             else:
                 fill_value = "missing_value"
         else:
-            fill_value = self.fill_value
+            fill_value = self._hyperparams["fill_value"]
 
         # validate that fill_value is numerical for numerical data
         if (
-            self.strategy == "constant"
+            self._hyperparams["strategy"] == "constant"
             and _is_numeric_df(X)
             and not isinstance(fill_value, numbers.Real)
         ):
@@ -114,22 +115,22 @@ class _SimpleImputerImpl:
         agg_op = None
         agg_data = None
         # learn the values to be imputed
-        if self.strategy == "mean":
+        if self._hyperparams["strategy"] == "mean":
             agg_op = Aggregate(
                 columns={c: mean(it[c]) for c in X.columns},
-                exclude_value=self.missing_values,
+                exclude_value=self._hyperparams["missing_values"],
             )
-        elif self.strategy == "median":
+        elif self._hyperparams["strategy"] == "median":
             agg_op = Aggregate(
                 columns={c: median(it[c]) for c in X.columns},
-                exclude_value=self.missing_values,
+                exclude_value=self._hyperparams["missing_values"],
             )
-        elif self.strategy == "most_frequent":
+        elif self._hyperparams["strategy"] == "most_frequent":
             agg_op = Aggregate(
                 columns={c: mode(it[c]) for c in X.columns},
-                exclude_value=self.missing_values,
+                exclude_value=self._hyperparams["missing_values"],
             )
-        elif self.strategy == "constant":
+        elif self._hyperparams["strategy"] == "constant":
             agg_data = [[fill_value for col in X.columns]]
             agg_data = pd.DataFrame(agg_data, columns=X.columns)
         if agg_data is None and agg_op is not None:
@@ -146,12 +147,33 @@ class _SimpleImputerImpl:
             self.transformer = Map(
                 columns={
                     col_name: replace(
-                        it[col_name], {self.missing_values: agg_data.iloc[0, col_idx]}
+                        it[col_name], {self._hyperparams["missing_values"]: agg_data.iloc[0, col_idx]}
                     )
                     for col_idx, col_name in enumerate(X.columns)
                 }
             )
         return self
+
+    def partial_fit(self, X, y=None):
+        if self._hyperparams["strategy"] not in ["mean", "constant"]:
+            raise ValueError("partial_fit is only supported for imputation strategy `mean` and `constant`.")
+        if not hasattr(self, "statistics_"):  # first fit
+            return self.fit(X)
+        lifted_a = self.lifted_statistics
+        lifted_b = self._lift(X, self._hyperparams)
+        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
+        return self
+
+    @staticmethod
+    def _lift(X, hyperparams):
+        strategy = hyperparams["strategy"]
+        if strategy not in ["mean", "constant"]:
+            raise ValueError("_lift is only supported for imputation strategy `mean` and `constant`.")
+        if strategy == "constant":
+            agg_data = [[hyperparams["fill_value"] for col in X.columns]]
+            self.lifted_statistics = pd.DataFrame(agg_data, columns=X.columns)
+        elif strategy == "mean":
+            
 
     def transform(self, X):
         return self.transformer.transform(X)
