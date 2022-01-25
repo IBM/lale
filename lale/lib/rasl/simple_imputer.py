@@ -20,7 +20,7 @@ import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.expressions import it, mean, median, mode, replace
+from lale.expressions import it, mean, median, mode, replace, sum, count
 from lale.helpers import _is_df, _is_pandas_df, _is_spark_df
 from lale.lib.sklearn import simple_imputer
 from lale.schemas import Enum
@@ -173,7 +173,14 @@ class _SimpleImputerImpl:
             agg_data = [[hyperparams["fill_value"] for col in X.columns]]
             self.lifted_statistics = pd.DataFrame(agg_data, columns=X.columns)
         elif strategy == "mean":
-            
+            agg_op_sum = Aggregate(
+                columns={c: sum(it[c]) for c in X.columns},
+                exclude_value=hyperparams["missing_values"],
+            )
+            agg_op_count = Aggregate(
+                columns={c: count(it[c]) for c in X.columns},
+                exclude_value=hyperparams["missing_values"],
+            )
 
     def transform(self, X):
         return self.transformer.transform(X)
