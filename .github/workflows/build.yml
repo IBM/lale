@@ -34,6 +34,12 @@ jobs:
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
       run: pip install --upgrade --upgrade-strategy eager 'autoai-ts-libs'
+    - name: Install autoai-libs from test pypi for Python 3.7 and 3.8
+      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
+      run: pip install autoai-libs
+    - name: Install autoai-libs from test pypi for Python 3.9.
+      if: ${{ matrix.python-version == 3.9}}
+      run: pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.2
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
@@ -60,9 +66,9 @@ jobs:
         - test/test_autoai_libs.py
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
-        - test/test_relational.py
         - test/test_snapml.py
-        python-version: [3.7, 3.8]
+        - test/test_relational.py
+        python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
         include:
         - test-case: test/test_autoai_ts_libs.py
@@ -109,12 +115,18 @@ jobs:
     - name: Install deps for test_lale_lib_versions
       if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
       run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
-    - name: Install deps for test_halving_gridsearchcv
-      if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
-      run: pip install 'scikit-learn==0.24.1'
     - name: Install deps for test_autoai_ts_libs
       if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
       run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
+    - name: Install autoai-libs from test pypi for Python 3.7 and 3.8
+      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
+      run: pip install autoai-libs>=1.12.6
+    - name: Install autoai-libs from test pypi for Python 3.9.
+      if: ${{ matrix.python-version == 3.9}}
+      run: pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.2
+    - name: Install deps for test_halving_gridsearchcv
+      if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
+      run: pip install 'scikit-learn==0.24.1'
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -129,7 +141,7 @@ jobs:
         - test/test_core_classifiers.py
         - test/test_core_regressors.py
         - test/test_core_transformers.py
-        python-version: [3.8]
+        python-version: [3.9]
         setup-target: ['.']
     steps:
     - uses: actions/checkout@v2

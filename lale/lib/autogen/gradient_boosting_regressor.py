@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.ensemble import GradientBoostingRegressor as Op
 
@@ -297,5 +298,80 @@ _combined_schemas = {
 GradientBoostingRegressor = make_operator(
     _GradientBoostingRegressorImpl, _combined_schemas
 )
+
+if sklearn.__version__ >= "0.22":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    from lale.schemas import AnyOf, Bool, Enum, Float
+
+    GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
+        presort=AnyOf(
+            types=[Bool(), Enum(["deprecated", "auto"])],
+            desc="This parameter is deprecated and will be removed in v0.24.",
+            default="deprecated",
+        ),
+        ccp_alpha=Float(
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
+            default=0.0,
+            forOptimizer=False,
+            minimum=0.0,
+            maximumForOptimizer=0.1,
+        ),
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
+        presort=None,
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {"enum": ["mse", "friedman_mse"]},
+                {
+                    "description": "Deprecated since version 0.24.",
+                    "enum": ["mae"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "friedman_mse",
+        },
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingRegressor.html
+    GradientBoostingRegressor = GradientBoostingRegressor.customize_schema(
+        loss={
+            "description": """Loss function to be optimized.
+‘squared_error’ refers to the squared error for regression. ‘absolute_error’ refers to the absolute error of regression and is a robust loss function.
+‘huber’ is a combination of the two. ‘quantile’ allows quantile regression (use alpha to specify the quantile).""",
+            "anyOf": [
+                {"enum": ["squared_error", "absolute_error", "huber", "quantile"]},
+                {
+                    "description": "Deprecated since version 1.0",
+                    "enum": ["ls", "lad"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "squared_error",
+        },
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {"enum": ["squared_error", "friedman_mse"]},
+                {
+                    "description": "Deprecated since version 0.24 and 1.0.",
+                    "enum": ["mae", "mse"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "friedman_mse",
+        },
+        min_impurity_split=None,
+        set_as_available=True,
+    )
 
 set_docstrings(GradientBoostingRegressor)

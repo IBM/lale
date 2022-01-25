@@ -466,8 +466,12 @@ def _it_column(expr):
                 f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
             )
     elif isinstance(expr, ast.Subscript):
-        if _is_ast_name_it(expr.value) and isinstance(expr.slice, ast.Index):
-            if isinstance(expr.slice.value, ast.Constant):
+        if isinstance(expr.slice, ast.Constant) or (
+            _is_ast_name_it(expr.value) and isinstance(expr.slice, ast.Index)
+        ):
+            if isinstance(expr.slice, ast.Constant):
+                return expr.slice.value
+            elif isinstance(expr.slice.value, ast.Constant):
                 return expr.slice.value.value
             elif isinstance(expr.slice.value, ast.Str):
                 return expr.slice.value.s

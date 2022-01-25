@@ -17,7 +17,13 @@ import pandas as pd
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.helpers import _is_ast_attribute, _is_ast_subscript, _is_df, _is_spark_df
+from lale.helpers import (
+    _get_subscript_value,
+    _is_ast_attribute,
+    _is_ast_subscript,
+    _is_df,
+    _is_spark_df,
+)
 
 try:
     from pyspark.sql.functions import col
@@ -48,7 +54,7 @@ class _JoinImpl:
         left_key = []
         right_key = []
         if _is_ast_subscript(expr_to_parse.left.value):
-            left_name = expr_to_parse.left.value.slice.value.s  # type: ignore
+            left_name = _get_subscript_value(expr_to_parse.left.value)
         elif _is_ast_attribute(expr_to_parse.left.value):
             left_name = expr_to_parse.left.value.attr
         else:
@@ -56,7 +62,7 @@ class _JoinImpl:
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
             )
         if _is_ast_subscript(expr_to_parse.left):
-            left_key.append(expr_to_parse.left.slice.value.s)  # type: ignore
+            left_key.append(_get_subscript_value(expr_to_parse.left))
         elif _is_ast_attribute(expr_to_parse.left):
             left_key.append(expr_to_parse.left.attr)
         else:
@@ -64,7 +70,7 @@ class _JoinImpl:
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it.table_name['column_name']"
             )
         if _is_ast_subscript(expr_to_parse.comparators[0].value):
-            right_name = expr_to_parse.comparators[0].value.slice.value.s  # type: ignore
+            right_name = _get_subscript_value(expr_to_parse.comparators[0].value)
         elif _is_ast_attribute(expr_to_parse.comparators[0].value):
             right_name = expr_to_parse.comparators[0].value.attr
         else:
@@ -72,7 +78,7 @@ class _JoinImpl:
                 "ERROR: Expression type not supported! Formats supported: it.table_name.column_name or it['table_name'].column_name"
             )
         if _is_ast_subscript(expr_to_parse.comparators[0]):
-            right_key.append(expr_to_parse.comparators[0].slice.value.s)  # type: ignore
+            right_key.append(_get_subscript_value(expr_to_parse.comparators[0]))
         elif _is_ast_attribute(expr_to_parse.comparators[0]):
             right_key.append(expr_to_parse.comparators[0].attr)
         else:

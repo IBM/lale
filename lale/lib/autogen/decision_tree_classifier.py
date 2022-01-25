@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.tree import DecisionTreeClassifier as Op
 
@@ -309,5 +310,40 @@ _combined_schemas = {
     },
 }
 DecisionTreeClassifier = make_operator(_DecisionTreeClassifierImpl, _combined_schemas)
+
+if sklearn.__version__ >= "0.22":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    from lale.schemas import AnyOf, Bool, Enum, Float
+
+    DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
+        presort=AnyOf(
+            types=[Bool(), Enum(["deprecated"])],
+            desc="This parameter is deprecated and will be removed in v0.24.",
+            default="deprecated",
+        ),
+        ccp_alpha=Float(
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
+            default=0.0,
+            forOptimizer=False,
+            minimum=0.0,
+            maximumForOptimizer=0.1,
+        ),
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
+        presort=None, set_as_available=True
+    )
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    DecisionTreeClassifier = DecisionTreeClassifier.customize_schema(
+        min_impurity_split=None, set_as_available=True
+    )
 
 set_docstrings(DecisionTreeClassifier)
