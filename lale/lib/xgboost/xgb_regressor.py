@@ -751,11 +751,12 @@ Only valid when gpu_hist and dataframe are used.""",
             "default": False,
         },
         predictor={
-            "anyOf": [{"type": "array", "items": {"type": "string"}}, {"enum": [None]}],
+            "anyOf": [{"type": "string"}, {"enum": [None]}],
             "description": """Force XGBoost to use specific predictor,
 available choices are [cpu_predictor, gpu_predictor].""",
             "default": None,
         },
+        set_as_available=True,
     )
 
 lale.docstrings.set_docstrings(XGBRegressor)
