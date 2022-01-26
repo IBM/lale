@@ -87,7 +87,7 @@ jobs:
           python-version: 3.7
           setup-target: '.[full,test]'
         - test-case: test/test_relational_sklearn.py
-          python-version: [3.7, 3.8]
+          python-version: 3.8
           setup-target: '.[test]'
 
     steps:
