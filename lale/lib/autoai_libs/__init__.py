@@ -22,6 +22,7 @@ Operators
 
 Preprocessing any columns:
 
+* lale.lib.autoai_libs. `ColumnSelector`_
 * lale.lib.autoai_libs. `NumpyColumnSelector`_
 * lale.lib.autoai_libs. `NumpyReplaceMissingValues`_
 * lale.lib.autoai_libs. `float32_transform`_
@@ -58,6 +59,7 @@ Feature transformation:
 * lale.lib.autoai_libs. `FS1`_
 * lale.lib.autoai_libs. `FS2`_
 
+.. _`ColumnSelector`: lale.lib.autoai_libs.column_selector.html
 .. _`NumpyColumnSelector`: lale.lib.autoai_libs.numpy_column_selector.html
 .. _`CompressStrings`: lale.lib.autoai_libs.compress_strings.html
 .. _`NumpyReplaceMissingValues`: lale.lib.autoai_libs.numpy_replace_missing_values.html
@@ -86,6 +88,7 @@ Feature transformation:
 from .boolean2float import boolean2float
 from .cat_encoder import CatEncoder
 from .cat_imputer import CatImputer
+from .column_selector import ColumnSelector
 from .compress_strings import CompressStrings
 from .float32_transform import float32_transform
 from .float_str2_float import FloatStr2Float
