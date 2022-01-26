@@ -831,6 +831,7 @@ class TestSimpleImputer(unittest.TestCase):
             with self.assertRaises(ValueError):
                 _ = rasl_trainable.partial_fit(train_X)
 
+
 class TestStandardScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
