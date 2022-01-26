@@ -45,6 +45,7 @@ except ImportError:
 def _is_pandas_df(d):
     return isinstance(d, pd.DataFrame)
 
+
 def _is_pandas_series(d):
     return isinstance(d, pd.Series)
 
