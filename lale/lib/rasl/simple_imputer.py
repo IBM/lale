@@ -117,7 +117,11 @@ class _SimpleImputerImpl:
             )
         if not hasattr(self, "statistics_"):  # first fit
             return self.fit(X)
-        lifted_a = self._lifted_statistics
+        lifted_a = (
+            self.feature_names_in_,
+            self._lifted_statistics,
+            self._hyperparams["strategy"],
+        )
         lifted_b = self._lift(X, self._hyperparams)
         self._set_fit_attributes(self._combine(lifted_a, lifted_b))
         return self
@@ -210,7 +214,7 @@ class _SimpleImputerImpl:
         strategy = lifted_a[2]
         assert list(feature_names_in_a) == list(feature_names_in_b)
         if strategy == "constant":
-            assert pd.equals(lifted_statistics_a, lifted_statistics_b)
+            assert lifted_statistics_a.equals(lifted_statistics_b)
             combined_statistic = lifted_statistics_a
         elif strategy == "mean":
             combined_statistic = {}

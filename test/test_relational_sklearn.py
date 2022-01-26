@@ -754,6 +754,82 @@ class TestSimpleImputer(unittest.TestCase):
         # is different in spark and hence the statistics_ does not match.
         # Both are correct as per the definition of mode.
 
+    def test_valid_partial_fit(self):
+        self._fill_missing_value("age", 36.0, -1)
+        num_columns = ["age", "fnlwgt", "education-num"]
+        prefix = Map(columns={c: it[c] for c in num_columns})
+
+        hyperparams = [
+            {"strategy": "mean"},
+            {"strategy": "constant", "fill_value": 99},
+        ]
+        for hyperparam in hyperparams:
+            rasl_trainable = prefix >> RaslSimpleImputer(
+                missing_values=-1, **hyperparam
+            )
+            sk_trainable = prefix >> SkSimpleImputer(missing_values=-1, **hyperparam)
+            sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
+            sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
+            sk_statistics_ = sk_trained.get_last().impl.statistics_
+            (train_X, _), (test_X, _) = self.tgt2adult["pandas"]
+            data1 = train_X.iloc[:10]
+            data2 = train_X.iloc[10:100]
+            data3 = train_X.iloc[100:]
+
+            for tgt in self.tgt2adult.keys():
+                print("tgt", tgt)
+                if tgt == "spark":
+                    from pyspark.sql import SparkSession
+
+                    spark = (
+                        SparkSession.builder.master("local[1]")
+                        .appName("test_relational_sklearn")
+                        .getOrCreate()
+                    )
+                    data1 = spark.createDataFrame(data1)  # type:ignore
+                    data2 = spark.createDataFrame(data2)  # type:ignore
+                    data3 = spark.createDataFrame(data3)  # type:ignore
+                    test_X = spark.createDataFrame(test_X)  # type:ignore
+                rasl_trainable = prefix >> RaslSimpleImputer(
+                    missing_values=-1, **hyperparam
+                )
+                rasl_trained = rasl_trainable.partial_fit(data1)
+                rasl_trained = rasl_trained.partial_fit(data2)
+                rasl_trained = rasl_trained.partial_fit(data3)
+                # test the fit succeeded.
+                rasl_statistics_ = rasl_trained.get_last().impl.statistics_  # type: ignore
+
+                self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
+                for i in range(len(sk_statistics_)):
+                    self.assertEqual(sk_statistics_[i], rasl_statistics_[i])
+
+                rasl_transformed = rasl_trained.transform(test_X)
+                if tgt == "spark":
+                    rasl_transformed = rasl_transformed.toPandas()
+                self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+                for row_idx in range(sk_transformed.shape[0]):
+                    for col_idx in range(sk_transformed.shape[1]):
+                        self.assertEqual(
+                            sk_transformed[row_idx, col_idx],
+                            rasl_transformed.iloc[row_idx, col_idx],
+                            (row_idx, col_idx, tgt),
+                        )
+
+    def test_invalid_partial_fit(self):
+        num_columns = ["age", "fnlwgt", "education-num"]
+        prefix = Map(columns={c: it[c] for c in num_columns})
+
+        hyperparams = [
+            {"strategy": "median"},
+            {"strategy": "most_frequent"},
+        ]
+        for hyperparam in hyperparams:
+            rasl_trainable = prefix >> RaslSimpleImputer(
+                missing_values=-1, **hyperparam
+            )
+            (train_X, _), (_, _) = self.tgt2adult["pandas"]
+            with self.assertRaises(ValueError):
+                _ = rasl_trainable.partial_fit(train_X)
 
 class TestStandardScaler(unittest.TestCase):
     @classmethod
