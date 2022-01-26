@@ -42,8 +42,12 @@ except ImportError:
     torch_installed = False
 
 
-def _is_pandas(d):
-    return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series)
+def _is_pandas_df(d):
+    return isinstance(d, pd.DataFrame)
+
+
+def _is_pandas_series(d):
+    return isinstance(d, pd.Series)
 
 
 class _ConcatFeaturesImpl:
@@ -51,7 +55,7 @@ class _ConcatFeaturesImpl:
         pass
 
     def transform(self, X):
-        if all([_is_pandas(d) for d in X]):
+        if all([_is_pandas_df(d) for d in X]):
             name2series = {}
             for dataset in X:
                 for name in dataset.columns:
@@ -82,14 +86,14 @@ class _ConcatFeaturesImpl:
                 return transformer.transform([d1, d2])
 
             result = reduce(join, X)
-        elif all([_is_pandas(d) or _is_spark_df(d) for d in X]):
+        elif all([_is_pandas_df(d) or _is_spark_df(d) for d in X]):
             X = [d.toPandas() if _is_spark_df(d) else d for d in X]
             return self.transform(X)
         else:
             np_datasets = []
             # Preprocess the datasets to convert them to 2-d numpy arrays
             for dataset in X:
-                if _is_pandas(dataset):
+                if _is_pandas_df(dataset) or _is_pandas_series(dataset):
                     np_dataset = dataset.values
                 elif _is_spark_df(dataset):
                     np_dataset = dataset.toPandas().values
