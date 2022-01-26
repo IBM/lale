@@ -146,7 +146,10 @@ def add_table_name(obj, name) -> Any:
         # Python class DataFrame with method alias(self, alias): https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
         # Scala class DataSet with method as(alias: String): https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/Dataset.scala
-        return obj.alias(name)
+        o = obj.alias(name)
+        for f in obj.schema.fieldNames():
+            o.schema[f].metadata = obj.schema[f].metadata
+        return o
     if isinstance(obj, NDArrayWithSchema):
         result = obj
     elif isinstance(obj, np.ndarray):
@@ -207,6 +210,40 @@ def get_table_name(obj):
     ):
         return getattr(obj, "table_name", None)
     return None
+
+
+def get_index_name(obj):
+    result = None
+    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+        sch = obj.schema
+        try:
+            result = next(
+                f.name
+                for f in sch
+                if hasattr(f, "metadata")
+                and "is_index" in f.metadata
+                and f.metadata["is_index"]
+            )
+        except StopIteration:
+            result = None
+    elif isinstance(
+        obj,
+        (
+            SeriesWithSchema,
+            DataFrameWithSchema,
+            pd.core.groupby.DataFrameGroupBy,
+            pd.core.groupby.SeriesGroupBy,
+        ),
+    ):
+        result = obj.index.names[0]
+    return result
+
+
+def set_index_name(obj, index_col):
+    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
+        obj.schema[index_col].metadata = {"is_index": True}
+    elif isinstance(obj, (SeriesWithSchema, DataFrameWithSchema)):
+        pd.rename_axis(index=[index_col])
 
 
 def strip_schema(obj):

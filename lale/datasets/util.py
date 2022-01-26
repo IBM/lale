@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from lale.datasets.data_schemas import set_index_name
+
 try:
     import pyspark.sql
     from pyspark import SparkConf, SparkContext
@@ -21,12 +23,22 @@ except ImportError:
     spark_installed = False
 
 
-def pandas2spark(pandas_dataframe):
+def pandas2spark(pandas_dataframe, add_index=False, index_name=None):
     assert spark_installed
     spark_conf = (
         SparkConf().setMaster("local[2]").set("spark.driver.bindAddress", "127.0.0.1")
     )
     spark_context = SparkContext.getOrCreate(conf=spark_conf)
     spark_sql_context = pyspark.sql.SQLContext(spark_context)
+    if add_index:
+        if index_name is None:
+            if pandas_dataframe.index.name is None:
+                index_name = "index"
+            else:
+                index_name = pandas_dataframe.index.name
+        pandas_dataframe = pandas_dataframe.copy(deep=False)
+        pandas_dataframe[index_name] = pandas_dataframe.index
     spark_dataframe = spark_sql_context.createDataFrame(pandas_dataframe)
+    if index_name is not None:
+        set_index_name(spark_dataframe, index_name)
     return spark_dataframe
