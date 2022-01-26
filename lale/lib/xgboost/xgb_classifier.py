@@ -730,7 +730,7 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
         },
         importance_type={
             "description": "The feature importance type for the feature_importances_ property.",
-            "enum": ["gain", "weight", "cover", "total_gain", "total_cover"],
+            "enum": ["gain", "weight", "cover", "total_gain", "total_cover", None],
             "default": "gain",
         },
         use_label_encoder={
@@ -758,6 +758,25 @@ Refer to https://xgboost.readthedocs.io/en/latest/parameter.html. """,
             "default": None,
             "minimum": 0,
             "maximum": 3,
+        },
+        set_as_available=True,
+    )
+
+if xgboost_installed and xgboost.__version__ >= "1.5":
+    # https://xgboost.readthedocs.io/en/latest/python/python_api.html#module-xgboost.sklearn
+    XGBClassifier = XGBClassifier.customize_schema(
+        enable_categorical={
+            "type": "boolean",
+            "description": """Experimental support for categorical data.
+Do not set to true unless you are interested in development.
+Only valid when gpu_hist and dataframe are used.""",
+            "default": False,
+        },
+        predictor={
+            "anyOf": [{"type": "string"}, {"enum": [None]}],
+            "description": """Force XGBoost to use specific predictor,
+available choices are [cpu_predictor, gpu_predictor].""",
+            "default": None,
         },
         set_as_available=True,
     )

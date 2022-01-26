@@ -49,6 +49,12 @@ class TestToGraphviz(unittest.TestCase):
 class TestPrettyPrint(unittest.TestCase):
     def _roundtrip(self, expected, printed):
         self.maxDiff = None
+        # sklearn_version_family changes based on the Python as well as sklearn version,
+        # so remove that hyperparameter while comparing if present.
+        import re
+
+        expected = re.sub(r"""sklearn_version_family=.\d*.,""", "", expected)
+        printed = re.sub(r"""sklearn_version_family=.\d*.,""", "", printed)
         self.assertEqual(expected, printed)
         globals2 = {}
         locals2 = {}

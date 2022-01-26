@@ -161,7 +161,7 @@ if sklearn.__version__ >= "1.0":
     LinearRegression = LinearRegression.customize_schema(
         relevantToOptimizer=["fit_intercept", "copy_X"],
         normalize={
-            "type": "boolean",
+            "anyOf": [{"type": "boolean"}, {"enum": ["deprecated"]}],
             "description": """This parameter is ignored when fit_intercept is set to False.
 If True, the regressors X will be normalized before regression by subtracting the mean and dividing by the l2-norm.
 If you wish to standardize, please use StandardScaler before calling fit on an estimator with normalize=False.""",

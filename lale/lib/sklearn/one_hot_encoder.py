@@ -16,6 +16,7 @@ import pandas as pd
 import scipy.sparse.csr
 import sklearn
 import sklearn.preprocessing
+from packaging import version
 
 import lale.docstrings
 import lale.operators
@@ -184,8 +185,10 @@ class _OneHotEncoderImpl:
 
 
 OneHotEncoder = lale.operators.make_operator(_OneHotEncoderImpl, _combined_schemas)
+sklearn_version_str = getattr(sklearn, "__version__")
+sklearn_version = version.parse(sklearn_version_str)
 
-if sklearn.__version__ >= "0.21":
+if sklearn_version >= version.Version("0.21"):
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.preprocessing.OneHotEncoder.html
     OneHotEncoder = OneHotEncoder.customize_schema(
         drop={
@@ -203,6 +206,10 @@ if sklearn.__version__ >= "0.21":
         },
         set_as_available=True,
     )
+if sklearn_version >= version.Version("0.21") and sklearn_version < version.Version(
+    "1.0"
+):
+    # new: https://scikit-learn.org/0.21/modules/generated/sklearn.preprocessing.OneHotEncoder.html
     OneHotEncoder = OneHotEncoder.customize_schema(
         constraint={
             "description": "'handle_unknown' must be 'error' when the drop parameter is specified, as both would create categories that are all zero.",
@@ -217,7 +224,7 @@ if sklearn.__version__ >= "0.21":
         set_as_available=True,
     )
 
-if sklearn.__version__ >= "0.23":
+if sklearn_version >= version.Version("0.23"):
     # new: https://scikit-learn.org/0.23/modules/generated/sklearn.preprocessing.OneHotEncoder.html
     OneHotEncoder = OneHotEncoder.customize_schema(
         drop={

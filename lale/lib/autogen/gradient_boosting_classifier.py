@@ -1,3 +1,4 @@
+import sklearn
 from numpy import inf, nan
 from sklearn.ensemble import GradientBoostingClassifier as Op
 
@@ -327,5 +328,69 @@ _combined_schemas = {
 GradientBoostingClassifier = make_operator(
     _GradientBoostingClassifierImpl, _combined_schemas
 )
+
+if sklearn.__version__ >= "0.22":
+    # old: https://scikit-learn.org/0.20/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    # new: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    from lale.schemas import AnyOf, Bool, Enum, Float
+
+    GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
+        presort=AnyOf(
+            types=[Bool(), Enum(["deprecated", "auto"])],
+            desc="This parameter is deprecated and will be removed in v0.24.",
+            default="deprecated",
+        ),
+        ccp_alpha=Float(
+            desc="Complexity parameter used for Minimal Cost-Complexity Pruning. The subtree with the largest cost complexity that is smaller than ccp_alpha will be chosen. By default, no pruning is performed.",
+            default=0.0,
+            forOptimizer=False,
+            minimum=0.0,
+            maximumForOptimizer=0.1,
+        ),
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "0.24":
+    # old: https://scikit-learn.org/0.22/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    # new: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
+        presort=None,
+        criterion={
+            "description": "Function to measure the quality of a split.",
+            "anyOf": [
+                {"enum": ["mse", "friedman_mse"]},
+                {
+                    "description": "Deprecated since version 0.24.",
+                    "enum": ["mae"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "friedman_mse",
+        },
+        set_as_available=True,
+    )
+
+if sklearn.__version__ >= "1.0":
+    # old: https://scikit-learn.org/0.24/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    # new: https://scikit-learn.org/1.0/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html
+    GradientBoostingClassifier = GradientBoostingClassifier.customize_schema(
+        criterion={
+            "description": """The function to measure the quality of a split.
+Supported criteria are ‘friedman_mse’ for the mean squared error with improvement score by Friedman, ‘
+squared_error’ for mean squared error, and ‘mae’ for the mean absolute error.
+The default value of ‘friedman_mse’ is generally the best as it can provide a better approximation in some cases.""",
+            "anyOf": [
+                {"enum": ["squared_error", "friedman_mse"]},
+                {
+                    "description": "Deprecated since version 0.24 and 1.0.",
+                    "enum": ["mae", "mse"],
+                    "forOptimizer": False,
+                },
+            ],
+            "default": "friedman_mse",
+        },
+        min_impurity_split=None,
+        set_as_available=True,
+    )
 
 set_docstrings(GradientBoostingClassifier)

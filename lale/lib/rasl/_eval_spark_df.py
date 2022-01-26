@@ -100,7 +100,10 @@ class _SparkEvaluator(ast.NodeVisitor):
     def visit_Call(self, node: ast.Call):
         functions_module = importlib.import_module("lale.lib.rasl._eval_spark_df")
         function_name = _ast_func_id(node.func)
-        map_func_to_be_called = getattr(functions_module, function_name)
+        try:
+            map_func_to_be_called = getattr(functions_module, function_name)
+        except AttributeError:
+            raise ValueError(f"""Unimplemented function {function_name}""")
         self.result = map_func_to_be_called(node)
 
 

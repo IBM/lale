@@ -20,6 +20,7 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 from lale.helpers import (
+    _get_subscript_value,
     _is_ast_attribute,
     _is_ast_constant,
     _is_ast_subs_or_attr,
@@ -65,7 +66,7 @@ class _FilterImpl:
                 )
             arg = expr_to_parse.args[0]
             if _is_ast_subscript(arg):
-                lhs = arg.slice.value.s  # type: ignore
+                lhs = _get_subscript_value(arg)
             elif _is_ast_attribute(arg):
                 lhs = arg.attr  # type: ignore
             else:
@@ -81,7 +82,7 @@ class _FilterImpl:
             return lhs, op, None
 
         if _is_ast_subscript(expr_to_parse.left):
-            lhs = expr_to_parse.left.slice.value.s  # type: ignore
+            lhs = _get_subscript_value(expr_to_parse.left)
         elif _is_ast_attribute(expr_to_parse.left):
             lhs = expr_to_parse.left.attr
         else:
@@ -96,7 +97,7 @@ class _FilterImpl:
             )
         op = expr_to_parse.ops[0]
         if _is_ast_subscript(expr_to_parse.comparators[0]):
-            rhs = expr_to_parse.comparators[0].slice.value.s  # type: ignore
+            rhs = _get_subscript_value(expr_to_parse.comparators[0])
         elif _is_ast_attribute(expr_to_parse.comparators[0]):
             rhs = expr_to_parse.comparators[0].attr
         elif _is_ast_constant(expr_to_parse.comparators[0]):

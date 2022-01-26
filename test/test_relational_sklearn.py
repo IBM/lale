@@ -29,6 +29,7 @@ import lale.datasets
 import lale.datasets.openml
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
+from lale.helpers import _ensure_pandas
 from lale.lib.lale import Scan, categorical
 from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
@@ -274,10 +275,20 @@ class TestPipeline(unittest.TestCase):
 
 
 class TestSelectKBest(unittest.TestCase):
-    def setUp(self):
+    # def setUp(self):
+    #     from sklearn.datasets import load_digits
+
+    #     self.X, self.y = load_digits(return_X_y=True, as_frame=True)
+
+    @classmethod
+    def setUpClass(cls):
         from sklearn.datasets import load_digits
 
-        self.X, self.y = load_digits(return_X_y=True, as_frame=True)
+        X, y = load_digits(return_X_y=True, as_frame=True)
+        cls.tgt2digits = {
+            "pandas": (X, y),
+            "spark": (lale.datasets.pandas2spark(X), lale.datasets.pandas2spark(y)),
+        }
 
     def _check_trained(self, sk_trained, rasl_trained, msg=""):
         np.testing.assert_equal(sk_trained.scores_, rasl_trained.impl.scores_, msg)
@@ -288,27 +299,32 @@ class TestSelectKBest(unittest.TestCase):
 
     def test_fit(self):
         sk_trainable = SkSelectKBest(k=20)
+        X, y = self.tgt2digits["pandas"]
+        sk_trained = sk_trainable.fit(X, y)
         rasl_trainable = RaslSelectKBest(k=20)
-        sk_trained = sk_trainable.fit(self.X, self.y)
-        rasl_trained = rasl_trainable.fit(self.X, self.y)
-        self._check_trained(sk_trained, rasl_trained)
+        for tgt, (X, y) in self.tgt2digits.items():
+            rasl_trained = rasl_trainable.fit(X, y)
+            self._check_trained(sk_trained, rasl_trained, tgt)
 
     def test_transform(self):
         sk_trainable = SkSelectKBest(k=20)
+        X, y = self.tgt2digits["pandas"]
+        sk_trained = sk_trainable.fit(X, y)
+        sk_transformed = sk_trained.transform(X)
         rasl_trainable = RaslSelectKBest(k=20)
-        sk_trained = sk_trainable.fit(self.X, self.y)
-        rasl_trained = rasl_trainable.fit(self.X, self.y)
-        sk_transformed = sk_trained.transform(self.X)
-        rasl_transformed = rasl_trained.transform(self.X)
-        self._check_trained(sk_trained, rasl_trained)
-        self.assertEqual(sk_transformed.shape, rasl_transformed.shape)
-        for row_idx in range(sk_transformed.shape[0]):
-            for col_idx in range(sk_transformed.shape[1]):
-                self.assertAlmostEqual(
-                    sk_transformed[row_idx, col_idx],
-                    rasl_transformed.iloc[row_idx, col_idx],
-                    msg=(row_idx, col_idx),
-                )
+        for tgt, (X, y) in self.tgt2digits.items():
+            rasl_trained = rasl_trainable.fit(X, y)
+            rasl_transformed = rasl_trained.transform(X)
+            self._check_trained(sk_trained, rasl_trained, tgt)
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            for row_idx in range(sk_transformed.shape[0]):
+                for col_idx in range(sk_transformed.shape[1]):
+                    self.assertAlmostEqual(
+                        sk_transformed[row_idx, col_idx],
+                        rasl_transformed.iloc[row_idx, col_idx],
+                        msg=(row_idx, col_idx),
+                    )
 
     def test_partial_fit(self):
         rasl_trainable = RaslSelectKBest(k=20)

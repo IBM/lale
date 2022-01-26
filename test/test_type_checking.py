@@ -1101,14 +1101,18 @@ class TestHyperparamConstraints(unittest.TestCase):
 
         bad_hyperparams = {"drop": "first", "handle_unknown": "ignore"}
         trainable = sklearn.preprocessing.OneHotEncoder(**bad_hyperparams)
-        with self.assertRaisesRegex(
-            ValueError,
-            "`handle_unknown` must be 'error' when the drop parameter is specified",
-        ):
-            trainable.fit(self.X, self.y)
+        if sklearn.__version__ < "1.0":
+            with self.assertRaisesRegex(
+                ValueError,
+                "`handle_unknown` must be 'error' when the drop parameter is specified",
+            ):
+                trainable.fit(self.X, self.y)
 
         with EnableSchemaValidation():
-            with self.assertRaises(jsonschema.ValidationError):
+            if sklearn.__version__ < "1.0":
+                with self.assertRaises(jsonschema.ValidationError):
+                    OneHotEncoder(**bad_hyperparams)
+            else:
                 OneHotEncoder(**bad_hyperparams)
 
     def test_ordinal_encoder_1(self):

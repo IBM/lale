@@ -4801,8 +4801,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                         output = method_to_call_on_operator(X=inputs, **kwargs)
                 else:
                     raise AttributeError(
-                        "The sink node of the pipeline does not support",
-                        operator_method_name,
+                        f"The sink node {type(operator.impl)} of the pipeline does not support {operator_method_name}"
                     )
             elif operator.is_transformer():
                 output = operator.transform(X=inputs, y=y)

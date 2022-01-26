@@ -1167,3 +1167,11 @@ def _ensure_pandas(df):
         return df.toPandas()
     assert _is_pandas_df, type(df)
     return df
+
+
+def _get_subscript_value(subscript_expr):
+    if isinstance(subscript_expr.slice, ast.Constant):  # for Python 3.9
+        subscript_value = subscript_expr.slice.value
+    else:
+        subscript_value = subscript_expr.slice.value.s  # type: ignore
+    return subscript_value

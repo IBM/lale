@@ -26,7 +26,8 @@ class _BaseResamplerImpl:
         op = self.operator
         assert op is not None
         self.trained_operator = op.fit(X, y)
-
+        if hasattr(self.trained_operator, "classes_"):
+            self.classes_ = self.trained_operator.classes_
         return self
 
     def transform(self, X, y=None):
