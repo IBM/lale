@@ -20,7 +20,7 @@ import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.expressions import it, mean, median, mode, replace, sum, count
+from lale.expressions import count, it, median, mode, replace, sum
 from lale.helpers import _is_df, _is_pandas_df, _is_spark_df
 from lale.lib.sklearn import simple_imputer
 from lale.schemas import Enum
@@ -85,41 +85,12 @@ class _SimpleImputerImpl:
 
         self._validate_input(X)
 
-        # assign appropriate value to fill_value depending on the datatype.
-        # default fill_value is 0 for numerical input and "missing_value"
-        # otherwise
-        if self._hyperparams["fill_value"] is None:
-            if _is_numeric_df(X):
-                fill_value = 0
-            else:
-                fill_value = "missing_value"
-        else:
-            fill_value = self._hyperparams["fill_value"]
-
-        # validate that fill_value is numerical for numerical data
-        if (
-            self._hyperparams["strategy"] == "constant"
-            and _is_numeric_df(X)
-            and not isinstance(fill_value, numbers.Real)
-        ):
-            raise ValueError(
-                "'fill_value'={0} is invalid. Expected a "
-                "numerical value when imputing numerical "
-                "data".format(fill_value)
-            )
-
-        # set attribute values
-        self.n_features_in_ = len(X.columns)
-        self.feature_names_in_ = X.columns
-
         agg_op = None
         agg_data = None
         # learn the values to be imputed
         if self._hyperparams["strategy"] == "mean":
-            agg_op = Aggregate(
-                columns={c: mean(it[c]) for c in X.columns},
-                exclude_value=self._hyperparams["missing_values"],
-            )
+            self._set_fit_attributes(self._lift(X, self._hyperparams))
+            return self
         elif self._hyperparams["strategy"] == "median":
             agg_op = Aggregate(
                 columns={c: median(it[c]) for c in X.columns},
@@ -131,47 +102,77 @@ class _SimpleImputerImpl:
                 exclude_value=self._hyperparams["missing_values"],
             )
         elif self._hyperparams["strategy"] == "constant":
-            agg_data = [[fill_value for col in X.columns]]
-            agg_data = pd.DataFrame(agg_data, columns=X.columns)
+            self._set_fit_attributes(self._lift(X, self._hyperparams))
+            return self
+
         if agg_data is None and agg_op is not None:
             agg_data = agg_op.transform(X)
-        if agg_data is not None and _is_spark_df(agg_data):
-            agg_data = agg_data.toPandas()
-
-        if agg_data is not None and _is_pandas_df(agg_data):
-            self.statistics_ = agg_data.to_numpy()[
-                0
-            ]  # Converting from a 2-d array to 1-d
-        # prepare the transformer
-        if agg_data is not None:
-            self.transformer = Map(
-                columns={
-                    col_name: replace(
-                        it[col_name], {self._hyperparams["missing_values"]: agg_data.iloc[0, col_idx]}
-                    )
-                    for col_idx, col_name in enumerate(X.columns)
-                }
-            )
+        self._set_fit_attributes((X.columns, agg_data))
         return self
 
     def partial_fit(self, X, y=None):
         if self._hyperparams["strategy"] not in ["mean", "constant"]:
-            raise ValueError("partial_fit is only supported for imputation strategy `mean` and `constant`.")
+            raise ValueError(
+                "partial_fit is only supported for imputation strategy `mean` and `constant`."
+            )
         if not hasattr(self, "statistics_"):  # first fit
             return self.fit(X)
-        lifted_a = self.lifted_statistics
+        lifted_a = self._lifted_statistics
         lifted_b = self._lift(X, self._hyperparams)
         self._set_fit_attributes(self._combine(lifted_a, lifted_b))
         return self
 
+    def _build_transformer(self):
+        # prepare the transformer
+        transformer = Map(
+            columns={
+                col_name: replace(
+                    it[col_name],
+                    {self._hyperparams["missing_values"]: self.statistics_[col_idx]},
+                )
+                for col_idx, col_name in enumerate(self.feature_names_in_)
+            }
+        )
+        return transformer
+
+    def transform(self, X):
+        if self._transformer is None:
+            self._transformer = self._build_transformer()
+        return self._transformer.transform(X)
+
+    @staticmethod
+    def _get_fill_value(X, hyperparams):
+        # assign appropriate value to fill_value depending on the datatype.
+        # default fill_value is 0 for numerical input and "missing_value"
+        # otherwise
+        if hyperparams["fill_value"] is None:
+            if _is_numeric_df(X):
+                fill_value = 0
+            else:
+                fill_value = "missing_value"
+        else:
+            fill_value = hyperparams["fill_value"]
+        # validate that fill_value is numerical for numerical data
+        if (
+            hyperparams["strategy"] == "constant"
+            and _is_numeric_df(X)
+            and not isinstance(fill_value, numbers.Real)
+        ):
+            raise ValueError(
+                "'fill_value'={0} is invalid. Expected a "
+                "numerical value when imputing numerical "
+                "data".format(fill_value)
+            )
+        return fill_value
+
     @staticmethod
     def _lift(X, hyperparams):
+        feature_names_in_ = X.columns
         strategy = hyperparams["strategy"]
-        if strategy not in ["mean", "constant"]:
-            raise ValueError("_lift is only supported for imputation strategy `mean` and `constant`.")
         if strategy == "constant":
-            agg_data = [[hyperparams["fill_value"] for col in X.columns]]
-            self.lifted_statistics = pd.DataFrame(agg_data, columns=X.columns)
+            fill_value = _SimpleImputerImpl._get_fill_value(X, hyperparams)
+            agg_data = [[fill_value for col in X.columns]]
+            lifted_statistics = pd.DataFrame(agg_data, columns=X.columns)
         elif strategy == "mean":
             agg_op_sum = Aggregate(
                 columns={c: sum(it[c]) for c in X.columns},
@@ -181,9 +182,71 @@ class _SimpleImputerImpl:
                 columns={c: count(it[c]) for c in X.columns},
                 exclude_value=hyperparams["missing_values"],
             )
+            lifted_statistics = {}
+            agg_sum = agg_op_sum.transform(X)
+            if agg_sum is not None and _is_spark_df(agg_sum):
+                agg_sum = agg_sum.toPandas()
+            agg_count = agg_op_count.transform(X)
+            if agg_count is not None and _is_spark_df(agg_count):
+                agg_count = agg_count.toPandas()
+            lifted_statistics["sum"] = agg_sum
+            lifted_statistics["count"] = agg_count
+        else:
+            raise ValueError(
+                "_lift is only supported for imputation strategy `mean` and `constant`."
+            )
+        return (
+            feature_names_in_,
+            lifted_statistics,
+            strategy,
+        )  # strategy is added so that _combine can use it
 
-    def transform(self, X):
-        return self.transformer.transform(X)
+    @staticmethod
+    def _combine(lifted_a, lifted_b):
+        feature_names_in_a = lifted_a[0]
+        lifted_statistics_a = lifted_a[1]
+        feature_names_in_b = lifted_b[0]
+        lifted_statistics_b = lifted_b[1]
+        strategy = lifted_a[2]
+        assert list(feature_names_in_a) == list(feature_names_in_b)
+        if strategy == "constant":
+            assert pd.equals(lifted_statistics_a, lifted_statistics_b)
+            combined_statistic = lifted_statistics_a
+        elif strategy == "mean":
+            combined_statistic = {}
+            combined_statistic["sum"] = (
+                lifted_statistics_a["sum"] + lifted_statistics_b["sum"]
+            )
+            combined_statistic["count"] = (
+                lifted_statistics_a["count"] + lifted_statistics_b["count"]
+            )
+        else:
+            raise ValueError(
+                "_combine is only supported for imputation strategy `mean` and `constant`."
+            )
+        return feature_names_in_a, combined_statistic, strategy
+
+    def _set_fit_attributes(self, lifted):
+        # set attribute values
+        self.feature_names_in_ = lifted[0]
+        self.n_features_in_ = len(self.feature_names_in_)
+        self._lifted_statistics = lifted[1]
+        strategy = self._hyperparams["strategy"]
+        if strategy == "constant":
+            self.statistics_ = self._lifted_statistics.to_numpy()[0]
+        elif strategy == "mean":
+            self.statistics_ = (
+                self._lifted_statistics["sum"] / self._lifted_statistics["count"]
+            ).to_numpy()[0]
+        else:
+            agg_data = self._lifted_statistics
+            if agg_data is not None and _is_spark_df(agg_data):
+                agg_data = agg_data.toPandas()
+            if agg_data is not None and _is_pandas_df(agg_data):
+                self.statistics_ = agg_data.to_numpy()[
+                    0
+                ]  # Converting from a 2-d array to 1-d
+        self._transformer = None
 
     def _validate_input(self, X):
         # validate that the dataset is either a pandas dataframe or spark.
@@ -195,17 +258,26 @@ class _SimpleImputerImpl:
             )
         # validate input to check the correct dtype and strategy
         # `mean` and `median` are not applicable to string inputs
-        if not _is_numeric_df(X) and self.strategy in ["mean", "median"]:
+        if not _is_numeric_df(X) and self._hyperparams["strategy"] in [
+            "mean",
+            "median",
+        ]:
             raise ValueError(
-                "Cannot use {} strategy with non-numeric data.".format(self.strategy)
+                "Cannot use {} strategy with non-numeric data.".format(
+                    self._hyperparams["strategy"]
+                )
             )
 
         # Check that missing_values are the right type
-        if _is_numeric_df(X) and not isinstance(self.missing_values, numbers.Real):
+        if _is_numeric_df(X) and not isinstance(
+            self._hyperparams["missing_values"], numbers.Real
+        ):
             raise ValueError(
                 "'X' and 'missing_values' types are expected to be"
                 " both numerical. Got X.dtypes={} and "
-                " type(missing_values)={}.".format(X.dtypes, type(self.missing_values))
+                " type(missing_values)={}.".format(
+                    X.dtypes, type(self._hyperparams["missing_values"])
+                )
             )
 
 

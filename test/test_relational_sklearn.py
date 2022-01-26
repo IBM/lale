@@ -489,10 +489,9 @@ class TestOneHotEncoder(unittest.TestCase):
 
 
 class TestSimpleImputer(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
+    def setUp(self):
         targets = ["pandas", "spark"]
-        cls.tgt2adult = {
+        self.tgt2adult = {
             tgt: lale.datasets.openml.fetch(
                 "adult",
                 "classification",
@@ -552,8 +551,12 @@ class TestSimpleImputer(unittest.TestCase):
                 # test the fit succeeded.
                 rasl_statistics_ = rasl_trained.steps[-1][1].impl.statistics_
 
-                self.assertEqual(len(sk_statistics_), len(rasl_statistics_), tgt)
-                self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
+                self.assertEqual(
+                    len(sk_statistics_), len(rasl_statistics_), (hyperparam, tgt)
+                )
+                self.assertEqual(
+                    list(sk_statistics_), list(rasl_statistics_), (hyperparam, tgt)
+                )
 
                 rasl_transformed = rasl_trained.transform(test_X)
                 if tgt == "spark":
@@ -649,7 +652,7 @@ class TestSimpleImputer(unittest.TestCase):
             sk_trainable = prefix >> SkSimpleImputer(**hyperparam)
             sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
             sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
-            sk_statistics_ = sk_trained.steps()[-1].impl.statistics_
+            sk_statistics_ = sk_trained.steps[-1][1].impl.statistics_
             for tgt, dataset in self.tgt2adult.items():
                 (train_X, _), (test_X, _) = dataset
                 rasl_trained = rasl_trainable.fit(train_X)
@@ -682,7 +685,7 @@ class TestSimpleImputer(unittest.TestCase):
             rasl_trainable = prefix >> RaslSimpleImputer(**hyperparam)
             sk_trainable = prefix >> SkSimpleImputer(**hyperparam)
             sk_trained = sk_trainable.fit(self.tgt2adult["pandas"][0][0])
-            sk_statistics_ = sk_trained.steps()[-1].impl.statistics_
+            sk_statistics_ = sk_trained.steps[-1][1].impl.statistics_
             for tgt, dataset in self.tgt2adult.items():
                 (train_X, _), (test_X, _) = dataset
                 rasl_trained = rasl_trainable.fit(train_X)
