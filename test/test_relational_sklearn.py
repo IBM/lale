@@ -275,10 +275,6 @@ class TestPipeline(unittest.TestCase):
 
 
 class TestSelectKBest(unittest.TestCase):
-    # def setUp(self):
-    #     from sklearn.datasets import load_digits
-
-    #     self.X, self.y = load_digits(return_X_y=True, as_frame=True)
 
     @classmethod
     def setUpClass(cls):
@@ -287,7 +283,7 @@ class TestSelectKBest(unittest.TestCase):
         X, y = load_digits(return_X_y=True, as_frame=True)
         cls.tgt2digits = {
             "pandas": (X, y),
-            "spark": (lale.datasets.pandas2spark(X), lale.datasets.pandas2spark(y)),
+            # "spark": (lale.datasets.pandas2spark(X), lale.datasets.pandas2spark(y)),
         }
 
     def _check_trained(self, sk_trained, rasl_trained, msg=""):
@@ -328,11 +324,12 @@ class TestSelectKBest(unittest.TestCase):
 
     def test_partial_fit(self):
         rasl_trainable = RaslSelectKBest(k=20)
-        for lower, upper in [[0, 100], [100, 200], [200, self.X.shape[0]]]:
-            X_so_far, y_so_far = self.X[0:upper], self.y[0:upper]
+        X, y = self.tgt2digits["pandas"]
+        for lower, upper in [[0, 100], [100, 200], [200, X.shape[0]]]:
+            X_so_far, y_so_far = X[0:upper], y[0:upper]
             sk_trainable = SkSelectKBest(k=20)
             sk_trained = sk_trainable.fit(X_so_far, y_so_far)
-            X_delta, y_delta = self.X[lower:upper], self.y[lower:upper]
+            X_delta, y_delta = X[lower:upper], y[lower:upper]
             rasl_trained = rasl_trainable.partial_fit(X_delta, y_delta)
             self._check_trained(
                 sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"

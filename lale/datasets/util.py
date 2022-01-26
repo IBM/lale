@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from lale.datasets.data_schemas import set_index_name
+import pandas as pd 
 
 try:
     import pyspark.sql
@@ -30,6 +31,8 @@ def pandas2spark(pandas_dataframe, add_index=False, index_name=None):
     )
     spark_context = SparkContext.getOrCreate(conf=spark_conf)
     spark_sql_context = pyspark.sql.SQLContext(spark_context)
+    if isinstance(pandas_dataframe, pd.Series):
+        pandas_dataframe = pandas_dataframe.to_frame()
     if add_index:
         if index_name is None:
             if pandas_dataframe.index.name is None:
@@ -38,6 +41,7 @@ def pandas2spark(pandas_dataframe, add_index=False, index_name=None):
                 index_name = pandas_dataframe.index.name
         pandas_dataframe = pandas_dataframe.copy(deep=False)
         pandas_dataframe[index_name] = pandas_dataframe.index
+
     spark_dataframe = spark_sql_context.createDataFrame(pandas_dataframe)
     if index_name is not None:
         set_index_name(spark_dataframe, index_name)

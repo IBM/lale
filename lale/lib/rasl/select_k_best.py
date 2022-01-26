@@ -22,6 +22,7 @@ from lale.expressions import count as agg_count
 from lale.expressions import it
 from lale.expressions import sum as agg_sum
 from lale.lib.lale.group_by import GroupBy
+from lale.lib.lale.concat_features import ConcatFeatures
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import select_k_best
 
@@ -162,6 +163,7 @@ def f_oneway(lifted):
 
 def f_classif_prep(X, y):
     Xy = pd.concat([X, y], axis=1)  # TODO: sparkify
+    # Xy = ConcatFeatures().transform([X,y])
     X_by_y = GroupBy(by=[it[y.name]]).transform(Xy)
     lifted = f_oneway_prep(X, X_by_y)
     return lifted
