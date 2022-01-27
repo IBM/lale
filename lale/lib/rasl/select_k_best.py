@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import numpy as np
-import pandas as pd
 from scipy import special
 
 import lale.docstrings
