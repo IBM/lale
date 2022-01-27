@@ -327,7 +327,7 @@ class TestFilterSpark(unittest.TestCase):
             self.assertEqual(filtered_df.count(), 4)
             self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col6")).first()[0]
-            self.assertTrue(np.all((not np.isnan(i) for i in test_list)))
+            self.assertTrue(np.all([not np.isnan(i) for i in test_list]))
 
     def test_filter_spark_isnull(self):
         if spark_installed:
@@ -347,7 +347,7 @@ class TestFilterSpark(unittest.TestCase):
             self.assertEqual(filtered_df.count(), 4)
             self.assertEqual(len(filtered_df.columns), 8)
             test_list = filtered_df.select(f.collect_list("col6")).first()[0]
-            self.assertTrue(np.all(i is not None for i in test_list))
+            self.assertTrue(np.all([i is not None for i in test_list]))
 
     def test_filter_spark_eq(self):
         if spark_installed:

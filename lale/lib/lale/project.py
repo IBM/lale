@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -22,7 +23,7 @@ import lale.type_checking
 from lale.type_checking import is_schema
 
 
-def _columns_schema_to_list(X, schema):
+def _columns_schema_to_list(X, schema) -> List[int]:
     s_all = lale.datasets.data_schemas.to_schema(X)
     s_row = s_all["items"]
     n_columns = s_row["minItems"]
@@ -43,7 +44,7 @@ def _columns_schema_to_list(X, schema):
     return result
 
 
-def _columns_to_list(columns, kind, X):
+def _columns_to_list(columns, kind, X) -> List[int]:
     if columns is None:
         if kind == "passthrough":
             result = [*range(X.shape[1])]
@@ -82,7 +83,7 @@ class _ProjectImpl:
             else:
                 result = X[self._fit_columns]
         elif isinstance(X, np.ndarray):
-            result = X[:, self._fit_columns]
+            result = X[:, self._fit_columns]  # type: ignore
         else:
             raise TypeError(f"type {type(X)}")
         s_X = lale.datasets.data_schemas.to_schema(X)
