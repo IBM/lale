@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
+
 from lale.datasets.data_schemas import set_index_name
-import pandas as pd 
 
 try:
     import pyspark.sql
