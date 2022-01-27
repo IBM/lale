@@ -49,7 +49,6 @@ class _MinMaxScalerImpl:
             self.data_min_,
             self.data_max_,
             self.n_samples_seen_,
-            self.n_features_in_,
             self.feature_names_in_,
         )
         lifted_b = self._lift(X, self._hyperparams)
