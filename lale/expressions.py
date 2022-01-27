@@ -469,12 +469,13 @@ def _it_column(expr):
         if isinstance(expr.slice, ast.Constant) or (
             _is_ast_name_it(expr.value) and isinstance(expr.slice, ast.Index)
         ):
+            v = getattr(expr.slice, "value", None)
             if isinstance(expr.slice, ast.Constant):
-                return expr.slice.value
-            elif isinstance(expr.slice.value, ast.Constant):
-                return expr.slice.value.value
-            elif isinstance(expr.slice.value, ast.Str):
-                return expr.slice.value.s
+                return v
+            elif isinstance(v, ast.Constant):
+                return v.value
+            elif isinstance(v, ast.Str):
+                return v.s
         else:
             raise ValueError(
                 f"Illegal {fixedUnparse(expr)}. Only the access to `it` is supported"
