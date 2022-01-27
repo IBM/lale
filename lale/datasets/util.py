@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lale.datasets.data_schemas import set_index_name
+from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
 try:
     import pyspark.sql
@@ -40,5 +40,5 @@ def pandas2spark(pandas_dataframe, add_index=False, index_name=None):
         pandas_dataframe[index_name] = pandas_dataframe.index
     spark_dataframe = spark_sql_context.createDataFrame(pandas_dataframe)
     if index_name is not None:
-        set_index_name(spark_dataframe, index_name)
+        spark_dataframe = SparkDataFrameWithIndex(spark_dataframe)
     return spark_dataframe
