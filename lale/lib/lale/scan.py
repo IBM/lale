@@ -37,7 +37,8 @@ class _ScanImpl:
         if valid and isinstance(table._expr, ast.Subscript):
             sub = table._expr.slice
             valid = isinstance(sub, ast.Constant) or (
-                isinstance(sub, ast.Index) and isinstance(sub.value, ast.Str)
+                isinstance(sub, ast.Index)
+                and isinstance(getattr(sub, "value", None), ast.Str)
             )
         if not valid:
             raise ValueError("expected `it.table_name` or `it['table name']`")

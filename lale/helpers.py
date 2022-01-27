@@ -125,13 +125,9 @@ def data_to_json(data, subsample_array: bool = True) -> Union[list, dict, int, f
     elif torch_installed and isinstance(data, torch.Tensor):
         np_array = data.detach().numpy()
         return ndarray_to_json(np_array, subsample_array)
-    elif (
-        isinstance(data, np.int64)
-        or isinstance(data, np.int32)
-        or isinstance(data, np.int16)
-    ):
+    elif isinstance(data, (np.int64, np.int32, np.int16)):  # type: ignore
         return int(data)
-    elif isinstance(data, np.float64) or isinstance(data, np.float32):
+    elif isinstance(data, (np.float32, np.float64)):  # type: ignore
         return float(data)
     else:
         return data
