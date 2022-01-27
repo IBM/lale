@@ -18,6 +18,7 @@ import unittest
 import jsonschema
 import numpy as np
 import pandas as pd
+import sklearn
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
@@ -36,6 +37,8 @@ from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
 from lale.lib.sklearn import FunctionTransformer, LogisticRegression
+
+assert sklearn.__version__ >= "1.0", sklearn.__version__
 
 
 class TestMinMaxScaler(unittest.TestCase):
@@ -271,7 +274,6 @@ class TestPipeline(unittest.TestCase):
         _ = trained.predict(self.X_test_spark)
 
 
-@unittest.skip("Skipping as it fails.")
 class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -294,13 +296,7 @@ class TestOrdinalEncoder(unittest.TestCase):
             self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
 
     def _check_last_trained(self, op1, op2, msg):
-        last1 = op1.get_last().impl
-        last2 = op2.get_last().impl
-
-        assert last1 is not None
-        assert last2 is not None
-
-        self._check_trained(last1.impl, last2.impl, msg)
+        self._check_trained(op1.get_last().impl, op2.get_last().impl, msg)
 
     def test_fit(self):
         prefix = Scan(table=it.go_daily_sales) >> Map(
@@ -378,7 +374,6 @@ class TestOrdinalEncoder(unittest.TestCase):
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
-@unittest.skip("Skipping as it fails.")
 class TestOneHotEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -406,13 +401,7 @@ class TestOneHotEncoder(unittest.TestCase):
             self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
 
     def _check_last_trained(self, op1, op2, msg):
-        last1 = op1.get_last().impl
-        last2 = op2.get_last().impl
-
-        assert last1 is not None
-        assert last2 is not None
-
-        self._check_trained(last1.impl, last2.impl, msg)
+        self._check_trained(op1.get_last().impl, op2.get_last().impl, msg)
 
     def test_fit(self):
         (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
@@ -849,7 +838,6 @@ class TestSimpleImputer(unittest.TestCase):
                 _ = rasl_trainable.partial_fit(train_X)
 
 
-@unittest.skip("Skipping as it fails.")
 class TestStandardScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
