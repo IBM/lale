@@ -27,6 +27,7 @@ from sklearn.preprocessing import StandardScaler as SkStandardScaler
 
 import lale.datasets
 import lale.datasets.openml
+from lale.datasets.data_schemas import add_table_name
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas
@@ -275,15 +276,18 @@ class TestPipeline(unittest.TestCase):
 
 
 class TestSelectKBest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         from sklearn.datasets import load_digits
 
         X, y = load_digits(return_X_y=True, as_frame=True)
+        X_spark = lale.datasets.pandas2spark(X, add_index=True)
+        y_spark = lale.datasets.pandas2spark(y, add_index=True)
+        X_spark = add_table_name(X, "X")
+        y_spark = add_table_name(y, "y")
         cls.tgt2digits = {
             "pandas": (X, y),
-            # "spark": (lale.datasets.pandas2spark(X), lale.datasets.pandas2spark(y)),
+            "spark": (X_spark, y_spark),
         }
 
     def _check_trained(self, sk_trained, rasl_trained, msg=""):
