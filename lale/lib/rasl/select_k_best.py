@@ -29,23 +29,34 @@ from ._utils import df_count
 
 
 # The following functions are a rewriting of sklearn.feature_selection.f_oneway
-# Contrary to the sklearn.feature_selection.f_oneway implementation it
-# takes as input a dictionary that associate to each class its sample
-# and the function is splitted into two parts.
+# Compared to the sklearn.feature_selection.f_oneway implementation it
+# takes as input the full dataset and the same dataset grouped by classes.
+# Moreover, the function is splitted into two parts: `f_oneway_prep` and
+# `f_oneway`.
 def f_oneway_prep(X, X_by_y):
-    """Performs a 1-way ANOVA.
+    """Prepare the data for a 1-way ANOVA.
 
     Parameters
     ----------
-    samples_dict : dictionnary
-        The sample measurements associated to each class.
+    X: array
+        The sample measurements.
+    X_by_y: group
+        The sample measurements grouped by class.
 
     Returns
     -------
-    F-value : float
-        The computed F-value of the test.
-    p-value : float
-        The associated p-value from the F-distribution.
+    classes: list
+        The list of classes.
+    n_samples_per_class: dictionary
+        The number of samples in each class.
+    n_samples: number
+        The total number of samples.
+    ss_alldata: array
+        The sum of square of each feature.
+    sums_samples: dictionary
+        The sum of each feaure per class.
+    sums_alldata: array
+        The sum of each feaure.
     """
     agg_sum_cols = Aggregate(columns={col: agg_sum(it[col]) for col in X.columns})
     sums_samples = agg_sum_cols.transform(X_by_y)
@@ -118,8 +129,8 @@ def f_oneway(lifted):
 
     Parameters
     ----------
-    samples_dict : dictionnary
-        The sample measurements associated to each class.
+    lifter : tuple
+        The result of `f_oneway_prep`.
 
     Returns
     -------
