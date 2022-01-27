@@ -211,7 +211,7 @@ def fit(self, X, y, Xstd=None):
             self.idxNonzeroOrd = idxNonzero[idxNonzero < numOrd]
             nnzOrd = len(self.idxNonzeroOrd)
             idxNonzeroRules = idxNonzero[idxNonzero >= numOrd] - numOrd
-            B = None
+            B = 0.0
             if self.debias and len(idxNonzero):
                 # Re-fit logistic regression model with effectively no regularization
                 z = z.iloc[:, idxNonzeroRules]
