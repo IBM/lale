@@ -50,16 +50,26 @@ def _is_pandas_series(d):
     return isinstance(d, pd.Series)
 
 
+def _is_pandas(d):
+    return _is_pandas_df(d) or _is_pandas_series(d)
+
+
 class _ConcatFeaturesImpl:
     def __init__(self):
         pass
 
     def transform(self, X):
-        if all([_is_pandas_df(d) for d in X]):
+        if all([_is_pandas(d) for d in X]):
             name2series = {}
             for dataset in X:
-                for name in dataset.columns:
-                    name2series[name] = name2series.get(name, []) + [dataset[name]]
+                if _is_pandas_df(dataset):
+                    for name in dataset.columns:
+                        name2series[name] = name2series.get(name, []) + [dataset[name]]
+                elif _is_pandas_series(dataset):
+                    name = dataset.name
+                    name2series[name] = name2series.get(name, []) + [dataset]
+                else:
+                    assert False
             duplicates = [name for name, ls in name2series.items() if len(ls) > 1]
             if len(duplicates) == 0:
                 result = pd.concat(X, axis=1)
@@ -86,14 +96,14 @@ class _ConcatFeaturesImpl:
                 return transformer.transform([d1, d2])
 
             result = reduce(join, X)
-        elif all([_is_pandas_df(d) or _is_spark_df(d) for d in X]):
+        elif all([_is_pandas(d) or _is_spark_df(d) for d in X]):
             X = [d.toPandas() if _is_spark_df(d) else d for d in X]
             return self.transform(X)
         else:
             np_datasets = []
             # Preprocess the datasets to convert them to 2-d numpy arrays
             for dataset in X:
-                if _is_pandas_df(dataset) or _is_pandas_series(dataset):
+                if _is_pandas(dataset):
                     np_dataset = dataset.values
                 elif _is_spark_df(dataset):
                     np_dataset = dataset.toPandas().values

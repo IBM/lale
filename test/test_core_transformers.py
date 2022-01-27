@@ -348,7 +348,7 @@ class TestConcatFeatures(unittest.TestCase):
         A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
         B = [14, 24, 34]
         A = pd.DataFrame(A, columns=["a", "b", "c"])
-        B = pd.Series(B)
+        B = pd.Series(B, name="d")
         A = add_table_name(A, "A")
         B = add_table_name(B, "B")
         trained_cf = trainable_cf.fit(X=[A, B])
@@ -358,11 +358,9 @@ class TestConcatFeatures(unittest.TestCase):
             [21, 22, 23, 24],
             [31, 32, 33, 34],
         ]
-        for i_sample in range(len(transformed)):
-            for i_feature in range(len(transformed[i_sample])):
-                self.assertEqual(
-                    transformed[i_sample][i_feature], expected[i_sample][i_feature]
-                )
+        expected = pd.DataFrame(expected, columns=["a", "b", "c", "d"])
+        for c in expected.columns:
+            self.assertEqual(list(transformed[c]), list(expected[c]))
 
     def test_init_fit_predict_spark(self):
 
