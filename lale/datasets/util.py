@@ -14,7 +14,7 @@
 
 import pandas as pd
 
-from lale.datasets.data_schemas import set_index_name
+from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
 try:
     import pyspark.sql
@@ -45,5 +45,5 @@ def pandas2spark(pandas_dataframe, add_index=False, index_name=None):
 
     spark_dataframe = spark_sql_context.createDataFrame(pandas_dataframe)
     if index_name is not None:
-        set_index_name(spark_dataframe, index_name)
+        spark_dataframe = SparkDataFrameWithIndex(spark_dataframe)
     return spark_dataframe

@@ -90,6 +90,30 @@ class SeriesWithSchema(pd.Series):
         return SeriesWithSchema
 
 
+if spark_installed:
+
+    class SparkDataFrameWithIndex(pyspark.sql.DataFrame):  # type: ignore
+        def __init__(self, df, index_name="index"):
+            if index_name not in df.columns:
+                df = (
+                    df.rdd.zipWithIndex()
+                    .map(lambda row: (row[1],) + row[0])
+                    .toDF([index_name] + df.columns)
+                )
+            super(self.__class__, self).__init__(df._jdf, df.sql_ctx)
+            self.index_name = index_name
+
+        @property
+        def columns_without_index(self):
+            cols = list(super().columns)
+            cols.remove(self.index_name)
+            return cols
+
+        def toPandas(self, *args, **kwargs):
+            df = super(self.__class__, self).toPandas(*args, **kwargs)
+            return df.drop(columns=[self.index_name])
+
+
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
     from lale.settings import disable_data_schema_validation
 
@@ -149,6 +173,8 @@ def add_table_name(obj, name) -> Any:
         o = obj.alias(name)
         for f in obj.schema.fieldNames():
             o.schema[f].metadata = obj.schema[f].metadata
+        if isinstance(obj, SparkDataFrameWithIndex):
+            o = SparkDataFrameWithIndex(o, obj.index_name)
         return o
     if isinstance(obj, NDArrayWithSchema):
         result = obj
@@ -214,18 +240,8 @@ def get_table_name(obj):
 
 def get_index_name(obj):
     result = None
-    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
-        sch = obj.schema
-        try:
-            result = next(
-                f.name
-                for f in sch
-                if hasattr(f, "metadata")
-                and "is_index" in f.metadata
-                and f.metadata["is_index"]
-            )
-        except StopIteration:
-            result = None
+    if spark_installed and isinstance(obj, SparkDataFrameWithIndex):
+        result = obj.index_name
     elif isinstance(
         obj,
         (
@@ -237,13 +253,6 @@ def get_index_name(obj):
     ):
         result = obj.index.names[0]
     return result
-
-
-def set_index_name(obj, index_col):
-    if spark_installed and isinstance(obj, pyspark.sql.DataFrame):
-        obj.schema[index_col].metadata = {"is_index": True}
-    elif isinstance(obj, (SeriesWithSchema, DataFrameWithSchema)):
-        pd.rename_axis(index=[index_col])
 
 
 def strip_schema(obj):
