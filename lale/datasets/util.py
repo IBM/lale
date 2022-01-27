@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
 try:
     import pyspark.sql
     from pyspark import SparkConf, SparkContext
+
+    from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
     spark_installed = True
 except ImportError:
