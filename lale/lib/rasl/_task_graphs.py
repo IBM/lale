@@ -15,7 +15,18 @@
 import enum
 import functools
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Type, cast
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import graphviz
 import pandas as pd
@@ -422,6 +433,7 @@ def _run_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Sequence[_Batch],
+    unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
     prio: Prio,
     verbose: int,
@@ -496,7 +508,12 @@ def _run_tasks(
             apply_pred = cast(_ApplyTask, find_task(_ApplyTask, task.preds))
             assert apply_pred.batch is not None
             input_X, input_y = apply_pred.batch
-            task.trained = trainee.partial_fit(input_X, input_y)
+            if trainee.is_supervised():
+                task.trained = trainee.partial_fit(
+                    input_X, input_y, classes=unique_class_labels
+                )
+            else:
+                task.trained = trainee.partial_fit(input_X, input_y)
         elif operation is _Operation.LIFT:
             assert isinstance(task, _TrainTask)
             assert len(task.batch_ids) == len(task.preds) == 1
@@ -526,6 +543,8 @@ def _run_tasks(
 def mockup_data_loader(
     X: pd.DataFrame, y: pd.Series, n_splits: int
 ) -> Sequence[_Batch]:
+    if n_splits == 1:
+        return [(X, y)]
     cv = sklearn.model_selection.StratifiedKFold(n_splits)
     estimator = sklearn.tree.DecisionTreeClassifier()
     result = [
@@ -538,6 +557,7 @@ def mockup_data_loader(
 def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Sequence[_Batch],
+    unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
     incremental: bool,
     verbose: int,
@@ -546,7 +566,16 @@ def fit_with_batches(
     tasks = _create_tasks_batching(pipeline, all_batch_ids, incremental)
     if verbose >= 3:
         _visualize_tasks(tasks, pipeline, prio, call_depth=2)
-    _run_tasks(tasks, pipeline, batches, all_batch_ids, prio, verbose, call_depth=2)
+    _run_tasks(
+        tasks,
+        pipeline,
+        batches,
+        unique_class_labels,
+        all_batch_ids,
+        prio,
+        verbose,
+        call_depth=2,
+    )
 
     def get_trained_step(step_id: int) -> TrainedIndividualOp:
         task = cast(_TrainTask, tasks[(_TrainTask, step_id, all_batch_ids, None)])
@@ -566,6 +595,7 @@ def fit_with_batches(
 def cross_val_score(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Sequence[_Batch],
+    unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
     scoring: Callable[[pd.Series, pd.Series], float],
     n_folds: int,
@@ -581,7 +611,16 @@ def cross_val_score(
     tasks = _create_tasks_cross_val(pipeline, folds, n_batches_per_fold, same_fold)
     if verbose >= 3:
         _visualize_tasks(tasks, pipeline, prio, call_depth=2)
-    _run_tasks(tasks, pipeline, batches, all_batch_ids, prio, verbose, call_depth=2)
+    _run_tasks(
+        tasks,
+        pipeline,
+        batches,
+        unique_class_labels,
+        all_batch_ids,
+        prio,
+        verbose,
+        call_depth=2,
+    )
     last_step_id = len(pipeline.steps_list()) - 1
 
     def predictions(fold: str) -> pd.Series:
