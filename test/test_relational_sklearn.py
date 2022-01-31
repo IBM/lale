@@ -20,6 +20,7 @@ import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.impute import SimpleImputer as SkSimpleImputer
+from sklearn.pipeline import make_pipeline as sk_make_pipeline
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
 from sklearn.preprocessing import OrdinalEncoder as SkOrdinalEncoder
@@ -34,27 +35,28 @@ from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
+from lale.lib.rasl import PrioBatch, PrioStep
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
-from lale.lib.sklearn import FunctionTransformer, LogisticRegression
+from lale.lib.rasl import fit_with_batches, mockup_data_loader
+from lale.lib.sklearn import FunctionTransformer, LogisticRegression, SGDClassifier
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
+
+
+def _check_trained_min_max_scaler(test, op1, op2, msg):
+    test.assertEqual(list(op1.data_min_), list(op2.data_min_), msg)
+    test.assertEqual(list(op1.data_max_), list(op2.data_max_), msg)
+    test.assertEqual(list(op1.data_range_), list(op2.data_range_), msg)
+    test.assertEqual(list(op1.scale_), list(op2.scale_), msg)
+    test.assertEqual(list(op1.min_), list(op2.min_), msg)
+    test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
+    test.assertEqual(op1.n_samples_seen_, op2.n_samples_seen_, msg)
 
 
 class TestMinMaxScaler(unittest.TestCase):
     def setUp(self):
         self.go_sales = fetch_go_sales_dataset()
-
-    def _check_trained(self, sk_trained, rasl_trained):
-        self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
-        self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
-        self.assertEqual(
-            list(sk_trained.data_range_), list(rasl_trained.impl.data_range_)
-        )
-        self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
-        self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
-        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
-        self.assertEqual(sk_trained.n_samples_seen_, rasl_trained.impl.n_samples_seen_)
 
     def test_get_params(self):
         sk_scaler = SkMinMaxScaler()
@@ -82,7 +84,7 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
 
     def test_transform(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -110,7 +112,7 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
 
     def test_transform_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -141,29 +143,18 @@ class TestMinMaxScaler(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.partial_fit(data1)
         rasl_trained = rasl_scaler.partial_fit(data1)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
         sk_trained = sk_scaler.partial_fit(data2)
         rasl_trained = rasl_scaler.partial_fit(data2)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
         sk_trained = sk_scaler.partial_fit(data3)
         rasl_trained = rasl_scaler.partial_fit(data3)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
 
 
 class TestMinMaxScalerSpark(unittest.TestCase):
     def setUp(self):
         self.go_sales = fetch_go_sales_dataset()
-
-    def _check_trained(self, sk_trained, rasl_trained):
-        self.assertEqual(list(sk_trained.data_min_), list(rasl_trained.impl.data_min_))
-        self.assertEqual(list(sk_trained.data_max_), list(rasl_trained.impl.data_max_))
-        self.assertEqual(
-            list(sk_trained.data_range_), list(rasl_trained.impl.data_range_)
-        )
-        self.assertEqual(list(sk_trained.scale_), list(rasl_trained.impl.scale_))
-        self.assertEqual(list(sk_trained.min_), list(rasl_trained.impl.min_))
-        self.assertEqual(sk_trained.n_features_in_, rasl_trained.impl.n_features_in_)
-        self.assertEqual(sk_trained.n_samples_seen_, rasl_trained.impl.n_samples_seen_)
 
     def test_fit(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -173,7 +164,7 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data_spark)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
 
     def test_transform(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -204,7 +195,7 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
         sk_trained = sk_scaler.fit(data)
         rasl_trained = rasl_scaler.fit(data_spark)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
 
     def test_transform_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
@@ -240,13 +231,13 @@ class TestMinMaxScalerSpark(unittest.TestCase):
         rasl_scaler = RaslMinMaxScaler()
         sk_trained = sk_scaler.partial_fit(data1)
         rasl_trained = rasl_scaler.partial_fit(data1_spark)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
         sk_trained = sk_scaler.partial_fit(data2)
         rasl_trained = rasl_scaler.partial_fit(data2_spark)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
         sk_trained = sk_scaler.partial_fit(data3)
         rasl_trained = rasl_scaler.partial_fit(data3_spark)
-        self._check_trained(sk_trained, rasl_trained)
+        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
 
 
 class TestPipeline(unittest.TestCase):
@@ -274,6 +265,13 @@ class TestPipeline(unittest.TestCase):
         _ = trained.predict(self.X_test_spark)
 
 
+def _check_trained_ordinal_encoder(test, op1, op2, msg):
+    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
+    for i in range(len(op1.categories_)):
+        test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+
+
 class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -289,14 +287,10 @@ class TestOrdinalEncoder(unittest.TestCase):
             for tgt in targets
         }
 
-    def _check_trained(self, op1, op2, msg):
-        self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
-        self.assertEqual(len(op1.categories_), len(op2.categories_), msg)
-        for i in range(len(op1.categories_)):
-            self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
-
     def _check_last_trained(self, op1, op2, msg):
-        self._check_trained(op1.get_last().impl, op2.get_last().impl, msg)
+        _check_trained_ordinal_encoder(
+            self, op1.get_last().impl, op2.get_last().impl, msg
+        )
 
     def test_fit(self):
         prefix = Scan(table=it.go_daily_sales) >> Map(
@@ -325,8 +319,11 @@ class TestOrdinalEncoder(unittest.TestCase):
                 if tgt == "spark":
                     data_delta = lale.datasets.pandas2spark(data_delta)
                 rasl_op = rasl_op.partial_fit(data_delta)
-                self._check_trained(
-                    sk_op, rasl_op.impl, f"tgt {tgt}, lower {lower}, upper {upper}"
+                _check_trained_ordinal_encoder(
+                    self,
+                    sk_op,
+                    rasl_op.impl,
+                    f"tgt {tgt}, lower {lower}, upper {upper}",
                 )
 
     def test_transform(self):
@@ -374,6 +371,13 @@ class TestOrdinalEncoder(unittest.TestCase):
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
+def _check_trained_one_hot_encoder(test, op1, op2, msg):
+    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
+    for i in range(len(op1.categories_)):
+        test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+
+
 class TestOneHotEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -394,14 +398,10 @@ class TestOneHotEncoder(unittest.TestCase):
             },
         )
 
-    def _check_trained(self, op1, op2, msg):
-        self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
-        self.assertEqual(len(op1.categories_), len(op2.categories_), msg)
-        for i in range(len(op1.categories_)):
-            self.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
-
     def _check_last_trained(self, op1, op2, msg):
-        self._check_trained(op1.get_last().impl, op2.get_last().impl, msg)
+        _check_trained_one_hot_encoder(
+            self, op1.get_last().impl, op2.get_last().impl, msg
+        )
 
     def test_fit(self):
         (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
@@ -838,6 +838,33 @@ class TestSimpleImputer(unittest.TestCase):
                 _ = rasl_trainable.partial_fit(train_X)
 
 
+def _check_trained_standard_scaler(test, op1, op2, msg):
+    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    test.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
+    test.assertEqual(op1.n_samples_seen_, op2.n_samples_seen_, msg)
+    if op1.mean_ is None:
+        test.assertIsNone(op2.mean_, msg)
+    else:
+        test.assertIsNotNone(op2.mean_, msg)
+        test.assertEqual(len(op1.mean_), len(op2.mean_), msg)
+        for i in range(len(op1.mean_)):
+            test.assertAlmostEqual(op1.mean_[i], op2.mean_[i], msg=msg)
+    if op1.var_ is None:
+        test.assertIsNone(op2.var_, msg)
+    else:
+        test.assertIsNotNone(op2.var_, msg)
+        test.assertEqual(len(op1.var_), len(op2.var_), msg)
+        for i in range(len(op1.var_)):
+            test.assertAlmostEqual(op1.var_[i], op2.var_[i], msg=msg)
+    if op1.scale_ is None:
+        test.assertIsNone(op2.scale_, msg)
+    else:
+        test.assertIsNotNone(op2.scale_, msg)
+        test.assertEqual(len(op1.scale_), len(op2.scale_), msg)
+        for i in range(len(op1.scale_)):
+            test.assertAlmostEqual(op1.scale_[i], op2.scale_[i], msg=msg)
+
+
 class TestStandardScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -858,32 +885,6 @@ class TestStandardScaler(unittest.TestCase):
             },
         )
 
-    def _check_trained(self, op1, op2, msg):
-        self.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
-        self.assertEqual(op1.n_features_in_, op2.n_features_in_, msg)
-        self.assertEqual(op1.n_samples_seen_, op2.n_samples_seen_, msg)
-        if op1.mean_ is None:
-            self.assertIsNone(op2.mean_, msg)
-        else:
-            self.assertIsNotNone(op2.mean_, msg)
-            self.assertEqual(len(op1.mean_), len(op2.mean_), msg)
-            for i in range(len(op1.mean_)):
-                self.assertAlmostEqual(op1.mean_[i], op2.mean_[i], msg=msg)
-        if op1.var_ is None:
-            self.assertIsNone(op2.var_, msg)
-        else:
-            self.assertIsNotNone(op2.var_, msg)
-            self.assertEqual(len(op1.var_), len(op2.var_), msg)
-            for i in range(len(op1.var_)):
-                self.assertAlmostEqual(op1.var_[i], op2.var_[i], msg=msg)
-        if op1.scale_ is None:
-            self.assertIsNone(op2.scale_, msg)
-        else:
-            self.assertIsNotNone(op2.scale_, msg)
-            self.assertEqual(len(op1.scale_), len(op2.scale_), msg)
-            for i in range(len(op1.scale_)):
-                self.assertAlmostEqual(op1.scale_[i], op2.scale_[i], msg=msg)
-
     def test_fit(self):
         (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
         sk_trainable = SkStandardScaler()
@@ -892,7 +893,7 @@ class TestStandardScaler(unittest.TestCase):
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, _), (_, _) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
-            self._check_trained(sk_trained, rasl_trained.impl, tgt)
+            _check_trained_standard_scaler(self, sk_trained, rasl_trained.impl, tgt)
 
     def test_partial_fit(self):
         (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
@@ -906,7 +907,9 @@ class TestStandardScaler(unittest.TestCase):
                 if tgt == "spark":
                     data_delta = lale.datasets.pandas2spark(data_delta)
                 rasl_op = rasl_op.partial_fit(data_delta)
-                self._check_trained(sk_op, rasl_op.impl, (tgt, lower, upper))
+                _check_trained_standard_scaler(
+                    self, sk_op, rasl_op.impl, (tgt, lower, upper)
+                )
 
     def test_transform(self):
         (train_X_pd, _), (test_X_pd, _) = self.tgt2creditg["pandas"]
@@ -917,7 +920,7 @@ class TestStandardScaler(unittest.TestCase):
         for tgt, dataset in self.tgt2creditg.items():
             (train_X, _), (test_X, _) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
-            self._check_trained(sk_trained, rasl_trained.impl, tgt)
+            _check_trained_standard_scaler(self, sk_trained, rasl_trained.impl, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
             if tgt == "spark":
                 rasl_transformed = rasl_transformed.toPandas()
@@ -946,3 +949,74 @@ class TestStandardScaler(unittest.TestCase):
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+
+
+class TestTaskGraphs(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+            "credit-g", "classification", preprocess=False
+        )
+        cat_columns = categorical()(train_X)
+        project = Map(columns={c: it[c] for c in cat_columns})
+        train_X, test_X = project.transform(train_X), project.transform(test_X)
+        cls.creditg = (train_X, train_y), (test_X, test_y)
+
+    @classmethod
+    def _make_sk_trainable(cls):
+        return sk_make_pipeline(
+            SkOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
+            SkMinMaxScaler(),
+            SGDClassifier(random_state=123),
+        )
+
+    @classmethod
+    def _make_rasl_trainable(cls):
+        return (
+            RaslOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+            >> RaslMinMaxScaler()
+            >> SGDClassifier(random_state=123)
+        )
+
+    def test_fit_no_batching(self):
+        (train_X, train_y), _ = self.creditg
+        sk_trainable = self._make_sk_trainable()
+        sk_trained = sk_trainable.fit(train_X, train_y)
+        rasl_trainable = self._make_rasl_trainable()
+        rasl_trained = rasl_trainable.fit(train_X, train_y)
+        _check_trained_ordinal_encoder(
+            self, sk_trained.steps[0][1], rasl_trained.steps[0][1].impl, "pandas"
+        )
+        _check_trained_min_max_scaler(
+            self, sk_trained.steps[1][1], rasl_trained.steps[1][1].impl, "pandas"
+        )
+
+    def test_fit_batching(self):
+        (train_X, train_y), _ = self.creditg
+        sk_trainable = self._make_sk_trainable()
+        sk_trained = sk_trainable.fit(train_X, train_y)
+        unique_class_labels = list(train_y.unique())
+        for n_batches in [1, 3]:
+            for prio in [PrioStep(), PrioBatch()]:
+                batches = mockup_data_loader(train_X, train_y, n_batches)
+                rasl_trainable = self._make_rasl_trainable()
+                rasl_trained = fit_with_batches(
+                    rasl_trainable,
+                    batches,
+                    unique_class_labels,
+                    prio,
+                    incremental=False,
+                    verbose=0,
+                )
+                _check_trained_ordinal_encoder(
+                    self,
+                    sk_trained.steps[0][1],
+                    rasl_trained.steps[0][1].impl,
+                    (n_batches, type(prio)),
+                )
+                _check_trained_min_max_scaler(
+                    self,
+                    sk_trained.steps[1][1],
+                    rasl_trained.steps[1][1].impl,
+                    (n_batches, type(prio)),
+                )
