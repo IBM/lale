@@ -16,9 +16,14 @@ import ast
 
 import pandas as pd
 
-import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import (
+    SparkDataFrameWithIndex,
+    add_table_name,
+    forward_metadata,
+    get_table_name,
+)
 from lale.expressions import _it_column
 from lale.helpers import (
     _is_ast_attribute,
@@ -177,8 +182,8 @@ class _MapImpl:
         if self.remainder == "passthrough":
             remainder_columns = [x for x in X.columns if x not in accessed_column_names]
             mapped_df[remainder_columns] = X[remainder_columns]
-        table_name = lale.datasets.data_schemas.get_table_name(X)
-        mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
+        table_name = get_table_name(X)
+        mapped_df = add_table_name(mapped_df, table_name)
         return mapped_df
 
     def transform_spark_df(self, X):
@@ -210,9 +215,10 @@ class _MapImpl:
                 spark_col(x) for x in X.columns if x not in accessed_column_names
             ]
             new_columns.extend(remainder_columns)
+        if isinstance(X, SparkDataFrameWithIndex):
+            new_columns.extend([spark_col(X.index_name)])
         mapped_df = X.select(new_columns)
-        table_name = lale.datasets.data_schemas.get_table_name(X)
-        mapped_df = lale.datasets.data_schemas.add_table_name(mapped_df, table_name)
+        mapped_df = forward_metadata(X, mapped_df)
         return mapped_df
 
 

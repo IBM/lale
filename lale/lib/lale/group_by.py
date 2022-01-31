@@ -17,12 +17,14 @@ import numpy as np
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
 from lale.helpers import (
     _get_subscript_value,
     _is_ast_attribute,
     _is_ast_subscript,
     _is_pandas_df,
     _is_spark_df,
+    _is_spark_with_index,
 )
 
 
@@ -53,6 +55,9 @@ class _GroupByImpl:
                     col_not_in_X
                 )
             )
+        if _is_spark_with_index(X):
+            name = get_table_name(X)
+            X = add_table_name(X.drop(get_index_name(X)), name)
         if _is_spark_df(X):
             grouped_df = X.groupby(group_by_keys)
         elif _is_pandas_df(X):
@@ -61,9 +66,7 @@ class _GroupByImpl:
             raise ValueError(
                 "Only pandas and spark dataframes are supported by the GroupBy operator."
             )
-        named_grouped_df = lale.datasets.data_schemas.add_table_name(
-            grouped_df, lale.datasets.data_schemas.get_table_name(X)
-        )
+        named_grouped_df = add_table_name(grouped_df, get_table_name(X))
         return named_grouped_df
 
 
