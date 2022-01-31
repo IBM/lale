@@ -211,11 +211,11 @@ def fit(self, X, y, Xstd=None):
             self.idxNonzeroOrd = idxNonzero[idxNonzero < numOrd]
             nnzOrd = len(self.idxNonzeroOrd)
             idxNonzeroRules = idxNonzero[idxNonzero >= numOrd] - numOrd
-            B = 1
             if self.debias and len(idxNonzero):
                 # Re-fit logistic regression model with effectively no regularization
                 z = z.iloc[:, idxNonzeroRules]
                 lr.C = 1 / self.eps
+                B = np.concatenate((Astd, A), axis=1)
                 lr.fit(B[:, idxNonzero], y)
                 idxNonzero = np.where(np.abs(lr.coef_) > self.eps)[1]
                 # Nonzero indices of standardized and rule features
