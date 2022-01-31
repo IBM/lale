@@ -14,16 +14,18 @@
 
 import pandas as pd
 
-import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
 from lale.helpers import (
     _get_subscript_value,
     _is_ast_attribute,
     _is_ast_subscript,
     _is_df,
     _is_spark_df,
+    _is_spark_with_index,
 )
+from lale.lib.lale.dataframe import get_columns
 
 try:
     from pyspark.sql.functions import col
@@ -189,7 +191,7 @@ class _JoinImpl:
             return op_df
 
         def fetch_one_df(named_df, table_name):
-            if lale.datasets.data_schemas.get_table_name(named_df) == table_name:
+            if get_table_name(named_df) == table_name:
                 return named_df
             return None
 
@@ -216,6 +218,13 @@ class _JoinImpl:
                         if _is_df(left_df_candidate):
                             left_df = left_df_candidate
             return left_df, right_df
+
+        def remove_implicit_col(key_col, df):
+            if _is_spark_with_index(df):
+                index = get_index_name(df)
+                if index not in key_col:
+                    df = df.drop(index)
+            return df
 
         # Iterate over all the elements of the predicate
         for pred_element in self.pred if self.pred is not None else []:
@@ -248,8 +257,10 @@ class _JoinImpl:
                         left_table_name, right_table_name
                     )
                 )
-            columns_in_both_tables = set(left_df.columns).intersection(  # type: ignore
-                set(right_df.columns)  # type: ignore
+            left_df = remove_implicit_col(left_key_col, left_df)
+            right_df = remove_implicit_col(right_key_col, right_df)
+            columns_in_both_tables = set(get_columns(left_df)).intersection(  # type: ignore
+                set(get_columns(right_df))  # type: ignore
             )
             if columns_in_both_tables and not set(
                 sorted(columns_in_both_tables)
@@ -260,7 +271,7 @@ class _JoinImpl:
             joined_df = join_df(left_df, right_df)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)
-        return lale.datasets.data_schemas.add_table_name(joined_df, self.name)
+        return add_table_name(joined_df, self.name)
 
     def viz_label(self) -> str:
         if isinstance(self.name, str):
