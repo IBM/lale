@@ -1171,10 +1171,10 @@ def _is_spark_with_index(df):
         return False
 
 
-def _ensure_pandas(df):
+def _ensure_pandas(df) -> pd.DataFrame:
     if _is_spark_df(df):
         return df.toPandas()
-    assert _is_pandas_df, type(df)
+    assert _is_pandas_df(df), type(df)
     return df
 
 

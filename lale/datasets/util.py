@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pandas as pd
 
 from lale.datasets.data_schemas import add_table_name, get_table_name
 
