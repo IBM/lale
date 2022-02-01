@@ -2134,6 +2134,17 @@ class TestMapOnBothPandasAndSpark(unittest.TestCase):
         self.assertIsInstance(trained_map, Map)  # type: ignore
         self.assertIsInstance(trained_map, lale.operators.TrainedOperator)
 
+    def test_project(self):
+        from lale.lib.lale import Project
+
+        pipeline = Scan(table=it.go_products) >> Project(columns={"type": "number"})
+        for tgt, datasets in self.tgt2datasets.items():
+            result = pipeline.fit(datasets).transform(datasets)
+            if tgt == "spark":
+                result = result.toPandas()
+            self.assertIn("Product number", result.columns)
+            self.assertNotIn("Product line", result.columns)
+
 
 class TestRelationalOperator(unittest.TestCase):
     def setUp(self):
