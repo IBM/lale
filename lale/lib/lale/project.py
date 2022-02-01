@@ -98,7 +98,7 @@ class _ProjectImpl:
         #     raise TypeError(f"type {type(X)}")
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
-        result = lale.datasets.data_schemas.add_schema(result, s_result)
+        result = lale.datasets.data_schemas.add_schema(result, s_result, recalc=True)
         result = lale.datasets.data_schemas.add_table_name(
             result, lale.datasets.data_schemas.get_table_name(X)
         )
