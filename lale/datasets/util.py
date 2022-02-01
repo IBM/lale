@@ -16,6 +16,8 @@ import pandas as pd
 
 from lale.datasets.data_schemas import add_table_name, get_table_name
 
+from lale.datasets.data_schemas import add_table_name, get_table_name
+
 try:
     import pyspark.sql
     from pyspark import SparkConf, SparkContext
