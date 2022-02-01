@@ -435,7 +435,7 @@ class TestDatasetSchemas(unittest.TestCase):
                 },
             }
             self.maxDiff = None
-            self.assertEqual(transformed_schema, transformed_expected)
+            self.assertEqual(transformed_expected, transformed_schema)
 
     def test_input_schema_fit(self):
         self.maxDiff = None

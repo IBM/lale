@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import typing
 
 import aif360.algorithms.preprocessing
 import aif360.datasets
@@ -99,8 +100,12 @@ class _DisparateImpactRemoverImpl:
         encoded_X, sensitive_attribute = self._prep_and_encode(X, y)
         if isinstance(sensitive_attribute, str):
             assert isinstance(encoded_X, pd.DataFrame)
-            features = encoded_X.to_numpy().tolist()
-            index = encoded_X.columns.to_list().index(sensitive_attribute)
+
+            enc = typing.cast(
+                pd.DataFrame, encoded_X
+            )  # not sure why this cast is needed
+            features = enc.to_numpy().tolist()
+            index = enc.columns.to_list().index(sensitive_attribute)
         else:
             assert isinstance(encoded_X, np.ndarray)
             features = encoded_X.tolist()
@@ -116,8 +121,12 @@ class _DisparateImpactRemoverImpl:
         encoded_X, _ = self._prep_and_encode(X)
         columns = None
         if isinstance(encoded_X, pd.DataFrame):
-            features = encoded_X.to_numpy().tolist()
-            columns = encoded_X.columns
+            enc = typing.cast(
+                pd.DataFrame, encoded_X
+            )  # not sure why this cast is needed
+
+            features = enc.to_numpy().tolist()
+            columns = enc.columns
         else:
             assert isinstance(encoded_X, np.ndarray)
             features = encoded_X.tolist()

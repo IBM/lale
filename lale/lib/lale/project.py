@@ -11,18 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from typing import List
 
 import numpy as np
-import pandas as pd
 
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 import lale.type_checking
+from lale.expressions import it
+from lale.lib.rasl import Map
 from lale.type_checking import is_schema
 
 
-def _columns_schema_to_list(X, schema):
+def _columns_schema_to_list(X, schema) -> List[int]:
     s_all = lale.datasets.data_schemas.to_schema(X)
     s_row = s_all["items"]
     n_columns = s_row["minItems"]
@@ -43,7 +45,7 @@ def _columns_schema_to_list(X, schema):
     return result
 
 
-def _columns_to_list(columns, kind, X):
+def _columns_to_list(columns, kind, X) -> List[int]:
     if columns is None:
         if kind == "passthrough":
             result = [*range(X.shape[1])]
@@ -76,18 +78,27 @@ class _ProjectImpl:
         return self
 
     def transform(self, X):
-        if isinstance(X, pd.DataFrame):
-            if len(self._fit_columns) == 0 or isinstance(self._fit_columns[0], int):
-                result = X.iloc[:, self._fit_columns]
-            else:
-                result = X[self._fit_columns]
-        elif isinstance(X, np.ndarray):
-            result = X[:, self._fit_columns]
+        if isinstance(X, np.ndarray):
+            result = X[:, self._fit_columns]  # type: ignore
         else:
-            raise TypeError(f"type {type(X)}")
+            # use the rasl backend
+            cols = [
+                X.columns[x] if isinstance(x, int) else x for x in self._fit_columns
+            ]
+            exprs = {c: it[c] for c in cols}
+            m = Map(columns=exprs)
+            assert isinstance(m, lale.operators.TrainedOperator)
+            result = m.transform(X)
+        # elif isinstance(X, pd.DataFrame):
+        #     if len(self._fit_columns) == 0 or isinstance(self._fit_columns[0], int):
+        #         result = X.iloc[:, self._fit_columns]
+        #     else:
+        #         result = X[self._fit_columns]
+        # else:
+        #     raise TypeError(f"type {type(X)}")
         s_X = lale.datasets.data_schemas.to_schema(X)
         s_result = self.transform_schema(s_X)
-        result = lale.datasets.data_schemas.add_schema(result, s_result)
+        result = lale.datasets.data_schemas.add_schema(result, s_result, recalc=True)
         result = lale.datasets.data_schemas.add_table_name(
             result, lale.datasets.data_schemas.get_table_name(X)
         )
