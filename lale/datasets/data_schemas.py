@@ -92,8 +92,17 @@ class SeriesWithSchema(pd.Series):
 
 if spark_installed:
 
+    def _gen_index_name(df, cpt=None):
+        name = f"index{0 if cpt is not None else ''}"
+        if name in df.columns:
+            return _gen_index_name(df, cpt=cpt + 1 if cpt is not None else 0)
+        else:
+            return name
+
     class SparkDataFrameWithIndex(pyspark.sql.DataFrame):  # type: ignore
-        def __init__(self, df, index_name="index"):
+        def __init__(self, df, index_name=None):
+            if index_name is None:
+                index_name = _gen_index_name(df)
             if index_name not in df.columns:
                 df = (
                     df.rdd.zipWithIndex()
@@ -253,6 +262,13 @@ def get_index_name(obj):
     ):
         result = obj.index.names[0]
     return result
+
+
+def forward_metadata(old, new):
+    new = add_table_name(new, get_table_name(old))
+    if isinstance(old, SparkDataFrameWithIndex):
+        new = SparkDataFrameWithIndex(new, index_name=get_index_name(old))
+    return new
 
 
 def strip_schema(obj):
