@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+from lale.datasets.data_schemas import add_table_name, get_table_name
+
 try:
     import pyspark.sql
     from pyspark import SparkConf, SparkContext
@@ -31,6 +33,9 @@ def pandas2spark(pandas_dataframe, add_index=False, index_name=None):
     )
     spark_context = SparkContext.getOrCreate(conf=spark_conf)
     spark_sql_context = pyspark.sql.SQLContext(spark_context)
+    name = get_table_name(pandas_dataframe)
+    if isinstance(pandas_dataframe, pd.Series):
+        pandas_dataframe = pandas_dataframe.to_frame()
     if add_index:
         if index_name is None:
             if pandas_dataframe.index.name is None:
@@ -41,5 +46,5 @@ def pandas2spark(pandas_dataframe, add_index=False, index_name=None):
         pandas_dataframe[index_name] = pandas_dataframe.index
     spark_dataframe = spark_sql_context.createDataFrame(pandas_dataframe)
     if index_name is not None:
-        spark_dataframe = SparkDataFrameWithIndex(spark_dataframe)
-    return spark_dataframe
+        spark_dataframe = SparkDataFrameWithIndex(spark_dataframe, index_name)
+    return add_table_name(spark_dataframe, name)
