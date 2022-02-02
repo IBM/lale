@@ -19,9 +19,9 @@ from typing import (
     Any,
     Callable,
     Dict,
+    Iterable,
     List,
     Optional,
-    Sequence,
     Tuple,
     Type,
     Union,
@@ -432,7 +432,7 @@ def _create_tasks_cross_val(
 def _run_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Sequence[_Batch],
+    batches: Iterable[_Batch],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
     prio: Prio,
@@ -445,8 +445,6 @@ def _run_tasks(
             task.status = _TaskStatus.READY
         else:
             task.status = _TaskStatus.WAITING
-    batch_id2idx = {batch_id: idx for idx, batch_id in enumerate(all_batch_ids)}
-    assert len(batches) == len(all_batch_ids) == len(batch_id2idx)
     ready_keys = {k for k, t in tasks.items() if t.status is _TaskStatus.READY}
 
     def find_task(task_class: Type["_Task"], task_list: List[_Task]) -> _Task:
@@ -476,7 +474,7 @@ def _run_tasks(
         if operation is _Operation.SCAN:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1 and len(task.preds) == 0
-            task.batch = batches[batch_id2idx[task.batch_ids[0]]]
+            task.batch = next(iter(batches))
         elif operation in [_Operation.TRANSFORM, _Operation.PREDICT]:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1 and len(task.preds) == 2
@@ -542,27 +540,28 @@ def _run_tasks(
 
 def mockup_data_loader(
     X: pd.DataFrame, y: pd.Series, n_splits: int
-) -> Sequence[_Batch]:
+) -> Iterable[_Batch]:
     if n_splits == 1:
         return [(X, y)]
     cv = sklearn.model_selection.StratifiedKFold(n_splits)
     estimator = sklearn.tree.DecisionTreeClassifier()
-    result = [
+    result = (
         lale.helpers.split_with_schemas(estimator, X, y, test, train)
         for train, test in cv.split(X, y)
-    ]
+    )  # generator expression returns object with __iter__() method
     return result
 
 
 def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Sequence[_Batch],
+    batches: Iterable[_Batch],
+    n_batches: int,
     unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
     incremental: bool,
     verbose: int,
 ) -> TrainedPipeline[TrainedIndividualOp]:
-    all_batch_ids = tuple(_batch_id("d", idx) for idx in range(len(batches)))
+    all_batch_ids = tuple(_batch_id("d", idx) for idx in range(n_batches))
     tasks = _create_tasks_batching(pipeline, all_batch_ids, incremental)
     if verbose >= 3:
         _visualize_tasks(tasks, pipeline, prio, call_depth=2)
@@ -594,7 +593,8 @@ def fit_with_batches(
 
 def cross_val_score(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Sequence[_Batch],
+    batches: Iterable[_Batch],
+    n_batches: int,
     unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
     scoring: Callable[[pd.Series, pd.Series], float],
@@ -603,8 +603,8 @@ def cross_val_score(
     verbose: int,
 ) -> List[float]:
     folds = [chr(ord("d") + i) for i in range(n_folds)]
-    n_batches_per_fold = int(len(batches) / n_folds)
-    assert n_folds * n_batches_per_fold == len(batches)
+    n_batches_per_fold = int(n_batches / n_folds)
+    assert n_folds * n_batches_per_fold == n_batches
     all_batch_ids = tuple(
         _batch_id(fold, idx) for fold in folds for idx in range(n_batches_per_fold)
     )
@@ -629,11 +629,9 @@ def cross_val_score(
             for idx in range(n_batches_per_fold)
         )
 
-    batch_id2idx = {batch_id: idx for idx, batch_id in enumerate(all_batch_ids)}
-
     def labels(fold: str) -> pd.Series:
         return pd.concat(
-            batches[batch_id2idx[_batch_id(fold, idx)]][1]
+            tasks[(_ApplyTask, _DUMMY_INPUT_STEP, (_batch_id(fold, idx),), fold)].batch[1]  # type: ignore
             for idx in range(n_batches_per_fold)
         )
 
