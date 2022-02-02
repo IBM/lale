@@ -2063,9 +2063,7 @@ class TestOrderBy(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         targets = ["pandas", "spark", "spark-with-index"]
-        cls.tgt2datasets = {
-            tgt: {} for tgt in targets
-        }
+        cls.tgt2datasets = {tgt: {} for tgt in targets}
 
         def add_df(name, df):
             cls.tgt2datasets["pandas"][name] = df
@@ -2090,9 +2088,7 @@ class TestOrderBy(unittest.TestCase):
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
             if tgt == "spark-with-index":
-                self.assertEqual(
-                    get_index_name(transformed_df), get_index_name(df)
-                )
+                self.assertEqual(get_index_name(transformed_df), get_index_name(df))
             transformed_df = _ensure_pandas(transformed_df)
             self.assertTrue((transformed_df["status"]).is_monotonic_increasing)
 
@@ -2103,9 +2099,7 @@ class TestOrderBy(unittest.TestCase):
             trained = trainable.fit(df)
             transformed_df = trained.transform(df)
             if tgt == "spark-with-index":
-                self.assertEqual(
-                    get_index_name(transformed_df), get_index_name(df)
-                )
+                self.assertEqual(get_index_name(transformed_df), get_index_name(df))
             transformed_df = _ensure_pandas(transformed_df)
             self.assertTrue((transformed_df["status"]).is_monotonic_increasing)
 
@@ -2144,7 +2138,9 @@ class TestOrderBy(unittest.TestCase):
             if tgt == "pandas" or tgt == "spark-with-index":
                 self.assertEqual(list(transformed_df.index), [1, 4, 2, 0, 3])
             self.assertTrue((transformed_df["gender"]).is_monotonic_increasing)
-            self.assertTrue(transformed_df.reset_index(drop=True).equals(expected_result))
+            self.assertTrue(
+                transformed_df.reset_index(drop=True).equals(expected_result)
+            )
 
     def test_str1(self):
         trainable = OrderBy(by="gender")

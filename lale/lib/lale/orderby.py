@@ -14,9 +14,9 @@
 import ast
 from typing import List, Tuple
 
-from lale.datasets.data_schemas import forward_metadata
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import forward_metadata
 from lale.expressions import Expr
 from lale.helpers import (
     _is_ast_attribute,

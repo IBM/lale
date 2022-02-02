@@ -120,7 +120,7 @@ if spark_installed:
 
         def toPandas(self, *args, **kwargs):
             df = super(self.__class__, self).toPandas(*args, **kwargs)
-            return df.drop(columns=[self.index_name])
+            return df.set_index(self.index_name)
 
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
