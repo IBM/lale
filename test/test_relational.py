@@ -2060,154 +2060,100 @@ class TestRelationalOperator(unittest.TestCase):
 
 
 class TestOrderBy(unittest.TestCase):
-    def setUp(self):
-        self.d = {
-            "gender": ["m", "f", "m", "m", "f"],
-            "state": ["NY", "NY", "CA", "NY", "CA"],
-            "status": [0, 1, 1, 0, 1],
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {
+            tgt: {} for tgt in targets
         }
 
-    def test_order_attr1(self):
-        df = pd.DataFrame(data=self.d)
-        trainable = OrderBy(by=it.gender)
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-
-        self.assertTrue((transformed_df["gender"]).is_monotonic_increasing)
-
-    def test_order_attr1_asc(self):
-        df = pd.DataFrame(data=self.d)
-        trainable = OrderBy(by=asc(it.gender))
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-
-        self.assertTrue((transformed_df["gender"]).is_monotonic_increasing)
-
-    def test_order_attr1_desc(self):
-        df = pd.DataFrame(data=self.d)
-        trainable = OrderBy(by=desc(it.gender))
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-
-        self.assertTrue((transformed_df["gender"]).is_monotonic_decreasing)
-
-    def test_order_str1_desc(self):
-        df = pd.DataFrame(data=self.d)
-        trainable = OrderBy(by=desc("gender"))
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-
-        self.assertTrue((transformed_df["gender"]).is_monotonic_decreasing)
-
-    def test_order_multiple(self):
-        df = pd.DataFrame(data=self.d)
-        trainable = OrderBy(by=[it.gender, desc(it.status)])
-        trained = trainable.fit(df)
-        transformed_df = trained.transform(df)
-        expected_result = pd.DataFrame(
-            data={
-                "gender": ["f", "f", "m", "m", "m"],
-                "state": ["NY", "CA", "CA", "NY", "NY"],
-                "status": [1, 1, 1, 0, 0],
-            }
-        )
-        self.assertEqual(list(transformed_df.index), [1, 4, 2, 0, 3])
-        self.assertTrue((transformed_df["gender"]).is_monotonic_increasing)
-        self.assertTrue(transformed_df.reset_index(drop=True).equals(expected_result))
-
-
-class TestOrderBySpark(unittest.TestCase):
-    def setUp(self):
-        if spark_installed:
-            conf = (
-                SparkConf()
-                .setMaster("local[2]")
-                .set("spark.driver.bindAddress", "127.0.0.1")
+        def add_df(name, df):
+            cls.tgt2datasets["pandas"][name] = df
+            cls.tgt2datasets["spark"][name] = pandas2spark(df)
+            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
+                df, add_index=True
             )
-            sc = SparkContext.getOrCreate(conf=conf)
-            self.sqlCtx = SQLContext(sc)
-            d = {
+
+        df = pd.DataFrame(
+            {
                 "gender": ["m", "f", "m", "m", "f"],
                 "state": ["NY", "NY", "CA", "NY", "CA"],
                 "status": [0, 1, 1, 0, 1],
             }
-            df = pd.DataFrame(data=d)
-            self.sdf = self.sqlCtx.createDataFrame(df)
-
-    # The rename column functionality implemented as part of identity function for Map operator
-    # does not support explicit identity calls for now.
-    def test_str1(self):
-        trainable = OrderBy(by="gender")
-        trained = trainable.fit(self.sdf)
-        transformed_df = trained.transform(self.sdf)
-        cgender = pd.Series(
-            transformed_df.select("gender").rdd.flatMap(lambda x: x).collect()
         )
-
-        self.assertTrue(cgender.is_monotonic_increasing)
+        add_df("df", df)
 
     def test_order_attr1(self):
-        trainable = OrderBy(by=it.gender)
-        trained = trainable.fit(self.sdf)
-        transformed_df = trained.transform(self.sdf)
-
-        cgender = pd.Series(
-            transformed_df.select("gender").rdd.flatMap(lambda x: x).collect()
-        )
-
-        self.assertTrue(cgender.is_monotonic_increasing)
+        trainable = OrderBy(by=it.status)
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            if tgt == "spark-with-index":
+                self.assertEqual(
+                    get_index_name(transformed_df), get_index_name(df)
+                )
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertTrue((transformed_df["status"]).is_monotonic_increasing)
 
     def test_order_attr1_asc(self):
-        trainable = OrderBy(by=asc(it.gender))
-        trained = trainable.fit(self.sdf)
-        transformed_df = trained.transform(self.sdf)
-
-        cgender = pd.Series(
-            transformed_df.select("gender").rdd.flatMap(lambda x: x).collect()
-        )
-
-        self.assertTrue(cgender.is_monotonic_increasing)
+        trainable = OrderBy(by=asc(it.status))
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            if tgt == "spark-with-index":
+                self.assertEqual(
+                    get_index_name(transformed_df), get_index_name(df)
+                )
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertTrue((transformed_df["status"]).is_monotonic_increasing)
 
     def test_order_attr1_desc(self):
-        trainable = OrderBy(by=desc(it.gender))
-        trained = trainable.fit(self.sdf)
-        transformed_df = trained.transform(self.sdf)
-
-        cgender = pd.Series(
-            transformed_df.select("gender").rdd.flatMap(lambda x: x).collect()
-        )
-
-        self.assertTrue(cgender.is_monotonic_decreasing)
+        trainable = OrderBy(by=desc(it.status))
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertTrue((transformed_df["status"]).is_monotonic_decreasing)
 
     def test_order_str1_desc(self):
         trainable = OrderBy(by=desc("gender"))
-        trained = trainable.fit(self.sdf)
-        transformed_df = trained.transform(self.sdf)
-
-        cgender = pd.Series(
-            transformed_df.select("gender").rdd.flatMap(lambda x: x).collect()
-        )
-
-        self.assertTrue(cgender.is_monotonic_decreasing)
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertTrue((transformed_df["gender"]).is_monotonic_decreasing)
 
     def test_order_multiple(self):
         trainable = OrderBy(by=[it.gender, desc(it.status)])
-        trained = trainable.fit(self.sdf)
-        transformed_df = trained.transform(self.sdf)
-        expected_result = pd.DataFrame(
-            data={
-                "gender": ["f", "f", "m", "m", "m"],
-                "state": ["NY", "CA", "CA", "NY", "NY"],
-                "status": [1, 1, 1, 0, 0],
-            }
-        )
-        cgender = pd.Series(
-            transformed_df.select("gender").rdd.flatMap(lambda x: x).collect()
-        )
-        self.assertTrue(cgender.is_monotonic_increasing)
-        self.assertTrue(
-            transformed_df.toPandas().reset_index(drop=True).equals(expected_result)
-        )
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            transformed_df = _ensure_pandas(transformed_df)
+            expected_result = pd.DataFrame(
+                data={
+                    "gender": ["f", "f", "m", "m", "m"],
+                    "state": ["NY", "CA", "CA", "NY", "NY"],
+                    "status": [1, 1, 1, 0, 0],
+                }
+            )
+            if tgt == "pandas" or tgt == "spark-with-index":
+                self.assertEqual(list(transformed_df.index), [1, 4, 2, 0, 3])
+            self.assertTrue((transformed_df["gender"]).is_monotonic_increasing)
+            self.assertTrue(transformed_df.reset_index(drop=True).equals(expected_result))
+
+    def test_str1(self):
+        trainable = OrderBy(by="gender")
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df"]
+            trained = trainable.fit(df)
+            transformed_df = trained.transform(df)
+            transformed_df = _ensure_pandas(transformed_df)
+            self.assertTrue((transformed_df["gender"]).is_monotonic_increasing)
 
 
 class TestSplitXy(unittest.TestCase):
