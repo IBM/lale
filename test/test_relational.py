@@ -1990,13 +1990,28 @@ class TestMap(unittest.TestCase):
 
 
 class TestRelationalOperator(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
 
-        data = load_iris()
-        X, y = data.data, data.target
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: {} for tgt in targets}
+
+        def add_df(name, df):
+            cls.tgt2datasets["pandas"][name] = df
+            cls.tgt2datasets["spark"][name] = pandas2spark(df)
+            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
+                df, add_index=True
+            )
+
+        X, y = load_iris(as_frame=True, return_X_y=True)
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        add_df("X_train", X_train)
+        add_df("X_test", X_test)
+        add_df("y_train", y_train)
+        add_df("y_test", y_test)
+
 
     def test_fit_transform(self):
         relational = Relational(
@@ -2009,8 +2024,10 @@ class TestRelationalOperator(unittest.TestCase):
             )
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
-        trained_relational = relational.fit(self.X_train, self.y_train)
-        _ = trained_relational.transform(self.X_test)
+        for tgt, datasets in self.tgt2datasets.items():
+            X_train, X_test, y_train = datasets["X_train"], datasets["X_test"], datasets["y_train"]
+            trained_relational = relational.fit(X_train, y_train)
+            _ = trained_relational.transform(X_test)
 
     def test_fit_error(self):
         relational = Relational(
@@ -2023,8 +2040,10 @@ class TestRelationalOperator(unittest.TestCase):
             )
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
-        with self.assertRaises(ValueError):
-            _ = relational.fit([self.X_train], self.y_train)
+        for tgt, datasets in self.tgt2datasets.items():
+            X_train, y_train = datasets["X_train"], datasets["y_train"]
+            with self.assertRaises(ValueError):
+                _ = relational.fit([X_train], y_train)
 
     def test_transform_error(self):
         relational = Relational(
@@ -2037,9 +2056,11 @@ class TestRelationalOperator(unittest.TestCase):
             )
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
-        trained_relational = relational.fit(self.X_train, self.y_train)
-        with self.assertRaises(ValueError):
-            _ = trained_relational.transform([self.X_test])
+        for tgt, datasets in self.tgt2datasets.items():
+            X_train, X_test, y_train = datasets["X_train"], datasets["X_test"], datasets["y_train"]
+            trained_relational = relational.fit(X_train, y_train)
+            with self.assertRaises(ValueError):
+                _ = trained_relational.transform([X_test])
 
     def test_fit_transform_in_pipeline(self):
         relational = Relational(
@@ -2053,8 +2074,16 @@ class TestRelationalOperator(unittest.TestCase):
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
         pipeline = relational >> LogisticRegression()
-        trained_pipeline = pipeline.fit(self.X_train, self.y_train)
-        _ = trained_pipeline.predict(self.X_test)
+        for tgt, datasets in self.tgt2datasets.items():
+            X_train, X_test, y_train = datasets["X_train"], datasets["X_test"], datasets["y_train"]
+            if tgt == "pandas":
+                trained_pipeline = pipeline.fit(X_train, y_train)
+                _ = trained_pipeline.predict(X_test)
+            elif tgt.startswith("spark"):
+                # LogisticRegression is not implemented on Spark
+                pass
+            else:
+                assert False
 
 
 class TestOrderBy(unittest.TestCase):
