@@ -545,7 +545,7 @@ def mockup_data_loader(
 ) -> Sequence[_Batch]:
     if n_splits == 1:
         return [(X, y)]
-    cv = sklearn.model_selection.StratifiedKFold(n_splits)
+    cv = sklearn.model_selection.KFold(n_splits)
     estimator = sklearn.tree.DecisionTreeClassifier()
     result = [
         lale.helpers.split_with_schemas(estimator, X, y, test, train)

@@ -459,11 +459,16 @@ class _ScorerFactory:
                 by=[it[pa] for pa in pa_names] + [it[y_pred.name]]
             ) >> Aggregate(columns={"count": count(it[y_pred.name])})
             agg_df = pipeline.transform(df)
+
+            def get_count(priv, fav):
+                row = (priv,) * len(pa_names) + (fav,)
+                return agg_df.at[row, "count"] if row in agg_df.index else 0
+
             return _LiftedDIorSPD(
-                priv0_fav0=agg_df.at[(0,) * len(pa_names) + (0,), "count"],
-                priv0_fav1=agg_df.at[(0,) * len(pa_names) + (1,), "count"],
-                priv1_fav0=agg_df.at[(1,) * len(pa_names) + (0,), "count"],
-                priv1_fav1=agg_df.at[(1,) * len(pa_names) + (1,), "count"],
+                priv0_fav0=get_count(0, 0),
+                priv0_fav1=get_count(0, 1),
+                priv1_fav0=get_count(1, 0),
+                priv1_fav1=get_count(1, 1),
             )
         assert False, self.metric
 
