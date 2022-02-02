@@ -67,9 +67,9 @@ extras_require = {
     "full": [
         "xgboost<=1.5.1",
         "lightgbm",
-        "snapml>=1.7.0rc3<=1.8.0",
+        "snapml>=1.7.0rc3,<=1.8.0",
         "liac-arff>=2.4.0",
-        "tensorflow>=2.4.0<=2.7.0",
+        "tensorflow>=2.4.0,<=2.7.0",
         "smac<=0.10.0",
         "numba",
         "aif360>=0.4.0",
