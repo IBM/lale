@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
+import functools
 import logging
 from typing import Optional, Tuple
 
@@ -29,6 +31,9 @@ import lale.lib.lale
 import lale.operators
 import lale.type_checking
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
+from lale.expressions import count, it
+from lale.lib.lale import GroupBy
+from lale.lib.rasl import Aggregate
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -322,6 +327,12 @@ def _ndarray_to_dataframe(array) -> pd.DataFrame:
     return result
 
 
+_LiftedDIorSPD = collections.namedtuple(
+    "_LiftedDIorSPD",
+    ["priv0_fav0", "priv0_fav1", "priv1_fav0", "priv1_fav1"],
+)
+
+
 class _ScorerFactory:
     def __init__(
         self, metric, favorable_labels, protected_attributes, unfavorable_labels
@@ -354,30 +365,36 @@ class _ScorerFactory:
         pas = protected_attributes
         self.unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
         self.privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
+        self._cached_pandas_to_dataset = None
 
-        self.pandas_to_dataset = _PandasToDatasetConverter(
-            favorable_label=1,
-            unfavorable_label=0,
-            protected_attribute_names=[_ensure_str(pa["feature"]) for pa in pas],
+    def _pandas_to_dataset(self):
+        if self._cached_pandas_to_dataset is None:
+            self._cached_pandas_to_dataset = _PandasToDatasetConverter(
+                favorable_label=1,
+                unfavorable_label=0,
+                protected_attribute_names=list(self.privileged_groups[0].keys()),
+            )
+        return self._cached_pandas_to_dataset
+
+    def _y_pred_series(self, y_true, y_pred, X):
+        if isinstance(y_pred, pd.Series):
+            return y_pred
+        assert y_true is not None
+        return _ndarray_to_series(
+            y_pred,
+            y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),
+            X.index if isinstance(X, pd.DataFrame) else None,
+            y_pred.dtype,
         )
 
     def score_data(self, y_true=None, y_pred=None, X=None):
         assert y_pred is not None
         assert X is not None
         y_pred_orig = y_pred
-        if not isinstance(y_pred, pd.Series):
-            assert y_true is not None
-            y_pred = _ndarray_to_series(
-                y_pred,
-                y_true.name
-                if isinstance(y_true, pd.Series)
-                else _ensure_str(X.shape[1]),
-                X.index if isinstance(X, pd.DataFrame) else None,
-                y_pred.dtype,
-            )
+        y_pred = self._y_pred_series(y_true, y_pred, X)
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
         try:
-            dataset_pred = self.pandas_to_dataset.convert(encoded_X, y_pred)
+            dataset_pred = self._pandas_to_dataset().convert(encoded_X, y_pred)
         except ValueError as e:
             raise ValueError(
                 "The data has unexpected labels given the fairness info: "
@@ -397,7 +414,7 @@ class _ScorerFactory:
                     y_true, y_pred.name, y_pred.index, y_pred_orig.dtype
                 )
             _, y_true = self.prot_attr_enc.transform(X, y_true)
-            dataset_true = self.pandas_to_dataset.convert(encoded_X, y_true)
+            dataset_true = self._pandas_to_dataset().convert(encoded_X, y_true)
             fairness_metrics = aif360.metrics.ClassificationMetric(
                 dataset_true,
                 dataset_pred,
@@ -425,6 +442,59 @@ class _ScorerFactory:
 
     def __call__(self, estimator, X, y):
         return self.score_estimator(estimator, X, y)
+
+    def _lift(self, batch):
+        if len(batch) == 2:
+            X, y_pred = batch
+            y_true = None
+        else:
+            y_true, y_pred, X = batch
+        if self.metric in ["disparate_impact", "statistical_parity_difference"]:
+            assert y_pred is not None and X is not None, (y_pred, X)
+            y_pred = self._y_pred_series(y_true, y_pred, X)
+            encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+            df = pd.concat([encoded_X, y_pred], axis=1)
+            pa_names = self.privileged_groups[0].keys()
+            pipeline = GroupBy(
+                by=[it[pa] for pa in pa_names] + [it[y_pred.name]]
+            ) >> Aggregate(columns={"count": count(it[y_pred.name])})
+            agg_df = pipeline.transform(df)
+            return _LiftedDIorSPD(
+                priv0_fav0=agg_df.at[(0,) * len(pa_names) + (0,), "count"],
+                priv0_fav1=agg_df.at[(0,) * len(pa_names) + (1,), "count"],
+                priv1_fav0=agg_df.at[(1,) * len(pa_names) + (0,), "count"],
+                priv1_fav1=agg_df.at[(1,) * len(pa_names) + (1,), "count"],
+            )
+        assert False, self.metric
+
+    def _combine(self, lifted_a, lifted_b):
+        if self.metric in ["disparate_impact", "statistical_parity_difference"]:
+            return _LiftedDIorSPD(
+                priv0_fav0=lifted_a.priv0_fav0 + lifted_b.priv0_fav0,
+                priv0_fav1=lifted_a.priv0_fav1 + lifted_b.priv0_fav1,
+                priv1_fav0=lifted_a.priv1_fav0 + lifted_b.priv1_fav0,
+                priv1_fav1=lifted_a.priv1_fav1 + lifted_b.priv1_fav1,
+            )
+        assert False, self.metric
+
+    def _lower(self, lifted):
+        if self.metric == "disparate_impact":
+            numerator = lifted.priv0_fav1 / (lifted.priv0_fav0 + lifted.priv0_fav1)
+            denominator = lifted.priv1_fav1 / (lifted.priv1_fav0 + lifted.priv1_fav1)
+            return numerator / denominator
+        if self.metric == "statistical_parity_difference":
+            minuend = lifted.priv0_fav1 / (lifted.priv0_fav0 + lifted.priv0_fav1)
+            subtrahend = lifted.priv1_fav1 / (lifted.priv1_fav0 + lifted.priv1_fav1)
+            return minuend - subtrahend
+        assert False, self.metric
+
+    def score_data_batched(self, batches):
+        lifted_batches = (self._lift(b) for b in batches)
+        return self._lower(functools.reduce(self._combine, lifted_batches))
+
+    def score_estimator_batched(self, estimator, batches):
+        predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
+        return self.score_data_batched(predicted_batches)
 
 
 _SCORER_DOCSTRING_ARGS = """
