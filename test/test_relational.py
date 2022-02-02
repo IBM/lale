@@ -222,7 +222,7 @@ class TestFilter(unittest.TestCase):
                 self.assertTrue(np.all((np.isnan(i) for i in test_list)))
             else:
                 assert False
-            if tgt == "spark-with_index":
+            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
@@ -239,10 +239,12 @@ class TestFilter(unittest.TestCase):
             elif tgt.startswith("spark"):
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (4, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
-                self.assertTrue(np.all((not np.isnan(i) for i in test_list)))
+                self.assertTrue(
+                    np.all((not np.isnan(i) for i in test_list if i is not None))
+                )
             else:
                 assert False
-            if tgt == "spark-with_index":
+            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
@@ -261,7 +263,7 @@ class TestFilter(unittest.TestCase):
                 self.assertTrue(np.all((i is None for i in test_list)))
             else:
                 assert False
-            if tgt == "spark-with_index":
+            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
@@ -280,7 +282,7 @@ class TestFilter(unittest.TestCase):
                 self.assertTrue(np.all((i is not None for i in test_list)))
             else:
                 assert False
-            if tgt == "spark-with_index":
+            if tgt == "spark-with-index":
                 self.assertEqual(
                     get_index_name(transformed_df), get_index_name(filtered_df)
                 )
