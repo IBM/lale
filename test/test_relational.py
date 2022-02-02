@@ -215,11 +215,11 @@ class TestFilter(unittest.TestCase):
             if tgt == "pandas":
                 # `None` is considered as `nan` in Pandas
                 self.assertEqual(filtered_df.shape, (2, 9), tgt)
-                self.assertTrue(np.all(np.isnan(filtered_df["col6"])), tgt)
+                self.assertTrue(all(np.isnan(filtered_df["col6"])), tgt)
             elif tgt.startswith("spark"):
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (1, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
-                self.assertTrue(np.all((np.isnan(i) for i in test_list)))
+                self.assertTrue(all((np.isnan(i) for i in test_list if i is not None)))
             else:
                 assert False
             if tgt == "spark-with-index":
@@ -232,15 +232,13 @@ class TestFilter(unittest.TestCase):
             trainable = Filter(pred=[isnotnan(it.col6)])
             filtered_df = trainable.transform(transformed_df)
             if tgt == "pandas":
-                self.assertTrue(
-                    np.all(np.logical_not(np.isnan(filtered_df["col6"]))), tgt
-                )
+                self.assertTrue(all(np.logical_not(np.isnan(filtered_df["col6"]))), tgt)
                 self.assertEqual(filtered_df.shape, (3, 9), tgt)
             elif tgt.startswith("spark"):
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (4, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
                 self.assertTrue(
-                    np.all((not np.isnan(i) for i in test_list if i is not None))
+                    all((not np.isnan(i) for i in test_list if i is not None))
                 )
             else:
                 assert False
@@ -256,11 +254,11 @@ class TestFilter(unittest.TestCase):
             if tgt == "pandas":
                 # `None` is considered as `nan` in Pandas
                 self.assertEqual(filtered_df.shape, (2, 9), tgt)
-                self.assertTrue(np.all(np.isnan(filtered_df["col6"])), tgt)
+                self.assertTrue(all(np.isnan(filtered_df["col6"])), tgt)
             elif tgt.startswith("spark"):
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (1, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
-                self.assertTrue(np.all((i is None for i in test_list)))
+                self.assertTrue(all((i is None for i in test_list)))
             else:
                 assert False
             if tgt == "spark-with-index":
@@ -275,11 +273,11 @@ class TestFilter(unittest.TestCase):
             if tgt == "pandas":
                 # `None` is considered as `nan` in Pandas
                 self.assertEqual(filtered_df.shape, (3, 9), tgt)
-                self.assertTrue(np.all(np.logical_not(np.isnan(filtered_df["col6"]))))
+                self.assertTrue(all(np.logical_not(np.isnan(filtered_df["col6"]))))
             elif tgt.startswith("spark"):
                 self.assertEqual(_ensure_pandas(filtered_df).shape, (4, 9), tgt)
                 test_list = [row[0] for row in filtered_df.select("col6").collect()]
-                self.assertTrue(np.all((i is not None for i in test_list)))
+                self.assertTrue(all((i is not None for i in test_list)))
             else:
                 assert False
             if tgt == "spark-with-index":
@@ -293,7 +291,7 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (2, 9), tgt)
-            self.assertTrue(np.all(filtered_df["col3"] == "TX"), tgt)
+            self.assertTrue(all(filtered_df["col3"] == "TX"), tgt)
 
     def test_filter_neq(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -301,7 +299,7 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (3, 9), tgt)
-            self.assertTrue(np.all(filtered_df["col1"] != filtered_df["col3"]), tgt)
+            self.assertTrue(all(filtered_df["col1"] != filtered_df["col3"]), tgt)
 
     def test_filter_ge(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -309,7 +307,7 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (3, 9), tgt)
-            self.assertTrue(np.all(filtered_df["col4"] >= 150), tgt)
+            self.assertTrue(all(filtered_df["col4"] >= 150), tgt)
 
     def test_filter_gt(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -317,7 +315,7 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (2, 9), tgt)
-            self.assertTrue(np.all(filtered_df["col4"] > 150), tgt)
+            self.assertTrue(all(filtered_df["col4"] > 150), tgt)
 
     def test_filter_le(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -325,7 +323,7 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (3, 9), tgt)
-            self.assertTrue(np.all(filtered_df["col3"] <= "NY"), tgt)
+            self.assertTrue(all(filtered_df["col3"] <= "NY"), tgt)
 
     def test_filter_lt(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -333,7 +331,7 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (2, 9), tgt)
-            self.assertTrue(np.all(filtered_df["col2"] < filtered_df["TrainId"]), tgt)
+            self.assertTrue(all(filtered_df["col2"] < filtered_df["TrainId"]), tgt)
 
     def test_filter_multiple1(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -341,8 +339,8 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (1, 9))
-            self.assertTrue(np.all(filtered_df["col3"] == "TX"), tgt)
-            self.assertTrue(np.all(filtered_df["col2"] > 4), tgt)
+            self.assertTrue(all(filtered_df["col3"] == "TX"), tgt)
+            self.assertTrue(all(filtered_df["col2"] > 4), tgt)
 
     def test_filter_multiple2(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -356,8 +354,8 @@ class TestFilter(unittest.TestCase):
                 self.assertEqual(filtered_df.shape, (1, 9))
             else:
                 assert False
-            self.assertTrue(np.all(filtered_df["col5"] != "Cold"), tgt)
-            self.assertTrue(np.all(filtered_df["train_id"] < 4), tgt)
+            self.assertTrue(all(filtered_df["col5"] != "Cold"), tgt)
+            self.assertTrue(all(filtered_df["train_id"] < 4), tgt)
 
     def test_multiple3(self):
         for tgt, transformed_df in self.tgt2datasets.items():
@@ -371,9 +369,9 @@ class TestFilter(unittest.TestCase):
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
             self.assertEqual(filtered_df.shape, (1, 9), tgt)
-            self.assertTrue(np.all(filtered_df["tid"] == filtered_df["TrainId"]), tgt)
-            self.assertTrue(np.all(filtered_df["col2"] >= filtered_df["train_id"]), tgt)
-            self.assertTrue(np.all(filtered_df["col3"] == "NY"), tgt)
+            self.assertTrue(all(filtered_df["tid"] == filtered_df["TrainId"]), tgt)
+            self.assertTrue(all(filtered_df["col2"] >= filtered_df["train_id"]), tgt)
+            self.assertTrue(all(filtered_df["col3"] == "NY"), tgt)
 
     def test_filter_no_col_error(self):
         for tgt, transformed_df in self.tgt2datasets.items():
