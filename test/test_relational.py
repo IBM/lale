@@ -162,70 +162,139 @@ class TestFilter(unittest.TestCase):
             table_main = rdd.map(
                 lambda x: Row(TrainId=int(x[0]), col1=x[1], col2=int(x[2]), col6=x[3])
             )
-            self.spark_df4 = add_table_name(sqlContext.createDataFrame(table4), "main")
+            spark_main = add_table_name(sqlContext.createDataFrame(table_main), "main")
+
+            rdd = sc.parallelize(info)
+            table_info = rdd.map(
+                lambda x: Row(train_id=int(x[0]), col3=x[1], col4=int(x[2]))
+            )
+            spark_info = add_table_name(sqlContext.createDataFrame(table_info), "info")
+
+            rdd = sc.parallelize(t1)
+            table_t1 = rdd.map(lambda x: Row(tid=int(x[0]), col5=x[1]))
+            spark_t1 = add_table_name(sqlContext.createDataFrame(table_t1), "t1")
 
             trainable = Join(
-                pred=[it.main.TrainId == it.info.TrainId, it.info.TrainId == it.t1.tid],
+                pred=[
+                    it.main.TrainId == it.info.train_id,
+                    it.info.train_id == it.t1.tid,
+                ],
                 join_type="left",
             )
-            self.transformed_df = trainable.transform(
-                [self.spark_df4, self.spark_df2, self.spark_df3]
+            spark_transformed_df = trainable.transform(
+                [spark_main, spark_info, spark_t1]
             ).sort("TrainId")
-            self.assertEqual(self.transformed_df.count(), 5)
-            self.assertEqual(len(self.transformed_df.columns), 8)
-            self.assertEqual(self.transformed_df.collect()[2]["col1"], "CA")
+            cls.tgt2datasets = {
+                "pandas": spark_transformed_df.toPandas(),
+                "spark": spark_transformed_df,
+                "spark-with-index": SparkDataFrameWithIndex(spark_transformed_df),
+            }
+        else:
+            pandas_main = pd.DataFrame(main, index=["TrainId", "col1", "col2", "col6"])
+            pandas_info = pd.DataFrame(info, index=["train_id", "col3", "col4"])
+            pandas_t1 = pd.DataFrame(t1, index=["tid", "col5"])
+            trainable = Join(
+                pred=[
+                    it.main.TrainId == it.info.train_id,
+                    it.info.train_id == it.t1.tid,
+                ],
+                join_type="left",
+            )
+            pandas_transformed_df = trainable.transform(
+                [pandas_main, pandas_info, pandas_t1]
+            ).sort("TrainId")
+            cls.tgt2datasets = {"pandas": pandas_transformed_df}
 
-    def test_filter_spark_isnan(self):
-        if spark_installed:
-            trainable = Filter(pred=[isnan(it["col6"])])
-            filtered_df = trainable.transform(self.transformed_df)
-            self.assertEqual(filtered_df.count(), 1)
-            self.assertEqual(len(filtered_df.columns), 8)
-            rows = filtered_df.rdd.collect()
-            row0 = rows[0]
-            self.assertEqual(row0[1], "TX")
-            self.assertTrue(np.isnan(row0[3]))
+    def test_filter_isnan(self):
+        pandas_transformed_df = self.tgt2datasets["pandas"]
+        self.assertEqual(pandas_transformed_df.shape, (5, 9))
+        self.assertEqual(pandas_transformed_df["col1"][2], "CA")
+        for tgt, transformed_df in self.tgt2datasets.items():
+            trainable = Filter(pred=[isnan(it.col6)])
+            filtered_df = trainable.transform(transformed_df)
+            if tgt == "pandas":
+                # `None` is considered as `nan` in Pandas
+                self.assertEqual(filtered_df.shape, (2, 9), tgt)
+                self.assertTrue(np.all(np.isnan(filtered_df["col6"])), tgt)
+            elif tgt.startswith("spark"):
+                self.assertEqual(_ensure_pandas(filtered_df).shape, (1, 9), tgt)
+                test_list = [row[0] for row in filtered_df.select("col6").collect()]
+                self.assertTrue(np.all((np.isnan(i) for i in test_list)))
+            else:
+                assert False
+            if tgt == "spark-with_index":
+                self.assertEqual(
+                    get_index_name(transformed_df), get_index_name(filtered_df)
+                )
 
-    def test_filter_spark_isnotnan(self):
-        if spark_installed:
-            trainable = Filter(pred=[isnotnan(it["col6"])])
-            filtered_df = trainable.transform(self.transformed_df)
-            self.assertEqual(filtered_df.count(), 4)
-            self.assertEqual(len(filtered_df.columns), 8)
-            test_list = filtered_df.select(f.collect_list("col6")).first()[0]
-            self.assertTrue(np.all([not np.isnan(i) for i in test_list]))
+    def test_filter_isnotnan(self):
+        for tgt, transformed_df in self.tgt2datasets.items():
+            trainable = Filter(pred=[isnotnan(it.col6)])
+            filtered_df = trainable.transform(transformed_df)
+            if tgt == "pandas":
+                self.assertTrue(
+                    np.all(np.logical_not(np.isnan(filtered_df["col6"]))), tgt
+                )
+                self.assertEqual(filtered_df.shape, (3, 9), tgt)
+            elif tgt.startswith("spark"):
+                self.assertEqual(_ensure_pandas(filtered_df).shape, (4, 9), tgt)
+                test_list = [row[0] for row in filtered_df.select("col6").collect()]
+                self.assertTrue(np.all((not np.isnan(i) for i in test_list)))
+            else:
+                assert False
+            if tgt == "spark-with_index":
+                self.assertEqual(
+                    get_index_name(transformed_df), get_index_name(filtered_df)
+                )
 
-    def test_filter_spark_isnull(self):
-        if spark_installed:
-            trainable = Filter(pred=[isnull(it["col6"])])
-            filtered_df = trainable.transform(self.transformed_df)
-            self.assertEqual(filtered_df.count(), 1)
-            self.assertEqual(len(filtered_df.columns), 8)
-            rows = filtered_df.rdd.collect()
-            row0 = rows[0]
-            self.assertEqual(row0[1], "NY")
-            self.assertIsNone(row0[3])
+    def test_filter_isnull(self):
+        for tgt, transformed_df in self.tgt2datasets.items():
+            trainable = Filter(pred=[isnull(it.col6)])
+            filtered_df = trainable.transform(transformed_df)
+            if tgt == "pandas":
+                # `None` is considered as `nan` in Pandas
+                self.assertEqual(filtered_df.shape, (2, 9), tgt)
+                self.assertTrue(np.all(np.isnan(filtered_df["col6"])), tgt)
+            elif tgt.startswith("spark"):
+                self.assertEqual(_ensure_pandas(filtered_df).shape, (1, 9), tgt)
+                test_list = [row[0] for row in filtered_df.select("col6").collect()]
+                self.assertTrue(np.all((i is None for i in test_list)))
+            else:
+                assert False
+            if tgt == "spark-with_index":
+                self.assertEqual(
+                    get_index_name(transformed_df), get_index_name(filtered_df)
+                )
 
-    def test_filter_spark_isnotnull(self):
-        if spark_installed:
-            trainable = Filter(pred=[isnotnull(it["col6"])])
-            filtered_df = trainable.transform(self.transformed_df)
-            self.assertEqual(filtered_df.count(), 4)
-            self.assertEqual(len(filtered_df.columns), 8)
-            test_list = filtered_df.select(f.collect_list("col6")).first()[0]
-            self.assertTrue(np.all([i is not None for i in test_list]))
+    def test_filter_isnotnull(self):
+        for tgt, transformed_df in self.tgt2datasets.items():
+            trainable = Filter(pred=[isnotnull(it.col6)])
+            filtered_df = trainable.transform(transformed_df)
+            if tgt == "pandas":
+                # `None` is considered as `nan` in Pandas
+                self.assertEqual(filtered_df.shape, (3, 9), tgt)
+                self.assertTrue(np.all(np.logical_not(np.isnan(filtered_df["col6"]))))
+            elif tgt.startswith("spark"):
+                self.assertEqual(_ensure_pandas(filtered_df).shape, (4, 9), tgt)
+                test_list = [row[0] for row in filtered_df.select("col6").collect()]
+                self.assertTrue(np.all((i is not None for i in test_list)))
+            else:
+                assert False
+            if tgt == "spark-with_index":
+                self.assertEqual(
+                    get_index_name(transformed_df), get_index_name(filtered_df)
+                )
 
-    def test_filter_spark_eq(self):
-        if spark_installed:
-            trainable = Filter(pred=[it["col3"] == "NY"])
-            filtered_df = trainable.transform(self.transformed_df)
-            self.assertEqual(filtered_df.count(), 2)
-            self.assertEqual(len(filtered_df.columns), 8)
-            test_list = filtered_df.select(f.collect_list("col3")).first()[0]
-            self.assertTrue(np.all(pd.Series(test_list) == "NY"))
+    def test_filter_eq(self):
+        for tgt, transformed_df in self.tgt2datasets.items():
+            trainable = Filter(pred=[it.col3 == "TX"])
+            filtered_df = trainable.transform(transformed_df)
+            filtered_df = _ensure_pandas(filtered_df)
+            self.assertEqual(filtered_df.shape, (2, 9), tgt)
+            self.assertTrue(np.all(filtered_df["col3"] == "TX"), tgt)
 
-    def test_filter_spark_neq(self):
-        if spark_installed:
+    def test_filter_neq(self):
+        for tgt, transformed_df in self.tgt2datasets.items():
             trainable = Filter(pred=[it.col1 != it["col3"]])
             filtered_df = trainable.transform(transformed_df)
             filtered_df = _ensure_pandas(filtered_df)
@@ -1913,9 +1982,9 @@ class TestMap(unittest.TestCase):
 
         pipeline = Scan(table=it.go_products) >> Project(columns={"type": "number"})
         for tgt, datasets in self.tgt2datasets.items():
+            datasets = datasets["go_sales"]
             result = pipeline.fit(datasets).transform(datasets)
-            if tgt == "spark":
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertIn("Product number", result.columns)
             self.assertNotIn("Product line", result.columns)
 
