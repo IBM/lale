@@ -788,8 +788,8 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0):
 
     from lale.util.batch_data_dictionary_dataset import BatchDataDict
     from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
-    from lale.util.numpy_to_torch_dataset import NumpyTorchDataset, numpy_collate_fn
-    from lale.util.pandas_to_torch_dataset import PandasTorchDataset, pandas_collate_fn
+    from lale.util.numpy_torch_dataset import NumpyTorchDataset, numpy_collate_fn
+    from lale.util.pandas_torch_dataset import PandasTorchDataset, pandas_collate_fn
 
     collate_fn = None
     worker_init_fn = None
