@@ -43,9 +43,10 @@ def pandas2spark(pandas_df, add_index=False, index_name=None):
                 index_name = "index"
             else:
                 index_name = pandas_df.index.name
-        pandas_df = pd.concat(
-            [pandas_df, pd.DataFrame(pandas_df.index, columns=[index_name])], axis=1
+        index_col = pd.DataFrame(
+            pandas_df.index, index=pandas_df.index, columns=[index_name]
         )
+        pandas_df = pd.concat([pandas_df, index_col], axis=1)
     spark_dataframe = spark_sql_context.createDataFrame(pandas_df)
     if index_name is not None:
         spark_dataframe = SparkDataFrameWithIndex(spark_dataframe, index_name)
