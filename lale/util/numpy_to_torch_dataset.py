@@ -56,6 +56,7 @@ class NumpyTorchDataset(Dataset):
         else:
             return self.X, self.y
 
+
 def numpy_collate_fn(batch):
     return_X = None
     return_y = None

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import pandas as pd
+
 try:
     from torch.utils.data import Dataset
 except ModuleNotFoundError:
@@ -54,6 +55,7 @@ class PandasTorchDataset(Dataset):
             return self.X
         else:
             return self.X, self.y
+
 
 def pandas_collate_fn(batch):
     return_X = None
