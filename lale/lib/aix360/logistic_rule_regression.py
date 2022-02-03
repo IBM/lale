@@ -64,7 +64,6 @@ def fit(self, X, y, Xstd=None):
     # Number of samples
     numOrd = None
     Astd = None
-    # B = None
     n = X.shape[0]
     if self.init0:
         # Initialize with empty feature indicator and conjunction matrices
