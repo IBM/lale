@@ -940,6 +940,7 @@ class TestTaskGraphs(unittest.TestCase):
                 rasl_trained = fit_with_batches(
                     rasl_trainable,
                     batches,
+                    n_batches,
                     unique_class_labels,
                     prio,
                     incremental=False,
