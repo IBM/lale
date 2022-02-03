@@ -2012,7 +2012,6 @@ class TestRelationalOperator(unittest.TestCase):
         add_df("y_train", y_train)
         add_df("y_test", y_test)
 
-
     def test_fit_transform(self):
         relational = Relational(
             operator=(Scan(table=it.main) & Scan(table=it.delay))
@@ -2025,7 +2024,11 @@ class TestRelationalOperator(unittest.TestCase):
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
         for tgt, datasets in self.tgt2datasets.items():
-            X_train, X_test, y_train = datasets["X_train"], datasets["X_test"], datasets["y_train"]
+            X_train, X_test, y_train = (
+                datasets["X_train"],
+                datasets["X_test"],
+                datasets["y_train"],
+            )
             trained_relational = relational.fit(X_train, y_train)
             _ = trained_relational.transform(X_test)
 
@@ -2057,7 +2060,11 @@ class TestRelationalOperator(unittest.TestCase):
             >> Aggregate(columns=[count(it.Delay)], group_by=it.MessageId)
         )
         for tgt, datasets in self.tgt2datasets.items():
-            X_train, X_test, y_train = datasets["X_train"], datasets["X_test"], datasets["y_train"]
+            X_train, X_test, y_train = (
+                datasets["X_train"],
+                datasets["X_test"],
+                datasets["y_train"],
+            )
             trained_relational = relational.fit(X_train, y_train)
             with self.assertRaises(ValueError):
                 _ = trained_relational.transform([X_test])
@@ -2075,7 +2082,11 @@ class TestRelationalOperator(unittest.TestCase):
         )
         pipeline = relational >> LogisticRegression()
         for tgt, datasets in self.tgt2datasets.items():
-            X_train, X_test, y_train = datasets["X_train"], datasets["X_test"], datasets["y_train"]
+            X_train, X_test, y_train = (
+                datasets["X_train"],
+                datasets["X_test"],
+                datasets["y_train"],
+            )
             if tgt == "pandas":
                 trained_pipeline = pipeline.fit(X_train, y_train)
                 _ = trained_pipeline.predict(X_test)

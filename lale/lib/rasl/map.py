@@ -32,6 +32,7 @@ from lale.helpers import (
     _is_pandas_df,
     _is_spark_df,
 )
+from lale.lib.lale.dataframe import get_columns
 from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
 from lale.lib.rasl._eval_spark_df import eval_expr_spark_df
 
@@ -212,10 +213,13 @@ class _MapImpl:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
             remainder_columns = [
-                spark_col(x) for x in X.columns if x not in accessed_column_names
+                spark_col(x) for x in get_columns(X) if x not in accessed_column_names
             ]
             new_columns.extend(remainder_columns)
-        if isinstance(X, SparkDataFrameWithIndex):
+        if (
+            isinstance(X, SparkDataFrameWithIndex)
+            and X.index_name not in accessed_column_names
+        ):
             new_columns.extend([spark_col(X.index_name)])
         mapped_df = X.select(new_columns)
         mapped_df = forward_metadata(X, mapped_df)
