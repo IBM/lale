@@ -621,19 +621,17 @@ def cross_val_score(
         verbose,
         call_depth=2,
     )
+
+    def labels(step_id: int, fold: str) -> pd.Series:
+        hof = None if step_id == _DUMMY_INPUT_STEP else fold
+        return pd.concat(
+            tasks[(_ApplyTask, step_id, (_batch_id(fold, idx),), hof)].batch[1]  # type: ignore
+            for idx in range(n_batches_per_fold)
+        )
+
     last_step_id = len(pipeline.steps_list()) - 1
-
-    def predictions(fold: str) -> pd.Series:
-        return pd.concat(
-            tasks[(_ApplyTask, last_step_id, (_batch_id(fold, idx),), fold)].batch[1]  # type: ignore
-            for idx in range(n_batches_per_fold)
-        )
-
-    def labels(fold: str) -> pd.Series:
-        return pd.concat(
-            tasks[(_ApplyTask, _DUMMY_INPUT_STEP, (_batch_id(fold, idx),), fold)].batch[1]  # type: ignore
-            for idx in range(n_batches_per_fold)
-        )
-
-    result = [scoring(labels(fold), predictions(fold)) for fold in folds]
+    result = [
+        scoring(labels(_DUMMY_INPUT_STEP, fold), labels(last_step_id, fold))
+        for fold in folds
+    ]
     return result
