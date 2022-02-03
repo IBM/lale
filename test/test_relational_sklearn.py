@@ -28,6 +28,7 @@ from sklearn.preprocessing import StandardScaler as SkStandardScaler
 
 import lale.datasets
 import lale.datasets.openml
+from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import SparkDataFrameWithIndex
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
@@ -167,9 +168,9 @@ class TestMinMaxScaler(unittest.TestCase):
                 if tgt == "pandas":
                     pass
                 elif tgt == "spark":
-                    data_delta = lale.datasets.pandas2spark(data_delta)
+                    data_delta = pandas2spark(data_delta)
                 elif tgt == "spark-with-index":
-                    data_delta = lale.datasets.pandas2spark(data_delta, add_index=True)
+                    data_delta = pandas2spark(data_delta, add_index=True)
                 else:
                     assert False
                 sk_trained = sk_scaler.fit(data_so_far)
@@ -178,28 +179,39 @@ class TestMinMaxScaler(unittest.TestCase):
 
 
 class TestPipeline(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
 
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: {} for tgt in targets}
+
+        def add_df(name, df):
+            cls.tgt2datasets["pandas"][name] = df
+            cls.tgt2datasets["spark"][name] = pandas2spark(df)
+            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
+                df, add_index=True
+            )
+
         X, y = load_iris(as_frame=True, return_X_y=True)
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        self.X_train_spark = lale.datasets.pandas2spark(self.X_train)
-        self.X_test_spark = lale.datasets.pandas2spark(self.X_test)
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        add_df("X_train", X_train)
+        add_df("X_test", X_test)
+        add_df("y_train", y_train)
+        add_df("y_test", y_test)
 
-    def test_pipeline_pandas(self):
-        pipeline = RaslMinMaxScaler() >> LogisticRegression()
-        trained = pipeline.fit(self.X_train, self.y_train)
-        _ = trained.predict(self.X_test)
-
-    def test_pipeline_spark(self):
-        pipeline = (
-            RaslMinMaxScaler()
-            >> FunctionTransformer(func=lambda X: X.toPandas())
-            >> LogisticRegression()
-        )
-        trained = pipeline.fit(self.X_train_spark, self.y_train)
-        _ = trained.predict(self.X_test_spark)
+    def test_pipeline(self):
+        for tgt, datasets in self.tgt2datasets.items():
+            X_train, X_test = (datasets["X_train"], datasets["X_test"])
+            y_train = self.tgt2datasets["pandas"]["y_train"]
+            pipeline = (
+                RaslMinMaxScaler()
+                >> FunctionTransformer(func=lambda X: _ensure_pandas(X))
+                >> LogisticRegression()
+            )
+            trained = pipeline.fit(X_train, y_train)
+            _ = trained.predict(X_test)
 
 
 def _check_trained_ordinal_encoder(test, op1, op2, msg):
@@ -254,7 +266,7 @@ class TestOrdinalEncoder(unittest.TestCase):
                 sk_op = SkOrdinalEncoder(**encoder_args).fit(data_so_far)
                 data_delta = pandas_data[lower:upper]
                 if tgt == "spark":
-                    data_delta = lale.datasets.pandas2spark(data_delta)
+                    data_delta = pandas2spark(data_delta)
                 rasl_op = rasl_op.partial_fit(data_delta)
                 _check_trained_ordinal_encoder(
                     self,
@@ -321,7 +333,7 @@ class TestOneHotEncoder(unittest.TestCase):
         import typing
         from typing import Any, Dict
 
-        targets = ["pandas", "spark"]
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2creditg = typing.cast(
             Dict[str, Any],
             {
@@ -363,8 +375,14 @@ class TestOneHotEncoder(unittest.TestCase):
                 sk_pipe = prefix >> SkOrdinalEncoder()
                 sk_pipe = sk_pipe.fit(data_so_far)
                 data_delta = train_X_pd[lower:upper]
-                if tgt == "spark":
-                    data_delta = lale.datasets.pandas2spark(data_delta)
+                if tgt == "pandas":
+                    pass
+                elif tgt == "spark":
+                    data_delta = pandas2spark(data_delta)
+                elif tgt == "spark-with-index":
+                    data_delta = pandas2spark(data_delta, add_index=True)
+                else:
+                    assert False
                 rasl_pipe = rasl_pipe.partial_fit(data_delta)
                 self._check_last_trained(
                     sk_pipe,
@@ -385,8 +403,7 @@ class TestOneHotEncoder(unittest.TestCase):
             rasl_trained = rasl_trainable.fit(train_X)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
-            if tgt == "spark":
-                rasl_transformed = rasl_transformed.toPandas()
+            rasl_transformed = _ensure_pandas(rasl_transformed)
             self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
             for row_idx in range(sk_transformed.shape[0]):
                 for col_idx in range(sk_transformed.shape[1]):
@@ -400,9 +417,7 @@ class TestOneHotEncoder(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
-        to_pd = FunctionTransformer(
-            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
-        )
+        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
         lr = LogisticRegression()
         sk_trainable = prefix >> SkOneHotEncoder(sparse=False) >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
@@ -842,7 +857,7 @@ class TestStandardScaler(unittest.TestCase):
                 sk_op = sk_op.fit(data_so_far)
                 data_delta = train_X_pd[lower:upper]
                 if tgt == "spark":
-                    data_delta = lale.datasets.pandas2spark(data_delta)
+                    data_delta = pandas2spark(data_delta)
                 rasl_op = rasl_op.partial_fit(data_delta)
                 _check_trained_standard_scaler(
                     self, sk_op, rasl_op.impl, (tgt, lower, upper)
