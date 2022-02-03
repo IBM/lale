@@ -21,6 +21,8 @@ from packaging import version
 import lale.docstrings
 import lale.operators
 
+sklearn_version = version.parse(getattr(sklearn, "__version__"))
+
 _hyperparams_schema = {
     "description": "Hyperparameter schema for the OneHotEncoder model from scikit-learn.",
     "allOf": [
@@ -149,7 +151,10 @@ class _OneHotEncoderImpl:
     def transform(self, X):
         result = self._wrapped_model.transform(X)
         if isinstance(X, pd.DataFrame):
-            columns = self._wrapped_model.get_feature_names(X.columns)
+            if sklearn_version >= version.Version("1.0"):
+                columns = self._wrapped_model.get_feature_names_out(X.columns)
+            else:
+                columns = self._wrapped_model.get_feature_names(X.columns)
             if isinstance(result, scipy.sparse.csr.csr_matrix):
                 result = result.toarray()
             result = pd.DataFrame(data=result, index=X.index, columns=columns)
@@ -171,7 +176,10 @@ class _OneHotEncoderImpl:
             in_names = self._X_columns
         if in_names is None:
             return _output_transform_schema
-        out_names = self._wrapped_model.get_feature_names(in_names)
+        if sklearn_version >= version.Version("1.0"):
+            out_names = self._wrapped_model.get_feature_names_out(in_names)
+        else:
+            out_names = self._wrapped_model.get_feature_names(in_names)
         result = {
             **s_X,
             "items": {
@@ -185,8 +193,6 @@ class _OneHotEncoderImpl:
 
 
 OneHotEncoder = lale.operators.make_operator(_OneHotEncoderImpl, _combined_schemas)
-sklearn_version_str = getattr(sklearn, "__version__")
-sklearn_version = version.parse(sklearn_version_str)
 
 if sklearn_version >= version.Version("0.21"):
     # new: https://scikit-learn.org/0.21/modules/generated/sklearn.preprocessing.OneHotEncoder.html

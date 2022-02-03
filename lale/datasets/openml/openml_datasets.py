@@ -18,10 +18,14 @@ from typing import Any, Dict, Optional
 
 import numpy as np
 import pandas as pd
+import sklearn
+from packaging import version
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+
+sklearn_version = version.parse(getattr(sklearn, "__version__"))
 
 try:
     import arff
@@ -754,7 +758,10 @@ def fetch(
         if astype in ["pandas", "spark"]:
             cat_col_names = [attributes[i][0].lower() for i in categorical_cols]
             one_hot_encoder = preprocessing.steps[1][1].named_transformers_["ohe"]
-            encoded_names = one_hot_encoder.get_feature_names(cat_col_names)
+            if sklearn_version >= version.Version("1.0"):
+                encoded_names = one_hot_encoder.get_feature_names_out(cat_col_names)
+            else:
+                encoded_names = one_hot_encoder.get_feature_names(cat_col_names)
             num_col_names = [attributes[i][0].lower() for i in numeric_cols]
             col_names = list(encoded_names) + list(num_col_names)
             if verbose:

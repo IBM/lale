@@ -66,6 +66,7 @@ from lale.lib.aif360 import (
     fair_stratified_train_test_split,
 )
 from lale.lib.lale import ConcatFeatures, Project
+from lale.lib.rasl import mockup_data_loader
 from lale.lib.sklearn import (
     FunctionTransformer,
     LinearRegression,
@@ -99,6 +100,9 @@ class TestAIF360Datasets(unittest.TestCase):
         di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_measured = di_scorer.score_data(X=X, y_pred=y)
         self.assertAlmostEqual(di_measured, di_expected, places=3)
+        bat3 = mockup_data_loader(X, y, n_splits=3)
+        di_bat3 = di_scorer.score_data_batched(iter(bat3))
+        self.assertEqual(di_measured, di_bat3)
 
     def test_dataset_adult_pd_cat(self):
         X, y, fairness_info = lale.lib.aif360.fetch_adult_df(preprocess=False)
@@ -899,6 +903,23 @@ class TestAIF360Cat(unittest.TestCase):
         symm_di = symm_di_scorer(estimator, test_X, test_y)
         self.assertLess(symm_di, 0.9)
 
+    def _attempt_scorers_batched(self, fairness_info, estimator, test_X, test_y):
+        fi = fairness_info
+        bat1 = mockup_data_loader(test_X, test_y, n_splits=1)
+        bat3 = mockup_data_loader(test_X, test_y, n_splits=3)
+        di_scorer = lale.lib.aif360.disparate_impact(**fi)
+        di_orig = di_scorer(estimator, test_X, test_y)
+        di_bat1 = di_scorer.score_estimator_batched(estimator, iter(bat1))
+        self.assertEqual(di_orig, di_bat1)
+        di_bat3 = di_scorer.score_estimator_batched(estimator, iter(bat3))
+        self.assertEqual(di_orig, di_bat3)
+        spd_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
+        spd_orig = spd_scorer(estimator, test_X, test_y)
+        spd_bat1 = spd_scorer.score_estimator_batched(estimator, iter(bat1))
+        self.assertEqual(spd_orig, spd_bat1)
+        spd_bat3 = spd_scorer.score_estimator_batched(estimator, iter(bat3))
+        self.assertEqual(spd_orig, spd_bat3)
+
     def test_scorers_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         trainable = self.prep_pd_cat >> LogisticRegression(max_iter=1000)
@@ -908,6 +929,7 @@ class TestAIF360Cat(unittest.TestCase):
         test_X = self.creditg_pd_cat["splits"][0]["test_X"]
         test_y = self.creditg_pd_cat["splits"][0]["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
+        self._attempt_scorers_batched(fairness_info, trained, test_X, test_y)
 
     def test_scorers_np_cat(self):
         fairness_info = self.creditg_np_cat["fairness_info"]
@@ -945,6 +967,7 @@ class TestAIF360Cat(unittest.TestCase):
         test_X = self.creditg_pd_ternary["splits"][0]["test_X"]
         test_y = self.creditg_pd_ternary["splits"][0]["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
+        self._attempt_scorers_batched(fairness_info, trained, test_X, test_y)
 
     def test_scorers_warn(self):
         fairness_info = {
