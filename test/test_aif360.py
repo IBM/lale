@@ -905,18 +905,20 @@ class TestAIF360Cat(unittest.TestCase):
 
     def _attempt_scorers_batched(self, fairness_info, estimator, test_X, test_y):
         fi = fairness_info
-        bat1 = mockup_data_loader(test_X, test_y, n_splits=1)
-        bat3 = mockup_data_loader(test_X, test_y, n_splits=3)
         di_scorer = lale.lib.aif360.disparate_impact(**fi)
         di_orig = di_scorer(estimator, test_X, test_y)
+        bat1 = mockup_data_loader(test_X, test_y, n_splits=1)
         di_bat1 = di_scorer.score_estimator_batched(estimator, iter(bat1))
         self.assertEqual(di_orig, di_bat1)
+        bat3 = mockup_data_loader(test_X, test_y, n_splits=3)
         di_bat3 = di_scorer.score_estimator_batched(estimator, iter(bat3))
         self.assertEqual(di_orig, di_bat3)
         spd_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         spd_orig = spd_scorer(estimator, test_X, test_y)
+        bat1 = mockup_data_loader(test_X, test_y, n_splits=1)
         spd_bat1 = spd_scorer.score_estimator_batched(estimator, iter(bat1))
         self.assertEqual(spd_orig, spd_bat1)
+        bat3 = mockup_data_loader(test_X, test_y, n_splits=3)
         spd_bat3 = spd_scorer.score_estimator_batched(estimator, iter(bat3))
         self.assertEqual(spd_orig, spd_bat3)
 
