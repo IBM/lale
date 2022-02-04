@@ -18,12 +18,7 @@ import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.datasets.data_schemas import (
-    SparkDataFrameWithIndex,
-    add_table_name,
-    forward_metadata,
-    get_table_name,
-)
+from lale.datasets.data_schemas import add_table_name, forward_metadata, get_table_name
 from lale.expressions import _it_column
 from lale.helpers import (
     _is_ast_attribute,
@@ -31,6 +26,7 @@ from lale.helpers import (
     _is_ast_name,
     _is_pandas_df,
     _is_spark_df,
+    _is_spark_with_index,
 )
 from lale.lib.lale.dataframe import get_columns
 from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
@@ -216,10 +212,7 @@ class _MapImpl:
                 spark_col(x) for x in get_columns(X) if x not in accessed_column_names
             ]
             new_columns.extend(remainder_columns)
-        if (
-            isinstance(X, SparkDataFrameWithIndex)
-            and X.index_name not in accessed_column_names
-        ):
+        if _is_spark_with_index(X) and X.index_name not in accessed_column_names:
             new_columns.extend([spark_col(X.index_name)])
         mapped_df = X.select(new_columns)
         mapped_df = forward_metadata(X, mapped_df)

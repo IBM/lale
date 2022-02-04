@@ -25,6 +25,8 @@ try:
     from pyspark import SparkConf, SparkContext
     from pyspark.sql import Row, SQLContext
 
+    from lale.datasets.data_schemas import SparkDataFrameWithIndex
+
     spark_installed = True
 except ImportError:
     spark_installed = False
@@ -35,12 +37,7 @@ from sklearn.datasets import load_iris
 from sklearn.model_selection import train_test_split
 
 from lale.datasets import pandas2spark
-from lale.datasets.data_schemas import (
-    SparkDataFrameWithIndex,
-    add_table_name,
-    get_index_name,
-    get_table_name,
-)
+from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
 from lale.datasets.multitable import multitable_train_test_split
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import (
