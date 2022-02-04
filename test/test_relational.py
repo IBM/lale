@@ -68,6 +68,7 @@ from lale.expressions import (
     sum,
 )
 from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
+from lale.lib.dataframe import get_columns
 from lale.lib.lale import (
     Alias,
     ConcatFeatures,
@@ -80,7 +81,6 @@ from lale.lib.lale import (
     Scan,
     SplitXy,
 )
-from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 
