@@ -83,6 +83,7 @@ from lale.lib.lale import (
     Scan,
     SplitXy,
 )
+from lale.lib.lale.dataframe import get_columns
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 
@@ -940,12 +941,20 @@ class TestJoin(unittest.TestCase):
                 join_type="inner",
             )
             transformed_df = trainable.transform(go_sales)
-            transformed_df = _ensure_pandas(transformed_df)
-            transformed_df = transformed_df.sort_values(
-                by=["Retailer code", "Product number", "Date"]
-            ).reset_index(drop=True)
-            self.assertEqual(transformed_df.shape, (149257, 10), tgt)
-            self.assertEqual(transformed_df["Country"][4], "France", tgt)
+            order = ["Retailer code", "Product number", "Date"]
+            if tgt == "pandas":
+                transformed_df = transformed_df.sort_values(by=order).reset_index(
+                    drop=True
+                )
+                self.assertEqual(transformed_df.shape, (149257, 10), tgt)
+                self.assertEqual(transformed_df["Country"][4], "France", tgt)
+            elif tgt.startswith("spark"):
+                self.assertEqual(len(get_columns(transformed_df)), 10, tgt)
+                self.assertEqual(transformed_df.count(), 149257, tgt)
+                transformed_df = transformed_df.orderBy(order).collect()
+                self.assertEqual(transformed_df[4]["Country"], "France", tgt)
+            else:
+                assert False
 
     # TestCase 2: Go_Sales dataset throws error because of duplicate non-key columns
     def test_join_go_sales2(self):
