@@ -21,7 +21,7 @@ import lale.helpers
 import lale.operators
 from lale.expressions import count, it
 from lale.expressions import sum as agg_sum
-from lale.lib.lale.dataframe import get_columns
+from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import standard_scaler
 
 from .aggregate import Aggregate

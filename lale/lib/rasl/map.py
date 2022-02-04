@@ -28,7 +28,7 @@ from lale.helpers import (
     _is_spark_df,
     _is_spark_with_index,
 )
-from lale.lib.lale.dataframe import get_columns
+from lale.lib.dataframe import get_columns
 from lale.lib.rasl._eval_pandas_df import eval_expr_pandas_df
 from lale.lib.rasl._eval_spark_df import eval_expr_spark_df
 

@@ -20,7 +20,7 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 from lale.expressions import collect_set, it, replace
-from lale.lib.lale.dataframe import get_columns
+from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import ordinal_encoder
 
 from .aggregate import Aggregate
