@@ -20,6 +20,7 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 from lale.expressions import collect_set, it, replace
+from lale.lib.lale.dataframe import get_columns
 from lale.lib.sklearn import ordinal_encoder
 
 from .aggregate import Aggregate
@@ -83,7 +84,7 @@ class _OrdinalEncoderImpl:
 
     @staticmethod
     def _lift(X, hyperparams):
-        feature_names_in = X.columns
+        feature_names_in = get_columns(X)
         if hyperparams["categories"] == "auto":
             agg_op = Aggregate(
                 columns={c: collect_set(it[c]) for c in feature_names_in}

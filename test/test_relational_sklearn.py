@@ -224,7 +224,7 @@ def _check_trained_ordinal_encoder(test, op1, op2, msg):
 class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2gosales = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
         cls.tgt2creditg = {
             tgt: lale.datasets.openml.fetch(
@@ -265,8 +265,14 @@ class TestOrdinalEncoder(unittest.TestCase):
                 data_so_far = pandas_data[0:upper]
                 sk_op = SkOrdinalEncoder(**encoder_args).fit(data_so_far)
                 data_delta = pandas_data[lower:upper]
-                if tgt == "spark":
+                if tgt == "pandas":
+                    pass
+                elif tgt == "spark":
                     data_delta = pandas2spark(data_delta)
+                elif tgt == "spark-with-index":
+                    data_delta = pandas2spark(data_delta, add_index=True)
+                else:
+                    assert False
                 rasl_op = rasl_op.partial_fit(data_delta)
                 _check_trained_ordinal_encoder(
                     self,
@@ -288,8 +294,7 @@ class TestOrdinalEncoder(unittest.TestCase):
             rasl_trained = rasl_trainable.fit(datasets)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(datasets)
-            if tgt == "spark":
-                rasl_transformed = rasl_transformed.toPandas()
+            rasl_transformed = _ensure_pandas(rasl_transformed)
             self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
             for row_idx in range(sk_transformed.shape[0]):
                 for col_idx in range(sk_transformed.shape[1]):
@@ -303,9 +308,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
-        to_pd = FunctionTransformer(
-            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
-        )
+        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
         lr = LogisticRegression()
         encoder_args = {"handle_unknown": "use_encoded_value", "unknown_value": -1}
         sk_trainable = prefix >> SkOrdinalEncoder(**encoder_args) >> lr
