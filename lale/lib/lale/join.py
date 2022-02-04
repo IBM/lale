@@ -16,7 +16,11 @@ import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
+from lale.datasets.data_schemas import (  # SparkDataFrameWithIndex,
+    add_table_name,
+    get_index_name,
+    get_table_name,
+)
 from lale.helpers import (
     _get_subscript_value,
     _is_ast_attribute,
@@ -25,7 +29,7 @@ from lale.helpers import (
     _is_spark_df,
     _is_spark_with_index,
 )
-from lale.lib.lale.dataframe import get_columns
+from lale.lib.dataframe import get_columns
 
 try:
     from pyspark.sql.functions import col
@@ -269,6 +273,10 @@ class _JoinImpl:
                     "Cannot perform join operation! Non-key columns cannot be duplicate."
                 )
             joined_df = join_df(left_df, right_df)
+            # if _is_spark_with_index(left_df):
+            #     index_name = get_index_name(left_df)
+            #     if index_name in columns_in_both_tables:
+            #         join_df = SparkDataFrameWithIndex(joined_df, index_name=index_name)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)
         return add_table_name(joined_df, self.name)

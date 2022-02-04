@@ -22,7 +22,7 @@ import lale.docstrings
 import lale.operators
 from lale.expressions import count, it, median, mode, replace, sum
 from lale.helpers import _is_df, _is_pandas_df, _is_spark_df
-from lale.lib.lale.dataframe import get_columns
+from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import simple_imputer
 from lale.schemas import Enum
 

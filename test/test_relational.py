@@ -80,7 +80,7 @@ from lale.lib.lale import (
     Scan,
     SplitXy,
 )
-from lale.lib.lale.dataframe import get_columns
+from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 
