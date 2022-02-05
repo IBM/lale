@@ -971,6 +971,68 @@ class TestJoin(unittest.TestCase):
             with self.assertRaises(ValueError):
                 _ = trainable.transform(go_sales)
 
+    def test_join_index(self):
+        trainable = Join(
+            pred=[it.info.idx == it.main.idx, it.info.idx == it.t1.idx],
+            join_type="inner",
+        )
+        df1 = pandas2spark(
+            self.tgt2datasets["pandas"]["df1"], add_index=True, index_name="idx"
+        )
+        df2 = pandas2spark(
+            self.tgt2datasets["pandas"]["df2"], add_index=True, index_name="idx"
+        )
+        df3 = pandas2spark(
+            self.tgt2datasets["pandas"]["df3"], add_index=True, index_name="idx"
+        )
+        transformed_df = trainable.transform([df1, df2, df3])
+        transformed_df = _ensure_pandas(transformed_df)
+        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+        self.assertEqual(transformed_df.shape, (3, 8))
+        self.assertEqual(transformed_df["col5"][1], "Cold")
+
+    def test_join_one_index_right(self):
+        trainable = Join(
+            pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
+            join_type="inner",
+        )
+        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
+        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
+        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
+        transformed_df = trainable.transform([df1, df2, df3])
+        transformed_df = _ensure_pandas(transformed_df)
+        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+        self.assertEqual(transformed_df.shape, (3, 7))
+        self.assertEqual(transformed_df["col5"][1], "Cold")
+
+    def test_join_one_index_left(self):
+        trainable = Join(
+            pred=[it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
+            join_type="inner",
+        )
+        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
+        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
+        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
+        transformed_df = trainable.transform([df1, df2, df3])
+        transformed_df = _ensure_pandas(transformed_df)
+        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+        self.assertEqual(transformed_df.shape, (3, 7))
+        self.assertEqual(transformed_df["col5"][1], "Cold")
+
+    def test_join_index_multiple_names(self):
+        trainable = Join(
+            pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
+            join_type="inner",
+        )
+        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
+        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"], index_name="TrainId")
+        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"], index_name="tid")
+        transformed_df = trainable.transform([df1, df2, df3])
+        transformed_df = _ensure_pandas(transformed_df)
+        transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
+        self.assertEqual(transformed_df.shape, (3, 7))
+        self.assertEqual(transformed_df["col5"][1], "Cold")
+
 
 class TestMap(unittest.TestCase):
     @classmethod
