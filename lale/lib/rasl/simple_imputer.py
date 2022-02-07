@@ -20,8 +20,10 @@ import pandas as pd
 
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import get_index_name
 from lale.expressions import count, it, median, mode, replace, sum
-from lale.helpers import _is_df, _is_pandas_df, _is_spark_df
+from lale.helpers import _is_df, _is_pandas_df, _is_spark_df, _is_spark_with_index
+from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import simple_imputer
 from lale.schemas import Enum
 
@@ -38,7 +40,9 @@ def _is_numeric_df(X):
         numeric_cols = [
             f.name for f in X.schema.fields if isinstance(f.dataType, NumericType)
         ]
-        return len(X.columns) == len(numeric_cols)
+        if _is_spark_with_index(X) and get_index_name(X) in numeric_cols:
+            numeric_cols.remove(get_index_name(X))
+        return len(get_columns(X)) == len(numeric_cols)
     else:
         return False
 
@@ -52,7 +56,7 @@ def _is_string_df(X):
         numeric_cols = [
             f.name for f in X.schema.fields if isinstance(f.dataType, StringType)
         ]
-        return len(X.columns) == len(numeric_cols)
+        return len(get_columns(X)) == len(numeric_cols)
     else:
         return False
 
@@ -93,12 +97,12 @@ class _SimpleImputerImpl:
             return self
         elif self._hyperparams["strategy"] == "median":
             agg_op = Aggregate(
-                columns={c: median(it[c]) for c in X.columns},
+                columns={c: median(it[c]) for c in get_columns(X)},
                 exclude_value=self._hyperparams["missing_values"],
             )
         elif self._hyperparams["strategy"] == "most_frequent":
             agg_op = Aggregate(
-                columns={c: mode(it[c]) for c in X.columns},
+                columns={c: mode(it[c]) for c in get_columns(X)},
                 exclude_value=self._hyperparams["missing_values"],
             )
         elif self._hyperparams["strategy"] == "constant":
@@ -107,7 +111,7 @@ class _SimpleImputerImpl:
 
         if agg_data is None and agg_op is not None:
             agg_data = agg_op.transform(X)
-        self._set_fit_attributes((X.columns, agg_data))
+        self._set_fit_attributes((get_columns(X), agg_data))
         return self
 
     def partial_fit(self, X, y=None):
@@ -171,19 +175,19 @@ class _SimpleImputerImpl:
 
     @staticmethod
     def _lift(X, hyperparams):
-        feature_names_in_ = X.columns
+        feature_names_in_ = get_columns(X)
         strategy = hyperparams["strategy"]
         if strategy == "constant":
             fill_value = _SimpleImputerImpl._get_fill_value(X, hyperparams)
-            agg_data = [[fill_value for col in X.columns]]
-            lifted_statistics = pd.DataFrame(agg_data, columns=X.columns)
+            agg_data = [[fill_value for col in get_columns(X)]]
+            lifted_statistics = pd.DataFrame(agg_data, columns=get_columns(X))
         elif strategy == "mean":
             agg_op_sum = Aggregate(
-                columns={c: sum(it[c]) for c in X.columns},
+                columns={c: sum(it[c]) for c in get_columns(X)},
                 exclude_value=hyperparams["missing_values"],
             )
             agg_op_count = Aggregate(
-                columns={c: count(it[c]) for c in X.columns},
+                columns={c: count(it[c]) for c in get_columns(X)},
                 exclude_value=hyperparams["missing_values"],
             )
             lifted_statistics = {}

@@ -18,10 +18,12 @@ import numpy as np
 
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import forward_metadata
 from lale.expressions import it
 from lale.expressions import max as agg_max
 from lale.expressions import min as agg_min
 from lale.helpers import _is_pandas_df, _is_spark_df
+from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import min_max_scaler
 from lale.schemas import Enum
@@ -65,7 +67,8 @@ class _MinMaxScalerImpl:
     def transform(self, X):
         if self._transformer is None:
             self._transformer = self._build_transformer(X)
-        return self._transformer.transform(X)
+        X_new = self._transformer.transform(X)
+        return forward_metadata(X, X_new)
 
     def _set_fit_attributes(self, lifted):
         (
@@ -83,7 +86,7 @@ class _MinMaxScalerImpl:
     def _build_transformer(self, X):
         range_min, range_max = self._hyperparams["feature_range"]
         ops = {}
-        for i, c in enumerate(X.columns):
+        for i, c in enumerate(get_columns(X)):
             c_std = (it[c] - self.data_min_[i]) / (  # type: ignore
                 self.data_max_[i] - self.data_min_[i]  # type: ignore
             )
@@ -93,23 +96,23 @@ class _MinMaxScalerImpl:
 
     @staticmethod
     def _lift(X, hyperparams):
-        agg = {f"{c}_min": agg_min(it[c]) for c in X.columns}
-        agg.update({f"{c}_max": agg_max(it[c]) for c in X.columns})
+        agg = {f"{c}_min": agg_min(it[c]) for c in get_columns(X)}
+        agg.update({f"{c}_max": agg_max(it[c]) for c in get_columns(X)})
         aggregate = Aggregate(columns=agg)
         data_min_max = aggregate.transform(X)
         if _is_spark_df(X):
             data_min_max = data_min_max.toPandas()
-        n = len(X.columns)
+        n = len(get_columns(X))
         data_min_ = np.zeros(shape=(n))
         data_max_ = np.zeros(shape=(n))
-        for i, c in enumerate(X.columns):
+        for i, c in enumerate(get_columns(X)):
             data_min_[i] = data_min_max[f"{c}_min"]
             data_max_[i] = data_min_max[f"{c}_max"]
         data_min_ = np.array(data_min_)
         data_max_ = np.array(data_max_)
         n_samples_seen_ = _df_count(X)
-        n_features_in_ = len(X.columns)
-        feature_names_in_ = X.columns
+        n_features_in_ = len(get_columns(X))
+        feature_names_in_ = get_columns(X)
         return data_min_, data_max_, n_samples_seen_, n_features_in_, feature_names_in_
 
     @staticmethod

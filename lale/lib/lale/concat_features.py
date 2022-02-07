@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from functools import reduce
 from typing import Optional
 
 import numpy as np
@@ -23,7 +24,11 @@ import lale.docstrings
 import lale.operators
 import lale.pretty_print
 import lale.type_checking
+from lale.datasets.data_schemas import get_index_name, get_table_name
+from lale.expressions import it
+from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
+from lale.lib.lale.join import Join
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -37,8 +42,16 @@ except ImportError:
     torch_installed = False
 
 
+def _is_pandas_df(d):
+    return isinstance(d, pd.DataFrame)
+
+
+def _is_pandas_series(d):
+    return isinstance(d, pd.Series)
+
+
 def _is_pandas(d):
-    return isinstance(d, pd.DataFrame) or isinstance(d, pd.Series)
+    return _is_pandas_df(d) or _is_pandas_series(d)
 
 
 class _ConcatFeaturesImpl:
@@ -49,8 +62,14 @@ class _ConcatFeaturesImpl:
         if all([_is_pandas(d) for d in X]):
             name2series = {}
             for dataset in X:
-                for name in dataset.columns:
-                    name2series[name] = name2series.get(name, []) + [dataset[name]]
+                if _is_pandas_df(dataset):
+                    for name in dataset.columns:
+                        name2series[name] = name2series.get(name, []) + [dataset[name]]
+                elif _is_pandas_series(dataset):
+                    name = dataset.name
+                    name2series[name] = name2series.get(name, []) + [dataset]
+                else:
+                    assert False
             duplicates = [name for name, ls in name2series.items() if len(ls) > 1]
             if len(duplicates) == 0:
                 result = pd.concat(X, axis=1)
@@ -58,12 +77,36 @@ class _ConcatFeaturesImpl:
                 logger.info(f"ConcatFeatures duplicate column names {duplicates}")
                 deduplicated = [ls[-1] for _, ls in name2series.items()]
                 result = pd.concat(deduplicated, axis=1)
+        elif all([_is_spark_df(d) for d in X]):
+
+            def join(d1, d2):
+                n1 = get_table_name(d1)
+                n2 = get_table_name(d2)
+                if n1 is None or n2 is None:
+                    raise ValueError(
+                        "Table names are required to concatenate features of Spark dataframes"
+                    )
+                index_col1 = get_index_name(d1)
+                index_col2 = get_index_name(d2)
+                if index_col1 is None or index_col2 is None:
+                    raise ValueError(
+                        "Index columns are required to concatenate features of Spark dataframes"
+                    )
+                transformer = Join(pred=[it[n1][index_col1] == it[n2][index_col2]])
+                return transformer.transform([d1, d2])
+
+            result = reduce(join, X)
+        elif all([_is_pandas(d) or _is_spark_df(d) for d in X]):
+            X = [d.toPandas() if _is_spark_df(d) else d for d in X]
+            return self.transform(X)
         else:
             np_datasets = []
             # Preprocess the datasets to convert them to 2-d numpy arrays
             for dataset in X:
                 if _is_pandas(dataset):
                     np_dataset = dataset.values
+                elif _is_spark_df(dataset):
+                    np_dataset = dataset.toPandas().values
                 elif isinstance(dataset, scipy.sparse.csr_matrix):
                     np_dataset = dataset.toarray()
                 elif torch_installed and isinstance(dataset, torch.Tensor):

@@ -14,9 +14,9 @@
 import ast
 from typing import List, Tuple
 
-import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import forward_metadata
 from lale.expressions import Expr
 from lale.helpers import (
     _is_ast_attribute,
@@ -84,8 +84,6 @@ class _OrderByImpl:
         return col, order_asc
 
     def transform(self, X):
-        table_name = lale.datasets.data_schemas.get_table_name(X)
-
         by = self.by
         orders: List[Tuple[str, bool]]
         if isinstance(by, list):
@@ -104,7 +102,7 @@ class _OrderByImpl:
                 "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
             )
 
-        ordered_df = lale.datasets.data_schemas.add_table_name(ordered_df, table_name)
+        ordered_df = forward_metadata(X, ordered_df)
         return ordered_df
 
 

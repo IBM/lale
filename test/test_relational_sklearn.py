@@ -28,8 +28,15 @@ from sklearn.preprocessing import StandardScaler as SkStandardScaler
 
 import lale.datasets
 import lale.datasets.openml
+from lale.datasets import pandas2spark
+from lale.datasets.data_schemas import (
+    SparkDataFrameWithIndex,
+    forward_metadata,
+    get_index_name,
+)
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
+from lale.helpers import _ensure_pandas
 from lale.lib.lale import Scan, categorical
 from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
@@ -55,8 +62,10 @@ def _check_trained_min_max_scaler(test, op1, op2, msg):
 
 
 class TestMinMaxScaler(unittest.TestCase):
-    def setUp(self):
-        self.go_sales = fetch_go_sales_dataset()
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
 
     def test_get_params(self):
         sk_scaler = SkMinMaxScaler()
@@ -79,190 +88,136 @@ class TestMinMaxScaler(unittest.TestCase):
 
     def test_fit(self):
         columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
+        pandas_data = self.tgt2datasets["pandas"][0][columns]
         sk_scaler = SkMinMaxScaler()
+        sk_trained = sk_scaler.fit(pandas_data)
         rasl_scaler = RaslMinMaxScaler()
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
+        for tgt, go_sales in self.tgt2datasets.items():
+            data = go_sales[0][columns]
+            if tgt == "spark-with-index":
+                data = SparkDataFrameWithIndex(data)
+            rasl_trained = rasl_scaler.fit(data)
+            _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
 
     def test_transform(self):
         columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
+        pandas_data = self.tgt2datasets["pandas"][0][columns]
         sk_scaler = SkMinMaxScaler()
+        sk_trained = sk_scaler.fit(pandas_data)
+        sk_transformed = sk_trained.transform(pandas_data)
         rasl_scaler = RaslMinMaxScaler()
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data)
-        sk_transformed = sk_trained.transform(data)
-        rasl_transformed = rasl_trained.transform(data)
-        self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
-        self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
-        self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
-        self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
-        self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
-        self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
-        self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
-        self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
-        self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
+        for tgt, go_sales in self.tgt2datasets.items():
+            data = go_sales[0][columns]
+            if tgt == "spark-with-index":
+                data = SparkDataFrameWithIndex(data)
+            rasl_trained = rasl_scaler.fit(data)
+            rasl_transformed = rasl_trained.transform(data)
+            if tgt == "spark-with-index":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
+            self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
+            self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
+            self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
+            self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
+            self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
+            self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
+            self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
+            self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
     def test_fit_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
+        pandas_data = self.tgt2datasets["pandas"][0][columns]
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
-        rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
+        sk_trained = sk_scaler.fit(pandas_data)
+        for tgt, go_sales in self.tgt2datasets.items():
+            data = go_sales[0][columns]
+            if tgt == "spark-with-index":
+                data = SparkDataFrameWithIndex(data)
+            rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
+            rasl_trained = rasl_scaler.fit(data)
+            _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
 
     def test_transform_range(self):
         columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
+        pandas_data = self.tgt2datasets["pandas"][0][columns]
         sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
+        sk_trained = sk_scaler.fit(pandas_data)
+        sk_transformed = sk_trained.transform(pandas_data)
         rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data)
-        sk_transformed = sk_trained.transform(data)
-        rasl_transformed = rasl_trained.transform(data)
-        self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
-        self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
-        self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
-        self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
-        self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
-        self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
-        self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
-        self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
-        self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
+        for tgt, go_sales in self.tgt2datasets.items():
+            data = go_sales[0][columns]
+            if tgt == "spark-with-index":
+                data = SparkDataFrameWithIndex(data)
+            rasl_trained = rasl_scaler.fit(data)
+            rasl_transformed = rasl_trained.transform(data)
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
+            self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
+            self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
+            self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
+            self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
+            self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
+            self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
+            self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
+            self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
 
     def test_partial_fit(self):
         columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
-        data1 = data[:10]
-        data2 = data[10:100]
-        data3 = data[100:]
-        sk_scaler = SkMinMaxScaler()
-        rasl_scaler = RaslMinMaxScaler()
-        sk_trained = sk_scaler.partial_fit(data1)
-        rasl_trained = rasl_scaler.partial_fit(data1)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
-        sk_trained = sk_scaler.partial_fit(data2)
-        rasl_trained = rasl_scaler.partial_fit(data2)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
-        sk_trained = sk_scaler.partial_fit(data3)
-        rasl_trained = rasl_scaler.partial_fit(data3)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "pandas")
-
-
-class TestMinMaxScalerSpark(unittest.TestCase):
-    def setUp(self):
-        self.go_sales = fetch_go_sales_dataset()
-
-    def test_fit(self):
-        columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
-        data_spark = lale.datasets.pandas2spark(data)
-        sk_scaler = SkMinMaxScaler()
-        rasl_scaler = RaslMinMaxScaler()
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data_spark)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
-
-    def test_transform(self):
-        columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
-        data_spark = lale.datasets.pandas2spark(data)
-        sk_scaler = SkMinMaxScaler()
-        rasl_scaler = RaslMinMaxScaler()
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data_spark)
-        sk_transformed = sk_trained.transform(data)
-        rasl_transformed = rasl_trained.transform(data_spark)
-        rasl_transformed = rasl_transformed.toPandas()
-        self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
-        self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
-        self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
-        self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
-        self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
-        self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
-        self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
-        self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
-        self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
-
-    def test_fit_range(self):
-        columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
-        data_spark = lale.datasets.pandas2spark(data)
-        sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
-        rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data_spark)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
-
-    def test_transform_range(self):
-        columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
-        data_spark = lale.datasets.pandas2spark(data)
-        sk_scaler = SkMinMaxScaler(feature_range=(-5, 5))
-        rasl_scaler = RaslMinMaxScaler(feature_range=(-5, 5))
-        sk_trained = sk_scaler.fit(data)
-        rasl_trained = rasl_scaler.fit(data_spark)
-        sk_transformed = sk_trained.transform(data)
-        rasl_transformed = rasl_trained.transform(data_spark)
-        rasl_transformed = rasl_transformed.toPandas()
-        self.assertAlmostEqual(sk_transformed[0, 0], rasl_transformed.iloc[0, 0])
-        self.assertAlmostEqual(sk_transformed[0, 1], rasl_transformed.iloc[0, 1])
-        self.assertAlmostEqual(sk_transformed[0, 2], rasl_transformed.iloc[0, 2])
-        self.assertAlmostEqual(sk_transformed[10, 0], rasl_transformed.iloc[10, 0])
-        self.assertAlmostEqual(sk_transformed[10, 1], rasl_transformed.iloc[10, 1])
-        self.assertAlmostEqual(sk_transformed[10, 2], rasl_transformed.iloc[10, 2])
-        self.assertAlmostEqual(sk_transformed[20, 0], rasl_transformed.iloc[20, 0])
-        self.assertAlmostEqual(sk_transformed[20, 1], rasl_transformed.iloc[20, 1])
-        self.assertAlmostEqual(sk_transformed[20, 2], rasl_transformed.iloc[20, 2])
-
-    def test_partial_fit(self):
-        columns = ["Product number", "Quantity", "Retailer code"]
-        data = self.go_sales[0][columns]
-        data1 = data[:10]
-        data1_spark = lale.datasets.pandas2spark(data1)
-        data2 = data[10:100]
-        data2_spark = lale.datasets.pandas2spark(data2)
-        data3 = data[100:]
-        data3_spark = lale.datasets.pandas2spark(data3)
-        sk_scaler = SkMinMaxScaler()
-        rasl_scaler = RaslMinMaxScaler()
-        sk_trained = sk_scaler.partial_fit(data1)
-        rasl_trained = rasl_scaler.partial_fit(data1_spark)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
-        sk_trained = sk_scaler.partial_fit(data2)
-        rasl_trained = rasl_scaler.partial_fit(data2_spark)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
-        sk_trained = sk_scaler.partial_fit(data3)
-        rasl_trained = rasl_scaler.partial_fit(data3_spark)
-        _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, "spark")
+        data = self.tgt2datasets["pandas"][0][columns]
+        for tgt in self.tgt2datasets.keys():
+            sk_scaler = SkMinMaxScaler()
+            rasl_scaler = RaslMinMaxScaler()
+            for lower, upper in [[0, 10], [10, 100], [100, data.shape[0]]]:
+                data_so_far = data[0:upper]
+                data_delta = data[lower:upper]
+                if tgt == "pandas":
+                    pass
+                elif tgt == "spark":
+                    data_delta = pandas2spark(data_delta)
+                elif tgt == "spark-with-index":
+                    data_delta = pandas2spark(data_delta, add_index=True)
+                else:
+                    assert False
+                sk_trained = sk_scaler.fit(data_so_far)
+                rasl_trained = rasl_scaler.partial_fit(data_delta)
+                _check_trained_min_max_scaler(self, sk_trained, rasl_trained.impl, tgt)
 
 
 class TestPipeline(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         from sklearn.datasets import load_iris
         from sklearn.model_selection import train_test_split
 
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: {} for tgt in targets}
+
+        def add_df(name, df):
+            cls.tgt2datasets["pandas"][name] = df
+            cls.tgt2datasets["spark"][name] = pandas2spark(df)
+            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
+                df, add_index=True
+            )
+
         X, y = load_iris(as_frame=True, return_X_y=True)
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(X, y)
-        self.X_train_spark = lale.datasets.pandas2spark(self.X_train)
-        self.X_test_spark = lale.datasets.pandas2spark(self.X_test)
+        X_train, X_test, y_train, y_test = train_test_split(X, y)
+        add_df("X_train", X_train)
+        add_df("X_test", X_test)
+        add_df("y_train", y_train)
+        add_df("y_test", y_test)
 
-    def test_pipeline_pandas(self):
-        pipeline = RaslMinMaxScaler() >> LogisticRegression()
-        trained = pipeline.fit(self.X_train, self.y_train)
-        _ = trained.predict(self.X_test)
-
-    def test_pipeline_spark(self):
-        pipeline = (
-            RaslMinMaxScaler()
-            >> FunctionTransformer(func=lambda X: X.toPandas())
-            >> LogisticRegression()
-        )
-        trained = pipeline.fit(self.X_train_spark, self.y_train)
-        _ = trained.predict(self.X_test_spark)
+    def test_pipeline(self):
+        for tgt, datasets in self.tgt2datasets.items():
+            X_train, X_test = (datasets["X_train"], datasets["X_test"])
+            y_train = self.tgt2datasets["pandas"]["y_train"]
+            pipeline = (
+                RaslMinMaxScaler()
+                >> FunctionTransformer(func=lambda X: _ensure_pandas(X))
+                >> LogisticRegression()
+            )
+            trained = pipeline.fit(X_train, y_train)
+            _ = trained.predict(X_test)
 
 
 def _check_trained_ordinal_encoder(test, op1, op2, msg):
@@ -275,7 +230,7 @@ def _check_trained_ordinal_encoder(test, op1, op2, msg):
 class TestOrdinalEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas", "spark"]
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2gosales = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
         cls.tgt2creditg = {
             tgt: lale.datasets.openml.fetch(
@@ -316,8 +271,14 @@ class TestOrdinalEncoder(unittest.TestCase):
                 data_so_far = pandas_data[0:upper]
                 sk_op = SkOrdinalEncoder(**encoder_args).fit(data_so_far)
                 data_delta = pandas_data[lower:upper]
-                if tgt == "spark":
-                    data_delta = lale.datasets.pandas2spark(data_delta)
+                if tgt == "pandas":
+                    pass
+                elif tgt == "spark":
+                    data_delta = pandas2spark(data_delta)
+                elif tgt == "spark-with-index":
+                    data_delta = pandas2spark(data_delta, add_index=True)
+                else:
+                    assert False
                 rasl_op = rasl_op.partial_fit(data_delta)
                 _check_trained_ordinal_encoder(
                     self,
@@ -339,8 +300,9 @@ class TestOrdinalEncoder(unittest.TestCase):
             rasl_trained = rasl_trainable.fit(datasets)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(datasets)
-            if tgt == "spark":
-                rasl_transformed = rasl_transformed.toPandas()
+            if tgt == "spark-with-index":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
             self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
             for row_idx in range(sk_transformed.shape[0]):
                 for col_idx in range(sk_transformed.shape[1]):
@@ -354,9 +316,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
-        to_pd = FunctionTransformer(
-            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
-        )
+        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
         lr = LogisticRegression()
         encoder_args = {"handle_unknown": "use_encoded_value", "unknown_value": -1}
         sk_trainable = prefix >> SkOrdinalEncoder(**encoder_args) >> lr
@@ -384,7 +344,7 @@ class TestOneHotEncoder(unittest.TestCase):
         import typing
         from typing import Any, Dict
 
-        targets = ["pandas", "spark"]
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2creditg = typing.cast(
             Dict[str, Any],
             {
@@ -426,8 +386,14 @@ class TestOneHotEncoder(unittest.TestCase):
                 sk_pipe = prefix >> SkOrdinalEncoder()
                 sk_pipe = sk_pipe.fit(data_so_far)
                 data_delta = train_X_pd[lower:upper]
-                if tgt == "spark":
-                    data_delta = lale.datasets.pandas2spark(data_delta)
+                if tgt == "pandas":
+                    pass
+                elif tgt == "spark":
+                    data_delta = pandas2spark(data_delta)
+                elif tgt == "spark-with-index":
+                    data_delta = pandas2spark(data_delta, add_index=True)
+                else:
+                    assert False
                 rasl_pipe = rasl_pipe.partial_fit(data_delta)
                 self._check_last_trained(
                     sk_pipe,
@@ -448,8 +414,9 @@ class TestOneHotEncoder(unittest.TestCase):
             rasl_trained = rasl_trainable.fit(train_X)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
-            if tgt == "spark":
-                rasl_transformed = rasl_transformed.toPandas()
+            if tgt == "spark-with-index":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
             self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
             for row_idx in range(sk_transformed.shape[0]):
                 for col_idx in range(sk_transformed.shape[1]):
@@ -463,9 +430,7 @@ class TestOneHotEncoder(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
-        to_pd = FunctionTransformer(
-            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
-        )
+        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
         lr = LogisticRegression()
         sk_trainable = prefix >> SkOneHotEncoder(sparse=False) >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
@@ -481,7 +446,7 @@ class TestOneHotEncoder(unittest.TestCase):
 
 class TestSimpleImputer(unittest.TestCase):
     def setUp(self):
-        targets = ["pandas", "spark"]
+        targets = ["pandas", "spark", "spark-with-index"]
         self.tgt2adult = {
             tgt: lale.datasets.openml.fetch(
                 "adult",
@@ -502,21 +467,25 @@ class TestSimpleImputer(unittest.TestCase):
                 test_X.loc[
                     test_X[col_name] == value, col_name
                 ] = missing_value  # type:ignore
-            elif tgt == "spark":
+            elif tgt.startswith("spark"):
                 from pyspark.sql.functions import col, when
 
-                train_X = train_X.withColumn(
+                train_X_new = train_X.withColumn(
                     col_name,
                     when(col(col_name) == value, missing_value).otherwise(
                         col(col_name)
                     ),
                 )
-                test_X = test_X.withColumn(
+                test_X_new = test_X.withColumn(
                     col_name,
                     when(col(col_name) == value, missing_value).otherwise(
                         col(col_name)
                     ),
                 )
+                train_X = forward_metadata(train_X, train_X_new)
+                test_X = forward_metadata(test_X, test_X_new)
+            else:
+                assert False
             self.tgt2adult[tgt] = (train_X, train_y), (test_X, test_y)
 
     def test_fit_transform_numeric_nan_missing(self):
@@ -545,20 +514,22 @@ class TestSimpleImputer(unittest.TestCase):
                 self.assertEqual(
                     len(sk_statistics_), len(rasl_statistics_), (hyperparam, tgt)
                 )
-                self.assertEqual(
-                    list(sk_statistics_), list(rasl_statistics_), (hyperparam, tgt)
-                )
+                for i in range(sk_statistics_.shape[0]):
+                    self.assertAlmostEqual(
+                        sk_statistics_[i], rasl_statistics_[i], msg=(i, hyperparam, tgt)
+                    )
 
                 rasl_transformed = rasl_trained.transform(test_X)
-                if tgt == "spark":
-                    rasl_transformed = rasl_transformed.toPandas()
+                if tgt == "spark-with-index":
+                    self.assertEqual(get_index_name(rasl_transformed), "index")
+                rasl_transformed = _ensure_pandas(rasl_transformed)
                 self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
                 for row_idx in range(sk_transformed.shape[0]):
                     for col_idx in range(sk_transformed.shape[1]):
-                        self.assertEqual(
+                        self.assertAlmostEqual(
                             sk_transformed[row_idx, col_idx],
                             rasl_transformed.iloc[row_idx, col_idx],
-                            (row_idx, col_idx, tgt),
+                            msg=(row_idx, col_idx, tgt),
                         )
 
     def test_fit_transform_numeric_nonan_missing(self):
@@ -589,8 +560,9 @@ class TestSimpleImputer(unittest.TestCase):
                 self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
 
                 rasl_transformed = rasl_trained.transform(test_X)
-                if tgt == "spark":
-                    rasl_transformed = rasl_transformed.toPandas()
+                if tgt == "spark-with-index":
+                    self.assertEqual(get_index_name(rasl_transformed), "index")
+                rasl_transformed = _ensure_pandas(rasl_transformed)
                 self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
                 for row_idx in range(sk_transformed.shape[0]):
                     for col_idx in range(sk_transformed.shape[1]):
@@ -626,8 +598,11 @@ class TestSimpleImputer(unittest.TestCase):
         with self.assertRaises(ValueError):
             sk_trainable.fit(self.tgt2adult["pandas"][0][0])
         rasl_trainable = RaslSimpleImputer()
-        for _, dataset in self.tgt2adult.items():
+        for tgt, dataset in self.tgt2adult.items():
             (train_X, _), (_, _) = dataset
+            if tgt.startswith("spark"):
+                # Skip test because of timeout!
+                continue
             with self.assertRaises(ValueError):
                 _ = rasl_trainable.fit(train_X)
 
@@ -652,8 +627,7 @@ class TestSimpleImputer(unittest.TestCase):
                 self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
 
                 rasl_transformed = rasl_trained.transform(test_X)
-                if tgt == "spark":
-                    rasl_transformed = rasl_transformed.toPandas()
+                rasl_transformed = _ensure_pandas(rasl_transformed)
                 self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
                 for row_idx in range(sk_transformed.shape[0]):
                     for col_idx in range(sk_transformed.shape[1]):
@@ -684,8 +658,7 @@ class TestSimpleImputer(unittest.TestCase):
                 self.assertEqual(list(sk_statistics_), list(rasl_statistics_), tgt)
 
                 rasl_transformed = rasl_trained.transform(test_X)
-                if tgt == "spark":
-                    rasl_transformed = rasl_transformed.toPandas()
+                rasl_transformed = _ensure_pandas(rasl_transformed)
                 # Note that for this test case, the output of sklearn transform does not
                 # match rasl transform. There is at least one row which has a None
                 # value and pandas replace treats it as nan and replaces it.
@@ -779,23 +752,25 @@ class TestSimpleImputer(unittest.TestCase):
             sk_transformed = sk_trained.transform(self.tgt2adult["pandas"][1][0])
             sk_statistics_ = sk_trained.get_last().impl.statistics_
             (train_X, _), (test_X, _) = self.tgt2adult["pandas"]
-            data1 = train_X.iloc[:10]
-            data2 = train_X.iloc[10:100]
-            data3 = train_X.iloc[100:]
+            data1_pandas = train_X.iloc[:10]
+            data2_pandas = train_X.iloc[10:100]
+            data3_pandas = train_X.iloc[100:]
+            test_X_pandas = test_X
 
             for tgt in self.tgt2adult.keys():
-                if tgt == "spark":
-                    from pyspark.sql import SparkSession
-
-                    spark = (
-                        SparkSession.builder.master("local[1]")
-                        .appName("test_relational_sklearn")
-                        .getOrCreate()
-                    )
-                    data1 = spark.createDataFrame(data1)  # type:ignore
-                    data2 = spark.createDataFrame(data2)  # type:ignore
-                    data3 = spark.createDataFrame(data3)  # type:ignore
-                    test_X = spark.createDataFrame(test_X)  # type:ignore
+                if tgt == "pandas":
+                    data1 = data1_pandas
+                    data2 = data2_pandas
+                    data3 = data3_pandas
+                    test_X = test_X_pandas
+                elif tgt.startswith("spark"):
+                    add_index = tgt == "spark-with-index"
+                    data1 = pandas2spark(data1_pandas, add_index)  # type:ignore
+                    data2 = pandas2spark(data2_pandas, add_index)  # type:ignore
+                    data3 = pandas2spark(data3_pandas, add_index)  # type:ignore
+                    test_X = pandas2spark(test_X_pandas, add_index)  # type:ignore
+                else:
+                    assert False
                 rasl_trainable = prefix >> RaslSimpleImputer(
                     missing_values=-1, **hyperparam
                 )
@@ -810,8 +785,7 @@ class TestSimpleImputer(unittest.TestCase):
                     self.assertEqual(sk_statistics_[i], rasl_statistics_[i])
 
                 rasl_transformed = rasl_trained.transform(test_X)
-                if tgt == "spark":
-                    rasl_transformed = rasl_transformed.toPandas()
+                rasl_transformed = _ensure_pandas(rasl_transformed)
                 self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
                 for row_idx in range(sk_transformed.shape[0]):
                     for col_idx in range(sk_transformed.shape[1]):
@@ -871,7 +845,7 @@ class TestStandardScaler(unittest.TestCase):
         import typing
         from typing import Any, Dict
 
-        targets = ["pandas", "spark"]
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2creditg = typing.cast(
             Dict[str, Any],
             {
@@ -904,8 +878,14 @@ class TestStandardScaler(unittest.TestCase):
                 sk_op = SkStandardScaler()
                 sk_op = sk_op.fit(data_so_far)
                 data_delta = train_X_pd[lower:upper]
-                if tgt == "spark":
-                    data_delta = lale.datasets.pandas2spark(data_delta)
+                if tgt == "pandas":
+                    pass
+                elif tgt == "spark":
+                    data_delta = pandas2spark(data_delta)
+                elif tgt == "spark-with-index":
+                    data_delta = pandas2spark(data_delta, add_index=True)
+                else:
+                    assert False
                 rasl_op = rasl_op.partial_fit(data_delta)
                 _check_trained_standard_scaler(
                     self, sk_op, rasl_op.impl, (tgt, lower, upper)
@@ -922,8 +902,9 @@ class TestStandardScaler(unittest.TestCase):
             rasl_trained = rasl_trainable.fit(train_X)
             _check_trained_standard_scaler(self, sk_trained, rasl_trained.impl, tgt)
             rasl_transformed = rasl_trained.transform(test_X)
-            if tgt == "spark":
-                rasl_transformed = rasl_transformed.toPandas()
+            if tgt == "spark-with-index":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
             self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
             for row_idx in range(sk_transformed.shape[0]):
                 for col_idx in range(sk_transformed.shape[1]):
@@ -935,9 +916,7 @@ class TestStandardScaler(unittest.TestCase):
 
     def test_predict(self):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
-        to_pd = FunctionTransformer(
-            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
-        )
+        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
         lr = LogisticRegression()
         sk_trainable = SkStandardScaler() >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)

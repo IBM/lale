@@ -16,9 +16,9 @@ import ast
 import importlib
 from typing import Any, Optional, Tuple
 
-import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
+from lale.datasets.data_schemas import forward_metadata
 from lale.helpers import (
     _get_subscript_value,
     _is_ast_attribute,
@@ -245,10 +245,8 @@ class _FilterImpl:
             expr_to_parse = pred_element._expr
             lhs, op, rhs = self._get_filter_info(expr_to_parse, X)
             filtered_df = filter(filtered_df)
-        named_filtered_df = lale.datasets.data_schemas.add_table_name(
-            filtered_df, lale.datasets.data_schemas.get_table_name(X)
-        )
-        return named_filtered_df
+        filtered_df_with_metadata = forward_metadata(X, filtered_df)
+        return filtered_df_with_metadata
 
 
 _hyperparams_schema = {

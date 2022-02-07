@@ -27,20 +27,27 @@ logger.setLevel(logging.INFO)
 try:
     from pyspark.sql import SparkSession
 
+    from lale.datasets.data_schemas import SparkDataFrameWithIndex
+
     spark_installed = True
 except ImportError:
     spark_installed = False
 
 
 def get_data_from_csv(datatype, data_file_name):
-    if datatype.casefold() == "pandas":
+    datatype = datatype.casefold()
+    if datatype == "pandas":
         return pd.read_csv(data_file_name)
-    elif datatype.casefold() == "spark":
+    elif datatype.startswith("spark"):
         if spark_installed:
             spark = SparkSession.builder.appName("GoSales Dataset").getOrCreate()
-            return spark.read.options(inferSchema="True", delimiter=",").csv(
+            df = spark.read.options(inferSchema="True", delimiter=",").csv(
                 data_file_name, header=True
             )
+            if datatype == "spark":
+                return df
+            elif datatype == "spark-with-index":
+                return SparkDataFrameWithIndex(df)
         else:
             raise ValueError("Spark is not installed on this machine.")
     else:
@@ -76,6 +83,12 @@ def fetch_go_sales_dataset(datatype="pandas"):
       table from the dataset) after reading the downloaded CSV files. The key of
       each dictionary is the name of the table and the value contains a spark
       dataframe consisting of the data.
+
+      If 'spark-with-index',
+      Returns a list of singleton dictionaries (each element of the list is one
+      table from the dataset) after reading the downloaded CSV files. The key of
+      each dictionary is the name of the table and the value contains a spark
+      dataframe consisting of the data extended with an index column.
 
       Else,
       Throws an error as it does not support any other return type.
@@ -136,6 +149,12 @@ def fetch_imdb_dataset(datatype="pandas"):
       table from the dataset) after reading the already existing CSV files.
       The key of each dictionary is the name of the table and the value contains
       a spark dataframe consisting of the data.
+
+      If 'spark-with-index',
+      Returns a list of singleton dictionaries (each element of the list is one
+      table from the dataset) after reading the downloaded CSV files. The key of
+      each dictionary is the name of the table and the value contains a spark
+      dataframe consisting of the data extended with an index column.
 
       Else,
       Throws an error as it does not support any other return type.

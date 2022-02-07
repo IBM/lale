@@ -90,6 +90,39 @@ class SeriesWithSchema(pd.Series):
         return SeriesWithSchema
 
 
+if spark_installed:
+
+    def _gen_index_name(df, cpt=None):
+        name = f"index{0 if cpt is not None else ''}"
+        if name in df.columns:
+            return _gen_index_name(df, cpt=cpt + 1 if cpt is not None else 0)
+        else:
+            return name
+
+    class SparkDataFrameWithIndex(pyspark.sql.DataFrame):  # type: ignore
+        def __init__(self, df, index_name=None):
+            if index_name is None:
+                index_name = _gen_index_name(df)
+            if index_name not in df.columns:
+                df = (
+                    df.rdd.zipWithIndex()
+                    .map(lambda row: row[0] + (row[1],))
+                    .toDF(df.columns + [index_name])
+                )
+            super(self.__class__, self).__init__(df._jdf, df.sql_ctx)
+            self.index_name = index_name
+
+        @property
+        def columns_without_index(self):
+            cols = list(super().columns)
+            cols.remove(self.index_name)
+            return cols
+
+        def toPandas(self, *args, **kwargs):
+            df = super(self.__class__, self).toPandas(*args, **kwargs)
+            return df.set_index(self.index_name)
+
+
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
     from lale.settings import disable_data_schema_validation
 
@@ -146,7 +179,12 @@ def add_table_name(obj, name) -> Any:
         # Python class DataFrame with method alias(self, alias): https://github.com/apache/spark/blob/master/python/pyspark/sql/dataframe.py
         # Scala type DataFrame: https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/package.scala
         # Scala class DataSet with method as(alias: String): https://github.com/apache/spark/blob/master/sql/core/src/main/scala/org/apache/spark/sql/Dataset.scala
-        return obj.alias(name)
+        o = obj.alias(name)
+        for f in obj.schema.fieldNames():
+            o.schema[f].metadata = obj.schema[f].metadata
+        if isinstance(obj, SparkDataFrameWithIndex):
+            o = SparkDataFrameWithIndex(o, obj.index_name)
+        return o
     if isinstance(obj, NDArrayWithSchema):
         result = obj
     elif isinstance(obj, np.ndarray):
@@ -207,6 +245,30 @@ def get_table_name(obj):
     ):
         return getattr(obj, "table_name", None)
     return None
+
+
+def get_index_name(obj):
+    result = None
+    if spark_installed and isinstance(obj, SparkDataFrameWithIndex):
+        result = obj.index_name
+    elif isinstance(
+        obj,
+        (
+            SeriesWithSchema,
+            DataFrameWithSchema,
+            pd.core.groupby.DataFrameGroupBy,
+            pd.core.groupby.SeriesGroupBy,
+        ),
+    ):
+        result = obj.index.names[0]
+    return result
+
+
+def forward_metadata(old, new):
+    new = add_table_name(new, get_table_name(old))
+    if isinstance(old, SparkDataFrameWithIndex):
+        new = SparkDataFrameWithIndex(new, index_name=get_index_name(old))
+    return new
 
 
 def strip_schema(obj):

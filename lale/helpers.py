@@ -1129,12 +1129,21 @@ def _is_pandas_df(df):
 def _is_spark_df(df):
     if spark_installed:
         return isinstance(df, spark_df)
+    else:
+        return False
 
 
-def _ensure_pandas(df):
+def _is_spark_with_index(df):
+    if spark_installed:
+        return isinstance(df, lale.datasets.data_schemas.SparkDataFrameWithIndex)
+    else:
+        return False
+
+
+def _ensure_pandas(df) -> pd.DataFrame:
     if _is_spark_df(df):
         return df.toPandas()
-    assert _is_pandas_df, type(df)
+    assert _is_pandas_df(df), type(df)
     return df
 
 
