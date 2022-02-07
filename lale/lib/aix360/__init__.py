@@ -15,6 +15,7 @@
 # from .beam_search import PricingInstance
 # import aix360
 # aix360.algorithms.rbm.beam_search.PricingInstance=PricingInstance
-from lale.lib.aif360.util import fair_stratified_train_test_split
 from lale.lib.aif360.datasets import fetch_creditg_df
+from lale.lib.aif360.util import fair_stratified_train_test_split
+
 from .logistic_rule_regression import logisticruleregression
