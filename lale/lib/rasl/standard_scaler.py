@@ -21,6 +21,7 @@ import lale.helpers
 import lale.operators
 from lale.expressions import count, it
 from lale.expressions import sum as agg_sum
+from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import standard_scaler
 
 from .aggregate import Aggregate
@@ -91,7 +92,7 @@ class _StandardScalerImpl:
 
     @staticmethod
     def _lift(X, hyperparams):
-        feature_names_in = X.columns
+        feature_names_in = get_columns(X)
         count_op = Aggregate(columns={"count": count(it[feature_names_in[0]])})
         count_data = lale.helpers._ensure_pandas(count_op.transform(X))
         n_samples_seen = count_data.loc[0, "count"]

@@ -20,6 +20,7 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 from lale.expressions import collect_set, it, replace
+from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import one_hot_encoder
 
 from .aggregate import Aggregate
@@ -83,7 +84,7 @@ class _OneHotEncoderImpl:
 
     @staticmethod
     def _lift(X, hyperparams):
-        feature_names_in = X.columns
+        feature_names_in = get_columns(X)
         agg_op = Aggregate(columns={c: collect_set(it[c]) for c in feature_names_in})
         agg_data = agg_op.transform(X)
         if lale.helpers._is_spark_df(agg_data):

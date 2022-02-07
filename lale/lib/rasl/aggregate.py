@@ -86,7 +86,12 @@ class _AggregateImpl:
             if agg_func_name == "collect_set":
                 agg_func_name = "unique"
             if agg_func_name == "mode":
-                agg_func_name = lambda x: x.value_counts().index[0]  # noqa
+                agg_func_name = (
+                    lambda x: x.value_counts()
+                    .sort_index(ascending=False)
+                    .sort_values(ascending=False)
+                    .index[0]
+                )  # noqa
             if is_grouped and old_col_name not in value_columns:
                 idx = X.count().index
                 if old_col_name not in idx.names:

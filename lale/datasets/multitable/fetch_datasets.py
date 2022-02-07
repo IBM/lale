@@ -18,7 +18,7 @@ import urllib.request
 
 import pandas as pd
 
-from lale.datasets.data_schemas import SparkDataFrameWithIndex, add_table_name
+from lale.datasets.data_schemas import add_table_name
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
@@ -26,6 +26,8 @@ logger.setLevel(logging.INFO)
 
 try:
     from pyspark.sql import SparkSession
+
+    from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
     spark_installed = True
 except ImportError:

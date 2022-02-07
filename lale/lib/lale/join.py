@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import warnings
+
 import pandas as pd
 
 import lale.docstrings
@@ -25,10 +27,12 @@ from lale.helpers import (
     _is_spark_df,
     _is_spark_with_index,
 )
-from lale.lib.lale.dataframe import get_columns
+from lale.lib.dataframe import get_columns
 
 try:
     from pyspark.sql.functions import col
+
+    from lale.datasets.data_schemas import SparkDataFrameWithIndex
 
     spark_installed = True
 
@@ -226,6 +230,44 @@ class _JoinImpl:
                     df = df.drop(index)
             return df
 
+        def add_index(left_key_col, left_df, right_key_col, right_df, joined_df):
+            if _is_spark_with_index(left_df) and _is_spark_with_index(right_df):
+                left_name = get_index_name(left_df)
+                right_name = get_index_name(right_df)
+                if left_name in left_key_col and right_name in right_key_col:
+                    if left_name == right_name:
+                        joined_df = SparkDataFrameWithIndex(
+                            joined_df, index_name=left_name
+                        )
+                    else:
+                        warnings.warn(f"New data column {right_name}")
+                        joined_df = SparkDataFrameWithIndex(
+                            joined_df, index_name=left_name
+                        )
+                elif left_name in left_key_col:
+                    joined_df = SparkDataFrameWithIndex(joined_df, index_name=left_name)
+                elif right_name in right_key_col:
+                    joined_df = SparkDataFrameWithIndex(
+                        joined_df, index_name=right_name
+                    )
+                else:
+                    pass
+            elif _is_spark_with_index(left_df):
+                index_name = get_index_name(left_df)
+                if index_name in left_key_col:
+                    joined_df = SparkDataFrameWithIndex(
+                        joined_df, index_name=index_name
+                    )
+            elif _is_spark_with_index(right_df):
+                index_name = get_index_name(right_df)
+                if index_name in right_key_col:
+                    joined_df = SparkDataFrameWithIndex(
+                        joined_df, index_name=index_name
+                    )
+            else:
+                assert False
+            return joined_df
+
         # Iterate over all the elements of the predicate
         for pred_element in self.pred if self.pred is not None else []:
             left_table_name = ""
@@ -269,6 +311,10 @@ class _JoinImpl:
                     "Cannot perform join operation! Non-key columns cannot be duplicate."
                 )
             joined_df = join_df(left_df, right_df)
+            if _is_spark_with_index(left_df) or _is_spark_with_index(right_df):
+                joined_df = add_index(
+                    left_key_col, left_df, right_key_col, right_df, joined_df
+                )
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)
         return add_table_name(joined_df, self.name)

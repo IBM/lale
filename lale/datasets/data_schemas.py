@@ -106,8 +106,8 @@ if spark_installed:
             if index_name not in df.columns:
                 df = (
                     df.rdd.zipWithIndex()
-                    .map(lambda row: (row[1],) + row[0])
-                    .toDF([index_name] + df.columns)
+                    .map(lambda row: row[0] + (row[1],))
+                    .toDF(df.columns + [index_name])
                 )
             super(self.__class__, self).__init__(df._jdf, df.sql_ctx)
             self.index_name = index_name
@@ -120,7 +120,7 @@ if spark_installed:
 
         def toPandas(self, *args, **kwargs):
             df = super(self.__class__, self).toPandas(*args, **kwargs)
-            return df.drop(columns=[self.index_name])
+            return df.set_index(self.index_name)
 
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
