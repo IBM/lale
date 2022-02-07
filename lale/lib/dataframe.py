@@ -18,14 +18,23 @@ Common interface to manipulate different type of dataframes supported in Lale.
 
 from typing import List
 
-from lale.helpers import _is_pandas_df, _is_spark_df, _is_spark_with_index
+import pandas as pd
+
+from lale.helpers import (
+    _is_pandas_df,
+    _is_pandas_series,
+    _is_spark_df,
+    _is_spark_with_index,
+)
 
 
 def get_columns(df) -> List[str]:
+    if _is_pandas_series(df):
+        return pd.Series([df.name])
     if _is_pandas_df(df):
         return df.columns
     if _is_spark_with_index(df):
-        return df.columns_without_index
+        return pd.Series(df.columns_without_index)
     if _is_spark_df(df):
         return df.columns
     assert False

@@ -235,39 +235,72 @@ class TestSelectKBest(unittest.TestCase):
     def setUpClass(cls):
         from sklearn.datasets import load_digits
 
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: {} for tgt in targets}
+
+        def add_df(name, df):
+            cls.tgt2datasets["pandas"][name] = df
+            cls.tgt2datasets["spark"][name] = pandas2spark(df)
+            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
+                df, add_index=True
+            )
+
         X, y = load_digits(return_X_y=True, as_frame=True)
-        X_spark = lale.datasets.pandas2spark(X, add_index=True)
-        y_spark = lale.datasets.pandas2spark(y, add_index=True)
-        X_spark = add_table_name(X, "X")
-        y_spark = add_table_name(y, "y")
-        cls.tgt2digits = {
-            "pandas": (X, y),
-            "spark": (X_spark, y_spark),
-        }
+        X = add_table_name(X, "X")
+        y = add_table_name(y, "y")
+        add_df("X", X)
+        add_df("y", y)
 
     def _check_trained(self, sk_trained, rasl_trained, msg=""):
-        np.testing.assert_equal(sk_trained.scores_, rasl_trained.impl.scores_, msg)
-        np.testing.assert_equal(sk_trained.pvalues_, rasl_trained.impl.pvalues_, msg)
+        for i in range(len(sk_trained.scores_)):
+            if not (
+                np.isnan(sk_trained.scores_[i])
+                and np.isnan(rasl_trained.impl.scores_[i])
+            ):
+                self.assertAlmostEqual(
+                    sk_trained.scores_[i],
+                    rasl_trained.impl.scores_[i],
+                    msg=f"{msg}: {i}",
+                )
+            if not (
+                np.isnan(sk_trained.pvalues_[i])
+                and np.isnan(rasl_trained.impl.pvalues_[i])
+            ):
+                self.assertAlmostEqual(
+                    sk_trained.pvalues_[i],
+                    rasl_trained.impl.pvalues_[i],
+                    msg=f"{msg}: {i}",
+                )
         self.assertEqual(
             sk_trained.n_features_in_, rasl_trained.impl.n_features_in_, msg
         )
 
     def test_fit(self):
         sk_trainable = SkSelectKBest(k=20)
-        X, y = self.tgt2digits["pandas"]
+        X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
         sk_trained = sk_trainable.fit(X, y)
         rasl_trainable = RaslSelectKBest(k=20)
-        for tgt, (X, y) in self.tgt2digits.items():
-            rasl_trained = rasl_trainable.fit(X, y)
-            self._check_trained(sk_trained, rasl_trained, tgt)
+        for tgt, datasets in self.tgt2datasets.items():
+            X, y = datasets["X"], datasets["y"]
+            if tgt == "spark":
+                with self.assertRaises(ValueError):
+                    rasl_trained = rasl_trainable.fit(X, y)
+            else:
+                rasl_trained = rasl_trainable.fit(X, y)
+                self._check_trained(sk_trained, rasl_trained, tgt)
 
     def test_transform(self):
         sk_trainable = SkSelectKBest(k=20)
-        X, y = self.tgt2digits["pandas"]
+        X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
         sk_trained = sk_trainable.fit(X, y)
         sk_transformed = sk_trained.transform(X)
         rasl_trainable = RaslSelectKBest(k=20)
-        for tgt, (X, y) in self.tgt2digits.items():
+        for tgt, datasets in self.tgt2datasets.items():
+            X, y = datasets["X"], datasets["y"]
+            if tgt == "spark":
+                with self.assertRaises(ValueError):
+                    rasl_trained = rasl_trainable.fit(X, y)
+                continue
             rasl_trained = rasl_trainable.fit(X, y)
             rasl_transformed = rasl_trained.transform(X)
             self._check_trained(sk_trained, rasl_trained, tgt)
@@ -283,7 +316,7 @@ class TestSelectKBest(unittest.TestCase):
 
     def test_partial_fit(self):
         rasl_trainable = RaslSelectKBest(k=20)
-        X, y = self.tgt2digits["pandas"]
+        X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
         for lower, upper in [[0, 100], [100, 200], [200, X.shape[0]]]:
             X_so_far, y_so_far = X[0:upper], y[0:upper]
             sk_trainable = SkSelectKBest(k=20)

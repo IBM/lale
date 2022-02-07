@@ -20,6 +20,8 @@ import lale.operators
 from lale.expressions import count as agg_count
 from lale.expressions import it
 from lale.expressions import sum as agg_sum
+from lale.helpers import _ensure_pandas
+from lale.lib.dataframe import get_columns
 from lale.lib.lale.concat_features import ConcatFeatures
 from lale.lib.lale.group_by import GroupBy
 from lale.lib.rasl import Aggregate, Map
@@ -58,18 +60,22 @@ def f_oneway_prep(X, X_by_y):
     sums_alldata: array
         The sum of each feaure.
     """
-    agg_sum_cols = Aggregate(columns={col: agg_sum(it[col]) for col in X.columns})
-    sums_samples = agg_sum_cols.transform(X_by_y)
+    agg_sum_cols = Aggregate(columns={col: agg_sum(it[col]) for col in get_columns(X)})
+    sums_samples = _ensure_pandas(agg_sum_cols.transform(X_by_y))
     n_samples_per_class = Aggregate(
-        columns={"n_samples_per_class": agg_count(it[X.columns[0]])}
+        columns={"n_samples_per_class": agg_count(it[get_columns(X)[0]])}
     ).transform(X_by_y)
-    n_samples = Aggregate(
-        columns={"sum": agg_sum(it["n_samples_per_class"])}
-    ).transform(n_samples_per_class)["sum"][0]
-    sqr_cols = Map(columns={col: it[col] ** 2 for col in X.columns})
-    ss_alldata = (sqr_cols >> agg_sum_cols).transform(X).loc[0]
-    sums_alldata = agg_sum_cols.transform(X).to_numpy()[0]
-    n_samples_per_class = n_samples_per_class.to_dict()["n_samples_per_class"]
+    n_samples = _ensure_pandas(
+        Aggregate(columns={"sum": agg_sum(it["n_samples_per_class"])}).transform(
+            n_samples_per_class
+        )
+    )["sum"][0]
+    sqr_cols = Map(columns={col: it[col] ** 2 for col in get_columns(X)})
+    ss_alldata = _ensure_pandas((sqr_cols >> agg_sum_cols).transform(X)).loc[0]
+    sums_alldata = _ensure_pandas(agg_sum_cols.transform(X)).loc[0].to_numpy()
+    n_samples_per_class = _ensure_pandas(n_samples_per_class).to_dict()[
+        "n_samples_per_class"
+    ]
     classes = list(n_samples_per_class.keys())
     sums_samples = {k: sums_samples.loc[k].to_numpy() for k in classes}
 
@@ -173,7 +179,7 @@ def f_oneway(lifted):
 
 def f_classif_prep(X, y):
     Xy = ConcatFeatures().transform([X, y])
-    X_by_y = GroupBy(by=[it[y.name]]).transform(Xy)
+    X_by_y = GroupBy(by=[it[get_columns(y)[0]]]).transform(Xy)
     lifted = f_oneway_prep(X, X_by_y)
     return lifted
 
@@ -240,7 +246,7 @@ class _SelectKBestImpl:
     def _lift(X, y, hyperparams):
         score_func_prep = hyperparams["score_func_prep"]
         n_samples_seen = df_count(X)
-        feature_names_in = X.columns
+        feature_names_in = get_columns(X)
         lifted_score = score_func_prep(X, y)
         return n_samples_seen, feature_names_in, lifted_score
 
