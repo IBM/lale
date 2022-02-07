@@ -4490,9 +4490,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 pass
             else:
                 raise AttributeError(
-                    "All operators to be trained with batching need to implement partial_fit. {} doesn't.".format(
-                        operator.name()
-                    )
+                    f"All operators to be trained with batching need to implement partial_fit. {operator.name()} doesn't."
                 )
             inputs_for_transform: Any = inputs
             if trainable.is_frozen_trained():

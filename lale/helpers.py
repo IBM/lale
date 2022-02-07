@@ -788,44 +788,17 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0):
 
     from lale.util.batch_data_dictionary_dataset import BatchDataDict
     from lale.util.hdf5_to_torch_dataset import HDF5TorchDataset
-    from lale.util.numpy_to_torch_dataset import NumpyTorchDataset
+    from lale.util.numpy_torch_dataset import NumpyTorchDataset, numpy_collate_fn
+    from lale.util.pandas_torch_dataset import PandasTorchDataset, pandas_collate_fn
 
     collate_fn = None
     worker_init_fn = None
 
-    def numpy_collate_fn(batch):
-        return_X = None
-        return_y = None
-        for item in batch:
-            if isinstance(item, tuple):
-                if return_X is None:
-                    return_X = item[0]
-                else:
-                    return_X = np.vstack((return_X, item[0]))
-                if return_y is None:
-                    return_y = item[1]
-                else:
-                    return_y = np.vstack((return_y, item[1]))
-            else:
-                if return_X is None:
-                    return_X = item
-                else:
-                    return_X = np.vstack((return_X, item))
-        if return_y is not None:
-            if len(return_y.shape) > 1 and return_y.shape[1] == 1:
-                return_y = np.reshape(return_y, (len(return_y),))
-            return return_X, return_y
-        else:
-            return return_X
-
     if isinstance(X, Dataset):
         dataset = X
     elif isinstance(X, pd.DataFrame):
-        X = X.to_numpy()
-        if isinstance(y, pd.Series):
-            y = y.to_numpy()
-        dataset = NumpyTorchDataset(X, y)
-        collate_fn = numpy_collate_fn
+        dataset = PandasTorchDataset(X, y)
+        collate_fn = pandas_collate_fn
     elif isinstance(X, scipy.sparse.csr.csr_matrix):
         # unfortunately, NumpyTorchDataset won't accept a subclass of np.ndarray
         X = X.toarray()

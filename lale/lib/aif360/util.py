@@ -14,6 +14,7 @@
 
 import collections
 import functools
+import itertools
 import logging
 from typing import Optional, Tuple
 
@@ -333,6 +334,21 @@ _LiftedDIorSPD = collections.namedtuple(
 )
 
 
+_LiftedAODorEOD = collections.namedtuple(
+    "_LiftedAODorEOD",
+    [
+        "tru0_pred0_priv0",
+        "tru0_pred0_priv1",
+        "tru0_pred1_priv0",
+        "tru0_pred1_priv1",
+        "tru1_pred0_priv0",
+        "tru1_pred0_priv1",
+        "tru1_pred1_priv0",
+        "tru1_pred1_priv1",
+    ],
+)
+
+
 class _ScorerFactory:
     def __init__(
         self, metric, favorable_labels, protected_attributes, unfavorable_labels
@@ -449,10 +465,10 @@ class _ScorerFactory:
             y_true = None
         else:
             y_true, y_pred, X = batch
+        assert y_pred is not None and X is not None, batch
+        y_pred = self._y_pred_series(y_true, y_pred, X)
+        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
         if self.metric in ["disparate_impact", "statistical_parity_difference"]:
-            assert y_pred is not None and X is not None, (y_pred, X)
-            y_pred = self._y_pred_series(y_true, y_pred, X)
-            encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
             df = pd.concat([encoded_X, y_pred], axis=1)
             pa_names = self.privileged_groups[0].keys()
             pipeline = GroupBy(
@@ -460,37 +476,92 @@ class _ScorerFactory:
             ) >> Aggregate(columns={"count": count(it[y_pred.name])})
             agg_df = pipeline.transform(df)
 
-            def get_count(priv, fav):
+            def count2(priv, fav):
                 row = (priv,) * len(pa_names) + (fav,)
                 return agg_df.at[row, "count"] if row in agg_df.index else 0
 
             return _LiftedDIorSPD(
-                priv0_fav0=get_count(0, 0),
-                priv0_fav1=get_count(0, 1),
-                priv1_fav0=get_count(1, 0),
-                priv1_fav1=get_count(1, 1),
+                priv0_fav0=count2(priv=0, fav=0),
+                priv0_fav1=count2(priv=0, fav=1),
+                priv1_fav0=count2(priv=1, fav=0),
+                priv1_fav1=count2(priv=1, fav=1),
+            )
+        if self.metric in ["average_odds_difference", "equal_opportunity_difference"]:
+
+            def is_fresh(col_name):
+                assert y_true is not None and isinstance(y_true, pd.Series), batch
+                return col_name not in encoded_X.columns and col_name != y_true.name
+
+            if is_fresh("y_pred"):
+                y_pred_name = "y_pred"
+            else:
+                y_pred_name = next(
+                    f"y_pred_{i}" for i in itertools.count(0) if is_fresh(f"y_pred_{i}")
+                )
+            y_pred = pd.Series(y_pred, y_pred.index, name=y_pred_name)
+            _, y_true = self.prot_attr_enc.transform(X, y_true)
+            df = pd.concat([y_true, y_pred, encoded_X], axis=1)
+            pa_names = self.privileged_groups[0].keys()
+            pipeline = GroupBy(
+                by=[it[y_true.name], it[y_pred_name]] + [it[pa] for pa in pa_names]
+            ) >> Aggregate(columns={"count": count(it[y_pred.name])})
+            agg_df = pipeline.transform(df)
+
+            def count3(tru, pred, priv):
+                row = (tru, pred) + (priv,) * len(pa_names)
+                return agg_df.at[row, "count"] if row in agg_df.index else 0
+
+            return _LiftedAODorEOD(
+                tru0_pred0_priv0=count3(tru=0, pred=0, priv=0),
+                tru0_pred0_priv1=count3(tru=0, pred=0, priv=1),
+                tru0_pred1_priv0=count3(tru=0, pred=1, priv=0),
+                tru0_pred1_priv1=count3(tru=0, pred=1, priv=1),
+                tru1_pred0_priv0=count3(tru=1, pred=0, priv=0),
+                tru1_pred0_priv1=count3(tru=1, pred=0, priv=1),
+                tru1_pred1_priv0=count3(tru=1, pred=1, priv=0),
+                tru1_pred1_priv1=count3(tru=1, pred=1, priv=1),
             )
         assert False, self.metric
 
     def _combine(self, lifted_a, lifted_b):
         if self.metric in ["disparate_impact", "statistical_parity_difference"]:
-            return _LiftedDIorSPD(
-                priv0_fav0=lifted_a.priv0_fav0 + lifted_b.priv0_fav0,
-                priv0_fav1=lifted_a.priv0_fav1 + lifted_b.priv0_fav1,
-                priv1_fav0=lifted_a.priv1_fav0 + lifted_b.priv1_fav0,
-                priv1_fav1=lifted_a.priv1_fav1 + lifted_b.priv1_fav1,
-            )
+            return _LiftedDIorSPD(*(a + b for a, b in zip(lifted_a, lifted_b)))
+        if self.metric in ["average_odds_difference", "equal_opportunity_difference"]:
+            return _LiftedAODorEOD(*(a + b for a, b in zip(lifted_a, lifted_b)))
         assert False, self.metric
 
     def _lower(self, lifted):
+        a = lifted
         if self.metric == "disparate_impact":
-            numerator = lifted.priv0_fav1 / (lifted.priv0_fav0 + lifted.priv0_fav1)
-            denominator = lifted.priv1_fav1 / (lifted.priv1_fav0 + lifted.priv1_fav1)
+            numerator = a.priv0_fav1 / np.float64(a.priv0_fav0 + a.priv0_fav1)
+            denominator = a.priv1_fav1 / np.float64(a.priv1_fav0 + a.priv1_fav1)
             return numerator / denominator
         if self.metric == "statistical_parity_difference":
-            minuend = lifted.priv0_fav1 / (lifted.priv0_fav0 + lifted.priv0_fav1)
-            subtrahend = lifted.priv1_fav1 / (lifted.priv1_fav0 + lifted.priv1_fav1)
+            minuend = a.priv0_fav1 / np.float64(a.priv0_fav0 + a.priv0_fav1)
+            subtrahend = a.priv1_fav1 / np.float64(a.priv1_fav0 + a.priv1_fav1)
             return minuend - subtrahend
+        if self.metric == "equal_opportunity_difference":
+            tpr_priv0 = a.tru1_pred1_priv0 / np.float64(
+                a.tru1_pred1_priv0 + a.tru1_pred0_priv0
+            )
+            tpr_priv1 = a.tru1_pred1_priv1 / np.float64(
+                a.tru1_pred1_priv1 + a.tru1_pred0_priv1
+            )
+            return tpr_priv0 - tpr_priv1
+        if self.metric == "average_odds_difference":
+            fpr_priv0 = a.tru0_pred1_priv0 / np.float64(
+                a.tru0_pred1_priv0 + a.tru0_pred0_priv0
+            )
+            fpr_priv1 = a.tru0_pred1_priv1 / np.float64(
+                a.tru0_pred1_priv1 + a.tru0_pred0_priv1
+            )
+            tpr_priv0 = a.tru1_pred1_priv0 / np.float64(
+                a.tru1_pred1_priv0 + a.tru1_pred0_priv0
+            )
+            tpr_priv1 = a.tru1_pred1_priv1 / np.float64(
+                a.tru1_pred1_priv1 + a.tru1_pred0_priv1
+            )
+            return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
         assert False, self.metric
 
     def score_data_batched(self, batches):

@@ -101,7 +101,7 @@ class TestAIF360Datasets(unittest.TestCase):
         di_measured = di_scorer.score_data(X=X, y_pred=y)
         self.assertAlmostEqual(di_measured, di_expected, places=3)
         bat3 = mockup_data_loader(X, y, n_splits=3)
-        di_bat3 = di_scorer.score_data_batched(iter(bat3))
+        di_bat3 = di_scorer.score_data_batched(bat3)
         self.assertEqual(di_measured, di_bat3)
 
     def test_dataset_adult_pd_cat(self):
@@ -904,23 +904,19 @@ class TestAIF360Cat(unittest.TestCase):
         self.assertLess(symm_di, 0.9)
 
     def _attempt_scorers_batched(self, fairness_info, estimator, test_X, test_y):
-        fi = fairness_info
-        di_scorer = lale.lib.aif360.disparate_impact(**fi)
-        di_orig = di_scorer(estimator, test_X, test_y)
-        bat1 = mockup_data_loader(test_X, test_y, n_splits=1)
-        di_bat1 = di_scorer.score_estimator_batched(estimator, iter(bat1))
-        self.assertEqual(di_orig, di_bat1)
-        bat3 = mockup_data_loader(test_X, test_y, n_splits=3)
-        di_bat3 = di_scorer.score_estimator_batched(estimator, iter(bat3))
-        self.assertEqual(di_orig, di_bat3)
-        spd_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
-        spd_orig = spd_scorer(estimator, test_X, test_y)
-        bat1 = mockup_data_loader(test_X, test_y, n_splits=1)
-        spd_bat1 = spd_scorer.score_estimator_batched(estimator, iter(bat1))
-        self.assertEqual(spd_orig, spd_bat1)
-        bat3 = mockup_data_loader(test_X, test_y, n_splits=3)
-        spd_bat3 = spd_scorer.score_estimator_batched(estimator, iter(bat3))
-        self.assertEqual(spd_orig, spd_bat3)
+        batched_scorer_factories = [
+            lale.lib.aif360.statistical_parity_difference,
+            lale.lib.aif360.disparate_impact,
+            lale.lib.aif360.equal_opportunity_difference,
+            lale.lib.aif360.average_odds_difference,
+        ]
+        for factory in batched_scorer_factories:
+            scorer = factory(**fairness_info)
+            score_orig = scorer(estimator, test_X, test_y)
+            for n_batches in [1, 3]:
+                batches = mockup_data_loader(test_X, test_y, n_splits=n_batches)
+                score_batched = scorer.score_estimator_batched(estimator, batches)
+                self.assertEqual(score_orig, score_batched, (scorer.metric, n_batches))
 
     def test_scorers_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
