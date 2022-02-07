@@ -38,3 +38,10 @@ def get_columns(df) -> List[str]:
     if _is_spark_df(df):
         return df.columns
     assert False
+
+
+def count(df):
+    if _is_pandas_df(df) or _is_pandas_series(df):
+        return len(df)
+    elif _is_spark_df(df):
+        return df.count()

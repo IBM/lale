@@ -21,13 +21,11 @@ from lale.expressions import count as agg_count
 from lale.expressions import it
 from lale.expressions import sum as agg_sum
 from lale.helpers import _ensure_pandas
-from lale.lib.dataframe import get_columns
+from lale.lib.dataframe import count, get_columns
 from lale.lib.lale.concat_features import ConcatFeatures
 from lale.lib.lale.group_by import GroupBy
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import select_k_best
-
-from ._utils import df_count
 
 
 # The following functions are a rewriting of sklearn.feature_selection.f_oneway
@@ -245,7 +243,7 @@ class _SelectKBestImpl:
     @staticmethod
     def _lift(X, y, hyperparams):
         score_func_prep = hyperparams["score_func_prep"]
-        n_samples_seen = df_count(X)
+        n_samples_seen = count(X)
         feature_names_in = get_columns(X)
         lifted_score = score_func_prep(X, y)
         return n_samples_seen, feature_names_in, lifted_score
