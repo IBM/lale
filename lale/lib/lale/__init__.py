@@ -95,7 +95,7 @@ Functions:
 .. _`spark_explainer`: lale.lib.lale.spark_explainer.html
 """
 
-from lale.lib.rasl import Aggregate, Filter, Map
+from lale.lib.rasl import Aggregate, Map
 
 from .alias import Alias
 
@@ -108,6 +108,7 @@ from .batching import Batching
 # estimators and transformers
 from .both import Both
 from .concat_features import ConcatFeatures
+from .filter import Filter
 
 # functions
 from .functions import categorical, date_time
