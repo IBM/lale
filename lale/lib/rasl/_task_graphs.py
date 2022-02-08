@@ -14,6 +14,7 @@
 
 import enum
 import functools
+import itertools
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -89,6 +90,7 @@ class _Task:
         self.preds = []
         self.succs = []
         self.seq_id = None  # for verbose visualization
+        self.deletable_output = True
 
     @abstractmethod
     def get_operation(
@@ -284,8 +286,9 @@ def _create_tasks_batching(
     incremental: bool,
 ) -> Dict[_MemoKey, _Task]:
     tg = _TaskGraph(pipeline)
-    for step in pipeline._find_sink_nodes():
-        tg.find_or_create(_TrainTask, tg.step_ids[step], all_batch_ids, None)
+    for step_id in range(len(pipeline.steps_list())):
+        task = tg.find_or_create(_TrainTask, step_id, all_batch_ids, None)
+        task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
         if isinstance(task, _TrainTask):
@@ -358,11 +361,11 @@ def _create_tasks_cross_val(
     tg = _TaskGraph(pipeline)
     held_out: Optional[str]
     for step in pipeline._find_sink_nodes():
-        for held_out in folds:
-            for idx in range(n_batches_per_fold):
-                tg.find_or_create(
-                    _ApplyTask, tg.step_ids[step], (_batch_id(held_out, idx),), held_out
-                )
+        for held_out, idx in itertools.product(folds, range(n_batches_per_fold)):
+            task = tg.find_or_create(
+                _ApplyTask, tg.step_ids[step], (_batch_id(held_out, idx),), held_out
+            )
+            task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
         if isinstance(task, _TrainTask):
@@ -448,6 +451,11 @@ def _create_tasks_cross_val(
                 )
         for pred_task in task.preds:
             pred_task.succs.append(task)
+    for fold, idx in itertools.product(folds, range(n_batches_per_fold)):
+        task = tg.all_tasks[
+            _ApplyTask, _DUMMY_INPUT_STEP, (_batch_id(fold, idx),), None
+        ]
+        task.deletable_output = False  # TODO: remove when batched scoring works
     return tg.all_tasks
 
 
@@ -475,6 +483,13 @@ def _run_tasks(
     def mark_done(task: _Task) -> None:
         if task.status is _TaskStatus.DONE:
             return
+        if task.deletable_output:
+            if all(s.status is _TaskStatus.DONE for s in task.succs):
+                if isinstance(task, _ApplyTask):
+                    task.batch = None
+                if isinstance(task, _TrainTask):
+                    task.lifted = None
+                    task.trained = None
         if task.status is _TaskStatus.READY:
             ready_keys.remove(task.memo_key())
         task.status = _TaskStatus.DONE
