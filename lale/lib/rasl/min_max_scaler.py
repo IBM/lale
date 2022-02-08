@@ -22,18 +22,11 @@ from lale.datasets.data_schemas import forward_metadata
 from lale.expressions import it
 from lale.expressions import max as agg_max
 from lale.expressions import min as agg_min
-from lale.helpers import _is_pandas_df, _is_spark_df
-from lale.lib.dataframe import get_columns
+from lale.helpers import _is_spark_df
+from lale.lib.dataframe import count, get_columns
 from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import min_max_scaler
 from lale.schemas import Enum
-
-
-def _df_count(X):
-    if _is_pandas_df(X):
-        return len(X)
-    elif _is_spark_df(X):
-        return X.count()
 
 
 class _MinMaxScalerImpl:
@@ -44,7 +37,6 @@ class _MinMaxScalerImpl:
             raise ValueError("`clip=True` is not supported by this implementation")
         self._hyperparams = {"feature_range": feature_range, "copy": copy, "clip": clip}
         self.n_samples_seen_ = 0
-        self._transformer = None
 
     def fit(self, X, y=None):
         self._set_fit_attributes(self._lift(X, self._hyperparams))
@@ -57,7 +49,6 @@ class _MinMaxScalerImpl:
             self.data_min_,
             self.data_max_,
             self.n_samples_seen_,
-            self.n_features_in_,
             self.feature_names_in_,
         )
         lifted_b = self._lift(X, self._hyperparams)
@@ -75,13 +66,14 @@ class _MinMaxScalerImpl:
             self.data_min_,
             self.data_max_,
             self.n_samples_seen_,
-            self.n_features_in_,
             self.feature_names_in_,
         ) = lifted
+        self.n_features_in_ = len(self.feature_names_in_)
         self.data_range_ = self.data_max_ - self.data_min_
         range_min, range_max = self._hyperparams["feature_range"]
         self.scale_ = (range_max - range_min) / (self.data_max_ - self.data_min_)
         self.min_ = range_min - self.data_min_ * self.scale_
+        self._transformer = None
 
     def _build_transformer(self, X):
         range_min, range_max = self._hyperparams["feature_range"]
@@ -110,10 +102,9 @@ class _MinMaxScalerImpl:
             data_max_[i] = data_min_max[f"{c}_max"]
         data_min_ = np.array(data_min_)
         data_max_ = np.array(data_max_)
-        n_samples_seen_ = _df_count(X)
-        n_features_in_ = len(get_columns(X))
+        n_samples_seen_ = count(X)
         feature_names_in_ = get_columns(X)
-        return data_min_, data_max_, n_samples_seen_, n_features_in_, feature_names_in_
+        return data_min_, data_max_, n_samples_seen_, feature_names_in_
 
     @staticmethod
     def _combine(lifted_a, lifted_b):
@@ -121,24 +112,20 @@ class _MinMaxScalerImpl:
             data_min_a,
             data_max_a,
             n_samples_seen_a,
-            n_features_in_a,
             feature_names_in_a,
         ) = lifted_a
         (
             data_min_b,
             data_max_b,
             n_samples_seen_b,
-            n_features_in_b,
             feature_names_in_b,
         ) = lifted_b
         data_min_ = np.minimum(data_min_a, data_min_b)
         data_max_ = np.maximum(data_max_a, data_max_b)
         n_samples_seen_ = n_samples_seen_a + n_samples_seen_b
-        assert n_features_in_a == n_features_in_b
-        n_features_in_ = n_features_in_a
         assert list(feature_names_in_a) == list(feature_names_in_b)
         feature_names_in_ = feature_names_in_a
-        return data_min_, data_max_, n_samples_seen_, n_features_in_, feature_names_in_
+        return data_min_, data_max_, n_samples_seen_, feature_names_in_
 
 
 _combined_schemas = {
