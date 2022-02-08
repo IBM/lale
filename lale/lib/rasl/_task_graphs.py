@@ -14,6 +14,7 @@
 
 import enum
 import functools
+import itertools
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -89,6 +90,7 @@ class _Task:
         self.preds = []
         self.succs = []
         self.seq_id = None  # for verbose visualization
+        self.deletable_output = True
 
     @abstractmethod
     def get_operation(
@@ -229,7 +231,11 @@ def _visualize_tasks(
         else:
             assert task.status is _TaskStatus.DONE
             color = "lightgray"
-        dot.node(task_to_string(task), style="filled", fillcolor=color)
+        if isinstance(task, _TrainTask):
+            style = "filled,rounded"
+        else:
+            style = "filled"
+        dot.node(task_to_string(task), style=style, fillcolor=color)
     for task in tasks.values():
         for succ in task.succs:
             dot.edge(task_to_string(task), task_to_string(succ))
@@ -280,8 +286,9 @@ def _create_tasks_batching(
     incremental: bool,
 ) -> Dict[_MemoKey, _Task]:
     tg = _TaskGraph(pipeline)
-    for step in pipeline._find_sink_nodes():
-        tg.find_or_create(_TrainTask, tg.step_ids[step], all_batch_ids, None)
+    for step_id in range(len(pipeline.steps_list())):
+        task = tg.find_or_create(_TrainTask, step_id, all_batch_ids, None)
+        task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
         if isinstance(task, _TrainTask):
@@ -314,7 +321,14 @@ def _create_tasks_batching(
                             )
                         )
                 else:
-                    assert False, "non-incremental operator " + step.name()
+                    assert len(tg.step_id_preds[task.step_id]) == 1
+                    pred_step_id = tg.step_id_preds[task.step_id][0]
+                    for batch_id in task.batch_ids:
+                        task.preds.append(
+                            tg.find_or_create(
+                                _ApplyTask, pred_step_id, (batch_id,), None
+                            )
+                        )
         if isinstance(task, _ApplyTask) and task.step_id != _DUMMY_INPUT_STEP:
             if incremental:
                 fit_upto = _get_idx(task.batch_ids[-1]) + 1
@@ -347,11 +361,11 @@ def _create_tasks_cross_val(
     tg = _TaskGraph(pipeline)
     held_out: Optional[str]
     for step in pipeline._find_sink_nodes():
-        for held_out in folds:
-            for idx in range(n_batches_per_fold):
-                tg.find_or_create(
-                    _ApplyTask, tg.step_ids[step], (_batch_id(held_out, idx),), held_out
-                )
+        for held_out, idx in itertools.product(folds, range(n_batches_per_fold)):
+            task = tg.find_or_create(
+                _ApplyTask, tg.step_ids[step], (_batch_id(held_out, idx),), held_out
+            )
+            task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
         if isinstance(task, _TrainTask):
@@ -401,6 +415,17 @@ def _create_tasks_cross_val(
                                 _ApplyTask, pred_step_id, task.batch_ids[-1:], held_out
                             )
                         )
+                else:
+                    assert len(tg.step_id_preds[task.step_id]) == 1
+                    pred_step_id = tg.step_id_preds[task.step_id][0]
+                    if pred_step_id != _DUMMY_INPUT_STEP and not same_fold:
+                        held_out = _get_fold(task.batch_ids[0])
+                    for batch_id in task.batch_ids:
+                        task.preds.append(
+                            tg.find_or_create(
+                                _ApplyTask, pred_step_id, (batch_id,), held_out
+                            )
+                        )
         if isinstance(task, _ApplyTask) and task.step_id != _DUMMY_INPUT_STEP:
             task.preds.append(
                 tg.find_or_create(
@@ -426,6 +451,11 @@ def _create_tasks_cross_val(
                 )
         for pred_task in task.preds:
             pred_task.succs.append(task)
+    for fold, idx in itertools.product(folds, range(n_batches_per_fold)):
+        task = tg.all_tasks[
+            _ApplyTask, _DUMMY_INPUT_STEP, (_batch_id(fold, idx),), None
+        ]
+        task.deletable_output = False  # TODO: remove when batched scoring works
     return tg.all_tasks
 
 
@@ -453,6 +483,13 @@ def _run_tasks(
     def mark_done(task: _Task) -> None:
         if task.status is _TaskStatus.DONE:
             return
+        if task.deletable_output:
+            if all(s.status is _TaskStatus.DONE for s in task.succs):
+                if isinstance(task, _ApplyTask):
+                    task.batch = None
+                if isinstance(task, _TrainTask):
+                    task.lifted = None
+                    task.trained = None
         if task.status is _TaskStatus.READY:
             ready_keys.remove(task.memo_key())
         task.status = _TaskStatus.DONE
@@ -489,11 +526,15 @@ def _run_tasks(
                 task.batch = input_X, pd.Series(trained.predict(input_X))
         elif operation is _Operation.FIT:
             assert isinstance(task, _TrainTask)
-            assert len(task.batch_ids) == len(task.preds) == 1
-            assert isinstance(task.preds[0], _ApplyTask)
-            assert task.preds[0].batch is not None
+            assert all(isinstance(p, _ApplyTask) for p in task.preds)
+            assert not any(cast(_ApplyTask, p).batch is None for p in task.preds)
             trainable = pipeline.steps_list()[task.step_id]
-            input_X, input_y = task.preds[0].batch
+            if len(task.preds) == 1:
+                input_X, input_y = task.preds[0].batch  # type: ignore
+            else:
+                assert not is_incremental(trainable)
+                input_X = pd.concat([p.batch[0] for p in task.preds])  # type: ignore
+                input_y = pd.concat([p.batch[1] for p in task.preds])  # type: ignore
             task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
@@ -595,16 +636,16 @@ def cross_val_score(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[_Batch],
     n_batches: int,
+    n_folds: int,
+    n_batches_per_fold: int,
+    scoring: Callable[[pd.Series, pd.Series], float],
     unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
-    scoring: Callable[[pd.Series, pd.Series], float],
-    n_folds: int,
     same_fold: bool,
     verbose: int,
 ) -> List[float]:
+    assert n_batches == n_folds * n_batches_per_fold
     folds = [chr(ord("d") + i) for i in range(n_folds)]
-    n_batches_per_fold = int(n_batches / n_folds)
-    assert n_folds * n_batches_per_fold == n_batches
     all_batch_ids = tuple(
         _batch_id(fold, idx) for fold in folds for idx in range(n_batches_per_fold)
     )
