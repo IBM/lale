@@ -19,6 +19,7 @@ import jsonschema
 import numpy as np
 import pandas as pd
 import sklearn
+from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.model_selection import KFold
@@ -34,6 +35,7 @@ import lale.datasets.openml
 from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import (
     SparkDataFrameWithIndex,
+    add_table_name,
     forward_metadata,
     get_index_name,
 )
@@ -46,6 +48,7 @@ from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
 from lale.lib.rasl import PrioBatch, PrioStep
+from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
 from lale.lib.rasl import cross_val_score as rasl_cross_val_score
@@ -234,6 +237,104 @@ def _check_trained_ordinal_encoder(test, op1, op2, msg):
     test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
     for i in range(len(op1.categories_)):
         test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+
+
+class TestSelectKBest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from sklearn.datasets import load_digits
+
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: {} for tgt in targets}
+
+        def add_df(name, df):
+            cls.tgt2datasets["pandas"][name] = df
+            cls.tgt2datasets["spark"][name] = pandas2spark(df)
+            cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
+                df, add_index=True
+            )
+
+        X, y = load_digits(return_X_y=True, as_frame=True)
+        X = add_table_name(X, "X")
+        y = add_table_name(y, "y")
+        add_df("X", X)
+        add_df("y", y)
+
+    def _check_trained(self, sk_trained, rasl_trained, msg=""):
+        for i in range(len(sk_trained.scores_)):
+            if not (
+                np.isnan(sk_trained.scores_[i])
+                and np.isnan(rasl_trained.impl.scores_[i])
+            ):
+                self.assertAlmostEqual(
+                    sk_trained.scores_[i],
+                    rasl_trained.impl.scores_[i],
+                    msg=f"{msg}: {i}",
+                )
+            if not (
+                np.isnan(sk_trained.pvalues_[i])
+                and np.isnan(rasl_trained.impl.pvalues_[i])
+            ):
+                self.assertAlmostEqual(
+                    sk_trained.pvalues_[i],
+                    rasl_trained.impl.pvalues_[i],
+                    msg=f"{msg}: {i}",
+                )
+        self.assertEqual(
+            sk_trained.n_features_in_, rasl_trained.impl.n_features_in_, msg
+        )
+
+    def test_fit(self):
+        sk_trainable = SkSelectKBest(k=20)
+        X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
+        sk_trained = sk_trainable.fit(X, y)
+        rasl_trainable = RaslSelectKBest(k=20)
+        for tgt, datasets in self.tgt2datasets.items():
+            X, y = datasets["X"], datasets["y"]
+            if tgt == "spark":
+                with self.assertRaises(ValueError):
+                    rasl_trained = rasl_trainable.fit(X, y)
+            else:
+                rasl_trained = rasl_trainable.fit(X, y)
+                self._check_trained(sk_trained, rasl_trained, tgt)
+
+    def test_transform(self):
+        sk_trainable = SkSelectKBest(k=20)
+        X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
+        sk_trained = sk_trainable.fit(X, y)
+        sk_transformed = sk_trained.transform(X)
+        rasl_trainable = RaslSelectKBest(k=20)
+        for tgt, datasets in self.tgt2datasets.items():
+            X, y = datasets["X"], datasets["y"]
+            if tgt == "spark":
+                with self.assertRaises(ValueError):
+                    rasl_trained = rasl_trainable.fit(X, y)
+                continue
+            rasl_trained = rasl_trainable.fit(X, y)
+            rasl_transformed = rasl_trained.transform(X)
+            self._check_trained(sk_trained, rasl_trained, tgt)
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            for row_idx in range(sk_transformed.shape[0]):
+                for col_idx in range(sk_transformed.shape[1]):
+                    self.assertAlmostEqual(
+                        sk_transformed[row_idx, col_idx],
+                        rasl_transformed.iloc[row_idx, col_idx],
+                        msg=(row_idx, col_idx),
+                    )
+
+    def test_partial_fit(self):
+        rasl_trainable = RaslSelectKBest(k=20)
+        X, y = self.tgt2datasets["pandas"]["X"], self.tgt2datasets["pandas"]["y"]
+        for lower, upper in [[0, 100], [100, 200], [200, X.shape[0]]]:
+            X_so_far, y_so_far = X[0:upper], y[0:upper]
+            sk_trainable = SkSelectKBest(k=20)
+            sk_trained = sk_trainable.fit(X_so_far, y_so_far)
+            X_delta, y_delta = X[lower:upper], y[lower:upper]
+            rasl_trained = rasl_trainable.partial_fit(X_delta, y_delta)
+            self._check_trained(
+                sk_trained, rasl_trained, f"lower: {lower}, upper: {upper}"
+            )
 
 
 class TestOrdinalEncoder(unittest.TestCase):
