@@ -186,15 +186,21 @@ def add_table_name(obj, name) -> Any:
             o = SparkDataFrameWithIndex(o, obj.index_name)
         return o
     if isinstance(obj, NDArrayWithSchema):
-        result = obj
+        result = obj.view(NDArrayWithSchema)
+        if hasattr(obj, "json_schema"):
+            result.json_schema = obj.json_schema
     elif isinstance(obj, np.ndarray):
         result = obj.view(NDArrayWithSchema)
     elif isinstance(obj, SeriesWithSchema):
-        result = obj
+        result = obj.copy(deep=False)
+        if hasattr(obj, "json_schema"):
+            result.json_schema = obj.json_schema
     elif isinstance(obj, pd.Series):
         result = SeriesWithSchema(obj)
     elif isinstance(obj, DataFrameWithSchema):
-        result = obj
+        result = obj.copy(deep=False)
+        if hasattr(obj, "json_schema"):
+            result.json_schema = obj.json_schema
     elif isinstance(obj, pd.DataFrame):
         result = DataFrameWithSchema(obj)
     elif is_list_tensor(obj):

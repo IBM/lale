@@ -424,8 +424,6 @@ class TestAlias(unittest.TestCase):
             trainable = Alias(name="test_alias")
             go_products = datasets[3]
             self.assertEqual(get_table_name(go_products), "go_products")
-            if tgt == "pandas":  # XXX to remove if Alias is becomping functional
-                go_products = go_products.copy()
             transformed_df = trainable.transform(go_products)
             self.assertEqual(get_table_name(transformed_df), "test_alias")
             if tgt == "pandas":
