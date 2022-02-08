@@ -20,6 +20,9 @@ import numpy as np
 import pandas as pd
 import sklearn
 from sklearn.impute import SimpleImputer as SkSimpleImputer
+from sklearn.metrics import accuracy_score, make_scorer
+from sklearn.model_selection import KFold
+from sklearn.model_selection import cross_val_score as sk_cross_val_score
 from sklearn.pipeline import make_pipeline as sk_make_pipeline
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
@@ -45,8 +48,14 @@ from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
 from lale.lib.rasl import PrioBatch, PrioStep
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
+from lale.lib.rasl import cross_val_score as rasl_cross_val_score
 from lale.lib.rasl import fit_with_batches, mockup_data_loader
-from lale.lib.sklearn import FunctionTransformer, LogisticRegression, SGDClassifier
+from lale.lib.sklearn import (
+    FunctionTransformer,
+    LogisticRegression,
+    RandomForestClassifier,
+    SGDClassifier,
+)
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
 
@@ -942,26 +951,38 @@ class TestTaskGraphs(unittest.TestCase):
         cls.creditg = (train_X, train_y), (test_X, test_y)
 
     @classmethod
-    def _make_sk_trainable(cls):
+    def _make_sk_trainable(cls, final_est):
+        if final_est == "sgd":
+            est = SGDClassifier(random_state=97)
+        elif final_est == "rfc":
+            est = RandomForestClassifier(random_state=97)
+        else:
+            assert False, final_est
         return sk_make_pipeline(
             SkOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
             SkMinMaxScaler(),
-            SGDClassifier(random_state=123),
+            est,
         )
 
     @classmethod
-    def _make_rasl_trainable(cls):
+    def _make_rasl_trainable(cls, final_est):
+        if final_est == "sgd":
+            est = SGDClassifier(random_state=97)
+        elif final_est == "rfc":
+            est = RandomForestClassifier(random_state=97)
+        else:
+            assert False, final_est
         return (
             RaslOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
             >> RaslMinMaxScaler()
-            >> SGDClassifier(random_state=123)
+            >> est
         )
 
     def test_fit_no_batching(self):
         (train_X, train_y), _ = self.creditg
-        sk_trainable = self._make_sk_trainable()
+        sk_trainable = self._make_sk_trainable("sgd")
         sk_trained = sk_trainable.fit(train_X, train_y)
-        rasl_trainable = self._make_rasl_trainable()
+        rasl_trainable = self._make_rasl_trainable("sgd")
         rasl_trained = rasl_trainable.fit(train_X, train_y)
         _check_trained_ordinal_encoder(
             self, sk_trained.steps[0][1], rasl_trained.steps[0][1].impl, "pandas"
@@ -972,13 +993,13 @@ class TestTaskGraphs(unittest.TestCase):
 
     def test_fit_batching(self):
         (train_X, train_y), _ = self.creditg
-        sk_trainable = self._make_sk_trainable()
+        sk_trainable = self._make_sk_trainable("sgd")
         sk_trained = sk_trainable.fit(train_X, train_y)
         unique_class_labels = list(train_y.unique())
         for n_batches in [1, 3]:
             for prio in [PrioStep(), PrioBatch()]:
                 batches = mockup_data_loader(train_X, train_y, n_batches)
-                rasl_trainable = self._make_rasl_trainable()
+                rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
                     rasl_trainable,
                     batches,
@@ -1000,3 +1021,27 @@ class TestTaskGraphs(unittest.TestCase):
                     rasl_trained.steps[1][1].impl,
                     (n_batches, type(prio)),
                 )
+
+    def test_cross_val_no_batching(self):
+        (train_X, train_y), _ = self.creditg
+        sk_scores = sk_cross_val_score(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=make_scorer(accuracy_score),
+            cv=KFold(3),
+        )
+        rasl_scores = rasl_cross_val_score(
+            pipeline=self._make_rasl_trainable("rfc"),
+            batches=mockup_data_loader(train_X, train_y, 3),
+            n_batches=3,
+            n_folds=3,
+            n_batches_per_fold=1,
+            scoring=accuracy_score,
+            unique_class_labels=list(train_y.unique()),
+            prio=PrioBatch(),
+            same_fold=True,
+            verbose=0,
+        )
+        for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+            self.assertAlmostEqual(sk_s, rasl_s)
