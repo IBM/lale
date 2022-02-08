@@ -1118,8 +1118,12 @@ def _ast_func_id(expr):
         raise ValueError("function name expected")
 
 
-def _is_df(d):
-    return isinstance(d, pd.DataFrame) or isinstance(d, spark_df)
+def _is_df(df):
+    return _is_pandas_df(df) or _is_spark_df(df)
+
+
+def _is_pandas_series(df):
+    return isinstance(df, pd.Series)
 
 
 def _is_pandas_df(df):
