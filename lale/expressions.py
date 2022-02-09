@@ -374,6 +374,10 @@ def identity(subject: Expr) -> Expr:
     return _make_call_expr("identity", subject)
 
 
+def astype(dtype, subject: Expr) -> Expr:
+    return _make_call_expr("astype", dtype, subject)
+
+
 def sum(group: Expr) -> Expr:
     return _make_call_expr("sum", group)
 

@@ -149,7 +149,7 @@ class _MapImpl:
             return self.transform_spark_df(X)
         else:
             raise ValueError(
-                "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
+                f"Only Pandas or Spark dataframe are supported as inputs, got {type(X)}. Please check that pyspark is installed if you see this error for a Spark dataframe."
             )
 
     def transform_pandas_df(self, X):

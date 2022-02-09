@@ -37,7 +37,7 @@ def get_columns(df) -> List[str]:
         return pd.Series(df.columns_without_index)
     if _is_spark_df(df):
         return df.columns
-    assert False
+    assert False, type(df)
 
 
 def count(df):

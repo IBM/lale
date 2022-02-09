@@ -21,7 +21,8 @@ import pandas as pd
 import sklearn
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
-from sklearn.metrics import accuracy_score, make_scorer
+from sklearn.metrics import accuracy_score as sk_accuracy_score
+from sklearn.metrics import make_scorer
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score as sk_cross_val_score
 from sklearn.pipeline import make_pipeline as sk_make_pipeline
@@ -51,8 +52,11 @@ from lale.lib.rasl import PrioBatch, PrioStep
 from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
+from lale.lib.rasl import accuracy_score as rasl_accuracy_score
 from lale.lib.rasl import cross_val_score as rasl_cross_val_score
-from lale.lib.rasl import fit_with_batches, mockup_data_loader
+from lale.lib.rasl import fit_with_batches
+from lale.lib.rasl import get_scorer as rasl_get_scorer
+from lale.lib.rasl import mockup_data_loader
 from lale.lib.sklearn import (
     FunctionTransformer,
     LogisticRegression,
@@ -1129,7 +1133,7 @@ class TestTaskGraphs(unittest.TestCase):
             estimator=self._make_sk_trainable("rfc"),
             X=train_X,
             y=train_y,
-            scoring=make_scorer(accuracy_score),
+            scoring=make_scorer(sk_accuracy_score),
             cv=KFold(3),
         )
         rasl_scores = rasl_cross_val_score(
@@ -1138,7 +1142,7 @@ class TestTaskGraphs(unittest.TestCase):
             n_batches=3,
             n_folds=3,
             n_batches_per_fold=1,
-            scoring=accuracy_score,
+            scoring=sk_accuracy_score,
             unique_class_labels=list(train_y.unique()),
             prio=PrioBatch(),
             same_fold=True,
@@ -1146,3 +1150,22 @@ class TestTaskGraphs(unittest.TestCase):
         )
         for sk_s, rasl_s in zip(sk_scores, rasl_scores):
             self.assertAlmostEqual(sk_s, rasl_s)
+
+
+class TestMetrics(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.creditg = lale.datasets.openml.fetch(
+            "credit-g", "classification", preprocess=True, astype="pandas"
+        )
+
+    def test_accuracy(self):
+        (train_X, train_y), (test_X, test_y) = self.creditg
+        est = LogisticRegression().fit(train_X, train_y)
+        y_pred = est.predict(test_X)
+        sk_score = sk_accuracy_score(test_y, y_pred)
+        self.assertEqual(sk_score, rasl_accuracy_score(test_y, y_pred))
+        rasl_scorer = rasl_get_scorer("accuracy")
+        self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
+        batches = mockup_data_loader(test_X, test_y, 3)
+        self.assertEqual(sk_score, rasl_scorer.score_estimator_batched(est, batches))
