@@ -321,14 +321,13 @@ def _create_tasks_batching(
                             )
                         )
                 else:
-                    assert len(tg.step_id_preds[task.step_id]) == 1
-                    pred_step_id = tg.step_id_preds[task.step_id][0]
-                    for batch_id in task.batch_ids:
-                        task.preds.append(
-                            tg.find_or_create(
-                                _ApplyTask, pred_step_id, (batch_id,), None
+                    for pred_step_id in tg.step_id_preds[task.step_id]:
+                        for batch_id in task.batch_ids:
+                            task.preds.append(
+                                tg.find_or_create(
+                                    _ApplyTask, pred_step_id, (batch_id,), None
+                                )
                             )
-                        )
         if isinstance(task, _ApplyTask) and task.step_id != _DUMMY_INPUT_STEP:
             if incremental:
                 fit_upto = _get_idx(task.batch_ids[-1]) + 1
@@ -416,16 +415,15 @@ def _create_tasks_cross_val(
                             )
                         )
                 else:
-                    assert len(tg.step_id_preds[task.step_id]) == 1
-                    pred_step_id = tg.step_id_preds[task.step_id][0]
-                    if pred_step_id != _DUMMY_INPUT_STEP and not same_fold:
-                        held_out = _get_fold(task.batch_ids[0])
-                    for batch_id in task.batch_ids:
-                        task.preds.append(
-                            tg.find_or_create(
-                                _ApplyTask, pred_step_id, (batch_id,), held_out
+                    for pred_step_id in tg.step_id_preds[task.step_id]:
+                        if pred_step_id != _DUMMY_INPUT_STEP and not same_fold:
+                            held_out = _get_fold(task.batch_ids[0])
+                        for batch_id in task.batch_ids:
+                            task.preds.append(
+                                tg.find_or_create(
+                                    _ApplyTask, pred_step_id, (batch_id,), held_out
+                                )
                             )
-                        )
         if isinstance(task, _ApplyTask) and task.step_id != _DUMMY_INPUT_STEP:
             task.preds.append(
                 tg.find_or_create(
@@ -477,8 +475,14 @@ def _run_tasks(
             task.status = _TaskStatus.WAITING
     ready_keys = {k for k, t in tasks.items() if t.status is _TaskStatus.READY}
 
-    def find_task(task_class: Type["_Task"], task_list: List[_Task]) -> _Task:
-        return next(t for t in task_list if isinstance(t, task_class))
+    def find_task(
+        task_class: Type["_Task"], task_list: List[_Task]
+    ) -> Union[_Task, List[_Task]]:
+        task_list = [t for t in task_list if isinstance(t, task_class)]
+        if len(task_list) == 1:
+            return task_list[0]
+        else:
+            return task_list
 
     def mark_done(task: _Task) -> None:
         if task.status is _TaskStatus.DONE:
@@ -514,12 +518,23 @@ def _run_tasks(
             task.batch = next(iter(batches))
         elif operation in [_Operation.TRANSFORM, _Operation.PREDICT]:
             assert isinstance(task, _ApplyTask)
-            assert len(task.batch_ids) == 1 and len(task.preds) == 2
+            assert len(task.batch_ids) == 1
             train_pred = cast(_TrainTask, find_task(_TrainTask, task.preds))
             trained = train_pred.get_trained(pipeline)
-            apply_pred = cast(_ApplyTask, find_task(_ApplyTask, task.preds))
-            assert apply_pred.batch is not None
-            input_X, input_y = apply_pred.batch
+            apply_preds = find_task(_ApplyTask, task.preds)
+            if isinstance(apply_preds, _Task):
+                apply_pred = cast(_ApplyTask, find_task(_ApplyTask, task.preds))
+                assert apply_pred.batch is not None
+                input_X, input_y = apply_pred.batch
+            else:  # a list of tasks
+                apply_preds = [
+                    cast(_ApplyTask, apply_pred) for apply_pred in apply_preds
+                ]
+                assert not any(apply_pred.batch is None for apply_pred in apply_preds)  # type: ignore
+                input_X = [pred.batch[0] for pred in apply_preds]  # type: ignore
+                # The assumption is that input_y is not changed by the preds, so we can
+                # use it from any one of them.
+                input_y = apply_preds[0].batch[1]  # type: ignore
             if operation is _Operation.TRANSFORM:
                 task.batch = trained.transform(input_X), input_y
             else:

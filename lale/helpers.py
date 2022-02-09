@@ -848,6 +848,7 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0):
         collate_fn=collate_fn,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,
+        shuffle=True,
     )
 
 
