@@ -42,6 +42,7 @@ from lale.datasets.multitable import multitable_train_test_split
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import (
     asc,
+    astype,
     collect_set,
     count,
     day_of_month,
@@ -2053,6 +2054,34 @@ class TestMap(unittest.TestCase):
             result = _ensure_pandas(result)
             self.assertIn("Product number", result.columns)
             self.assertNotIn("Product line", result.columns)
+
+    def assertSeriesEqual(self, first, second, msg=None):
+        self.assertIsInstance(first, pd.Series, msg)
+        self.assertIsInstance(second, pd.Series, msg)
+        self.assertEqual(first.shape, second.shape, msg)
+        self.assertEqual(list(first), list(second), msg)
+
+    def test_transform_compare_ops(self):
+        trained = Map(
+            columns={
+                "height<=5": it.height <= 5,
+                "int(height<=5)": astype("int", it.height <= 5),  # type: ignore
+                "4==height": 4 == it.height,
+                "height*10==weight": it.height * 10 == it.weight,
+            }
+        )
+        for tgt, datasets in self.tgt2datasets.items():
+            df = datasets["df_num"]
+            transformed_df = trained.transform(df)
+            df, transformed_df = _ensure_pandas(df), _ensure_pandas(transformed_df)
+            self.assertSeriesEqual(transformed_df["height<=5"], df["height"] <= 5, tgt)
+            self.assertSeriesEqual(
+                transformed_df["int(height<=5)"], (df["height"] <= 5).astype(int), tgt
+            )
+            self.assertSeriesEqual(transformed_df["4==height"], 4 == df["height"], tgt)
+            self.assertSeriesEqual(
+                transformed_df["height*10==weight"], df["height"] * 10 == df.weight, tgt
+            )
 
 
 class TestRelationalOperator(unittest.TestCase):

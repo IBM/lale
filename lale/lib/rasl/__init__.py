@@ -37,8 +37,10 @@ Other Facilities
 * lale.lib.rasl. `Prio`_
 * lale.lib.rasl. `PrioBatch`_
 * lale.lib.rasl. `PrioStep`_
+* lale.lib.rasl. `accuracy_score`_
 * lale.lib.rasl. `cross_val_score`_
 * lale.lib.rasl. `fit_with_batches`_
+* lale.lib.rasl. `get_scorer`_
 * lale.lib.rasl. `is_associative`_
 * lale.lib.rasl. `is_incremental`_
 * lale.lib.rasl. `mockup_data_loader`_
@@ -56,14 +58,17 @@ Other Facilities
 .. _`Prio`: lale.lib.rasl.Prio.html
 .. _`PrioBatch`: lale.lib.rasl.PrioBatch.html
 .. _`PrioStep`: lale.lib.rasl.PrioStep.html
+.. _`accuracy_score`: lale.lib.rasl.accuracy_score.html
 .. _`cross_val_score`: lale.lib.rasl.cross_val_score.html
 .. _`fit_with_batches`: lale.lib.rasl.fit_with_batches.html
+.. _`get_scorer`: lale.lib.rasl.get_scorer.html
 .. _`is_associative`: lale.lib.rasl.is_associative.html
 .. _`is_incremental`: lale.lib.rasl.is_incremental.html
 .. _`mockup_data_loader`: lale.lib.rasl.mockup_data_loader.html
 
 """
 
+from ._metrics import accuracy_score, get_scorer
 from ._task_graphs import (
     Prio,
     PrioBatch,

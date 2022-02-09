@@ -97,6 +97,30 @@ class _SparkEvaluator(ast.NodeVisitor):
         else:
             raise ValueError(f"""Unimplemented operator {ast.dump(node.op)}""")
 
+    def visit_Compare(self, node: ast.Compare):
+        self.visit(node.left)
+        left = self.result
+        assert len(node.ops) == len(node.comparators)
+        if len(node.ops) != 1:  # need chained comparison in lale.expressions.Expr
+            raise ValueError("Chained comparisons not supported yet.")
+        self.visit(node.comparators[0])
+        right = self.result
+        op = node.ops[0]
+        if isinstance(op, ast.Eq):
+            self.result = left == right  # type: ignore
+        elif isinstance(op, ast.NotEq):
+            self.result = left != right  # type: ignore
+        elif isinstance(op, ast.Lt):
+            self.result = left < right  # type: ignore
+        elif isinstance(op, ast.LtE):
+            self.result = left <= right  # type: ignore
+        elif isinstance(op, ast.Gt):
+            self.result = left > right  # type: ignore
+        elif isinstance(op, ast.GtE):
+            self.result = left >= right  # type: ignore
+        else:
+            raise ValueError(f"Unimplemented operator {ast.dump(op)}")
+
     def visit_Call(self, node: ast.Call):
         functions_module = importlib.import_module("lale.lib.rasl._eval_spark_df")
         function_name = _ast_func_id(node.func)
@@ -105,6 +129,13 @@ class _SparkEvaluator(ast.NodeVisitor):
         except AttributeError:
             raise ValueError(f"""Unimplemented function {function_name}""")
         self.result = map_func_to_be_called(node)
+
+
+def astype(call: ast.Call):
+    dtype = ast.literal_eval(call.args[0])
+    column = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
+    assert column is not None
+    return column.astype(dtype)
 
 
 def replace(call: ast.Call):
