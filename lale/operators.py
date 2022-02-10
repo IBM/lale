@@ -4411,7 +4411,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         return result
 
     def fit_with_batches(
-        self, X, y=None, serialize=True, num_epochs_batching=None
+        self, X, y=None, serialize=True, num_epochs_batching=None, shuffle=True
     ) -> "TrainedPipeline[TrainedIndividualOp]":
         """[summary]
 
@@ -4591,6 +4591,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         "fit_with_batches" + str(operator_idx) + ".hdf5",
                     ),
                     batch_size=inputs_for_transform.batch_size,
+                    shuffle=shuffle,
                 )
             else:
                 if isinstance(output, tuple):
@@ -4598,10 +4599,14 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         X=output[0],
                         y=output[1],
                         batch_size=inputs_for_transform.batch_size,
+                        shuffle=shuffle,
                     )
                 else:
                     output = lale.helpers.create_data_loader(
-                        X=output, y=None, batch_size=inputs_for_transform.batch_size
+                        X=output,
+                        y=None,
+                        batch_size=inputs_for_transform.batch_size,
+                        shuffle=shuffle,
                     )
             outputs[operator] = output
             operator_idx += 1

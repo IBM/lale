@@ -103,7 +103,9 @@ class TestBatching(unittest.TestCase):
         warnings.filterwarnings(action="ignore")
         from lale.lib.sklearn import MinMaxScaler
 
-        pipeline = Batching(operator=MinMaxScaler() >> MinMaxScaler(), batch_size=112)
+        pipeline = Batching(
+            operator=MinMaxScaler() >> MinMaxScaler(), batch_size=112, shuffle=False
+        )
         trained = pipeline.fit(self.X_train, self.y_train)
         lale_transforms = trained.transform(self.X_test)
 
@@ -112,7 +114,6 @@ class TestBatching(unittest.TestCase):
         prep = MinMaxScaler()
         trained_prep = prep.partial_fit(self.X_train, self.y_train)
         X_transformed = trained_prep.transform(self.X_train)
-
         clf = MinMaxScaler()
 
         trained_clf = clf.partial_fit(X_transformed, self.y_train)

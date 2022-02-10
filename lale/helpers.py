@@ -756,7 +756,7 @@ def append_batch(data, batch_data):
     # TODO:Handle dataframes
 
 
-def create_data_loader(X, y=None, batch_size=1, num_workers=0):
+def create_data_loader(X, y=None, batch_size=1, num_workers=0, shuffle=True):
     """A function that takes a dataset as input and outputs a Pytorch dataloader.
 
     Parameters
@@ -773,6 +773,8 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0):
         Number of samples in each batch, by default 1
     num_workers : int, optional
         Number of workers used by the data loader, by default 0
+    shuffle: boolean, optional, default True
+        Whether to use SequentialSampler or RandomSampler for creating batches
 
     Returns
     -------
@@ -824,7 +826,9 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0):
                 0
             ]  # because BatchDataDict's get_item returns a batch, so no collate is required.
 
-        return DataLoader(dataset, batch_size=1, collate_fn=my_collate_fn)
+        return DataLoader(
+            dataset, batch_size=1, collate_fn=my_collate_fn, shuffle=shuffle
+        )
     elif isinstance(X, dict):  # Assumed that it is data indexed by batch number
         if "dataset" in X:
             dataset = X["dataset"]
@@ -848,7 +852,7 @@ def create_data_loader(X, y=None, batch_size=1, num_workers=0):
         collate_fn=collate_fn,
         num_workers=num_workers,
         worker_init_fn=worker_init_fn,
-        shuffle=True,
+        shuffle=shuffle,
     )
 
 
