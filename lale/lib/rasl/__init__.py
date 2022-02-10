@@ -44,6 +44,7 @@ Other Facilities
 * lale.lib.rasl. `is_associative`_
 * lale.lib.rasl. `is_incremental`_
 * lale.lib.rasl. `mockup_data_loader`_
+* lale.lib.rasl. `r2_score`_
 
 .. _`Aggregate`: lale.lib.rasl.aggregate.html
 .. _`Map`: lale.lib.rasl.map.html
@@ -65,10 +66,11 @@ Other Facilities
 .. _`is_associative`: lale.lib.rasl.is_associative.html
 .. _`is_incremental`: lale.lib.rasl.is_incremental.html
 .. _`mockup_data_loader`: lale.lib.rasl.mockup_data_loader.html
+.. _`r2_score`: lale.lib.rasl.r2_score.html
 
 """
 
-from ._metrics import accuracy_score, get_scorer
+from ._metrics import accuracy_score, get_scorer, r2_score
 from ._task_graphs import (
     Prio,
     PrioBatch,

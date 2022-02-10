@@ -23,6 +23,7 @@ from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.metrics import accuracy_score as sk_accuracy_score
 from sklearn.metrics import make_scorer
+from sklearn.metrics import r2_score as sk_r2_score
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score as sk_cross_val_score
 from sklearn.pipeline import make_pipeline as sk_make_pipeline
@@ -57,6 +58,7 @@ from lale.lib.rasl import cross_val_score as rasl_cross_val_score
 from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
 from lale.lib.rasl import mockup_data_loader
+from lale.lib.rasl import r2_score as rasl_r2_score
 from lale.lib.sklearn import (
     FunctionTransformer,
     LogisticRegression,
@@ -1169,3 +1171,16 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
         batches = mockup_data_loader(test_X, test_y, 3)
         self.assertEqual(sk_score, rasl_scorer.score_estimator_batched(est, batches))
+
+    def test_r2_score(self):
+        (train_X, train_y), (test_X, test_y) = self.creditg
+        est = LogisticRegression().fit(train_X, train_y)
+        y_pred = est.predict(test_X)
+        sk_score = sk_r2_score(test_y, y_pred)
+        self.assertAlmostEqual(sk_score, rasl_r2_score(test_y, y_pred))
+        rasl_scorer = rasl_get_scorer("r2")
+        self.assertAlmostEqual(sk_score, rasl_scorer(est, test_X, test_y))
+        batches = mockup_data_loader(test_X, test_y, 3)
+        self.assertAlmostEqual(
+            sk_score, rasl_scorer.score_estimator_batched(est, batches)
+        )
