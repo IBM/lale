@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import itertools
 import re
 import unittest
 
@@ -1152,6 +1153,35 @@ class TestTaskGraphs(unittest.TestCase):
         )
         for sk_s, rasl_s in zip(sk_scores, rasl_scores):
             self.assertAlmostEqual(sk_s, rasl_s)
+
+    def test_cross_val_batching(self):
+        (train_X, train_y), _ = self.creditg
+        n_folds = 3
+        sk_scores = sk_cross_val_score(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(n_folds),
+        )
+        for n_batches_per_fold in [1, 3]:
+            rasl_scores = rasl_cross_val_score(
+                pipeline=self._make_rasl_trainable("rfc"),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
+                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=sk_accuracy_score,
+                unique_class_labels=list(train_y.unique()),
+                prio=PrioBatch(),
+                same_fold=True,
+                verbose=0,
+            )
+            for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+                self.assertAlmostEqual(sk_s, rasl_s)
 
 
 class TestMetrics(unittest.TestCase):

@@ -15,7 +15,7 @@
 import collections
 import functools
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Iterable, Tuple
 
 import numpy as np
 import pandas as pd
@@ -24,38 +24,49 @@ from lale.datasets.data_schemas import add_table_name
 from lale.expressions import astype, count, it, sum
 from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import get_columns
+from lale.operators import TrainableOperator
 
 from .aggregate import Aggregate
 from .map import Map
 
+_Batch = Tuple[pd.DataFrame, pd.Series]
+
 
 class _MonoidMetric(ABC):
+    _Lifted = Tuple[Any, ...]
+
     @abstractmethod
-    def _lift(self, batch):
+    def _lift(self, batch: _Batch) -> _Lifted:
         pass
 
     @abstractmethod
-    def _combine(self, lifted_a, lifted_b):
+    def _combine(self, lifted_a: _Lifted, lifted_b: _Lifted) -> _Lifted:
         pass
 
     @abstractmethod
-    def _lower(self, lifted):
+    def _lower(self, lifted: _Lifted) -> float:
         pass
 
-    def score_data(self, y_true, y_pred):
+    def score_data(self, y_true: pd.Series, y_pred: pd.Series) -> float:
         return self._lower(self._lift((y_true, y_pred)))
 
-    def score_estimator(self, estimator, X, y):
+    def score_estimator(
+        self, estimator: TrainableOperator, X: pd.DataFrame, y: pd.Series
+    ) -> float:
         return self.score_data(y_true=y, y_pred=estimator.predict(X))
 
-    def __call__(self, estimator, X, y):
+    def __call__(
+        self, estimator: TrainableOperator, X: pd.DataFrame, y: pd.Series
+    ) -> float:
         return self.score_estimator(estimator, X, y)
 
-    def score_data_batched(self, batches):
+    def score_data_batched(self, batches: Iterable[_Batch]) -> float:
         lifted_batches = (self._lift(b) for b in batches)
         return self._lower(functools.reduce(self._combine, lifted_batches))
 
-    def score_estimator_batched(self, estimator, batches):
+    def score_estimator_batched(
+        self, estimator: TrainableOperator, batches: Iterable[_Batch]
+    ) -> float:
         predicted_batches = ((y, estimator.predict(X)) for X, y in batches)
         return self.score_data_batched(predicted_batches)
 
@@ -72,7 +83,7 @@ class _Accuracy(_MonoidMetric):
             >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
         )
 
-    def _lift(self, batch):
+    def _lift(self, batch: _Batch) -> _Lifted:
         from lale.lib.lale import Scan
 
         y_true, y_pred = batch
