@@ -1334,7 +1334,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
             estimator=self._make_sk_trainable("rfc"),
             X=train_X,
             y=train_y,
-            scoring=make_scorer(accuracy_score),
+            scoring=make_scorer(sk_accuracy_score),
             cv=KFold(3),
         )
         rasl_scores = rasl_cross_val_score(
@@ -1344,7 +1344,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
             n_batches=3,
             n_folds=3,
             n_batches_per_fold=1,
-            scoring=accuracy_score,
+            scoring=sk_accuracy_score,
             unique_class_labels=list(train_y.unique()),
             prio=PrioBatch(),
             same_fold=True,
