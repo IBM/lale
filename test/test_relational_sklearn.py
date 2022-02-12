@@ -45,16 +45,16 @@ from lale.datasets.data_schemas import (
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas
-from lale.lib.lale import ConcatFeatures, Project, Scan, categorical
-from lale.lib.rasl import Map
+from lale.lib.rasl import ConcatFeatures, Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder
-from lale.lib.rasl import PrioBatch, PrioStep
+from lale.lib.rasl import PrioBatch, PrioStep, Project, Scan
 from lale.lib.rasl import SelectKBest as RaslSelectKBest
 from lale.lib.rasl import SimpleImputer as RaslSimpleImputer
 from lale.lib.rasl import StandardScaler as RaslStandardScaler
 from lale.lib.rasl import accuracy_score as rasl_accuracy_score
+from lale.lib.rasl import categorical
 from lale.lib.rasl import cross_val_score as rasl_cross_val_score
 from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer

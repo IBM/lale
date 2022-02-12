@@ -313,8 +313,8 @@ Examples
 NDArrayWithSchema([[1, 3],
                    [2, 4]])
 """,
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.project.html",
-    "import_from": "lale.lib.lale",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.project.html",
+    "import_from": "lale.lib.rasl",
     "type": "object",
     "tags": {"pre": ["categoricals"], "op": ["transformer"], "post": []},
     "properties": {

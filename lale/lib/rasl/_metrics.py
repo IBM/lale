@@ -75,7 +75,7 @@ class _Accuracy(_MonoidMetric):
     _Lifted = collections.namedtuple("_Lifted", ["match", "total"])
 
     def __init__(self):
-        from lale.lib.lale import ConcatFeatures
+        from lale.lib.rasl import ConcatFeatures
 
         self._pipeline_suffix = (
             ConcatFeatures
@@ -84,7 +84,7 @@ class _Accuracy(_MonoidMetric):
         )
 
     def _lift(self, batch: _Batch) -> _Lifted:
-        from lale.lib.lale import Scan
+        from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
         assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark
@@ -119,7 +119,7 @@ class _R2(_MonoidMetric):
     _Lifted = collections.namedtuple("_Lifted", ["n", "sum", "sum_sq", "res_sum_sq"])
 
     def __init__(self):
-        from lale.lib.lale import ConcatFeatures
+        from lale.lib.rasl import ConcatFeatures
 
         self._pipeline_suffix = (
             ConcatFeatures
@@ -142,7 +142,7 @@ class _R2(_MonoidMetric):
         )
 
     def _lift(self, batch):
-        from lale.lib.lale import Scan
+        from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
         assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark

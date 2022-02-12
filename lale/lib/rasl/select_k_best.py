@@ -22,9 +22,9 @@ from lale.expressions import it
 from lale.expressions import sum as agg_sum
 from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import count, get_columns
-from lale.lib.lale.concat_features import ConcatFeatures
-from lale.lib.lale.group_by import GroupBy
 from lale.lib.rasl import Aggregate, Map
+from lale.lib.rasl.concat_features import ConcatFeatures
+from lale.lib.rasl.group_by import GroupBy
 from lale.lib.sklearn import select_k_best
 
 

@@ -107,7 +107,7 @@ _output_transform_schema = {
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Scans a database table.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.scan.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.scan.html",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

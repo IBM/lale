@@ -21,13 +21,13 @@ import lale.helpers
 import lale.lib.sklearn
 import lale.operators
 import lale.search.lale_grid_search_cv
-
-from ._common_schemas import (
+from lale.lib._common_schemas import (
     schema_estimator,
     schema_max_opt_time,
     schema_scoring_single,
     schema_simple_cv,
 )
+
 from .observing import Observing
 
 func_timeout_installed = False

@@ -114,7 +114,7 @@ _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": """Higher order operator that contains a nested data join pipeline that has
     multiple table joins and aggregates on those joins.""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.relational.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.relational.html",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

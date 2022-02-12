@@ -28,7 +28,7 @@ from lale.datasets.data_schemas import get_index_name, get_table_name
 from lale.expressions import it
 from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
-from lale.lib.lale.join import Join
+from lale.lib.rasl.join import Join
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -249,8 +249,8 @@ Examples
 NDArrayWithSchema([[11, 12, 13, 14, 15],
                    [21, 22, 23, 24, 25],
                    [31, 32, 33, 34, 35]])""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.concat_features.html",
-    "import_from": "lale.lib.lale",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.concat_features.html",
+    "import_from": "lale.lib.rasl",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

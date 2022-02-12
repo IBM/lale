@@ -70,19 +70,20 @@ from lale.expressions import (
 )
 from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import get_columns
-from lale.lib.lale import (
+from lale.lib.lale import Hyperopt
+from lale.lib.rasl import (
+    Aggregate,
     Alias,
     ConcatFeatures,
     Filter,
     GroupBy,
-    Hyperopt,
     Join,
+    Map,
     OrderBy,
     Relational,
     Scan,
     SplitXy,
 )
-from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 
 
@@ -1696,7 +1697,6 @@ class TestMap(unittest.TestCase):
         from sklearn.datasets import load_iris
 
         X, y = load_iris(return_X_y=True)
-        from lale.lib.lale import Hyperopt
 
         opt = Hyperopt(estimator=pipeline, max_evals=2)
         opt.fit(X, y)
@@ -1996,7 +1996,7 @@ class TestMap(unittest.TestCase):
             )
 
     def test_dynamic_categorical(self):
-        from lale.lib.lale import categorical
+        from lale.lib.rasl import categorical
 
         def expr(X):
             ret = {}
@@ -2016,7 +2016,7 @@ class TestMap(unittest.TestCase):
             self.assertIn("cat_Product line", result.columns)
 
     def test_dynamic_lambda_categorical_drop(self):
-        from lale.lib.lale import categorical
+        from lale.lib.rasl import categorical
 
         pipeline = Scan(table=it.go_products) >> Map(
             columns=lambda X: {c: it[c] for c in categorical()(_ensure_pandas(X))}

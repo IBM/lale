@@ -47,7 +47,7 @@ class categorical:
         self._max_values = max_values
 
     def __repr__(self):
-        return f"lale.lib.lale.categorical(max_values={self._max_values})"
+        return f"lale.lib.rasl.categorical(max_values={self._max_values})"
 
     def __call__(self, X):
         def is_categorical(column_values):
@@ -87,7 +87,7 @@ class date_time:
         self._fmt = fmt
 
     def __repr__(self):
-        return f"lale.lib.lale.date_time(fmt={self._fmt})"
+        return f"lale.lib.rasl.date_time(fmt={self._fmt})"
 
     def __call__(self, X):
         def is_date_time(column_values):

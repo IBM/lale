@@ -24,8 +24,7 @@ import sklearn.model_selection
 import lale.docstrings
 import lale.helpers
 import lale.operators
-
-from ._common_schemas import (
+from lale.lib._common_schemas import (
     schema_best_score_single,
     schema_max_opt_time,
     schema_scoring_single,
