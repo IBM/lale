@@ -3881,9 +3881,8 @@ class BasePipeline(Operator, Generic[OpType]):
     def export_to_sklearn_pipeline(self):
         from sklearn.pipeline import FeatureUnion, make_pipeline
 
-        from lale.lib.lale.concat_features import ConcatFeatures
         from lale.lib.lale.no_op import NoOp
-        from lale.lib.lale.relational import Relational
+        from lale.lib.rasl import ConcatFeatures, Relational
 
         def convert_nested_objects(node):
             for element in dir(node):  # Looking at only 1 level for now.
