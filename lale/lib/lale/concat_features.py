@@ -249,8 +249,8 @@ Examples
 NDArrayWithSchema([[11, 12, 13, 14, 15],
                    [21, 22, 23, 24, 25],
                    [31, 32, 33, 34, 35]])""",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.concat_features.html",
-    "import_from": "lale.lib.rasl",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.concat_features.html",
+    "import_from": "lale.lib.lale",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

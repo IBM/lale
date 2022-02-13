@@ -34,7 +34,7 @@ Transformers:
 * lale.lib.rasl. `Aggregate`_
 * lale.lib.rasl. `Alias`_
 * lale.lib.rasl. `Batching`_
-* lale.lib.rasl. `ConcatFeatures`_
+* lale.lib.lale. `ConcatFeatures`_
 * lale.lib.rasl. `Filter`_
 * lale.lib.rasl. `GroupBy`_
 * lale.lib.rasl. `Join`_
@@ -64,7 +64,7 @@ Estimators and transformers:
 .. _`TopKVotingClassifier`: lale.lib.lale.topk_voting_classifier.html
 .. _`SMAC`: lale.lib.lale.smac.html
 .. _`Batching`: lale.lib.rasl.batching.html
-.. _`ConcatFeatures`: lale.lib.rasl.concat_features.html
+.. _`ConcatFeatures`: lale.lib.lale.concat_features.html
 .. _`NoOp`: lale.lib.lale.no_op.html
 .. _`Project`: lale.lib.rasl.project.html
 .. _`SampleBasedVoting`: lale.lib.lale.sample_based_voting.html
@@ -99,7 +99,6 @@ from lale.lib.rasl import (
     Aggregate,
     Alias,
     Batching,
-    ConcatFeatures,
     Filter,
     GroupBy,
     Join,
@@ -119,6 +118,7 @@ from .auto_pipeline import AutoPipeline
 
 # estimators and transformers
 from .both import Both
+from .concat_features import ConcatFeatures
 
 # functions
 from .grid_search_cv import GridSearchCV

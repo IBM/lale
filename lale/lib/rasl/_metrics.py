@@ -75,7 +75,7 @@ class _Accuracy(_MonoidMetric):
     _Lifted = collections.namedtuple("_Lifted", ["match", "total"])
 
     def __init__(self):
-        from lale.lib.rasl import ConcatFeatures
+        from lale.lib.lale.concat_features import ConcatFeatures
 
         self._pipeline_suffix = (
             ConcatFeatures
@@ -119,7 +119,7 @@ class _R2(_MonoidMetric):
     _Lifted = collections.namedtuple("_Lifted", ["n", "sum", "sum_sq", "res_sum_sq"])
 
     def __init__(self):
-        from lale.lib.rasl import ConcatFeatures
+        from lale.lib.lale.concat_features import ConcatFeatures
 
         self._pipeline_suffix = (
             ConcatFeatures
