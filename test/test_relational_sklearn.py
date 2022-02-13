@@ -45,8 +45,7 @@ from lale.datasets.data_schemas import (
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas
-from lale.lib.lale import ConcatFeatures
-from lale.lib.rasl import Map
+from lale.lib.rasl import ConcatFeatures, Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
 from lale.lib.rasl import OrdinalEncoder as RaslOrdinalEncoder

@@ -70,10 +70,11 @@ from lale.expressions import (
 )
 from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import get_columns
-from lale.lib.lale import ConcatFeatures, Hyperopt
+from lale.lib.lale import Hyperopt
 from lale.lib.rasl import (
     Aggregate,
     Alias,
+    ConcatFeatures,
     Filter,
     GroupBy,
     Join,

@@ -338,7 +338,7 @@ def _introduce_structure(pipeline: JSON_TYPE, gen: _CodeGenState) -> JSON_TYPE:
     def find_union(
         graph: JSON_TYPE,
     ) -> Optional[Tuple[Dict[str, JSON_TYPE], Dict[str, JSON_TYPE]]]:
-        cat_cls = "lale.lib.rasl.concat_features._ConcatFeaturesImpl"
+        cat_cls = "lale.lib.lale.concat_features._ConcatFeaturesImpl"
         for seq_uid, seq_jsn in graph["steps"].items():
             if _op_kind(seq_jsn) == "Seq":
                 seq_uids = list(seq_jsn["steps"].keys())
