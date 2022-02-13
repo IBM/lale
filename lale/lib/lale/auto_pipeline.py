@@ -45,7 +45,7 @@ except ImportError:
 
 
 def auto_prep(X):
-    from lale.lib.lale import ConcatFeatures, Project, categorical
+    from lale.lib.rasl import ConcatFeatures, Project, categorical
     from lale.lib.sklearn import OneHotEncoder, SimpleImputer
 
     n_cols = X.shape[1]
@@ -174,7 +174,7 @@ class _AutoPipelineImpl:
         self._try_and_add("dummy", trainable, X, y)
 
     def _fit_gbt_num(self, X, y):
-        from lale.lib.lale import Project
+        from lale.lib.rasl import Project
         from lale.lib.sklearn import SimpleImputer
 
         gbt = auto_gbt(self.prediction_type)

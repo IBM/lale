@@ -4428,7 +4428,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         """
         estimator_only = True
         concat_features = False
-        from lale.lib.lale import ConcatFeatures
+        from lale.lib.rasl import ConcatFeatures
 
         for operator in self._steps[:-1]:
             if not operator.is_frozen_trained():
@@ -5428,7 +5428,7 @@ def make_union(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
 
 
 def make_union(*orig_steps):  # type: ignore
-    from lale.lib.lale import ConcatFeatures
+    from lale.lib.rasl import ConcatFeatures
 
     return make_union_no_concat(*orig_steps) >> ConcatFeatures()
 
