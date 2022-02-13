@@ -1135,7 +1135,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "state": "trained",
                     "operator": "ConcatFeatures",
                     "label": "ConcatFeatures",
-                    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.concat_features.html",
+                    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.concat_features.html",
                     "hyperparams": None,
                     "coefs": None,
                     "is_frozen_trainable": True,
