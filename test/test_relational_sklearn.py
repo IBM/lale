@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import itertools
+import math
 import re
 import unittest
 
@@ -44,7 +45,7 @@ from lale.datasets.data_schemas import (
 )
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
-from lale.helpers import _ensure_pandas
+from lale.helpers import _ensure_pandas, create_data_loader
 from lale.lib.lale import ConcatFeatures
 from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
@@ -1305,13 +1306,14 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
         unique_class_labels = list(train_y.unique())
         for n_batches in [1, 3]:
             for prio in [PrioStep(), PrioBatch()]:
-                # batches = create_data_loader(train_X, train_y, math.ceil(len(train_y)/n_batches))
-                batches = mockup_data_loader(train_X, train_y, n_batches)
+                batches = create_data_loader(
+                    train_X, train_y, math.ceil(len(train_y) / n_batches)
+                )
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
                     rasl_trainable,
-                    batches,
-                    n_batches,
+                    batches,  # type: ignore
+                    len(batches),
                     unique_class_labels,
                     prio,
                     incremental=False,
@@ -1341,7 +1343,6 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
         )
         rasl_scores = rasl_cross_val_score(
             pipeline=self._make_rasl_trainable("rfc"),
-            # batches=create_data_loader(train_X, train_y, math.ceil(len(train_y)/3)),
             batches=mockup_data_loader(train_X, train_y, 3),
             n_batches=3,
             n_folds=3,
@@ -1354,6 +1355,35 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
         )
         for sk_s, rasl_s in zip(sk_scores, rasl_scores):
             self.assertAlmostEqual(sk_s, rasl_s)
+
+    def test_cross_val_batching(self):
+        (train_X, train_y), _ = self.creditg
+        n_folds = 3
+        sk_scores = sk_cross_val_score(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(n_folds),
+        )
+        for n_batches_per_fold in [1, 3]:
+            rasl_scores = rasl_cross_val_score(
+                pipeline=self._make_rasl_trainable("rfc"),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
+                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=sk_accuracy_score,
+                unique_class_labels=list(train_y.unique()),
+                prio=PrioBatch(),
+                same_fold=True,
+                verbose=0,
+            )
+            for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+                self.assertAlmostEqual(sk_s, rasl_s)
 
 
 class TestMetrics(unittest.TestCase):
