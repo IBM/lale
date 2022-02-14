@@ -52,12 +52,18 @@ _Operation = enum.Enum(
 _DUMMY_INPUT_STEP = -1
 
 
+def is_pretrained(op: TrainableIndividualOp) -> bool:
+    return isinstance(op, TrainedIndividualOp) and (
+        op.is_frozen_trained() or not hasattr(op.impl, "fit")
+    )
+
+
 def is_incremental(op: TrainableIndividualOp) -> bool:
-    return op.has_method("partial_fit")
+    return op.has_method("partial_fit") or is_pretrained(op)
 
 
 def is_associative(op: TrainableIndividualOp) -> bool:
-    return op.has_method("_lift") and op.has_method("_combine")
+    return op.has_method("_lift") and op.has_method("_combine") or is_pretrained(op)
 
 
 def _batch_id(fold: str, idx: int) -> str:
@@ -301,7 +307,9 @@ def _create_tasks_batching(
                     )
             else:
                 step = pipeline.steps_list()[task.step_id]
-                if is_associative(step):
+                if is_pretrained(step):
+                    pass
+                elif is_associative(step):
                     for batch_id in task.batch_ids:
                         task.preds.append(
                             tg.find_or_create(
@@ -391,7 +399,10 @@ def _create_tasks_cross_val(
                         held_out = next(iter(hofs))
                     else:
                         held_out = task.held_out
-                if is_associative(pipeline.steps_list()[task.step_id]):
+                step = pipeline.steps_list()[task.step_id]
+                if is_pretrained(step):
+                    pass
+                if is_associative(step):
                     if not same_fold:
                         held_out = None
                     for batch_id in task.batch_ids:
@@ -400,7 +411,7 @@ def _create_tasks_cross_val(
                                 _TrainTask, task.step_id, (batch_id,), held_out
                             )
                         )
-                elif is_incremental(pipeline.steps_list()[task.step_id]):
+                elif is_incremental(step):
                     task.preds.append(
                         tg.find_or_create(
                             _TrainTask, task.step_id, task.batch_ids[:-1], held_out
@@ -469,7 +480,7 @@ def _run_tasks(
 ) -> None:
     for task in tasks.values():
         assert task.status is _TaskStatus.FRESH
-        if task.step_id == _DUMMY_INPUT_STEP:
+        if len(task.preds) == 0:
             task.status = _TaskStatus.READY
         else:
             task.status = _TaskStatus.WAITING
@@ -544,13 +555,17 @@ def _run_tasks(
             assert all(isinstance(p, _ApplyTask) for p in task.preds)
             assert not any(cast(_ApplyTask, p).batch is None for p in task.preds)
             trainable = pipeline.steps_list()[task.step_id]
-            if len(task.preds) == 1:
-                input_X, input_y = task.preds[0].batch  # type: ignore
+            if is_pretrained(trainable):
+                assert len(task.preds) == 0
+                task.trained = cast(TrainedIndividualOp, trainable)
             else:
-                assert not is_incremental(trainable)
-                input_X = pd.concat([p.batch[0] for p in task.preds])  # type: ignore
-                input_y = pd.concat([p.batch[1] for p in task.preds])  # type: ignore
-            task.trained = trainable.fit(input_X, input_y)
+                if len(task.preds) == 1:
+                    input_X, input_y = task.preds[0].batch  # type: ignore
+                else:
+                    assert not is_incremental(trainable)
+                    input_X = pd.concat([p.batch[0] for p in task.preds])  # type: ignore
+                    input_y = pd.concat([p.batch[1] for p in task.preds])  # type: ignore
+                task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
             assert len(task.preds) in [1, 2]
