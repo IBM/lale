@@ -45,7 +45,7 @@ Transformers:
 * lale.lib.rasl. `Relational`_
 * lale.lib.lale. `SampleBasedVoting`_
 * lale.lib.rasl. `Scan`_
-* lale.lib.rasl. `SplitXy`_
+* lale.lib.lale. `SplitXy`_
 * lale.lib.lale. `Tee`_
 
 Estimators and transformers:
@@ -76,7 +76,7 @@ Estimators and transformers:
 .. _`Join`: lale.lib.rasl.join.html
 .. _`Alias`: lale.lib.rasl.alias.html
 .. _`Scan`: lale.lib.rasl.scan.html
-.. _`SplitXy`: lale.lib.rasl.split_xy.html
+.. _`SplitXy`: lale.lib.lale.split_xy.html
 .. _`Relational`: lale.lib.rasl.relational.html
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
@@ -107,7 +107,6 @@ from lale.lib.rasl import (
     Project,
     Relational,
     Scan,
-    SplitXy,
     categorical,
     date_time,
     spark_explainer,
@@ -131,5 +130,6 @@ from .optimize_last import OptimizeLast
 from .optimize_suffix import OptimizeSuffix
 from .sample_based_voting import SampleBasedVoting
 from .smac import SMAC
+from .split_xy import SplitXy
 from .tee import Tee
 from .topk_voting_classifier import TopKVotingClassifier

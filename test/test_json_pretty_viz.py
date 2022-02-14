@@ -866,7 +866,7 @@ pipeline = numpy_column_selector >> compress_strings"""
         join = Join(pred=[it["table1.csv"].k1 == it["table2.csv"].k2])
         aggregate = Aggregate(columns={"talk_time|mean": mean(it.talk_time)})
         pipeline = (scan1 & scan2) >> join >> aggregate
-        expected = """from lale.lib.lale import Scan
+        expected = """from lale.lib.rasl import Scan
 from lale.expressions import it
 from lale.lib.rasl import Join
 from lale.lib.rasl import Aggregate

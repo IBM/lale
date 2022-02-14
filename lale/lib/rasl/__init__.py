@@ -33,7 +33,6 @@ Transformers
 
 * lale.lib.rasl. `Batching`_
 * lale.lib.rasl. `Scan`_
-* lale.lib.rasl. `SplitXy`_
 
 Scikit-learn Operators
 ======================
@@ -79,7 +78,6 @@ Other Facilities
 
 .. _`Batching`: lale.lib.rasl.batching.html
 .. _`Scan`: lale.lib.rasl.scan.html
-.. _`SplitXy`: lale.lib.rasl.split_xy.html
 
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
 .. _`OneHotEncoder`: lale.lib.rasl.one_hot_encoder.html
@@ -135,5 +133,4 @@ from .scan import Scan
 from .select_k_best import SelectKBest
 from .simple_imputer import SimpleImputer
 from .spark_explainer import SparkExplainer
-from .split_xy import SplitXy
 from .standard_scaler import StandardScaler
