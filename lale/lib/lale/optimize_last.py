@@ -18,9 +18,8 @@ from typing import Any, Dict, Optional
 import lale.docstrings
 import lale.operators
 import lale.pretty_print
+from lale.lib._common_schemas import schema_estimator
 from lale.lib.lale.optimize_suffix import OptimizeSuffix
-
-from ._common_schemas import schema_estimator
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.ERROR)

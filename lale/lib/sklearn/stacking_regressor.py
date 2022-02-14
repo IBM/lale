@@ -17,7 +17,7 @@ from sklearn.ensemble import StackingRegressor as SKLModel
 
 import lale.docstrings
 import lale.operators
-from lale.lib.lale._common_schemas import schema_cv
+from lale.lib._common_schemas import schema_cv
 
 from .stacking_utils import _concatenate_predictions_pandas
 

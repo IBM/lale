@@ -120,7 +120,7 @@ class _FilterImpl:
         def filter(X):
             if isinstance(op, ast.Name):
                 # currently only handles single argument predicates
-                functions_module = importlib.import_module("lale.lib.lale.functions")
+                functions_module = importlib.import_module("lale.lib.rasl.functions")
                 func = getattr(functions_module, "filter_" + op.id)
                 return func(X, lhs)
 
@@ -290,7 +290,7 @@ _output_transform_schema = {
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Relational algebra filter operator.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.filter.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.filter.html",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

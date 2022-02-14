@@ -26,15 +26,14 @@ import lale.helpers
 import lale.operators
 import lale.sklearn_compat
 from lale.helpers import cross_val_score_track_trials
-from lale.lib.sklearn import LogisticRegression
-
-from ._common_schemas import (
+from lale.lib._common_schemas import (
     schema_best_score_single,
     schema_cv,
     schema_estimator,
     schema_max_opt_time,
     schema_scoring_single,
 )
+from lale.lib.sklearn import LogisticRegression
 
 try:
     # Import ConfigSpace and different types of parameters

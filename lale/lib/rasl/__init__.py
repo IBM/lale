@@ -19,7 +19,20 @@ Relational Algebra Operators
 ============================
 
 * lale.lib.rasl. `Aggregate`_
+* lale.lib.rasl. `Alias`_
+* lale.lib.rasl. `Filter`_
+* lale.lib.rasl. `GroupBy`_
+* lale.lib.rasl. `Join`_
 * lale.lib.rasl. `Map`_
+* lale.lib.rasl. `OrderBy`_
+* lale.lib.rasl. `Project`_
+* lale.lib.rasl. `Relational`_
+
+Transformers
+============
+
+* lale.lib.rasl. `Batching`_
+* lale.lib.rasl. `Scan`_
 
 Scikit-learn Operators
 ======================
@@ -30,6 +43,13 @@ Scikit-learn Operators
 * lale.lib.rasl. `SelectKBest`_
 * lale.lib.rasl. `SimpleImputer`_
 * lale.lib.rasl. `StandardScaler`_
+
+Functions:
+==========
+
+* lale.lib.rasl. `categorical`_
+* lale.lib.rasl. `date_time`_
+* SparkExplainer. `spark_explainer`_
 
 Other Facilities
 ================
@@ -47,7 +67,17 @@ Other Facilities
 * lale.lib.rasl. `r2_score`_
 
 .. _`Aggregate`: lale.lib.rasl.aggregate.html
+.. _`Alias`: lale.lib.rasl.alias.html
+.. _`Filter`: lale.lib.rasl.filter.html
+.. _`GroupBy`: lale.lib.rasl.group_by.html
+.. _`Join`: lale.lib.rasl.join.html
 .. _`Map`: lale.lib.rasl.map.html
+.. _`OrderBy`: lale.lib.rasl.orderby.html
+.. _`Project`: lale.lib.rasl.project.html
+.. _`Relational`: lale.lib.rasl.relational.html
+
+.. _`Batching`: lale.lib.rasl.batching.html
+.. _`Scan`: lale.lib.rasl.scan.html
 
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
 .. _`OneHotEncoder`: lale.lib.rasl.one_hot_encoder.html
@@ -55,6 +85,10 @@ Other Facilities
 .. _`SelectKBest`: lale.lib.rasl.select_k_best.html
 .. _`SimpleImputer`: lale.lib.rasl.simple_imputer.html
 .. _`StandardScaler`: lale.lib.rasl.standard_scaler.html
+
+.. _`categorical`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.categorical
+.. _`date_time`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.date_time
+.. _`spark_explainer`: lale.lib.rasl.spark_explainer.html
 
 .. _`Prio`: lale.lib.rasl.Prio.html
 .. _`PrioBatch`: lale.lib.rasl.PrioBatch.html
@@ -82,10 +116,21 @@ from ._task_graphs import (
     mockup_data_loader,
 )
 from .aggregate import Aggregate
+from .alias import Alias
+from .batching import Batching
+from .filter import Filter
+from .functions import categorical, date_time
+from .group_by import GroupBy
+from .join import Join
 from .map import Map
 from .min_max_scaler import MinMaxScaler
 from .one_hot_encoder import OneHotEncoder
+from .orderby import OrderBy
 from .ordinal_encoder import OrdinalEncoder
+from .project import Project
+from .relational import Relational
+from .scan import Scan
 from .select_k_best import SelectKBest
 from .simple_imputer import SimpleImputer
+from .spark_explainer import SparkExplainer
 from .standard_scaler import StandardScaler

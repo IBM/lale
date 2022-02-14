@@ -32,19 +32,19 @@ Estimators:
 Transformers:
 
 * lale.lib.rasl. `Aggregate`_
-* lale.lib.lale. `Alias`_
-* lale.lib.lale. `Batching`_
+* lale.lib.rasl. `Alias`_
+* lale.lib.rasl. `Batching`_
 * lale.lib.lale. `ConcatFeatures`_
-* lale.lib.lale. `Filter`_
-* lale.lib.lale. `GroupBy`_
-* lale.lib.lale. `Join`_
+* lale.lib.rasl. `Filter`_
+* lale.lib.rasl. `GroupBy`_
+* lale.lib.rasl. `Join`_
 * lale.lib.rasl. `Map`_
 * lale.lib.lale. `NoOp`_
-* lale.lib.lale. `OrderBy`_
-* lale.lib.lale. `Project`_
-* lale.lib.lale. `Relational`_
+* lale.lib.rasl. `OrderBy`_
+* lale.lib.rasl. `Project`_
+* lale.lib.rasl. `Relational`_
 * lale.lib.lale. `SampleBasedVoting`_
-* lale.lib.lale. `Scan`_
+* lale.lib.rasl. `Scan`_
 * lale.lib.lale. `SplitXy`_
 * lale.lib.lale. `Tee`_
 
@@ -63,21 +63,21 @@ Estimators and transformers:
 
 .. _`TopKVotingClassifier`: lale.lib.lale.topk_voting_classifier.html
 .. _`SMAC`: lale.lib.lale.smac.html
-.. _`Batching`: lale.lib.lale.batching.html
+.. _`Batching`: lale.lib.rasl.batching.html
 .. _`ConcatFeatures`: lale.lib.lale.concat_features.html
 .. _`NoOp`: lale.lib.lale.no_op.html
-.. _`Project`: lale.lib.lale.project.html
+.. _`Project`: lale.lib.rasl.project.html
 .. _`SampleBasedVoting`: lale.lib.lale.sample_based_voting.html
 .. _`Aggregate`: lale.lib.rasl.aggregate.html
-.. _`Filter`: lale.lib.lale.filter.html
-.. _`GroupBy`: lale.lib.lale.group_by.html
+.. _`Filter`: lale.lib.rasl.filter.html
+.. _`GroupBy`: lale.lib.rasl.group_by.html
 .. _`Map`: lale.lib.rasl.map.html
-.. _`OrderBy`: lale.lib.lale.orderby.html
-.. _`Join`: lale.lib.lale.join.html
-.. _`Alias`: lale.lib.lale.alias.html
-.. _`Scan`: lale.lib.lale.scan.html
+.. _`OrderBy`: lale.lib.rasl.orderby.html
+.. _`Join`: lale.lib.rasl.join.html
+.. _`Alias`: lale.lib.rasl.alias.html
+.. _`Scan`: lale.lib.rasl.scan.html
 .. _`SplitXy`: lale.lib.lale.split_xy.html
-.. _`Relational`: lale.lib.lale.relational.html
+.. _`Relational`: lale.lib.rasl.relational.html
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
 .. _`Observing`: lale.lib.lale.observing.html
@@ -90,45 +90,46 @@ Functions:
 * lale.lib.lale. `date_time`_
 * SparkExplainer. `spark_explainer`_
 
-.. _`categorical`: lale.lib.lale.functions.html#lale.lib.lale.functions.categorical
-.. _`date_time`: lale.lib.lale.functions.html#lale.lib.lale.functions.date_time
-.. _`spark_explainer`: lale.lib.lale.spark_explainer.html
+.. _`categorical`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.categorical
+.. _`date_time`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.date_time
+.. _`spark_explainer`: lale.lib.rasl.spark_explainer.html
 """
 
-from lale.lib.rasl import Aggregate, Map
-
-from .alias import Alias
+from lale.lib.rasl import (
+    Aggregate,
+    Alias,
+    Batching,
+    Filter,
+    GroupBy,
+    Join,
+    Map,
+    OrderBy,
+    Project,
+    Relational,
+    Scan,
+    categorical,
+    date_time,
+    spark_explainer,
+)
 
 # estimators
 from .auto_pipeline import AutoPipeline
 
-# transformers
-from .batching import Batching
-
 # estimators and transformers
 from .both import Both
 from .concat_features import ConcatFeatures
-from .filter import Filter
 
 # functions
-from .functions import categorical, date_time
 from .grid_search_cv import GridSearchCV
-from .group_by import GroupBy
 from .halving_grid_search_cv import HalvingGridSearchCV
 from .hyperopt import Hyperopt
 from .identity_wrapper import IdentityWrapper
-from .join import Join
 from .no_op import NoOp
 from .observing import Observing
 from .optimize_last import OptimizeLast
 from .optimize_suffix import OptimizeSuffix
-from .orderby import OrderBy
-from .project import Project
-from .relational import Relational
 from .sample_based_voting import SampleBasedVoting
-from .scan import Scan
 from .smac import SMAC
-from .spark_explainer import SparkExplainer
 from .split_xy import SplitXy
 from .tee import Tee
 from .topk_voting_classifier import TopKVotingClassifier

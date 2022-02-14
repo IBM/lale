@@ -28,7 +28,7 @@ from lale.datasets.data_schemas import get_index_name, get_table_name
 from lale.expressions import it
 from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
-from lale.lib.lale.join import Join
+from lale.lib.rasl.join import Join
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)

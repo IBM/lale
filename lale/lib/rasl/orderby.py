@@ -163,7 +163,7 @@ _output_transform_schema = {
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Relational algebra OrderBy (sort) operator.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.orderby.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.orderby.html",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {

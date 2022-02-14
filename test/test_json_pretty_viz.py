@@ -302,7 +302,7 @@ pipeline = Vote(
 
     def test_multimodal(self):
         from lale.lib.lale import ConcatFeatures as Cat
-        from lale.lib.lale import Project
+        from lale.lib.rasl import Project
         from lale.lib.sklearn import LinearSVC
         from lale.lib.sklearn import Normalizer as Norm
         from lale.lib.sklearn import OneHotEncoder as OneHot
@@ -313,7 +313,7 @@ pipeline = Vote(
         pipeline = (
             ((project_0 >> Norm()) & (project_1 >> OneHot())) >> Cat >> linear_svc
         )
-        expected = """from lale.lib.lale import Project
+        expected = """from lale.lib.rasl import Project
 from sklearn.preprocessing import Normalizer as Norm
 from sklearn.preprocessing import OneHotEncoder as OneHot
 from lale.lib.lale import ConcatFeatures as Cat
@@ -859,17 +859,16 @@ pipeline = numpy_column_selector >> compress_strings"""
 
     def test_expression(self):
         from lale.expressions import it, mean
-        from lale.lib.lale import Join, Scan
-        from lale.lib.rasl import Aggregate
+        from lale.lib.rasl import Aggregate, Join, Scan
 
         scan1 = Scan(table=it["table1.csv"])
         scan2 = Scan(table=it["table2.csv"])
         join = Join(pred=[it["table1.csv"].k1 == it["table2.csv"].k2])
         aggregate = Aggregate(columns={"talk_time|mean": mean(it.talk_time)})
         pipeline = (scan1 & scan2) >> join >> aggregate
-        expected = """from lale.lib.lale import Scan
+        expected = """from lale.lib.rasl import Scan
 from lale.expressions import it
-from lale.lib.lale import Join
+from lale.lib.rasl import Join
 from lale.lib.rasl import Aggregate
 from lale.expressions import mean
 import lale

@@ -37,17 +37,16 @@ from lale.helpers import (
     create_instance_from_hyperopt_search_space,
     cross_val_score_track_trials,
 )
-from lale.lib.sklearn import LogisticRegression
-from lale.search.op2hp import hyperopt_search_space
-from lale.search.PGO import PGO
-
-from ._common_schemas import (
+from lale.lib._common_schemas import (
     schema_best_score_single,
     schema_cv,
     schema_estimator,
     schema_max_opt_time,
     schema_scoring_single,
 )
+from lale.lib.sklearn import LogisticRegression
+from lale.search.op2hp import hyperopt_search_space
+from lale.search.PGO import PGO
 
 SEED = 42
 logger = logging.getLogger(__name__)
