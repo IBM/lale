@@ -56,7 +56,7 @@ class MetricMonoidMaker(MonoidMaker[_Batch, float]):
         self, batches: Iterable[Tuple[pd.Series, pd.Series]]
     ) -> float:
         lifted_batches = (self.to_monoid(b) for b in batches)
-        return (functools.reduce(Monoid.combine, lifted_batches)).result
+        return (functools.reduce(lambda x, y: x.combine(y), lifted_batches)).result
 
     def score_estimator_batched(
         self,
