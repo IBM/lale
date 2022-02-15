@@ -51,23 +51,7 @@ jobs:
       fail-fast: false
       matrix:
         test-case:
-        - test/test_core_classifiers.py
-        - test/test_core_regressors.py
-        - test/test_core_transformers.py
-        - test/test_core_misc.py
-        - test/test_core_pipeline.py
-        - test/test_custom_schemas.py
-        - test/test_json_pretty_viz.py
-        - test/test_grammar.py
-        - test/test_type_checking.py
-        - test/test_interoperability.py
-        - test/test_optimizers.py
-        - test/test_pipeline.py
-        - test/test_autoai_libs.py
-        - test/test_autoai_output_consumption.py
-        - test/test_autogen_lib.py
         - test/test_snapml.py
-        - test/test_relational.py
         python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
         include:
