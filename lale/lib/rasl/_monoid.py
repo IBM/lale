@@ -29,7 +29,7 @@ class Monoid(ABC):
 _M = TypeVar("_M", bound=Monoid)
 
 
-class MonoidFactoy(ABC, Generic[_InputType, _OutputType, _M]):
+class MonoidFactory(ABC, Generic[_InputType, _OutputType, _M]):
     @abstractmethod
     def _to_monoid(self, v: _InputType) -> _M:
         pass
@@ -39,7 +39,7 @@ class MonoidFactoy(ABC, Generic[_InputType, _OutputType, _M]):
         pass
 
 
-class MonoidableOperator(MonoidFactoy[Any, None, _M]):
+class MonoidableOperator(MonoidFactory[Any, None, _M]):
     _monoid: Optional[_M] = None
 
     def partial_fit(self, X, y=None):

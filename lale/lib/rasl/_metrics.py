@@ -25,7 +25,7 @@ from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import get_columns
 from lale.operators import TrainableOperator
 
-from ._monoid import Monoid, MonoidFactoy
+from ._monoid import Monoid, MonoidFactory
 from .aggregate import Aggregate
 from .map import Map
 
@@ -35,7 +35,7 @@ _Batch = Tuple[pd.Series, pd.Series]
 _M = TypeVar("_M", bound=MetricMonoid)
 
 
-class MetricMonoidFactory(MonoidFactoy[_Batch, float, _M]):
+class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
     @abstractmethod
     def _to_monoid(self, v: _Batch) -> _M:
         pass
