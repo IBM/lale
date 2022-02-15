@@ -13,39 +13,45 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Optional, TypeVar
 
 _InputType = TypeVar("_InputType", contravariant=True)
 _OutputType = TypeVar("_OutputType", covariant=True)
 _SelfType = TypeVar("_SelfType")
 
 
-class Monoid(ABC, Generic[_OutputType]):
+class Monoid(ABC):
     @abstractmethod
     def combine(self: _SelfType, other: _SelfType) -> _SelfType:
         pass
 
-    @property
+
+_M = TypeVar("_M", bound=Monoid)
+
+
+class MonoidFactoy(ABC, Generic[_InputType, _OutputType, _M]):
     @abstractmethod
-    def result(self) -> _OutputType:
-        pass
-
-
-class MonoidMaker(ABC, Generic[_InputType, _OutputType]):
-    @abstractmethod
-    def to_monoid(self, v: _InputType) -> Monoid[_OutputType]:
-        pass
-
-
-class MonoidableOperator(MonoidMaker[Any, "MonoidableOperator"]):
-    def partial_fit(self):
-        # generic implementation here
-        pass
-
-    def fit(self):
-        # generic implementation here
+    def _to_monoid(self, v: _InputType) -> _M:
         pass
 
     @abstractmethod
-    def to_monoid(self: _SelfType, v: Any) -> Monoid[_SelfType]:
+    def _from_monoid(self, v: _M) -> _OutputType:
         pass
+
+
+class MonoidableOperator(MonoidFactoy[Any, None, _M]):
+    _monoid: Optional[_M] = None
+
+    def partial_fit(self, X, y=None):
+        lifted = self._to_monoid((X, y))
+        if self._monoid is None:  # first fit
+            self._monoid = lifted
+        else:
+            self._monoid = self._monoid.combine(lifted)
+        self._from_monoid(self._monoid)
+        return self
+
+    def fit(self, X, y=None):
+        self._monoid = self._to_monoid((X, y))
+        self._from_monoid(self._monoid)
+        return self
