@@ -14,6 +14,7 @@
 
 import ast
 import collections
+import hashlib
 import importlib
 from typing import Any
 
@@ -115,6 +116,13 @@ class _PandasEvaluator(ast.NodeVisitor):
 def astype(df: Any, call: ast.Call):
     dtype = ast.literal_eval(call.args[0])
     column = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
+    return column.astype(dtype)
+
+
+def hash(df: Any, call: ast.Call):
+    hash_method = ast.literal_eval(call.args[0])
+    column = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
+    h = hashlib.new(hash_method)
     return column.astype(dtype)
 
 

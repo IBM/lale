@@ -378,6 +378,10 @@ def astype(dtype, subject: Expr) -> Expr:
     return _make_call_expr("astype", dtype, subject)
 
 
+def hash(hash_method: str, subject: Expr) -> Expr:
+    return _make_call_expr("hash", hash_method, subject)
+
+
 def sum(group: Expr) -> Expr:
     return _make_call_expr("sum", group)
 

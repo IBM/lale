@@ -20,6 +20,7 @@ import jsonschema
 import numpy as np
 import pandas as pd
 import sklearn
+from category_encoders.hashing import HashingEncoder as SkHashingEncoder
 from sklearn.feature_selection import SelectKBest as SkSelectKBest
 from sklearn.impute import SimpleImputer as SkSimpleImputer
 from sklearn.metrics import accuracy_score as sk_accuracy_score
@@ -46,6 +47,7 @@ from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas
 from lale.lib.lale import ConcatFeatures
+from lale.lib.rasl import HashingEncoder as RaslHashingEncoder
 from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
 from lale.lib.rasl import OneHotEncoder as RaslOneHotEncoder
@@ -560,6 +562,50 @@ class TestOneHotEncoder(unittest.TestCase):
             rasl_predicted = rasl_trained.predict(test_X)
             self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
             self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
+
+
+def _check_trained_hashing_encoder(test, op1, op2, msg):
+    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
+    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
+    for i in range(len(op1.categories_)):
+        test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+
+class TestHasingEncoder(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        import typing
+        from typing import Any, Dict
+
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2creditg = typing.cast(
+            Dict[str, Any],
+            {
+                tgt: lale.datasets.openml.fetch(
+                    "credit-g",
+                    "classification",
+                    preprocess=False,
+                    astype=tgt,
+                )
+                for tgt in targets
+            },
+        )
+
+    def _check_last_trained(self, op1, op2, msg):
+        _check_trained_one_hot_encoder(
+            self, op1.get_last().impl, op2.get_last().impl, msg
+        )
+
+    def test_fit(self):
+        (train_X_pd, _), (_, _) = self.tgt2creditg["pandas"]
+        cat_columns = categorical()(train_X_pd)
+        prefix = Map(columns={c: it[c] for c in cat_columns})
+        rasl_trainable = prefix >> RaslHashingEncoder()
+        sk_trainable = prefix >> SkHashingEncoder()
+        sk_trained = sk_trainable.fit(train_X_pd)
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X)
+            self._check_last_trained(sk_trained, rasl_trained, tgt)
 
 
 class TestSimpleImputer(unittest.TestCase):
