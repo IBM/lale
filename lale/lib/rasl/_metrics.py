@@ -36,11 +36,11 @@ _Batch = Tuple[pd.Series, pd.Series]
 
 class MetricMonoidMaker(MonoidMaker[_Batch, float]):
     @abstractmethod
-    def lift(self, v: _Batch) -> Monoid[float]:
+    def to_monoid(self, v: _Batch) -> Monoid[float]:
         pass
 
     def score_data(self, y_true: pd.Series, y_pred: pd.Series) -> float:
-        return (self.lift((y_true, y_pred))).lower()
+        return (self.to_monoid((y_true, y_pred))).result
 
     def score_estimator(
         self, estimator: TrainableOperator, X: pd.DataFrame, y: pd.Series
@@ -55,8 +55,8 @@ class MetricMonoidMaker(MonoidMaker[_Batch, float]):
     def score_data_batched(
         self, batches: Iterable[Tuple[pd.Series, pd.Series]]
     ) -> float:
-        lifted_batches = (self.lift(b) for b in batches)
-        return (functools.reduce(Monoid.combine, lifted_batches)).lower()
+        lifted_batches = (self.to_monoid(b) for b in batches)
+        return (functools.reduce(Monoid.combine, lifted_batches)).result
 
     def score_estimator_batched(
         self,
@@ -75,14 +75,12 @@ class _AccuracyData(MetricMonoid):
     def combine(self, other):
         return _AccuracyData(self._match + other._match, self._total + other._total)
 
-    def lower(self):
+    @property
+    def result(self):
         return self._match / np.float64(self._total)
 
 
 class _Accuracy(MetricMonoidMaker):
-
-    # _LiftedType = collections.namedtuple("_Lifted", ["match", "total"])
-
     def __init__(self):
         from lale.lib.lale.concat_features import ConcatFeatures
 
@@ -92,7 +90,7 @@ class _Accuracy(MetricMonoidMaker):
             >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
         )
 
-    def lift(self, batch: _Batch):
+    def to_monoid(self, batch: _Batch):
         from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
@@ -132,7 +130,8 @@ class _R2Data(MetricMonoid):
             res_sum_sq=self._res_sum_sq + other._res_sum_sq,
         )
 
-    def lower(self):
+    @property
+    def result(self):
         ss_tot = self._sum_sq - (self._sum * self._sum / np.float64(self._n))
         return 1 - self._res_sum_sq / ss_tot
 
@@ -163,7 +162,7 @@ class _R2(MetricMonoidMaker):
             )
         )
 
-    def lift(self, batch):
+    def to_monoid(self, batch):
         from lale.lib.rasl import Scan
 
         y_true, y_pred = batch

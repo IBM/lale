@@ -25,14 +25,15 @@ class Monoid(ABC, Generic[_OutputType]):
     def combine(self: _SelfType, other: _SelfType) -> _SelfType:
         pass
 
+    @property
     @abstractmethod
-    def lower(self) -> _OutputType:
+    def result(self) -> _OutputType:
         pass
 
 
 class MonoidMaker(ABC, Generic[_InputType, _OutputType]):
     @abstractmethod
-    def lift(self, v: _InputType) -> Monoid[_OutputType]:
+    def to_monoid(self, v: _InputType) -> Monoid[_OutputType]:
         pass
 
 
@@ -46,5 +47,5 @@ class MonoidableOperator(MonoidMaker[Any, "MonoidableOperator"]):
         pass
 
     @abstractmethod
-    def lift(self: _SelfType, v: Any) -> Monoid[_SelfType]:
+    def to_monoid(self: _SelfType, v: Any) -> Monoid[_SelfType]:
         pass
