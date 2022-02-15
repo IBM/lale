@@ -518,6 +518,7 @@ def _run_tasks(
                 mark_done(pred)
 
     seq_id = 0
+    batches_iterator = iter(batches)
     while len(ready_keys) > 0:
         if verbose >= 3:
             _visualize_tasks(tasks, pipeline, prio, call_depth + 1)
@@ -526,7 +527,7 @@ def _run_tasks(
         if operation is _Operation.SCAN:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1 and len(task.preds) == 0
-            task.batch = next(iter(batches))
+            task.batch = next(batches_iterator)
         elif operation in [_Operation.TRANSFORM, _Operation.PREDICT]:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1
@@ -534,13 +535,11 @@ def _run_tasks(
             trained = train_pred.get_trained(pipeline)
             apply_preds = find_task(_ApplyTask, task.preds)
             if isinstance(apply_preds, _Task):
-                apply_pred = cast(_ApplyTask, find_task(_ApplyTask, task.preds))
+                apply_pred = cast(_ApplyTask, apply_preds)
                 assert apply_pred.batch is not None
                 input_X, input_y = apply_pred.batch
             else:  # a list of tasks
-                apply_preds = [
-                    cast(_ApplyTask, apply_pred) for apply_pred in apply_preds
-                ]
+                apply_preds = cast(List[_ApplyTask], apply_preds)  # type: ignore
                 assert not any(apply_pred.batch is None for apply_pred in apply_preds)  # type: ignore
                 input_X = [pred.batch[0] for pred in apply_preds]  # type: ignore
                 # The assumption is that input_y is not changed by the preds, so we can
