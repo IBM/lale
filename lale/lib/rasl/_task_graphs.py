@@ -297,8 +297,11 @@ def _create_tasks_batching(
         task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
+        step = pipeline.steps_list()[task.step_id]
         if isinstance(task, _TrainTask):
-            if len(task.batch_ids) == 1:
+            if is_pretrained(step):
+                pass
+            elif len(task.batch_ids) == 1:
                 for pred_step_id in tg.step_id_preds[task.step_id]:
                     task.preds.append(
                         tg.find_or_create(
@@ -306,10 +309,7 @@ def _create_tasks_batching(
                         )
                     )
             else:
-                step = pipeline.steps_list()[task.step_id]
-                if is_pretrained(step):
-                    pass
-                elif is_associative(step):
+                if is_associative(step):
                     for batch_id in task.batch_ids:
                         task.preds.append(
                             tg.find_or_create(
@@ -375,8 +375,11 @@ def _create_tasks_cross_val(
             task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
+        step = pipeline.steps_list()[task.step_id]
         if isinstance(task, _TrainTask):
-            if len(task.batch_ids) == 1:
+            if is_pretrained(step):
+                pass
+            elif len(task.batch_ids) == 1:
                 for pred_step_id in tg.step_id_preds[task.step_id]:
                     if pred_step_id == _DUMMY_INPUT_STEP:
                         held_out = None
@@ -399,9 +402,6 @@ def _create_tasks_cross_val(
                         held_out = next(iter(hofs))
                     else:
                         held_out = task.held_out
-                step = pipeline.steps_list()[task.step_id]
-                if is_pretrained(step):
-                    pass
                 if is_associative(step):
                     if not same_fold:
                         held_out = None
