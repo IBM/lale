@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
 import functools
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any, Dict, Generic, Iterable, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -29,26 +28,53 @@ from lale.operators import TrainableOperator
 from .aggregate import Aggregate
 from .map import Map
 
-_Batch = Tuple[pd.DataFrame, pd.Series]
+_InputType = TypeVar("_InputType", contravariant=True)
+_OutputType = TypeVar("_OutputType", covariant=True)
+_SelfType = TypeVar("_SelfType")
 
 
-class _MonoidMetric(ABC):
-    _Lifted = Tuple[Any, ...]
-
+class _Monoid(ABC, Generic[_OutputType]):
     @abstractmethod
-    def _lift(self, batch: _Batch) -> _Lifted:
+    def _combine(self: _SelfType, other: _SelfType) -> _SelfType:
         pass
 
     @abstractmethod
-    def _combine(self, lifted_a: _Lifted, lifted_b: _Lifted) -> _Lifted:
+    def _lower(self) -> _OutputType:
+        pass
+
+
+class _MonoidMaker(ABC, Generic[_InputType, _OutputType]):
+    @abstractmethod
+    def _lift(self, v: _InputType) -> _Monoid[_OutputType]:
+        pass
+
+
+class _MonoidableOperator(_MonoidMaker[Any, "_MonoidableOperator"]):
+    def partial_fit(self):
+        # generic implementation here
+        pass
+
+    def fit(self):
+        # generic implementation here
         pass
 
     @abstractmethod
-    def _lower(self, lifted: _Lifted) -> float:
+    def _lift(self: _SelfType, v: Any) -> _Monoid[_SelfType]:
+        pass
+
+
+_MetricMonoid = _Monoid[float]
+
+_Batch = Tuple[pd.Series, pd.Series]
+
+
+class _MetricMonoidMaker(_MonoidMaker[_Batch, float]):
+    @abstractmethod
+    def _lift(self, v: _Batch) -> _Monoid[float]:
         pass
 
     def score_data(self, y_true: pd.Series, y_pred: pd.Series) -> float:
-        return self._lower(self._lift((y_true, y_pred)))
+        return (self._lift((y_true, y_pred)))._lower()
 
     def score_estimator(
         self, estimator: TrainableOperator, X: pd.DataFrame, y: pd.Series
@@ -60,30 +86,50 @@ class _MonoidMetric(ABC):
     ) -> float:
         return self.score_estimator(estimator, X, y)
 
-    def score_data_batched(self, batches: Iterable[_Batch]) -> float:
+    def score_data_batched(
+        self, batches: Iterable[Tuple[pd.Series, pd.Series]]
+    ) -> float:
         lifted_batches = (self._lift(b) for b in batches)
-        return self._lower(functools.reduce(self._combine, lifted_batches))
+        return (functools.reduce(_Monoid._combine, lifted_batches))._lower()
 
     def score_estimator_batched(
-        self, estimator: TrainableOperator, batches: Iterable[_Batch]
+        self,
+        estimator: TrainableOperator,
+        batches: Iterable[Tuple[pd.Series, pd.Series]],
     ) -> float:
         predicted_batches = ((y, estimator.predict(X)) for X, y in batches)
         return self.score_data_batched(predicted_batches)
 
 
-class _Accuracy(_MonoidMetric):
-    _Lifted = collections.namedtuple("_Lifted", ["match", "total"])
+class _AccuracyData(_MetricMonoid):
+    def __init__(self, match, total):
+        self._match = match
+        self._total = total
 
-    def __init__(self):
+    def _combine(self, other):
+        return _AccuracyData(self._match + other._match, self._total + other._total)
+
+    def _lower(self):
+        return self._match / np.float64(self._total)
+
+
+class _Accuracy(_MetricMonoidMaker):
+
+    # _LiftedType = collections.namedtuple("_Lifted", ["match", "total"])
+
+    def __init__(self, _pipeline=None):
         from lale.lib.lale.concat_features import ConcatFeatures
 
-        self._pipeline_suffix = (
-            ConcatFeatures
-            >> Map(columns={"match": astype("int", it.y_true == it.y_pred)})  # type: ignore
-            >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
-        )
+        if _pipeline is None:
+            self._pipeline_suffix = (
+                ConcatFeatures
+                >> Map(columns={"match": astype("int", it.y_true == it.y_pred)})  # type: ignore
+                >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
+            )
+        else:
+            self._pipeline_suffix = _pipeline
 
-    def _lift(self, batch: _Batch) -> _Lifted:
+    def _lift(self, batch: _Batch):
         from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
@@ -101,22 +147,35 @@ class _Accuracy(_MonoidMetric):
         )
         pipeline = (prefix_true & prefix_pred) >> self._pipeline_suffix
         agg_df = _ensure_pandas(pipeline.transform([y_true, y_pred]))
-        return self._Lifted(*agg_df.iloc[0])
-
-    def _combine(self, lifted_a, lifted_b):
-        return self._Lifted(*(a + b for a, b in zip(lifted_a, lifted_b)))
-
-    def _lower(self, lifted):
-        return lifted.match / np.float64(lifted.total)
+        return _AccuracyData(*agg_df.iloc[0])
 
 
 def accuracy_score(y_true, y_pred):
     return get_scorer("accuracy").score_data(y_true, y_pred)
 
 
-class _R2(_MonoidMetric):
+class _R2Data(_MetricMonoid):
+    def __init__(self, n, sum, sum_sq, res_sum_sq):
+        self._n = n
+        self._sum = sum
+        self._sum_sq = sum_sq
+        self._res_sum_sq = res_sum_sq
+
+    def _combine(self, other):
+        return _R2Data(
+            n=self._n + other._n,
+            sum=self._sum + other._sum,
+            sum_sq=self._sum_sq + other._sum_sq,
+            res_sum_sq=self._res_sum_sq + other._res_sum_sq,
+        )
+
+    def _lower(self):
+        ss_tot = self._sum_sq - (self._sum * self._sum / np.float64(self._n))
+        return 1 - self._res_sum_sq / ss_tot
+
+
+class _R2(_MetricMonoidMaker):
     # https://en.wikipedia.org/wiki/Coefficient_of_determination
-    _Lifted = collections.namedtuple("_Lifted", ["n", "sum", "sum_sq", "res_sum_sq"])
 
     def __init__(self):
         from lale.lib.lale.concat_features import ConcatFeatures
@@ -159,15 +218,7 @@ class _R2(_MonoidMetric):
         )
         pipeline = (prefix_true & prefix_pred) >> self._pipeline_suffix
         agg_df = _ensure_pandas(pipeline.transform([y_true, y_pred]))
-        return self._Lifted(*agg_df.iloc[0])
-
-    def _combine(self, lifted_a, lifted_b):
-        return self._Lifted(*(a + b for a, b in zip(lifted_a, lifted_b)))
-
-    def _lower(self, lifted):
-        ss_res = lifted.res_sum_sq
-        ss_tot = lifted.sum_sq - (lifted.sum * lifted.sum / np.float64(lifted.n))
-        return 1 - ss_res / ss_tot
+        return _R2Data(*agg_df.iloc[0])
 
 
 def r2_score(y_true, y_pred):
