@@ -12,27 +12,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import abstractmethod
 from typing import Any, Generic, Tuple, TypeVar
+
 import numpy as np
 from scipy import special
 
-import lale.docstrings
-import lale.operators
 from lale.expressions import count as agg_count
 from lale.expressions import it
 from lale.expressions import sum as agg_sum
 from lale.helpers import _ensure_pandas
-from lale.lib.dataframe import count, get_columns
+from lale.lib.dataframe import get_columns
 from lale.lib.lale.concat_features import ConcatFeatures
 from lale.lib.rasl import Aggregate, GroupBy, Map
+
 from ._monoid import Monoid, MonoidFactory
 
 ScoreMonoid = Monoid
 
-_InputType = Tuple[Any, Any] # TODO: be more precise?
+_InputType = Tuple[Any, Any]  # TODO: be more precise?
 _OutputType = Tuple[float, float]
 _M = TypeVar("_M", bound=ScoreMonoid)
+
 
 class ScoreMonoidFactory(Generic[_M], MonoidFactory[_InputType, _OutputType, _M]):
     def score(self, X, y) -> Tuple[float, float]:
@@ -40,7 +40,16 @@ class ScoreMonoidFactory(Generic[_M], MonoidFactory[_InputType, _OutputType, _M]
 
 
 class FOnewayData(Monoid):
-    def __init__(self, *, classes, n_samples_per_class, n_samples, ss_alldata, sums_samples, sums_alldata):
+    def __init__(
+        self,
+        *,
+        classes,
+        n_samples_per_class,
+        n_samples,
+        ss_alldata,
+        sums_samples,
+        sums_alldata
+    ):
         """
         Parameters
         ----------
@@ -71,12 +80,12 @@ class FOnewayData(Monoid):
         ss_alldata_a = self.ss_alldata
         sums_samples_a = self.sums_samples
         sums_alldata_a = self.sums_alldata
-        classes_b =  other.classes
-        n_samples_per_class_b =  other.n_samples_per_class
-        n_samples_b =  other.n_samples
-        ss_alldata_b =  other.ss_alldata
-        sums_samples_b =  other.sums_samples
-        sums_alldata_b =  other.sums_alldata
+        classes_b = other.classes
+        n_samples_per_class_b = other.n_samples_per_class
+        n_samples_b = other.n_samples
+        ss_alldata_b = other.ss_alldata
+        sums_samples_b = other.sums_samples
+        sums_alldata_b = other.sums_alldata
         classes = list(set(classes_a + classes_b))
         n_samples_per_class = {
             k: (n_samples_per_class_a[k] if k in n_samples_per_class_a else 0)
@@ -99,6 +108,7 @@ class FOnewayData(Monoid):
             sums_samples=sums_samples,
             sums_alldata=sums_alldata,
         )
+
 
 # The following function is a rewriting of sklearn.feature_selection.f_oneway
 # Compared to the sklearn.feature_selection.f_oneway implementation it
@@ -150,6 +160,7 @@ def _f_oneway_lift(X, y) -> FOnewayData:
         sums_samples=sums_samples,
         sums_alldata=sums_alldata,
     )
+
 
 def _f_oneway_lower(lifted):
     """Performs a 1-way ANOVA.
