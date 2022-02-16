@@ -14,7 +14,7 @@
 
 import functools
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Tuple, TypeVar
+from typing import Any, Dict, Generic, Iterable, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -35,7 +35,7 @@ _Batch = Tuple[pd.Series, pd.Series]
 _M = TypeVar("_M", bound=MetricMonoid)
 
 
-class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
+class MetricMonoidFactory(Generic[_M], MonoidFactory[_Batch, float, _M]):
     @abstractmethod
     def _to_monoid(self, v: _Batch) -> _M:
         pass
