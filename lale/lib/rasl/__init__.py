@@ -105,7 +105,7 @@ Other Facilities
 """
 
 from ._metrics import accuracy_score, get_scorer, r2_score
-from ._monoid import Monoid, MonoidableOperator, MonoidMaker
+from ._monoid import Monoid, MonoidableOperator, MonoidFactory
 from ._task_graphs import (
     Prio,
     PrioBatch,

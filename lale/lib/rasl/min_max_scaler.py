@@ -28,32 +28,37 @@ from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import min_max_scaler
 from lale.schemas import Enum
 
+from ._monoid import Monoid, MonoidableOperator
 
-class _MinMaxScalerImpl:
+
+class _MinMaxScalerMonoid(Monoid):
+    def __init__(self, *, data_min_, data_max_, n_samples_seen_, feature_names_in_):
+        self.data_min_ = data_min_
+        self.data_max_ = data_max_
+        self.n_samples_seen_ = n_samples_seen_
+        self.feature_names_in_ = feature_names_in_
+
+    def combine(self, other):
+        data_min_ = np.minimum(self.data_min_, other.data_min_)
+        data_max_ = np.maximum(self.data_max_, other.data_max_)
+        n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
+        assert list(self.feature_names_in_) == list(self.feature_names_in_)
+        feature_names_in_ = self.feature_names_in_
+        return _MinMaxScalerMonoid(
+            data_min_=data_min_,
+            data_max_=data_max_,
+            n_samples_seen_=n_samples_seen_,
+            feature_names_in_=feature_names_in_,
+        )
+
+
+class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
     def __init__(self, feature_range=(0, 1), *, copy=True, clip=False):
         if not copy:
             raise ValueError("`copy=False` is not supported by this implementation")
         if clip:
             raise ValueError("`clip=True` is not supported by this implementation")
         self._hyperparams = {"feature_range": feature_range, "copy": copy, "clip": clip}
-        self.n_samples_seen_ = 0
-
-    def fit(self, X, y=None):
-        self._set_fit_attributes(self._lift(X, self._hyperparams))
-        return self
-
-    def partial_fit(self, X, y=None):
-        if self.n_samples_seen_ == 0:  # first fit
-            return self.fit(X)
-        lifted_a = (
-            self.data_min_,
-            self.data_max_,
-            self.n_samples_seen_,
-            self.feature_names_in_,
-        )
-        lifted_b = self._lift(X, self._hyperparams)
-        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
-        return self
 
     def transform(self, X):
         if self._transformer is None:
@@ -61,18 +66,29 @@ class _MinMaxScalerImpl:
         X_new = self._transformer.transform(X)
         return forward_metadata(X, X_new)
 
-    def _set_fit_attributes(self, lifted):
-        (
-            self.data_min_,
-            self.data_max_,
-            self.n_samples_seen_,
-            self.feature_names_in_,
-        ) = lifted
-        self.n_features_in_ = len(self.feature_names_in_)
-        self.data_range_ = self.data_max_ - self.data_min_
+    @property
+    def data_min_(self):
+        return getattr(self._monoid, "data_min_", None)
+
+    @property
+    def data_max_(self):
+        return getattr(self._monoid, "data_max_", None)
+
+    @property
+    def n_samples_seen_(self):
+        return getattr(self._monoid, "n_samples_seen_", None)
+
+    @property
+    def feature_names_in_(self):
+        return getattr(self._monoid, "feature_names_in_", None)
+
+    def _from_monoid(self, v: _MinMaxScalerMonoid):
+        self._monoid = v
+        self.n_features_in_ = len(v.feature_names_in_)
+        self.data_range_ = v.data_max_ - v.data_min_
         range_min, range_max = self._hyperparams["feature_range"]
-        self.scale_ = (range_max - range_min) / (self.data_max_ - self.data_min_)
-        self.min_ = range_min - self.data_min_ * self.scale_
+        self.scale_ = (range_max - range_min) / (v.data_max_ - v.data_min_)
+        self.min_ = range_min - v.data_min_ * self.scale_
         self._transformer = None
 
     def _build_transformer(self, X):
@@ -86,8 +102,8 @@ class _MinMaxScalerImpl:
             ops.update({c: c_scaled})
         return Map(columns=ops)
 
-    @staticmethod
-    def _lift(X, hyperparams):
+    def _to_monoid(self, v) -> _MinMaxScalerMonoid:
+        X, _ = v
         agg = {f"{c}_min": agg_min(it[c]) for c in get_columns(X)}
         agg.update({f"{c}_max": agg_max(it[c]) for c in get_columns(X)})
         aggregate = Aggregate(columns=agg)
@@ -104,28 +120,12 @@ class _MinMaxScalerImpl:
         data_max_ = np.array(data_max_)
         n_samples_seen_ = count(X)
         feature_names_in_ = get_columns(X)
-        return data_min_, data_max_, n_samples_seen_, feature_names_in_
-
-    @staticmethod
-    def _combine(lifted_a, lifted_b):
-        (
-            data_min_a,
-            data_max_a,
-            n_samples_seen_a,
-            feature_names_in_a,
-        ) = lifted_a
-        (
-            data_min_b,
-            data_max_b,
-            n_samples_seen_b,
-            feature_names_in_b,
-        ) = lifted_b
-        data_min_ = np.minimum(data_min_a, data_min_b)
-        data_max_ = np.maximum(data_max_a, data_max_b)
-        n_samples_seen_ = n_samples_seen_a + n_samples_seen_b
-        assert list(feature_names_in_a) == list(feature_names_in_b)
-        feature_names_in_ = feature_names_in_a
-        return data_min_, data_max_, n_samples_seen_, feature_names_in_
+        return _MinMaxScalerMonoid(
+            data_min_=data_min_,
+            data_max_=data_max_,
+            n_samples_seen_=n_samples_seen_,
+            feature_names_in_=feature_names_in_,
+        )
 
 
 _combined_schemas = {

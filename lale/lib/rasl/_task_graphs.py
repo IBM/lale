@@ -43,6 +43,8 @@ from lale.operators import (
     TrainedPipeline,
 )
 
+from ._monoid import Monoid
+
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
 _Operation = enum.Enum(
@@ -63,7 +65,13 @@ def is_incremental(op: TrainableIndividualOp) -> bool:
 
 
 def is_associative(op: TrainableIndividualOp) -> bool:
-    return op.has_method("_lift") and op.has_method("_combine") or is_pretrained(op)
+    return (
+        op.has_method("_lift")
+        and op.has_method("_combine")
+        or is_pretrained(op)
+        or op.has_method("_to_monoid")
+        and op.has_method("_from_monoid")
+    )
 
 
 def _batch_id(fold: str, idx: int) -> str:
@@ -109,7 +117,7 @@ class _Task:
 
 
 class _TrainTask(_Task):
-    lifted: Optional[Tuple[Any, ...]]
+    lifted: Optional[Union[Tuple[Any, ...], Monoid]]
     trained: Optional[TrainedIndividualOp]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
@@ -138,7 +146,12 @@ class _TrainTask(_Task):
             self.trained = trainable.convert_to_trained()
             hyperparams = trainable.impl._hyperparams
             self.trained._impl = trainable._impl_class()(**hyperparams)
-            self.trained._impl._set_fit_attributes(self.lifted)
+            if trainable.has_method("_set_fit_attributes"):
+                self.trained._impl._set_fit_attributes(self.lifted)
+            elif trainable.has_method("_from_monoid"):
+                self.trained._impl._from_monoid(self.lifted)
+            else:
+                assert False, self.trained
         return self.trained
 
 
@@ -589,8 +602,13 @@ def _run_tasks(
             assert task.preds[0].batch is not None
             trainable = pipeline.steps_list()[task.step_id]
             input_X, input_y = task.preds[0].batch
-            hyperparams = trainable.impl._hyperparams
-            task.lifted = trainable.impl._lift(input_X, hyperparams)
+            if trainable.has_method("_lift"):
+                hyperparams = trainable.impl._hyperparams
+                task.lifted = trainable.impl._lift(input_X, hyperparams)
+            elif trainable.has_method("_to_monoid"):
+                task.lifted = trainable.impl._to_monoid((input_X, input_y))
+            else:
+                assert False, operation
         elif operation is _Operation.COMBINE:
             assert isinstance(task, _TrainTask)
             assert len(task.batch_ids) > 1
@@ -598,7 +616,17 @@ def _run_tasks(
             assert all(isinstance(p, _TrainTask) for p in task.preds)
             trainable = pipeline.steps_list()[task.step_id]
             lifteds = (cast(_TrainTask, p).lifted for p in task.preds)
-            task.lifted = functools.reduce(trainable.impl._combine, lifteds)
+            if trainable.has_method("_combine"):
+                task.lifted = functools.reduce(trainable.impl._combine, lifteds)
+            elif trainable.has_method("_monoid"):
+
+                def _combine(x, y):
+                    assert isinstance(x, Monoid)
+                    return x.combine(y)
+
+                task.lifted = functools.reduce(_combine, lifteds)
+            else:
+                assert False, operation
         else:
             assert False, operation
         task.seq_id = seq_id
