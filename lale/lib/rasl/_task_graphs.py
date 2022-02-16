@@ -16,18 +16,7 @@ import enum
 import functools
 import itertools
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, cast
 
 import graphviz
 import pandas as pd
@@ -43,10 +32,12 @@ from lale.operators import (
     TrainedPipeline,
 )
 
+from ._metrics import MetricMonoidMaker
+
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
 _Operation = enum.Enum(
-    "_Operation", "SCAN TRANSFORM PREDICT FIT PARTIAL_FIT LIFT COMBINE"
+    "_Operation", "SCAN TRANSFORM PREDICT FIT PARTIAL_FIT TO_MONOID COMBINE"
 )
 
 _DUMMY_INPUT_STEP = -1
@@ -126,7 +117,9 @@ class _TrainTask(_Task):
             return _Operation.FIT
         step = pipeline.steps_list()[self.step_id]
         if is_associative(step):
-            return _Operation.LIFT if len(self.batch_ids) == 1 else _Operation.COMBINE
+            if len(self.batch_ids) == 1:
+                return _Operation.TO_MONOID
+            return _Operation.COMBINE
         return _Operation.PARTIAL_FIT
 
     def get_trained(
@@ -237,6 +230,7 @@ def _visualize_tasks(
         else:
             assert task.status is _TaskStatus.DONE
             color = "lightgray"
+        # https://www.graphviz.org/doc/info/shapes.html
         if isinstance(task, _TrainTask):
             style = "filled,rounded"
         else:
@@ -548,7 +542,10 @@ def _run_tasks(
             if operation is _Operation.TRANSFORM:
                 task.batch = trained.transform(input_X), input_y
             else:
-                task.batch = input_X, pd.Series(trained.predict(input_X))
+                y_pred = trained.predict(input_X)
+                if not isinstance(y_pred, pd.Series):
+                    y_pred = pd.Series(y_pred, input_y.index, input_y.dtype, "y_pred")
+                task.batch = input_X, y_pred
         elif operation is _Operation.FIT:
             assert isinstance(task, _TrainTask)
             assert all(isinstance(p, _ApplyTask) for p in task.preds)
@@ -582,7 +579,7 @@ def _run_tasks(
                 )
             else:
                 task.trained = trainee.partial_fit(input_X, input_y)
-        elif operation is _Operation.LIFT:
+        elif operation is _Operation.TO_MONOID:
             assert isinstance(task, _TrainTask)
             assert len(task.batch_ids) == len(task.preds) == 1
             assert isinstance(task.preds[0], _ApplyTask)
@@ -667,7 +664,7 @@ def cross_val_score(
     n_batches: int,
     n_folds: int,
     n_batches_per_fold: int,
-    scoring: Callable[[pd.Series, pd.Series], float],
+    scoring: MetricMonoidMaker,
     unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
     same_fold: bool,
@@ -692,16 +689,18 @@ def cross_val_score(
         call_depth=2,
     )
 
-    def labels(step_id: int, fold: str) -> pd.Series:
+    def labels(step_id: int, fold: str) -> Iterable[pd.Series]:
         hof = None if step_id == _DUMMY_INPUT_STEP else fold
-        return pd.concat(
+        return (
             tasks[(_ApplyTask, step_id, (_batch_id(fold, idx),), hof)].batch[1]  # type: ignore
             for idx in range(n_batches_per_fold)
         )
 
     last_step_id = len(pipeline.steps_list()) - 1
     result = [
-        scoring(labels(_DUMMY_INPUT_STEP, fold), labels(last_step_id, fold))
+        scoring.score_data_batched(
+            zip(labels(_DUMMY_INPUT_STEP, fold), labels(last_step_id, fold))
+        )
         for fold in folds
     ]
     return result
