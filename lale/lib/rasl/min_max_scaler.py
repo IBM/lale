@@ -52,7 +52,7 @@ class _MinMaxScalerMonoid(Monoid):
         )
 
 
-class _MinMaxScalerImpl(MonoidableOperator):
+class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
     def __init__(self, feature_range=(0, 1), *, copy=True, clip=False):
         if not copy:
             raise ValueError("`copy=False` is not supported by this implementation")
