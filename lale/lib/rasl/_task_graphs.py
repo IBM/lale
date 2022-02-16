@@ -43,6 +43,8 @@ from lale.operators import (
     TrainedPipeline,
 )
 
+from ._monoid import Monoid
+
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
 _Operation = enum.Enum(
@@ -115,7 +117,7 @@ class _Task:
 
 
 class _TrainTask(_Task):
-    lifted: Optional[Tuple[Any, ...]]
+    lifted: Optional[Union[Tuple[Any, ...], Monoid]]
     trained: Optional[TrainedIndividualOp]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
@@ -617,7 +619,12 @@ def _run_tasks(
             if trainable.has_method("_combine"):
                 task.lifted = functools.reduce(trainable.impl._combine, lifteds)
             elif trainable.has_method("_monoid"):
-                task.lifted = functools.reduce(lambda x, y: x.combine(y), lifteds)
+
+                def _combine(x, y):
+                    assert isinstance(x, Monoid)
+                    return x.combine(y)
+
+                task.lifted = functools.reduce(_combine, lifteds)
             else:
                 assert False, operation
         else:
