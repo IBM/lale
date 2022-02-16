@@ -83,6 +83,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
         return getattr(self._monoid, "feature_names_in_", None)
 
     def _from_monoid(self, v: _MinMaxScalerMonoid):
+        self._monoid = v
         self.n_features_in_ = len(v.feature_names_in_)
         self.data_range_ = v.data_max_ - v.data_min_
         range_min, range_max = self._hyperparams["feature_range"]

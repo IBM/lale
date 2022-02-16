@@ -44,14 +44,12 @@ class MonoidableOperator(Generic[_M], MonoidFactory[Any, None, _M]):
 
     def partial_fit(self, X, y=None):
         lifted = self._to_monoid((X, y))
-        if self._monoid is None:  # first fit
-            self._monoid = lifted
-        else:
-            self._monoid = self._monoid.combine(lifted)
-        self._from_monoid(self._monoid)
+        if self._monoid is not None:  # not first fit
+            lifted = self._monoid.combine(lifted)
+        self._from_monoid(lifted)
         return self
 
     def fit(self, X, y=None):
-        self._monoid = self._to_monoid((X, y))
-        self._from_monoid(self._monoid)
+        lifted = self._to_monoid((X, y))
+        self._from_monoid(lifted)
         return self
