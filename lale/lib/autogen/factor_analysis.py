@@ -194,7 +194,7 @@ if sklearn.__version__ >= "0.24":
     # new: https://scikit-learn.org/0.24/modules/generated/sklearn.decomposition.FactorAnalysis#sklearn-decomposition-factoranalysis
     FactorAnalysis = FactorAnalysis.customize_schema(
         rotation={
-            "enum": ["varimax", "quartimax"],
+            "enum": ["varimax", "quartimax", None],
             "default": None,
             "description": "if not None, apply the indicated rotation. Currently, varimax and quartimax are implemented.",
         },
