@@ -47,6 +47,10 @@ Preprocessing text columns:
 * lale.lib.autoai_libs. `TextTransformer`_
 * lale.lib.autoai_libs. `Word2VecTransformer`_
 
+Preprocessing date columns:
+
+* lale.lib.autoai_libs. `DateTransformer`_
+
 Feature transformation:
 
 * lale.lib.autoai_libs. `TNoOp`_
@@ -73,6 +77,7 @@ Feature transformation:
 .. _`OptStandardScaler`: lale.lib.autoai_libs.opt_standard_scaler.html
 .. _`TextTransformer`: lale.lib.autoai_libs.text_transformer.html
 .. _`Word2VecTransformer`: lale.lib.autoai_libs.word2vec_transformer.html
+.. _`DateTransformer`: lale.lib.autoai_libs.date_transformer.html
 .. _`NumpyPermuteArray`: lale.lib.autoai_libs.numpy_permute_array.html
 .. _`TNoOp`: lale.lib.autoai_libs.t_no_op.html
 .. _`TA1`: lale.lib.autoai_libs.ta1.html
@@ -90,6 +95,7 @@ from .cat_encoder import CatEncoder
 from .cat_imputer import CatImputer
 from .column_selector import ColumnSelector
 from .compress_strings import CompressStrings
+from .date_transformer import DateTransformer
 from .float32_transform import float32_transform
 from .float_str2_float import FloatStr2Float
 from .fs1 import FS1

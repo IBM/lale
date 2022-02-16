@@ -20,6 +20,7 @@ import sklearn.datasets
 import sklearn.model_selection
 
 import lale.lib.autoai_libs
+from lale.datasets.uci import fetch_household_power_consumption
 from lale.lib.autoai_libs import float32_transform
 from lale.lib.lale import Hyperopt
 from lale.lib.sklearn import LogisticRegression as LR
@@ -300,3 +301,60 @@ class TestAutoaiLibsText(unittest.TestCase):
             drop_columns=True, output_dim=5
         )
         self.doTest(trainable, self.train_X, self.train_y, self.test_X, self.test_y)
+
+
+class TestDateTransformer(unittest.TestCase):
+    X_train = None
+    X_test = None
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        data = fetch_household_power_consumption()
+        data = data.iloc[1::5000, :]
+        cls.X_train = data.iloc[-10:]
+        cls.X_test = data.iloc[:-10]
+
+    def test_01_all_mini_options_with_headers(self):
+        transformer = lale.lib.autoai_libs.DateTransformer(
+            options=["all"], column_headers_list=self.X_train.columns.values.tolist()
+        )
+        fitted_transformer = transformer.fit(self.X_train.values)
+        X_train = fitted_transformer.transform(self.X_train.values)
+        X_test = transformer.transform(self.X_test.values)
+        header_list = transformer.new_column_headers_list
+        print(f"New columns: {header_list}")
+
+        self.assertEqual(
+            X_train.shape[1], X_test.shape[1], msg="Shape after transform is different."
+        )
+
+    # def test_02_all_options_without_headers(self):
+    #     transformer = DateTransformer(options=['all'])
+    #     X_train = transformer.fit_transform(self.data_2_train.values)
+    #     X_test = transformer.transform(self.data_2_test.values)
+    #     header_list = transformer.new_column_headers_list
+    #     print(f"New columns: {header_list}")
+
+    #     self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+
+    # def test_03_specific_options_and_delete_source_columns(self):
+    #     transformer = DateTransformer(options=['bb', 'FloatTimestamp', 'DayOfWeek', 'Hour', 'Minute', 'aa'],
+    #                                 delete_source_columns=True,
+    #                                 column_headers_list=self.data_1_train.columns.values.tolist())
+    #     X_train = transformer.fit_transform(self.data_1_train.values)
+    #     X_test = transformer.transform(self.data_1_test.values)
+    #     header_list = transformer.new_column_headers_list
+    #     print(f"New columns: {header_list}")
+
+    #     self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
+
+    # def test_04_option_Datetime_and_delete_source_columns(self):
+    #     transformer = DateTransformer(options=['Datetime'],
+    #                                 delete_source_columns=True,
+    #                                 column_headers_list=self.data_1_train.columns.values.tolist())
+    #     X_train = transformer.fit_transform(self.data_1_train.values)
+    #     X_test = transformer.transform(self.data_1_test.values)
+    #     header_list = transformer.new_column_headers_list
+    #     print(f"New columns: {header_list}")
+
+    #     self.assertEqual(X_train.shape[1], X_test.shape[1], msg="Shape after transform is different.")
