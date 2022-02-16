@@ -62,6 +62,11 @@ class TestDatasetSchemas(unittest.TestCase):
             train_X, train_y, test_X, test_y = fetch_drugscom()
             cls._drugRev = {"X": train_X, "y": train_y}
 
+            (train_X, train_y), (test_X, test_y) = openml.fetch(
+                "airlines_delay", "regression", preprocess=False
+            )
+            cls._airlines_delay = {"X": train_X, "y": train_y}
+
     @classmethod
     def tearDownClass(cls):
         cls._irisArr = None
@@ -71,6 +76,7 @@ class TestDatasetSchemas(unittest.TestCase):
         cls._creditG = None
         cls._movies = None
         cls._drugRev = None
+        cls._airlines_delay = None
 
     def test_datasets_with_own_schemas(self):
         from lale.datasets.data_schemas import to_schema
@@ -84,6 +90,7 @@ class TestDatasetSchemas(unittest.TestCase):
             "creditG",
             "movies",
             "drugRev",
+            "airlines_delay",
         ]:
             dataset = getattr(self, f"_{name}")
             data_X, data_y = dataset["X"], dataset["y"]
@@ -506,6 +513,7 @@ class TestDatasetSchemas(unittest.TestCase):
                 self._creditG,
                 self._movies,
                 self._drugRev,
+                self._airlines_delay,
             ]:
                 assert ds is not None
                 s_input = to_schema(ds["X"])

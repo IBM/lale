@@ -565,6 +565,17 @@ experiments_dict["tae"][
 experiments_dict["tae"]["task_type"] = "classification"
 experiments_dict["tae"]["target"] = "class_attribute"
 
+experiments_dict["airlines_delay"] = {}
+experiments_dict["airlines_delay"]["dataset_url"] = "https://www.openml.org/d/42728"
+experiments_dict["airlines_delay"][
+    "download_arff_url"
+] = "https://www.openml.org/data/download/22044760/airlines_train_regression_10000000.arff"
+experiments_dict["airlines_delay"][
+    "download_csv_url"
+] = "https://www.openml.org/data/get_csv/22044760/airlines_train_regression_10000000.arff"
+experiments_dict["airlines_delay"]["task_type"] = "regression"
+experiments_dict["airlines_delay"]["target"] = "depdelay"
+
 
 def add_schemas(schema_orig, target_col, train_X, test_X, train_y, test_y):
     from lale.datasets.data_schemas import add_schema
