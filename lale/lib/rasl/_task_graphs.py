@@ -14,20 +14,9 @@
 
 import enum
 import functools
-import itertools
+import sys
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, cast
 
 import graphviz
 import pandas as pd
@@ -43,15 +32,18 @@ from lale.operators import (
     TrainedPipeline,
 )
 
+from ._metrics import MetricMonoid, MetricMonoidFactory
 from ._monoid import Monoid
 
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
 _Operation = enum.Enum(
-    "_Operation", "SCAN TRANSFORM PREDICT FIT PARTIAL_FIT LIFT COMBINE"
+    "_Operation", "SCAN TRANSFORM PREDICT FIT PARTIAL_FIT TO_MONOID COMBINE"
 )
 
 _DUMMY_INPUT_STEP = -1
+
+_DUMMY_SCORE_STEP = sys.maxsize
 
 
 def is_pretrained(op: TrainableIndividualOp) -> bool:
@@ -117,12 +109,12 @@ class _Task:
 
 
 class _TrainTask(_Task):
-    lifted: Optional[Union[Tuple[Any, ...], Monoid]]
+    monoid: Optional[Union[Tuple[Any, ...], Monoid]]
     trained: Optional[TrainedIndividualOp]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
         super(_TrainTask, self).__init__(step_id, batch_ids, held_out)
-        self.lifted = None
+        self.monoid = None
         self.trained = None
 
     def get_operation(
@@ -134,22 +126,24 @@ class _TrainTask(_Task):
             return _Operation.FIT
         step = pipeline.steps_list()[self.step_id]
         if is_associative(step):
-            return _Operation.LIFT if len(self.batch_ids) == 1 else _Operation.COMBINE
+            if len(self.batch_ids) == 1:
+                return _Operation.TO_MONOID
+            return _Operation.COMBINE
         return _Operation.PARTIAL_FIT
 
     def get_trained(
         self, pipeline: TrainablePipeline[TrainableIndividualOp]
     ) -> TrainedIndividualOp:
         if self.trained is None:
-            assert self.lifted is not None
+            assert self.monoid is not None
             trainable = pipeline.steps_list()[self.step_id]
             self.trained = trainable.convert_to_trained()
             hyperparams = trainable.impl._hyperparams
             self.trained._impl = trainable._impl_class()(**hyperparams)
             if trainable.has_method("_set_fit_attributes"):
-                self.trained._impl._set_fit_attributes(self.lifted)
+                self.trained._impl._set_fit_attributes(self.monoid)
             elif trainable.has_method("_from_monoid"):
-                self.trained._impl._from_monoid(self.lifted)
+                self.trained._impl._from_monoid(self.monoid)
             else:
                 assert False, self.trained
         return self.trained
@@ -170,6 +164,19 @@ class _ApplyTask(_Task):
             return _Operation.SCAN
         step = pipeline.steps_list()[self.step_id]
         return _Operation.TRANSFORM if step.is_transformer() else _Operation.PREDICT
+
+
+class _MetricTask(_Task):
+    score: Optional[MetricMonoid]
+
+    def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
+        super(_MetricTask, self).__init__(step_id, batch_ids, held_out)
+        self.score = None
+
+    def get_operation(self, pipeline: TrainablePipeline) -> _Operation:
+        if len(self.batch_ids) == 1:
+            return _Operation.TO_MONOID
+        return _Operation.COMBINE
 
 
 class Prio(ABC):
@@ -213,29 +220,41 @@ class PrioBatch(Prio):
         return result
 
 
+def _step_id_to_string(
+    step_id: int,
+    pipeline: TrainablePipeline,
+    cls2label: Dict[str, str] = {},
+) -> str:
+    if step_id == _DUMMY_INPUT_STEP:
+        return "INP"
+    if step_id == _DUMMY_SCORE_STEP:
+        return "SCR"
+    step = pipeline.steps_list()[step_id]
+    cls = step.class_name()
+    return cls2label[cls] if cls in cls2label else step.name()
+
+
+def _task_to_string(
+    task: _Task,
+    pipeline: TrainablePipeline,
+    cls2label: Dict[str, str] = {},
+    sep: str = "\n",
+) -> str:
+    seq_id_s = "" if task.seq_id is None else f"{task.seq_id} "
+    operation_s = task.get_operation(pipeline).name.lower()
+    step_s = _step_id_to_string(task.step_id, pipeline, cls2label)
+    batches_s = ",".join(task.batch_ids)
+    held_out_s = "" if task.held_out is None else f"#~{task.held_out}"
+    return f"{seq_id_s}{operation_s}{sep}{step_s}({batches_s}){held_out_s}"
+
+
 def _visualize_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
     prio: Prio,
     call_depth: int,
 ) -> None:
-    steps = pipeline.steps_list()
     cls2label = lale.json_operator._get_cls2label(call_depth + 1)
-
-    def step_id_to_string(step_id: int) -> str:
-        if step_id == _DUMMY_INPUT_STEP:
-            return "INP"
-        cls = steps[step_id].class_name()
-        return cls2label[cls] if cls in cls2label else steps[step_id].name()
-
-    def task_to_string(task: _Task) -> str:
-        seq_id_s = "" if task.seq_id is None else f"{task.seq_id} "
-        operation_s = task.get_operation(pipeline).name.lower()
-        step_s = step_id_to_string(task.step_id)
-        batches_s = ",".join(task.batch_ids)
-        held_out_s = "" if task.held_out is None else f"#~{task.held_out}"
-        return f"{seq_id_s}{operation_s}\n{step_s}({batches_s}){held_out_s}"
-
     dot = graphviz.Digraph()
     dot.attr("graph", rankdir="LR", nodesep="0.1")
     dot.attr("node", fontsize="11", margin="0.03,0.03", shape="box", height="0.1")
@@ -250,14 +269,22 @@ def _visualize_tasks(
         else:
             assert task.status is _TaskStatus.DONE
             color = "lightgray"
+        # https://www.graphviz.org/doc/info/shapes.html
         if isinstance(task, _TrainTask):
             style = "filled,rounded"
-        else:
+        elif isinstance(task, _ApplyTask):
             style = "filled"
-        dot.node(task_to_string(task), style=style, fillcolor=color)
+        elif isinstance(task, _MetricTask):
+            style = "filled,diagonals"
+        else:
+            assert False, type(task)
+        task_s = _task_to_string(task, pipeline, cls2label)
+        dot.node(task_s, style=style, fillcolor=color)
     for task in tasks.values():
+        task_s = _task_to_string(task, pipeline, cls2label)
         for succ in task.succs:
-            dot.edge(task_to_string(task), task_to_string(succ))
+            succ_s = _task_to_string(succ, pipeline, cls2label)
+            dot.edge(task_s, succ_s)
 
     import IPython.display
 
@@ -310,8 +337,8 @@ def _create_tasks_batching(
         task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
-        step = pipeline.steps_list()[task.step_id]
         if isinstance(task, _TrainTask):
+            step = pipeline.steps_list()[task.step_id]
             if is_pretrained(step):
                 pass
             elif len(task.batch_ids) == 1:
@@ -380,16 +407,18 @@ def _create_tasks_cross_val(
 ) -> Dict[_MemoKey, _Task]:
     tg = _TaskGraph(pipeline)
     held_out: Optional[str]
-    for step in pipeline._find_sink_nodes():
-        for held_out, idx in itertools.product(folds, range(n_batches_per_fold)):
-            task = tg.find_or_create(
-                _ApplyTask, tg.step_ids[step], (_batch_id(held_out, idx),), held_out
-            )
-            task.deletable_output = False
+    for held_out in folds:
+        task = tg.find_or_create(
+            _MetricTask,
+            _DUMMY_SCORE_STEP,
+            tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold)),
+            held_out,
+        )
+        task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
-        step = pipeline.steps_list()[task.step_id]
         if isinstance(task, _TrainTask):
+            step = pipeline.steps_list()[task.step_id]
             if is_pretrained(step):
                 pass
             elif len(task.batch_ids) == 1:
@@ -471,13 +500,29 @@ def _create_tasks_cross_val(
                         None if pred_step_id == _DUMMY_INPUT_STEP else task.held_out,
                     )
                 )
+        if isinstance(task, _MetricTask):
+            if len(task.batch_ids) == 1:
+                task.preds.append(
+                    tg.find_or_create(
+                        _ApplyTask, _DUMMY_INPUT_STEP, task.batch_ids, None
+                    )
+                )
+                sink = pipeline.get_last()
+                assert sink is not None
+                task.preds.append(
+                    tg.find_or_create(
+                        _ApplyTask, tg.step_ids[sink], task.batch_ids, task.held_out
+                    )
+                )
+            else:
+                for batch_id in task.batch_ids:
+                    task.preds.append(
+                        tg.find_or_create(
+                            _MetricTask, task.step_id, (batch_id,), task.held_out
+                        )
+                    )
         for pred_task in task.preds:
             pred_task.succs.append(task)
-    for fold, idx in itertools.product(folds, range(n_batches_per_fold)):
-        task = tg.all_tasks[
-            _ApplyTask, _DUMMY_INPUT_STEP, (_batch_id(fold, idx),), None
-        ]
-        task.deletable_output = False  # TODO: remove when batched scoring works
     return tg.all_tasks
 
 
@@ -485,6 +530,7 @@ def _run_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[_Batch],
+    scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
     prio: Prio,
@@ -515,9 +561,13 @@ def _run_tasks(
             if all(s.status is _TaskStatus.DONE for s in task.succs):
                 if isinstance(task, _ApplyTask):
                     task.batch = None
-                if isinstance(task, _TrainTask):
-                    task.lifted = None
+                elif isinstance(task, _TrainTask):
+                    task.monoid = None
                     task.trained = None
+                elif isinstance(task, _MetricTask):
+                    task.score = None
+                else:
+                    assert False, type(task)
         if task.status is _TaskStatus.READY:
             ready_keys.remove(task.memo_key())
         task.status = _TaskStatus.DONE
@@ -561,7 +611,10 @@ def _run_tasks(
             if operation is _Operation.TRANSFORM:
                 task.batch = trained.transform(input_X), input_y
             else:
-                task.batch = input_X, pd.Series(trained.predict(input_X))
+                y_pred = trained.predict(input_X)
+                if not isinstance(y_pred, pd.Series):
+                    y_pred = pd.Series(y_pred, input_y.index, input_y.dtype, "y_pred")
+                task.batch = input_X, y_pred
         elif operation is _Operation.FIT:
             assert isinstance(task, _TrainTask)
             assert all(isinstance(p, _ApplyTask) for p in task.preds)
@@ -595,38 +648,53 @@ def _run_tasks(
                 )
             else:
                 task.trained = trainee.partial_fit(input_X, input_y)
-        elif operation is _Operation.LIFT:
-            assert isinstance(task, _TrainTask)
-            assert len(task.batch_ids) == len(task.preds) == 1
-            assert isinstance(task.preds[0], _ApplyTask)
-            assert task.preds[0].batch is not None
-            trainable = pipeline.steps_list()[task.step_id]
-            input_X, input_y = task.preds[0].batch
-            if trainable.has_method("_lift"):
-                hyperparams = trainable.impl._hyperparams
-                task.lifted = trainable.impl._lift(input_X, hyperparams)
-            elif trainable.has_method("_to_monoid"):
-                task.lifted = trainable.impl._to_monoid((input_X, input_y))
+        elif operation is _Operation.TO_MONOID:
+            assert len(task.batch_ids) == 1
+            assert all(isinstance(p, _ApplyTask) for p in task.preds)
+            assert all(cast(_ApplyTask, p).batch is not None for p in task.preds)
+            if isinstance(task, _TrainTask):
+                assert len(task.preds) == 1
+                trainable = pipeline.steps_list()[task.step_id]
+                input_X, input_y = task.preds[0].batch  # type: ignore
+                if trainable.has_method("_lift"):
+                    hyperparams = trainable.impl._hyperparams
+                    task.monoid = trainable.impl._lift(input_X, hyperparams)
+                elif trainable.has_method("_to_monoid"):
+                    task.monoid = trainable.impl._to_monoid((input_X, input_y))
+                else:
+                    assert False, operation
+            elif isinstance(task, _MetricTask):
+                assert len(task.preds) == 2
+                assert task.preds[0].step_id == _DUMMY_INPUT_STEP
+                assert scoring is not None
+                _, y_true = task.preds[0].batch  # type: ignore
+                _, y_pred = task.preds[1].batch  # type: ignore
+                task.score = scoring._to_monoid((y_true, y_pred))
             else:
-                assert False, operation
+                assert False, type(task)
         elif operation is _Operation.COMBINE:
-            assert isinstance(task, _TrainTask)
             assert len(task.batch_ids) > 1
             assert len(task.preds) == len(task.batch_ids)
-            assert all(isinstance(p, _TrainTask) for p in task.preds)
-            trainable = pipeline.steps_list()[task.step_id]
-            lifteds = (cast(_TrainTask, p).lifted for p in task.preds)
-            if trainable.has_method("_combine"):
-                task.lifted = functools.reduce(trainable.impl._combine, lifteds)
-            elif trainable.has_method("_monoid"):
+            if isinstance(task, _TrainTask):
+                assert all(isinstance(p, _TrainTask) for p in task.preds)
+                trainable = pipeline.steps_list()[task.step_id]
+                monoids = (cast(_TrainTask, p).monoid for p in task.preds)
+                if trainable.has_method("_combine"):
+                    task.monoid = functools.reduce(trainable.impl._combine, monoids)
+                elif trainable.has_method("_monoid"):
 
-                def _combine(x, y):
-                    assert isinstance(x, Monoid)
-                    return x.combine(y)
+                    def _combine(x, y):
+                        assert isinstance(x, Monoid)
+                        return x.combine(y)
 
-                task.lifted = functools.reduce(_combine, lifteds)
+                    task.monoid = functools.reduce(_combine, monoids)
+                else:
+                    assert False, operation
+            elif isinstance(task, _MetricTask):
+                scores = (cast(_MetricTask, p).score for p in task.preds)
+                task.score = functools.reduce(lambda x, y: x.combine(y), scores)  # type: ignore
             else:
-                assert False, operation
+                assert False, type(task)
         else:
             assert False, operation
         task.seq_id = seq_id
@@ -667,6 +735,7 @@ def fit_with_batches(
         tasks,
         pipeline,
         batches,
+        None,
         unique_class_labels,
         all_batch_ids,
         prio,
@@ -695,7 +764,7 @@ def cross_val_score(
     n_batches: int,
     n_folds: int,
     n_batches_per_fold: int,
-    scoring: Callable[[pd.Series, pd.Series], float],
+    scoring: MetricMonoidFactory,
     unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
     same_fold: bool,
@@ -713,6 +782,7 @@ def cross_val_score(
         tasks,
         pipeline,
         batches,
+        scoring,
         unique_class_labels,
         all_batch_ids,
         prio,
@@ -720,16 +790,11 @@ def cross_val_score(
         call_depth=2,
     )
 
-    def labels(step_id: int, fold: str) -> pd.Series:
-        hof = None if step_id == _DUMMY_INPUT_STEP else fold
-        return pd.concat(
-            tasks[(_ApplyTask, step_id, (_batch_id(fold, idx),), hof)].batch[1]  # type: ignore
-            for idx in range(n_batches_per_fold)
-        )
+    def get_score(held_out: str) -> float:
+        batches = tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold))
+        task = tasks[(_MetricTask, _DUMMY_SCORE_STEP, batches, held_out)]
+        assert isinstance(task, _MetricTask) and task.score is not None
+        return scoring._from_monoid(task.score)
 
-    last_step_id = len(pipeline.steps_list()) - 1
-    result = [
-        scoring(labels(_DUMMY_INPUT_STEP, fold), labels(last_step_id, fold))
-        for fold in folds
-    ]
+    result = [get_score(held_out) for held_out in folds]
     return result
