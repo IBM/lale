@@ -113,7 +113,7 @@ class _TrainTask(_Task):
     trained: Optional[TrainedIndividualOp]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
-        super(_TrainTask, self).__init__(step_id, batch_ids, held_out)
+        super().__init__(step_id, batch_ids, held_out)
         self.monoid = None
         self.trained = None
 
@@ -156,7 +156,7 @@ class _ApplyTask(_Task):
     batch: Optional[_Batch]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
-        super(_ApplyTask, self).__init__(step_id, batch_ids, held_out)
+        super().__init__(step_id, batch_ids, held_out)
         self.batch = None
 
     def get_operation(self, pipeline: TrainablePipeline) -> _Operation:
@@ -170,7 +170,7 @@ class _MetricTask(_Task):
     score: Optional[MetricMonoid]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
-        super(_MetricTask, self).__init__(step_id, batch_ids, held_out)
+        super().__init__(step_id, batch_ids, held_out)
         self.score = None
 
     def get_operation(self, pipeline: TrainablePipeline) -> _Operation:
@@ -554,9 +554,7 @@ def _run_tasks(
         else:
             return task_list
 
-    def mark_done(task: _Task) -> None:
-        if task.status is _TaskStatus.DONE:
-            return
+    def try_to_delete_output(task: _Task) -> None:
         if task.deletable_output:
             if all(s.status is _TaskStatus.DONE for s in task.succs):
                 if isinstance(task, _ApplyTask):
@@ -568,6 +566,11 @@ def _run_tasks(
                     task.score = None
                 else:
                     assert False, type(task)
+
+    def mark_done(task: _Task) -> None:
+        try_to_delete_output(task)
+        if task.status is _TaskStatus.DONE:
+            return
         if task.status is _TaskStatus.READY:
             ready_keys.remove(task.memo_key())
         task.status = _TaskStatus.DONE
@@ -718,6 +721,13 @@ def mockup_data_loader(
     return result
 
 
+def _clear_tasks_dict(tasks: Dict[_MemoKey, _Task]):
+    for task in tasks.values():  # preds form a cycle with succs
+        task.preds.clear()
+        task.succs.clear()
+    tasks.clear()
+
+
 def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[_Batch],
@@ -755,6 +765,7 @@ def fit_with_batches(
     result = TrainedPipeline(
         list(step_map.values()), trained_edges, ordered=True, _lale_trained=True
     )
+    _clear_tasks_dict(tasks)
     return result
 
 
@@ -797,4 +808,5 @@ def cross_val_score(
         return scoring._from_monoid(task.score)
 
     result = [get_score(held_out) for held_out in folds]
+    _clear_tasks_dict(tasks)
     return result
