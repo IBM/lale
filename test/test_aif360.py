@@ -48,6 +48,7 @@ except ImportError:
 
 import lale.helpers
 import lale.lib.aif360
+import lale.lib.aif360.metrics
 import lale.lib.aif360.stratification
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
@@ -977,7 +978,7 @@ class TestAIF360Cat(unittest.TestCase):
         test_X = self.creditg_pd_cat["splits"][0]["test_X"]
         test_y = self.creditg_pd_cat["splits"][0]["test_y"]
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
-        with self.assertLogs(lale.lib.aif360.util.logger) as log_context_manager:
+        with self.assertLogs(lale.lib.aif360.metrics.logger) as log_context_manager:
             impact = disparate_impact_scorer(trained, test_X, test_y)
         self.assertRegex(log_context_manager.output[-1], "is ill-defined")
         self.assertTrue(np.isnan(impact))
@@ -990,7 +991,7 @@ class TestAIF360Cat(unittest.TestCase):
                 {"feature": "age", "reference_group": [[26, 1000]]}
             ],
         }
-        with self.assertLogs(lale.lib.aif360.util.logger) as log_context_manager:
+        with self.assertLogs(lale.lib.aif360.metrics.logger) as log_context_manager:
             _ = lale.lib.aif360.disparate_impact(**fairness_info)
         self.assertRegex(
             log_context_manager.output[-1],
@@ -1018,7 +1019,7 @@ class TestAIF360Cat(unittest.TestCase):
                 }
             ],
         }
-        with self.assertLogs(lale.lib.aif360.util.logger) as log_context_manager:
+        with self.assertLogs(lale.lib.aif360.metrics.logger) as log_context_manager:
             _ = lale.lib.aif360.disparate_impact(**fairness_info)
         self.assertRegex(
             log_context_manager.output[-1],
