@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from typing import List
+from typing import Any, List, Optional
 
 import numpy as np
 
@@ -20,11 +20,12 @@ import lale.docstrings
 import lale.operators
 import lale.type_checking
 from lale.expressions import it
-from lale.lib.rasl import Map
+from lale.lib.dataframe import column_index, get_columns
+from lale.lib.rasl import Map, Monoid, MonoidFactory
 from lale.type_checking import is_schema
 
 
-def _columns_schema_to_list(X, schema) -> List[int]:
+def _columns_schema_to_list(X, schema) -> List[column_index]:
     s_all = lale.datasets.data_schemas.to_schema(X)
     s_row = s_all["items"]
     n_columns = s_row["minItems"]
@@ -32,52 +33,185 @@ def _columns_schema_to_list(X, schema) -> List[int]:
     s_cols = s_row["items"]
     if isinstance(s_cols, dict):
         if lale.type_checking.is_subschema(s_cols, schema):
-            result = [*range(n_columns)]
+            result = get_columns(X)
         else:
             result = []
     else:
         assert isinstance(s_cols, list)
+        cols = get_columns(X)
         result = [
-            i
+            cols[i]
             for i in range(n_columns)
             if lale.type_checking.is_subschema(s_cols[i], schema)
         ]
     return result
 
 
-def _columns_to_list(columns, kind, X) -> List[int]:
+class _ProjectMonoid(Monoid):
+    def __init__(self, columns: Monoid, drop_columns: Monoid):
+        self._columns = columns
+        self._drop_columns = drop_columns
+
+    def combine(self, other):
+        c = self._columns.combine(other._columns)
+        dc = self._drop_columns.combine(other._drop_columns)
+        return _ProjectMonoid(c, dc)
+
+
+class _StaticMonoid(Monoid):
+    def __init__(self, v):
+        self._v = v
+
+    def combine(self, other):
+        assert self._v == other._v
+        return self
+
+
+class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
+    def __init__(self, cl):
+        self._cl = cl
+
+    def _to_monoid(self, df):
+        cl = self._cl
+        if cl is None:
+            cl = get_columns(df)
+            self._cl = cl
+
+        return _StaticMonoid(cl)
+
+    def _from_monoid(self, v):
+        return v._v
+
+
+class _CallableMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
+    def __init__(self, c):
+        self._c = c
+
+    def _to_monoid(self, df):
+        c = self._c
+        if callable(c):
+            c = c(df)
+            self._c = c
+        elif is_schema(c):
+            c = _columns_schema_to_list(df, c)
+            self._c = c
+        else:
+            assert isinstance(c, list)
+
+        return _StaticMonoid(c)
+
+    def _from_monoid(self, v):
+        return v._v
+
+
+class _AllDataMonoidFactory(_CallableMonoidFactory):
+    """This really needs all the data, and should not be considered a monoid.
+    It is used to simplify the code, but does not enable monoidal fitting
+    """
+
+    def __init__(self, c):
+        super().__init__(c)
+
+
+def get_column_factory(columns, kind):
     if columns is None:
         if kind == "passthrough":
-            result = [*range(X.shape[1])]
+            return _StaticMonoidFactory(None)
         else:
-            result = []
+            return _StaticMonoidFactory([])
     elif isinstance(columns, list):
-        result = columns
+        return _StaticMonoidFactory(columns)
+    elif isinstance(columns, MonoidFactory):
+        return columns
     elif callable(columns):
-        result = columns(X)
+        return _AllDataMonoidFactory(columns)
     elif is_schema(columns):
-        result = _columns_schema_to_list(X, columns)
+        return _CallableMonoidFactory(columns)
     else:
         raise TypeError(f"type {type(columns)}, columns {columns}")
-    if len(result) > 0 and isinstance(result[0], str):
-        name2idx = {name: idx for idx, name in enumerate(X.columns)}
-        result = [name2idx[name] for name in result]
-    return result
 
 
 class _ProjectImpl:
     def __init__(self, columns=None, drop_columns=None):
-        self._hyperparams = {"columns": columns, "drop_columns": drop_columns}
+        self._columns = get_column_factory(columns, "passthrough")
+        self._drop_columns = get_column_factory(drop_columns, "drop")
+        self._monoid = None
 
-    def fit(self, X, y=None):
-        keep_cols = self._hyperparams["columns"]
-        keep_list = _columns_to_list(keep_cols, "passthrough", X)
-        drop_cols = self._hyperparams["drop_columns"]
-        drop_list = _columns_to_list(drop_cols, "drop", X)
-        self._fit_columns = [c for c in keep_list if c not in drop_list]
+    def __getattribute__(self, item):
+        # we want to remove fit if a static column is available
+        # since it should be considered already trained
+        if item == "fit":
+            omit_fit = False
+            try:
+                cols = super().__getattribute__("_columns")
+                drop_cols = super().__getattribute__("_drop_columns")
+                if isinstance(cols, _StaticMonoidFactory) and isinstance(
+                    drop_cols, _StaticMonoidFactory
+                ):
+                    omit_fit = True
+            except AttributeError:
+                pass
+            if omit_fit:
+                raise AttributeError(
+                    "fit cannot be called on a Project that has a static columns and drop_columns or has already been fit"
+                )
+        elif item in ["_to_monoid", "_from_monoid", "partial_fit"]:
+            omit_monoid = False
+            try:
+                cols = super().__getattribute__("_columns")
+                drop_cols = super().__getattribute__("_drop_columns")
+                if isinstance(cols, _AllDataMonoidFactory) or isinstance(
+                    drop_cols, _AllDataMonoidFactory
+                ):
+                    omit_monoid = True
+            except AttributeError:
+                pass
+            if omit_monoid:
+                raise AttributeError("monoidal operations not available")
+        return super().__getattribute__(item)
+
+    def _to_monoid_internal(self, df):
+        col = self._columns._to_monoid(df)
+        dcol = self._drop_columns._to_monoid(df)
+
+        return _ProjectMonoid(col, dcol)
+
+    def _to_monoid(self, df):
+        return self._to_monoid_internal(df)
+
+    def _from_monoid_internal(self, pm: _ProjectMonoid):
+        col = self._columns._from_monoid(pm._columns)
+        dcol = self._drop_columns._from_monoid(pm._drop_columns)
+
+        self._fit_columns = [c for c in col if c not in dcol]
+
+    def _from_monoid(self, pm: _ProjectMonoid):
+        self._from_monoid_internal(pm)
+
+    _monoid: Optional[_ProjectMonoid]
+
+    def partial_fit(self, X, y=None):
+        lifted = self._to_monoid_internal(X)
+        if self._monoid is not None:  # not first fit
+            lifted = self._monoid.combine(lifted)
+        self._from_monoid_internal(lifted)
         return self
 
+    def _fit_internal(self, X, y=None):
+        lifted = self._to_monoid_internal(X)
+        self._from_monoid_internal(lifted)
+        return self
+
+    def fit(self, X, y=None):
+        return self._fit_internal(X, y)
+
     def transform(self, X):
+        fitcols = getattr(self, "_fit_columns", None)
+        if fitcols is None:
+            self._fit_internal(X)
+            fitcols = getattr(self, "_fit_columns", None)
+            assert fitcols is not None
+
         if isinstance(X, np.ndarray):
             result = X[:, self._fit_columns]  # type: ignore
         else:

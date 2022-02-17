@@ -27,6 +27,7 @@ import lale.operators as Ops
 import lale.type_checking
 from lale.helpers import nest_HPparams
 from lale.lib.lale import ConcatFeatures, NoOp
+from lale.lib.rasl import categorical
 from lale.lib.sklearn import (
     NMF,
     PCA,
@@ -854,6 +855,18 @@ class TestUserValidator(unittest.TestCase):
         self.assertRaisesRegex(
             ValueError, "validate set to False!", UserValidatorOp, validate=False
         )
+
+
+class TestCategorical(unittest.TestCase):
+    def test_pickle_categorical(self):
+        from multiprocessing.reduction import ForkingPickler
+
+        from lale.lib.rasl import Project
+
+        c = categorical(5)
+        p = Project(columns=None, drop_columns=categorical(10))
+        _ = ForkingPickler.dumps(c)
+        _ = ForkingPickler.dumps(p)
 
 
 class TestHyperparamRanges(unittest.TestCase):
