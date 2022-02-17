@@ -76,7 +76,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
 
     @property
     def n_samples_seen_(self):
-        return getattr(self._monoid, "n_samples_seen_", None)
+        return getattr(self._monoid, "n_samples_seen_", 0)
 
     @property
     def feature_names_in_(self):
