@@ -48,6 +48,7 @@ except ImportError:
 
 import lale.helpers
 import lale.lib.aif360
+import lale.lib.aif360.stratification
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
 from lale.lib.aif360 import (
@@ -841,7 +842,7 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         train_X = self.creditg_pd_cat["splits"][0]["train_X"]
         train_y = self.creditg_pd_cat["splits"][0]["train_y"]
-        stratify = lale.lib.aif360.util._column_for_stratification(
+        stratify = lale.lib.aif360.stratification._column_for_stratification(
             train_X, train_y, **fairness_info, unfavorable_labels=None
         )
         for i in train_X.index:

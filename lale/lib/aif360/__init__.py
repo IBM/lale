@@ -141,7 +141,7 @@ zero or one to simplify the task for the mitigator.
 .. _`CalibratedEqOddsPostprocessing`: lale.lib.aif360.calibrated_eq_odds_postprocessing.html#lale.lib.aif360.calibrated_eq_odds_postprocessing.CalibratedEqOddsPostprocessing
 .. _`DisparateImpactRemover`: lale.lib.aif360.disparate_impact_remover.html#lale.lib.aif360.disparate_impact_remover.DisparateImpactRemover
 .. _`EqOddsPostprocessing`: lale.lib.aif360.eq_odds_postprocessing.html#lale.lib.aif360.eq_odds_postprocessing.EqOddsPostprocessing
-.. _`FairStratifiedKFold`: lale.lib.aif360.util.html#lale.lib.aif360.util.FairStratifiedKFold
+.. _`FairStratifiedKFold`: lale.lib.aif360.stratification.html#lale.lib.aif360.stratification.FairStratifiedKFold
 .. _`LFR`: lale.lib.aif360.lfr.html#lale.lib.aif360.lfr.LFR
 .. _`GerryFairClassifier`: lale.lib.aif360.gerry_fair_classifier.html#lale.lib.aif360.gerry_fair_classifier.GerryFairClassifier
 .. _`MetaFairClassifier`: lale.lib.aif360.meta_fair_classifier.html#lale.lib.aif360.meta_fair_classifier.MetaFairClassifier
@@ -156,7 +156,7 @@ zero or one to simplify the task for the mitigator.
 .. _`dataset_to_pandas`: lale.lib.aif360.util.html#lale.lib.aif360.util.dataset_to_pandas
 .. _`disparate_impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact
 .. _`equal_opportunity_difference`: lale.lib.aif360.util.html#lale.lib.aif360.util.equal_opportunity_difference
-.. _`fair_stratified_train_test_split`: lale.lib.aif360.util.html#lale.lib.aif360.util.fair_stratified_train_test_split
+.. _`fair_stratified_train_test_split`: lale.lib.aif360.stratification.html#lale.lib.aif360.stratification.fair_stratified_train_test_split
 .. _`fetch_adult_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_adult_df
 .. _`fetch_bank_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_bank_df
 .. _`fetch_compas_df`: lale.lib.aif360.datasets.html#lale.lib.aif360.datasets.fetch_compas_df
@@ -206,15 +206,14 @@ from .protected_attributes_encoder import ProtectedAttributesEncoder
 from .redacting import Redacting
 from .reject_option_classification import RejectOptionClassification
 from .reweighing import Reweighing
+from .stratification import FairStratifiedKFold, fair_stratified_train_test_split
 from .util import (
     FAIRNESS_INFO_SCHEMA,
-    FairStratifiedKFold,
     accuracy_and_disparate_impact,
     average_odds_difference,
     dataset_to_pandas,
     disparate_impact,
     equal_opportunity_difference,
-    fair_stratified_train_test_split,
     r2_and_disparate_impact,
     statistical_parity_difference,
     symmetric_disparate_impact,

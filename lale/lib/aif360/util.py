@@ -29,7 +29,6 @@ import sklearn.model_selection
 import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.lib.lale
-from lale.datasets.data_schemas import add_schema_adjusting_n_rows
 from lale.expressions import count, it
 from lale.lib.lale import GroupBy
 from lale.lib.rasl import Aggregate
@@ -332,54 +331,7 @@ def _ndarray_to_dataframe(array) -> pd.DataFrame:
     return result
 
 
-class _DIorSPDData(MetricMonoid):
-    def __init__(self, priv0_fav0, priv0_fav1, priv1_fav0, priv1_fav1):
-        self.priv0_fav0 = priv0_fav0
-        self.priv0_fav1 = priv0_fav1
-        self.priv1_fav0 = priv1_fav0
-        self.priv1_fav1 = priv1_fav1
-
-    def combine(self, other):
-        return _DIorSPDData(
-            priv0_fav0=self.priv0_fav0 + other.priv0_fav0,
-            priv0_fav1=self.priv0_fav1 + other.priv0_fav1,
-            priv1_fav0=self.priv1_fav0 + other.priv1_fav0,
-            priv1_fav1=self.priv1_fav1 + other.priv1_fav1,
-        )
-
-
-class _AODorEODData(MetricMonoid):
-    def __init__(
-        self,
-        tru0_pred0_priv0,
-        tru0_pred0_priv1,
-        tru0_pred1_priv0,
-        tru0_pred1_priv1,
-        tru1_pred0_priv0,
-        tru1_pred0_priv1,
-        tru1_pred1_priv0,
-        tru1_pred1_priv1,
-    ):
-        self.tru0_pred0_priv0 = tru0_pred0_priv0
-        self.tru0_pred0_priv1 = tru0_pred0_priv1
-        self.tru0_pred1_priv0 = tru0_pred1_priv0
-        self.tru0_pred1_priv1 = tru0_pred1_priv1
-        self.tru1_pred0_priv0 = tru1_pred0_priv0
-        self.tru1_pred0_priv1 = tru1_pred0_priv1
-        self.tru1_pred1_priv0 = tru1_pred1_priv0
-        self.tru1_pred1_priv1 = tru1_pred1_priv1
-
-    def combine(self, other):
-        return _AODorEODData(
-            tru0_pred0_priv0=self.tru0_pred0_priv0 + other.tru0_pred0_priv0,
-            tru0_pred0_priv1=self.tru0_pred0_priv1 + other.tru0_pred0_priv1,
-            tru0_pred1_priv0=self.tru0_pred1_priv0 + other.tru0_pred1_priv0,
-            tru0_pred1_priv1=self.tru0_pred1_priv1 + other.tru0_pred1_priv1,
-            tru1_pred0_priv0=self.tru1_pred0_priv0 + other.tru1_pred0_priv0,
-            tru1_pred0_priv1=self.tru1_pred0_priv1 + other.tru1_pred0_priv1,
-            tru1_pred1_priv0=self.tru1_pred1_priv0 + other.tru1_pred1_priv0,
-            tru1_pred1_priv1=self.tru1_pred1_priv1 + other.tru1_pred1_priv1,
-        )
+# ===== metrics =====
 
 
 class _ScorerFactory:
@@ -499,12 +451,12 @@ class _ScorerFactory:
         return self.score_estimator(estimator, X, y)
 
 
-_M = TypeVar("_M", bound=MetricMonoid)
+_Monoid = TypeVar("_Monoid", bound=MetricMonoid)
 
 
-class _BatchedScorerFactory(_ScorerFactory, Generic[_M]):
+class _BatchedScorerFactory(_ScorerFactory, Generic[_Monoid]):
     @abstractmethod
-    def _to_monoid(self, batch) -> _M:
+    def _to_monoid(self, batch) -> _Monoid:
         pass
 
     @abstractmethod
@@ -520,6 +472,22 @@ class _BatchedScorerFactory(_ScorerFactory, Generic[_M]):
     def score_estimator_batched(self, estimator: TrainedOperator, batches) -> float:
         predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
         return self.score_data_batched(predicted_batches)
+
+
+class _DIorSPDData(MetricMonoid):
+    def __init__(self, priv0_fav0, priv0_fav1, priv1_fav0, priv1_fav1):
+        self.priv0_fav0 = priv0_fav0
+        self.priv0_fav1 = priv0_fav1
+        self.priv1_fav0 = priv1_fav0
+        self.priv1_fav1 = priv1_fav1
+
+    def combine(self, other):
+        return _DIorSPDData(
+            priv0_fav0=self.priv0_fav0 + other.priv0_fav0,
+            priv0_fav1=self.priv0_fav1 + other.priv0_fav1,
+            priv1_fav0=self.priv1_fav0 + other.priv1_fav0,
+            priv1_fav1=self.priv1_fav1 + other.priv1_fav1,
+        )
 
 
 class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
@@ -551,44 +519,38 @@ class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
         )
 
 
-class _DisparateImpact(_DIorSPDScorerFactory):
+class _AODorEODData(MetricMonoid):
     def __init__(
         self,
-        favorable_labels: _FAV_LABELS_TYPE,
-        protected_attributes: List[JSON_TYPE],
-        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+        tru0_pred0_priv0,
+        tru0_pred0_priv1,
+        tru0_pred1_priv0,
+        tru0_pred1_priv1,
+        tru1_pred0_priv0,
+        tru1_pred0_priv1,
+        tru1_pred1_priv0,
+        tru1_pred1_priv1,
     ):
-        super().__init__(
-            "disparate_impact",
-            favorable_labels,
-            protected_attributes,
-            unfavorable_labels,
+        self.tru0_pred0_priv0 = tru0_pred0_priv0
+        self.tru0_pred0_priv1 = tru0_pred0_priv1
+        self.tru0_pred1_priv0 = tru0_pred1_priv0
+        self.tru0_pred1_priv1 = tru0_pred1_priv1
+        self.tru1_pred0_priv0 = tru1_pred0_priv0
+        self.tru1_pred0_priv1 = tru1_pred0_priv1
+        self.tru1_pred1_priv0 = tru1_pred1_priv0
+        self.tru1_pred1_priv1 = tru1_pred1_priv1
+
+    def combine(self, other):
+        return _AODorEODData(
+            tru0_pred0_priv0=self.tru0_pred0_priv0 + other.tru0_pred0_priv0,
+            tru0_pred0_priv1=self.tru0_pred0_priv1 + other.tru0_pred0_priv1,
+            tru0_pred1_priv0=self.tru0_pred1_priv0 + other.tru0_pred1_priv0,
+            tru0_pred1_priv1=self.tru0_pred1_priv1 + other.tru0_pred1_priv1,
+            tru1_pred0_priv0=self.tru1_pred0_priv0 + other.tru1_pred0_priv0,
+            tru1_pred0_priv1=self.tru1_pred0_priv1 + other.tru1_pred0_priv1,
+            tru1_pred1_priv0=self.tru1_pred1_priv0 + other.tru1_pred1_priv0,
+            tru1_pred1_priv1=self.tru1_pred1_priv1 + other.tru1_pred1_priv1,
         )
-
-    def _from_monoid(self, v: _DIorSPDData) -> float:
-        numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-        denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-        return numerator / denominator
-
-
-class _StatisticalParityDifference(_DIorSPDScorerFactory):
-    def __init__(
-        self,
-        favorable_labels: _FAV_LABELS_TYPE,
-        protected_attributes: List[JSON_TYPE],
-        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
-    ):
-        super().__init__(
-            "statistical_parity_difference",
-            favorable_labels,
-            protected_attributes,
-            unfavorable_labels,
-        )
-
-    def _from_monoid(self, v: _DIorSPDData) -> float:
-        minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-        subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-        return minuend - subtrahend
 
 
 class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
@@ -635,60 +597,6 @@ class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
             tru1_pred1_priv0=count3(tru=1, pred=1, priv=0),
             tru1_pred1_priv1=count3(tru=1, pred=1, priv=1),
         )
-
-
-class _AverageOddsDifference(_AODorEODScorerFactory):
-    def __init__(
-        self,
-        favorable_labels: _FAV_LABELS_TYPE,
-        protected_attributes: List[JSON_TYPE],
-        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
-    ):
-        super().__init__(
-            "average_odds_difference",
-            favorable_labels,
-            protected_attributes,
-            unfavorable_labels,
-        )
-
-    def _from_monoid(self, v: _AODorEODData) -> float:
-        fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
-            v.tru0_pred1_priv0 + v.tru0_pred0_priv0
-        )
-        fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
-            v.tru0_pred1_priv1 + v.tru0_pred0_priv1
-        )
-        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
-        )
-        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
-        )
-        return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
-
-
-class _EqualOpportunityDifference(_AODorEODScorerFactory):
-    def __init__(
-        self,
-        favorable_labels: _FAV_LABELS_TYPE,
-        protected_attributes: List[JSON_TYPE],
-        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
-    ):
-        super().__init__(
-            "equal_opportunity_difference",
-            favorable_labels,
-            protected_attributes,
-            unfavorable_labels,
-        )
-
-    def _from_monoid(self, v) -> float:
-        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
-        )
-        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
-        )
-        return tpr_priv0 - tpr_priv1
 
 
 _SCORER_DOCSTRING_ARGS = """
@@ -885,6 +793,36 @@ accuracy_and_disparate_impact.__doc__ = (
 )
 
 
+class _AverageOddsDifference(_AODorEODScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "average_odds_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v: _AODorEODData) -> float:
+        fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
+            v.tru0_pred1_priv0 + v.tru0_pred0_priv0
+        )
+        fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
+            v.tru0_pred1_priv1 + v.tru0_pred0_priv1
+        )
+        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        )
+        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        )
+        return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
+
+
 def average_odds_difference(
     favorable_labels: _FAV_LABELS_TYPE,
     protected_attributes: List[JSON_TYPE],
@@ -915,6 +853,26 @@ def average_odds_difference(
 average_odds_difference.__doc__ = (
     str(average_odds_difference.__doc__) + _SCORER_DOCSTRING
 )
+
+
+class _DisparateImpact(_DIorSPDScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "disparate_impact",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v: _DIorSPDData) -> float:
+        numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+        denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+        return numerator / denominator
 
 
 def disparate_impact(
@@ -948,6 +906,30 @@ def disparate_impact(
 
 
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
+
+
+class _EqualOpportunityDifference(_AODorEODScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "equal_opportunity_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v) -> float:
+        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        )
+        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        )
+        return tpr_priv0 - tpr_priv1
 
 
 def equal_opportunity_difference(
@@ -1058,6 +1040,26 @@ def r2_and_disparate_impact(
 r2_and_disparate_impact.__doc__ = (
     str(r2_and_disparate_impact.__doc__) + _BLENDED_SCORER_DOCSTRING
 )
+
+
+class _StatisticalParityDifference(_DIorSPDScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "statistical_parity_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v: _DIorSPDData) -> float:
+        minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+        subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+        return minuend - subtrahend
 
 
 def statistical_parity_difference(
@@ -1179,6 +1181,9 @@ def theil_index(
 
 
 theil_index.__doc__ = str(theil_index.__doc__) + _SCORER_DOCSTRING
+
+
+# ===== mitigator base classes =====
 
 
 class _BaseInEstimatorImpl:
@@ -1496,264 +1501,3 @@ _numeric_output_transform_schema = {
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }
-
-
-def _column_for_stratification(
-    X, y, favorable_labels, protected_attributes, unfavorable_labels
-):
-    from lale.lib.aif360 import ProtectedAttributesEncoder
-
-    prot_attr_enc = ProtectedAttributesEncoder(
-        favorable_labels=favorable_labels,
-        protected_attributes=protected_attributes,
-        unfavorable_labels=unfavorable_labels,
-        remainder="drop",
-        return_X_y=True,
-    )
-    encoded_X, encoded_y = prot_attr_enc.transform(X, y)
-    df = pd.concat([encoded_X, encoded_y], axis=1)
-
-    def label_for_stratification(row):
-        return "".join(["T" if v == 1 else "F" if v == 0 else "N" for v in row])
-
-    result = df.apply(label_for_stratification, axis=1)
-    result.name = "stratify"
-    return result
-
-
-def fair_stratified_train_test_split(
-    X,
-    y,
-    *arrays,
-    favorable_labels,
-    protected_attributes,
-    unfavorable_labels=None,
-    test_size=0.25,
-    random_state=None,
-) -> Tuple:
-    """
-    Splits X and y into random train and test subsets stratified by
-    labels and protected attributes.
-
-    Behaves similar to the `train_test_split`_ function from scikit-learn.
-
-    .. _`train_test_split`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
-
-    Parameters
-    ----------
-    X : array
-
-      Features including protected attributes as numpy ndarray or pandas dataframe.
-
-    y : array
-
-      Labels as numpy ndarray or pandas series.
-
-    *arrays : array
-
-      Sequence of additional arrays with same length as X and y.
-
-    favorable_labels : array
-
-      Label values which are considered favorable (i.e. "positive").
-
-    protected_attributes : array
-
-      Features for which fairness is desired.
-
-    unfavorable_labels : array or None, default None
-
-      Label values which are considered unfavorable (i.e. "negative").
-
-    test_size : float or int, default=0.25
-
-      If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the test split.
-      If int, represents the absolute number of test samples.
-
-    random_state : int, RandomState instance or None, default=None
-
-      Controls the shuffling applied to the data before applying the split.
-      Pass an integer for reproducible output across multiple function calls.
-
-      - None
-
-          RandomState used by numpy.random
-
-      - numpy.random.RandomState
-
-          Use the provided random state, only affecting other users of that same random state instance.
-
-      - integer
-
-          Explicit seed.
-
-    Returns
-    -------
-    result : tuple
-
-      - item 0: train_X
-
-      - item 1: test_X
-
-      - item 2: train_y
-
-      - item 3: test_y
-
-      - item 4+: Each argument in `*arrays`, if any, yields two items in the result, for the two splits of that array.
-    """
-    _validate_fairness_info(
-        favorable_labels, protected_attributes, unfavorable_labels, True
-    )
-    stratify = _column_for_stratification(
-        X, y, favorable_labels, protected_attributes, unfavorable_labels
-    )
-    (
-        train_X,
-        test_X,
-        train_y,
-        test_y,
-        *arrays_splits,
-    ) = sklearn.model_selection.train_test_split(
-        X, y, *arrays, test_size=test_size, random_state=random_state, stratify=stratify
-    )
-    if hasattr(X, "json_schema"):
-        train_X = add_schema_adjusting_n_rows(train_X, X.json_schema)
-        test_X = add_schema_adjusting_n_rows(test_X, X.json_schema)
-    if hasattr(y, "json_schema"):
-        train_y = add_schema_adjusting_n_rows(train_y, y.json_schema)
-        test_y = add_schema_adjusting_n_rows(test_y, y.json_schema)
-    return (train_X, test_X, train_y, test_y, *arrays_splits)
-
-
-class FairStratifiedKFold:
-    """
-    Stratified k-folds cross-validator by labels and protected attributes.
-
-    Behaves similar to the `StratifiedKFold`_ class from scikit-learn.
-    This cross-validation object can be passed to the `cv` argument of
-    the `auto_configure`_ method.
-
-    .. _`StratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
-    .. _`auto_configure`: https://lale.readthedocs.io/en/latest/modules/lale.operators.html#lale.operators.PlannedOperator.auto_configure
-    """
-
-    def __init__(
-        self,
-        favorable_labels,
-        protected_attributes,
-        unfavorable_labels=None,
-        n_splits=5,
-        shuffle=False,
-        random_state=None,
-    ):
-        """
-        Parameters
-        ----------
-        favorable_labels : array
-
-          Label values which are considered favorable (i.e. "positive").
-
-        protected_attributes : array
-
-          Features for which fairness is desired.
-
-        unfavorable_labels : array or None, default None
-
-          Label values which are considered unfavorable (i.e. "negative").
-
-        n_splits : integer, optional, default 5
-
-          Number of folds. Must be at least 2.
-
-        shuffle : boolean, optional, default False
-
-          Whether to shuffle each class's samples before splitting into batches.
-
-        random_state : union type, not for optimizer, default None
-
-          When shuffle is True, random_state affects the ordering of the indices.
-
-          - None
-
-              RandomState used by np.random
-
-          - numpy.random.RandomState
-
-              Use the provided random state, only affecting other users of that same random state instance.
-
-          - integer
-
-              Explicit seed.
-        """
-        _validate_fairness_info(
-            favorable_labels, protected_attributes, unfavorable_labels, True
-        )
-        self._fairness_info = {
-            "favorable_labels": favorable_labels,
-            "protected_attributes": protected_attributes,
-            "unfavorable_labels": unfavorable_labels,
-        }
-        self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
-            n_splits=n_splits, shuffle=shuffle, random_state=random_state
-        )
-
-    def get_n_splits(self, X=None, y=None, groups=None):
-        """
-        The number of splitting iterations in the cross-validator.
-
-        Parameters
-        ----------
-        X : Any
-
-            Always ignored, exists for compatibility.
-
-        y : Any
-
-            Always ignored, exists for compatibility.
-
-        groups : Any
-
-            Always ignored, exists for compatibility.
-
-        Returns
-        -------
-        integer
-            The number of splits.
-        """
-        return self._stratified_k_fold.get_n_splits(X, y, groups)
-
-    def split(self, X, y, groups=None):
-        """
-        Generate indices to split data into training and test set.
-
-        X : array **of** items : array **of** items : Any
-
-            Training data, including columns with the protected attributes.
-
-        y : union type
-
-            Target class labels; the array is over samples.
-
-            - array **of** items : float
-
-            - array **of** items : string
-
-        groups : Any
-
-            Always ignored, exists for compatibility.
-
-        Yields
-        ------
-        result : tuple
-
-            - train
-
-                The training set indices for that split.
-
-            - test
-
-                The testing set indices for that split.
-        """
-        stratify = _column_for_stratification(X, y, **self._fairness_info)
-        result = self._stratified_k_fold.split(X, stratify, groups)
-        return result
