@@ -676,13 +676,13 @@ _SCORER_DOCSTRING_RETURNS = """
 
 _SCORER_DOCSTRING = _SCORER_DOCSTRING_ARGS + _SCORER_DOCSTRING_RETURNS
 
-_COMBINED_SCORER_DOCSTRING = (
+_BLENDED_SCORER_DOCSTRING = (
     _SCORER_DOCSTRING_ARGS
     + """
 
     fairness_weight : number, >=0, <=1, default=0.5
 
-      At the default weight of 0.5, the two metrics contribute equally to the combined result. Above 0.5, fairness influences the combination more, and below 0.5, fairness influences the combination less. In the extreme, at 1, the outcome is only determined by fairness, and at 0, the outcome ignores fairness.
+      At the default weight of 0.5, the two metrics contribute equally to the blended result. Above 0.5, fairness influences the combination more, and below 0.5, fairness influences the combination less. In the extreme, at 1, the outcome is only determined by fairness, and at 0, the outcome ignores fairness.
 """
     + _SCORER_DOCSTRING_RETURNS
 )
@@ -709,7 +709,7 @@ class _AccuracyAndDisparateImpact:
         )
         self.fairness_weight = fairness_weight
 
-    def _combine(self, accuracy, symm_di):
+    def _blend_metrics(self, accuracy, symm_di):
         if accuracy < 0.0 or accuracy > 1.0:
             logger.warning(f"invalid accuracy {accuracy}, setting it to zero")
             accuracy = 0.0
@@ -726,12 +726,12 @@ class _AccuracyAndDisparateImpact:
     def score_data(self, y_true=None, y_pred=None, X=None):
         accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
-        return self._combine(accuracy, symm_di)
+        return self._blend_metrics(accuracy, symm_di)
 
     def score_estimator(self, estimator, X, y):
         accuracy = self.accuracy_scorer(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
-        return self._combine(accuracy, symm_di)
+        return self._blend_metrics(accuracy, symm_di)
 
     def __call__(self, estimator, X, y):
         return self.score_estimator(estimator, X, y)
@@ -741,7 +741,7 @@ def accuracy_and_disparate_impact(
     favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=0.5
 ):
     """
-    Create a scikit-learn compatible combined scorer for `accuracy`_
+    Create a scikit-learn compatible blended scorer for `accuracy`_
     and `symmetric disparate impact`_ given the fairness info.
     The scorer is suitable for classification problems,
     with higher resulting scores indicating better outcomes.
@@ -760,7 +760,7 @@ def accuracy_and_disparate_impact(
 
 
 accuracy_and_disparate_impact.__doc__ = (
-    str(accuracy_and_disparate_impact.__doc__) + _COMBINED_SCORER_DOCSTRING
+    str(accuracy_and_disparate_impact.__doc__) + _BLENDED_SCORER_DOCSTRING
 )
 
 
@@ -876,7 +876,7 @@ class _R2AndDisparateImpact:
         )
         self.fairness_weight = fairness_weight
 
-    def _combine(self, r2, symm_di):
+    def _blend_metrics(self, r2, symm_di):
         if r2 > 1.0:
             logger.warning(f"invalid r2 {r2}, setting it to float min")
             r2 = np.finfo(np.float32).min
@@ -894,12 +894,12 @@ class _R2AndDisparateImpact:
     def score_data(self, y_true=None, y_pred=None, X=None):
         r2 = sklearn.metrics.r2_score(y_true, y_pred)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
-        return self._combine(r2, symm_di)
+        return self._blend_metrics(r2, symm_di)
 
     def score_estimator(self, estimator, X, y):
         r2 = self.r2_scorer(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
-        return self._combine(r2, symm_di)
+        return self._blend_metrics(r2, symm_di)
 
     def __call__(self, estimator, X, y):
         return self.score_estimator(estimator, X, y)
@@ -909,7 +909,7 @@ def r2_and_disparate_impact(
     favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=0.5
 ):
     """
-    Create a scikit-learn compatible combined scorer for `R2 score`_
+    Create a scikit-learn compatible blended scorer for `R2 score`_
     and `symmetric disparate impact`_ given the fairness info.
     The scorer is suitable for regression problems,
     with higher resulting scores indicating better outcomes.
@@ -928,7 +928,7 @@ def r2_and_disparate_impact(
 
 
 r2_and_disparate_impact.__doc__ = (
-    str(r2_and_disparate_impact.__doc__) + _COMBINED_SCORER_DOCSTRING
+    str(r2_and_disparate_impact.__doc__) + _BLENDED_SCORER_DOCSTRING
 )
 
 

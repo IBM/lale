@@ -433,15 +433,12 @@ class TestAIF360Num(unittest.TestCase):
         impact = disparate_impact_scorer(estimator, test_X, test_y)
         self.assertLess(impact, 0.9)
         if estimator.is_classifier():
-            combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
-            combined = combined_scorer(estimator, test_X, test_y)
-            self.assertLess(0.0, combined)
-            self.assertLess(combined, 1.0)
+            blended_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
         else:
-            combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
-            combined = combined_scorer(estimator, test_X, test_y)
-            self.assertLess(0.0, combined)
-            self.assertLess(combined, 1.0)
+            blended_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
+        blended = blended_scorer(estimator, test_X, test_y)
+        self.assertLess(0.0, blended)
+        self.assertLess(blended, 1.0)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, 0.0)
@@ -498,7 +495,7 @@ class TestAIF360Num(unittest.TestCase):
         test_y = self.boston_np_num["test_y"]
         self._attempt_scorers(fairness_info, trained, test_X, test_y)
 
-    def test_scorers_combine_acc(self):
+    def test_scorers_blend_acc(self):
         dummy_fairness_info = {
             "favorable_labels": ["fav"],
             "protected_attributes": [{"feature": "prot", "reference_group": ["ref"]}],
@@ -506,14 +503,14 @@ class TestAIF360Num(unittest.TestCase):
         scorer = lale.lib.aif360.accuracy_and_disparate_impact(**dummy_fairness_info)
         for acc in [0.2, 0.8, 1]:
             for di in [0.7, 0.9, 1.0]:
-                score = scorer._combine(acc, di)
+                score = scorer._blend_metrics(acc, di)
                 self.assertLess(0.0, score)
                 self.assertLessEqual(score, 1.0)
             for di in [0.0, float("inf"), float("-inf"), float("nan")]:
-                score = scorer._combine(acc, di)
+                score = scorer._blend_metrics(acc, di)
                 self.assertEqual(score, 0.5 * acc)
 
-    def test_scorers_combine_r2(self):
+    def test_scorers_blend_r2(self):
         dummy_fairness_info = {
             "favorable_labels": ["fav"],
             "protected_attributes": [{"feature": "prot", "reference_group": ["ref"]}],
@@ -521,11 +518,11 @@ class TestAIF360Num(unittest.TestCase):
         scorer = lale.lib.aif360.r2_and_disparate_impact(**dummy_fairness_info)
         for r2 in [-2, 0, 0.5, 1]:
             for di in [0.7, 0.9, 1.0]:
-                score = scorer._combine(r2, di)
+                score = scorer._blend_metrics(r2, di)
                 self.assertLess(0.0, score)
                 self.assertLessEqual(score, 1.0)
             for di in [0.0, float("inf"), float("-inf"), float("nan")]:
-                score = scorer._combine(r2, di)
+                score = scorer._blend_metrics(r2, di)
                 self.assertEqual(score, 0.5 / (2.0 - r2))
 
     def _attempt_remi_creditg_pd_num(
@@ -878,15 +875,15 @@ class TestAIF360Cat(unittest.TestCase):
         impact = disparate_impact_scorer(estimator, test_X, test_y)
         self.assertLess(impact, 0.9)
         if estimator.is_classifier():
-            combined_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
-            combined = combined_scorer(estimator, test_X, test_y)
-            self.assertLess(0.0, combined)
-            self.assertLess(combined, 1.0)
+            blended_scorer = lale.lib.aif360.accuracy_and_disparate_impact(**fi)
+            blended = blended_scorer(estimator, test_X, test_y)
+            self.assertLess(0.0, blended)
+            self.assertLess(blended, 1.0)
         else:
-            combined_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
-            combined = combined_scorer(estimator, test_X, test_y)
-            self.assertLess(0.0, combined)
-            self.assertLess(combined, 1.0)
+            blended_scorer = lale.lib.aif360.r2_and_disparate_impact(**fi)
+            blended = blended_scorer(estimator, test_X, test_y)
+            self.assertLess(0.0, blended)
+            self.assertLess(blended, 1.0)
         parity_scorer = lale.lib.aif360.statistical_parity_difference(**fi)
         parity = parity_scorer(estimator, test_X, test_y)
         self.assertLess(parity, 0.0)
