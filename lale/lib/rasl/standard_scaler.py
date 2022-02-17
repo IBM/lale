@@ -24,53 +24,82 @@ from lale.expressions import sum as agg_sum
 from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import standard_scaler
 
+from ._monoid import Monoid, MonoidableOperator
 from .aggregate import Aggregate
 from .map import Map
 
 
-class _StandardScalerImpl:
+class _StandardScalerMonoid(Monoid):
+    def __init__(self, *, feature_names_in_, n_samples_seen_, _sum1, _sum2):
+        self.feature_names_in_ = feature_names_in_
+        self.n_samples_seen_ = n_samples_seen_
+        self._sum1 = _sum1
+        self._sum2 = _sum2
+
+    def combine(self, other):
+        assert list(self.feature_names_in_) == list(other.feature_names_in_)
+        combined_feat = self.feature_names_in_
+        combined_n_samples_seen = self.n_samples_seen_ + other.n_samples_seen_
+        if self._sum1 is None:
+            combined_sum1 = None
+        else:
+            assert other._sum1 is not None and len(self._sum1) == len(other._sum1)
+            combined_sum1 = [
+                self._sum1[i] + other._sum1[i] for i in range(len(self._sum1))
+            ]
+        if self._sum2 is None:
+            combined_sum2 = None
+        else:
+            assert other._sum2 is not None and len(self._sum2) == len(other._sum2)
+            combined_sum2 = [
+                self._sum2[i] + other._sum2[i] for i in range(len(self._sum2))
+            ]
+        return _StandardScalerMonoid(
+            feature_names_in_=combined_feat,
+            n_samples_seen_=combined_n_samples_seen,
+            _sum1=combined_sum1,
+            _sum2=combined_sum2,
+        )
+
+
+class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
     def __init__(self, *, copy=True, with_mean=True, with_std=True):
         self._hyperparams = {"copy": copy, "with_mean": with_mean, "with_std": with_std}
-        self.n_samples_seen_ = 0
-
-    def fit(self, X, y=None):
-        self._set_fit_attributes(self._lift(X, self._hyperparams))
-        return self
-
-    def partial_fit(self, X, y=None):
-        if self.n_samples_seen_ == 0:  # first fit
-            return self.fit(X)
-        lifted_a = self.feature_names_in_, self.n_samples_seen_, self._sum1, self._sum2
-        lifted_b = self._lift(X, self._hyperparams)
-        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
-        return self
 
     def transform(self, X):
         if self._transformer is None:
             self._transformer = self._build_transformer()
         return self._transformer.transform(X)
 
-    def _set_fit_attributes(self, lifted):
-        self.feature_names_in_, self.n_samples_seen_, self._sum1, self._sum2 = lifted
-        n = self.n_samples_seen_
+    @property
+    def n_samples_seen_(self):
+        return getattr(self._monoid, "n_samples_seen_", 0)
+
+    @property
+    def feature_names_in_(self):
+        return getattr(self._monoid, "feature_names_in_", None)
+
+    def _from_monoid(self, lifted):
+        self._monoid = lifted
+        n = lifted.n_samples_seen_
         if self._hyperparams["with_std"]:
             # Table 1 of http://www.vldb.org/pvldb/vol8/p702-tangwongsan.pdf
             self.var_ = [
-                (self._sum2[i] - self._sum1[i] * self._sum1[i] / n) / n
-                for i in range(len(self._sum1))
+                (lifted._sum2[i] - lifted._sum1[i] * lifted._sum1[i] / n) / n
+                for i in range(len(lifted._sum1))
             ]
             self.scale_ = [
                 1.0 if self.var_[i] == 0.0 else np.sqrt(self.var_[i])
-                for i in range(len(self._sum1))
+                for i in range(len(lifted._sum1))
             ]
         else:
             self.var_ = None
             self.scale_ = None
         if self._hyperparams["with_mean"]:
-            self.mean_ = [self._sum1[i] / n for i in range(len(self._sum1))]
+            self.mean_ = [lifted._sum1[i] / n for i in range(len(lifted._sum1))]
         else:
             self.mean_ = None
-        self.n_features_in_ = len(self.feature_names_in_)
+        self.n_features_in_ = len(lifted.feature_names_in_)
         self._transformer = None
 
     def _build_transformer(self):
@@ -82,16 +111,18 @@ class _StandardScalerImpl:
                 expr = expr / self.scale_[col_idx]
             return expr
 
+        assert self._monoid is not None
         result = Map(
             columns={
                 col_name: scale_expr(col_idx, col_name)
-                for col_idx, col_name in enumerate(self.feature_names_in_)
+                for col_idx, col_name in enumerate(self._monoid.feature_names_in_)
             }
         )
         return result
 
-    @staticmethod
-    def _lift(X, hyperparams):
+    def _to_monoid(self, v):
+        X, _ = v
+        hyperparams = self._hyperparams
         feature_names_in = get_columns(X)
         count_op = Aggregate(columns={"count": count(it[feature_names_in[0]])})
         count_data = lale.helpers._ensure_pandas(count_op.transform(X))
@@ -110,26 +141,12 @@ class _StandardScalerImpl:
             sum2 = [sum2_data.loc[0, c] for c in feature_names_in]
         else:
             sum2 = None
-        return feature_names_in, n_samples_seen, sum1, sum2
-
-    @staticmethod
-    def _combine(lifted_a, lifted_b):
-        feature_names_in_a, n_samples_seen_a, sum1_a, sum2_a = lifted_a
-        feature_names_in_b, n_samples_seen_b, sum1_b, sum2_b = lifted_b
-        assert list(feature_names_in_a) == list(feature_names_in_b)
-        combined_feat = feature_names_in_a
-        combined_n_samples_seen = n_samples_seen_a + n_samples_seen_b
-        if sum1_a is None:
-            combined_sum1 = None
-        else:
-            assert sum1_b is not None and len(sum1_a) == len(sum1_b)
-            combined_sum1 = [sum1_a[i] + sum1_b[i] for i in range(len(sum1_a))]
-        if sum2_a is None:
-            combined_sum2 = None
-        else:
-            assert sum2_b is not None and len(sum2_a) == len(sum2_b)
-            combined_sum2 = [sum2_a[i] + sum2_b[i] for i in range(len(sum2_a))]
-        return combined_feat, combined_n_samples_seen, combined_sum1, combined_sum2
+        return _StandardScalerMonoid(
+            feature_names_in_=feature_names_in,
+            n_samples_seen_=n_samples_seen,
+            _sum1=sum1,
+            _sum2=sum2,
+        )
 
 
 _combined_schemas = {
