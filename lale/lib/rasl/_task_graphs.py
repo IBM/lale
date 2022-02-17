@@ -32,7 +32,8 @@ from lale.operators import (
     TrainedPipeline,
 )
 
-from ._metrics import MetricMonoid, MetricMonoidMaker
+from ._metrics import MetricMonoid, MetricMonoidFactory
+from ._monoid import Monoid
 
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
@@ -56,7 +57,13 @@ def is_incremental(op: TrainableIndividualOp) -> bool:
 
 
 def is_associative(op: TrainableIndividualOp) -> bool:
-    return op.has_method("_lift") and op.has_method("_combine") or is_pretrained(op)
+    return (
+        op.has_method("_lift")
+        and op.has_method("_combine")
+        or is_pretrained(op)
+        or op.has_method("_to_monoid")
+        and op.has_method("_from_monoid")
+    )
 
 
 def _batch_id(fold: str, idx: int) -> str:
@@ -102,12 +109,12 @@ class _Task:
 
 
 class _TrainTask(_Task):
-    lifted: Optional[Tuple[Any, ...]]
+    monoid: Optional[Union[Tuple[Any, ...], Monoid]]
     trained: Optional[TrainedIndividualOp]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
         super(_TrainTask, self).__init__(step_id, batch_ids, held_out)
-        self.lifted = None
+        self.monoid = None
         self.trained = None
 
     def get_operation(
@@ -128,12 +135,17 @@ class _TrainTask(_Task):
         self, pipeline: TrainablePipeline[TrainableIndividualOp]
     ) -> TrainedIndividualOp:
         if self.trained is None:
-            assert self.lifted is not None
+            assert self.monoid is not None
             trainable = pipeline.steps_list()[self.step_id]
             self.trained = trainable.convert_to_trained()
             hyperparams = trainable.impl._hyperparams
             self.trained._impl = trainable._impl_class()(**hyperparams)
-            self.trained._impl._set_fit_attributes(self.lifted)
+            if trainable.has_method("_set_fit_attributes"):
+                self.trained._impl._set_fit_attributes(self.monoid)
+            elif trainable.has_method("_from_monoid"):
+                self.trained._impl._from_monoid(self.monoid)
+            else:
+                assert False, self.trained
         return self.trained
 
 
@@ -518,7 +530,7 @@ def _run_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[_Batch],
-    scoring: Optional[MetricMonoidMaker],
+    scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
     prio: Prio,
@@ -550,7 +562,7 @@ def _run_tasks(
                 if isinstance(task, _ApplyTask):
                     task.batch = None
                 elif isinstance(task, _TrainTask):
-                    task.lifted = None
+                    task.monoid = None
                     task.trained = None
                 elif isinstance(task, _MetricTask):
                     task.score = None
@@ -644,24 +656,40 @@ def _run_tasks(
                 assert len(task.preds) == 1
                 trainable = pipeline.steps_list()[task.step_id]
                 input_X, input_y = task.preds[0].batch  # type: ignore
-                hyperparams = trainable.impl._hyperparams
-                task.lifted = trainable.impl._lift(input_X, hyperparams)
+                if trainable.has_method("_lift"):
+                    hyperparams = trainable.impl._hyperparams
+                    task.monoid = trainable.impl._lift(input_X, hyperparams)
+                elif trainable.has_method("_to_monoid"):
+                    task.monoid = trainable.impl._to_monoid((input_X, input_y))
+                else:
+                    assert False, operation
             elif isinstance(task, _MetricTask):
                 assert len(task.preds) == 2
                 assert task.preds[0].step_id == _DUMMY_INPUT_STEP
                 assert scoring is not None
                 _, y_true = task.preds[0].batch  # type: ignore
                 _, y_pred = task.preds[1].batch  # type: ignore
-                task.score = scoring.to_monoid((y_true, y_pred))
+                task.score = scoring._to_monoid((y_true, y_pred))
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:
             assert len(task.batch_ids) > 1
             assert len(task.preds) == len(task.batch_ids)
             if isinstance(task, _TrainTask):
+                assert all(isinstance(p, _TrainTask) for p in task.preds)
                 trainable = pipeline.steps_list()[task.step_id]
-                lifteds = (cast(_TrainTask, p).lifted for p in task.preds)
-                task.lifted = functools.reduce(trainable.impl._combine, lifteds)
+                monoids = (cast(_TrainTask, p).monoid for p in task.preds)
+                if trainable.has_method("_combine"):
+                    task.monoid = functools.reduce(trainable.impl._combine, monoids)
+                elif trainable.has_method("_monoid"):
+
+                    def _combine(x, y):
+                        assert isinstance(x, Monoid)
+                        return x.combine(y)
+
+                    task.monoid = functools.reduce(_combine, monoids)
+                else:
+                    assert False, operation
             elif isinstance(task, _MetricTask):
                 scores = (cast(_MetricTask, p).score for p in task.preds)
                 task.score = functools.reduce(lambda x, y: x.combine(y), scores)  # type: ignore
@@ -736,7 +764,7 @@ def cross_val_score(
     n_batches: int,
     n_folds: int,
     n_batches_per_fold: int,
-    scoring: MetricMonoidMaker,
+    scoring: MetricMonoidFactory,
     unique_class_labels: List[Union[str, int, float]],
     prio: Prio,
     same_fold: bool,
@@ -766,7 +794,7 @@ def cross_val_score(
         batches = tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold))
         task = tasks[(_MetricTask, _DUMMY_SCORE_STEP, batches, held_out)]
         assert isinstance(task, _MetricTask) and task.score is not None
-        return task.score.result
+        return scoring._from_monoid(task.score)
 
     result = [get_score(held_out) for held_out in folds]
     return result

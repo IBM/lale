@@ -14,7 +14,7 @@
 
 import functools
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Tuple
+from typing import Any, Dict, Generic, Iterable, Tuple, TypeVar
 
 import numpy as np
 import pandas as pd
@@ -25,22 +25,23 @@ from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import get_columns
 from lale.operators import TrainableOperator
 
-from ._monoid import Monoid, MonoidMaker
+from ._monoid import Monoid, MonoidFactory
 from .aggregate import Aggregate
 from .map import Map
 
-MetricMonoid = Monoid[float]
+MetricMonoid = Monoid
 
 _Batch = Tuple[pd.Series, pd.Series]
+_M = TypeVar("_M", bound=MetricMonoid)
 
 
-class MetricMonoidMaker(MonoidMaker[_Batch, float]):
+class MetricMonoidFactory(Generic[_M], MonoidFactory[_Batch, float, _M]):
     @abstractmethod
-    def to_monoid(self, v: _Batch) -> Monoid[float]:
+    def _to_monoid(self, v: _Batch) -> _M:
         pass
 
     def score_data(self, y_true: pd.Series, y_pred: pd.Series) -> float:
-        return (self.to_monoid((y_true, y_pred))).result
+        return self._from_monoid(self._to_monoid((y_true, y_pred)))
 
     def score_estimator(
         self, estimator: TrainableOperator, X: pd.DataFrame, y: pd.Series
@@ -55,8 +56,10 @@ class MetricMonoidMaker(MonoidMaker[_Batch, float]):
     def score_data_batched(
         self, batches: Iterable[Tuple[pd.Series, pd.Series]]
     ) -> float:
-        lifted_batches = (self.to_monoid(b) for b in batches)
-        return (functools.reduce(lambda x, y: x.combine(y), lifted_batches)).result
+        lifted_batches = (self._to_monoid(b) for b in batches)
+        return self._from_monoid(
+            functools.reduce(lambda x, y: x.combine(y), lifted_batches)
+        )
 
     def score_estimator_batched(
         self,
@@ -75,12 +78,8 @@ class _AccuracyData(MetricMonoid):
     def combine(self, other):
         return _AccuracyData(self._match + other._match, self._total + other._total)
 
-    @property
-    def result(self):
-        return self._match / np.float64(self._total)
 
-
-class _Accuracy(MetricMonoidMaker):
+class _Accuracy(MetricMonoidFactory[_AccuracyData]):
     def __init__(self):
         from lale.lib.lale.concat_features import ConcatFeatures
 
@@ -90,7 +89,7 @@ class _Accuracy(MetricMonoidMaker):
             >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
         )
 
-    def to_monoid(self, batch: _Batch):
+    def _to_monoid(self, batch: _Batch) -> _AccuracyData:
         from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
@@ -109,6 +108,9 @@ class _Accuracy(MetricMonoidMaker):
         pipeline = (prefix_true & prefix_pred) >> self._pipeline_suffix
         agg_df = _ensure_pandas(pipeline.transform([y_true, y_pred]))
         return _AccuracyData(*agg_df.iloc[0])
+
+    def _from_monoid(self, v: _AccuracyData) -> float:
+        return v._match / np.float64(v._total)
 
 
 def accuracy_score(y_true, y_pred):
@@ -130,13 +132,8 @@ class _R2Data(MetricMonoid):
             res_sum_sq=self._res_sum_sq + other._res_sum_sq,
         )
 
-    @property
-    def result(self):
-        ss_tot = self._sum_sq - (self._sum * self._sum / np.float64(self._n))
-        return 1 - self._res_sum_sq / ss_tot
 
-
-class _R2(MetricMonoidMaker):
+class _R2(MetricMonoidFactory[_R2Data]):
     # https://en.wikipedia.org/wiki/Coefficient_of_determination
 
     def __init__(self):
@@ -162,7 +159,7 @@ class _R2(MetricMonoidMaker):
             )
         )
 
-    def to_monoid(self, batch):
+    def _to_monoid(self, batch) -> _R2Data:
         from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
@@ -181,6 +178,10 @@ class _R2(MetricMonoidMaker):
         pipeline = (prefix_true & prefix_pred) >> self._pipeline_suffix
         agg_df = _ensure_pandas(pipeline.transform([y_true, y_pred]))
         return _R2Data(*agg_df.iloc[0])
+
+    def _from_monoid(self, v: _R2Data) -> float:
+        ss_tot = v._sum_sq - (v._sum * v._sum / np.float64(v._n))
+        return 1 - v._res_sum_sq / ss_tot
 
 
 def r2_score(y_true, y_pred):
