@@ -1,4 +1,4 @@
-# Copyright 2019, 2020, 2021 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
 import functools
 import itertools
 import logging
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Union
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -29,12 +28,13 @@ import sklearn.model_selection
 import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.lib.lale
-import lale.operators
-import lale.type_checking
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
 from lale.expressions import count, it
 from lale.lib.lale import GroupBy
 from lale.lib.rasl import Aggregate
+from lale.lib.rasl._metrics import MetricMonoid
+from lale.operators import TrainablePipeline, TrainedOperator
+from lale.type_checking import JSON_TYPE, validate_schema_directly
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
@@ -79,7 +79,10 @@ def dataset_to_pandas(
     return result_X, result_y
 
 
-_categorical_fairness_properties: lale.type_checking.JSON_TYPE = {
+_FAV_LABELS_TYPE = List[Union[int, float, str, List[Union[int, float, str]]]]
+
+
+_categorical_fairness_properties: JSON_TYPE = {
     "favorable_labels": {
         "description": 'Label values which are considered favorable (i.e. "positive").',
         "type": "array",
@@ -200,7 +203,7 @@ def _validate_fairness_info(
     favorable_labels, protected_attributes, unfavorable_labels, check_schema
 ):
     if check_schema:
-        lale.type_checking.validate_schema_directly(
+        validate_schema_directly(
             {
                 "favorable_labels": favorable_labels,
                 "protected_attributes": protected_attributes,
@@ -328,30 +331,65 @@ def _ndarray_to_dataframe(array) -> pd.DataFrame:
     return result
 
 
-_LiftedDIorSPD = collections.namedtuple(
-    "_LiftedDIorSPD",
-    ["priv0_fav0", "priv0_fav1", "priv1_fav0", "priv1_fav1"],
-)
+class _DIorSPDData(MetricMonoid):
+    def __init__(self, priv0_fav0, priv0_fav1, priv1_fav0, priv1_fav1):
+        self.priv0_fav0 = priv0_fav0
+        self.priv0_fav1 = priv0_fav1
+        self.priv1_fav0 = priv1_fav0
+        self.priv1_fav1 = priv1_fav1
+
+    def combine(self, other):
+        return _DIorSPDData(
+            priv0_fav0=self.priv0_fav0 + other.priv0_fav0,
+            priv0_fav1=self.priv0_fav1 + other.priv0_fav1,
+            priv1_fav0=self.priv1_fav0 + other.priv1_fav0,
+            priv1_fav1=self.priv1_fav1 + other.priv1_fav1,
+        )
 
 
-_LiftedAODorEOD = collections.namedtuple(
-    "_LiftedAODorEOD",
-    [
-        "tru0_pred0_priv0",
-        "tru0_pred0_priv1",
-        "tru0_pred1_priv0",
-        "tru0_pred1_priv1",
-        "tru1_pred0_priv0",
-        "tru1_pred0_priv1",
-        "tru1_pred1_priv0",
-        "tru1_pred1_priv1",
-    ],
-)
+class _AODorEODData(MetricMonoid):
+    def __init__(
+        self,
+        tru0_pred0_priv0,
+        tru0_pred0_priv1,
+        tru0_pred1_priv0,
+        tru0_pred1_priv1,
+        tru1_pred0_priv0,
+        tru1_pred0_priv1,
+        tru1_pred1_priv0,
+        tru1_pred1_priv1,
+    ):
+        self.tru0_pred0_priv0 = tru0_pred0_priv0
+        self.tru0_pred0_priv1 = tru0_pred0_priv1
+        self.tru0_pred1_priv0 = tru0_pred1_priv0
+        self.tru0_pred1_priv1 = tru0_pred1_priv1
+        self.tru1_pred0_priv0 = tru1_pred0_priv0
+        self.tru1_pred0_priv1 = tru1_pred0_priv1
+        self.tru1_pred1_priv0 = tru1_pred1_priv0
+        self.tru1_pred1_priv1 = tru1_pred1_priv1
+
+    def combine(self, other):
+        return _AODorEODData(
+            tru0_pred0_priv0=self.tru0_pred0_priv0 + other.tru0_pred0_priv0,
+            tru0_pred0_priv1=self.tru0_pred0_priv1 + other.tru0_pred0_priv1,
+            tru0_pred1_priv0=self.tru0_pred1_priv0 + other.tru0_pred1_priv0,
+            tru0_pred1_priv1=self.tru0_pred1_priv1 + other.tru0_pred1_priv1,
+            tru1_pred0_priv0=self.tru1_pred0_priv0 + other.tru1_pred0_priv0,
+            tru1_pred0_priv1=self.tru1_pred0_priv1 + other.tru1_pred0_priv1,
+            tru1_pred1_priv0=self.tru1_pred1_priv0 + other.tru1_pred1_priv0,
+            tru1_pred1_priv1=self.tru1_pred1_priv1 + other.tru1_pred1_priv1,
+        )
 
 
 class _ScorerFactory:
+    _cached_pandas_to_dataset: Optional[_PandasToDatasetConverter]
+
     def __init__(
-        self, metric, favorable_labels, protected_attributes, unfavorable_labels
+        self,
+        metric: str,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
     ):
         _validate_fairness_info(
             favorable_labels, protected_attributes, unfavorable_labels, True
@@ -383,7 +421,7 @@ class _ScorerFactory:
         self.privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
         self._cached_pandas_to_dataset = None
 
-    def _pandas_to_dataset(self):
+    def _pandas_to_dataset(self) -> _PandasToDatasetConverter:
         if self._cached_pandas_to_dataset is None:
             self._cached_pandas_to_dataset = _PandasToDatasetConverter(
                 favorable_label=1,
@@ -392,7 +430,7 @@ class _ScorerFactory:
             )
         return self._cached_pandas_to_dataset
 
-    def _y_pred_series(self, y_true, y_pred, X):
+    def _y_pred_series(self, y_true, y_pred, X) -> pd.Series:
         if isinstance(y_pred, pd.Series):
             return y_pred
         assert y_true is not None
@@ -403,7 +441,7 @@ class _ScorerFactory:
             y_pred.dtype,
         )
 
-    def score_data(self, y_true=None, y_pred=None, X=None):
+    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
         assert y_pred is not None
         assert X is not None
         y_pred_orig = y_pred
@@ -453,13 +491,13 @@ class _ScorerFactory:
             )
         return result
 
-    def score_estimator(self, estimator, X, y):
+    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
         return self.score_data(y_true=y, y_pred=estimator.predict(X), X=X)
 
-    def __call__(self, estimator, X, y):
+    def __call__(self, estimator: TrainedOperator, X, y) -> float:
         return self.score_estimator(estimator, X, y)
 
-    def _lift(self, batch):
+    def _to_monoid(self, batch):
         if len(batch) == 2:
             X, y_pred = batch
             y_true = None
@@ -480,7 +518,7 @@ class _ScorerFactory:
                 row = (priv,) * len(pa_names) + (fav,)
                 return agg_df.at[row, "count"] if row in agg_df.index else 0
 
-            return _LiftedDIorSPD(
+            return _DIorSPDData(
                 priv0_fav0=count2(priv=0, fav=0),
                 priv0_fav1=count2(priv=0, fav=1),
                 priv1_fav0=count2(priv=1, fav=0),
@@ -511,7 +549,7 @@ class _ScorerFactory:
                 row = (tru, pred) + (priv,) * len(pa_names)
                 return agg_df.at[row, "count"] if row in agg_df.index else 0
 
-            return _LiftedAODorEOD(
+            return _AODorEODData(
                 tru0_pred0_priv0=count3(tru=0, pred=0, priv=0),
                 tru0_pred0_priv1=count3(tru=0, pred=0, priv=1),
                 tru0_pred1_priv0=count3(tru=0, pred=1, priv=0),
@@ -523,52 +561,46 @@ class _ScorerFactory:
             )
         assert False, self.metric
 
-    def _combine(self, lifted_a, lifted_b):
-        if self.metric in ["disparate_impact", "statistical_parity_difference"]:
-            return _LiftedDIorSPD(*(a + b for a, b in zip(lifted_a, lifted_b)))
-        if self.metric in ["average_odds_difference", "equal_opportunity_difference"]:
-            return _LiftedAODorEOD(*(a + b for a, b in zip(lifted_a, lifted_b)))
-        assert False, self.metric
-
-    def _lower(self, lifted):
-        a = lifted
+    def _from_monoid(self, v) -> float:
         if self.metric == "disparate_impact":
-            numerator = a.priv0_fav1 / np.float64(a.priv0_fav0 + a.priv0_fav1)
-            denominator = a.priv1_fav1 / np.float64(a.priv1_fav0 + a.priv1_fav1)
+            numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+            denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
             return numerator / denominator
         if self.metric == "statistical_parity_difference":
-            minuend = a.priv0_fav1 / np.float64(a.priv0_fav0 + a.priv0_fav1)
-            subtrahend = a.priv1_fav1 / np.float64(a.priv1_fav0 + a.priv1_fav1)
+            minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+            subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
             return minuend - subtrahend
         if self.metric == "equal_opportunity_difference":
-            tpr_priv0 = a.tru1_pred1_priv0 / np.float64(
-                a.tru1_pred1_priv0 + a.tru1_pred0_priv0
+            tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+                v.tru1_pred1_priv0 + v.tru1_pred0_priv0
             )
-            tpr_priv1 = a.tru1_pred1_priv1 / np.float64(
-                a.tru1_pred1_priv1 + a.tru1_pred0_priv1
+            tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+                v.tru1_pred1_priv1 + v.tru1_pred0_priv1
             )
             return tpr_priv0 - tpr_priv1
         if self.metric == "average_odds_difference":
-            fpr_priv0 = a.tru0_pred1_priv0 / np.float64(
-                a.tru0_pred1_priv0 + a.tru0_pred0_priv0
+            fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
+                v.tru0_pred1_priv0 + v.tru0_pred0_priv0
             )
-            fpr_priv1 = a.tru0_pred1_priv1 / np.float64(
-                a.tru0_pred1_priv1 + a.tru0_pred0_priv1
+            fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
+                v.tru0_pred1_priv1 + v.tru0_pred0_priv1
             )
-            tpr_priv0 = a.tru1_pred1_priv0 / np.float64(
-                a.tru1_pred1_priv0 + a.tru1_pred0_priv0
+            tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+                v.tru1_pred1_priv0 + v.tru1_pred0_priv0
             )
-            tpr_priv1 = a.tru1_pred1_priv1 / np.float64(
-                a.tru1_pred1_priv1 + a.tru1_pred0_priv1
+            tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+                v.tru1_pred1_priv1 + v.tru1_pred0_priv1
             )
             return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
         assert False, self.metric
 
-    def score_data_batched(self, batches):
-        lifted_batches = (self._lift(b) for b in batches)
-        return self._lower(functools.reduce(self._combine, lifted_batches))
+    def score_data_batched(self, batches) -> float:
+        lifted_batches = (self._to_monoid(b) for b in batches)
+        return self._from_monoid(
+            functools.reduce(lambda x, y: x.combine(y), lifted_batches)
+        )
 
-    def score_estimator_batched(self, estimator, batches):
+    def score_estimator_batched(self, estimator: TrainedOperator, batches) -> float:
         predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
         return self.score_data_batched(predicted_batches)
 
@@ -691,10 +723,10 @@ _BLENDED_SCORER_DOCSTRING = (
 class _AccuracyAndDisparateImpact:
     def __init__(
         self,
-        favorable_labels,
-        protected_attributes,
-        unfavorable_labels,
-        fairness_weight,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+        fairness_weight: float,
     ):
         if fairness_weight < 0.0 or fairness_weight > 1.0:
             logger.warning(
@@ -709,7 +741,7 @@ class _AccuracyAndDisparateImpact:
         )
         self.fairness_weight = fairness_weight
 
-    def _blend_metrics(self, accuracy, symm_di):
+    def _blend_metrics(self, accuracy: float, symm_di: float) -> float:
         if accuracy < 0.0 or accuracy > 1.0:
             logger.warning(f"invalid accuracy {accuracy}, setting it to zero")
             accuracy = 0.0
@@ -723,23 +755,26 @@ class _AccuracyAndDisparateImpact:
             )
         return result
 
-    def score_data(self, y_true=None, y_pred=None, X=None):
+    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
         accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
         return self._blend_metrics(accuracy, symm_di)
 
-    def score_estimator(self, estimator, X, y):
+    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
         accuracy = self.accuracy_scorer(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
         return self._blend_metrics(accuracy, symm_di)
 
-    def __call__(self, estimator, X, y):
+    def __call__(self, estimator: TrainedOperator, X, y) -> float:
         return self.score_estimator(estimator, X, y)
 
 
 def accuracy_and_disparate_impact(
-    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=0.5
-):
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    fairness_weight: float = 0.5,
+) -> _AccuracyAndDisparateImpact:
     """
     Create a scikit-learn compatible blended scorer for `accuracy`_
     and `symmetric disparate impact`_ given the fairness info.
@@ -765,8 +800,10 @@ accuracy_and_disparate_impact.__doc__ = (
 
 
 def average_odds_difference(
-    favorable_labels, protected_attributes, unfavorable_labels=None
-):
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _ScorerFactory:
     r"""
     Create a scikit-learn compatible `average odds difference`_ scorer
     given the fairness info. Average of difference in false positive
@@ -795,7 +832,11 @@ average_odds_difference.__doc__ = (
 )
 
 
-def disparate_impact(favorable_labels, protected_attributes, unfavorable_labels=None):
+def disparate_impact(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _ScorerFactory:
     r"""
     Create a scikit-learn compatible `disparate_impact`_ scorer given
     the fairness info (`Feldman et al. 2015`_). Ratio of rate of
@@ -827,8 +868,10 @@ disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
 
 
 def equal_opportunity_difference(
-    favorable_labels, protected_attributes, unfavorable_labels=None
-):
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _ScorerFactory:
     r"""
     Create a scikit-learn compatible `equal opportunity difference`_
     scorer given the fairness info. Difference of true positive rates
@@ -860,10 +903,10 @@ equal_opportunity_difference.__doc__ = (
 class _R2AndDisparateImpact:
     def __init__(
         self,
-        favorable_labels,
-        protected_attributes,
-        unfavorable_labels,
-        fairness_weight,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+        fairness_weight: float,
     ):
         if fairness_weight < 0.0 or fairness_weight > 1.0:
             logger.warning(
@@ -876,7 +919,7 @@ class _R2AndDisparateImpact:
         )
         self.fairness_weight = fairness_weight
 
-    def _blend_metrics(self, r2, symm_di):
+    def _blend_metrics(self, r2: float, symm_di: float) -> float:
         if r2 > 1.0:
             logger.warning(f"invalid r2 {r2}, setting it to float min")
             r2 = np.finfo(np.float32).min
@@ -891,23 +934,26 @@ class _R2AndDisparateImpact:
             )
         return result
 
-    def score_data(self, y_true=None, y_pred=None, X=None):
+    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
         r2 = sklearn.metrics.r2_score(y_true, y_pred)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
         return self._blend_metrics(r2, symm_di)
 
-    def score_estimator(self, estimator, X, y):
+    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
         r2 = self.r2_scorer(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
         return self._blend_metrics(r2, symm_di)
 
-    def __call__(self, estimator, X, y):
+    def __call__(self, estimator: TrainedOperator, X, y) -> float:
         return self.score_estimator(estimator, X, y)
 
 
 def r2_and_disparate_impact(
-    favorable_labels, protected_attributes, unfavorable_labels=None, fairness_weight=0.5
-):
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    fairness_weight: float = 0.5,
+) -> _R2AndDisparateImpact:
     """
     Create a scikit-learn compatible blended scorer for `R2 score`_
     and `symmetric disparate impact`_ given the fairness info.
@@ -933,8 +979,10 @@ r2_and_disparate_impact.__doc__ = (
 
 
 def statistical_parity_difference(
-    favorable_labels, protected_attributes, unfavorable_labels=None
-):
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _ScorerFactory:
     r"""
     Create a scikit-learn compatible `statistical parity difference`_
     scorer given the fairness info. Difference of the rate of
@@ -967,33 +1015,40 @@ statistical_parity_difference.__doc__ = (
 
 
 class _SymmetricDisparateImpact:
-    def __init__(self, favorable_labels, protected_attributes, unfavorable_labels):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
         self.disparate_impact_scorer = disparate_impact(
             favorable_labels, protected_attributes, unfavorable_labels
         )
 
-    def _make_symmetric(self, disp_impact):
+    def _make_symmetric(self, disp_impact: float) -> float:
         if np.isnan(disp_impact):  # empty privileged or unprivileged groups
             return disp_impact
         if disp_impact <= 1.0:
             return disp_impact
         return 1.0 / disp_impact
 
-    def score_data(self, y_true=None, y_pred=None, X=None):
+    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
         disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
         return self._make_symmetric(disp_impact)
 
-    def score_estimator(self, estimator, X, y):
+    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
         disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
         return self._make_symmetric(disp_impact)
 
-    def __call__(self, estimator, X, y):
+    def __call__(self, estimator: TrainedOperator, X, y) -> float:
         return self.score_estimator(estimator, X, y)
 
 
 def symmetric_disparate_impact(
-    favorable_labels, protected_attributes, unfavorable_labels=None
-):
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _SymmetricDisparateImpact:
     """
     Create a scikit-learn compatible scorer for symmetric `disparate impact`_ given the fairness info.
     For disparate impact <= 1.0, return that value, otherwise return
@@ -1013,7 +1068,11 @@ symmetric_disparate_impact.__doc__ = (
 )
 
 
-def theil_index(favorable_labels, protected_attributes, unfavorable_labels=None):
+def theil_index(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _ScorerFactory:
     r"""
     Create a scikit-learn compatible `Theil index`_ scorer given the
     fairness info (`Speicher et al. 2018`_). Generalized entropy of
@@ -1098,7 +1157,7 @@ class _BaseInEstimatorImpl:
         }
         redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         trainable_redact_and_prep = redacting >> self.preparation
-        assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
+        assert isinstance(trainable_redact_and_prep, TrainablePipeline)
         self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,
@@ -1177,7 +1236,7 @@ class _BasePostEstimatorImpl:
         }
         redacting = Redacting(**fairness_info) if self.redact else lale.lib.lale.NoOp
         trainable_redact_and_estim = redacting >> self.estimator
-        assert isinstance(trainable_redact_and_estim, lale.operators.TrainablePipeline)
+        assert isinstance(trainable_redact_and_estim, TrainablePipeline)
         self.redact_and_estim = trainable_redact_and_estim.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,

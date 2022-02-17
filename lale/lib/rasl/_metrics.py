@@ -23,7 +23,7 @@ from lale.datasets.data_schemas import add_table_name
 from lale.expressions import astype, count, it, sum
 from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import get_columns
-from lale.operators import TrainableOperator
+from lale.operators import TrainedOperator
 
 from ._monoid import Monoid, MonoidFactory
 from .aggregate import Aggregate
@@ -44,12 +44,12 @@ class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
         return self._from_monoid(self._to_monoid((y_true, y_pred)))
 
     def score_estimator(
-        self, estimator: TrainableOperator, X: pd.DataFrame, y: pd.Series
+        self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
     ) -> float:
         return self.score_data(y_true=y, y_pred=estimator.predict(X))
 
     def __call__(
-        self, estimator: TrainableOperator, X: pd.DataFrame, y: pd.Series
+        self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
     ) -> float:
         return self.score_estimator(estimator, X, y)
 
@@ -63,7 +63,7 @@ class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
 
     def score_estimator_batched(
         self,
-        estimator: TrainableOperator,
+        estimator: TrainedOperator,
         batches: Iterable[Tuple[pd.Series, pd.Series]],
     ) -> float:
         predicted_batches = ((y, estimator.predict(X)) for X, y in batches)
