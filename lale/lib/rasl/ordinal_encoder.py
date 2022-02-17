@@ -20,14 +20,38 @@ import lale.docstrings
 import lale.helpers
 import lale.operators
 from lale.expressions import collect_set, it, replace
-from lale.lib.dataframe import get_columns
+from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import ordinal_encoder
 
+from ._monoid import Monoid, MonoidableOperator
 from .aggregate import Aggregate
 from .map import Map
 
 
-class _OrdinalEncoderImpl:
+class _OrdinalEncoderMonoid(Monoid):
+    def __init__(self, *, n_samples_seen_, feature_names_in_, categories_):
+        self.n_samples_seen_ = n_samples_seen_
+        self.feature_names_in_ = feature_names_in_
+        self.categories_ = categories_
+
+    def combine(self, other):
+        n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
+        assert list(self.feature_names_in_) == list(other.feature_names_in_)
+        assert len(self.categories_) == len(other.categories_)
+        combined_categories = [
+            np.sort(
+                np.unique(np.concatenate([self.categories_[i], other.categories_[i]]))
+            )
+            for i in range(len(self.categories_))
+        ]
+        return _OrdinalEncoderMonoid(
+            n_samples_seen_=n_samples_seen_,
+            feature_names_in_=self.feature_names_in_,
+            categories_=combined_categories,
+        )
+
+
+class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
     def __init__(
         self,
         *,
@@ -43,71 +67,68 @@ class _OrdinalEncoderImpl:
             "unknown_value": unknown_value,
         }
 
-    def fit(self, X, y=None):
-        self._set_fit_attributes(self._lift(X, self._hyperparams))
-        return self
-
-    def partial_fit(self, X, y=None):
-        if not hasattr(self, "categories_"):  # first fit
-            return self.fit(X)
-        lifted_a = self.feature_names_in_, self.categories_
-        lifted_b = self._lift(X, self._hyperparams)
-        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
-        return self
-
     def transform(self, X):
         if self._transformer is None:
             self._transformer = self._build_transformer()
         return self._transformer.transform(X)
 
-    def _set_fit_attributes(self, lifted):
-        self.feature_names_in_, self.categories_ = lifted
-        self.n_features_in_ = len(self.feature_names_in_)
+    @property
+    def n_samples_seen_(self):
+        return getattr(self._monoid, "n_samples_seen_", 0)
+
+    @property
+    def categories_(self):
+        return getattr(self._monoid, "categories_", None)
+
+    @property
+    def feature_names_in_(self):
+        return getattr(self._monoid, "feature_names_in_", None)
+
+    def _from_monoid(self, lifted):
+        self._monoid = lifted
+        self.n_features_in_ = len(lifted.feature_names_in_)
         self._transformer = None
 
     def _build_transformer(self):
+        assert self._monoid is not None
         result = Map(
             columns={
                 col_name: replace(
                     it[col_name],
                     {
                         cat_value: cat_idx
-                        for cat_idx, cat_value in enumerate(self.categories_[col_idx])
+                        for cat_idx, cat_value in enumerate(
+                            self._monoid.categories_[col_idx]
+                        )
                     },
                     handle_unknown="use_encoded_value",
                     unknown_value=self._hyperparams["unknown_value"],
                 )
-                for col_idx, col_name in enumerate(self.feature_names_in_)
+                for col_idx, col_name in enumerate(self._monoid.feature_names_in_)
             }
         )
         return result
 
-    @staticmethod
-    def _lift(X, hyperparams):
-        feature_names_in = get_columns(X)
+    def _to_monoid(self, v):
+        hyperparams = self._hyperparams
+        X, _ = v
+        n_samples_seen_ = count(X)
+        feature_names_in_ = get_columns(X)
         if hyperparams["categories"] == "auto":
             agg_op = Aggregate(
-                columns={c: collect_set(it[c]) for c in feature_names_in}
+                columns={c: collect_set(it[c]) for c in feature_names_in_}
             )
             agg_data = agg_op.transform(X)
             if lale.helpers._is_spark_df(agg_data):
                 agg_data = agg_data.toPandas()
-            categories = [np.sort(agg_data.loc[0, c]) for c in feature_names_in]
+            categories_ = [np.sort(agg_data.loc[0, c]) for c in feature_names_in_]
         else:
-            categories = hyperparams["categories"]
-        return feature_names_in, categories
-
-    @staticmethod
-    def _combine(lifted_a, lifted_b):
-        feature_names_in_a, categories_a = lifted_a
-        feature_names_in_b, categories_b = lifted_b
-        assert list(feature_names_in_a) == list(feature_names_in_b)
-        assert len(categories_a) == len(categories_b)
-        combined_categories = [
-            np.sort(np.unique(np.concatenate([categories_a[i], categories_b[i]])))
-            for i in range(len(categories_a))
-        ]
-        return feature_names_in_a, combined_categories
+            categories_ = hyperparams["categories"]
+        return _OrdinalEncoderMonoid(
+            n_samples_seen_=n_samples_seen_,
+            feature_names_in_=feature_names_in_,
+            categories_=categories_,
+        )
 
 
 _combined_schemas = {
