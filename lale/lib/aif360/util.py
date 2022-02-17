@@ -15,7 +15,8 @@
 import functools
 import itertools
 import logging
-from typing import List, Optional, Tuple, Union
+from abc import abstractmethod
+from typing import Generic, List, Optional, Tuple, TypeVar, Union
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -497,102 +498,18 @@ class _ScorerFactory:
     def __call__(self, estimator: TrainedOperator, X, y) -> float:
         return self.score_estimator(estimator, X, y)
 
-    def _to_monoid(self, batch):
-        if len(batch) == 2:
-            X, y_pred = batch
-            y_true = None
-        else:
-            y_true, y_pred, X = batch
-        assert y_pred is not None and X is not None, batch
-        y_pred = self._y_pred_series(y_true, y_pred, X)
-        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
-        if self.metric in ["disparate_impact", "statistical_parity_difference"]:
-            df = pd.concat([encoded_X, y_pred], axis=1)
-            pa_names = self.privileged_groups[0].keys()
-            pipeline = GroupBy(
-                by=[it[pa] for pa in pa_names] + [it[y_pred.name]]
-            ) >> Aggregate(columns={"count": count(it[y_pred.name])})
-            agg_df = pipeline.transform(df)
 
-            def count2(priv, fav):
-                row = (priv,) * len(pa_names) + (fav,)
-                return agg_df.at[row, "count"] if row in agg_df.index else 0
+_M = TypeVar("_M", bound=MetricMonoid)
 
-            return _DIorSPDData(
-                priv0_fav0=count2(priv=0, fav=0),
-                priv0_fav1=count2(priv=0, fav=1),
-                priv1_fav0=count2(priv=1, fav=0),
-                priv1_fav1=count2(priv=1, fav=1),
-            )
-        if self.metric in ["average_odds_difference", "equal_opportunity_difference"]:
 
-            def is_fresh(col_name):
-                assert y_true is not None and isinstance(y_true, pd.Series), batch
-                return col_name not in encoded_X.columns and col_name != y_true.name
+class _BatchedScorerFactory(_ScorerFactory, Generic[_M]):
+    @abstractmethod
+    def _to_monoid(self, batch) -> _M:
+        pass
 
-            if is_fresh("y_pred"):
-                y_pred_name = "y_pred"
-            else:
-                y_pred_name = next(
-                    f"y_pred_{i}" for i in itertools.count(0) if is_fresh(f"y_pred_{i}")
-                )
-            y_pred = pd.Series(y_pred, y_pred.index, name=y_pred_name)
-            _, y_true = self.prot_attr_enc.transform(X, y_true)
-            df = pd.concat([y_true, y_pred, encoded_X], axis=1)
-            pa_names = self.privileged_groups[0].keys()
-            pipeline = GroupBy(
-                by=[it[y_true.name], it[y_pred_name]] + [it[pa] for pa in pa_names]
-            ) >> Aggregate(columns={"count": count(it[y_pred.name])})
-            agg_df = pipeline.transform(df)
-
-            def count3(tru, pred, priv):
-                row = (tru, pred) + (priv,) * len(pa_names)
-                return agg_df.at[row, "count"] if row in agg_df.index else 0
-
-            return _AODorEODData(
-                tru0_pred0_priv0=count3(tru=0, pred=0, priv=0),
-                tru0_pred0_priv1=count3(tru=0, pred=0, priv=1),
-                tru0_pred1_priv0=count3(tru=0, pred=1, priv=0),
-                tru0_pred1_priv1=count3(tru=0, pred=1, priv=1),
-                tru1_pred0_priv0=count3(tru=1, pred=0, priv=0),
-                tru1_pred0_priv1=count3(tru=1, pred=0, priv=1),
-                tru1_pred1_priv0=count3(tru=1, pred=1, priv=0),
-                tru1_pred1_priv1=count3(tru=1, pred=1, priv=1),
-            )
-        assert False, self.metric
-
+    @abstractmethod
     def _from_monoid(self, v) -> float:
-        if self.metric == "disparate_impact":
-            numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-            denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-            return numerator / denominator
-        if self.metric == "statistical_parity_difference":
-            minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
-            subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-            return minuend - subtrahend
-        if self.metric == "equal_opportunity_difference":
-            tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-                v.tru1_pred1_priv0 + v.tru1_pred0_priv0
-            )
-            tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-                v.tru1_pred1_priv1 + v.tru1_pred0_priv1
-            )
-            return tpr_priv0 - tpr_priv1
-        if self.metric == "average_odds_difference":
-            fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
-                v.tru0_pred1_priv0 + v.tru0_pred0_priv0
-            )
-            fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
-                v.tru0_pred1_priv1 + v.tru0_pred0_priv1
-            )
-            tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
-                v.tru1_pred1_priv0 + v.tru1_pred0_priv0
-            )
-            tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
-                v.tru1_pred1_priv1 + v.tru1_pred0_priv1
-            )
-            return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
-        assert False, self.metric
+        pass
 
     def score_data_batched(self, batches) -> float:
         lifted_batches = (self._to_monoid(b) for b in batches)
@@ -603,6 +520,175 @@ class _ScorerFactory:
     def score_estimator_batched(self, estimator: TrainedOperator, batches) -> float:
         predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
         return self.score_data_batched(predicted_batches)
+
+
+class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
+    def _to_monoid(self, batch) -> _DIorSPDData:
+        if len(batch) == 2:
+            X, y_pred = batch
+            y_true = None
+        else:
+            y_true, y_pred, X = batch
+        assert y_pred is not None and X is not None, batch
+        y_pred = self._y_pred_series(y_true, y_pred, X)
+        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        df = pd.concat([encoded_X, y_pred], axis=1)
+        pa_names = self.privileged_groups[0].keys()
+        pipeline = GroupBy(
+            by=[it[pa] for pa in pa_names] + [it[y_pred.name]]
+        ) >> Aggregate(columns={"count": count(it[y_pred.name])})
+        agg_df = pipeline.transform(df)
+
+        def count2(priv, fav):
+            row = (priv,) * len(pa_names) + (fav,)
+            return agg_df.at[row, "count"] if row in agg_df.index else 0
+
+        return _DIorSPDData(
+            priv0_fav0=count2(priv=0, fav=0),
+            priv0_fav1=count2(priv=0, fav=1),
+            priv1_fav0=count2(priv=1, fav=0),
+            priv1_fav1=count2(priv=1, fav=1),
+        )
+
+
+class _DisparateImpact(_DIorSPDScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "disparate_impact",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v: _DIorSPDData) -> float:
+        numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+        denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+        return numerator / denominator
+
+
+class _StatisticalParityDifference(_DIorSPDScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "statistical_parity_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v: _DIorSPDData) -> float:
+        minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+        subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+        return minuend - subtrahend
+
+
+class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
+    def _to_monoid(self, batch) -> _AODorEODData:
+        if len(batch) == 2:
+            X, y_pred = batch
+            y_true = None
+        else:
+            y_true, y_pred, X = batch
+        assert y_pred is not None and X is not None, batch
+        y_pred = self._y_pred_series(y_true, y_pred, X)
+        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+
+        def is_fresh(col_name):
+            assert y_true is not None and isinstance(y_true, pd.Series), batch
+            return col_name not in encoded_X.columns and col_name != y_true.name
+
+        if is_fresh("y_pred"):
+            y_pred_name = "y_pred"
+        else:
+            y_pred_name = next(
+                f"y_pred_{i}" for i in itertools.count(0) if is_fresh(f"y_pred_{i}")
+            )
+        y_pred = pd.Series(y_pred, y_pred.index, name=y_pred_name)
+        _, y_true = self.prot_attr_enc.transform(X, y_true)
+        df = pd.concat([y_true, y_pred, encoded_X], axis=1)
+        pa_names = self.privileged_groups[0].keys()
+        pipeline = GroupBy(
+            by=[it[y_true.name], it[y_pred_name]] + [it[pa] for pa in pa_names]
+        ) >> Aggregate(columns={"count": count(it[y_pred.name])})
+        agg_df = pipeline.transform(df)
+
+        def count3(tru, pred, priv):
+            row = (tru, pred) + (priv,) * len(pa_names)
+            return agg_df.at[row, "count"] if row in agg_df.index else 0
+
+        return _AODorEODData(
+            tru0_pred0_priv0=count3(tru=0, pred=0, priv=0),
+            tru0_pred0_priv1=count3(tru=0, pred=0, priv=1),
+            tru0_pred1_priv0=count3(tru=0, pred=1, priv=0),
+            tru0_pred1_priv1=count3(tru=0, pred=1, priv=1),
+            tru1_pred0_priv0=count3(tru=1, pred=0, priv=0),
+            tru1_pred0_priv1=count3(tru=1, pred=0, priv=1),
+            tru1_pred1_priv0=count3(tru=1, pred=1, priv=0),
+            tru1_pred1_priv1=count3(tru=1, pred=1, priv=1),
+        )
+
+
+class _AverageOddsDifference(_AODorEODScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "average_odds_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v: _AODorEODData) -> float:
+        fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
+            v.tru0_pred1_priv0 + v.tru0_pred0_priv0
+        )
+        fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
+            v.tru0_pred1_priv1 + v.tru0_pred0_priv1
+        )
+        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        )
+        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        )
+        return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
+
+
+class _EqualOpportunityDifference(_AODorEODScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "equal_opportunity_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def _from_monoid(self, v) -> float:
+        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        )
+        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        )
+        return tpr_priv0 - tpr_priv1
 
 
 _SCORER_DOCSTRING_ARGS = """
@@ -803,7 +889,7 @@ def average_odds_difference(
     favorable_labels: _FAV_LABELS_TYPE,
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
-) -> _ScorerFactory:
+) -> _AverageOddsDifference:
     r"""
     Create a scikit-learn compatible `average odds difference`_ scorer
     given the fairness info. Average of difference in false positive
@@ -819,8 +905,7 @@ def average_odds_difference(
     between -0.1 and 0.1.
 
     .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
-    return _ScorerFactory(
-        "average_odds_difference",
+    return _AverageOddsDifference(
         favorable_labels,
         protected_attributes,
         unfavorable_labels,
@@ -836,7 +921,7 @@ def disparate_impact(
     favorable_labels: _FAV_LABELS_TYPE,
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
-) -> _ScorerFactory:
+) -> _DisparateImpact:
     r"""
     Create a scikit-learn compatible `disparate_impact`_ scorer given
     the fairness info (`Feldman et al. 2015`_). Ratio of rate of
@@ -859,9 +944,7 @@ def disparate_impact(
 
     .. _`disparate_impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact
     .. _`Feldman et al. 2015`: https://doi.org/10.1145/2783258.2783311"""
-    return _ScorerFactory(
-        "disparate_impact", favorable_labels, protected_attributes, unfavorable_labels
-    )
+    return _DisparateImpact(favorable_labels, protected_attributes, unfavorable_labels)
 
 
 disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
@@ -871,7 +954,7 @@ def equal_opportunity_difference(
     favorable_labels: _FAV_LABELS_TYPE,
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
-) -> _ScorerFactory:
+) -> _EqualOpportunityDifference:
     r"""
     Create a scikit-learn compatible `equal opportunity difference`_
     scorer given the fairness info. Difference of true positive rates
@@ -887,8 +970,7 @@ def equal_opportunity_difference(
     unprivileged group. Fairness for this metric is between -0.1 and 0.1.
 
     .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
-    return _ScorerFactory(
-        "equal_opportunity_difference",
+    return _EqualOpportunityDifference(
         favorable_labels,
         protected_attributes,
         unfavorable_labels,
@@ -982,7 +1064,7 @@ def statistical_parity_difference(
     favorable_labels: _FAV_LABELS_TYPE,
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
-) -> _ScorerFactory:
+) -> _StatisticalParityDifference:
     r"""
     Create a scikit-learn compatible `statistical parity difference`_
     scorer given the fairness info. Difference of the rate of
@@ -1001,8 +1083,7 @@ def statistical_parity_difference(
 
     .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference
     .. _`Dwork et al. 2012`: https://doi.org/10.1145/2090236.2090255"""
-    return _ScorerFactory(
-        "statistical_parity_difference",
+    return _StatisticalParityDifference(
         favorable_labels,
         protected_attributes,
         unfavorable_labels,
