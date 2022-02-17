@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Generic, Tuple, TypeVar
+from typing import Any, Tuple, TypeVar
 
 import numpy as np
 from scipy import special
@@ -34,7 +34,7 @@ _OutputType = Tuple[float, float]
 _M = TypeVar("_M", bound=ScoreMonoid)
 
 
-class ScoreMonoidFactory(Generic[_M], MonoidFactory[_InputType, _OutputType, _M]):
+class ScoreMonoidFactory(MonoidFactory[_InputType, _OutputType, _M]):
     def score(self, X, y) -> Tuple[float, float]:
         return self._from_monoid(self._to_monoid((X, y)))
 
