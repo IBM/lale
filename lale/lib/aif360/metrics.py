@@ -14,7 +14,6 @@
 
 import functools
 import itertools
-import logging
 from abc import abstractmethod
 from typing import Generic, List, Optional, TypeVar, Union
 
@@ -36,10 +35,8 @@ from .util import (
     _ndarray_to_series,
     _PandasToDatasetConverter,
     _validate_fairness_info,
+    logger,
 )
-
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.WARNING)
 
 _FAV_LABELS_TYPE = List[Union[int, float, str, List[Union[int, float, str]]]]
 
