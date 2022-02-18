@@ -33,7 +33,7 @@ from lale.operators import (
 )
 
 from ._metrics import MetricMonoid, MetricMonoidFactory
-from ._monoid import Monoid
+from ._monoid import Monoid, MonoidFactory
 
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
@@ -61,8 +61,7 @@ def is_associative(op: TrainableIndividualOp) -> bool:
         op.has_method("_lift")
         and op.has_method("_combine")
         or is_pretrained(op)
-        or op.has_method("_to_monoid")
-        and op.has_method("_from_monoid")
+        or isinstance(op.impl, MonoidFactory)
     )
 
 

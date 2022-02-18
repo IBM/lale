@@ -15,31 +15,64 @@
 from abc import ABC, abstractmethod
 from typing import Any, Generic, Optional, TypeVar
 
+from typing_extensions import Protocol, runtime_checkable
+
 _InputType = TypeVar("_InputType", contravariant=True)
 _OutputType = TypeVar("_OutputType", covariant=True)
 _SelfType = TypeVar("_SelfType")
 
 
 class Monoid(ABC):
+    """
+    Data that can be combined in an associative way.  See :class:MonoidFactory for ways to create/unpack
+    a given monoid.
+    """
+
     @abstractmethod
     def combine(self: _SelfType, other: _SelfType) -> _SelfType:
+        """
+         Combines this monoid instance with another, producing a result.
+         This operation must be observationally associative, satisfying
+         ``x._from_monoid(a.combine(b.combine(c))) == x._from_monoid(a.combine(b).combine(c)))``
+        where `x` is the instance of :class:MonoidFactory that created these instances.
+        """
         pass
 
 
 _M = TypeVar("_M", bound=Monoid)
 
 
-class MonoidFactory(ABC, Generic[_InputType, _OutputType, _M]):
-    @abstractmethod
-    def _to_monoid(self, v: _InputType) -> _M:
-        pass
+@runtime_checkable
+class MonoidFactory(Generic[_InputType, _OutputType, _M], Protocol):
+    """
+    This protocol determines if a class supports creating a monad and using it
+    to support associative computation.
+    Due to the ``runtime_checkable`` decorator, ``isinstance(obj, MonoidFactory)`` will succeed
+    if the object has the requisite methods, even if it does not have this protocol as
+    a base class.
+    """
 
-    @abstractmethod
+    def _to_monoid(self, v: _InputType) -> _M:
+        """
+        Create a monoid instance representing the input data
+        """
+        ...
+
     def _from_monoid(self, v: _M) -> _OutputType:
-        pass
+        """
+        Given the monoid instance, return the appropriate type of output.
+        This method may also modify self based on the monoid instance.
+        """
+        ...
 
 
 class MonoidableOperator(MonoidFactory[Any, None, _M]):
+    """
+    This is a useful base class for operator implementations that support associative (monoid-based) fit.
+    Given the implementation supplied :class:MonoidFactory methods, this class provides
+    default :method:partial_fit and :method:fit implementations.
+    """
+
     _monoid: Optional[_M] = None
 
     def partial_fit(self, X, y=None):
