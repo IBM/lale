@@ -66,7 +66,6 @@ jobs:
         - test/test_autoai_libs.py
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
-        - test/test_snapml.py
         - test/test_relational.py
         python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
