@@ -1969,6 +1969,8 @@ class IndividualOp(Operator):
                 default = schema["default"]
                 non_default = [v for v in schema["enum"] if v != default]
                 return [*non_default, default]
+            elif schema["type"] == "boolean":
+                return (False, True, schema["default"])
             else:
 
                 def get(schema, key):
