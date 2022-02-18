@@ -44,6 +44,7 @@ else:
     install_requires = [
         "numpy",
         "black==19.10b0",
+        "greenery<=3.3.3",  # needed by jsonsubschema
         "graphviz",
         "hyperopt<=0.2.5",
         "jsonschema",
