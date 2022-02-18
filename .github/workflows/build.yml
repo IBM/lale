@@ -90,7 +90,10 @@ jobs:
           python-version: 3.7
           setup-target: '.[test]'
         - test-case: test/test_snapml.py
-          python-version: [3.8, 3.9]
+          python-version: 3.8
+          setup-target: '.[full,test]'
+        - test-case: test/test_snapml.py
+          python-version: 3.9
           setup-target: '.[full,test]'
 
     steps:
