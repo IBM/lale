@@ -955,6 +955,25 @@ class TestHyperparamRanges(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(ranges, expected_ranges)
 
+    def test_logisticregression(self):
+        from lale.lib.sklearn import LogisticRegression
+
+        ranges, dists = LogisticRegression.get_param_ranges()
+        expected_ranges = {
+            "solver": ["newton-cg", "liblinear", "sag", "saga", "lbfgs"],
+            "dual": (False, True, False),
+            "tol": (1e-08, 0.01, 0.0001),
+            "fit_intercept": (False, True, True),
+            "intercept_scaling": (0.0, 1.0, 1.0),
+            "max_iter": (10, 1000, 100),
+            "multi_class": ["ovr", "multinomial", "auto"],
+        }
+        expected_dists = {"solver": (0, 4, 4), "multi_class": (0, 2, 2)}
+
+        self.maxDiff = None
+        self.assertEqual(ranges, expected_ranges)
+        self.assertEqual(dists, expected_dists)
+
     def test_bool_enum(self):
         from lale.lib.sklearn import SVR
         from lale.schemas import AnyOf, Bool, Null

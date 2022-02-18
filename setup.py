@@ -47,7 +47,7 @@ else:
         "graphviz",
         "hyperopt<=0.2.5",
         "jsonschema",
-        "jsonsubschema",
+        "jsonsubschema>=0.0.6",
         "scikit-learn",
         "scipy",
         "pandas",
