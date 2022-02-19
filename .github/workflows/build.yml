@@ -180,7 +180,6 @@ jobs:
         - test/test_autoai_libs.py
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
-        - test/test_snapml.py
         - test/test_relational.py
         python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
@@ -203,6 +202,12 @@ jobs:
         - test-case: test/test_relational_sklearn.py
           python-version: 3.7
           setup-target: '.[test]'
+        - test-case: test/test_snapml.py
+          python-version: 3.8
+          setup-target: '.[full,test]'
+        - test-case: test/test_snapml.py
+          python-version: 3.9
+          setup-target: '.[full,test]'
 
     steps:
     - uses: actions/checkout@v2
@@ -247,6 +252,9 @@ jobs:
     - name: Install deps for test_relational_sklearn
       if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
       run: pip install 'scikit-learn>=1.0'
+    - name: Install deps for test_snapml
+      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
+      run: pip install 'numpy>=1.20.1'
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
