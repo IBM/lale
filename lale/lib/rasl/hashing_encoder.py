@@ -129,6 +129,21 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
             n_samples_seen_=n_samples_seen_, feature_names=feature_names
         )
 
+    # https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/hashing.py
+    def get_feature_names(self):
+        """
+        Returns the names of all transformed / added columns.
+        Returns
+        -------
+        feature_names: list
+            A list with all feature names transformed or added.
+            Note: potentially dropped features are not included!
+        """
+
+        if not isinstance(self.feature_names, list):
+            raise ValueError('Must fit data first. Affected feature names are not known before.')
+        else:
+            return self.feature_names
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
