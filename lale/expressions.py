@@ -370,6 +370,10 @@ def replace(
     )
 
 
+def ite(c: Expr, v1: Expr, v2: Expr) -> Expr:
+    return _make_call_expr("ite", c, v1, v2)
+
+
 def identity(subject: Expr) -> Expr:
     return _make_call_expr("identity", subject)
 

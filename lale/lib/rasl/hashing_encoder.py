@@ -13,14 +13,39 @@
 # limitations under the License.
 
 from functools import reduce
+
+import pandas as pd
+
 import lale.docstrings
 import lale.helpers
 import lale.operators
-from lale.expressions import it, hash, Expr
+from lale.expressions import Expr, hash, it, ite
+from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import hashing_encoder
 
 from .map import Map
+
+
+# From https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
+def get_obj_cols(df):
+    """
+    Returns names of 'object' columns in the DataFrame.
+    """
+    obj_cols = []
+    if _is_pandas_df(df):
+        for idx, dt in enumerate(df.dtypes):
+            if dt == "object" or is_category(dt):
+                obj_cols.append(df.columns.values[idx])
+    elif _is_spark_df(df):
+        assert False, "Not yet implemented"
+
+    return obj_cols
+
+
+# From https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
+def is_category(dtype):
+    return pd.api.types.is_categorical_dtype(dtype)
 
 
 class _HashingEncoderImpl:
@@ -28,10 +53,10 @@ class _HashingEncoderImpl:
         self,
         *,
         n_components=8,
-        cols=False,
+        cols=None,
         # drop_invariant=False,
         # return_df=True,
-        hash_method='md5',
+        hash_method="md5",
     ):
         self._hyperparams = {
             "n_components": n_components,
@@ -57,30 +82,40 @@ class _HashingEncoderImpl:
 
     def transform(self, X):
         if self._transformer is None:
-            self._transformer = self._build_transformer()
+            self._transformer = self._build_transformer(X)
         return self._transformer.transform(X)
 
     def _set_fit_attributes(self, lifted):
         self.n_samples_seen_, self.feature_names = lifted
         self._transformer = None
 
-    def _build_transformer(self):
+    def _build_transformer(self, X):
         cols = self._hyperparams["cols"]
         hash_method = self._hyperparams["hash_method"]
         N = self._hyperparams["n_components"]
-        result = Map(
-            columns={
-                f"col_{i}":reduce(Expr.__add__, [hash(hash_method, it[col_name]) % N for col_name in cols])
-                for i in range(N)
-            }
-        )
+        columns_cat = {
+            f"col_{i}": reduce(
+                Expr.__add__,  # type: ignore
+                [
+                    ite(hash(hash_method, it[col_name]) % N == i, 1, 0)  # type: ignore
+                    for col_name in cols
+                ],
+            )
+            for i in range(N)
+        }
+        columns_num = {col: it[col] for col in get_columns(X) if col not in cols}
+        result = Map(columns={**columns_cat, **columns_num})
         return result
 
     @staticmethod
     def _lift(X, hyperparams):
         if hyperparams["cols"] is None:
-            hyperparams["cols"] = get_columns(X)
-        feature_names = hyperparams["cols"]
+            hyperparams["cols"] = get_obj_cols(X)
+        cols = hyperparams["cols"]
+        N = hyperparams["n_components"]
+        feature_names_cat = [f"col_{i}" for i in range(N)]
+        feature_names_num = [col for col in get_columns(X) if col not in cols]
+        feature_names = feature_names_cat + feature_names_num
         n_samples_seen_ = count(X)
         return n_samples_seen_, feature_names
 

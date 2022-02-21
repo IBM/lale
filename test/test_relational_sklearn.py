@@ -566,10 +566,8 @@ class TestOneHotEncoder(unittest.TestCase):
 
 
 def _check_trained_hashing_encoder(test, op1, op2, msg):
-    test.assertEqual(list(op1.feature_names_in_), list(op2.feature_names_in_), msg)
-    test.assertEqual(len(op1.categories_), len(op2.categories_), msg)
-    for i in range(len(op1.categories_)):
-        test.assertEqual(list(op1.categories_[i]), list(op2.categories_[i]), msg)
+    test.assertEqual(list(op1.feature_names), list(op2.feature_names), msg)
+
 
 class TestHasingEncoder(unittest.TestCase):
     @classmethod
@@ -577,7 +575,7 @@ class TestHasingEncoder(unittest.TestCase):
         import typing
         from typing import Any, Dict
 
-        targets = ["pandas", "spark", "spark-with-index"]
+        targets = ["pandas"]  # TODO: "spark", "spark-with-index"
         cls.tgt2creditg = typing.cast(
             Dict[str, Any],
             {
@@ -592,7 +590,7 @@ class TestHasingEncoder(unittest.TestCase):
         )
 
     def _check_last_trained(self, op1, op2, msg):
-        _check_trained_one_hot_encoder(
+        _check_trained_hashing_encoder(
             self, op1.get_last().impl, op2.get_last().impl, msg
         )
 
@@ -607,6 +605,48 @@ class TestHasingEncoder(unittest.TestCase):
             (train_X, train_y), (test_X, test_y) = dataset
             rasl_trained = rasl_trainable.fit(train_X)
             self._check_last_trained(sk_trained, rasl_trained, tgt)
+
+    def test_transform(self):
+        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        cat_columns = categorical()(train_X_pd)
+        prefix = Map(columns={c: it[c] for c in cat_columns})
+        rasl_trainable = prefix >> RaslHashingEncoder()
+        sk_trainable = prefix >> SkHashingEncoder()
+        sk_trained = sk_trainable.fit(train_X_pd)
+        sk_transformed = sk_trained.transform(test_X_pd)
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X)
+            self._check_last_trained(sk_trained, rasl_trained, tgt)
+            rasl_transformed = rasl_trained.transform(test_X)
+            if tgt == "spark-with-index":
+                self.assertEqual(get_index_name(rasl_transformed), "index")
+            rasl_transformed = _ensure_pandas(rasl_transformed)
+            self.assertEqual(sk_transformed.shape, rasl_transformed.shape, tgt)
+            for row_idx in range(sk_transformed.shape[0]):
+                for col_idx in range(sk_transformed.shape[1]):
+                    self.assertEqual(
+                        sk_transformed.iloc[row_idx, col_idx],
+                        rasl_transformed.iloc[row_idx, col_idx],
+                        (row_idx, col_idx, tgt),
+                    )
+
+    def test_predict(self):
+        (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
+        cat_columns = categorical()(train_X_pd)
+        prefix = Map(columns={c: it[c] for c in cat_columns})
+        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
+        lr = LogisticRegression()
+        sk_trainable = prefix >> SkHashingEncoder() >> lr
+        sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
+        sk_predicted = sk_trained.predict(test_X_pd)
+        rasl_trainable = prefix >> RaslHashingEncoder() >> to_pd >> lr
+        for tgt, dataset in self.tgt2creditg.items():
+            (train_X, train_y), (test_X, test_y) = dataset
+            rasl_trained = rasl_trainable.fit(train_X, train_y)
+            rasl_predicted = rasl_trained.predict(test_X)
+            self.assertEqual(sk_predicted.shape, rasl_predicted.shape, tgt)
+            self.assertEqual(sk_predicted.tolist(), rasl_predicted.tolist(), tgt)
 
 
 class TestSimpleImputer(unittest.TestCase):

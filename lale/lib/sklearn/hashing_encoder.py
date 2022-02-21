@@ -13,22 +13,20 @@
 # limitations under the License.
 
 import pandas as pd
-import scipy.sparse.csr
-
-from category_encoders.hashing import HashingEncoder 
+from category_encoders.hashing import HashingEncoder as SkHashingEncoder
 
 import lale.docstrings
 import lale.operators
 
 _hyperparams_schema = {
-            "allOf": [
-                {
-                    "type": "object",
-                    "properties": {},
-                    "relevantToOptimizer": [],
-                }
-            ]
+    "allOf": [
+        {
+            "type": "object",
+            "properties": {},
+            "relevantToOptimizer": [],
         }
+    ]
+}
 # _hyperparams_schema = {
 #     "description": "Hyperparameter schema for the HashingEncoder model from scikit-learn contrib.",
 #     "allOf": [
@@ -146,7 +144,7 @@ _combined_schemas = {
 class _HashingEncoderImpl:
     def __init__(self, **hyperparams):
         self._hyperparams = hyperparams
-        self._wrapped_model = HashingEncoder(**self._hyperparams)
+        self._wrapped_model = SkHashingEncoder(**self._hyperparams)
 
     def fit(self, X, y=None):
         self._wrapped_model.fit(X, y)
