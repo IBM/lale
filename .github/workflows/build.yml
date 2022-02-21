@@ -153,6 +153,9 @@ jobs:
     - name: Install deps for test_relational_sklearn
       if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
       run: pip install 'scikit-learn>=1.0'
+    - name: Install deps for test_snapml
+      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
+      run: pip install 'numpy>=1.20.1'
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
