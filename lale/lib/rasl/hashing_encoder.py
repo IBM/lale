@@ -24,6 +24,7 @@ from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import hashing_encoder
 
+from ._monoid import Monoid, MonoidableOperator
 from .map import Map
 
 
@@ -48,7 +49,20 @@ def is_category(dtype):
     return pd.api.types.is_categorical_dtype(dtype)
 
 
-class _HashingEncoderImpl:
+class _HashingEncoderMonoid(Monoid):
+    def __init__(self, *, n_samples_seen_, feature_names):
+        self.n_samples_seen_ = n_samples_seen_
+        self.feature_names = feature_names
+
+    def combine(self, other):
+        assert list(self.feature_names) == list(other.feature_names)
+        n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
+        return _HashingEncoderMonoid(
+            n_samples_seen_=n_samples_seen_, feature_names=self.feature_names
+        )
+
+
+class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
     def __init__(
         self,
         *,
@@ -64,29 +78,23 @@ class _HashingEncoderImpl:
             # "drop_invariant": drop_invariant,
             "hash_method": hash_method,
         }
-        self.n_samples_seen_ = 0
         self._dim = None
-        self.feature_names = None
-
-    def fit(self, X, y=None):
-        self._set_fit_attributes(self._lift(X, self._hyperparams))
-        return self
-
-    def partial_fit(self, X, y=None):
-        if self.n_samples_seen_ == 0:  # first fit
-            return self.fit(X)
-        lifted_a = self.n_samples_seen_, self.feature_names
-        lifted_b = self._lift(X, self._hyperparams)
-        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
-        return self
 
     def transform(self, X):
         if self._transformer is None:
             self._transformer = self._build_transformer(X)
         return self._transformer.transform(X)
 
-    def _set_fit_attributes(self, lifted):
-        self.n_samples_seen_, self.feature_names = lifted
+    @property
+    def n_samples_seen_(self):
+        return getattr(self._monoid, "n_samples_seen_", 0)
+
+    @property
+    def feature_names(self):
+        return getattr(self._monoid, "feature_names", None)
+
+    def _from_monoid(self, lifted):
+        self._monoid = lifted
         self._transformer = None
 
     def _build_transformer(self, X):
@@ -107,25 +115,19 @@ class _HashingEncoderImpl:
         result = Map(columns={**columns_cat, **columns_num})
         return result
 
-    @staticmethod
-    def _lift(X, hyperparams):
-        if hyperparams["cols"] is None:
-            hyperparams["cols"] = get_obj_cols(X)
-        cols = hyperparams["cols"]
-        N = hyperparams["n_components"]
+    def _to_monoid(self, v):
+        X, y = v
+        if self._hyperparams["cols"] is None:
+            self._hyperparams["cols"] = get_obj_cols(X)
+        cols = self._hyperparams["cols"]
+        N = self._hyperparams["n_components"]
         feature_names_cat = [f"col_{i}" for i in range(N)]
         feature_names_num = [col for col in get_columns(X) if col not in cols]
         feature_names = feature_names_cat + feature_names_num
         n_samples_seen_ = count(X)
-        return n_samples_seen_, feature_names
-
-    @staticmethod
-    def _combine(lifted_a, lifted_b):
-        n_samples_seen_a, feature_names_a = lifted_a
-        n_samples_seen_b, feature_names_b = lifted_b
-        assert list(feature_names_a) == list(feature_names_b)
-        n_samples_seen_ = n_samples_seen_a + n_samples_seen_b
-        return n_samples_seen_, feature_names_a
+        return _HashingEncoderMonoid(
+            n_samples_seen_=n_samples_seen_, feature_names=feature_names
+        )
 
 
 _combined_schemas = {
