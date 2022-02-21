@@ -79,6 +79,7 @@ extras_require = {
         "cvxpy>=1.0",
         "fairlearn",
         "h5py",
+        "category-encoders",
     ],
     "dev": ["pre-commit"],
     "test": [
