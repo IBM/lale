@@ -141,9 +141,12 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         """
 
         if not isinstance(self.feature_names, list):
-            raise ValueError('Must fit data first. Affected feature names are not known before.')
+            raise ValueError(
+                "Must fit data first. Affected feature names are not known before."
+            )
         else:
             return self.feature_names
+
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
