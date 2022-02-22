@@ -1998,7 +1998,7 @@ class TestMap(unittest.TestCase):
 
         def expr(X):
             ret = {}
-            cats = categorical()(_ensure_pandas(X))
+            cats = categorical()(X)
             for c in X.columns:
                 if c in cats:
                     ret["cat_" + c] = it[c]

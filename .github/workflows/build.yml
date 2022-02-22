@@ -43,9 +43,13 @@ jobs:
     - name: pre-commit checks
       uses: pre-commit/action@v2.0.0
 
-  test_matrix:
-    name: Test
+# test_matrix_pr and test_matrix_master have a lot of redundancy
+# If GitHub actions adds support for conditional matrix expressions
+# these should be combined, but current workarounds seem overly complex
+  test_matrix_pr:
+    name: Test (PR)
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [static]
     strategy:
       fail-fast: false
@@ -54,7 +58,6 @@ jobs:
         - test/test_core_classifiers.py
         - test/test_core_regressors.py
         - test/test_core_transformers.py
-        - test/test_core_misc.py
         - test/test_core_pipeline.py
         - test/test_custom_schemas.py
         - test/test_json_pretty_viz.py
@@ -63,14 +66,31 @@ jobs:
         - test/test_interoperability.py
         - test/test_optimizers.py
         - test/test_pipeline.py
-        - test/test_autoai_libs.py
         - test/test_autoai_output_consumption.py
         - test/test_autogen_lib.py
         - test/test_snapml.py
         - test/test_relational.py
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.8]
         setup-target: ['.[full,test]']
         include:
+        - test-case: test/test_autoai_libs.py
+          python-version: 3.7
+          setup-target: '.[full,test]'
+        - test-case: test/test_autoai_libs.py
+          python-version: 3.8
+          setup-target: '.[full,test]'
+        - test-case: test/test_autoai_libs.py
+          python-version: 3.9
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_misc.py
+          python-version: 3.7
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_misc.py
+          python-version: 3.8
+          setup-target: '.[full,test]'
+        - test-case: test/test_core_misc.py
+          python-version: 3.9
+          setup-target: '.[full,test]'
         - test-case: test/test_autoai_ts_libs.py
           python-version: 3.8
           setup-target: '.[test]'
@@ -133,6 +153,111 @@ jobs:
     - name: Install deps for test_relational_sklearn
       if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
       run: pip install 'scikit-learn>=1.0'
+    - name: Install deps for test_snapml
+      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
+      run: pip install 'numpy>=1.20.1'
+    - name: Run test
+      run: py.test -v --capture=tee-sys ${{matrix.test-case}}
+
+  test_matrix_master:
+    name: Test (master)
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    needs: [static]
+    strategy:
+      fail-fast: false
+      matrix:
+        test-case:
+        - test/test_core_classifiers.py
+        - test/test_core_regressors.py
+        - test/test_core_transformers.py
+        - test/test_core_misc.py
+        - test/test_core_pipeline.py
+        - test/test_custom_schemas.py
+        - test/test_json_pretty_viz.py
+        - test/test_grammar.py
+        - test/test_type_checking.py
+        - test/test_interoperability.py
+        - test/test_optimizers.py
+        - test/test_pipeline.py
+        - test/test_autoai_libs.py
+        - test/test_autoai_output_consumption.py
+        - test/test_autogen_lib.py
+        - test/test_relational.py
+        python-version: [3.7, 3.8, 3.9]
+        setup-target: ['.[full,test]']
+        include:
+        - test-case: test/test_autoai_ts_libs.py
+          python-version: 3.8
+          setup-target: '.[test]'
+        - test-case: test/test_autogen_lib.py
+          python-version: 3.6
+          setup-target: '.[test]'
+        - test-case: test/test_halving_gridsearchcv.py
+          python-version: 3.7
+          setup-target: '.[test]'
+        - test-case: test/test_lale_lib_versions.py
+          python-version: 3.7
+          setup-target: '.[full,test]'
+        - test-case: test/test_aif360.py
+          python-version: 3.7
+          setup-target: '.[full,test]'
+        - test-case: test/test_relational_sklearn.py
+          python-version: 3.7
+          setup-target: '.[test]'
+        - test-case: test/test_snapml.py
+          python-version: 3.8
+          setup-target: '.[full,test]'
+        - test-case: test/test_snapml.py
+          python-version: 3.9
+          setup-target: '.[full,test]'
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install system packages
+      run: sudo apt-get install graphviz swig
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-new2
+          ${{ runner.os }}-new2
+    - name: Install numpy
+      run: pip install -U numpy
+    - name: Install dependencies
+      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+    - name: Install deps for test_autoai_output_consumption
+      if: ${{ matrix.test-case == 'test/test_autoai_output_consumption.py' }}
+      run: pip install 'scikit-learn==0.23.1' 'lightgbm==3.3.0'
+    - name: Install deps for test_lale_lib_versions
+      if: ${{ matrix.test-case == 'test/test_lale_lib_versions.py' }}
+      run: pip install 'scikit-learn==0.20.3' 'xgboost==0.90'
+    - name: Install deps for test_autoai_ts_libs
+      if: ${{ matrix.test-case == 'test/test_autoai_ts_libs.py' }}
+      run: pip install 'autoai-ts-libs' 'scikit-learn==0.23.2'
+    - name: Install autoai-libs from test pypi for Python 3.7 and 3.8
+      if: ${{ matrix.python-version == 3.7 || matrix.python-version == 3.8 }}
+      run: pip install autoai-libs>=1.12.6
+    - name: Install autoai-libs from test pypi for Python 3.9.
+      if: ${{ matrix.python-version == 3.9}}
+      run: pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ autoai-libs==1.13.2
+    - name: Install deps for test_halving_gridsearchcv
+      if: ${{ matrix.test-case == 'test/test_halving_gridsearchcv.py' }}
+      run: pip install 'scikit-learn==0.24.1'
+    - name: Install deps for test_relational_sklearn
+      if: ${{ matrix.test-case == 'test/test_relational_sklearn.py' }}
+      run: pip install 'scikit-learn>=1.0'
+    - name: Install deps for test_snapml
+      if: ${{ matrix.test-case == 'test/test_snapml.py' }}
+      run: pip install 'numpy>=1.20.1'
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
@@ -178,10 +303,11 @@ jobs:
     - name: Run test
       run: py.test -v --capture=tee-sys ${{matrix.test-case}}
 
-  test_notebooks:
-    name: Test Notebooks
+  test_notebooks_pr:
+    name: Test Notebooks (PR)
     needs: [static]
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
     env:
       ALL_NOTEBOOK_CATEGORIES: demo_ docs_ talk_
     strategy:
@@ -191,7 +317,49 @@ jobs:
         - demo_
         - docs_
         - talk_
-        python-version: [3.7, 3.8]
+        python-version: [3.8]
+        setup-target: ['.[full,test]']
+        test-case: [test/test_notebooks.py]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Cache pip
+      uses: actions/cache@v2
+      with:
+        # This path is specific to Ubuntu
+        path: ${{ env.pythonLocation }}
+        # Look to see if there is a cache hit for the setup file
+        key: ${{ runner.os }}-pip-new2-${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-new2
+          ${{ runner.os }}-new2
+    - name: Install packages
+      run: sudo apt-get install graphviz swig
+    - name: Install numpy
+      run: pip install -U numpy
+    - name: Install dependencies
+      run: pip install --upgrade --upgrade-strategy eager ${{matrix.setup-target}}
+    - name: Run test
+      run: NOTEBOOK_CATEGORY=${{matrix.category}} py.test -v --capture=tee-sys ${{matrix.test-case}}
+
+  test_notebooks_master:
+    name: Test Notebooks (master)
+    needs: [static]
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
+    env:
+      ALL_NOTEBOOK_CATEGORIES: demo_ docs_ talk_
+    strategy:
+      fail-fast: false
+      matrix:
+        category:
+        - demo_
+        - docs_
+        - talk_
+        python-version: [3.7, 3.8, 3.9]
         setup-target: ['.[full,test]']
         test-case: [test/test_notebooks.py]
     steps:
@@ -253,7 +421,7 @@ jobs:
     runs-on: ubuntu-latest
     # This should run only on the master branch of the main repo
     if: github.repository == 'IBM/lale' && github.ref == 'refs/heads/master' && success()
-    needs: [static, test_matrix, test_notebooks]
+    needs: [static, test_matrix_pr, test_matrix_master, test_newer, test_fairness, test_notebooks_pr, test_notebooks_master]
     strategy:
       matrix:
         python-version: [3.7]

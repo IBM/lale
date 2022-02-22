@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+import typing
 
 import pandas as pd
 
@@ -209,7 +210,9 @@ class _MapImpl:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
             remainder_columns = [
-                spark_col(x) for x in get_columns(X) if x not in accessed_column_names
+                spark_col(typing.cast(str, x))
+                for x in get_columns(X)
+                if x not in accessed_column_names
             ]
             new_columns.extend(remainder_columns)
         if _is_spark_with_index(X) and X.index_name not in accessed_column_names:
