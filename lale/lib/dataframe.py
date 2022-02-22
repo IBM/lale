@@ -83,7 +83,7 @@ def make_series_distinct(df):
 def make_series_concat(df1, df2):
     if isinstance(df1, np.ndarray):
         assert isinstance(df2, np.ndarray)
-        return np.concatenate(df1, df2)
+        return np.concatenate((df1, df2))
     elif isinstance(df1, pd.Series):
         assert isinstance(df2, pd.Series)
         return pd.concat([df1, df2])

@@ -137,6 +137,8 @@ class _ProjectImpl:
         self._drop_columns = get_column_factory(drop_columns, "drop")
         self._monoid = None
 
+        self._hyperparams = {"columns": columns, "drop_columns": drop_columns}
+
     def __getattribute__(self, item):
         # we want to remove fit if a static column is available
         # since it should be considered already trained
@@ -170,14 +172,15 @@ class _ProjectImpl:
                 raise AttributeError("monoidal operations not available")
         return super().__getattribute__(item)
 
-    def _to_monoid_internal(self, df):
+    def _to_monoid_internal(self, xy):
+        df, _ = xy
         col = self._columns._to_monoid(df)
         dcol = self._drop_columns._to_monoid(df)
 
         return _ProjectMonoid(col, dcol)
 
-    def _to_monoid(self, df):
-        return self._to_monoid_internal(df)
+    def _to_monoid(self, xy):
+        return self._to_monoid_internal(xy)
 
     def _from_monoid_internal(self, pm: _ProjectMonoid):
         col = self._columns._from_monoid(pm._columns)
@@ -191,14 +194,14 @@ class _ProjectImpl:
     _monoid: Optional[_ProjectMonoid]
 
     def partial_fit(self, X, y=None):
-        lifted = self._to_monoid_internal(X)
+        lifted = self._to_monoid_internal((X, y))
         if self._monoid is not None:  # not first fit
             lifted = self._monoid.combine(lifted)
         self._from_monoid_internal(lifted)
         return self
 
     def _fit_internal(self, X, y=None):
-        lifted = self._to_monoid_internal(X)
+        lifted = self._to_monoid_internal((X, y))
         self._from_monoid_internal(lifted)
         return self
 
@@ -243,11 +246,25 @@ class _ProjectImpl:
         if is_schema(s_X):
             if hasattr(self, "_fit_columns"):
                 return self._transform_schema_fit_columns(s_X)
-            keep_cols = self._hyperparams["columns"]
-            drop_cols = self._hyperparams["drop_columns"]
-            if (keep_cols is None or is_schema(keep_cols)) and (
-                drop_cols is None or is_schema(drop_cols)
-            ):
+            keep_cols = self._columns
+            drop_cols = self._drop_columns
+            known_keep_cols = False
+            known_drop_cols = False
+            if keep_cols is None:
+                known_keep_cols = True
+            elif isinstance(keep_cols, _CallableMonoidFactory):
+                kc = keep_cols._c
+                if is_schema(kc):
+                    keep_cols = kc
+                    known_keep_cols = True
+            if drop_cols is None:
+                known_drop_cols = True
+            elif isinstance(drop_cols, _CallableMonoidFactory):
+                dc = drop_cols._c
+                if is_schema(dc):
+                    drop_cols = dc
+                    known_drop_cols = True
+            if known_keep_cols and known_drop_cols:
                 return self._transform_schema_schema(s_X, keep_cols, drop_cols)
             return s_X
         else:
