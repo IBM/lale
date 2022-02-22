@@ -25,9 +25,9 @@ from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import get_columns
 from lale.operators import TrainedOperator
 
-from ._monoid import Monoid, MonoidFactory
 from .aggregate import Aggregate
 from .map import Map
+from .monoid import Monoid, MonoidFactory
 
 MetricMonoid = Monoid
 
@@ -37,11 +37,11 @@ _M = TypeVar("_M", bound=MetricMonoid)
 
 class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
     @abstractmethod
-    def _to_monoid(self, v: _Batch) -> _M:
+    def to_monoid(self, v: _Batch) -> _M:
         pass
 
     def score_data(self, y_true: pd.Series, y_pred: pd.Series) -> float:
-        return self._from_monoid(self._to_monoid((y_true, y_pred)))
+        return self.from_monoid(self.to_monoid((y_true, y_pred)))
 
     def score_estimator(
         self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
@@ -56,8 +56,8 @@ class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
     def score_data_batched(
         self, batches: Iterable[Tuple[pd.Series, pd.Series]]
     ) -> float:
-        lifted_batches = (self._to_monoid(b) for b in batches)
-        return self._from_monoid(
+        lifted_batches = (self.to_monoid(b) for b in batches)
+        return self.from_monoid(
             functools.reduce(lambda x, y: x.combine(y), lifted_batches)
         )
 
@@ -89,7 +89,7 @@ class _Accuracy(MetricMonoidFactory[_AccuracyData]):
             >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
         )
 
-    def _to_monoid(self, batch: _Batch) -> _AccuracyData:
+    def to_monoid(self, batch: _Batch) -> _AccuracyData:
         from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
@@ -109,7 +109,7 @@ class _Accuracy(MetricMonoidFactory[_AccuracyData]):
         agg_df = _ensure_pandas(pipeline.transform([y_true, y_pred]))
         return _AccuracyData(*agg_df.iloc[0])
 
-    def _from_monoid(self, v: _AccuracyData) -> float:
+    def from_monoid(self, v: _AccuracyData) -> float:
         return v._match / np.float64(v._total)
 
 
@@ -159,7 +159,7 @@ class _R2(MetricMonoidFactory[_R2Data]):
             )
         )
 
-    def _to_monoid(self, batch) -> _R2Data:
+    def to_monoid(self, batch) -> _R2Data:
         from lale.lib.rasl import Scan
 
         y_true, y_pred = batch
@@ -179,7 +179,7 @@ class _R2(MetricMonoidFactory[_R2Data]):
         agg_df = _ensure_pandas(pipeline.transform([y_true, y_pred]))
         return _R2Data(*agg_df.iloc[0])
 
-    def _from_monoid(self, v: _R2Data) -> float:
+    def from_monoid(self, v: _R2Data) -> float:
         ss_tot = v._sum_sq - (v._sum * v._sum / np.float64(v._n))
         return 1 - v._res_sum_sq / ss_tot
 

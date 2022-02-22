@@ -110,8 +110,6 @@ Other Facilities
 
 """
 
-from ._metrics import accuracy_score, get_scorer, r2_score
-from ._monoid import Monoid, MonoidableOperator, MonoidFactory
 from ._task_graphs import (
     Prio,
     PrioBatch,
@@ -132,7 +130,9 @@ from .group_by import GroupBy
 from .hashing_encoder import HashingEncoder
 from .join import Join
 from .map import Map
+from .metrics import accuracy_score, get_scorer, r2_score
 from .min_max_scaler import MinMaxScaler
+from .monoid import Monoid, MonoidableOperator, MonoidFactory
 from .one_hot_encoder import OneHotEncoder
 from .orderby import OrderBy
 from .ordinal_encoder import OrdinalEncoder

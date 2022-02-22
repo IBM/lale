@@ -27,7 +27,7 @@ import sklearn.model_selection
 from lale.expressions import count, it
 from lale.lib.lale import GroupBy
 from lale.lib.rasl import Aggregate
-from lale.lib.rasl._metrics import MetricMonoid
+from lale.lib.rasl.metrics import MetricMonoid
 from lale.operators import TrainedOperator
 from lale.type_checking import JSON_TYPE
 

@@ -28,7 +28,7 @@ from lale.lib.rasl import Aggregate, Map
 from lale.lib.sklearn import min_max_scaler
 from lale.schemas import Enum
 
-from ._monoid import Monoid, MonoidableOperator
+from .monoid import Monoid, MonoidableOperator
 
 
 class _MinMaxScalerMonoid(Monoid):
@@ -82,7 +82,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def _from_monoid(self, v: _MinMaxScalerMonoid):
+    def from_monoid(self, v: _MinMaxScalerMonoid):
         self._monoid = v
         self.n_features_in_ = len(v.feature_names_in_)
         self.data_range_ = v.data_max_ - v.data_min_
@@ -102,7 +102,7 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
             ops.update({c: c_scaled})
         return Map(columns=ops)
 
-    def _to_monoid(self, v) -> _MinMaxScalerMonoid:
+    def to_monoid(self, v) -> _MinMaxScalerMonoid:
         X, _ = v
         agg = {f"{c}_min": agg_min(it[c]) for c in get_columns(X)}
         agg.update({f"{c}_max": agg_max(it[c]) for c in get_columns(X)})

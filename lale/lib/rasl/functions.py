@@ -36,7 +36,7 @@ except ImportError:
 
 from lale.helpers import _is_pandas_df, _is_spark_df
 
-from ._monoid import Monoid, MonoidFactory
+from .monoid import Monoid, MonoidFactory
 
 
 class _column_distinct_count_data(Monoid):
@@ -80,11 +80,11 @@ class count_distinct_column(MonoidFactory[_Batch, int, _column_distinct_count_da
         self._col = col
         self._limit = limit
 
-    def _to_monoid(self, df) -> _column_distinct_count_data:
+    def to_monoid(self, df) -> _column_distinct_count_data:
         c = select_col(df, self._col)
         return _column_distinct_count_data(c, limit=self._limit)
 
-    def _from_monoid(self, v: _column_distinct_count_data) -> int:
+    def from_monoid(self, v: _column_distinct_count_data) -> int:
         return len(v)
 
 
@@ -98,11 +98,11 @@ class categorical_column(MonoidFactory[_Batch, bool, _column_distinct_count_data
         self._col = col
         self._threshold = threshold
 
-    def _to_monoid(self, df) -> _column_distinct_count_data:
+    def to_monoid(self, df) -> _column_distinct_count_data:
         c = select_col(df, self._col)
         return _column_distinct_count_data(c, limit=self._threshold)
 
-    def _from_monoid(self, v: _column_distinct_count_data) -> bool:
+    def from_monoid(self, v: _column_distinct_count_data) -> bool:
         return not v.is_past_limit
 
 
@@ -132,7 +132,7 @@ class DictMonoid(Generic[_D], Monoid):
 
 class ColumnSelector(MonoidFactory[_Batch, List[column_index], _D]):
     def __call__(self, df) -> List[column_index]:
-        return self._from_monoid(self._to_monoid(df))
+        return self.from_monoid(self.to_monoid(df))
 
 
 class ColumnMonoidFactory(ColumnSelector[DictMonoid[_D]]):
@@ -157,14 +157,14 @@ class ColumnMonoidFactory(ColumnSelector[DictMonoid[_D]]):
             self._makers = makers
         return makers
 
-    def _to_monoid(self, df):
+    def to_monoid(self, df):
         makers = self._get_makers(df)
-        return DictMonoid({k: v._to_monoid(df) for k, v in makers.items()})
+        return DictMonoid({k: v.to_monoid(df) for k, v in makers.items()})
 
-    def _from_monoid(self, d: DictMonoid[_D]) -> List[column_index]:
+    def from_monoid(self, d: DictMonoid[_D]) -> List[column_index]:
         makers = self._makers
         assert makers is not None
-        return [k for k, v in makers.items() if v._from_monoid(d._m[k])]
+        return [k for k, v in makers.items() if v.from_monoid(d._m[k])]
 
 
 class categorical(ColumnMonoidFactory):

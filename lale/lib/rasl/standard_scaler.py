@@ -24,9 +24,9 @@ from lale.expressions import sum as agg_sum
 from lale.lib.dataframe import get_columns
 from lale.lib.sklearn import standard_scaler
 
-from ._monoid import Monoid, MonoidableOperator
 from .aggregate import Aggregate
 from .map import Map
+from .monoid import Monoid, MonoidableOperator
 
 
 class _StandardScalerMonoid(Monoid):
@@ -79,7 +79,7 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def _from_monoid(self, lifted):
+    def from_monoid(self, lifted):
         self._monoid = lifted
         n = lifted.n_samples_seen_
         if self._hyperparams["with_std"]:
@@ -120,7 +120,7 @@ class _StandardScalerImpl(MonoidableOperator[_StandardScalerMonoid]):
         )
         return result
 
-    def _to_monoid(self, v):
+    def to_monoid(self, v):
         X, _ = v
         hyperparams = self._hyperparams
         feature_names_in = get_columns(X)
