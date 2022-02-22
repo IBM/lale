@@ -99,6 +99,7 @@ extras_require = {
         "liac-arff>=2.4.0",
         "aif360<0.4.0",
         "BlackBoxAuditing",
+        "category-encoders",
     ],
 }
 

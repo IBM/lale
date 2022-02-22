@@ -75,6 +75,7 @@ Transformers:
 * lale.lib.sklearn. `Nystroem`_
 * lale.lib.sklearn. `OneHotEncoder`_
 * lale.lib.sklearn. `OrdinalEncoder`_
+* lale.lib.sklearn. `HashingEncoder`_
 * lale.lib.sklearn. `PCA`_
 * lale.lib.sklearn. `PolynomialFeatures`_
 * lale.lib.sklearn. `QuadraticDiscriminantAnalysis`_
@@ -129,6 +130,7 @@ Clustering:
 .. _`Nystroem`: lale.lib.sklearn.nystroem.html
 .. _`OneHotEncoder`: lale.lib.sklearn.one_hot_encoder.html
 .. _`OrdinalEncoder`: lale.lib.sklearn.ordinal_encoder.html
+.. _`HashingEncoder`: lale.lib.sklearn.hashing_encoder.html
 .. _`PassiveAggressiveClassifier`: lale.lib.sklearn.passive_aggressive_classifier.html
 .. _`PCA`: lale.lib.sklearn.pca.html
 .. _`Pipeline`: lale.lib.sklearn.pipeline.html
@@ -194,6 +196,7 @@ from .normalizer import Normalizer
 from .nystroem import Nystroem
 from .one_hot_encoder import OneHotEncoder
 from .ordinal_encoder import OrdinalEncoder
+from .hashing_encoder import HashingEncoder
 from .passive_aggressive_classifier import PassiveAggressiveClassifier
 from .pca import PCA
 from .pipeline import Pipeline
