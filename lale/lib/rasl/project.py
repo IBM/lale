@@ -157,7 +157,7 @@ class _ProjectImpl:
                 raise AttributeError(
                     "fit cannot be called on a Project that has a static columns and drop_columns or has already been fit"
                 )
-        elif item in ["_to_monoid", "_from_monoid", "partial_fit"]:
+        elif item in ["to_monoid", "from_monoid", "partial_fit"]:
             omit_monoid = False
             try:
                 cols = super().__getattribute__("_columns")
@@ -179,7 +179,7 @@ class _ProjectImpl:
 
         return _ProjectMonoid(col, dcol)
 
-    def _to_monoid(self, xy):
+    def to_monoid(self, xy):
         return self._to_monoid_internal(xy)
 
     def _from_monoid_internal(self, pm: _ProjectMonoid):
@@ -188,7 +188,7 @@ class _ProjectImpl:
 
         self._fit_columns = [c for c in col if c not in dcol]
 
-    def _from_monoid(self, pm: _ProjectMonoid):
+    def from_monoid(self, pm: _ProjectMonoid):
         self._from_monoid_internal(pm)
 
     _monoid: Optional[_ProjectMonoid]

@@ -164,16 +164,16 @@ _Monoid = TypeVar("_Monoid", bound=MetricMonoid)
 
 class _BatchedScorerFactory(_ScorerFactory, Generic[_Monoid]):
     @abstractmethod
-    def _to_monoid(self, batch) -> _Monoid:
+    def to_monoid(self, batch) -> _Monoid:
         pass
 
     @abstractmethod
-    def _from_monoid(self, v) -> float:
+    def from_monoid(self, v) -> float:
         pass
 
     def score_data_batched(self, batches) -> float:
-        lifted_batches = (self._to_monoid(b) for b in batches)
-        return self._from_monoid(
+        lifted_batches = (self.to_monoid(b) for b in batches)
+        return self.from_monoid(
             functools.reduce(lambda x, y: x.combine(y), lifted_batches)
         )
 
@@ -199,7 +199,7 @@ class _DIorSPDData(MetricMonoid):
 
 
 class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
-    def _to_monoid(self, batch) -> _DIorSPDData:
+    def to_monoid(self, batch) -> _DIorSPDData:
         if len(batch) == 2:
             X, y_pred = batch
             y_true = None
@@ -262,7 +262,7 @@ class _AODorEODData(MetricMonoid):
 
 
 class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
-    def _to_monoid(self, batch) -> _AODorEODData:
+    def to_monoid(self, batch) -> _AODorEODData:
         if len(batch) == 2:
             X, y_pred = batch
             y_true = None
@@ -515,7 +515,7 @@ class _AverageOddsDifference(_AODorEODScorerFactory):
             unfavorable_labels,
         )
 
-    def _from_monoid(self, v: _AODorEODData) -> float:
+    def from_monoid(self, v: _AODorEODData) -> float:
         fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
             v.tru0_pred1_priv0 + v.tru0_pred0_priv0
         )
@@ -577,7 +577,7 @@ class _DisparateImpact(_DIorSPDScorerFactory):
             unfavorable_labels,
         )
 
-    def _from_monoid(self, v: _DIorSPDData) -> float:
+    def from_monoid(self, v: _DIorSPDData) -> float:
         numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
         denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
         return numerator / denominator
@@ -630,7 +630,7 @@ class _EqualOpportunityDifference(_AODorEODScorerFactory):
             unfavorable_labels,
         )
 
-    def _from_monoid(self, v) -> float:
+    def from_monoid(self, v) -> float:
         tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
             v.tru1_pred1_priv0 + v.tru1_pred0_priv0
         )
@@ -764,7 +764,7 @@ class _StatisticalParityDifference(_DIorSPDScorerFactory):
             unfavorable_labels,
         )
 
-    def _from_monoid(self, v: _DIorSPDData) -> float:
+    def from_monoid(self, v: _DIorSPDData) -> float:
         minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
         subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
         return minuend - subtrahend

@@ -167,7 +167,7 @@ def _f_oneway_lower(lifted):
     Parameters
     ----------
     lifted : FOnewayData
-        The result of `_to_monoid`.
+        The result of `to_monoid`.
 
     Returns
     -------

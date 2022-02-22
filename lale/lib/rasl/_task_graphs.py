@@ -141,7 +141,7 @@ class _TrainTask(_Task):
             self.trained._impl = trainable._impl_class()(**hyperparams)
             if trainable.has_method("_set_fit_attributes"):
                 self.trained._impl._set_fit_attributes(self.monoid)
-            elif trainable.has_method("_from_monoid"):
+            elif trainable.has_method("from_monoid"):
                 self.trained._impl.from_monoid(self.monoid)
             else:
                 assert False, self.trained
@@ -661,7 +661,7 @@ def _run_tasks(
                 if trainable.has_method("_lift"):
                     hyperparams = trainable.impl._hyperparams
                     task.monoid = trainable.impl._lift(input_X, hyperparams)
-                elif trainable.has_method("_to_monoid"):
+                elif trainable.has_method("to_monoid"):
                     task.monoid = trainable.impl.to_monoid((input_X, input_y))
                 else:
                     assert False, operation

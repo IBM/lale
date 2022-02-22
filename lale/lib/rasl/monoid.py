@@ -33,7 +33,7 @@ class Monoid(ABC):
         """
          Combines this monoid instance with another, producing a result.
          This operation must be observationally associative, satisfying
-         ``x._from_monoid(a.combine(b.combine(c))) == x._from_monoid(a.combine(b).combine(c)))``
+         ``x.from_monoid(a.combine(b.combine(c))) == x.from_monoid(a.combine(b).combine(c)))``
         where `x` is the instance of :class:MonoidFactory that created these instances.
         """
         pass
