@@ -138,6 +138,29 @@ def astype(call: ast.Call):
     return column.astype(dtype)
 
 
+def ite(call: ast.Call):
+    cond = _eval_ast_expr_spark_df(call.args[0])  # type: ignore
+    v1 = ast.literal_eval(call.args[1])
+    v2 = ast.literal_eval(call.args[2])
+    return pyspark.sql.functions.when(cond, v1).otherwise(v2)
+
+
+def hash(call: ast.Call):
+    hashing_method = ast.literal_eval(call.args[0])
+    column = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
+    if hashing_method == "md5":
+        hash = pyspark.sql.functions.unhex(pyspark.sql.functions.md5(column))
+    else:
+        raise ValueError(f"Unimplementade hash function in Spark: {hashing_method}")
+    # def hash(v):
+    #     hasher = hashlib.new(hashing_method)
+    #     hasher.update(bytes(str(v), "utf-8"))
+    #     return int(hasher.hexdigest(), 16)
+    # return column.map(hash)
+    return hash
+
+
+
 def replace(call: ast.Call):
     column = _eval_ast_expr_spark_df(call.args[0])  # type: ignore
     mapping_dict = {}

@@ -575,7 +575,8 @@ class TestHasingEncoder(unittest.TestCase):
         import typing
         from typing import Any, Dict
 
-        targets = ["pandas"]  # TODO: "spark", "spark-with-index"
+        # targets = ["pandas"]  # TODO: "spark", "spark-with-index"
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2creditg = typing.cast(
             Dict[str, Any],
             {

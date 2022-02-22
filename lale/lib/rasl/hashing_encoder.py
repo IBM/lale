@@ -28,7 +28,7 @@ from ._monoid import Monoid, MonoidableOperator
 from .map import Map
 
 
-# From https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
+# Based on https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
 def get_obj_cols(df):
     """
     Returns names of 'object' columns in the DataFrame.
@@ -39,8 +39,11 @@ def get_obj_cols(df):
             if dt == "object" or is_category(dt):
                 obj_cols.append(df.columns.values[idx])
     elif _is_spark_df(df):
-        assert False, "Not yet implemented"
-
+        for idx, (col, dt) in enumerate(df.dtypes):
+            if dt == "string":
+                obj_cols.append(col)
+    else:
+        assert False
     return obj_cols
 
 
