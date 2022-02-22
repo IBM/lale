@@ -123,7 +123,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         N = self._hyperparams["n_components"]
         feature_names_cat = [f"col_{i}" for i in range(N)]
         feature_names_num = [col for col in get_columns(X) if col not in cols]
-        feature_names = feature_names_cat + feature_names_num
+        feature_names = feature_names_cat + feature_names_num  # type: ignore
         n_samples_seen_ = count(X)
         return _HashingEncoderMonoid(
             n_samples_seen_=n_samples_seen_, feature_names=feature_names

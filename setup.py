@@ -49,7 +49,6 @@ else:
         "jsonschema",
         "jsonsubschema>=0.0.6",
         "scikit-learn",
-        "category-encoders",
         "scipy",
         "pandas",
         "decorator",
@@ -94,6 +93,7 @@ extras_require = {
         "pytest",
         "pyspark",
         "func_timeout",
+        "category-encoders",
     ],
     "fairness": [
         "liac-arff>=2.4.0",
