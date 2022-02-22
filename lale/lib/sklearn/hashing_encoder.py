@@ -19,69 +19,39 @@ import lale.docstrings
 import lale.operators
 
 _hyperparams_schema = {
+    "description": "Hyperparameter schema for the HashingEncoder model from scikit-learn contrib.",
     "allOf": [
         {
             "type": "object",
-            "properties": {},
+            "additionalProperties": False,
+            "required": ["n_components", "cols", "hash_method"],
             "relevantToOptimizer": [],
+            "properties": {
+                "n_components": {
+                    "description": "how many bits to use to represent the feature.",
+                    "type": "integer",
+                    "default": 8,
+                },
+                "cols": {
+                    "description": "a list of columns to encode, if None, all string columns will be encoded.",
+                    "anyOf": [
+                        {"enum": [None]},
+                        {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                    ],
+                    "default": None,
+                },
+                "hash_method": {
+                    "descruption": "which hashing method to use.",
+                    "type": "string",
+                    "default": "md5",
+                },
+            },
         }
-    ]
+    ],
 }
-# _hyperparams_schema = {
-#     "description": "Hyperparameter schema for the HashingEncoder model from scikit-learn contrib.",
-#     "allOf": [
-#         {
-#             "description": "This first object lists all constructor arguments with their types, but omits constraints for conditional hyperparameters.",
-#             "type": "object",
-#             "additionalProperties": False,
-#             "required": ["categories", "sparse", "dtype", "handle_unknown"],
-#             "relevantToOptimizer": [],
-#             "properties": {
-#                 "categories": {
-#                     "anyOf": [
-#                         {
-#                             "description": "Determine categories automatically from training data.",
-#                             "enum": ["auto", None],
-#                         },
-#                         {
-#                             "description": "The ith list element holds the categories expected in the ith column.",
-#                             "type": "array",
-#                             "items": {
-#                                 "anyOf": [
-#                                     {
-#                                         "type": "array",
-#                                         "items": {"type": "string"},
-#                                     },
-#                                     {
-#                                         "type": "array",
-#                                         "items": {"type": "number"},
-#                                         "description": "Should be sorted.",
-#                                     },
-#                                 ]
-#                             },
-#                         },
-#                     ],
-#                     "default": "auto",
-#                 },
-#                 "sparse": {
-#                     "description": "Will return sparse matrix if set true, else array.",
-#                     "type": "boolean",
-#                     "default": True,
-#                 },
-#                 "dtype": {
-#                     "description": "Desired dtype of output, must be number. See https://docs.scipy.org/doc/numpy-1.14.0/reference/arrays.scalars.html#arrays-scalars-built-in",
-#                     "laleType": "Any",
-#                     "default": "float64",
-#                 },
-#                 "handle_unknown": {
-#                     "description": "Whether to raise an error or ignore if an unknown categorical feature is present during transform.",
-#                     "enum": ["error", "ignore"],
-#                     "default": "error",
-#                 },
-#             },
-#         }
-#     ],
-# }
 
 _input_fit_schema = {
     "type": "object",
