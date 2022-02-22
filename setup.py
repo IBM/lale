@@ -49,6 +49,7 @@ else:
         "jsonschema",
         "jsonsubschema>=0.0.6",
         "scikit-learn",
+        "category-encoders",
         "scipy",
         "pandas",
         "decorator",
@@ -79,7 +80,6 @@ extras_require = {
         "cvxpy>=1.0",
         "fairlearn",
         "h5py",
-        "category-encoders",
     ],
     "dev": ["pre-commit"],
     "test": [
@@ -99,7 +99,6 @@ extras_require = {
         "liac-arff>=2.4.0",
         "aif360<0.4.0",
         "BlackBoxAuditing",
-        "category-encoders",
     ],
 }
 
