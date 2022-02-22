@@ -177,6 +177,7 @@ from .function_transformer import FunctionTransformer
 from .gaussian_nb import GaussianNB
 from .gradient_boosting_classifier import GradientBoostingClassifier
 from .gradient_boosting_regressor import GradientBoostingRegressor
+from .hashing_encoder import HashingEncoder
 from .isolation_forest import IsolationForest
 from .isomap import Isomap
 from .k_means import KMeans
@@ -196,7 +197,6 @@ from .normalizer import Normalizer
 from .nystroem import Nystroem
 from .one_hot_encoder import OneHotEncoder
 from .ordinal_encoder import OrdinalEncoder
-from .hashing_encoder import HashingEncoder
 from .passive_aggressive_classifier import PassiveAggressiveClassifier
 from .pca import PCA
 from .pipeline import Pipeline
