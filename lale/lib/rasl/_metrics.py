@@ -81,7 +81,7 @@ class _AccuracyData(MetricMonoid):
 
 class _Accuracy(MetricMonoidFactory[_AccuracyData]):
     def __init__(self):
-        from lale.lib.lale.concat_features import ConcatFeatures
+        from lale.lib.rasl.concat_features import ConcatFeatures
 
         self._pipeline_suffix = (
             ConcatFeatures
@@ -137,7 +137,7 @@ class _R2(MetricMonoidFactory[_R2Data]):
     # https://en.wikipedia.org/wiki/Coefficient_of_determination
 
     def __init__(self):
-        from lale.lib.lale.concat_features import ConcatFeatures
+        from lale.lib.rasl.concat_features import ConcatFeatures
 
         self._pipeline_suffix = (
             ConcatFeatures

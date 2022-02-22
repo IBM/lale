@@ -111,7 +111,8 @@ pipeline = LogisticRegression()"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_reducible(self):
-        from lale.lib.lale import ConcatFeatures, NoOp
+        from lale.lib.lale import NoOp
+        from lale.lib.rasl import ConcatFeatures
         from lale.lib.sklearn import (
             PCA,
             KNeighborsClassifier,
@@ -133,7 +134,7 @@ pipeline = LogisticRegression()"""
 from lale.lib.lale import NoOp
 from sklearn.decomposition import PCA
 from sklearn.kernel_approximation import Nystroem
-from lale.lib.lale import ConcatFeatures
+from lale.lib.rasl import ConcatFeatures
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier as XGB
@@ -151,7 +152,8 @@ pipeline = (
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_no_combinators(self):
-        from lale.lib.lale import ConcatFeatures, NoOp
+        from lale.lib.lale import NoOp
+        from lale.lib.rasl import ConcatFeatures
         from lale.lib.sklearn import (
             PCA,
             KNeighborsClassifier,
@@ -188,7 +190,7 @@ pipeline = make_pipeline(choice_0, union, choice_1)"""
         self._roundtrip(expected, printed)
 
     def test_astype_sklearn(self):
-        from lale.lib.lale import ConcatFeatures
+        from lale.lib.rasl import ConcatFeatures
         from lale.lib.sklearn import PCA, LogisticRegression, MinMaxScaler, Nystroem
 
         pca = PCA(copy=False)
@@ -225,8 +227,8 @@ pipeline = LR(solver="saga", C=0.9)"""
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_import_as_2(self):
-        from lale.lib.lale import ConcatFeatures as Concat
         from lale.lib.lale import NoOp
+        from lale.lib.rasl import ConcatFeatures as Concat
         from lale.lib.sklearn import PCA
         from lale.lib.sklearn import KNeighborsClassifier as KNN
         from lale.lib.sklearn import LogisticRegression as LR
@@ -240,7 +242,7 @@ pipeline = LR(solver="saga", C=0.9)"""
 from lale.lib.lale import NoOp
 from sklearn.decomposition import PCA
 from sklearn.kernel_approximation import Nystroem
-from lale.lib.lale import ConcatFeatures as Concat
+from lale.lib.rasl import ConcatFeatures as Concat
 from sklearn.neighbors import KNeighborsClassifier as KNN
 from sklearn.linear_model import LogisticRegression as LR
 import lale
@@ -301,7 +303,7 @@ pipeline = Vote(
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_multimodal(self):
-        from lale.lib.lale import ConcatFeatures as Cat
+        from lale.lib.rasl import ConcatFeatures as Cat
         from lale.lib.rasl import Project
         from lale.lib.sklearn import LinearSVC
         from lale.lib.sklearn import Normalizer as Norm
@@ -316,7 +318,7 @@ pipeline = Vote(
         expected = """from lale.lib.rasl import Project
 from sklearn.preprocessing import Normalizer as Norm
 from sklearn.preprocessing import OneHotEncoder as OneHot
-from lale.lib.lale import ConcatFeatures as Cat
+from lale.lib.rasl import ConcatFeatures as Cat
 from sklearn.svm import LinearSVC
 import lale
 
@@ -369,7 +371,7 @@ pipeline = make_pipeline_graph(
         self._roundtrip(expected, lale.pretty_print.to_string(pipeline))
 
     def test_irreducible_2(self):
-        from lale.lib.lale import ConcatFeatures as HStack
+        from lale.lib.rasl import ConcatFeatures as HStack
         from lale.lib.sklearn import PCA
         from lale.lib.sklearn import KNeighborsClassifier as KNN
         from lale.lib.sklearn import LogisticRegression as LR
@@ -384,7 +386,7 @@ pipeline = make_pipeline_graph(
         expected = """from sklearn.decomposition import PCA
 from sklearn.preprocessing import MinMaxScaler as MMS
 from sklearn.neighbors import KNeighborsClassifier as KNN
-from lale.lib.lale import ConcatFeatures as HStack
+from lale.lib.rasl import ConcatFeatures as HStack
 from sklearn.linear_model import LogisticRegression as LR
 from lale.operators import make_pipeline_graph
 import lale
@@ -1096,7 +1098,8 @@ class TestToAndFromJSON(unittest.TestCase):
     def test_pipeline_1(self):
         self.maxDiff = None
         from lale.json_operator import from_json, to_json
-        from lale.lib.lale import ConcatFeatures, NoOp
+        from lale.lib.lale import NoOp
+        from lale.lib.rasl import ConcatFeatures
         from lale.lib.sklearn import PCA
         from lale.lib.sklearn import LogisticRegression as LR
 
@@ -1133,7 +1136,7 @@ class TestToAndFromJSON(unittest.TestCase):
                     "state": "trained",
                     "operator": "ConcatFeatures",
                     "label": "ConcatFeatures",
-                    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.concat_features.html",
+                    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.concat_features.html",
                     "hyperparams": None,
                     "coefs": None,
                     "is_frozen_trainable": True,

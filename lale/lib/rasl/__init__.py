@@ -32,6 +32,7 @@ Transformers
 ============
 
 * lale.lib.rasl. `Batching`_
+* lale.lib.rasl. `ConcatFeatures`_
 * lale.lib.rasl. `Scan`_
 
 Scikit-learn Operators
@@ -77,6 +78,7 @@ Other Facilities
 .. _`Relational`: lale.lib.rasl.relational.html
 
 .. _`Batching`: lale.lib.rasl.batching.html
+.. _`ConcatFeatures`: lale.lib.rasl.concat_features.html
 .. _`Scan`: lale.lib.rasl.scan.html
 
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
@@ -119,6 +121,7 @@ from ._task_graphs import (
 from .aggregate import Aggregate
 from .alias import Alias
 from .batching import Batching
+from .concat_features import ConcatFeatures
 from .filter import Filter
 from .functions import categorical, date_time
 from .group_by import GroupBy
