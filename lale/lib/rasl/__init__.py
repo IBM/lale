@@ -40,6 +40,7 @@ Scikit-learn Operators
 * lale.lib.rasl. `MinMaxScaler`_
 * lale.lib.rasl. `OneHotEncoder`_
 * lale.lib.rasl. `OrdinalEncoder`_
+* lale.lib.rasl. `HashingEncoder`_
 * lale.lib.rasl. `SelectKBest`_
 * lale.lib.rasl. `SimpleImputer`_
 * lale.lib.rasl. `StandardScaler`_
@@ -82,6 +83,7 @@ Other Facilities
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
 .. _`OneHotEncoder`: lale.lib.rasl.one_hot_encoder.html
 .. _`OrdinalEncoder`: lale.lib.rasl.ordinal_encoder.html
+.. _`HashingEncoder`: lale.lib.rasl.hashing_encoder.html
 .. _`SelectKBest`: lale.lib.rasl.select_k_best.html
 .. _`SimpleImputer`: lale.lib.rasl.simple_imputer.html
 .. _`StandardScaler`: lale.lib.rasl.standard_scaler.html
@@ -122,6 +124,7 @@ from .batching import Batching
 from .filter import Filter
 from .functions import categorical, date_time
 from .group_by import GroupBy
+from .hashing_encoder import HashingEncoder
 from .join import Join
 from .map import Map
 from .min_max_scaler import MinMaxScaler

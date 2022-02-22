@@ -14,6 +14,7 @@
 
 import ast
 import collections
+import hashlib
 import importlib
 from typing import Any
 
@@ -116,6 +117,25 @@ def astype(df: Any, call: ast.Call):
     dtype = ast.literal_eval(call.args[0])
     column = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
     return column.astype(dtype)
+
+
+def ite(df: Any, call: ast.Call):
+    column_c = _eval_ast_expr_pandas_df(df, call.args[0])  # type: ignore
+    v1 = ast.literal_eval(call.args[1])
+    v2 = ast.literal_eval(call.args[2])
+    return column_c.map(lambda b: v1 if b else v2)
+
+
+def hash(df: Any, call: ast.Call):
+    hashing_method = ast.literal_eval(call.args[0])
+    column = _eval_ast_expr_pandas_df(df, call.args[1])  # type: ignore
+
+    def hash(v):
+        hasher = hashlib.new(hashing_method)
+        hasher.update(bytes(str(v), "utf-8"))
+        return int(hasher.hexdigest(), 16)
+
+    return column.map(hash)
 
 
 def replace(df: Any, call: ast.Call):
