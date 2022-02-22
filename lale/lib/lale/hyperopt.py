@@ -270,7 +270,7 @@ class _HyperoptImpl:
             ):
                 # if max optimization time set, and we have crossed it, exit optimization completely
                 sys.exit(0)
-            if False and self.max_eval_time:
+            if self.max_eval_time:
                 # Run hyperopt in a subprocess that can be interupted
                 manager = multiprocessing.Manager()
                 proc_dict: Dict[str, Any] = manager.dict()
