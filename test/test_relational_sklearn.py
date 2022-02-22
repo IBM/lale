@@ -1386,6 +1386,206 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
                 self.assertAlmostEqual(sk_s, rasl_s)
 
 
+class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
+            "credit-g", "classification", preprocess=False
+        )
+        cls.cat_columns = [
+            "checking_status",
+            "credit_history",
+            "purpose",
+            "savings_status",
+            "employment",
+            "personal_status",
+            "other_parties",
+            "property_magnitude",
+            "other_payment_plans",
+            "housing",
+            "job",
+            "own_telephone",
+            "foreign_worker",
+        ]
+        cls.num_columns = [
+            "duration",
+            "credit_amount",
+            "installment_commitment",
+            "residence_since",
+            "age",
+            "existing_credits",
+            "num_dependents",
+        ]
+        cls.creditg = (train_X, train_y), (test_X, test_y)
+
+    @classmethod
+    def _make_sk_trainable(cls, final_est):
+        from sklearn.compose import ColumnTransformer
+        from sklearn.ensemble import RandomForestClassifier
+        from sklearn.linear_model import SGDClassifier
+
+        if final_est == "sgd":
+            est = SGDClassifier(random_state=97)
+        elif final_est == "rfc":
+            est = RandomForestClassifier(random_state=97)
+        else:
+            assert False, final_est
+        return sk_make_pipeline(
+            ColumnTransformer(
+                [
+                    (
+                        "prep_cat",
+                        SkOrdinalEncoder(
+                            handle_unknown="use_encoded_value", unknown_value=-1
+                        ),
+                        cls.cat_columns,
+                    ),
+                    (
+                        "prep_num",
+                        sk_make_pipeline(
+                            SkSimpleImputer(strategy="mean"),
+                            SkMinMaxScaler(),
+                            "passthrough",
+                        ),
+                        cls.num_columns,
+                    ),
+                ]
+            ),
+            est,
+        )
+
+    @classmethod
+    def _make_rasl_trainable(cls, final_est):
+        if final_est == "sgd":
+            est = SGDClassifier(random_state=97)
+        elif final_est == "rfc":
+            est = RandomForestClassifier(random_state=97)
+        else:
+            assert False, final_est
+        return (
+            (
+                (
+                    Project(columns=categorical(11), drop_columns={"type": "number"})
+                    >> RaslOrdinalEncoder(
+                        handle_unknown="use_encoded_value", unknown_value=-1
+                    )
+                )
+                & (
+                    Project(columns={"type": "number"})
+                    >> RaslSimpleImputer(strategy="mean")
+                    >> RaslMinMaxScaler()
+                )
+            )
+            >> ConcatFeatures()
+            >> est
+        )
+
+    def test_fit_no_batching(self):
+        (train_X, train_y), _ = self.creditg
+        sk_trainable = self._make_sk_trainable("sgd")
+        sk_trained = sk_trainable.fit(train_X, train_y)
+        rasl_trainable = self._make_rasl_trainable("sgd")
+        rasl_trained = rasl_trainable.fit(train_X, train_y)
+        _check_trained_ordinal_encoder(
+            self,
+            sk_trained.steps[0][1].transformers_[0][1],
+            rasl_trained.steps[1][1].impl,
+            "pandas",
+        )
+        _check_trained_min_max_scaler(
+            self,
+            sk_trained.steps[0][1].transformers_[1][1].steps[1][1],
+            rasl_trained.steps[4][1].impl,
+            "pandas",
+        )
+
+    def test_fit_batching(self):
+        (train_X, train_y), _ = self.creditg
+        sk_trainable = self._make_sk_trainable("sgd")
+        sk_trained = sk_trainable.fit(train_X, train_y)
+        unique_class_labels = list(train_y.unique())
+        for n_batches in [1, 3]:
+            for prio in [PrioStep(), PrioBatch()]:
+                batches = create_data_loader(
+                    train_X, train_y, math.ceil(len(train_y) / n_batches)
+                )
+                rasl_trainable = self._make_rasl_trainable("sgd")
+                rasl_trained = fit_with_batches(
+                    rasl_trainable,
+                    batches,  # type: ignore
+                    len(batches),
+                    unique_class_labels,
+                    prio,
+                    incremental=False,
+                    verbose=0,
+                )
+                _check_trained_ordinal_encoder(
+                    self,
+                    sk_trained.steps[0][1].transformers_[0][1],
+                    rasl_trained.steps[1][1].impl,
+                    (n_batches, type(prio)),
+                )
+                _check_trained_min_max_scaler(
+                    self,
+                    sk_trained.steps[0][1].transformers_[1][1].steps[1][1],
+                    rasl_trained.steps[4][1].impl,
+                    (n_batches, type(prio)),
+                )
+
+    def test_cross_val_no_batching(self):
+        (train_X, train_y), _ = self.creditg
+        sk_scores = sk_cross_val_score(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(3),
+        )
+        rasl_scores = rasl_cross_val_score(
+            pipeline=self._make_rasl_trainable("rfc"),
+            batches=mockup_data_loader(train_X, train_y, 3),
+            n_batches=3,
+            n_folds=3,
+            n_batches_per_fold=1,
+            scoring=rasl_get_scorer("accuracy"),
+            unique_class_labels=list(train_y.unique()),
+            prio=PrioBatch(),
+            same_fold=True,
+            verbose=0,
+        )
+        for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+            self.assertAlmostEqual(sk_s, rasl_s)
+
+    def test_cross_val_batching(self):
+        (train_X, train_y), _ = self.creditg
+        n_folds = 3
+        sk_scores = sk_cross_val_score(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(n_folds),
+        )
+        for n_batches_per_fold in [1, 3]:
+            rasl_scores = rasl_cross_val_score(
+                pipeline=self._make_rasl_trainable("rfc"),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
+                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=rasl_get_scorer("accuracy"),
+                unique_class_labels=list(train_y.unique()),
+                prio=PrioBatch(),
+                same_fold=True,
+                verbose=0,
+            )
+            for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+                self.assertAlmostEqual(sk_s, rasl_s)
+
+
 class TestMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):

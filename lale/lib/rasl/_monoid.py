@@ -45,7 +45,7 @@ _M = TypeVar("_M", bound=Monoid)
 @runtime_checkable
 class MonoidFactory(Generic[_InputType, _OutputType, _M], Protocol):
     """
-    This protocol determines if a class supports creating a monad and using it
+    This protocol determines if a class supports creating a monoid and using it
     to support associative computation.
     Due to the ``runtime_checkable`` decorator, ``isinstance(obj, MonoidFactory)`` will succeed
     if the object has the requisite methods, even if it does not have this protocol as
