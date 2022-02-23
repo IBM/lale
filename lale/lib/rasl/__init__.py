@@ -62,6 +62,7 @@ Other Facilities
 * lale.lib.rasl. `PrioStep`_
 * lale.lib.rasl. `accuracy_score`_
 * lale.lib.rasl. `cross_val_score`_
+* lale.lib.rasl. `cross_validate`_
 * lale.lib.rasl. `fit_with_batches`_
 * lale.lib.rasl. `get_scorer`_
 * lale.lib.rasl. `is_associative`_
@@ -101,6 +102,7 @@ Other Facilities
 .. _`PrioStep`: lale.lib.rasl.PrioStep.html
 .. _`accuracy_score`: lale.lib.rasl.accuracy_score.html
 .. _`cross_val_score`: lale.lib.rasl.cross_val_score.html
+.. _`cross_validate`: lale.lib.rasl.cross_validate.html
 .. _`fit_with_batches`: lale.lib.rasl.fit_with_batches.html
 .. _`get_scorer`: lale.lib.rasl.get_scorer.html
 .. _`is_associative`: lale.lib.rasl.is_associative.html
@@ -115,6 +117,7 @@ from ._task_graphs import (
     PrioBatch,
     PrioStep,
     cross_val_score,
+    cross_validate,
     fit_with_batches,
     is_associative,
     is_incremental,

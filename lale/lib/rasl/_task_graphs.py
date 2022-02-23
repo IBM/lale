@@ -419,11 +419,25 @@ def _create_tasks_batching(
     return tg.all_tasks
 
 
+def _batch_ids_except(
+    folds: List[str],
+    n_batches_per_fold: int,
+    held_out: Optional[str],
+) -> Tuple[str, ...]:
+    return tuple(
+        _batch_id(fold, idx)
+        for fold in folds
+        if fold != held_out
+        for idx in range(n_batches_per_fold)
+    )
+
+
 def _create_tasks_cross_val(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     folds: List[str],
     n_batches_per_fold: int,
     same_fold: bool,
+    keep_estimator: bool,
 ) -> Dict[_MemoKey, _Task]:
     tg = _TaskGraph(pipeline)
     held_out: Optional[str]
@@ -435,6 +449,16 @@ def _create_tasks_cross_val(
             held_out,
         )
         task.deletable_output = False
+    if keep_estimator:
+        for step_id in range(len(pipeline.steps_list())):
+            for held_out in folds:
+                task = tg.find_or_create(
+                    _TrainTask,
+                    step_id,
+                    _batch_ids_except(folds, n_batches_per_fold, held_out),
+                    held_out,
+                )
+                task.deletable_output = False
     while len(tg.fresh_tasks) > 0:
         task = tg.fresh_tasks.pop()
         if isinstance(task, _TrainTask):
@@ -502,12 +526,7 @@ def _create_tasks_cross_val(
                 tg.find_or_create(
                     _TrainTask,
                     task.step_id,
-                    tuple(
-                        _batch_id(fold, idx)
-                        for fold in folds
-                        if fold != task.held_out
-                        for idx in range(n_batches_per_fold)
-                    ),
+                    _batch_ids_except(folds, n_batches_per_fold, task.held_out),
                     None,
                 )
             )
@@ -790,6 +809,30 @@ def _clear_tasks_dict(tasks: Dict[_MemoKey, _Task]):
     tasks.clear()
 
 
+def _extract_trained_pipeline(
+    pipeline: TrainablePipeline[TrainableIndividualOp],
+    folds: List[str],
+    n_batches_per_fold: int,
+    tasks: Dict[_MemoKey, _Task],
+    held_out: Optional[str],
+) -> TrainedPipeline:
+    batch_ids = _batch_ids_except(folds, n_batches_per_fold, held_out)
+
+    def extract_trained_step(step_id: int) -> TrainedIndividualOp:
+        task = cast(_TrainTask, tasks[(_TrainTask, step_id, batch_ids, held_out)])
+        return task.get_trained(pipeline)
+
+    step_map = {
+        old_step: extract_trained_step(step_id)
+        for step_id, old_step in enumerate(pipeline.steps_list())
+    }
+    trained_edges = [(step_map[x], step_map[y]) for x, y in pipeline.edges()]
+    result = TrainedPipeline(
+        list(step_map.values()), trained_edges, ordered=True, _lale_trained=True
+    )
+    return result
+
+
 def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[_Batch],
@@ -814,21 +857,28 @@ def fit_with_batches(
         verbose,
         call_depth=2,
     )
-
-    def get_trained_step(step_id: int) -> TrainedIndividualOp:
-        task = cast(_TrainTask, tasks[(_TrainTask, step_id, all_batch_ids, None)])
-        return task.get_trained(pipeline)
-
-    step_map = {
-        old_step: get_trained_step(step_id)
-        for step_id, old_step in enumerate(pipeline.steps_list())
-    }
-    trained_edges = [(step_map[x], step_map[y]) for x, y in pipeline.edges()]
-    result = TrainedPipeline(
-        list(step_map.values()), trained_edges, ordered=True, _lale_trained=True
+    trained_pipeline = _extract_trained_pipeline(
+        pipeline, ["d"], n_batches, tasks, None
     )
     _clear_tasks_dict(tasks)
-    return result
+    return trained_pipeline
+
+
+def _extract_scores(
+    pipeline: TrainablePipeline[TrainableIndividualOp],
+    folds: List[str],
+    n_batches_per_fold: int,
+    scoring: MetricMonoidFactory,
+    tasks: Dict[_MemoKey, _Task],
+) -> List[float]:
+    def extract_score(held_out: str) -> float:
+        batch_ids = tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold))
+        task = tasks[(_MetricTask, _DUMMY_SCORE_STEP, batch_ids, held_out)]
+        assert isinstance(task, _MetricTask) and task.score is not None
+        return scoring.from_monoid(task.score)
+
+    scores = [extract_score(held_out) for held_out in folds]
+    return scores
 
 
 def cross_val_score(
@@ -848,7 +898,9 @@ def cross_val_score(
     all_batch_ids = tuple(
         _batch_id(fold, idx) for fold in folds for idx in range(n_batches_per_fold)
     )
-    tasks = _create_tasks_cross_val(pipeline, folds, n_batches_per_fold, same_fold)
+    tasks = _create_tasks_cross_val(
+        pipeline, folds, n_batches_per_fold, same_fold, False
+    )
     if verbose >= 3:
         _visualize_tasks(tasks, pipeline, prio, call_depth=2, trace=None)
     _run_tasks(
@@ -862,13 +914,55 @@ def cross_val_score(
         verbose,
         call_depth=2,
     )
+    scores = _extract_scores(pipeline, folds, n_batches_per_fold, scoring, tasks)
+    _clear_tasks_dict(tasks)
+    return scores
 
-    def get_score(held_out: str) -> float:
-        batches = tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold))
-        task = tasks[(_MetricTask, _DUMMY_SCORE_STEP, batches, held_out)]
-        assert isinstance(task, _MetricTask) and task.score is not None
-        return scoring.from_monoid(task.score)
 
-    result = [get_score(held_out) for held_out in folds]
+def cross_validate(
+    pipeline: TrainablePipeline[TrainableIndividualOp],
+    batches: Iterable[_Batch],
+    n_batches: int,
+    n_folds: int,
+    n_batches_per_fold: int,
+    scoring: MetricMonoidFactory,
+    unique_class_labels: List[Union[str, int, float]],
+    prio: Prio,
+    same_fold: bool,
+    return_estimator: bool,
+    verbose: int,
+) -> Dict[str, Union[List[float], List[TrainedPipeline]]]:
+    assert n_batches == n_folds * n_batches_per_fold
+    folds = [chr(ord("d") + i) for i in range(n_folds)]
+    all_batch_ids = tuple(
+        _batch_id(fold, idx) for fold in folds for idx in range(n_batches_per_fold)
+    )
+    tasks = _create_tasks_cross_val(
+        pipeline, folds, n_batches_per_fold, same_fold, return_estimator
+    )
+    if verbose >= 3:
+        _visualize_tasks(tasks, pipeline, prio, call_depth=2, trace=None)
+    _run_tasks(
+        tasks,
+        pipeline,
+        batches,
+        scoring,
+        unique_class_labels,
+        all_batch_ids,
+        prio,
+        verbose,
+        call_depth=2,
+    )
+    result: Dict[str, Union[List[float], List[TrainedPipeline]]] = {}
+    result["test_score"] = _extract_scores(
+        pipeline, folds, n_batches_per_fold, scoring, tasks
+    )
+    if return_estimator:
+        result["estimator"] = [
+            _extract_trained_pipeline(
+                pipeline, folds, n_batches_per_fold, tasks, held_out
+            )
+            for held_out in folds
+        ]
     _clear_tasks_dict(tasks)
     return result

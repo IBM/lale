@@ -16,6 +16,7 @@ import itertools
 import math
 import re
 import unittest
+from typing import Any, Dict, cast
 
 import jsonschema
 import numpy as np
@@ -29,6 +30,7 @@ from sklearn.metrics import make_scorer
 from sklearn.metrics import r2_score as sk_r2_score
 from sklearn.model_selection import KFold
 from sklearn.model_selection import cross_val_score as sk_cross_val_score
+from sklearn.model_selection import cross_validate as sk_cross_validate
 from sklearn.pipeline import make_pipeline as sk_make_pipeline
 from sklearn.preprocessing import MinMaxScaler as SkMinMaxScaler
 from sklearn.preprocessing import OneHotEncoder as SkOneHotEncoder
@@ -60,6 +62,7 @@ from lale.lib.rasl import StandardScaler as RaslStandardScaler
 from lale.lib.rasl import accuracy_score as rasl_accuracy_score
 from lale.lib.rasl import categorical
 from lale.lib.rasl import cross_val_score as rasl_cross_val_score
+from lale.lib.rasl import cross_validate as rasl_cross_validate
 from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
 from lale.lib.rasl import mockup_data_loader
@@ -70,6 +73,7 @@ from lale.lib.sklearn import (
     RandomForestClassifier,
     SGDClassifier,
 )
+from lale.operators import TrainedPipeline
 
 assert sklearn.__version__ >= "1.0", sklearn.__version__
 
@@ -462,11 +466,8 @@ def _check_trained_one_hot_encoder(test, op1, op2, msg):
 class TestOneHotEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import typing
-        from typing import Any, Dict
-
         targets = ["pandas", "spark", "spark-with-index"]
-        cls.tgt2creditg = typing.cast(
+        cls.tgt2creditg = cast(
             Dict[str, Any],
             {
                 tgt: lale.datasets.openml.fetch(
@@ -572,11 +573,8 @@ def _check_trained_hashing_encoder(test, op1, op2, msg):
 class TestHasingEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import typing
-        from typing import Any, Dict
-
         targets = ["pandas"]  # TODO: "spark", "spark-with-index"
-        cls.tgt2creditg = typing.cast(
+        cls.tgt2creditg = cast(
             Dict[str, Any],
             {
                 tgt: lale.datasets.openml.fetch(
@@ -1047,11 +1045,8 @@ def _check_trained_standard_scaler(test, op1, op2, msg):
 class TestStandardScaler(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        import typing
-        from typing import Any, Dict
-
         targets = ["pandas", "spark", "spark-with-index"]
-        cls.tgt2creditg = typing.cast(
+        cls.tgt2creditg = cast(
             Dict[str, Any],
             {
                 tgt: lale.datasets.openml.fetch(
@@ -1218,7 +1213,7 @@ class TestTaskGraphs(unittest.TestCase):
                     (n_batches, type(prio)),
                 )
 
-    def test_cross_val_no_batching(self):
+    def test_cross_val_score_no_batching(self):
         (train_X, train_y), _ = self.creditg
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
@@ -1242,7 +1237,7 @@ class TestTaskGraphs(unittest.TestCase):
         for sk_s, rasl_s in zip(sk_scores, rasl_scores):
             self.assertAlmostEqual(sk_s, rasl_s)
 
-    def test_cross_val_batching(self):
+    def test_cross_val_score_batching(self):
         (train_X, train_y), _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_val_score(
@@ -1270,6 +1265,89 @@ class TestTaskGraphs(unittest.TestCase):
             )
             for sk_s, rasl_s in zip(sk_scores, rasl_scores):
                 self.assertAlmostEqual(sk_s, rasl_s)
+
+    def test_cross_validate_no_batching(self):
+        (train_X, train_y), _ = self.creditg
+        sk_scores = sk_cross_validate(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(3),
+            return_estimator=True,
+        )
+        rasl_scores = rasl_cross_validate(
+            pipeline=self._make_rasl_trainable("rfc"),
+            batches=mockup_data_loader(train_X, train_y, 3),
+            n_batches=3,
+            n_folds=3,
+            n_batches_per_fold=1,
+            scoring=rasl_get_scorer("accuracy"),
+            unique_class_labels=list(train_y.unique()),
+            prio=PrioBatch(),
+            same_fold=True,
+            return_estimator=True,
+            verbose=0,
+        )
+        for sk_s, rasl_s in zip(sk_scores["test_score"], rasl_scores["test_score"]):
+            self.assertAlmostEqual(cast(float, sk_s), cast(float, rasl_s))
+        for sk_e, rasl_e in zip(sk_scores["estimator"], rasl_scores["estimator"]):
+            _check_trained_ordinal_encoder(
+                self,
+                sk_e.steps[0][1],
+                cast(TrainedPipeline, rasl_e).steps[0][1].impl,
+                "",
+            )
+            _check_trained_min_max_scaler(
+                self,
+                sk_e.steps[1][1],
+                cast(TrainedPipeline, rasl_e).steps[1][1].impl,
+                "",
+            )
+
+    def test_cross_validate_batching(self):
+        (train_X, train_y), _ = self.creditg
+        n_folds = 3
+        sk_scores = sk_cross_validate(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(n_folds),
+            return_estimator=True,
+        )
+        for n_batches_per_fold in [1, 3]:
+            rasl_scores = rasl_cross_validate(
+                pipeline=self._make_rasl_trainable("rfc"),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
+                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=rasl_get_scorer("accuracy"),
+                unique_class_labels=list(train_y.unique()),
+                prio=PrioBatch(),
+                same_fold=True,
+                return_estimator=True,
+                verbose=0,
+            )
+            for sk_s, rasl_s in zip(sk_scores["test_score"], rasl_scores["test_score"]):
+                self.assertAlmostEqual(cast(float, sk_s), cast(float, rasl_s))
+            for sk_e, rasl_e in zip(sk_scores["estimator"], rasl_scores["estimator"]):
+                _check_trained_ordinal_encoder(
+                    self,
+                    sk_e.steps[0][1],
+                    cast(TrainedPipeline, rasl_e).steps[0][1].impl,
+                    n_batches_per_fold,
+                )
+                _check_trained_min_max_scaler(
+                    self,
+                    sk_e.steps[1][1],
+                    cast(TrainedPipeline, rasl_e).steps[1][1].impl,
+                    n_batches_per_fold,
+                )
 
 
 class TestTaskGraphsWithConcat(unittest.TestCase):
@@ -1418,7 +1496,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
                     (n_batches, type(prio)),
                 )
 
-    def test_cross_val_no_batching(self):
+    def test_cross_val_score_no_batching(self):
         (train_X, train_y), _ = self.creditg
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
@@ -1442,7 +1520,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
         for sk_s, rasl_s in zip(sk_scores, rasl_scores):
             self.assertAlmostEqual(sk_s, rasl_s)
 
-    def test_cross_val_batching(self):
+    def test_cross_val_score_batching(self):
         (train_X, train_y), _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_val_score(
@@ -1618,7 +1696,7 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
                     (n_batches, type(prio)),
                 )
 
-    def test_cross_val_no_batching(self):
+    def test_cross_val_score_no_batching(self):
         (train_X, train_y), _ = self.creditg
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
@@ -1642,7 +1720,7 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
         for sk_s, rasl_s in zip(sk_scores, rasl_scores):
             self.assertAlmostEqual(sk_s, rasl_s)
 
-    def test_cross_val_batching(self):
+    def test_cross_val_score_batching(self):
         (train_X, train_y), _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_val_score(
