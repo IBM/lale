@@ -174,7 +174,7 @@ _output_decision_function_schema = {
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Relational algebra SplitXy operator.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.lale.split_xy.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.split_xy.html",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "transformer"], "post": []},
     "properties": {

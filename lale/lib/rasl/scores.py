@@ -22,8 +22,7 @@ from lale.expressions import it
 from lale.expressions import sum as agg_sum
 from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import get_columns
-from lale.lib.lale.concat_features import ConcatFeatures
-from lale.lib.rasl import Aggregate, GroupBy, Map
+from lale.lib.rasl import Aggregate, ConcatFeatures, GroupBy, Map
 
 from ._monoid import Monoid, MonoidFactory
 
