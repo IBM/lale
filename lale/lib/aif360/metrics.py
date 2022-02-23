@@ -14,6 +14,7 @@
 
 import functools
 import itertools
+import typing
 from abc import abstractmethod
 from typing import Generic, List, Optional, TypeVar, Union
 
@@ -693,7 +694,7 @@ class _R2AndDisparateImpact:
     def _blend_metrics(self, r2: float, symm_di: float) -> float:
         if r2 > 1.0:
             logger.warning(f"invalid r2 {r2}, setting it to float min")
-            r2 = np.finfo(np.float32).min
+            r2 = typing.cast(float, np.finfo(np.float32).min)
         if symm_di < 0.0 or symm_di > 1.0 or np.isinf(symm_di) or np.isnan(symm_di):
             logger.warning(f"invalid symm_di {symm_di}, setting it to zero")
             symm_di = 0.0
