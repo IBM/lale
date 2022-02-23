@@ -13,5 +13,8 @@
 # limitations under the License.
 
 from lale.lib.rasl import ConcatFeatures as RaslConcatFeatures
+from lale.lib.rasl.concat_features import _ConcatFeaturesImpl as _RaslConcatFeaturesImpl
+
+_ConcatFeaturesImpl = _RaslConcatFeaturesImpl
 
 ConcatFeatures = RaslConcatFeatures
