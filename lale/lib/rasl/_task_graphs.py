@@ -15,6 +15,7 @@
 import enum
 import functools
 import sys
+import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, cast
 
@@ -25,12 +26,14 @@ import sklearn.tree
 
 import lale.helpers
 import lale.json_operator
+import lale.pretty_print
 from lale.operators import (
     TrainableIndividualOp,
     TrainablePipeline,
     TrainedIndividualOp,
     TrainedPipeline,
 )
+from lale.type_checking import JSON_TYPE
 
 from ._metrics import MetricMonoid, MetricMonoidFactory
 from ._monoid import Monoid, MonoidFactory
@@ -83,7 +86,6 @@ _MemoKey = Tuple[Type["_Task"], int, Tuple[str, ...], Optional[str]]
 class _Task:
     preds: List["_Task"]
     succs: List["_Task"]
-    seq_id: Optional[int]
 
     def __init__(
         self, step_id: int, batch_ids: Tuple[str, ...], held_out: Optional[str]
@@ -94,7 +96,6 @@ class _Task:
         self.status = _TaskStatus.FRESH
         self.preds = []
         self.succs = []
-        self.seq_id = None  # for verbose visualization
         self.deletable_output = True
 
     @abstractmethod
@@ -238,13 +239,26 @@ def _task_to_string(
     pipeline: TrainablePipeline,
     cls2label: Dict[str, str] = {},
     sep: str = "\n",
+    trace_id: int = None,
 ) -> str:
-    seq_id_s = "" if task.seq_id is None else f"{task.seq_id} "
+    trace_id_s = "" if trace_id is None else f"{trace_id} "
     operation_s = task.get_operation(pipeline).name.lower()
     step_s = _step_id_to_string(task.step_id, pipeline, cls2label)
     batches_s = ",".join(task.batch_ids)
     held_out_s = "" if task.held_out is None else f"#~{task.held_out}"
-    return f"{seq_id_s}{operation_s}{sep}{step_s}({batches_s}){held_out_s}"
+    return f"{trace_id_s}{operation_s}{sep}{step_s}({batches_s}){held_out_s}"
+
+
+class _TraceRecord:
+    def __init__(self, task, time):
+        self.task = task
+        self.time = time
+        if isinstance(task, _ApplyTask):
+            assert task.batch is not None
+            X, y = task.batch
+            self.space = X.size + y.size
+        else:
+            self.space = 0  # TODO: size for train tasks and metrics tasks
 
 
 def _visualize_tasks(
@@ -252,12 +266,16 @@ def _visualize_tasks(
     pipeline: TrainablePipeline[TrainableIndividualOp],
     prio: Prio,
     call_depth: int,
+    trace: Optional[List[_TraceRecord]],
 ) -> None:
     cls2label = lale.json_operator._get_cls2label(call_depth + 1)
     dot = graphviz.Digraph()
     dot.attr("graph", rankdir="LR", nodesep="0.1")
     dot.attr("node", fontsize="11", margin="0.03,0.03", shape="box", height="0.1")
     next_task = min(tasks.values(), key=lambda t: prio.task_priority(t))
+    task_key2trace_id: Dict[_MemoKey, int] = {}
+    if trace is not None:
+        task_key2trace_id = {r.task.memo_key(): i for i, r in enumerate(trace)}
     for task in tasks.values():
         if task.status is _TaskStatus.FRESH:
             color = "white"
@@ -277,12 +295,15 @@ def _visualize_tasks(
             style = "filled,diagonals"
         else:
             assert False, type(task)
-        task_s = _task_to_string(task, pipeline, cls2label)
+        trace_id = task_key2trace_id.get(task.memo_key(), None)
+        task_s = _task_to_string(task, pipeline, cls2label, trace_id=trace_id)
         dot.node(task_s, style=style, fillcolor=color)
     for task in tasks.values():
-        task_s = _task_to_string(task, pipeline, cls2label)
+        trace_id = task_key2trace_id.get(task.memo_key(), None)
+        task_s = _task_to_string(task, pipeline, cls2label, trace_id=trace_id)
         for succ in task.succs:
-            succ_s = _task_to_string(succ, pipeline, cls2label)
+            succ_id = task_key2trace_id.get(succ.memo_key(), None)
+            succ_s = _task_to_string(succ, pipeline, cls2label, trace_id=succ_id)
             dot.edge(task_s, succ_s)
 
     import IPython.display
@@ -525,6 +546,43 @@ def _create_tasks_cross_val(
     return tg.all_tasks
 
 
+def _analyze_run_trace(trace: List[_TraceRecord]) -> None:
+    def task_kind(task):
+        if isinstance(task, _TrainTask):
+            return "train"
+        elif isinstance(task, _ApplyTask):
+            return "apply"
+        elif isinstance(task, _MetricTask):
+            return "metric"
+        else:
+            assert False, type(task)
+
+    result: JSON_TYPE = {
+        "total_counts": {"train": 0, "apply": 0, "metric": 0},
+        "total_times": {"train": 0, "apply": 0, "metric": 0},
+        "critical_count": 0,
+        "critical_time": 0,
+    }
+    memo_key2critical_count: Dict[_MemoKey, int] = {}
+    memo_key2critical_time: Dict[_MemoKey, int] = {}
+    for record in trace:
+        kind = task_kind(record.task)
+        result["total_counts"][kind] += 1
+        result["total_times"][kind] += record.time
+        critical_count = 1 + max(
+            (memo_key2critical_count[p.memo_key()] for p in record.task.preds),
+            default=0,
+        )
+        result["critical_count"] = max(critical_count, result["critical_count"])
+        memo_key2critical_count[record.task.memo_key()] = critical_count
+        critical_time = record.time + max(
+            (memo_key2critical_time[p.memo_key()] for p in record.task.preds), default=0
+        )
+        result["critical_time"] = max(critical_time, result["critical_time"])
+        memo_key2critical_time[record.task.memo_key()] = critical_time
+    print(lale.pretty_print.json_to_string(result))
+
+
 def _run_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
@@ -582,13 +640,14 @@ def _run_tasks(
             if all(s.status is _TaskStatus.DONE for s in pred.succs):
                 mark_done(pred)
 
-    seq_id = 0
+    trace: Optional[List[_TraceRecord]] = [] if verbose >= 2 else None
     batches_iterator = iter(batches)
     while len(ready_keys) > 0:
         if verbose >= 3:
-            _visualize_tasks(tasks, pipeline, prio, call_depth + 1)
+            _visualize_tasks(tasks, pipeline, prio, call_depth + 1, trace)
         task = tasks[min(ready_keys, key=lambda k: prio.task_priority(tasks[k]))]
         operation = task.get_operation(pipeline)
+        start_time = time.time() if verbose >= 2 else float("nan")
         if operation is _Operation.SCAN:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1 and len(task.preds) == 0
@@ -699,11 +758,15 @@ def _run_tasks(
                 assert False, type(task)
         else:
             assert False, operation
-        task.seq_id = seq_id
-        seq_id += 1
+        if verbose >= 2:
+            finish_time = time.time()
+            assert trace is not None
+            trace.append(_TraceRecord(task, finish_time - start_time))
         mark_done(task)
     if verbose >= 2:
-        _visualize_tasks(tasks, pipeline, prio, call_depth + 1)
+        _visualize_tasks(tasks, pipeline, prio, call_depth + 1, trace)
+        assert trace is not None
+        _analyze_run_trace(trace)
 
 
 def mockup_data_loader(
@@ -739,7 +802,7 @@ def fit_with_batches(
     all_batch_ids = tuple(_batch_id("d", idx) for idx in range(n_batches))
     tasks = _create_tasks_batching(pipeline, all_batch_ids, incremental)
     if verbose >= 3:
-        _visualize_tasks(tasks, pipeline, prio, call_depth=2)
+        _visualize_tasks(tasks, pipeline, prio, call_depth=2, trace=None)
     _run_tasks(
         tasks,
         pipeline,
@@ -787,7 +850,7 @@ def cross_val_score(
     )
     tasks = _create_tasks_cross_val(pipeline, folds, n_batches_per_fold, same_fold)
     if verbose >= 3:
-        _visualize_tasks(tasks, pipeline, prio, call_depth=2)
+        _visualize_tasks(tasks, pipeline, prio, call_depth=2, trace=None)
     _run_tasks(
         tasks,
         pipeline,
