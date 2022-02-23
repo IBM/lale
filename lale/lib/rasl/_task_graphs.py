@@ -35,8 +35,8 @@ from lale.operators import (
 )
 from lale.type_checking import JSON_TYPE
 
-from ._metrics import MetricMonoid, MetricMonoidFactory
-from ._monoid import Monoid, MonoidFactory
+from .metrics import MetricMonoid, MetricMonoidFactory
+from .monoid import Monoid, MonoidFactory
 
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
@@ -142,8 +142,8 @@ class _TrainTask(_Task):
             self.trained._impl = trainable._impl_class()(**hyperparams)
             if trainable.has_method("_set_fit_attributes"):
                 self.trained._impl._set_fit_attributes(self.monoid)
-            elif trainable.has_method("_from_monoid"):
-                self.trained._impl._from_monoid(self.monoid)
+            elif trainable.has_method("from_monoid"):
+                self.trained._impl.from_monoid(self.monoid)
             else:
                 assert False, self.trained
         return self.trained
@@ -720,8 +720,8 @@ def _run_tasks(
                 if trainable.has_method("_lift"):
                     hyperparams = trainable.impl._hyperparams
                     task.monoid = trainable.impl._lift(input_X, hyperparams)
-                elif trainable.has_method("_to_monoid"):
-                    task.monoid = trainable.impl._to_monoid((input_X, input_y))
+                elif trainable.has_method("to_monoid"):
+                    task.monoid = trainable.impl.to_monoid((input_X, input_y))
                 else:
                     assert False, operation
             elif isinstance(task, _MetricTask):
@@ -730,7 +730,7 @@ def _run_tasks(
                 assert scoring is not None
                 _, y_true = task.preds[0].batch  # type: ignore
                 _, y_pred = task.preds[1].batch  # type: ignore
-                task.score = scoring._to_monoid((y_true, y_pred))
+                task.score = scoring.to_monoid((y_true, y_pred))
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:
@@ -867,7 +867,7 @@ def cross_val_score(
         batches = tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold))
         task = tasks[(_MetricTask, _DUMMY_SCORE_STEP, batches, held_out)]
         assert isinstance(task, _MetricTask) and task.score is not None
-        return scoring._from_monoid(task.score)
+        return scoring.from_monoid(task.score)
 
     result = [get_score(held_out) for held_out in folds]
     _clear_tasks_dict(tasks)

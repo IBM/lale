@@ -33,7 +33,7 @@ class Monoid(ABC):
         """
          Combines this monoid instance with another, producing a result.
          This operation must be observationally associative, satisfying
-         ``x._from_monoid(a.combine(b.combine(c))) == x._from_monoid(a.combine(b).combine(c)))``
+         ``x.from_monoid(a.combine(b.combine(c))) == x.from_monoid(a.combine(b).combine(c)))``
         where `x` is the instance of :class:MonoidFactory that created these instances.
         """
         pass
@@ -52,13 +52,13 @@ class MonoidFactory(Generic[_InputType, _OutputType, _M], Protocol):
     a base class.
     """
 
-    def _to_monoid(self, v: _InputType) -> _M:
+    def to_monoid(self, v: _InputType) -> _M:
         """
         Create a monoid instance representing the input data
         """
         ...
 
-    def _from_monoid(self, v: _M) -> _OutputType:
+    def from_monoid(self, v: _M) -> _OutputType:
         """
         Given the monoid instance, return the appropriate type of output.
         This method may also modify self based on the monoid instance.
@@ -76,13 +76,13 @@ class MonoidableOperator(MonoidFactory[Any, None, _M]):
     _monoid: Optional[_M] = None
 
     def partial_fit(self, X, y=None):
-        lifted = self._to_monoid((X, y))
+        lifted = self.to_monoid((X, y))
         if self._monoid is not None:  # not first fit
             lifted = self._monoid.combine(lifted)
-        self._from_monoid(lifted)
+        self.from_monoid(lifted)
         return self
 
     def fit(self, X, y=None):
-        lifted = self._to_monoid((X, y))
-        self._from_monoid(lifted)
+        lifted = self.to_monoid((X, y))
+        self.from_monoid(lifted)
         return self

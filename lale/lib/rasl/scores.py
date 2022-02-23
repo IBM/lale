@@ -24,7 +24,7 @@ from lale.helpers import _ensure_pandas
 from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, ConcatFeatures, GroupBy, Map
 
-from ._monoid import Monoid, MonoidFactory
+from .monoid import Monoid, MonoidFactory
 
 ScoreMonoid = Monoid
 
@@ -35,7 +35,7 @@ _M = TypeVar("_M", bound=ScoreMonoid)
 
 class ScoreMonoidFactory(MonoidFactory[_InputType, _OutputType, _M]):
     def score(self, X, y) -> Tuple[float, float]:
-        return self._from_monoid(self._to_monoid((X, y)))
+        return self.from_monoid(self.to_monoid((X, y)))
 
 
 class FOnewayData(Monoid):
@@ -167,7 +167,7 @@ def _f_oneway_lower(lifted):
     Parameters
     ----------
     lifted : FOnewayData
-        The result of `_to_monoid`.
+        The result of `to_monoid`.
 
     Returns
     -------
@@ -209,9 +209,9 @@ def _f_oneway_lower(lifted):
 class FClassif(ScoreMonoidFactory[FOnewayData]):
     """Compute the ANOVA F-value for the provided sample."""
 
-    def _to_monoid(self, v):
+    def to_monoid(self, v):
         X, y = v
         return _f_oneway_lift(X, y)
 
-    def _from_monoid(self, lifted):
+    def from_monoid(self, lifted):
         return _f_oneway_lower(lifted)

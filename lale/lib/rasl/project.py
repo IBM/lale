@@ -71,7 +71,7 @@ class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]
     def __init__(self, cl):
         self._cl = cl
 
-    def _to_monoid(self, df):
+    def to_monoid(self, df):
         cl = self._cl
         if cl is None:
             cl = get_columns(df)
@@ -79,7 +79,7 @@ class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]
 
         return _StaticMonoid(cl)
 
-    def _from_monoid(self, v):
+    def from_monoid(self, v):
         return v._v
 
 
@@ -87,7 +87,7 @@ class _CallableMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoi
     def __init__(self, c):
         self._c = c
 
-    def _to_monoid(self, df):
+    def to_monoid(self, df):
         c = self._c
         if callable(c):
             c = c(df)
@@ -100,7 +100,7 @@ class _CallableMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoi
 
         return _StaticMonoid(c)
 
-    def _from_monoid(self, v):
+    def from_monoid(self, v):
         return v._v
 
 
@@ -157,7 +157,7 @@ class _ProjectImpl:
                 raise AttributeError(
                     "fit cannot be called on a Project that has a static columns and drop_columns or has already been fit"
                 )
-        elif item in ["_to_monoid", "_from_monoid", "partial_fit"]:
+        elif item in ["to_monoid", "from_monoid", "partial_fit"]:
             omit_monoid = False
             try:
                 cols = super().__getattribute__("_columns")
@@ -174,21 +174,21 @@ class _ProjectImpl:
 
     def _to_monoid_internal(self, xy):
         df, _ = xy
-        col = self._columns._to_monoid(df)
-        dcol = self._drop_columns._to_monoid(df)
+        col = self._columns.to_monoid(df)
+        dcol = self._drop_columns.to_monoid(df)
 
         return _ProjectMonoid(col, dcol)
 
-    def _to_monoid(self, xy):
+    def to_monoid(self, xy):
         return self._to_monoid_internal(xy)
 
     def _from_monoid_internal(self, pm: _ProjectMonoid):
-        col = self._columns._from_monoid(pm._columns)
-        dcol = self._drop_columns._from_monoid(pm._drop_columns)
+        col = self._columns.from_monoid(pm._columns)
+        dcol = self._drop_columns.from_monoid(pm._drop_columns)
 
         self._fit_columns = [c for c in col if c not in dcol]
 
-    def _from_monoid(self, pm: _ProjectMonoid):
+    def from_monoid(self, pm: _ProjectMonoid):
         self._from_monoid_internal(pm)
 
     _monoid: Optional[_ProjectMonoid]

@@ -21,7 +21,7 @@ from lale.lib.dataframe import count, get_columns
 from lale.lib.rasl import Map
 from lale.lib.sklearn import select_k_best
 
-from ._monoid import Monoid, MonoidableOperator
+from .monoid import Monoid, MonoidableOperator
 from .scores import FClassif
 
 
@@ -63,11 +63,11 @@ class _SelectKBestImpl(MonoidableOperator[_SelectKBestMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def _from_monoid(self, lifted):
+    def from_monoid(self, lifted):
         self._monoid = lifted
         score_func = self._hyperparams["score_func"]
         lifted_score_ = self._monoid.lifted_score_
-        self.scores_, self.pvalues_ = score_func._from_monoid(lifted_score_)
+        self.scores_, self.pvalues_ = score_func.from_monoid(lifted_score_)
         self.n_features_in_ = len(self._monoid.feature_names_in_)
         self._transformer = None
 
@@ -81,12 +81,12 @@ class _SelectKBestImpl(MonoidableOperator[_SelectKBestMonoid]):
         result = Map(columns={col: it[col] for col in kbest})
         return result
 
-    def _to_monoid(self, v):
+    def to_monoid(self, v):
         X, y = v
         score_func = self._hyperparams["score_func"]
         n_samples_seen_ = count(X)
         feature_names_in_ = get_columns(X)
-        lifted_score_ = score_func._to_monoid((X, y))
+        lifted_score_ = score_func.to_monoid((X, y))
         return _SelectKBestMonoid(
             n_samples_seen_=n_samples_seen_,
             feature_names_in_=feature_names_in_,

@@ -24,8 +24,8 @@ from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import hashing_encoder
 
-from ._monoid import Monoid, MonoidableOperator
 from .map import Map
+from .monoid import Monoid, MonoidableOperator
 
 
 # From https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
@@ -93,7 +93,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
     def feature_names(self):
         return getattr(self._monoid, "feature_names", None)
 
-    def _from_monoid(self, lifted):
+    def from_monoid(self, lifted):
         self._monoid = lifted
         self._transformer = None
 
@@ -115,7 +115,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         result = Map(columns={**columns_cat, **columns_num})
         return result
 
-    def _to_monoid(self, v):
+    def to_monoid(self, v):
         X, y = v
         if self._hyperparams["cols"] is None:
             self._hyperparams["cols"] = get_obj_cols(X)
