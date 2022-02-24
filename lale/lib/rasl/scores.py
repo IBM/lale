@@ -20,7 +20,7 @@ from scipy import special
 from lale.expressions import count as agg_count
 from lale.expressions import it
 from lale.expressions import sum as agg_sum
-from lale.helpers import _ensure_pandas
+from lale.helpers import _ensure_pandas, _is_pandas_series
 from lale.lib.dataframe import get_columns
 from lale.lib.rasl import Aggregate, ConcatFeatures, GroupBy, Map
 
@@ -47,7 +47,7 @@ class FOnewayData(Monoid):
         n_samples,
         ss_alldata,
         sums_samples,
-        sums_alldata
+        sums_alldata,
     ):
         """
         Parameters
@@ -109,6 +109,15 @@ class FOnewayData(Monoid):
         )
 
 
+def _gen_name(base, avoid):
+    if base not in avoid:
+        return base
+    cpt = 0
+    while f"{base}{cpt}" in avoid:
+        cpt += 1
+    return f"{base}{cpt}"
+
+
 # The following function is a rewriting of sklearn.feature_selection.f_oneway
 # Compared to the sklearn.feature_selection.f_oneway implementation it
 # takes as input the dataset and the target vector.
@@ -129,6 +138,9 @@ def _f_oneway_lift(X, y) -> FOnewayData:
     monoid: FOnewayData
         The inermediate data that can be combine for incremental computation.
     """
+    if get_columns(y)[0] is None:
+        if _is_pandas_series(y):
+            y = y.rename(_gen_name("target", get_columns(X)))
     Xy = ConcatFeatures().transform([X, y])
     X_by_y = GroupBy(by=[it[get_columns(y)[0]]]).transform(Xy)
 
