@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Optional, Tuple, Type
+from typing import Any, Optional, Tuple, Type, Union
 
 import numpy as np
 import pandas as pd
@@ -121,6 +121,17 @@ if spark_installed:
         def toPandas(self, *args, **kwargs):
             df = super(self.__class__, self).toPandas(*args, **kwargs)
             return df.set_index(self.index_name)
+
+
+else:
+
+    class SparkDataFrameWithIndex:  # type: ignore
+        def __init__(self, df, index_name=None):
+            raise ValueError("pyspark is not installed")
+
+        @property
+        def index_name(self) -> Union[int, str, slice]:
+            raise ValueError("pyspark is not installed")  # type: ignore
 
 
 def add_schema(obj, schema=None, raise_on_failure=False, recalc=False) -> Any:
