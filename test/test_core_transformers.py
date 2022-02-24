@@ -22,7 +22,7 @@ import pandas as pd
 import lale.lib.lale
 import lale.lib.sklearn
 import lale.type_checking
-from lale.datasets.data_schemas import add_table_name
+from lale.datasets.data_schemas import add_table_name, get_table_name
 from lale.lib.lale import ConcatFeatures
 from lale.lib.sklearn import (
     NMF,
@@ -506,6 +506,15 @@ class TestConcatFeatures(unittest.TestCase):
         iris_data = load_iris()
         clf.fit(iris_data.data, iris_data.target)
         clf.predict(iris_data.data)
+
+    def test_name(self):
+        trainable_cf = ConcatFeatures(name="AB")
+        A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
+        B = [[14, 15], [24, 25], [34, 35]]
+
+        trained_cf = trainable_cf.fit(X=[A, B])
+        transformed: Any = trained_cf.transform([A, B])
+        self.assertEqual(get_table_name(transformed), "AB")
 
 
 class TestTfidfVectorizer(unittest.TestCase):
