@@ -59,6 +59,7 @@ Other Facilities
 
 * lale.lib.rasl. `Prio`_
 * lale.lib.rasl. `PrioBatch`_
+* lale.lib.rasl. `PrioResourceAware`_
 * lale.lib.rasl. `PrioStep`_
 * lale.lib.rasl. `accuracy_score`_
 * lale.lib.rasl. `cross_val_score`_
@@ -99,6 +100,7 @@ Other Facilities
 
 .. _`Prio`: lale.lib.rasl.Prio.html
 .. _`PrioBatch`: lale.lib.rasl.PrioBatch.html
+.. _`PrioResourceAware`: lale.lib.rasl.PrioResourceAware.html
 .. _`PrioStep`: lale.lib.rasl.PrioStep.html
 .. _`accuracy_score`: lale.lib.rasl.accuracy_score.html
 .. _`cross_val_score`: lale.lib.rasl.cross_val_score.html
@@ -115,6 +117,7 @@ Other Facilities
 from ._task_graphs import (
     Prio,
     PrioBatch,
+    PrioResourceAware,
     PrioStep,
     cross_val_score,
     cross_validate,
