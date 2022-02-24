@@ -33,10 +33,11 @@ from lale.operators import (
     TrainedIndividualOp,
     TrainedPipeline,
 )
-from lale.type_checking import JSON_TYPE
 
 from .metrics import MetricMonoid, MetricMonoidFactory
 from .monoid import Monoid, MonoidFactory
+
+_BatchStatus = enum.Enum("BatchStatus", "RESIDENT SPILLED")
 
 _TaskStatus = enum.Enum("_TaskStatus", "FRESH READY WAITING DONE")
 
@@ -149,7 +150,27 @@ class _TrainTask(_Task):
         return self.trained
 
 
-_Batch = Tuple[pd.DataFrame, pd.Series]
+_RawBatch = Tuple[pd.DataFrame, pd.Series]
+
+
+class _Batch:
+    X: pd.DataFrame
+    y: pd.Series
+    task: Optional["_ApplyTask"]
+
+    def __init__(self, X: pd.DataFrame, y: pd.Series, task: Optional["_ApplyTask"]):
+        self.X = X
+        self.y = y
+        self.task = task
+        self.status = _BatchStatus.RESIDENT
+
+    @property
+    def Xy(self) -> _RawBatch:
+        return self.X, self.y
+
+    @property
+    def size(self) -> int:
+        return self.X.size + self.y.size
 
 
 class _ApplyTask(_Task):
@@ -185,6 +206,17 @@ class Prio(ABC):
     def bottom(self) -> Any:  # tuple of "inf" means all others are more important
         return self.arity * (float("inf"),)
 
+    def batch_priority(self, batch: _Batch) -> Any:  # prefer to keep resident if lower
+        assert batch.task is not None
+        return min(
+            (
+                self.task_priority(s)
+                for s in batch.task.succs
+                if s.status in [_TaskStatus.READY, _TaskStatus.WAITING]
+            ),
+            default=self.bottom(),
+        )
+
     @abstractmethod
     def task_priority(self, task: _Task) -> Any:  # prefer to do first if lower
         pass
@@ -212,6 +244,27 @@ class PrioBatch(Prio):
         result = (
             task.status.value,
             len(task.batch_ids),
+            task.batch_ids,
+            task.step_id,
+            0 if isinstance(task, _TrainTask) else 1,
+        )
+        assert len(result) == self.arity
+        return result
+
+
+class PrioResourceAware(Prio):
+    arity = 5
+
+    def task_priority(self, task: _Task) -> Any:
+        non_res = sum(
+            1
+            for p in task.preds
+            if isinstance(p, _ApplyTask) and p.batch is not None
+            if p.batch.status != _BatchStatus.RESIDENT
+        )
+        result = (
+            task.status.value,
+            non_res,
             task.batch_ids,
             task.step_id,
             0 if isinstance(task, _TrainTask) else 1,
@@ -249,14 +302,49 @@ def _task_to_string(
     return f"{trace_id_s}{operation_s}{sep}{step_s}({batches_s}){held_out_s}"
 
 
+class _RunStats:
+    _values: Dict[str, float]
+
+    def __init__(self):
+        object.__setattr__(
+            self,
+            "_values",
+            {
+                "spill_count": 0,
+                "load_count": 0,
+                "train_count": 0,
+                "apply_count": 0,
+                "metric_count": 0,
+                "train_time": 0,
+                "apply_time": 0,
+                "metric_time": 0,
+                "critical_count": 0,
+                "critical_time": 0,
+            },
+        )
+
+    def __getattr__(self, name: str) -> float:
+        if name in self._values:
+            return self._values[name]
+        raise AttributeError(f"'{name}' not in {self._values.keys()}")
+
+    def __setattr__(self, name: str, value: float) -> None:
+        if name in self._values:
+            self._values[name] = value
+        else:
+            raise AttributeError(f"'{name}' not in {self._values.keys()}")
+
+    def __repr__(self) -> str:
+        return lale.pretty_print.json_to_string(self._values)
+
+
 class _TraceRecord:
     def __init__(self, task, time):
         self.task = task
         self.time = time
         if isinstance(task, _ApplyTask):
             assert task.batch is not None
-            X, y = task.batch
-            self.space = X.size + y.size
+            self.space = task.batch.size
         else:
             self.space = 0  # TODO: size for train tasks and metrics tasks
 
@@ -565,50 +653,43 @@ def _create_tasks_cross_val(
     return tg.all_tasks
 
 
-def _analyze_run_trace(trace: List[_TraceRecord]) -> None:
-    def task_kind(task):
-        if isinstance(task, _TrainTask):
-            return "train"
-        elif isinstance(task, _ApplyTask):
-            return "apply"
-        elif isinstance(task, _MetricTask):
-            return "metric"
-        else:
-            assert False, type(task)
-
-    result: JSON_TYPE = {
-        "total_counts": {"train": 0, "apply": 0, "metric": 0},
-        "total_times": {"train": 0, "apply": 0, "metric": 0},
-        "critical_count": 0,
-        "critical_time": 0,
-    }
+def _analyze_run_trace(stats: _RunStats, trace: List[_TraceRecord]) -> _RunStats:
     memo_key2critical_count: Dict[_MemoKey, int] = {}
     memo_key2critical_time: Dict[_MemoKey, int] = {}
     for record in trace:
-        kind = task_kind(record.task)
-        result["total_counts"][kind] += 1
-        result["total_times"][kind] += record.time
+        if isinstance(record.task, _TrainTask):
+            stats.train_count += 1
+            stats.train_time += record.time
+        elif isinstance(record.task, _ApplyTask):
+            stats.apply_count += 1
+            stats.apply_time += record.time
+        elif isinstance(record.task, _MetricTask):
+            stats.metric_count += 1
+            stats.metric_time += record.time
+        else:
+            assert False, type(record.task)
         critical_count = 1 + max(
             (memo_key2critical_count[p.memo_key()] for p in record.task.preds),
             default=0,
         )
-        result["critical_count"] = max(critical_count, result["critical_count"])
+        stats.critical_count = max(critical_count, stats.critical_count)
         memo_key2critical_count[record.task.memo_key()] = critical_count
         critical_time = record.time + max(
             (memo_key2critical_time[p.memo_key()] for p in record.task.preds), default=0
         )
-        result["critical_time"] = max(critical_time, result["critical_time"])
+        stats.critical_time = max(critical_time, stats.critical_time)
         memo_key2critical_time[record.task.memo_key()] = critical_time
-    print(lale.pretty_print.json_to_string(result))
+    return stats
 
 
 def _run_tasks(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_Batch],
+    batches: Iterable[_RawBatch],
     scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
+    max_resident,
     prio: Prio,
     verbose: int,
     call_depth: int = 1,
@@ -620,6 +701,7 @@ def _run_tasks(
         else:
             task.status = _TaskStatus.WAITING
     ready_keys = {k for k, t in tasks.items() if t.status is _TaskStatus.READY}
+    stats = _RunStats()
 
     def find_task(
         task_class: Type["_Task"], task_list: List[_Task]
@@ -659,6 +741,44 @@ def _run_tasks(
             if all(s.status is _TaskStatus.DONE for s in pred.succs):
                 mark_done(pred)
 
+    def ensure_space(amount_needed: int) -> None:
+        resident_batches = [
+            t.batch
+            for t in tasks.values()
+            if isinstance(t, _ApplyTask) and t.batch is not None
+            if t.batch.status == _BatchStatus.RESIDENT
+        ]
+        resident_batches.sort(key=lambda b: prio.batch_priority(b))
+        resident_batches_size = len(
+            resident_batches
+        )  # sum(b.size for b in resident_batches)
+        while resident_batches_size + amount_needed > max_resident:
+            batch = resident_batches.pop()
+            assert batch.status == _BatchStatus.RESIDENT and batch.task is not None
+            batch.status = _BatchStatus.SPILLED
+            stats.spill_count += 1
+            if verbose >= 2:
+                print(f"spill {_task_to_string(batch.task, pipeline, sep=' ')}")
+            resident_batches_size -= 1  # batch.size
+
+    def load_batch(batch: _Batch) -> None:
+        assert batch.status == _BatchStatus.SPILLED and batch.task is not None
+        ensure_space(1)  # ensure_space(batch.size)
+        stats.load_count += 1
+        if verbose >= 2:
+            print(f"load {_task_to_string(batch.task, pipeline, sep=' ')}")
+        batch.status = _BatchStatus.RESIDENT
+
+    def load_input_batches(task: _Task) -> None:
+        for batch in (p.batch for p in task.preds if isinstance(p, _ApplyTask)):
+            assert batch is not None
+            if batch.status == _BatchStatus.SPILLED:
+                load_batch(batch)
+
+    def assert_input_batches(task: _Task) -> None:
+        batches = (p.batch for p in task.preds if isinstance(p, _ApplyTask))
+        assert all(b is not None and b.status == _BatchStatus.RESIDENT for b in batches)
+
     trace: Optional[List[_TraceRecord]] = [] if verbose >= 2 else None
     batches_iterator = iter(batches)
     while len(ready_keys) > 0:
@@ -670,7 +790,9 @@ def _run_tasks(
         if operation is _Operation.SCAN:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1 and len(task.preds) == 0
-            task.batch = next(batches_iterator)
+            ensure_space(1)  # ensure_space(output batch size)
+            X, y = next(batches_iterator)
+            task.batch = _Batch(X, y, task)
         elif operation in [_Operation.TRANSFORM, _Operation.PREDICT]:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1
@@ -680,21 +802,23 @@ def _run_tasks(
             if isinstance(apply_preds, _Task):
                 apply_pred = cast(_ApplyTask, apply_preds)
                 assert apply_pred.batch is not None
-                input_X, input_y = apply_pred.batch
+                input_X, input_y = apply_pred.batch.Xy
             else:  # a list of tasks
-                apply_preds = cast(List[_ApplyTask], apply_preds)  # type: ignore
                 assert not any(apply_pred.batch is None for apply_pred in apply_preds)  # type: ignore
-                input_X = [pred.batch[0] for pred in apply_preds]  # type: ignore
+                input_X = [pred.batch.X for pred in apply_preds]  # type: ignore
                 # The assumption is that input_y is not changed by the preds, so we can
                 # use it from any one of them.
-                input_y = apply_preds[0].batch[1]  # type: ignore
+                input_y = apply_preds[0].batch.y  # type: ignore
+            load_input_batches(task)
+            ensure_space(1)  # ensure_space(output batch size)
+            assert_input_batches(task)
             if operation is _Operation.TRANSFORM:
-                task.batch = trained.transform(input_X), input_y
+                task.batch = _Batch(trained.transform(input_X), input_y, task)
             else:
                 y_pred = trained.predict(input_X)
                 if not isinstance(y_pred, pd.Series):
                     y_pred = pd.Series(y_pred, input_y.index, input_y.dtype, "y_pred")
-                task.batch = input_X, y_pred
+                task.batch = _Batch(input_X, y_pred, task)
         elif operation is _Operation.FIT:
             assert isinstance(task, _TrainTask)
             assert all(isinstance(p, _ApplyTask) for p in task.preds)
@@ -704,12 +828,14 @@ def _run_tasks(
                 assert len(task.preds) == 0
                 task.trained = cast(TrainedIndividualOp, trainable)
             else:
+                load_input_batches(task)
+                assert_input_batches(task)
                 if len(task.preds) == 1:
-                    input_X, input_y = task.preds[0].batch  # type: ignore
+                    input_X, input_y = task.preds[0].batch.Xy  # type: ignore
                 else:
                     assert not is_incremental(trainable)
-                    input_X = pd.concat([p.batch[0] for p in task.preds])  # type: ignore
-                    input_y = pd.concat([p.batch[1] for p in task.preds])  # type: ignore
+                    input_X = pd.concat([p.batch.X for p in task.preds])  # type: ignore
+                    input_y = pd.concat([p.batch.y for p in task.preds])  # type: ignore
                 task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
@@ -721,7 +847,9 @@ def _run_tasks(
                 trainee = train_pred.get_trained(pipeline)
             apply_pred = cast(_ApplyTask, find_task(_ApplyTask, task.preds))
             assert apply_pred.batch is not None
-            input_X, input_y = apply_pred.batch
+            load_input_batches(task)
+            assert_input_batches(task)
+            input_X, input_y = apply_pred.batch.Xy
             if trainee.is_supervised():
                 task.trained = trainee.partial_fit(
                     input_X, input_y, classes=unique_class_labels
@@ -732,10 +860,12 @@ def _run_tasks(
             assert len(task.batch_ids) == 1
             assert all(isinstance(p, _ApplyTask) for p in task.preds)
             assert all(cast(_ApplyTask, p).batch is not None for p in task.preds)
+            load_input_batches(task)
+            assert_input_batches(task)
             if isinstance(task, _TrainTask):
                 assert len(task.preds) == 1
                 trainable = pipeline.steps_list()[task.step_id]
-                input_X, input_y = task.preds[0].batch  # type: ignore
+                input_X, input_y = task.preds[0].batch.Xy  # type: ignore
                 if trainable.has_method("_lift"):
                     hyperparams = trainable.impl._hyperparams
                     task.monoid = trainable.impl._lift(input_X, hyperparams)
@@ -747,14 +877,16 @@ def _run_tasks(
                 assert len(task.preds) == 2
                 assert task.preds[0].step_id == _DUMMY_INPUT_STEP
                 assert scoring is not None
-                _, y_true = task.preds[0].batch  # type: ignore
-                _, y_pred = task.preds[1].batch  # type: ignore
+                y_true = task.preds[0].batch.y  # type: ignore
+                y_pred = task.preds[1].batch.y  # type: ignore
                 task.score = scoring.to_monoid((y_true, y_pred))
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:
             assert len(task.batch_ids) > 1
             assert len(task.preds) == len(task.batch_ids)
+            load_input_batches(task)
+            assert_input_batches(task)
             if isinstance(task, _TrainTask):
                 assert all(isinstance(p, _TrainTask) for p in task.preds)
                 trainable = pipeline.steps_list()[task.step_id]
@@ -785,12 +917,12 @@ def _run_tasks(
     if verbose >= 2:
         _visualize_tasks(tasks, pipeline, prio, call_depth + 1, trace)
         assert trace is not None
-        _analyze_run_trace(trace)
+        print(_analyze_run_trace(stats, trace))
 
 
 def mockup_data_loader(
     X: pd.DataFrame, y: pd.Series, n_splits: int
-) -> Iterable[_Batch]:
+) -> Iterable[_RawBatch]:
     if n_splits == 1:
         return [(X, y)]
     cv = sklearn.model_selection.KFold(n_splits)
@@ -803,9 +935,14 @@ def mockup_data_loader(
 
 
 def _clear_tasks_dict(tasks: Dict[_MemoKey, _Task]):
-    for task in tasks.values():  # preds form a cycle with succs
+    for task in tasks.values():
+        # preds form a cycle with succs
         task.preds.clear()
         task.succs.clear()
+        # tasks form a cycle with batches
+        if isinstance(task, _ApplyTask) and task.batch is not None:
+            task.batch.task = None
+            task.batch = None
     tasks.clear()
 
 
@@ -835,9 +972,10 @@ def _extract_trained_pipeline(
 
 def fit_with_batches(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_Batch],
+    batches: Iterable[_RawBatch],
     n_batches: int,
     unique_class_labels: List[Union[str, int, float]],
+    max_resident: int,
     prio: Prio,
     incremental: bool,
     verbose: int,
@@ -853,6 +991,7 @@ def fit_with_batches(
         None,
         unique_class_labels,
         all_batch_ids,
+        max_resident,
         prio,
         verbose,
         call_depth=2,
@@ -883,12 +1022,13 @@ def _extract_scores(
 
 def cross_val_score(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_Batch],
+    batches: Iterable[_RawBatch],
     n_batches: int,
     n_folds: int,
     n_batches_per_fold: int,
     scoring: MetricMonoidFactory,
     unique_class_labels: List[Union[str, int, float]],
+    max_resident: int,
     prio: Prio,
     same_fold: bool,
     verbose: int,
@@ -910,6 +1050,7 @@ def cross_val_score(
         scoring,
         unique_class_labels,
         all_batch_ids,
+        max_resident,
         prio,
         verbose,
         call_depth=2,
@@ -921,12 +1062,13 @@ def cross_val_score(
 
 def cross_validate(
     pipeline: TrainablePipeline[TrainableIndividualOp],
-    batches: Iterable[_Batch],
+    batches: Iterable[_RawBatch],
     n_batches: int,
     n_folds: int,
     n_batches_per_fold: int,
     scoring: MetricMonoidFactory,
     unique_class_labels: List[Union[str, int, float]],
+    max_resident: int,
     prio: Prio,
     same_fold: bool,
     return_estimator: bool,
@@ -949,6 +1091,7 @@ def cross_validate(
         scoring,
         unique_class_labels,
         all_batch_ids,
+        max_resident,
         prio,
         verbose,
         call_depth=2,
