@@ -45,6 +45,8 @@ class _GroupByImpl:
             )
 
     def transform(self, X):
+        name = get_table_name(X)
+        X_is_spark_with_index = _is_spark_with_index(X)
         group_by_keys = []
         for by_element in self.by if self.by is not None else []:
             expr_to_parse = by_element._expr
@@ -56,18 +58,17 @@ class _GroupByImpl:
                     col_not_in_X
                 )
             )
-        if _is_spark_with_index(X):
-            name = get_table_name(X)
-            X = add_table_name(X.drop(get_index_name(X)), name)
-        if _is_spark_df(X):
-            grouped_df = X.groupby(group_by_keys)
-        elif _is_pandas_df(X):
+        if X_is_spark_with_index:
+            X = X.drop(get_index_name(X))
+        if _is_pandas_df(X):
             grouped_df = X.groupby(group_by_keys, sort=False)
+        elif _is_spark_df(X):
+            grouped_df = X.groupby(group_by_keys)
         else:
             raise ValueError(
                 "Only pandas and spark dataframes are supported by the GroupBy operator."
             )
-        named_grouped_df = add_table_name(grouped_df, get_table_name(X))
+        named_grouped_df = add_table_name(grouped_df, name)
         return named_grouped_df
 
 

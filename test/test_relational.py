@@ -585,6 +585,7 @@ class TestAggregate(unittest.TestCase):
             )
             # self.assertEqual(result.loc[row.index[0], "mode_method_code"], 5, tgt)
             self.assertEqual(result.loc[row.index[0], "median_method_code"], 5, tgt)
+            self.assertEqual(result.index.name, "Retailer code", tgt)
 
     def test_products_onekey_grouped(self):
         pipeline = (

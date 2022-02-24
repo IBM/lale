@@ -17,10 +17,14 @@ import ast
 import numpy as np
 import pandas as pd
 
-import lale.datasets.data_schemas
 import lale.docstrings
 import lale.expressions
 import lale.operators
+from lale.datasets.data_schemas import (
+    SparkDataFrameWithIndex,
+    add_table_name,
+    get_table_name,
+)
 
 try:
     import pyspark.sql
@@ -69,9 +73,7 @@ class _AggregateImpl:
             aggregated_df = self._transform_spark(X, agg_info)
         else:
             raise ValueError(f"Unsupported type(X) {type(X)} for Aggregate.")
-        named_aggregated_df = lale.datasets.data_schemas.add_table_name(
-            aggregated_df, lale.datasets.data_schemas.get_table_name(X)
-        )
+        named_aggregated_df = add_table_name(aggregated_df, get_table_name(X))
         return named_aggregated_df
 
     def _transform_pandas(self, X, agg_info):
@@ -194,7 +196,10 @@ class _AggregateImpl:
 
         keep_columns = [new_col_name for new_col_name, _, _ in agg_info]
         drop_columns = list(set(aggregated_df.columns) - set(keep_columns))
-        aggregated_df = aggregated_df.drop(*drop_columns)
+        if len(drop_columns) == 1:
+            aggregated_df = SparkDataFrameWithIndex(aggregated_df, drop_columns[0])
+        elif len(drop_columns) > 1:
+            aggregated_df = aggregated_df.drop(*drop_columns)
         return aggregated_df
 
     def _get_exclude_when_expr(self, col_name):
