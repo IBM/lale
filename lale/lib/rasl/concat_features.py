@@ -55,9 +55,6 @@ def _is_pandas(d):
 
 
 class _ConcatFeaturesImpl:
-    def __init__(self, name=None):
-        self.name = name
-
     def transform(self, X):
         if all([_is_pandas(d) for d in X]):
             name2series = {}
@@ -118,7 +115,15 @@ class _ConcatFeaturesImpl:
                         np_dataset = np.reshape(np_dataset, (np_dataset.shape[0], 1))
                 np_datasets.append(np_dataset)
             result = np.concatenate(np_datasets, axis=1)
-        return add_table_name(result, self.name)
+        name = reduce(
+            (
+                lambda x, y: get_table_name(x)
+                if get_table_name(x) == get_table_name(y)
+                else None
+            ),
+            X,
+        )
+        return add_table_name(result, name)
 
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""
@@ -188,25 +193,7 @@ _hyperparams_schema = {
             "types, one at a time, omitting cross-argument constraints, if any.",
             "type": "object",
             "additionalProperties": False,
-            "required": ["name"],
             "relevantToOptimizer": [],
-            "properties": {
-                "name": {
-                    "description": "The table name to be given to the output dataframe.",
-                    "anyOf": [
-                        {
-                            "type": "string",
-                            "pattern": "[^ ]",
-                            "description": "String (cannot be all spaces).",
-                        },
-                        {
-                            "enum": [None],
-                            "description": "No table name.",
-                        },
-                    ],
-                    "default": None,
-                },
-            },
         }
     ]
 }

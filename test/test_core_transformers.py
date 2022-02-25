@@ -508,12 +508,20 @@ class TestConcatFeatures(unittest.TestCase):
         clf.predict(iris_data.data)
 
     def test_name(self):
-        trainable_cf = ConcatFeatures(name="AB")
+        trainable_cf = ConcatFeatures()
         A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
         B = [[14, 15], [24, 25], [34, 35]]
-
+        A = pd.DataFrame(A, columns=["a", "b", "c"])
+        B = pd.DataFrame(B, columns=["d", "e"])
+        A = add_table_name(A, "A")
+        B = add_table_name(B, "B")
         trained_cf = trainable_cf.fit(X=[A, B])
-        transformed: Any = trained_cf.transform([A, B])
+        transformed = trained_cf.transform([A, B])
+        self.assertEqual(get_table_name(transformed), None)
+        A = add_table_name(A, "AB")
+        B = add_table_name(B, "AB")
+        trained_cf = trainable_cf.fit(X=[A, B])
+        transformed = trained_cf.transform([A, B])
         self.assertEqual(get_table_name(transformed), "AB")
 
 

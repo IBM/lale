@@ -12,16 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import lale.operators
-from lale.lib.rasl.concat_features import _combined_schemas
+from lale.lib.rasl import ConcatFeatures as RaslConcatFeatures
 from lale.lib.rasl.concat_features import _ConcatFeaturesImpl as _RaslConcatFeaturesImpl
 
+_ConcatFeaturesImpl = _RaslConcatFeaturesImpl
 
-class _ConcatFeaturesImpl(_RaslConcatFeaturesImpl):
-    def __init__(self):
-        super().__init__()
-
-
-ConcatFeatures = lale.operators.make_pretrained_operator(
-    _ConcatFeaturesImpl, _combined_schemas
-)
+ConcatFeatures = RaslConcatFeatures
