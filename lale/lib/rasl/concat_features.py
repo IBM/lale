@@ -194,6 +194,7 @@ _hyperparams_schema = {
             "type": "object",
             "additionalProperties": False,
             "relevantToOptimizer": [],
+            "properties": {},
         }
     ]
 }
