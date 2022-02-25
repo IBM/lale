@@ -24,7 +24,7 @@ import lale.docstrings
 import lale.operators
 import lale.pretty_print
 import lale.type_checking
-from lale.datasets.data_schemas import get_index_name, get_table_name
+from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
 from lale.expressions import it
 from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
@@ -55,9 +55,6 @@ def _is_pandas(d):
 
 
 class _ConcatFeaturesImpl:
-    def __init__(self):
-        pass
-
     def transform(self, X):
         if all([_is_pandas(d) for d in X]):
             name2series = {}
@@ -98,7 +95,7 @@ class _ConcatFeaturesImpl:
             result = reduce(join, X)
         elif all([_is_pandas(d) or _is_spark_df(d) for d in X]):
             X = [d.toPandas() if _is_spark_df(d) else d for d in X]
-            return self.transform(X)
+            result = self.transform(X)
         else:
             np_datasets = []
             # Preprocess the datasets to convert them to 2-d numpy arrays
@@ -118,7 +115,15 @@ class _ConcatFeaturesImpl:
                         np_dataset = np.reshape(np_dataset, (np_dataset.shape[0], 1))
                 np_datasets.append(np_dataset)
             result = np.concatenate(np_datasets, axis=1)
-        return result
+        name = reduce(
+            (
+                lambda x, y: get_table_name(x)
+                if get_table_name(x) == get_table_name(y)
+                else None
+            ),
+            X,
+        )
+        return add_table_name(result, name)
 
     def transform_schema(self, s_X):
         """Used internally by Lale for type-checking downstream operators."""
