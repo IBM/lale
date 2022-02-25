@@ -29,6 +29,7 @@ from lale.schemas import Enum
 
 from .aggregate import Aggregate
 from .map import Map
+from .monoid import Monoid, MonoidableOperator
 
 
 def _is_numeric_df(X):
@@ -61,7 +62,37 @@ def _is_string_df(X):
         return False
 
 
-class _SimpleImputerImpl:
+class _SimpleImputerMonoid(Monoid):
+    def __init__(self, *, feature_names_in_, lifted_statistics, strategy):
+        self.feature_names_in_ = feature_names_in_
+        self.lifted_statistics = lifted_statistics
+        self.strategy = strategy
+
+    def combine(self, other):
+        assert list(self.feature_names_in_) == list(other.feature_names_in_)
+        if self.strategy == "constant":
+            assert self.lifted_statistics.equals(other.lifted_statistics)
+            combined_statistic = self.lifted_statistics
+        elif self.strategy == "mean":
+            combined_statistic = {}
+            combined_statistic["sum"] = (
+                self.lifted_statistics["sum"] + other.lifted_statistics["sum"]
+            )
+            combined_statistic["count"] = (
+                self.lifted_statistics["count"] + other.lifted_statistics["count"]
+            )
+        else:
+            raise ValueError(
+                "_combine is only supported for imputation strategy `mean` and `constant`."
+            )
+        return _SimpleImputerMonoid(
+            feature_names_in_=self.feature_names_in_,
+            lifted_statistics=combined_statistic,
+            strategy=self.strategy,
+        )
+
+
+class _SimpleImputerImpl(MonoidableOperator[_SimpleImputerMonoid]):
     def __init__(
         self,
         missing_values=np.nan,
@@ -85,6 +116,59 @@ class _SimpleImputerImpl:
         # the `indicator_`` property is always None as we do not support `add_indictor=True`
         self.indicator_ = None
 
+    def to_monoid(self, v):
+        hyperparams = self._hyperparams
+        X, _ = v
+        feature_names_in_ = get_columns(X)
+        agg_data = None
+        # learn the values to be imputed
+        strategy = hyperparams["strategy"]
+        if strategy == "constant":
+            fill_value = _SimpleImputerImpl._get_fill_value(X, hyperparams)
+            agg_data = [[fill_value for col in get_columns(X)]]
+            lifted_statistics = pd.DataFrame(agg_data, columns=get_columns(X))
+        elif strategy == "mean":
+            agg_op_sum = Aggregate(
+                columns={c: sum(it[c]) for c in get_columns(X)},
+                exclude_value=hyperparams["missing_values"],
+            )
+            agg_op_count = Aggregate(
+                columns={c: count(it[c]) for c in get_columns(X)},
+                exclude_value=hyperparams["missing_values"],
+            )
+            lifted_statistics = {}
+            agg_sum = agg_op_sum.transform(X)
+            if agg_sum is not None and _is_spark_df(agg_sum):
+                agg_sum = agg_sum.toPandas()
+            agg_count = agg_op_count.transform(X)
+            if agg_count is not None and _is_spark_df(agg_count):
+                agg_count = agg_count.toPandas()
+            lifted_statistics["sum"] = agg_sum
+            lifted_statistics["count"] = agg_count
+        else:
+            raise ValueError(
+                "SimpleImputer can create a Monoind only for imputation strategy `mean` and `constant`."
+            )
+        return _SimpleImputerMonoid(
+            feature_names_in_=feature_names_in_,
+            lifted_statistics=lifted_statistics,
+            strategy=strategy,
+        )
+
+    def from_monoid(self, lifted):
+        self._monoid = lifted
+        self.feature_names_in_ = lifted.feature_names_in_
+        self.n_features_in_ = len(self.feature_names_in_)
+        _lifted_statistics = lifted.lifted_statistics
+        strategy = self._hyperparams["strategy"]
+        if strategy == "constant":
+            self.statistics_ = _lifted_statistics.to_numpy()[0]
+        elif strategy == "mean":
+            self.statistics_ = (
+                _lifted_statistics["sum"] / _lifted_statistics["count"]
+            ).to_numpy()[0]
+        self._transformer = None
+
     def fit(self, X, y=None):
 
         self._validate_input(X)
@@ -92,8 +176,9 @@ class _SimpleImputerImpl:
         agg_op = None
         agg_data = None
         # learn the values to be imputed
-        if self._hyperparams["strategy"] == "mean":
-            self._set_fit_attributes(self._lift(X, self._hyperparams))
+        if self._hyperparams["strategy"] in ["mean", "constant"]:
+            lifted = self.to_monoid((X, y))
+            self.from_monoid(lifted)
             return self
         elif self._hyperparams["strategy"] == "median":
             agg_op = Aggregate(
@@ -105,29 +190,17 @@ class _SimpleImputerImpl:
                 columns={c: mode(it[c]) for c in get_columns(X)},
                 exclude_value=self._hyperparams["missing_values"],
             )
-        elif self._hyperparams["strategy"] == "constant":
-            self._set_fit_attributes(self._lift(X, self._hyperparams))
-            return self
-
         if agg_data is None and agg_op is not None:
             agg_data = agg_op.transform(X)
-        self._set_fit_attributes((get_columns(X), agg_data))
-        return self
-
-    def partial_fit(self, X, y=None):
-        if self._hyperparams["strategy"] not in ["mean", "constant"]:
-            raise ValueError(
-                "partial_fit is only supported for imputation strategy `mean` and `constant`."
-            )
-        if not hasattr(self, "statistics_"):  # first fit
-            return self.fit(X)
-        lifted_a = (
-            self.feature_names_in_,
-            self._lifted_statistics,
-            self._hyperparams["strategy"],
-        )
-        lifted_b = self._lift(X, self._hyperparams)
-        self._set_fit_attributes(self._combine(lifted_a, lifted_b))
+        self.feature_names_in_ = get_columns(X)
+        self.n_features_in_ = len(self.feature_names_in_)
+        if agg_data is not None and _is_spark_df(agg_data):
+            agg_data = agg_data.toPandas()
+        if agg_data is not None and _is_pandas_df(agg_data):
+            self.statistics_ = agg_data.to_numpy()[
+                0
+            ]  # Converting from a 2-d array to 1-d
+        self._transformer = None
         return self
 
     def _build_transformer(self):
@@ -172,89 +245,6 @@ class _SimpleImputerImpl:
                 "data".format(fill_value)
             )
         return fill_value
-
-    @staticmethod
-    def _lift(X, hyperparams):
-        feature_names_in_ = get_columns(X)
-        strategy = hyperparams["strategy"]
-        if strategy == "constant":
-            fill_value = _SimpleImputerImpl._get_fill_value(X, hyperparams)
-            agg_data = [[fill_value for col in get_columns(X)]]
-            lifted_statistics = pd.DataFrame(agg_data, columns=get_columns(X))
-        elif strategy == "mean":
-            agg_op_sum = Aggregate(
-                columns={c: sum(it[c]) for c in get_columns(X)},
-                exclude_value=hyperparams["missing_values"],
-            )
-            agg_op_count = Aggregate(
-                columns={c: count(it[c]) for c in get_columns(X)},
-                exclude_value=hyperparams["missing_values"],
-            )
-            lifted_statistics = {}
-            agg_sum = agg_op_sum.transform(X)
-            if agg_sum is not None and _is_spark_df(agg_sum):
-                agg_sum = agg_sum.toPandas()
-            agg_count = agg_op_count.transform(X)
-            if agg_count is not None and _is_spark_df(agg_count):
-                agg_count = agg_count.toPandas()
-            lifted_statistics["sum"] = agg_sum
-            lifted_statistics["count"] = agg_count
-        else:
-            raise ValueError(
-                "_lift is only supported for imputation strategy `mean` and `constant`."
-            )
-        return (
-            feature_names_in_,
-            lifted_statistics,
-            strategy,
-        )  # strategy is added so that _combine can use it
-
-    @staticmethod
-    def _combine(lifted_a, lifted_b):
-        feature_names_in_a = lifted_a[0]
-        lifted_statistics_a = lifted_a[1]
-        feature_names_in_b = lifted_b[0]
-        lifted_statistics_b = lifted_b[1]
-        strategy = lifted_a[2]
-        assert list(feature_names_in_a) == list(feature_names_in_b)
-        if strategy == "constant":
-            assert lifted_statistics_a.equals(lifted_statistics_b)
-            combined_statistic = lifted_statistics_a
-        elif strategy == "mean":
-            combined_statistic = {}
-            combined_statistic["sum"] = (
-                lifted_statistics_a["sum"] + lifted_statistics_b["sum"]
-            )
-            combined_statistic["count"] = (
-                lifted_statistics_a["count"] + lifted_statistics_b["count"]
-            )
-        else:
-            raise ValueError(
-                "_combine is only supported for imputation strategy `mean` and `constant`."
-            )
-        return feature_names_in_a, combined_statistic, strategy
-
-    def _set_fit_attributes(self, lifted):
-        # set attribute values
-        self.feature_names_in_ = lifted[0]
-        self.n_features_in_ = len(self.feature_names_in_)
-        self._lifted_statistics = lifted[1]
-        strategy = self._hyperparams["strategy"]
-        if strategy == "constant":
-            self.statistics_ = self._lifted_statistics.to_numpy()[0]
-        elif strategy == "mean":
-            self.statistics_ = (
-                self._lifted_statistics["sum"] / self._lifted_statistics["count"]
-            ).to_numpy()[0]
-        else:
-            agg_data = self._lifted_statistics
-            if agg_data is not None and _is_spark_df(agg_data):
-                agg_data = agg_data.toPandas()
-            if agg_data is not None and _is_pandas_df(agg_data):
-                self.statistics_ = agg_data.to_numpy()[
-                    0
-                ]  # Converting from a 2-d array to 1-d
-        self._transformer = None
 
     def _validate_input(self, X):
         # validate that the dataset is either a pandas dataframe or spark.
