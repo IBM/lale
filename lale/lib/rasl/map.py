@@ -107,7 +107,9 @@ class _Validate(ast.NodeVisitor):
 
     def visit_Subscript(self, node: ast.Subscript):
         column_name = _it_column(node)
-        if column_name is None or not column_name.strip():
+        if column_name is None or (
+            isinstance(column_name, str) and not column_name.strip()
+        ):
             raise ValueError("Name of the column cannot be None or empty.")
         if column_name not in self.df.columns:
             raise ValueError(
