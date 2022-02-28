@@ -26,8 +26,10 @@ from lale.lib.dataframe import get_columns
 from lale.operators import TrainedOperator
 
 from .aggregate import Aggregate
+from .concat_features import ConcatFeatures
 from .map import Map
 from .monoid import Monoid, MonoidFactory
+from .scan import Scan
 
 MetricMonoid = Monoid
 
@@ -81,8 +83,6 @@ class _AccuracyData(MetricMonoid):
 
 class _Accuracy(MetricMonoidFactory[_AccuracyData]):
     def __init__(self):
-        from lale.lib.rasl.concat_features import ConcatFeatures
-
         self._pipeline_suffix = (
             ConcatFeatures
             >> Map(columns={"match": astype("int", it.y_true == it.y_pred)})  # type: ignore
@@ -90,8 +90,6 @@ class _Accuracy(MetricMonoidFactory[_AccuracyData]):
         )
 
     def to_monoid(self, batch: _Batch) -> _AccuracyData:
-        from lale.lib.rasl import Scan
-
         y_true, y_pred = batch
         assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark
         if isinstance(y_pred, np.ndarray):
@@ -137,8 +135,6 @@ class _R2(MetricMonoidFactory[_R2Data]):
     # https://en.wikipedia.org/wiki/Coefficient_of_determination
 
     def __init__(self):
-        from lale.lib.rasl.concat_features import ConcatFeatures
-
         self._pipeline_suffix = (
             ConcatFeatures
             >> Map(
@@ -160,8 +156,6 @@ class _R2(MetricMonoidFactory[_R2Data]):
         )
 
     def to_monoid(self, batch) -> _R2Data:
-        from lale.lib.rasl import Scan
-
         y_true, y_pred = batch
         assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark
         if isinstance(y_pred, np.ndarray):

@@ -47,18 +47,17 @@ class _column_distinct_count_data(Monoid):
     def __len__(self):
         return count(self.df)
 
-    # We want a way to stop early if is_past_limit is True
     @property
-    def is_past_limit(self):
+    def is_absorbing(self):
         if self.limit is None:
             return False
         else:
             return len(self) > self.limit
 
     def combine(self, other):
-        if self.is_past_limit:
+        if self.is_absorbing:
             return self
-        elif other.is_past_limit:
+        elif other.is_absorbing:
             return other
         else:
             c = make_series_concat(self.df, other.df)
@@ -103,7 +102,7 @@ class categorical_column(MonoidFactory[_Batch, bool, _column_distinct_count_data
         return _column_distinct_count_data(c, limit=self._threshold)
 
     def from_monoid(self, v: _column_distinct_count_data) -> bool:
-        return not v.is_past_limit
+        return not v.is_absorbing
 
 
 class make_categorical_column:
@@ -128,6 +127,10 @@ class DictMonoid(Generic[_D], Monoid):
     def combine(self, other: "DictMonoid[_D]"):
         r = {k: self._m[k].combine(other._m[k]) for k in self._m.keys()}
         return DictMonoid(r)
+
+    @property
+    def is_absorbing(self):
+        return all(v.is_absorbing for v in self._m.values())
 
 
 class ColumnSelector(MonoidFactory[_Batch, List[column_index], _D]):

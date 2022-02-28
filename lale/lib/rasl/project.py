@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -57,6 +57,10 @@ class _ProjectMonoid(Monoid):
         dc = self._drop_columns.combine(other._drop_columns)
         return _ProjectMonoid(c, dc)
 
+    @property
+    def is_absorbing(self):
+        return self._columns.is_absorbing and self._drop_columns.is_absorbing
+
 
 class _StaticMonoid(Monoid):
     def __init__(self, v):
@@ -65,6 +69,10 @@ class _StaticMonoid(Monoid):
     def combine(self, other):
         assert self._v == other._v
         return self
+
+    @property
+    def is_absorbing(self):
+        return True
 
 
 class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
@@ -194,10 +202,11 @@ class _ProjectImpl:
     _monoid: Optional[_ProjectMonoid]
 
     def partial_fit(self, X, y=None):
-        lifted = self._to_monoid_internal((X, y))
-        if self._monoid is not None:  # not first fit
-            lifted = self._monoid.combine(lifted)
-        self._from_monoid_internal(lifted)
+        if self._monoid is None or not self._monoid.is_absorbing:
+            lifted = self._to_monoid_internal((X, y))
+            if self._monoid is not None:  # not first fit
+                lifted = self._monoid.combine(lifted)
+            self._from_monoid_internal(lifted)
         return self
 
     def _fit_internal(self, X, y=None):
