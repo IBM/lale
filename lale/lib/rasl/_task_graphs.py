@@ -737,18 +737,18 @@ def _run_tasks(
                 mark_done(pred)
         if isinstance(task, _TrainTask):
             if task.get_operation(pipeline) is _Operation.TO_MONOID:
-                assert task.monoid is not None
-                if task.monoid.is_absorbing:
+                if task.monoid is not None and task.monoid.is_absorbing:
 
                     def is_moot(task2):  # same modulo batch_ids
                         type1, step1, _, hold1 = task.memo_key()
                         type2, step2, _, hold2 = task2.memo_key()
                         return type1 == type2 and step1 == step2 and hold1 == hold2
 
+                    task_monoid = task.monoid  # prevent accidental None assignment
                     for task2 in tasks.values():
                         if task2.status is not _TaskStatus.DONE and is_moot(task2):
                             assert isinstance(task2, _TrainTask)
-                            task2.monoid = task.monoid
+                            task2.monoid = task_monoid
                             mark_done(task2)
 
     def ensure_space(amount_needed: int) -> None:

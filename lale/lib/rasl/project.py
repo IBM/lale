@@ -70,6 +70,10 @@ class _StaticMonoid(Monoid):
         assert self._v == other._v
         return self
 
+    @property
+    def is_absorbing(self):
+        return True
+
 
 class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
     def __init__(self, cl):

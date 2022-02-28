@@ -128,6 +128,10 @@ class DictMonoid(Generic[_D], Monoid):
         r = {k: self._m[k].combine(other._m[k]) for k in self._m.keys()}
         return DictMonoid(r)
 
+    @property
+    def is_absorbing(self):
+        return all(v.is_absorbing for v in self._m.values())
+
 
 class ColumnSelector(MonoidFactory[_Batch, List[column_index], _D]):
     def __call__(self, df) -> List[column_index]:
