@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,6 +56,10 @@ class _ProjectMonoid(Monoid):
         c = self._columns.combine(other._columns)
         dc = self._drop_columns.combine(other._drop_columns)
         return _ProjectMonoid(c, dc)
+
+    @property
+    def is_absorbing(self):
+        return self._columns.is_absorbing and self._drop_columns.is_absorbing
 
 
 class _StaticMonoid(Monoid):

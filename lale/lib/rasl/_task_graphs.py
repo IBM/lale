@@ -61,12 +61,7 @@ def is_incremental(op: TrainableIndividualOp) -> bool:
 
 
 def is_associative(op: TrainableIndividualOp) -> bool:
-    return (
-        op.has_method("_lift")
-        and op.has_method("_combine")
-        or is_pretrained(op)
-        or isinstance(op.impl, MonoidFactory)
-    )
+    return is_pretrained(op) or isinstance(op.impl, MonoidFactory)
 
 
 def _batch_id(fold: str, idx: int) -> str:
@@ -110,7 +105,7 @@ class _Task:
 
 
 class _TrainTask(_Task):
-    monoid: Optional[Union[Tuple[Any, ...], Monoid]]
+    monoid: Optional[Monoid]
     trained: Optional[TrainedIndividualOp]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
@@ -740,6 +735,21 @@ def _run_tasks(
         for pred in task.preds:
             if all(s.status is _TaskStatus.DONE for s in pred.succs):
                 mark_done(pred)
+        if isinstance(task, _TrainTask):
+            if task.get_operation(pipeline) is _Operation.TO_MONOID:
+                assert task.monoid is not None
+                if task.monoid.is_absorbing:
+
+                    def is_moot(task2):  # same modulo batch_ids
+                        type1, step1, _, hold1 = task.memo_key()
+                        type2, step2, _, hold2 = task2.memo_key()
+                        return type1 == type2 and step1 == step2 and hold1 == hold2
+
+                    for task2 in tasks.values():
+                        if task2.status is not _TaskStatus.DONE and is_moot(task2):
+                            assert isinstance(task2, _TrainTask)
+                            task2.monoid = task.monoid
+                            mark_done(task2)
 
     def ensure_space(amount_needed: int) -> None:
         resident_batches = [
@@ -866,13 +876,7 @@ def _run_tasks(
                 assert len(task.preds) == 1
                 trainable = pipeline.steps_list()[task.step_id]
                 input_X, input_y = task.preds[0].batch.Xy  # type: ignore
-                if trainable.has_method("_lift"):
-                    hyperparams = trainable.impl._hyperparams
-                    task.monoid = trainable.impl._lift(input_X, hyperparams)
-                elif trainable.has_method("to_monoid"):
-                    task.monoid = trainable.impl.to_monoid((input_X, input_y))
-                else:
-                    assert False, operation
+                task.monoid = trainable.impl.to_monoid((input_X, input_y))
             elif isinstance(task, _MetricTask):
                 assert len(task.preds) == 2
                 assert task.preds[0].step_id == _DUMMY_INPUT_STEP
@@ -891,17 +895,7 @@ def _run_tasks(
                 assert all(isinstance(p, _TrainTask) for p in task.preds)
                 trainable = pipeline.steps_list()[task.step_id]
                 monoids = (cast(_TrainTask, p).monoid for p in task.preds)
-                if trainable.has_method("_combine"):
-                    task.monoid = functools.reduce(trainable.impl._combine, monoids)
-                elif trainable.has_method("_monoid"):
-
-                    def _combine(x, y):
-                        assert isinstance(x, Monoid)
-                        return x.combine(y)
-
-                    task.monoid = functools.reduce(_combine, monoids)
-                else:
-                    assert False, operation
+                task.monoid = functools.reduce(lambda x, y: x.combine(y), monoids)  # type: ignore
             elif isinstance(task, _MetricTask):
                 scores = (cast(_MetricTask, p).score for p in task.preds)
                 task.score = functools.reduce(lambda x, y: x.combine(y), scores)  # type: ignore
