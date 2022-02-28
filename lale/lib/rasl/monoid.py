@@ -84,10 +84,11 @@ class MonoidableOperator(MonoidFactory[Any, None, _M]):
     _monoid: Optional[_M] = None
 
     def partial_fit(self, X, y=None):
-        lifted = self.to_monoid((X, y))
-        if self._monoid is not None:  # not first fit
-            lifted = self._monoid.combine(lifted)
-        self.from_monoid(lifted)
+        if self._monoid is None or not self._monoid.is_absorbing:
+            lifted = self.to_monoid((X, y))
+            if self._monoid is not None:  # not first fit
+                lifted = self._monoid.combine(lifted)
+            self.from_monoid(lifted)
         return self
 
     def fit(self, X, y=None):

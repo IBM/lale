@@ -202,10 +202,11 @@ class _ProjectImpl:
     _monoid: Optional[_ProjectMonoid]
 
     def partial_fit(self, X, y=None):
-        lifted = self._to_monoid_internal((X, y))
-        if self._monoid is not None:  # not first fit
-            lifted = self._monoid.combine(lifted)
-        self._from_monoid_internal(lifted)
+        if self._monoid is None or not self._monoid.is_absorbing:
+            lifted = self._to_monoid_internal((X, y))
+            if self._monoid is not None:  # not first fit
+                lifted = self._monoid.combine(lifted)
+            self._from_monoid_internal(lifted)
         return self
 
     def _fit_internal(self, X, y=None):
