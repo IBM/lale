@@ -94,7 +94,7 @@ _input_fit_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {"type": "array", "items": {"laleType": "Any"}},
         },
     },
 }
@@ -107,7 +107,7 @@ _input_transform_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {"type": "array", "items": {"laleType": "Any"}},
         },
     },
 }
@@ -125,7 +125,7 @@ _input_predict_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {"type": "array", "items": {"laleType": "Any"}},
         }
     },
 }
@@ -143,7 +143,7 @@ _input_predict_proba_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {"type": "array", "items": {"laleType": "Any"}},
         }
     },
 }
@@ -161,7 +161,7 @@ _input_decision_function_schema = {
         "X": {
             "description": "Features; the outer array is over samples.",
             "type": "array",
-            "items": {"type": "array", "items": {"type": "number"}},
+            "items": {"type": "array", "items": {"laleType": "Any"}},
         }
     },
 }

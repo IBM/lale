@@ -2313,9 +2313,6 @@ class TestSplitXy(unittest.TestCase):
         _ = trained.predict(self.X_test)
 
 
-@unittest.skip(
-    "skipping because we don't have any estimators that handle a Spark dataframe."
-)
 class TestSplitXySpark(unittest.TestCase):
     def setUp(self):
         if spark_installed:
