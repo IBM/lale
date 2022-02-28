@@ -31,8 +31,10 @@ class _SplitXyImpl:
             y = pd.DataFrame(X[self.label_name])
             X = X.drop(self.label_name, axis=1)
         elif _is_spark_df(X):
-            y = X.select(X[self.label_name])
-            X = X.drop(self.label_name)
+            X = (
+                X.toPandas()
+            )  # This operator is meant to be used with scikit-learn compatible pipelines, so converting to pandas.
+            return self.split_df(X)
         else:
             raise ValueError(
                 "Only Pandas or Spark dataframe are supported as inputs. Please check that pyspark is installed if you see this error for a Spark dataframe."
