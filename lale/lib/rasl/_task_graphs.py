@@ -14,7 +14,9 @@
 
 import enum
 import functools
+import pathlib
 import sys
+import tempfile
 import time
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, cast
@@ -149,23 +151,48 @@ _RawBatch = Tuple[pd.DataFrame, pd.Series]
 
 
 class _Batch:
-    X: pd.DataFrame
-    y: pd.Series
-    task: Optional["_ApplyTask"]
+    X: Union[pd.DataFrame, pathlib.Path]
+    y: Union[pd.Series, pathlib.Path]
 
     def __init__(self, X: pd.DataFrame, y: pd.Series, task: Optional["_ApplyTask"]):
         self.X = X
         self.y = y
         self.task = task
-        self.status = _BatchStatus.RESIDENT
+        self.size = X.size + y.size
+
+    def spill(self, spill_dir: pathlib.Path) -> None:
+        assert self.status == _BatchStatus.RESIDENT and self.task is not None
+        assert len(self.task.batch_ids) == 1, self.task.batch_ids
+        batch_id = self.task.batch_ids[0]
+        suffix = f"{self.task.step_id}_{batch_id}_{self.task.held_out}.pkl"
+        name_X = spill_dir / ("X_" + suffix)
+        name_y = spill_dir / ("y_" + suffix)
+        cast(pd.DataFrame, self.X).to_pickle(name_X)
+        cast(pd.Series, self.y).to_pickle(name_y)
+        self.X, self.y = name_X, name_y
+
+    def load_spilled(self) -> None:
+        assert isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path)
+        data_X, data_y = pd.read_pickle(self.X), pd.read_pickle(self.y)
+        self.X, self.y = data_X, data_y
+
+    def delete_if_spilled(self) -> None:
+        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
+            pathlib.Path(self.X).unlink()
+            pathlib.Path(self.y).unlink()
 
     @property
     def Xy(self) -> _RawBatch:
+        assert isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series)
         return self.X, self.y
 
     @property
-    def size(self) -> int:
-        return self.X.size + self.y.size
+    def status(self) -> _BatchStatus:
+        if isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series):
+            return _BatchStatus.RESIDENT
+        if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
+            return _BatchStatus.SPILLED
+        assert False, (type(self.X), type(self.y))
 
 
 class _ApplyTask(_Task):
@@ -677,17 +704,18 @@ def _analyze_run_trace(stats: _RunStats, trace: List[_TraceRecord]) -> _RunStats
     return stats
 
 
-def _run_tasks(
+def _run_tasks_inner(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
     batches: Iterable[_RawBatch],
     scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
-    max_resident,
+    max_resident: int,
     prio: Prio,
     verbose: int,
-    call_depth: int = 1,
+    call_depth: int,
+    spill_dir: Optional[pathlib.Path],
 ) -> None:
     for task in tasks.values():
         assert task.status is _TaskStatus.FRESH
@@ -711,6 +739,8 @@ def _run_tasks(
         if task.deletable_output:
             if all(s.status is _TaskStatus.DONE for s in task.succs):
                 if isinstance(task, _ApplyTask):
+                    if task.batch is not None:
+                        task.batch.delete_if_spilled()
                     task.batch = None
                 elif isinstance(task, _TrainTask):
                     task.monoid = None
@@ -765,19 +795,21 @@ def _run_tasks(
         while resident_batches_size + amount_needed > max_resident:
             batch = resident_batches.pop()
             assert batch.status == _BatchStatus.RESIDENT and batch.task is not None
-            batch.status = _BatchStatus.SPILLED
+            assert spill_dir is not None, max_resident
+            batch.spill(spill_dir)
             stats.spill_count += 1
             if verbose >= 2:
-                print(f"spill {_task_to_string(batch.task, pipeline, sep=' ')}")
+                task_string = _task_to_string(batch.task, pipeline, sep=" ")
+                print(f"spill {task_string} {batch.X} {batch.y.name}")
             resident_batches_size -= 1  # batch.size
 
     def load_batch(batch: _Batch) -> None:
         assert batch.status == _BatchStatus.SPILLED and batch.task is not None
         ensure_space(1)  # ensure_space(batch.size)
+        batch.load_spilled()
         stats.load_count += 1
         if verbose >= 2:
             print(f"load {_task_to_string(batch.task, pipeline, sep=' ')}")
-        batch.status = _BatchStatus.RESIDENT
 
     def load_input_batches(task: _Task) -> None:
         for batch in (p.batch for p in task.preds if isinstance(p, _ApplyTask)):
@@ -809,6 +841,7 @@ def _run_tasks(
             train_pred = cast(_TrainTask, find_task(_TrainTask, task.preds))
             trained = train_pred.get_trained(pipeline)
             apply_preds = find_task(_ApplyTask, task.preds)
+            load_input_batches(task)
             if isinstance(apply_preds, _Task):
                 apply_pred = cast(_ApplyTask, apply_preds)
                 assert apply_pred.batch is not None
@@ -819,7 +852,6 @@ def _run_tasks(
                 # The assumption is that input_y is not changed by the preds, so we can
                 # use it from any one of them.
                 input_y = apply_preds[0].batch.y  # type: ignore
-            load_input_batches(task)
             ensure_space(1)  # ensure_space(output batch size)
             assert_input_batches(task)
             if operation is _Operation.TRANSFORM:
@@ -914,6 +946,49 @@ def _run_tasks(
         print(_analyze_run_trace(stats, trace))
 
 
+def _run_tasks(
+    tasks: Dict[_MemoKey, _Task],
+    pipeline: TrainablePipeline[TrainableIndividualOp],
+    batches: Iterable[_RawBatch],
+    scoring: Optional[MetricMonoidFactory],
+    unique_class_labels: List[Union[str, int, float]],
+    all_batch_ids: Tuple[str, ...],
+    max_resident: Optional[int],
+    prio: Prio,
+    verbose: int,
+    call_depth: int,
+) -> None:
+    if max_resident is None:
+        _run_tasks_inner(
+            tasks,
+            pipeline,
+            batches,
+            scoring,
+            unique_class_labels,
+            all_batch_ids,
+            sys.maxsize,
+            prio,
+            verbose,
+            call_depth + 1,
+            None,
+        )
+    else:
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            _run_tasks_inner(
+                tasks,
+                pipeline,
+                batches,
+                scoring,
+                unique_class_labels,
+                all_batch_ids,
+                max_resident,
+                prio,
+                verbose,
+                call_depth + 1,
+                pathlib.Path(tmpdirname),
+            )
+
+
 def mockup_data_loader(
     X: pd.DataFrame, y: pd.Series, n_splits: int
 ) -> Iterable[_RawBatch]:
@@ -969,7 +1044,7 @@ def fit_with_batches(
     batches: Iterable[_RawBatch],
     n_batches: int,
     unique_class_labels: List[Union[str, int, float]],
-    max_resident: int,
+    max_resident: Optional[int],
     prio: Prio,
     incremental: bool,
     verbose: int,
@@ -1022,7 +1097,7 @@ def cross_val_score(
     n_batches_per_fold: int,
     scoring: MetricMonoidFactory,
     unique_class_labels: List[Union[str, int, float]],
-    max_resident: int,
+    max_resident: Optional[int],
     prio: Prio,
     same_fold: bool,
     verbose: int,
@@ -1062,7 +1137,7 @@ def cross_validate(
     n_batches_per_fold: int,
     scoring: MetricMonoidFactory,
     unique_class_labels: List[Union[str, int, float]],
-    max_resident: int,
+    max_resident: Optional[int],
     prio: Prio,
     same_fold: bool,
     return_estimator: bool,
