@@ -1,4 +1,4 @@
-# Copyright 2020, 2021 IBM Corporation
+# Copyright 2020-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -47,7 +47,6 @@ except ImportError:
 
 import lale.helpers
 import lale.lib.aif360
-import lale.lib.aif360.stratification
 import lale.lib.aif360.util
 from lale.datasets.data_schemas import NDArrayWithSchema
 from lale.lib.aif360 import (
@@ -841,7 +840,7 @@ class TestAIF360Cat(unittest.TestCase):
         fairness_info = self.creditg_pd_cat["fairness_info"]
         train_X = self.creditg_pd_cat["splits"][0]["train_X"]
         train_y = self.creditg_pd_cat["splits"][0]["train_y"]
-        stratify = lale.lib.aif360.stratification._column_for_stratification(
+        stratify = lale.lib.aif360.util._column_for_stratification(
             train_X, train_y, **fairness_info, unfavorable_labels=None
         )
         for i in train_X.index:
@@ -1185,3 +1184,19 @@ class TestAIF360Cat(unittest.TestCase):
         di = di_scorer(trained_remi, test_X, test_y)
         self.assertLessEqual(0.8, di)
         self.assertLessEqual(di, 1.0)
+
+
+class TestAIF360Imports(unittest.TestCase):
+    def test_import_split(self):
+        # for backward compatibility, need to support import from `...util`
+        from lale.lib.aif360 import fair_stratified_train_test_split as s_init
+        from lale.lib.aif360.util import fair_stratified_train_test_split as s_util
+
+        self.assertIs(s_init, s_util)
+
+    def test_import_disparate_impact(self):
+        # for backward compatibility, need to support import from `...util`
+        from lale.lib.aif360 import disparate_impact as di_init
+        from lale.lib.aif360.util import disparate_impact as di_util
+
+        self.assertIs(di_init, di_util)
