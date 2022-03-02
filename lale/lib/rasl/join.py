@@ -12,13 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
-
 import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
+from lale.datasets.data_schemas import add_table_name, get_table_name
 from lale.helpers import (
     _get_subscript_value,
     _is_ast_attribute,
@@ -225,47 +223,27 @@ class _JoinImpl:
 
         def remove_implicit_col(key_col, df):
             if _is_spark_with_index(df):
-                index = get_index_name(df)
-                if index not in key_col:
+                indexes = df.index_names
+                for index in set(indexes) - set(key_col):
                     df = df.drop(index)
             return df
 
-        def add_index(left_key_col, left_df, right_key_col, right_df, joined_df):
+        def add_index(left_df, right_df, joined_df):
+            joined_names = set(get_columns(joined_df))
             if _is_spark_with_index(left_df) and _is_spark_with_index(right_df):
-                left_name = get_index_name(left_df)
-                right_name = get_index_name(right_df)
-                if left_name in left_key_col and right_name in right_key_col:
-                    if left_name == right_name:
-                        joined_df = SparkDataFrameWithIndex(
-                            joined_df, index_name=left_name
-                        )
-                    else:
-                        warnings.warn(f"New data column {right_name}")
-                        joined_df = SparkDataFrameWithIndex(
-                            joined_df, index_name=left_name
-                        )
-                elif left_name in left_key_col:
-                    joined_df = SparkDataFrameWithIndex(joined_df, index_name=left_name)
-                elif right_name in right_key_col:
-                    joined_df = SparkDataFrameWithIndex(
-                        joined_df, index_name=right_name
-                    )
-                else:
-                    pass
+                left_names = left_df.index_names
+                right_names = right_df.index_names
+                index_names = set.union(set(left_names), set(right_names))
             elif _is_spark_with_index(left_df):
-                index_name = get_index_name(left_df)
-                if index_name in left_key_col:
-                    joined_df = SparkDataFrameWithIndex(
-                        joined_df, index_name=index_name
-                    )
+                index_names = set(left_df.index_names)
             elif _is_spark_with_index(right_df):
-                index_name = get_index_name(right_df)
-                if index_name in right_key_col:
-                    joined_df = SparkDataFrameWithIndex(
-                        joined_df, index_name=index_name
-                    )
+                index_names = set(right_df.index_names)
             else:
                 assert False
+            new_index_names = set.intersection(index_names, joined_names)
+            joined_df = SparkDataFrameWithIndex(
+                joined_df, index_names=list(new_index_names)
+            )
             return joined_df
 
         # Iterate over all the elements of the predicate
@@ -312,9 +290,7 @@ class _JoinImpl:
                 )
             joined_df = join_df(left_df, right_df)
             if _is_spark_with_index(left_df) or _is_spark_with_index(right_df):
-                joined_df = add_index(
-                    left_key_col, left_df, right_key_col, right_df, joined_df
-                )
+                joined_df = add_index(left_df, right_df, joined_df)
             tables_encountered.add(left_table_name)
             tables_encountered.add(right_table_name)
         return add_table_name(joined_df, self.name)

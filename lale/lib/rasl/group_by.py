@@ -17,7 +17,7 @@ import numpy as np
 import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
-from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
+from lale.datasets.data_schemas import add_table_name, get_index_names, get_table_name
 from lale.helpers import (
     _get_subscript_value,
     _is_ast_attribute,
@@ -59,7 +59,7 @@ class _GroupByImpl:
                 )
             )
         if X_is_spark_with_index:
-            X = X.drop(get_index_name(X))
+            X = X.drop(*get_index_names(X))
         if _is_pandas_df(X):
             grouped_df = X.groupby(group_by_keys, sort=False)
         elif _is_spark_df(X):

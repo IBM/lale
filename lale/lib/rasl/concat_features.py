@@ -24,7 +24,7 @@ import lale.docstrings
 import lale.operators
 import lale.pretty_print
 import lale.type_checking
-from lale.datasets.data_schemas import add_table_name, get_index_name, get_table_name
+from lale.datasets.data_schemas import add_table_name, get_index_names, get_table_name
 from lale.expressions import it
 from lale.helpers import _is_spark_df
 from lale.json_operator import JSON_TYPE
@@ -83,13 +83,18 @@ class _ConcatFeaturesImpl:
                     raise ValueError(
                         "Table names are required to concatenate features of Spark dataframes"
                     )
-                index_col1 = get_index_name(d1)
-                index_col2 = get_index_name(d2)
-                if index_col1 is None or index_col2 is None:
+                indexes_col1 = get_index_names(d1)
+                indexes_col2 = get_index_names(d2)
+                if indexes_col1 is None or indexes_col2 is None:
                     raise ValueError(
                         "Index columns are required to concatenate features of Spark dataframes"
                     )
-                transformer = Join(pred=[it[n1][index_col1] == it[n2][index_col2]])
+                transformer = Join(
+                    pred=[
+                        it[n1][index_col1] == it[n2][index_col2]
+                        for index_col1, index_col2 in zip(indexes_col1, indexes_col2)
+                    ]
+                )
                 return transformer.transform([d1, d2])
 
             result = reduce(join, X)

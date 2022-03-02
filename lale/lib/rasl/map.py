@@ -217,8 +217,10 @@ class _MapImpl:
                 if x not in accessed_column_names
             ]
             new_columns.extend(remainder_columns)
-        if _is_spark_with_index(X) and X.index_name not in accessed_column_names:
-            new_columns.extend([spark_col(X.index_name)])
+        if _is_spark_with_index(X):
+            for index_name in X.index_names:
+                if index_name not in accessed_column_names:
+                    new_columns.extend([spark_col(index_name)])
         mapped_df = X.select(new_columns)
         mapped_df = forward_metadata(X, mapped_df)
         return mapped_df

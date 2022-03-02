@@ -203,7 +203,7 @@ class TestMinMaxScaler(unittest.TestCase):
                 elif tgt == "spark":
                     data_delta = pandas2spark(data_delta)
                 elif tgt == "spark-with-index":
-                    data_delta = pandas2spark(data_delta, add_index=True)
+                    data_delta = pandas2spark(data_delta, with_index=True)
                 else:
                     assert False
                 sk_trained = sk_scaler.fit(data_so_far)
@@ -224,7 +224,7 @@ class TestPipeline(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         X, y = load_iris(as_frame=True, return_X_y=True)
@@ -266,7 +266,7 @@ class TestSelectKBest(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         X, y = load_digits(return_X_y=True, as_frame=True)
@@ -401,7 +401,7 @@ class TestOrdinalEncoder(unittest.TestCase):
                 elif tgt == "spark":
                     data_delta = pandas2spark(data_delta)
                 elif tgt == "spark-with-index":
-                    data_delta = pandas2spark(data_delta, add_index=True)
+                    data_delta = pandas2spark(data_delta, with_index=True)
                 else:
                     assert False
                 rasl_op = rasl_op.partial_fit(data_delta)
@@ -513,7 +513,7 @@ class TestOneHotEncoder(unittest.TestCase):
                 elif tgt == "spark":
                     data_delta = pandas2spark(data_delta)
                 elif tgt == "spark-with-index":
-                    data_delta = pandas2spark(data_delta, add_index=True)
+                    data_delta = pandas2spark(data_delta, with_index=True)
                 else:
                     assert False
                 rasl_pipe = rasl_pipe.partial_fit(data_delta)
@@ -967,11 +967,11 @@ class TestSimpleImputer(unittest.TestCase):
                     data3 = data3_pandas
                     test_X = test_X_pandas
                 elif tgt.startswith("spark"):
-                    add_index = tgt == "spark-with-index"
-                    data1 = pandas2spark(data1_pandas, add_index)  # type:ignore
-                    data2 = pandas2spark(data2_pandas, add_index)  # type:ignore
-                    data3 = pandas2spark(data3_pandas, add_index)  # type:ignore
-                    test_X = pandas2spark(test_X_pandas, add_index)  # type:ignore
+                    with_index = tgt == "spark-with-index"
+                    data1 = pandas2spark(data1_pandas, with_index)  # type:ignore
+                    data2 = pandas2spark(data2_pandas, with_index)  # type:ignore
+                    data3 = pandas2spark(data3_pandas, with_index)  # type:ignore
+                    test_X = pandas2spark(test_X_pandas, with_index)  # type:ignore
                 else:
                     assert False
                 rasl_trainable = prefix >> RaslSimpleImputer(
@@ -1083,7 +1083,7 @@ class TestStandardScaler(unittest.TestCase):
                 elif tgt == "spark":
                     data_delta = pandas2spark(data_delta)
                 elif tgt == "spark-with-index":
-                    data_delta = pandas2spark(data_delta, add_index=True)
+                    data_delta = pandas2spark(data_delta, with_index=True)
                 else:
                     assert False
                 rasl_op = rasl_op.partial_fit(data_delta)
