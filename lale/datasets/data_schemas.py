@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Optional, Tuple, Type, Union
+from typing import Any, List, Optional, Tuple, Type, Union
 
 import numpy as np
 import pandas as pd
@@ -100,10 +100,15 @@ if spark_installed:
             return name
 
     class SparkDataFrameWithIndex(pyspark.sql.DataFrame):  # type: ignore
-        def __init__(self, df, index_name=None):
-            if index_name is None:
+        def __init__(self, df, index_names=None):
+            if index_names is not None and len(index_names) == 1:
+                index_name = index_names[0]
+            elif index_names is None:
                 index_name = _gen_index_name(df)
-            if index_name not in df.columns:
+                index_names = [index_name]
+            else:
+                index_name = None
+            if index_name is not None and index_name not in df.columns:
                 df = (
                     df.rdd.zipWithIndex()
                     .map(lambda row: row[0] + (row[1],))
@@ -111,26 +116,32 @@ if spark_installed:
                 )
             super(self.__class__, self).__init__(df._jdf, df.sql_ctx)
             self.index_name = index_name
+            self.index_names = index_names
 
         @property
         def columns_without_index(self):
-            cols = list(super().columns)
-            cols.remove(self.index_name)
+            cols = list(self.columns)
+            for name in self.index_names:
+                cols.remove(name)
             return cols
 
         def toPandas(self, *args, **kwargs):
             df = super(self.__class__, self).toPandas(*args, **kwargs)
-            return df.set_index(self.index_name)
+            return df.set_index(self.index_names)
 
 
 else:
 
     class SparkDataFrameWithIndex:  # type: ignore
-        def __init__(self, df, index_name=None):
+        def __init__(self, df, index_names=None):
             raise ValueError("pyspark is not installed")
 
         @property
-        def index_name(self) -> Union[int, str, slice]:
+        def index_name(self) -> Union[str, None]:
+            raise ValueError("pyspark is not installed")  # type: ignore
+
+        @property
+        def index_names(self) -> List[str]:
             raise ValueError("pyspark is not installed")  # type: ignore
 
 
@@ -194,7 +205,7 @@ def add_table_name(obj, name) -> Any:
         for f in obj.schema.fieldNames():
             o.schema[f].metadata = obj.schema[f].metadata
         if isinstance(obj, SparkDataFrameWithIndex):
-            o = SparkDataFrameWithIndex(o, obj.index_name)
+            o = SparkDataFrameWithIndex(o, obj.index_names)
         return o
     if isinstance(obj, NDArrayWithSchema):
         result = obj.view(NDArrayWithSchema)
@@ -277,14 +288,31 @@ def get_index_name(obj):
             pd.core.groupby.SeriesGroupBy,
         ),
     ):
-        result = obj.index.names[0]
+        result = obj.index.name
+    return result
+
+
+def get_index_names(obj):
+    result = None
+    if spark_installed and isinstance(obj, SparkDataFrameWithIndex):
+        result = obj.index_names
+    elif isinstance(
+        obj,
+        (
+            SeriesWithSchema,
+            DataFrameWithSchema,
+            pd.core.groupby.DataFrameGroupBy,
+            pd.core.groupby.SeriesGroupBy,
+        ),
+    ):
+        result = obj.index.names
     return result
 
 
 def forward_metadata(old, new):
     new = add_table_name(new, get_table_name(old))
     if isinstance(old, SparkDataFrameWithIndex):
-        new = SparkDataFrameWithIndex(new, index_name=get_index_name(old))
+        new = SparkDataFrameWithIndex(new, index_names=get_index_names(old))
     return new
 
 

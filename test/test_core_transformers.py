@@ -373,8 +373,8 @@ class TestConcatFeatures(unittest.TestCase):
             B = [[14, 15], [24, 25], [34, 35]]
             A = pd.DataFrame(A, columns=["a", "b", "c"])
             B = pd.DataFrame(B, columns=["d", "e"])
-            A = pandas2spark(A, add_index=True)
-            B = pandas2spark(B, add_index=True, index_name="idx")
+            A = pandas2spark(A, with_index=True)
+            B = pandas2spark(B.rename_axis(index="idx"), with_index=True)
             A = add_table_name(A, "A")
             B = add_table_name(B, "B")
 
@@ -400,7 +400,7 @@ class TestConcatFeatures(unittest.TestCase):
             B = [[14, 15], [24, 25], [34, 35]]
             A = pd.DataFrame(A, columns=["a", "b", "c"])
             B = pd.DataFrame(B, columns=["d", "e"])
-            A = pandas2spark(A, add_index=True)
+            A = pandas2spark(A, with_index=True)
             A = add_table_name(A, "A")
             B = add_table_name(B, "B")
 

@@ -85,6 +85,14 @@ from lale.lib.rasl import (
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 
 
+def _set_index_name(df, name):
+    return add_table_name(df.rename_axis(index=name), get_table_name(df))
+
+
+def _set_index(df, name):
+    return add_table_name(df.set_index(name), get_table_name(df))
+
+
 # Testing '==' and '!=' operator with different types of expressions
 class TestExpressions(unittest.TestCase):
     def test_expr_1(self):
@@ -627,8 +635,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (5000, 5))
             row = result[(result["product"] == 70240) & (result["retailer"] == 1205)]
             self.assertEqual(row.loc[row.index[0], "product"], 70240, tgt)
@@ -638,6 +645,9 @@ class TestAggregate(unittest.TestCase):
             )
             self.assertEqual(row.loc[row.index[0], "max_usp"], 122.70, tgt)
             self.assertEqual(row.loc[row.index[0], "count_quantity"], 41, tgt)
+            self.assertEqual(
+                result.index.names, ["Product number", "Retailer code"], tgt
+            )
 
     def test_products_twokeys_grouped(self):
         pipeline = (
@@ -706,7 +716,7 @@ class TestJoin(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         table1 = {
@@ -976,13 +986,13 @@ class TestJoin(unittest.TestCase):
             join_type="inner",
         )
         df1 = pandas2spark(
-            self.tgt2datasets["pandas"]["df1"], add_index=True, index_name="idx"
+            _set_index_name(self.tgt2datasets["pandas"]["df1"], "idx"), with_index=True
         )
         df2 = pandas2spark(
-            self.tgt2datasets["pandas"]["df2"], add_index=True, index_name="idx"
+            _set_index_name(self.tgt2datasets["pandas"]["df2"], "idx"), with_index=True
         )
         df3 = pandas2spark(
-            self.tgt2datasets["pandas"]["df3"], add_index=True, index_name="idx"
+            _set_index_name(self.tgt2datasets["pandas"]["df3"], "idx"), with_index=True
         )
         transformed_df = trainable.transform([df1, df2, df3])
         transformed_df = _ensure_pandas(transformed_df)
@@ -995,7 +1005,10 @@ class TestJoin(unittest.TestCase):
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
+        df1 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
+            with_index=True,
+        )
         df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
         df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
         transformed_df = trainable.transform([df1, df2, df3])
@@ -1009,7 +1022,10 @@ class TestJoin(unittest.TestCase):
             pred=[it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
+        df1 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
+            with_index=True,
+        )
         df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
         df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
         transformed_df = trainable.transform([df1, df2, df3])
@@ -1023,13 +1039,21 @@ class TestJoin(unittest.TestCase):
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
-        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"], index_name="TrainId")
-        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"], index_name="tid")
+        df1 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
+            with_index=True,
+        )
+        df2 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df2"], "TrainId"),
+            with_index=True,
+        )
+        df3 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df3"], "tid"), with_index=True
+        )
         transformed_df = trainable.transform([df1, df2, df3])
         transformed_df = _ensure_pandas(transformed_df)
         transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 7))
+        self.assertEqual(transformed_df.shape, (3, 6))
         self.assertEqual(transformed_df["col5"][1], "Cold")
 
 
@@ -1045,7 +1069,7 @@ class TestMap(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         df = pd.DataFrame(
@@ -2096,7 +2120,7 @@ class TestRelationalOperator(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         X, y = load_iris(as_frame=True, return_X_y=True)
@@ -2201,7 +2225,7 @@ class TestOrderBy(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         df = pd.DataFrame(
