@@ -1184,6 +1184,7 @@ class TestTaskGraphs(unittest.TestCase):
 
     def test_fit_batching(self):
         (train_X, train_y), _ = self.creditg
+        train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_trainable = self._make_sk_trainable("sgd")
         sk_trained = sk_trainable.fit(train_X, train_y)
         unique_class_labels = list(train_y.unique())
@@ -1192,12 +1193,12 @@ class TestTaskGraphs(unittest.TestCase):
                 batches = mockup_data_loader(train_X, train_y, n_batches)
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
-                    rasl_trainable,
-                    batches,
-                    n_batches,
-                    unique_class_labels,
-                    3,
-                    prio,
+                    pipeline=rasl_trainable,
+                    batches=batches,
+                    n_batches=n_batches,
+                    unique_class_labels=unique_class_labels,
+                    max_resident=3 * math.ceil(train_data_space / n_batches),
+                    prio=prio,
                     incremental=False,
                     verbose=0,
                 )
@@ -1216,6 +1217,7 @@ class TestTaskGraphs(unittest.TestCase):
 
     def test_cross_val_score_no_batching(self):
         (train_X, train_y), _ = self.creditg
+        train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
             X=train_X,
@@ -1231,7 +1233,7 @@ class TestTaskGraphs(unittest.TestCase):
             n_batches_per_fold=1,
             scoring=rasl_get_scorer("accuracy"),
             unique_class_labels=list(train_y.unique()),
-            max_resident=3,
+            max_resident=3 * math.ceil(train_data_space / 3),
             prio=PrioBatch(),
             same_fold=True,
             verbose=0,
@@ -1271,6 +1273,7 @@ class TestTaskGraphs(unittest.TestCase):
 
     def test_cross_validate_no_batching(self):
         (train_X, train_y), _ = self.creditg
+        train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_scores = sk_cross_validate(
             estimator=self._make_sk_trainable("rfc"),
             X=train_X,
@@ -1287,7 +1290,7 @@ class TestTaskGraphs(unittest.TestCase):
             n_batches_per_fold=1,
             scoring=rasl_get_scorer("accuracy"),
             unique_class_labels=list(train_y.unique()),
-            max_resident=3,
+            max_resident=3 * math.ceil(train_data_space / 3),
             prio=PrioBatch(),
             same_fold=True,
             return_estimator=True,
@@ -1470,6 +1473,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
 
     def test_fit_batching(self):
         (train_X, train_y), _ = self.creditg
+        train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_trainable = self._make_sk_trainable("sgd")
         sk_trained = sk_trainable.fit(train_X, train_y)
         unique_class_labels = list(train_y.unique())
@@ -1478,14 +1482,15 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
                 batches = create_data_loader(
                     train_X, train_y, math.ceil(len(train_y) / n_batches)
                 )
+                self.assertEqual(n_batches, len(batches))
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
-                    rasl_trainable,
-                    batches,  # type: ignore
-                    len(batches),
-                    unique_class_labels,
-                    3,
-                    prio,
+                    pipeline=rasl_trainable,
+                    batches=batches,  # type: ignore
+                    n_batches=n_batches,
+                    unique_class_labels=unique_class_labels,
+                    max_resident=3 * math.ceil(train_data_space / n_batches),
+                    prio=prio,
                     incremental=False,
                     verbose=0,
                 )
@@ -1673,6 +1678,7 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
 
     def test_fit_batching(self):
         (train_X, train_y), _ = self.creditg
+        train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_trainable = self._make_sk_trainable("sgd")
         sk_trained = sk_trainable.fit(train_X, train_y)
         unique_class_labels = list(train_y.unique())
@@ -1681,14 +1687,15 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
                 batches = create_data_loader(
                     train_X, train_y, math.ceil(len(train_y) / n_batches)
                 )
+                self.assertEqual(n_batches, len(batches))
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
-                    rasl_trainable,
-                    batches,  # type: ignore
-                    len(batches),
-                    unique_class_labels,
-                    3,
-                    prio,
+                    pipeline=rasl_trainable,
+                    batches=batches,  # type: ignore
+                    n_batches=n_batches,
+                    unique_class_labels=unique_class_labels,
+                    max_resident=3 * math.ceil(train_data_space / n_batches),
+                    prio=prio,
                     incremental=False,
                     verbose=0,
                 )

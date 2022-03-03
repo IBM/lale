@@ -14,12 +14,13 @@
 
 import enum
 import functools
+import logging
 import pathlib
 import sys
 import tempfile
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Iterable, List, Optional, Tuple, Type, Union, cast
+from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union, cast
 
 import graphviz
 import pandas as pd
@@ -38,6 +39,9 @@ from lale.operators import (
 
 from .metrics import MetricMonoid, MetricMonoidFactory
 from .monoid import Monoid, MonoidFactory
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.WARNING)
 
 _BatchStatus = enum.Enum("BatchStatus", "RESIDENT SPILLED")
 
@@ -158,15 +162,12 @@ class _Batch:
         self.X = X
         self.y = y
         self.task = task
-        self.size = X.size + y.size
+        self.space = int(X.memory_usage().sum() + y.memory_usage())
 
     def spill(self, spill_dir: pathlib.Path) -> None:
-        assert self.status == _BatchStatus.RESIDENT and self.task is not None
-        assert len(self.task.batch_ids) == 1, self.task.batch_ids
-        batch_id = self.task.batch_ids[0]
-        suffix = f"{self.task.step_id}_{batch_id}_{self.task.held_out}.pkl"
-        name_X = spill_dir / ("X_" + suffix)
-        name_y = spill_dir / ("y_" + suffix)
+        assert self.status == _BatchStatus.RESIDENT
+        name_X = spill_dir / f"X_{self}.pkl"
+        name_y = spill_dir / f"y_{self}.pkl"
         cast(pd.DataFrame, self.X).to_pickle(name_X)
         cast(pd.Series, self.y).to_pickle(name_y)
         self.X, self.y = name_X, name_y
@@ -178,8 +179,13 @@ class _Batch:
 
     def delete_if_spilled(self) -> None:
         if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
-            pathlib.Path(self.X).unlink()
-            pathlib.Path(self.y).unlink()
+            self.X.unlink()
+            self.y.unlink()
+
+    def __str__(self) -> str:
+        assert self.task is not None and len(self.task.batch_ids) == 1
+        batch_id = self.task.batch_ids[0]
+        return f"{self.task.step_id}_{batch_id}_{self.task.held_out}"
 
     @property
     def Xy(self) -> _RawBatch:
@@ -334,6 +340,10 @@ class _RunStats:
             {
                 "spill_count": 0,
                 "load_count": 0,
+                "spill_space": 0,
+                "load_space": 0,
+                "min_resident": 0,
+                "max_resident": 0,
                 "train_count": 0,
                 "apply_count": 0,
                 "metric_count": 0,
@@ -366,7 +376,7 @@ class _TraceRecord:
         self.time = time
         if isinstance(task, _ApplyTask):
             assert task.batch is not None
-            self.space = task.batch.size
+            self.space = task.batch.space
         else:
             self.space = 0  # TODO: size for train tasks and metrics tasks
 
@@ -704,6 +714,106 @@ def _analyze_run_trace(stats: _RunStats, trace: List[_TraceRecord]) -> _RunStats
     return stats
 
 
+class _BatchCache:
+    spill_dir: Optional[tempfile.TemporaryDirectory]
+    spill_path: Optional[pathlib.Path]
+
+    def __init__(
+        self,
+        tasks: Dict[_MemoKey, _Task],
+        max_resident: Optional[int],
+        prio: Prio,
+        verbose: int,
+    ):
+        self.tasks = tasks
+        self.max_resident = sys.maxsize if max_resident is None else max_resident
+        self.prio = prio
+        self.spill_dir = None
+        self.spill_path = None
+        self.verbose = verbose
+        self.stats = _RunStats()
+        self.stats.max_resident = self.max_resident
+
+    def __enter__(self) -> "_BatchCache":
+        if self.max_resident < sys.maxsize:
+            self.spill_dir = tempfile.TemporaryDirectory()
+            self.spill_path = pathlib.Path(self.spill_dir.name)
+        return self
+
+    def __exit__(self, value, type, traceback) -> None:
+        if self.spill_dir is not None:
+            self.spill_dir.cleanup()
+
+    def _get_apply_preds(self, task: _Task) -> List[_ApplyTask]:
+        result = [t for t in task.preds if isinstance(t, _ApplyTask)]
+        assert all(t.batch is not None for t in result)
+        return result
+
+    def estimate_space(self, task: _ApplyTask) -> int:
+        other_tasks_with_similar_output = (
+            t
+            for t in self.tasks.values()
+            if t is not task and isinstance(t, _ApplyTask)
+            if t.step_id == task.step_id and t.batch is not None
+        )
+        try:
+            surrogate = next(other_tasks_with_similar_output)
+            assert isinstance(surrogate, _ApplyTask) and surrogate.batch is not None
+            return surrogate.batch.space
+        except StopIteration:  # the iterator was empty
+            if task.step_id == _DUMMY_INPUT_STEP:
+                return 1  # safe to underestimate on first batch scanned
+            apply_preds = self._get_apply_preds(task)
+            return sum(cast(_Batch, t.batch).space for t in apply_preds)
+
+    def ensure_space(self, amount_needed: int, no_spill_set: Set[_Batch]) -> None:
+        no_spill_space = sum(b.space for b in no_spill_set)
+        min_resident = amount_needed + no_spill_space
+        self.stats.min_resident = max(self.stats.min_resident, min_resident)
+        resident_batches = [
+            t.batch
+            for t in self.tasks.values()
+            if isinstance(t, _ApplyTask) and t.batch is not None
+            if t.batch.status == _BatchStatus.RESIDENT
+        ]
+        resident_batches.sort(key=lambda b: self.prio.batch_priority(b))
+        resident_batches_space = sum(b.space for b in resident_batches)
+        while resident_batches_space + amount_needed > self.max_resident:
+            if len(resident_batches) == 0:
+                logger.warning(
+                    f"ensure_space() failed, amount_needed {amount_needed}, no_spill_space {no_spill_space}, min_resident {min_resident}, max_resident {self.max_resident}"
+                )
+                break
+            batch = resident_batches.pop()
+            assert batch.status == _BatchStatus.RESIDENT and batch.task is not None
+            if batch in no_spill_set:
+                logger.warning(f"aborted spill of batch {batch}")
+            else:
+                assert self.spill_path is not None, self.max_resident
+                batch.spill(self.spill_path)
+                self.stats.spill_count += 1
+                self.stats.spill_space += batch.space
+                if self.verbose >= 2:
+                    print(f"spill {batch.X} {batch.y}")
+                resident_batches_space -= batch.space
+
+    def load_input_batches(self, task: _Task) -> None:
+        apply_preds = self._get_apply_preds(task)
+        no_spill_set = cast(Set[_Batch], set(t.batch for t in apply_preds))
+        for pred in apply_preds:
+            assert pred.batch is not None
+            if pred.batch.status == _BatchStatus.SPILLED:
+                self.ensure_space(pred.batch.space, no_spill_set)
+                if self.verbose >= 2:
+                    print(f"load {pred.batch.X} {pred.batch.y}")
+                pred.batch.load_spilled()
+                self.stats.load_count += 1
+                self.stats.load_space += pred.batch.space
+        for pred in apply_preds:
+            assert pred.batch is not None
+            assert pred.batch.status == _BatchStatus.RESIDENT
+
+
 def _run_tasks_inner(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
@@ -711,11 +821,10 @@ def _run_tasks_inner(
     scoring: Optional[MetricMonoidFactory],
     unique_class_labels: List[Union[str, int, float]],
     all_batch_ids: Tuple[str, ...],
-    max_resident: int,
+    cache: _BatchCache,
     prio: Prio,
     verbose: int,
     call_depth: int,
-    spill_dir: Optional[pathlib.Path],
 ) -> None:
     for task in tasks.values():
         assert task.status is _TaskStatus.FRESH
@@ -724,7 +833,6 @@ def _run_tasks_inner(
         else:
             task.status = _TaskStatus.WAITING
     ready_keys = {k for k, t in tasks.items() if t.status is _TaskStatus.READY}
-    stats = _RunStats()
 
     def find_task(
         task_class: Type["_Task"], task_list: List[_Task]
@@ -781,46 +889,6 @@ def _run_tasks_inner(
                             task2.monoid = task_monoid
                             mark_done(task2)
 
-    def ensure_space(amount_needed: int) -> None:
-        resident_batches = [
-            t.batch
-            for t in tasks.values()
-            if isinstance(t, _ApplyTask) and t.batch is not None
-            if t.batch.status == _BatchStatus.RESIDENT
-        ]
-        resident_batches.sort(key=lambda b: prio.batch_priority(b))
-        resident_batches_size = len(
-            resident_batches
-        )  # sum(b.size for b in resident_batches)
-        while resident_batches_size + amount_needed > max_resident:
-            batch = resident_batches.pop()
-            assert batch.status == _BatchStatus.RESIDENT and batch.task is not None
-            assert spill_dir is not None, max_resident
-            batch.spill(spill_dir)
-            stats.spill_count += 1
-            if verbose >= 2:
-                task_string = _task_to_string(batch.task, pipeline, sep=" ")
-                print(f"spill {task_string} {batch.X} {batch.y.name}")
-            resident_batches_size -= 1  # batch.size
-
-    def load_batch(batch: _Batch) -> None:
-        assert batch.status == _BatchStatus.SPILLED and batch.task is not None
-        ensure_space(1)  # ensure_space(batch.size)
-        batch.load_spilled()
-        stats.load_count += 1
-        if verbose >= 2:
-            print(f"load {_task_to_string(batch.task, pipeline, sep=' ')}")
-
-    def load_input_batches(task: _Task) -> None:
-        for batch in (p.batch for p in task.preds if isinstance(p, _ApplyTask)):
-            assert batch is not None
-            if batch.status == _BatchStatus.SPILLED:
-                load_batch(batch)
-
-    def assert_input_batches(task: _Task) -> None:
-        batches = (p.batch for p in task.preds if isinstance(p, _ApplyTask))
-        assert all(b is not None and b.status == _BatchStatus.RESIDENT for b in batches)
-
     trace: Optional[List[_TraceRecord]] = [] if verbose >= 2 else None
     batches_iterator = iter(batches)
     while len(ready_keys) > 0:
@@ -832,7 +900,7 @@ def _run_tasks_inner(
         if operation is _Operation.SCAN:
             assert isinstance(task, _ApplyTask)
             assert len(task.batch_ids) == 1 and len(task.preds) == 0
-            ensure_space(1)  # ensure_space(output batch size)
+            cache.ensure_space(cache.estimate_space(task), set())
             X, y = next(batches_iterator)
             task.batch = _Batch(X, y, task)
         elif operation in [_Operation.TRANSFORM, _Operation.PREDICT]:
@@ -840,20 +908,19 @@ def _run_tasks_inner(
             assert len(task.batch_ids) == 1
             train_pred = cast(_TrainTask, find_task(_TrainTask, task.preds))
             trained = train_pred.get_trained(pipeline)
-            apply_preds = find_task(_ApplyTask, task.preds)
-            load_input_batches(task)
-            if isinstance(apply_preds, _Task):
-                apply_pred = cast(_ApplyTask, apply_preds)
-                assert apply_pred.batch is not None
-                input_X, input_y = apply_pred.batch.Xy
-            else:  # a list of tasks
-                assert not any(apply_pred.batch is None for apply_pred in apply_preds)  # type: ignore
-                input_X = [pred.batch.X for pred in apply_preds]  # type: ignore
+            apply_preds = [t for t in task.preds if isinstance(t, _ApplyTask)]
+            cache.load_input_batches(task)
+            if len(apply_preds) == 1:
+                assert apply_preds[0].batch is not None
+                input_X, input_y = apply_preds[0].batch.Xy
+            else:
+                assert not any(pred.batch is None for pred in apply_preds)
+                input_X = [cast(_Batch, pred.batch).X for pred in apply_preds]
                 # The assumption is that input_y is not changed by the preds, so we can
                 # use it from any one of them.
-                input_y = apply_preds[0].batch.y  # type: ignore
-            ensure_space(1)  # ensure_space(output batch size)
-            assert_input_batches(task)
+                input_y = cast(pd.Series, cast(_Batch, apply_preds[0].batch).y)
+            no_spill_set = cast(Set[_Batch], set(t.batch for t in apply_preds))
+            cache.ensure_space(cache.estimate_space(task), no_spill_set)
             if operation is _Operation.TRANSFORM:
                 task.batch = _Batch(trained.transform(input_X), input_y, task)
             else:
@@ -864,20 +931,20 @@ def _run_tasks_inner(
         elif operation is _Operation.FIT:
             assert isinstance(task, _TrainTask)
             assert all(isinstance(p, _ApplyTask) for p in task.preds)
-            assert not any(cast(_ApplyTask, p).batch is None for p in task.preds)
+            apply_preds = [cast(_ApplyTask, p) for p in task.preds]
+            assert not any(p.batch is None for p in apply_preds)
             trainable = pipeline.steps_list()[task.step_id]
             if is_pretrained(trainable):
                 assert len(task.preds) == 0
                 task.trained = cast(TrainedIndividualOp, trainable)
             else:
-                load_input_batches(task)
-                assert_input_batches(task)
+                cache.load_input_batches(task)
                 if len(task.preds) == 1:
-                    input_X, input_y = task.preds[0].batch.Xy  # type: ignore
+                    input_X, input_y = cast(_Batch, apply_preds[0].batch).Xy
                 else:
                     assert not is_incremental(trainable)
-                    input_X = pd.concat([p.batch.X for p in task.preds])  # type: ignore
-                    input_y = pd.concat([p.batch.y for p in task.preds])  # type: ignore
+                    input_X = pd.concat([cast(_Batch, p.batch).X for p in apply_preds])
+                    input_y = pd.concat([cast(_Batch, p.batch).y for p in apply_preds])
                 task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
@@ -889,8 +956,7 @@ def _run_tasks_inner(
                 trainee = train_pred.get_trained(pipeline)
             apply_pred = cast(_ApplyTask, find_task(_ApplyTask, task.preds))
             assert apply_pred.batch is not None
-            load_input_batches(task)
-            assert_input_batches(task)
+            cache.load_input_batches(task)
             input_X, input_y = apply_pred.batch.Xy
             if trainee.is_supervised():
                 task.trained = trainee.partial_fit(
@@ -902,8 +968,7 @@ def _run_tasks_inner(
             assert len(task.batch_ids) == 1
             assert all(isinstance(p, _ApplyTask) for p in task.preds)
             assert all(cast(_ApplyTask, p).batch is not None for p in task.preds)
-            load_input_batches(task)
-            assert_input_batches(task)
+            cache.load_input_batches(task)
             if isinstance(task, _TrainTask):
                 assert len(task.preds) == 1
                 trainable = pipeline.steps_list()[task.step_id]
@@ -921,8 +986,7 @@ def _run_tasks_inner(
         elif operation is _Operation.COMBINE:
             assert len(task.batch_ids) > 1
             assert len(task.preds) == len(task.batch_ids)
-            load_input_batches(task)
-            assert_input_batches(task)
+            cache.load_input_batches(task)
             if isinstance(task, _TrainTask):
                 assert all(isinstance(p, _TrainTask) for p in task.preds)
                 trainable = pipeline.steps_list()[task.step_id]
@@ -943,7 +1007,7 @@ def _run_tasks_inner(
     if verbose >= 2:
         _visualize_tasks(tasks, pipeline, prio, call_depth + 1, trace)
         assert trace is not None
-        print(_analyze_run_trace(stats, trace))
+        print(_analyze_run_trace(cache.stats, trace))
 
 
 def _run_tasks(
@@ -958,7 +1022,7 @@ def _run_tasks(
     verbose: int,
     call_depth: int,
 ) -> None:
-    if max_resident is None:
+    with _BatchCache(tasks, max_resident, prio, verbose) as cache:
         _run_tasks_inner(
             tasks,
             pipeline,
@@ -966,27 +1030,11 @@ def _run_tasks(
             scoring,
             unique_class_labels,
             all_batch_ids,
-            sys.maxsize,
+            cache,
             prio,
             verbose,
             call_depth + 1,
-            None,
         )
-    else:
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            _run_tasks_inner(
-                tasks,
-                pipeline,
-                batches,
-                scoring,
-                unique_class_labels,
-                all_batch_ids,
-                max_resident,
-                prio,
-                verbose,
-                call_depth + 1,
-                pathlib.Path(tmpdirname),
-            )
 
 
 def mockup_data_loader(
