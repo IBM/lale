@@ -849,6 +849,7 @@ class TestGridSearchCV(unittest.TestCase):
             max_opt_time, opt_time, rel_diff
         )
 
+    @unittest.skip("This test has finicky timing")
     def test_runtime_limit_hor(self):
         import time
 
@@ -857,7 +858,7 @@ class TestGridSearchCV(unittest.TestCase):
 
         X, y = load_boston(return_X_y=True)
 
-        max_opt_time = 3.0
+        max_opt_time = 3
         hor = GridSearchCV(
             estimator=planned_pipeline,
             cv=3,
@@ -869,6 +870,7 @@ class TestGridSearchCV(unittest.TestCase):
             _ = hor.fit(X[:500, :], y[:500])
         end = time.time()
         opt_time = end - start
+        print(opt_time)
         rel_diff = (opt_time - max_opt_time) / max_opt_time
         assert (
             rel_diff < 0.2

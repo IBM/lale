@@ -2409,7 +2409,20 @@ class IndividualOp(Operator):
     def is_supervised(self, default_if_missing=True) -> bool:
         if self.has_method("fit"):
             schema_fit = self.input_schema_fit()
-            return lale.type_checking.is_subschema(schema_fit, _is_supervised_schema)
+            # first we try a fast path, since subschema checking can be a bit slow
+            if (
+                schema_fit is not None
+                and isinstance(schema_fit, dict)
+                and all(
+                    k not in schema_fit for k in ["all_of", "any_of", "one_of", "not"]
+                )
+            ):
+                req = schema_fit.get("required", None)
+                return req is not None and "y" in req
+            else:
+                return lale.type_checking.is_subschema(
+                    schema_fit, _is_supervised_schema
+                )
         return default_if_missing
 
     def is_classifier(self) -> bool:
