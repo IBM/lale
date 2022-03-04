@@ -30,8 +30,8 @@ import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.lib.lale
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
-from lale.expressions import count, it
-from lale.lib.rasl import Aggregate, GroupBy
+from lale.expressions import astype, it, sum
+from lale.lib.rasl import Aggregate, Map
 from lale.lib.rasl.metrics import MetricMonoid
 from lale.operators import TrainablePipeline, TrainedOperator
 from lale.type_checking import JSON_TYPE, validate_schema_directly
@@ -826,21 +826,26 @@ class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
         df = pd.concat([encoded_X, y_pred], axis=1)
         pa_names = self.privileged_groups[0].keys()
-        pipeline = GroupBy(
-            by=[it[pa] for pa in pa_names] + [it[y_pred.name]]
-        ) >> Aggregate(columns={"count": count(it[y_pred.name])})
-        agg_df = pipeline.transform(df)
-
-        def count2(priv, fav):
-            row = (priv,) * len(pa_names) + (fav,)
-            return agg_df.at[row, "count"] if row in agg_df.index else 0
-
-        return _DIorSPDData(
-            priv0_fav0=count2(priv=0, fav=0),
-            priv0_fav1=count2(priv=0, fav=1),
-            priv1_fav0=count2(priv=1, fav=0),
-            priv1_fav1=count2(priv=1, fav=1),
+        priv0 = functools.reduce(lambda x, y: x & y, (it[pa] == 0 for pa in pa_names))  # type: ignore
+        priv1 = functools.reduce(lambda x, y: x & y, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        pred = it[y_pred.name]
+        pipeline = Map(
+            columns={
+                "priv0_fav0": astype("int", priv0 & (pred == 0)),  # type: ignore
+                "priv0_fav1": astype("int", priv0 & (pred == 1)),  # type: ignore
+                "priv1_fav0": astype("int", priv1 & (pred == 0)),  # type: ignore
+                "priv1_fav1": astype("int", priv1 & (pred == 1)),  # type: ignore
+            }
+        ) >> Aggregate(
+            columns={
+                "priv0_fav0": sum(it.priv0_fav0),
+                "priv0_fav1": sum(it.priv0_fav1),
+                "priv1_fav0": sum(it.priv1_fav0),
+                "priv1_fav1": sum(it.priv1_fav1),
+            }
         )
+        agg_df = pipeline.transform(df)
+        return _DIorSPDData(*agg_df.iloc[0])
 
 
 class _AODorEODData(MetricMonoid):
@@ -902,25 +907,34 @@ class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
         _, y_true = self.prot_attr_enc.transform(X, y_true)
         df = pd.concat([y_true, y_pred, encoded_X], axis=1)
         pa_names = self.privileged_groups[0].keys()
-        pipeline = GroupBy(
-            by=[it[y_true.name], it[y_pred_name]] + [it[pa] for pa in pa_names]
-        ) >> Aggregate(columns={"count": count(it[y_pred.name])})
-        agg_df = pipeline.transform(df)
-
-        def count3(tru, pred, priv):
-            row = (tru, pred) + (priv,) * len(pa_names)
-            return agg_df.at[row, "count"] if row in agg_df.index else 0
-
-        return _AODorEODData(
-            tru0_pred0_priv0=count3(tru=0, pred=0, priv=0),
-            tru0_pred0_priv1=count3(tru=0, pred=0, priv=1),
-            tru0_pred1_priv0=count3(tru=0, pred=1, priv=0),
-            tru0_pred1_priv1=count3(tru=0, pred=1, priv=1),
-            tru1_pred0_priv0=count3(tru=1, pred=0, priv=0),
-            tru1_pred0_priv1=count3(tru=1, pred=0, priv=1),
-            tru1_pred1_priv0=count3(tru=1, pred=1, priv=0),
-            tru1_pred1_priv1=count3(tru=1, pred=1, priv=1),
+        priv0 = functools.reduce(lambda x, y: x & y, (it[pa] == 0 for pa in pa_names))  # type: ignore
+        priv1 = functools.reduce(lambda x, y: x & y, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        tru, prd = it[y_true.name], it[y_pred_name]
+        pipeline = Map(
+            columns={
+                "tru0_pred0_priv0": astype("int", (tru == 0) & (prd == 0) & priv0),  # type: ignore
+                "tru0_pred0_priv1": astype("int", (tru == 0) & (prd == 0) & priv1),  # type: ignore
+                "tru0_pred1_priv0": astype("int", (tru == 0) & (prd == 1) & priv0),  # type: ignore
+                "tru0_pred1_priv1": astype("int", (tru == 0) & (prd == 1) & priv1),  # type: ignore
+                "tru1_pred0_priv0": astype("int", (tru == 1) & (prd == 0) & priv0),  # type: ignore
+                "tru1_pred0_priv1": astype("int", (tru == 1) & (prd == 0) & priv1),  # type: ignore
+                "tru1_pred1_priv0": astype("int", (tru == 1) & (prd == 1) & priv0),  # type: ignore
+                "tru1_pred1_priv1": astype("int", (tru == 1) & (prd == 1) & priv1),  # type: ignore
+            }
+        ) >> Aggregate(
+            columns={
+                "tru0_pred0_priv0": sum(it.tru0_pred0_priv0),
+                "tru0_pred0_priv1": sum(it.tru0_pred0_priv1),
+                "tru0_pred1_priv0": sum(it.tru0_pred1_priv0),
+                "tru0_pred1_priv1": sum(it.tru0_pred1_priv1),
+                "tru1_pred0_priv0": sum(it.tru1_pred0_priv0),
+                "tru1_pred0_priv1": sum(it.tru1_pred0_priv1),
+                "tru1_pred1_priv0": sum(it.tru1_pred1_priv0),
+                "tru1_pred1_priv1": sum(it.tru1_pred1_priv1),
+            }
         )
+        agg_df = pipeline.transform(df)
+        return _AODorEODData(*agg_df.iloc[0])
 
 
 _SCORER_DOCSTRING_ARGS = """
