@@ -93,6 +93,10 @@ class _SparkEvaluator(ast.NodeVisitor):
             self.result = v1 % v2
         elif isinstance(node.op, ast.Pow):
             self.result = v1 ** v2
+        elif isinstance(node.op, ast.BitAnd):
+            self.result = v1 & v2
+        elif isinstance(node.op, ast.BitOr):
+            self.result = v1 | v2
         else:
             raise ValueError(f"""Unimplemented operator {ast.dump(node.op)}""")
 

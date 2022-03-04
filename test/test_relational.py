@@ -2091,6 +2091,8 @@ class TestMap(unittest.TestCase):
                 "int(height<=5)": astype("int", it.height <= 5),  # type: ignore
                 "4==height": 4 == it.height,
                 "height*10==weight": it.height * 10 == it.weight,
+                "height>3&<=5": (it.height > 3) & (it.height <= 5),  # type: ignore
+                "height<=3|>5": (it.height <= 3) | (it.height > 5),  # type: ignore
             }
         )
         for tgt, datasets in self.tgt2datasets.items():
@@ -2104,6 +2106,12 @@ class TestMap(unittest.TestCase):
             self.assertSeriesEqual(transformed_df["4==height"], 4 == df["height"], tgt)
             self.assertSeriesEqual(
                 transformed_df["height*10==weight"], df["height"] * 10 == df.weight, tgt
+            )
+            self.assertSeriesEqual(
+                transformed_df["height>3&<=5"], (df["height"] > 3) & (df["height"] <= 5)
+            )
+            self.assertSeriesEqual(
+                transformed_df["height<=3|>5"], (df["height"] <= 3) | (df["height"] > 5)
             )
 
 

@@ -230,6 +230,12 @@ class Expr:
     def __pow__(self, other):
         return _make_binop(ast.Pow(), self._expr, other)
 
+    def __and__(self, other):
+        return _make_binop(ast.BitAnd(), self._expr, other)
+
+    def __or__(self, other):
+        return _make_binop(ast.BitOr(), self._expr, other)
+
 
 def _make_binop(op, left, other):
     if isinstance(other, Expr):
