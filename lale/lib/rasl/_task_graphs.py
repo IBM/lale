@@ -285,7 +285,7 @@ class PrioResourceAware(Prio):
 
     def task_priority(self, task: _Task) -> Any:
         non_res = sum(
-            1
+            p.batch.space
             for p in task.preds
             if isinstance(p, _ApplyTask) and p.batch is not None
             if p.batch.status != _BatchStatus.RESIDENT
