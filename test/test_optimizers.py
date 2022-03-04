@@ -857,7 +857,7 @@ class TestGridSearchCV(unittest.TestCase):
 
         X, y = load_boston(return_X_y=True)
 
-        max_opt_time = 3.0
+        max_opt_time = 1.0
         hor = GridSearchCV(
             estimator=planned_pipeline,
             cv=3,
