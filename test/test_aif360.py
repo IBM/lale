@@ -99,7 +99,7 @@ class TestAIF360Datasets(unittest.TestCase):
         di_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         di_measured = di_scorer.score_data(X=X, y_pred=y)
         self.assertAlmostEqual(di_measured, di_expected, places=3)
-        bat3 = mockup_data_loader(X, y, n_splits=3)
+        bat3 = ((None, by, bX) for bX, by in mockup_data_loader(X, y, n_splits=3))
         di_bat3 = di_scorer.score_data_batched(bat3)
         self.assertEqual(di_measured, di_bat3)
 

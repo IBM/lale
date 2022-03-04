@@ -979,8 +979,8 @@ def _run_tasks_inner(
                 assert task.preds[0].step_id == _DUMMY_INPUT_STEP
                 assert scoring is not None
                 y_true = task.preds[0].batch.y  # type: ignore
-                y_pred = task.preds[1].batch.y  # type: ignore
-                task.score = scoring.to_monoid((y_true, y_pred))
+                X, y_pred = task.preds[1].batch.Xy  # type: ignore
+                task.score = scoring.to_monoid((y_true, y_pred, X))
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:

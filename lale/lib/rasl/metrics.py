@@ -14,7 +14,7 @@
 
 import functools
 from abc import abstractmethod
-from typing import Any, Dict, Iterable, Tuple, TypeVar
+from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
@@ -33,17 +33,22 @@ from .scan import Scan
 
 MetricMonoid = Monoid
 
-_Batch = Tuple[pd.Series, pd.Series]
+_Batch_Xy = Tuple[pd.DataFrame, pd.Series]
+
+_Batch_yyX = Tuple[Optional[pd.Series], Union[pd.Series, np.ndarray], pd.DataFrame]
+
 _M = TypeVar("_M", bound=MetricMonoid)
 
 
-class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
+class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M]):
     @abstractmethod
-    def to_monoid(self, v: _Batch) -> _M:
+    def to_monoid(self, v: _Batch_yyX) -> _M:
         pass
 
-    def score_data(self, y_true: pd.Series, y_pred: pd.Series) -> float:
-        return self.from_monoid(self.to_monoid((y_true, y_pred)))
+    def score_data(
+        self, y_true: pd.Series, y_pred: pd.Series, X: Optional[pd.DataFrame] = None
+    ) -> float:
+        return self.from_monoid(self.to_monoid((y_true, y_pred, X)))
 
     def score_estimator(
         self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
@@ -55,29 +60,24 @@ class MetricMonoidFactory(MonoidFactory[_Batch, float, _M]):
     ) -> float:
         return self.score_estimator(estimator, X, y)
 
-    def score_data_batched(
-        self, batches: Iterable[Tuple[pd.Series, pd.Series]]
-    ) -> float:
+    def score_data_batched(self, batches: Iterable[_Batch_yyX]) -> float:
         lifted_batches = (self.to_monoid(b) for b in batches)
-        return self.from_monoid(
-            functools.reduce(lambda x, y: x.combine(y), lifted_batches)
-        )
+        combined = functools.reduce(lambda x, y: x.combine(y), lifted_batches)
+        return self.from_monoid(combined)
 
     def score_estimator_batched(
-        self,
-        estimator: TrainedOperator,
-        batches: Iterable[Tuple[pd.Series, pd.Series]],
+        self, estimator: TrainedOperator, batches: Iterable[_Batch_Xy]
     ) -> float:
-        predicted_batches = ((y, estimator.predict(X)) for X, y in batches)
+        predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
         return self.score_data_batched(predicted_batches)
 
 
 class _AccuracyData(MetricMonoid):
-    def __init__(self, match, total):
+    def __init__(self, match: int, total: int):
         self._match = match
         self._total = total
 
-    def combine(self, other):
+    def combine(self, other: "_AccuracyData") -> "_AccuracyData":
         return _AccuracyData(self._match + other._match, self._total + other._total)
 
 
@@ -89,8 +89,9 @@ class _Accuracy(MetricMonoidFactory[_AccuracyData]):
             >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
         )
 
-    def to_monoid(self, batch: _Batch) -> _AccuracyData:
-        y_true, y_pred = batch
+    def to_monoid(self, batch: _Batch_yyX) -> _AccuracyData:
+        y_true, y_pred, _ = batch
+        assert y_true is not None and y_pred is not None
         assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark
         if isinstance(y_pred, np.ndarray):
             y_pred = pd.Series(y_pred, y_true.index, y_true.dtype, "y_pred")
@@ -111,18 +112,18 @@ class _Accuracy(MetricMonoidFactory[_AccuracyData]):
         return v._match / np.float64(v._total)
 
 
-def accuracy_score(y_true, y_pred):
+def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     return get_scorer("accuracy").score_data(y_true, y_pred)
 
 
 class _R2Data(MetricMonoid):
-    def __init__(self, n, sum, sum_sq, res_sum_sq):
+    def __init__(self, n: int, sum: float, sum_sq: float, res_sum_sq: float):
         self._n = n
         self._sum = sum
         self._sum_sq = sum_sq
         self._res_sum_sq = res_sum_sq
 
-    def combine(self, other):
+    def combine(self, other: "_R2Data") -> "_R2Data":
         return _R2Data(
             n=self._n + other._n,
             sum=self._sum + other._sum,
@@ -155,8 +156,9 @@ class _R2(MetricMonoidFactory[_R2Data]):
             )
         )
 
-    def to_monoid(self, batch) -> _R2Data:
-        y_true, y_pred = batch
+    def to_monoid(self, batch: _Batch_yyX) -> _R2Data:
+        y_true, y_pred, _ = batch
+        assert y_true is not None and y_pred is not None
         assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark
         if isinstance(y_pred, np.ndarray):
             y_pred = pd.Series(y_pred, y_true.index, y_true.dtype, "y_pred")
@@ -178,18 +180,18 @@ class _R2(MetricMonoidFactory[_R2Data]):
         return 1 - v._res_sum_sq / ss_tot
 
 
-def r2_score(y_true, y_pred):
+def r2_score(y_true: pd.Series, y_pred: pd.Series) -> float:
     return get_scorer("r2").score_data(y_true, y_pred)
 
 
-_scorer_cache: Dict[str, Any] = {"accuracy": None, "r2": None}
+_scorer_cache: Dict[str, Optional[MetricMonoidFactory]] = {"accuracy": None, "r2": None}
 
 
-def get_scorer(scoring: str):
+def get_scorer(scoring: str) -> MetricMonoidFactory:
     assert scoring in _scorer_cache, scoring
     if _scorer_cache[scoring] is None:
         if scoring == "accuracy":
             _scorer_cache[scoring] = _Accuracy()
         elif scoring == "r2":
             _scorer_cache[scoring] = _R2()
-    return _scorer_cache[scoring]
+    return cast(MetricMonoidFactory, _scorer_cache[scoring])
