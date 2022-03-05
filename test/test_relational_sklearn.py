@@ -39,6 +39,7 @@ from sklearn.preprocessing import StandardScaler as SkStandardScaler
 
 import lale.datasets
 import lale.datasets.openml
+import lale.lib.aif360
 from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import (
     SparkDataFrameWithIndex,
@@ -1133,13 +1134,13 @@ class TestStandardScaler(unittest.TestCase):
 class TestTaskGraphs(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        (train_X, train_y), (test_X, test_y) = lale.datasets.openml.fetch(
-            "credit-g", "classification", preprocess=False
-        )
-        cat_columns = categorical()(train_X)
-        project = Map(columns={c: it[c] for c in cat_columns})
-        train_X, test_X = project.transform(train_X), project.transform(test_X)
-        cls.creditg = (train_X, train_y), (test_X, test_y)
+        X, y, fairness_info = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        X = Project(columns=categorical()).fit(X).transform(X)
+        fairness_info = {  # remove numeric protected attribute age
+            "favorable_labels": fairness_info["favorable_labels"],
+            "protected_attributes": fairness_info["protected_attributes"][:1],
+        }
+        cls.creditg = X, y, fairness_info
 
     @classmethod
     def _make_sk_trainable(cls, final_est):
@@ -1170,7 +1171,7 @@ class TestTaskGraphs(unittest.TestCase):
         )
 
     def test_fit_no_batching(self):
-        (train_X, train_y), _ = self.creditg
+        train_X, train_y, _ = self.creditg
         sk_trainable = self._make_sk_trainable("sgd")
         sk_trained = sk_trainable.fit(train_X, train_y)
         rasl_trainable = self._make_rasl_trainable("sgd")
@@ -1183,7 +1184,7 @@ class TestTaskGraphs(unittest.TestCase):
         )
 
     def test_fit_batching(self):
-        (train_X, train_y), _ = self.creditg
+        train_X, train_y, _ = self.creditg
         train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_trainable = self._make_sk_trainable("sgd")
         sk_trained = sk_trainable.fit(train_X, train_y)
@@ -1216,7 +1217,7 @@ class TestTaskGraphs(unittest.TestCase):
                 )
 
     def test_cross_val_score_no_batching(self):
-        (train_X, train_y), _ = self.creditg
+        train_X, train_y, _ = self.creditg
         train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
@@ -1242,7 +1243,7 @@ class TestTaskGraphs(unittest.TestCase):
             self.assertAlmostEqual(sk_s, rasl_s)
 
     def test_cross_val_score_batching(self):
-        (train_X, train_y), _ = self.creditg
+        train_X, train_y, _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
@@ -1271,8 +1272,39 @@ class TestTaskGraphs(unittest.TestCase):
             for sk_s, rasl_s in zip(sk_scores, rasl_scores):
                 self.assertAlmostEqual(sk_s, rasl_s)
 
+    def test_cross_val_score_disparate_impact(self):
+        train_X, train_y, fairness_info = self.creditg
+        disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
+        n_folds = 3
+        sk_scores = sk_cross_val_score(
+            estimator=self._make_sk_trainable("rfc"),
+            X=train_X,
+            y=train_y,
+            scoring=disparate_impact_scorer,
+            cv=KFold(n_folds),
+        )
+        for n_batches_per_fold in [1, 3]:
+            rasl_scores = rasl_cross_val_score(
+                pipeline=self._make_rasl_trainable("rfc"),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
+                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=disparate_impact_scorer,
+                unique_class_labels=list(train_y.unique()),
+                max_resident=None,
+                prio=PrioBatch(),
+                same_fold=True,
+                verbose=0,
+            )
+            for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+                self.assertAlmostEqual(sk_s, rasl_s, msg=n_batches_per_fold)
+
     def test_cross_validate_no_batching(self):
-        (train_X, train_y), _ = self.creditg
+        train_X, train_y, _ = self.creditg
         train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
         sk_scores = sk_cross_validate(
             estimator=self._make_sk_trainable("rfc"),
@@ -1313,7 +1345,7 @@ class TestTaskGraphs(unittest.TestCase):
             )
 
     def test_cross_validate_batching(self):
-        (train_X, train_y), _ = self.creditg
+        train_X, train_y, _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_validate(
             estimator=self._make_sk_trainable("rfc"),

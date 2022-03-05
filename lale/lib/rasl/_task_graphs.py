@@ -216,11 +216,11 @@ class _ApplyTask(_Task):
 
 
 class _MetricTask(_Task):
-    score: Optional[MetricMonoid]
+    mscore: Optional[MetricMonoid]
 
     def __init__(self, step_id: int, batch_ids: Tuple[str, ...], held_out: str):
         super().__init__(step_id, batch_ids, held_out)
-        self.score = None
+        self.mmonoid = None
 
     def get_operation(self, pipeline: TrainablePipeline) -> _Operation:
         if len(self.batch_ids) == 1:
@@ -854,7 +854,7 @@ def _run_tasks_inner(
                     task.monoid = None
                     task.trained = None
                 elif isinstance(task, _MetricTask):
-                    task.score = None
+                    task.mmonoid = None
                 else:
                     assert False, type(task)
 
@@ -978,9 +978,9 @@ def _run_tasks_inner(
                 assert len(task.preds) == 2
                 assert task.preds[0].step_id == _DUMMY_INPUT_STEP
                 assert scoring is not None
-                y_true = task.preds[0].batch.y  # type: ignore
+                X, y_true = task.preds[0].batch.Xy  # type: ignore
                 y_pred = task.preds[1].batch.y  # type: ignore
-                task.score = scoring.to_monoid((y_true, y_pred))
+                task.mmonoid = scoring.to_monoid((y_true, y_pred, X))
             else:
                 assert False, type(task)
         elif operation is _Operation.COMBINE:
@@ -991,10 +991,10 @@ def _run_tasks_inner(
                 assert all(isinstance(p, _TrainTask) for p in task.preds)
                 trainable = pipeline.steps_list()[task.step_id]
                 monoids = (cast(_TrainTask, p).monoid for p in task.preds)
-                task.monoid = functools.reduce(lambda x, y: x.combine(y), monoids)  # type: ignore
+                task.monoid = functools.reduce(lambda a, b: a.combine(b), monoids)  # type: ignore
             elif isinstance(task, _MetricTask):
-                scores = (cast(_MetricTask, p).score for p in task.preds)
-                task.score = functools.reduce(lambda x, y: x.combine(y), scores)  # type: ignore
+                scores = (cast(_MetricTask, p).mmonoid for p in task.preds)
+                task.mmonoid = functools.reduce(lambda a, b: a.combine(b), scores)  # type: ignore
             else:
                 assert False, type(task)
         else:
@@ -1130,8 +1130,8 @@ def _extract_scores(
     def extract_score(held_out: str) -> float:
         batch_ids = tuple(_batch_id(held_out, idx) for idx in range(n_batches_per_fold))
         task = tasks[(_MetricTask, _DUMMY_SCORE_STEP, batch_ids, held_out)]
-        assert isinstance(task, _MetricTask) and task.score is not None
-        return scoring.from_monoid(task.score)
+        assert isinstance(task, _MetricTask) and task.mmonoid is not None
+        return scoring.from_monoid(task.mmonoid)
 
     scores = [extract_score(held_out) for held_out in folds]
     return scores

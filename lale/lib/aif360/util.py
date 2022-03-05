@@ -16,7 +16,7 @@ import functools
 import itertools
 import logging
 from abc import abstractmethod
-from typing import Generic, List, Optional, Tuple, TypeVar, Union, cast
+from typing import List, Optional, Tuple, TypeVar, Union, cast
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -32,7 +32,7 @@ import lale.lib.lale
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
 from lale.expressions import astype, it, sum
 from lale.lib.rasl import Aggregate, Map
-from lale.lib.rasl.metrics import MetricMonoid
+from lale.lib.rasl.metrics import MetricMonoid, MetricMonoidFactory
 from lale.operators import TrainablePipeline, TrainedOperator
 from lale.type_checking import JSON_TYPE, validate_schema_directly
 
@@ -707,20 +707,29 @@ class _ScorerFactory:
             )
         return self._cached_pandas_to_dataset
 
-    def _y_pred_series(self, y_true, y_pred, X) -> pd.Series:
+    def _y_pred_series(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None],
+        y_pred: Union[pd.Series, np.ndarray],
+        X: Union[pd.DataFrame, np.ndarray],
+    ) -> pd.Series:
         if isinstance(y_pred, pd.Series):
             return y_pred
         assert y_true is not None
         return _ndarray_to_series(
             y_pred,
-            y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),
-            X.index if isinstance(X, pd.DataFrame) else None,
+            y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),  # type: ignore
+            X.index if isinstance(X, pd.DataFrame) else None,  # type: ignore
             y_pred.dtype,
         )
 
-    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
-        assert y_pred is not None
-        assert X is not None
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_pred is not None and X is not None
         y_pred_orig = y_pred
         y_pred = self._y_pred_series(y_true, y_pred, X)
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
@@ -739,10 +748,10 @@ class _ScorerFactory:
             )
         else:
             assert self.kind == "ClassificationMetric"
-            assert y_true is not None
+            assert y_pred is not None and y_true is not None
             if not isinstance(y_true, pd.Series):
                 y_true = _ndarray_to_series(
-                    y_true, y_pred.name, y_pred.index, y_pred_orig.dtype
+                    y_true, y_pred.name, y_pred.index, y_pred_orig.dtype  # type: ignore
                 )
             _, y_true = self.prot_attr_enc.transform(X, y_true)
             dataset_true = self._pandas_to_dataset().convert(encoded_X, y_true)
@@ -768,44 +777,50 @@ class _ScorerFactory:
             )
         return result
 
-    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         return self.score_data(y_true=y, y_pred=estimator.predict(X), X=X)
 
-    def __call__(self, estimator: TrainedOperator, X, y) -> float:
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         return self.score_estimator(estimator, X, y)
 
 
 _Monoid = TypeVar("_Monoid", bound=MetricMonoid)
 
+_Batch_Xy = Tuple[pd.DataFrame, pd.Series]
 
-class _BatchedScorerFactory(_ScorerFactory, Generic[_Monoid]):
+_Batch_yyX = Tuple[Optional[pd.Series], pd.Series, pd.DataFrame]
+
+
+class _BatchedScorerFactory(_ScorerFactory, MetricMonoidFactory[_Monoid]):
     @abstractmethod
-    def to_monoid(self, batch) -> _Monoid:
+    def to_monoid(self, batch: _Batch_yyX) -> _Monoid:
         pass
 
     @abstractmethod
-    def from_monoid(self, v) -> float:
+    def from_monoid(self, v: _Monoid) -> float:
         pass
-
-    def score_data_batched(self, batches) -> float:
-        lifted_batches = (self.to_monoid(b) for b in batches)
-        return self.from_monoid(
-            functools.reduce(lambda x, y: x.combine(y), lifted_batches)
-        )
-
-    def score_estimator_batched(self, estimator: TrainedOperator, batches) -> float:
-        predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
-        return self.score_data_batched(predicted_batches)
 
 
 class _DIorSPDData(MetricMonoid):
-    def __init__(self, priv0_fav0, priv0_fav1, priv1_fav0, priv1_fav1):
+    def __init__(
+        self, priv0_fav0: float, priv0_fav1: float, priv1_fav0: float, priv1_fav1: float
+    ):
         self.priv0_fav0 = priv0_fav0
         self.priv0_fav1 = priv0_fav1
         self.priv1_fav0 = priv1_fav0
         self.priv1_fav1 = priv1_fav1
 
-    def combine(self, other):
+    def combine(self, other: "_DIorSPDData") -> "_DIorSPDData":
         return _DIorSPDData(
             priv0_fav0=self.priv0_fav0 + other.priv0_fav0,
             priv0_fav1=self.priv0_fav1 + other.priv0_fav1,
@@ -815,19 +830,15 @@ class _DIorSPDData(MetricMonoid):
 
 
 class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
-    def to_monoid(self, batch) -> _DIorSPDData:
-        if len(batch) == 2:
-            X, y_pred = batch
-            y_true = None
-        else:
-            y_true, y_pred, X = batch
+    def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
+        y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
         y_pred = self._y_pred_series(y_true, y_pred, X)
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
         df = pd.concat([encoded_X, y_pred], axis=1)
         pa_names = self.privileged_groups[0].keys()
-        priv0 = functools.reduce(lambda x, y: x & y, (it[pa] == 0 for pa in pa_names))  # type: ignore
-        priv1 = functools.reduce(lambda x, y: x & y, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
         pred = it[y_pred.name]
         pipeline = Map(
             columns={
@@ -851,14 +862,14 @@ class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
 class _AODorEODData(MetricMonoid):
     def __init__(
         self,
-        tru0_pred0_priv0,
-        tru0_pred0_priv1,
-        tru0_pred1_priv0,
-        tru0_pred1_priv1,
-        tru1_pred0_priv0,
-        tru1_pred0_priv1,
-        tru1_pred1_priv0,
-        tru1_pred1_priv1,
+        tru0_pred0_priv0: float,
+        tru0_pred0_priv1: float,
+        tru0_pred1_priv0: float,
+        tru0_pred1_priv1: float,
+        tru1_pred0_priv0: float,
+        tru1_pred0_priv1: float,
+        tru1_pred1_priv0: float,
+        tru1_pred1_priv1: float,
     ):
         self.tru0_pred0_priv0 = tru0_pred0_priv0
         self.tru0_pred0_priv1 = tru0_pred0_priv1
@@ -869,7 +880,7 @@ class _AODorEODData(MetricMonoid):
         self.tru1_pred1_priv0 = tru1_pred1_priv0
         self.tru1_pred1_priv1 = tru1_pred1_priv1
 
-    def combine(self, other):
+    def combine(self, other: "_AODorEODData") -> "_AODorEODData":
         return _AODorEODData(
             tru0_pred0_priv0=self.tru0_pred0_priv0 + other.tru0_pred0_priv0,
             tru0_pred0_priv1=self.tru0_pred0_priv1 + other.tru0_pred0_priv1,
@@ -883,12 +894,8 @@ class _AODorEODData(MetricMonoid):
 
 
 class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
-    def to_monoid(self, batch) -> _AODorEODData:
-        if len(batch) == 2:
-            X, y_pred = batch
-            y_true = None
-        else:
-            y_true, y_pred, X = batch
+    def to_monoid(self, batch: _Batch_yyX) -> _AODorEODData:
+        y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
         y_pred = self._y_pred_series(y_true, y_pred, X)
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
@@ -907,8 +914,8 @@ class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
         _, y_true = self.prot_attr_enc.transform(X, y_true)
         df = pd.concat([y_true, y_pred, encoded_X], axis=1)
         pa_names = self.privileged_groups[0].keys()
-        priv0 = functools.reduce(lambda x, y: x & y, (it[pa] == 0 for pa in pa_names))  # type: ignore
-        priv1 = functools.reduce(lambda x, y: x & y, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
         tru, prd = it[y_true.name], it[y_pred_name]
         pipeline = Map(
             columns={
@@ -1087,17 +1094,32 @@ class _AccuracyAndDisparateImpact:
             )
         return result
 
-    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray],
+        y_pred: Union[pd.Series, np.ndarray],
+        X: Union[pd.DataFrame, np.ndarray],
+    ) -> float:
         accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
         return self._blend_metrics(accuracy, symm_di)
 
-    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         accuracy = self.accuracy_scorer(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
         return self._blend_metrics(accuracy, symm_di)
 
-    def __call__(self, estimator: TrainedOperator, X, y) -> float:
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         return self.score_estimator(estimator, X, y)
 
 
@@ -1158,7 +1180,7 @@ class _AverageOddsDifference(_AODorEODScorerFactory):
         tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
             v.tru1_pred1_priv1 + v.tru1_pred0_priv1
         )
-        return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
+        return 0.5 * float(fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
 
 
 def average_odds_difference(
@@ -1210,7 +1232,7 @@ class _DisparateImpact(_DIorSPDScorerFactory):
     def from_monoid(self, v: _DIorSPDData) -> float:
         numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
         denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-        return numerator / denominator
+        return float(numerator / denominator)
 
 
 def disparate_impact(
@@ -1336,17 +1358,32 @@ class _R2AndDisparateImpact:
             )
         return result
 
-    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray],
+        y_pred: Union[pd.Series, np.ndarray],
+        X: Union[pd.DataFrame, np.ndarray],
+    ) -> float:
         r2 = sklearn.metrics.r2_score(y_true, y_pred)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
         return self._blend_metrics(r2, symm_di)
 
-    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         r2 = self.r2_scorer(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
         return self._blend_metrics(r2, symm_di)
 
-    def __call__(self, estimator: TrainedOperator, X, y) -> float:
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         return self.score_estimator(estimator, X, y)
 
 
@@ -1397,7 +1434,7 @@ class _StatisticalParityDifference(_DIorSPDScorerFactory):
     def from_monoid(self, v: _DIorSPDData) -> float:
         minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
         subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-        return minuend - subtrahend
+        return float(minuend - subtrahend)
 
 
 def statistical_parity_difference(
@@ -1453,15 +1490,31 @@ class _SymmetricDisparateImpact:
             return disp_impact
         return 1.0 / disp_impact
 
-    def score_data(self, y_true=None, y_pred=None, X=None) -> float:
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_pred is not None and X is not None
         disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
         return self._make_symmetric(disp_impact)
 
-    def score_estimator(self, estimator: TrainedOperator, X, y) -> float:
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
         return self._make_symmetric(disp_impact)
 
-    def __call__(self, estimator: TrainedOperator, X, y) -> float:
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
         return self.score_estimator(estimator, X, y)
 
 
@@ -1527,8 +1580,12 @@ theil_index.__doc__ = str(theil_index.__doc__) + _SCORER_DOCSTRING
 
 
 def _column_for_stratification(
-    X, y, favorable_labels, protected_attributes, unfavorable_labels
-):
+    X: Union[pd.DataFrame, np.ndarray],
+    y: Union[pd.Series, np.ndarray],
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> pd.Series:
     from lale.lib.aif360 import ProtectedAttributesEncoder
 
     prot_attr_enc = ProtectedAttributesEncoder(
@@ -1553,10 +1610,10 @@ def fair_stratified_train_test_split(
     X,
     y,
     *arrays,
-    favorable_labels,
-    protected_attributes,
-    unfavorable_labels=None,
-    test_size=0.25,
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    test_size: float = 0.25,
     random_state=None,
 ) -> Tuple:
     """
@@ -1667,11 +1724,11 @@ class FairStratifiedKFold:
 
     def __init__(
         self,
-        favorable_labels,
-        protected_attributes,
-        unfavorable_labels=None,
-        n_splits=5,
-        shuffle=False,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+        n_splits: int = 5,
+        shuffle: bool = False,
         random_state=None,
     ):
         """
@@ -1725,7 +1782,7 @@ class FairStratifiedKFold:
             n_splits=n_splits, shuffle=shuffle, random_state=random_state
         )
 
-    def get_n_splits(self, X=None, y=None, groups=None):
+    def get_n_splits(self, X=None, y=None, groups=None) -> int:
         """
         The number of splitting iterations in the cross-validator.
 
