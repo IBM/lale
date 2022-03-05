@@ -16,7 +16,7 @@ import functools
 import itertools
 import logging
 from abc import abstractmethod
-from typing import Generic, Iterable, List, Optional, Tuple, TypeVar, Union, cast
+from typing import List, Optional, Tuple, TypeVar, Union, cast
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -32,7 +32,7 @@ import lale.lib.lale
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
 from lale.expressions import astype, it, sum
 from lale.lib.rasl import Aggregate, Map
-from lale.lib.rasl.metrics import MetricMonoid
+from lale.lib.rasl.metrics import MetricMonoid, MetricMonoidFactory
 from lale.operators import TrainablePipeline, TrainedOperator
 from lale.type_checking import JSON_TYPE, validate_schema_directly
 
@@ -718,8 +718,8 @@ class _ScorerFactory:
         assert y_true is not None
         return _ndarray_to_series(
             y_pred,
-            y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),
-            X.index if isinstance(X, pd.DataFrame) else None,
+            y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),  # type: ignore
+            X.index if isinstance(X, pd.DataFrame) else None,  # type: ignore
             y_pred.dtype,
         )
 
@@ -751,7 +751,7 @@ class _ScorerFactory:
             assert y_pred is not None and y_true is not None
             if not isinstance(y_true, pd.Series):
                 y_true = _ndarray_to_series(
-                    y_true, y_pred.name, y_pred.index, y_pred_orig.dtype
+                    y_true, y_pred.name, y_pred.index, y_pred_orig.dtype  # type: ignore
                 )
             _, y_true = self.prot_attr_enc.transform(X, y_true)
             dataset_true = self._pandas_to_dataset().convert(encoded_X, y_true)
@@ -801,7 +801,7 @@ _Batch_Xy = Tuple[pd.DataFrame, pd.Series]
 _Batch_yyX = Tuple[Optional[pd.Series], pd.Series, pd.DataFrame]
 
 
-class _BatchedScorerFactory(_ScorerFactory, Generic[_Monoid]):
+class _BatchedScorerFactory(_ScorerFactory, MetricMonoidFactory[_Monoid]):
     @abstractmethod
     def to_monoid(self, batch: _Batch_yyX) -> _Monoid:
         pass
@@ -809,17 +809,6 @@ class _BatchedScorerFactory(_ScorerFactory, Generic[_Monoid]):
     @abstractmethod
     def from_monoid(self, v: _Monoid) -> float:
         pass
-
-    def score_data_batched(self, batches: Iterable[_Batch_yyX]) -> float:
-        lifted_batches = (self.to_monoid(b) for b in batches)
-        combined = functools.reduce(lambda x, y: x.combine(y), lifted_batches)
-        return self.from_monoid(combined)
-
-    def score_estimator_batched(
-        self, estimator: TrainedOperator, batches: Iterable[_Batch_Xy]
-    ) -> float:
-        predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
-        return self.score_data_batched(predicted_batches)
 
 
 class _DIorSPDData(MetricMonoid):
@@ -848,8 +837,8 @@ class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
         df = pd.concat([encoded_X, y_pred], axis=1)
         pa_names = self.privileged_groups[0].keys()
-        priv0 = functools.reduce(lambda x, y: x & y, (it[pa] == 0 for pa in pa_names))  # type: ignore
-        priv1 = functools.reduce(lambda x, y: x & y, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
         pred = it[y_pred.name]
         pipeline = Map(
             columns={
@@ -925,8 +914,8 @@ class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
         _, y_true = self.prot_attr_enc.transform(X, y_true)
         df = pd.concat([y_true, y_pred, encoded_X], axis=1)
         pa_names = self.privileged_groups[0].keys()
-        priv0 = functools.reduce(lambda x, y: x & y, (it[pa] == 0 for pa in pa_names))  # type: ignore
-        priv1 = functools.reduce(lambda x, y: x & y, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
         tru, prd = it[y_true.name], it[y_pred_name]
         pipeline = Map(
             columns={
@@ -1191,7 +1180,7 @@ class _AverageOddsDifference(_AODorEODScorerFactory):
         tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
             v.tru1_pred1_priv1 + v.tru1_pred0_priv1
         )
-        return 0.5 * (fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
+        return 0.5 * float(fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
 
 
 def average_odds_difference(
@@ -1243,7 +1232,7 @@ class _DisparateImpact(_DIorSPDScorerFactory):
     def from_monoid(self, v: _DIorSPDData) -> float:
         numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
         denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-        return numerator / denominator
+        return float(numerator / denominator)
 
 
 def disparate_impact(
@@ -1445,7 +1434,7 @@ class _StatisticalParityDifference(_DIorSPDScorerFactory):
     def from_monoid(self, v: _DIorSPDData) -> float:
         minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
         subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
-        return minuend - subtrahend
+        return float(minuend - subtrahend)
 
 
 def statistical_parity_difference(

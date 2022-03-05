@@ -14,7 +14,7 @@
 
 import functools
 from abc import abstractmethod
-from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
+from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union
 
 import numpy as np
 import pandas as pd
@@ -45,6 +45,36 @@ class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M]):
     def to_monoid(self, v: _Batch_yyX) -> _M:
         pass
 
+    @abstractmethod
+    def score_data(
+        self, y_true: pd.Series, y_pred: pd.Series, X: Optional[pd.DataFrame] = None
+    ) -> float:
+        pass
+
+    @abstractmethod
+    def score_estimator(
+        self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
+    ) -> float:
+        pass
+
+    def __call__(
+        self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
+    ) -> float:
+        return self.score_estimator(estimator, X, y)
+
+    def score_data_batched(self, batches: Iterable[_Batch_yyX]) -> float:
+        lifted_batches = (self.to_monoid(b) for b in batches)
+        combined = functools.reduce(lambda a, b: a.combine(b), lifted_batches)
+        return self.from_monoid(combined)
+
+    def score_estimator_batched(
+        self, estimator: TrainedOperator, batches: Iterable[_Batch_Xy]
+    ) -> float:
+        predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
+        return self.score_data_batched(predicted_batches)
+
+
+class _MetricMonoidMixin(MetricMonoidFactory[_M]):
     def score_data(
         self, y_true: pd.Series, y_pred: pd.Series, X: Optional[pd.DataFrame] = None
     ) -> float:
@@ -54,22 +84,6 @@ class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M]):
         self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
     ) -> float:
         return self.score_data(y_true=y, y_pred=estimator.predict(X))
-
-    def __call__(
-        self, estimator: TrainedOperator, X: pd.DataFrame, y: pd.Series
-    ) -> float:
-        return self.score_estimator(estimator, X, y)
-
-    def score_data_batched(self, batches: Iterable[_Batch_yyX]) -> float:
-        lifted_batches = (self.to_monoid(b) for b in batches)
-        combined = functools.reduce(lambda x, y: x.combine(y), lifted_batches)
-        return self.from_monoid(combined)
-
-    def score_estimator_batched(
-        self, estimator: TrainedOperator, batches: Iterable[_Batch_Xy]
-    ) -> float:
-        predicted_batches = ((y, estimator.predict(X), X) for X, y in batches)
-        return self.score_data_batched(predicted_batches)
 
 
 class _AccuracyData(MetricMonoid):
@@ -81,7 +95,7 @@ class _AccuracyData(MetricMonoid):
         return _AccuracyData(self._match + other._match, self._total + other._total)
 
 
-class _Accuracy(MetricMonoidFactory[_AccuracyData]):
+class _Accuracy(_MetricMonoidMixin[_AccuracyData]):
     def __init__(self):
         self._pipeline_suffix = (
             ConcatFeatures
@@ -109,7 +123,7 @@ class _Accuracy(MetricMonoidFactory[_AccuracyData]):
         return _AccuracyData(*agg_df.iloc[0])
 
     def from_monoid(self, v: _AccuracyData) -> float:
-        return v._match / np.float64(v._total)
+        return float(v._match / np.float64(v._total))
 
 
 def accuracy_score(y_true: pd.Series, y_pred: pd.Series) -> float:
@@ -132,7 +146,7 @@ class _R2Data(MetricMonoid):
         )
 
 
-class _R2(MetricMonoidFactory[_R2Data]):
+class _R2(_MetricMonoidMixin[_R2Data]):
     # https://en.wikipedia.org/wiki/Coefficient_of_determination
 
     def __init__(self):
@@ -177,7 +191,7 @@ class _R2(MetricMonoidFactory[_R2Data]):
 
     def from_monoid(self, v: _R2Data) -> float:
         ss_tot = v._sum_sq - (v._sum * v._sum / np.float64(v._n))
-        return 1 - v._res_sum_sq / ss_tot
+        return 1 - float(v._res_sum_sq / ss_tot)
 
 
 def r2_score(y_true: pd.Series, y_pred: pd.Series) -> float:
@@ -194,4 +208,6 @@ def get_scorer(scoring: str) -> MetricMonoidFactory:
             _scorer_cache[scoring] = _Accuracy()
         elif scoring == "r2":
             _scorer_cache[scoring] = _R2()
-    return cast(MetricMonoidFactory, _scorer_cache[scoring])
+    result = _scorer_cache[scoring]
+    assert result is not None
+    return result
