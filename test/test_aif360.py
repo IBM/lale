@@ -905,14 +905,16 @@ class TestAIF360Cat(unittest.TestCase):
             lale.lib.aif360.disparate_impact,
             lale.lib.aif360.equal_opportunity_difference,
             lale.lib.aif360.average_odds_difference,
-        ]
+            lale.lib.aif360.symmetric_disparate_impact,
+            lale.lib.aif360.accuracy_and_disparate_impact,
+        ]  # not including r2_and_disparate_impact, because it's for regression
         for factory in batched_scorer_factories:
             scorer = factory(**fairness_info)
             score_orig = scorer(estimator, test_X, test_y)
             for n_batches in [1, 3]:
                 batches = mockup_data_loader(test_X, test_y, n_splits=n_batches)
                 score_batched = scorer.score_estimator_batched(estimator, batches)
-                self.assertEqual(score_orig, score_batched, (scorer.metric, n_batches))
+                self.assertEqual(score_orig, score_batched, (type(scorer), n_batches))
 
     def test_scorers_pd_cat(self):
         fairness_info = self.creditg_pd_cat["fairness_info"]
