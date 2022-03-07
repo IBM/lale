@@ -32,7 +32,14 @@ from .monoid import Monoid, MonoidableOperator
 
 
 class _MinMaxScalerMonoid(Monoid):
-    def __init__(self, *, data_min_, data_max_, n_samples_seen_, feature_names_in_):
+    def __init__(
+        self,
+        *,
+        data_min_: np.ndarray,
+        data_max_: np.ndarray,
+        n_samples_seen_: int,
+        feature_names_in_,
+    ):
         self.data_min_ = data_min_
         self.data_max_ = data_max_
         self.n_samples_seen_ = n_samples_seen_
@@ -94,10 +101,12 @@ class _MinMaxScalerImpl(MonoidableOperator[_MinMaxScalerMonoid]):
     def _build_transformer(self, X):
         range_min, range_max = self._hyperparams["feature_range"]
         ops = {}
+        dmin = self.data_min_
+        assert dmin is not None
+        dmax = self.data_max_
+        assert dmax is not None
         for i, c in enumerate(get_columns(X)):
-            c_std = (it[c] - self.data_min_[i]) / (  # type: ignore
-                self.data_max_[i] - self.data_min_[i]  # type: ignore
-            )
+            c_std = (it[c] - dmin[i]) / (dmax[i] - dmin[i])
             c_scaled = c_std * (range_max - range_min) + range_min
             ops.update({c: c_scaled})
         return Map(columns=ops)

@@ -1874,7 +1874,7 @@ class TestMap(unittest.TestCase):
                         "date": replace(it.month, month_map),
                         "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
                         "next_month_id": identity(
-                            month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1  # type: ignore
+                            month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1
                         ),
                     }
                 )
@@ -1884,7 +1884,7 @@ class TestMap(unittest.TestCase):
                         "date": replace(it.month, month_map),
                         "month_id": month(replace(it.month, month_map), "y-M-d"),
                         "next_month_id": identity(
-                            month(replace(it.month, month_map), "y-M-d") % 12 + 1  # type: ignore
+                            month(replace(it.month, month_map), "y-M-d") % 12 + 1
                         ),
                     }
                 )
@@ -2088,11 +2088,11 @@ class TestMap(unittest.TestCase):
         trained = Map(
             columns={
                 "height<=5": it.height <= 5,
-                "int(height<=5)": astype("int", it.height <= 5),  # type: ignore
+                "int(height<=5)": astype("int", it.height <= 5),
                 "4==height": 4 == it.height,
                 "height*10==weight": it.height * 10 == it.weight,
-                "height>3&<=5": (it.height > 3) & (it.height <= 5),  # type: ignore
-                "height<=3|>5": (it.height <= 3) | (it.height > 5),  # type: ignore
+                "height>3&<=5": (it.height > 3) & (it.height <= 5),
+                "height<=3|>5": (it.height <= 3) | (it.height > 5),
             }
         )
         for tgt, datasets in self.tgt2datasets.items():

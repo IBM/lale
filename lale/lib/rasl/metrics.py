@@ -98,7 +98,7 @@ class _Accuracy(_MetricMonoidMixin[_AccuracyData]):
     def __init__(self):
         self._pipeline = (
             ConcatFeatures
-            >> Map(columns={"match": astype("int", it.y_true == it.y_pred)})  # type: ignore
+            >> Map(columns={"match": astype("int", it.y_true == it.y_pred)})
             >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
         )
 
@@ -154,7 +154,7 @@ class _R2(_MetricMonoidMixin[_R2Data]):
                     "y": it.y_true,  # observed values
                     "f": it.y_pred,  # predicted values
                     "y2": it.y_true * it.y_true,  # squares
-                    "e2": (it.y_true - it.y_pred) * (it.y_true - it.y_pred),  # type: ignore
+                    "e2": (it.y_true - it.y_pred) * (it.y_true - it.y_pred),
                 }
             )
             >> Aggregate(

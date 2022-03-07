@@ -828,15 +828,15 @@ class _DIorSPDScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_DIorSPDDa
         y_pred_name = gensym("y_pred")
         y_pred = pd.DataFrame({y_pred_name: y_pred})
         pa_names = self.privileged_groups[0].keys()
-        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
-        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))
         prd = it[y_pred_name]
         map_op = Map(
             columns={
-                "priv0_fav0": astype("int", priv0 & (prd == 0)),  # type: ignore
-                "priv0_fav1": astype("int", priv0 & (prd == 1)),  # type: ignore
-                "priv1_fav0": astype("int", priv1 & (prd == 0)),  # type: ignore
-                "priv1_fav1": astype("int", priv1 & (prd == 1)),  # type: ignore
+                "priv0_fav0": astype("int", priv0 & (prd == 0)),
+                "priv0_fav1": astype("int", priv0 & (prd == 1)),
+                "priv1_fav0": astype("int", priv1 & (prd == 0)),
+                "priv1_fav1": astype("int", priv1 & (prd == 1)),
             }
         )
         agg_op = Aggregate(
@@ -903,19 +903,19 @@ class _AODorEODScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_AODorEOD
         _, y_true = self.prot_attr_enc.transform(X, y_true)
         y_true = pd.DataFrame({y_true_name: pd.Series(y_true, y_pred.index)})
         pa_names = self.privileged_groups[0].keys()
-        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
-        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))
         tru, prd = it[y_true_name], it[y_pred_name]
         map_op = Map(
             columns={
-                "tru0_pred0_priv0": astype("int", (tru == 0) & (prd == 0) & priv0),  # type: ignore
-                "tru0_pred0_priv1": astype("int", (tru == 0) & (prd == 0) & priv1),  # type: ignore
-                "tru0_pred1_priv0": astype("int", (tru == 0) & (prd == 1) & priv0),  # type: ignore
-                "tru0_pred1_priv1": astype("int", (tru == 0) & (prd == 1) & priv1),  # type: ignore
-                "tru1_pred0_priv0": astype("int", (tru == 1) & (prd == 0) & priv0),  # type: ignore
-                "tru1_pred0_priv1": astype("int", (tru == 1) & (prd == 0) & priv1),  # type: ignore
-                "tru1_pred1_priv0": astype("int", (tru == 1) & (prd == 1) & priv0),  # type: ignore
-                "tru1_pred1_priv1": astype("int", (tru == 1) & (prd == 1) & priv1),  # type: ignore
+                "tru0_pred0_priv0": astype("int", (tru == 0) & (prd == 0) & priv0),
+                "tru0_pred0_priv1": astype("int", (tru == 0) & (prd == 0) & priv1),
+                "tru0_pred1_priv0": astype("int", (tru == 0) & (prd == 1) & priv0),
+                "tru0_pred1_priv1": astype("int", (tru == 0) & (prd == 1) & priv1),
+                "tru1_pred0_priv0": astype("int", (tru == 1) & (prd == 0) & priv0),
+                "tru1_pred0_priv1": astype("int", (tru == 1) & (prd == 0) & priv1),
+                "tru1_pred1_priv0": astype("int", (tru == 1) & (prd == 1) & priv0),
+                "tru1_pred1_priv1": astype("int", (tru == 1) & (prd == 1) & priv1),
             }
         )
         agg_op = Aggregate(

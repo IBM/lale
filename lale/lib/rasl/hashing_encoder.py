@@ -103,9 +103,9 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         N = self._hyperparams["n_components"]
         columns_cat = {
             f"col_{i}": reduce(
-                Expr.__add__,  # type: ignore
+                Expr.__add__,
                 [
-                    ite(hash(hash_method, it[col_name]) % N == i, 1, 0)  # type: ignore
+                    ite(hash(hash_method, it[col_name]) % N == i, 1, 0)
                     for col_name in cols
                 ],
             )
