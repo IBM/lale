@@ -13,10 +13,8 @@
 # limitations under the License.
 
 import functools
-import itertools
 import logging
-from abc import abstractmethod
-from typing import List, Optional, Tuple, TypeVar, Union, cast
+from typing import List, Optional, Tuple, Union, cast
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
@@ -29,9 +27,12 @@ import sklearn.model_selection
 import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.lib.lale
+import lale.lib.rasl
 from lale.datasets.data_schemas import add_schema_adjusting_n_rows
 from lale.expressions import astype, it, sum
-from lale.lib.rasl import Aggregate, Map
+from lale.helpers import GenSym, _ensure_pandas
+from lale.lib.dataframe import get_columns
+from lale.lib.rasl import Aggregate, ConcatFeatures, Map
 from lale.lib.rasl.metrics import MetricMonoid, MetricMonoidFactory
 from lale.operators import TrainablePipeline, TrainedOperator
 from lale.type_checking import JSON_TYPE, validate_schema_directly
@@ -301,7 +302,7 @@ class _PandasToDatasetConverter:
         return result
 
 
-def _ensure_str(str_or_int):
+def _ensure_str(str_or_int: Union[str, int]) -> str:
     return f"f{str_or_int}" if isinstance(str_or_int, int) else str_or_int
 
 
@@ -658,7 +659,23 @@ _numeric_output_transform_schema = {
 #####################################################################
 
 
-class _ScorerFactory:
+def _y_pred_series(
+    y_true: Union[pd.Series, np.ndarray, None],
+    y_pred: Union[pd.Series, np.ndarray],
+    X: Union[pd.DataFrame, np.ndarray],
+) -> pd.Series:
+    if isinstance(y_pred, pd.Series):
+        return y_pred
+    assert y_true is not None
+    return _ndarray_to_series(
+        y_pred,
+        y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),  # type: ignore
+        X.index if isinstance(X, pd.DataFrame) else None,  # type: ignore
+        y_pred.dtype,
+    )
+
+
+class _AIF360ScorerFactory:
     _cached_pandas_to_dataset: Optional[_PandasToDatasetConverter]
 
     def __init__(
@@ -707,22 +724,6 @@ class _ScorerFactory:
             )
         return self._cached_pandas_to_dataset
 
-    def _y_pred_series(
-        self,
-        y_true: Union[pd.Series, np.ndarray, None],
-        y_pred: Union[pd.Series, np.ndarray],
-        X: Union[pd.DataFrame, np.ndarray],
-    ) -> pd.Series:
-        if isinstance(y_pred, pd.Series):
-            return y_pred
-        assert y_true is not None
-        return _ndarray_to_series(
-            y_pred,
-            y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),  # type: ignore
-            X.index if isinstance(X, pd.DataFrame) else None,  # type: ignore
-            y_pred.dtype,
-        )
-
     def score_data(
         self,
         y_true: Union[pd.Series, np.ndarray, None] = None,
@@ -731,7 +732,7 @@ class _ScorerFactory:
     ) -> float:
         assert y_pred is not None and X is not None
         y_pred_orig = y_pred
-        y_pred = self._y_pred_series(y_true, y_pred, X)
+        y_pred = _y_pred_series(y_true, y_pred, X)
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
         try:
             dataset_pred = self._pandas_to_dataset().convert(encoded_X, y_pred)
@@ -794,21 +795,9 @@ class _ScorerFactory:
         return self.score_estimator(estimator, X, y)
 
 
-_Monoid = TypeVar("_Monoid", bound=MetricMonoid)
-
 _Batch_Xy = Tuple[pd.DataFrame, pd.Series]
 
 _Batch_yyX = Tuple[Optional[pd.Series], pd.Series, pd.DataFrame]
-
-
-class _BatchedScorerFactory(_ScorerFactory, MetricMonoidFactory[_Monoid]):
-    @abstractmethod
-    def to_monoid(self, batch: _Batch_yyX) -> _Monoid:
-        pass
-
-    @abstractmethod
-    def from_monoid(self, v: _Monoid) -> float:
-        pass
 
 
 class _DIorSPDData(MetricMonoid):
@@ -829,25 +818,28 @@ class _DIorSPDData(MetricMonoid):
         )
 
 
-class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
+class _DIorSPDScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_DIorSPDData]):
     def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
         y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
-        y_pred = self._y_pred_series(y_true, y_pred, X)
+        y_pred = _y_pred_series(y_true, y_pred, X)
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
-        df = pd.concat([encoded_X, y_pred], axis=1)
+        gensym = GenSym(set(_ensure_str(n) for n in get_columns(encoded_X)))
+        y_pred_name = gensym("y_pred")
+        y_pred = pd.DataFrame({y_pred_name: y_pred})
         pa_names = self.privileged_groups[0].keys()
         priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
         priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
-        pred = it[y_pred.name]
-        pipeline = Map(
+        prd = it[y_pred_name]
+        map_op = Map(
             columns={
-                "priv0_fav0": astype("int", priv0 & (pred == 0)),  # type: ignore
-                "priv0_fav1": astype("int", priv0 & (pred == 1)),  # type: ignore
-                "priv1_fav0": astype("int", priv1 & (pred == 0)),  # type: ignore
-                "priv1_fav1": astype("int", priv1 & (pred == 1)),  # type: ignore
+                "priv0_fav0": astype("int", priv0 & (prd == 0)),  # type: ignore
+                "priv0_fav1": astype("int", priv0 & (prd == 1)),  # type: ignore
+                "priv1_fav0": astype("int", priv1 & (prd == 0)),  # type: ignore
+                "priv1_fav1": astype("int", priv1 & (prd == 1)),  # type: ignore
             }
-        ) >> Aggregate(
+        )
+        agg_op = Aggregate(
             columns={
                 "priv0_fav0": sum(it.priv0_fav0),
                 "priv0_fav1": sum(it.priv0_fav1),
@@ -855,8 +847,14 @@ class _DIorSPDScorerFactory(_BatchedScorerFactory[_DIorSPDData]):
                 "priv1_fav1": sum(it.priv1_fav1),
             }
         )
-        agg_df = pipeline.transform(df)
-        return _DIorSPDData(*agg_df.iloc[0])
+        pipeline = ConcatFeatures >> map_op >> agg_op
+        agg_df = _ensure_pandas(pipeline.transform([encoded_X, y_pred]))
+        return _DIorSPDData(
+            priv0_fav0=agg_df.at[0, "priv0_fav0"],
+            priv0_fav1=agg_df.at[0, "priv0_fav1"],
+            priv1_fav0=agg_df.at[0, "priv1_fav0"],
+            priv1_fav1=agg_df.at[0, "priv1_fav1"],
+        )
 
 
 class _AODorEODData(MetricMonoid):
@@ -893,31 +891,22 @@ class _AODorEODData(MetricMonoid):
         )
 
 
-class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
+class _AODorEODScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_AODorEODData]):
     def to_monoid(self, batch: _Batch_yyX) -> _AODorEODData:
         y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
-        y_pred = self._y_pred_series(y_true, y_pred, X)
+        y_pred = _y_pred_series(y_true, y_pred, X)
         encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
-
-        def is_fresh(col_name):
-            assert y_true is not None and isinstance(y_true, pd.Series), batch
-            return col_name not in encoded_X.columns and col_name != y_true.name
-
-        if is_fresh("y_pred"):
-            y_pred_name = "y_pred"
-        else:
-            y_pred_name = next(
-                f"y_pred_{i}" for i in itertools.count(0) if is_fresh(f"y_pred_{i}")
-            )
-        y_pred = pd.Series(y_pred, y_pred.index, name=y_pred_name)
+        gensym = GenSym(set(_ensure_str(n) for n in get_columns(encoded_X)))
+        y_true_name, y_pred_name = gensym("y_true"), gensym("y_pred")
+        y_pred = pd.DataFrame({y_pred_name: y_pred})
         _, y_true = self.prot_attr_enc.transform(X, y_true)
-        df = pd.concat([y_true, y_pred, encoded_X], axis=1)
+        y_true = pd.DataFrame({y_true_name: pd.Series(y_true, y_pred.index)})
         pa_names = self.privileged_groups[0].keys()
         priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))  # type: ignore
         priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))  # type: ignore
-        tru, prd = it[y_true.name], it[y_pred_name]
-        pipeline = Map(
+        tru, prd = it[y_true_name], it[y_pred_name]
+        map_op = Map(
             columns={
                 "tru0_pred0_priv0": astype("int", (tru == 0) & (prd == 0) & priv0),  # type: ignore
                 "tru0_pred0_priv1": astype("int", (tru == 0) & (prd == 0) & priv1),  # type: ignore
@@ -928,7 +917,8 @@ class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
                 "tru1_pred1_priv0": astype("int", (tru == 1) & (prd == 1) & priv0),  # type: ignore
                 "tru1_pred1_priv1": astype("int", (tru == 1) & (prd == 1) & priv1),  # type: ignore
             }
-        ) >> Aggregate(
+        )
+        agg_op = Aggregate(
             columns={
                 "tru0_pred0_priv0": sum(it.tru0_pred0_priv0),
                 "tru0_pred0_priv1": sum(it.tru0_pred0_priv1),
@@ -940,8 +930,18 @@ class _AODorEODScorerFactory(_BatchedScorerFactory[_AODorEODData]):
                 "tru1_pred1_priv1": sum(it.tru1_pred1_priv1),
             }
         )
-        agg_df = pipeline.transform(df)
-        return _AODorEODData(*agg_df.iloc[0])
+        pipeline = ConcatFeatures >> map_op >> agg_op
+        agg_df = _ensure_pandas(pipeline.transform([encoded_X, y_true, y_pred]))
+        return _AODorEODData(
+            tru0_pred0_priv0=agg_df.at[0, "tru0_pred0_priv0"],
+            tru0_pred0_priv1=agg_df.at[0, "tru0_pred0_priv1"],
+            tru0_pred1_priv0=agg_df.at[0, "tru0_pred1_priv0"],
+            tru0_pred1_priv1=agg_df.at[0, "tru0_pred1_priv1"],
+            tru1_pred0_priv0=agg_df.at[0, "tru1_pred0_priv0"],
+            tru1_pred0_priv1=agg_df.at[0, "tru1_pred0_priv1"],
+            tru1_pred1_priv0=agg_df.at[0, "tru1_pred1_priv0"],
+            tru1_pred1_priv1=agg_df.at[0, "tru1_pred1_priv1"],
+        )
 
 
 _SCORER_DOCSTRING_ARGS = """
@@ -1059,7 +1059,23 @@ _BLENDED_SCORER_DOCSTRING = (
 )
 
 
-class _AccuracyAndDisparateImpact:
+class _AccuracyAndSymmDIData(MetricMonoid):
+    def __init__(
+        self,
+        accuracy_data: lale.lib.rasl.metrics._AccuracyData,
+        symm_di_data: _DIorSPDData,
+    ):
+        self.accuracy_data = accuracy_data
+        self.symm_di_data = symm_di_data
+
+    def combine(self, other: "_AccuracyAndSymmDIData") -> "_AccuracyAndSymmDIData":
+        return _AccuracyAndSymmDIData(
+            self.accuracy_data.combine(other.accuracy_data),
+            self.symm_di_data.combine(other.symm_di_data),
+        )
+
+
+class _AccuracyAndDisparateImpact(MetricMonoidFactory[_AccuracyAndSymmDIData]):
     def __init__(
         self,
         favorable_labels: _FAV_LABELS_TYPE,
@@ -1072,9 +1088,7 @@ class _AccuracyAndDisparateImpact:
                 f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
             )
             fairness_weight = 0.5
-        self.accuracy_scorer = sklearn.metrics.make_scorer(
-            sklearn.metrics.accuracy_score
-        )
+        self.accuracy_scorer = lale.lib.rasl.get_scorer("accuracy")
         self.symm_di_scorer = symmetric_disparate_impact(
             favorable_labels, protected_attributes, unfavorable_labels
         )
@@ -1094,13 +1108,24 @@ class _AccuracyAndDisparateImpact:
             )
         return result
 
+    def to_monoid(self, batch: _Batch_yyX) -> _AccuracyAndSymmDIData:
+        return _AccuracyAndSymmDIData(
+            self.accuracy_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
+        )
+
+    def from_monoid(self, v: _AccuracyAndSymmDIData) -> float:
+        accuracy = self.accuracy_scorer.from_monoid(v.accuracy_data)
+        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+        return self._blend_metrics(accuracy, symm_di)
+
     def score_data(
         self,
-        y_true: Union[pd.Series, np.ndarray],
-        y_pred: Union[pd.Series, np.ndarray],
-        X: Union[pd.DataFrame, np.ndarray],
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
     ) -> float:
-        accuracy = sklearn.metrics.accuracy_score(y_true, y_pred)
+        assert y_true is not None and y_pred is not None and X is not None
+        accuracy = self.accuracy_scorer.score_data(y_true, y_pred, X)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
         return self._blend_metrics(accuracy, symm_di)
 
@@ -1110,7 +1135,7 @@ class _AccuracyAndDisparateImpact:
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
     ) -> float:
-        accuracy = self.accuracy_scorer(estimator, X, y)
+        accuracy = self.accuracy_scorer.score_estimator(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
         return self._blend_metrics(accuracy, symm_di)
 
@@ -1324,7 +1349,23 @@ equal_opportunity_difference.__doc__ = (
 )
 
 
-class _R2AndDisparateImpact:
+class _R2AndSymmDIData(MetricMonoid):
+    def __init__(
+        self,
+        r2_data: lale.lib.rasl.metrics._R2Data,
+        symm_di_data: _DIorSPDData,
+    ):
+        self.r2_data = r2_data
+        self.symm_di_data = symm_di_data
+
+    def combine(self, other: "_R2AndSymmDIData") -> "_R2AndSymmDIData":
+        return _R2AndSymmDIData(
+            self.r2_data.combine(other.r2_data),
+            self.symm_di_data.combine(other.symm_di_data),
+        )
+
+
+class _R2AndDisparateImpact(MetricMonoidFactory[_R2AndSymmDIData]):
     def __init__(
         self,
         favorable_labels: _FAV_LABELS_TYPE,
@@ -1337,7 +1378,7 @@ class _R2AndDisparateImpact:
                 f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
             )
             fairness_weight = 0.5
-        self.r2_scorer = sklearn.metrics.make_scorer(sklearn.metrics.r2_score)
+        self.r2_scorer = lale.lib.rasl.get_scorer("r2")
         self.symm_di_scorer = symmetric_disparate_impact(
             favorable_labels, protected_attributes, unfavorable_labels
         )
@@ -1358,13 +1399,24 @@ class _R2AndDisparateImpact:
             )
         return result
 
+    def to_monoid(self, batch: _Batch_yyX) -> _R2AndSymmDIData:
+        return _R2AndSymmDIData(
+            self.r2_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
+        )
+
+    def from_monoid(self, v: _R2AndSymmDIData) -> float:
+        r2 = self.r2_scorer.from_monoid(v.r2_data)
+        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+        return self._blend_metrics(r2, symm_di)
+
     def score_data(
         self,
-        y_true: Union[pd.Series, np.ndarray],
-        y_pred: Union[pd.Series, np.ndarray],
-        X: Union[pd.DataFrame, np.ndarray],
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
     ) -> float:
-        r2 = sklearn.metrics.r2_score(y_true, y_pred)
+        assert y_true is not None and y_pred is not None and X is not None
+        r2 = self.r2_scorer.score_data(y_true, y_pred, X)
         symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
         return self._blend_metrics(r2, symm_di)
 
@@ -1374,7 +1426,7 @@ class _R2AndDisparateImpact:
         X: Union[pd.DataFrame, np.ndarray],
         y: Union[pd.Series, np.ndarray],
     ) -> float:
-        r2 = self.r2_scorer(estimator, X, y)
+        r2 = self.r2_scorer.score_estimator(estimator, X, y)
         symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
         return self._blend_metrics(r2, symm_di)
 
@@ -1472,7 +1524,7 @@ statistical_parity_difference.__doc__ = (
 )
 
 
-class _SymmetricDisparateImpact:
+class _SymmetricDisparateImpact(MetricMonoidFactory[_DIorSPDData]):
     def __init__(
         self,
         favorable_labels: _FAV_LABELS_TYPE,
@@ -1489,6 +1541,12 @@ class _SymmetricDisparateImpact:
         if disp_impact <= 1.0:
             return disp_impact
         return 1.0 / disp_impact
+
+    def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
+        return self.disparate_impact_scorer.to_monoid(batch)
+
+    def from_monoid(self, v: _DIorSPDData) -> float:
+        return self._make_symmetric(self.disparate_impact_scorer.from_monoid(v))
 
     def score_data(
         self,
@@ -1546,7 +1604,7 @@ def theil_index(
     favorable_labels: _FAV_LABELS_TYPE,
     protected_attributes: List[JSON_TYPE],
     unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
-) -> _ScorerFactory:
+) -> _AIF360ScorerFactory:
     r"""
     Create a scikit-learn compatible `Theil index`_ scorer given the
     fairness info (`Speicher et al. 2018`_). Generalized entropy of
@@ -1566,7 +1624,7 @@ def theil_index(
 
     .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
     .. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
-    return _ScorerFactory(
+    return _AIF360ScorerFactory(
         "theil_index", favorable_labels, protected_attributes, unfavorable_labels
     )
 

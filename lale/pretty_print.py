@@ -1,4 +1,4 @@
-# Copyright 2019, 2020, 2021, 2022 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import numpy as np
 import sklearn.metrics
 
 import lale.expressions
+import lale.helpers
 import lale.json_operator
 import lale.operators
 import lale.type_checking
@@ -39,7 +40,6 @@ _black78 = black.FileMode(line_length=78)
 class _CodeGenState:
     imports: List[str]
     assigns: List[str]
-    _names: Set[str]
 
     def __init__(
         self, names: Set[str], combinators: bool, customize_schema: bool, astype: str
@@ -49,7 +49,7 @@ class _CodeGenState:
         self.combinators = combinators
         self.customize_schema = customize_schema
         self.astype = astype
-        self._names = (
+        self.gensym = lale.helpers.GenSym(
             {
                 "make_pipeline_graph",
                 "lale",
@@ -64,17 +64,6 @@ class _CodeGenState:
             | set(keyword.kwlist)
             | names
         )
-
-    def gensym(self, prefix: str) -> str:
-        if prefix in self._names:
-            suffix = 0
-            while f"{prefix}_{suffix}" in self._names:
-                suffix += 1
-            result = f"{prefix}_{suffix}"
-        else:
-            result = prefix
-        self._names |= {result}
-        return result
 
 
 def hyperparams_to_string(
