@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import ast
+import typing
 
 import pandas as pd
 
@@ -106,7 +107,9 @@ class _Validate(ast.NodeVisitor):
 
     def visit_Subscript(self, node: ast.Subscript):
         column_name = _it_column(node)
-        if column_name is None or not column_name.strip():
+        if column_name is None or (
+            isinstance(column_name, str) and not column_name.strip()
+        ):
             raise ValueError("Name of the column cannot be None or empty.")
         if column_name not in self.df.columns:
             raise ValueError(
@@ -209,11 +212,15 @@ class _MapImpl:
             raise ValueError("columns must be either a list or a dictionary.")
         if self.remainder == "passthrough":
             remainder_columns = [
-                spark_col(x) for x in get_columns(X) if x not in accessed_column_names
+                spark_col(typing.cast(str, x))
+                for x in get_columns(X)
+                if x not in accessed_column_names
             ]
             new_columns.extend(remainder_columns)
-        if _is_spark_with_index(X) and X.index_name not in accessed_column_names:
-            new_columns.extend([spark_col(X.index_name)])
+        if _is_spark_with_index(X):
+            for index_name in X.index_names:
+                if index_name not in accessed_column_names:
+                    new_columns.extend([spark_col(index_name)])
         mapped_df = X.select(new_columns)
         mapped_df = forward_metadata(X, mapped_df)
         return mapped_df

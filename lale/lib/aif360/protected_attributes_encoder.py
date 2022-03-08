@@ -20,6 +20,7 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 import lale.type_checking
+from lale.helpers import GenSym
 
 from .util import (
     _categorical_fairness_properties,
@@ -255,12 +256,6 @@ class _ProtectedAttributesEncoderImpl:
             prot_attr_names = [
                 _ensure_str(pa["feature"]) for pa in self.protected_attributes
             ]
-            comb_name = f"_{self.combine}_".join(prot_attr_names)
-            if comb_name in X_pd.columns:
-                suffix = 0
-                while f"{comb_name}_{suffix}" in X_pd.columns:
-                    suffix += 1
-                comb_name = f"{comb_name}_{suffix}"
             comb_df = pd.concat([protected[f] for f in protected], axis=1)
             if self.combine == "and":
                 comb_series = comb_df.min(axis=1)
@@ -268,6 +263,8 @@ class _ProtectedAttributesEncoderImpl:
                 comb_series = comb_df.max(axis=1)
             else:
                 assert False, self.combine
+            gensym = GenSym(set(X_pd.columns))
+            comb_name = gensym(f"_{self.combine}_".join(prot_attr_names))
             comb_series.name = comb_name
             protected = {comb_name: comb_series}
         if self.remainder == "drop":

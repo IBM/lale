@@ -276,7 +276,7 @@ class TestImportExport(unittest.TestCase):
             import_from_sklearn_pipeline(sklearn_pipeline),
         )
         self.assertEqual(len(lale_pipeline.edges()), 3)
-        from lale.lib.lale.concat_features import ConcatFeatures
+        from lale.lib.rasl.concat_features import ConcatFeatures
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifier
         from lale.lib.sklearn.nystroem import Nystroem
         from lale.lib.sklearn.pca import PCA
@@ -313,7 +313,7 @@ class TestImportExport(unittest.TestCase):
             import_from_sklearn_pipeline(sklearn_pipeline),
         )
         self.assertEqual(len(lale_pipeline.edges()), 4)
-        from lale.lib.lale.concat_features import ConcatFeatures
+        from lale.lib.rasl.concat_features import ConcatFeatures
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifier
         from lale.lib.sklearn.nystroem import Nystroem
         from lale.lib.sklearn.pca import PCA
@@ -366,7 +366,7 @@ class TestImportExport(unittest.TestCase):
         )
         self.assertEqual(len(lale_pipeline.edges()), 8)
         # These assertions assume topological sort, which may not be unique. So the assertions are brittle.
-        from lale.lib.lale.concat_features import ConcatFeatures
+        from lale.lib.rasl.concat_features import ConcatFeatures
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifier
         from lale.lib.sklearn.nystroem import Nystroem
         from lale.lib.sklearn.pca import PCA
@@ -415,7 +415,7 @@ class TestImportExport(unittest.TestCase):
             import_from_sklearn_pipeline(sklearn_pipeline),
         )
         self.assertEqual(len(lale_pipeline.edges()), 5)
-        from lale.lib.lale.concat_features import ConcatFeatures
+        from lale.lib.rasl.concat_features import ConcatFeatures
         from lale.lib.sklearn.k_neighbors_classifier import KNeighborsClassifier
         from lale.lib.sklearn.nystroem import Nystroem
         from lale.lib.sklearn.pca import PCA

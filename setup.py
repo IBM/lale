@@ -94,6 +94,7 @@ extras_require = {
         "pytest",
         "pyspark",
         "func_timeout",
+        "category-encoders",
     ],
     "fairness": [
         "liac-arff>=2.4.0",

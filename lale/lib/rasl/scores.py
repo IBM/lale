@@ -20,12 +20,11 @@ from scipy import special
 from lale.expressions import count as agg_count
 from lale.expressions import it
 from lale.expressions import sum as agg_sum
-from lale.helpers import _ensure_pandas
+from lale.helpers import _ensure_pandas, _is_pandas_series
 from lale.lib.dataframe import get_columns
-from lale.lib.lale.concat_features import ConcatFeatures
-from lale.lib.rasl import Aggregate, GroupBy, Map
+from lale.lib.rasl import Aggregate, ConcatFeatures, GroupBy, Map
 
-from ._monoid import Monoid, MonoidFactory
+from .monoid import Monoid, MonoidFactory
 
 ScoreMonoid = Monoid
 
@@ -36,7 +35,7 @@ _M = TypeVar("_M", bound=ScoreMonoid)
 
 class ScoreMonoidFactory(MonoidFactory[_InputType, _OutputType, _M]):
     def score(self, X, y) -> Tuple[float, float]:
-        return self._from_monoid(self._to_monoid((X, y)))
+        return self.from_monoid(self.to_monoid((X, y)))
 
 
 class FOnewayData(Monoid):
@@ -48,7 +47,7 @@ class FOnewayData(Monoid):
         n_samples,
         ss_alldata,
         sums_samples,
-        sums_alldata
+        sums_alldata,
     ):
         """
         Parameters
@@ -110,6 +109,15 @@ class FOnewayData(Monoid):
         )
 
 
+def _gen_name(base, avoid):
+    if base not in avoid:
+        return base
+    cpt = 0
+    while f"{base}{cpt}" in avoid:
+        cpt += 1
+    return f"{base}{cpt}"
+
+
 # The following function is a rewriting of sklearn.feature_selection.f_oneway
 # Compared to the sklearn.feature_selection.f_oneway implementation it
 # takes as input the dataset and the target vector.
@@ -130,6 +138,9 @@ def _f_oneway_lift(X, y) -> FOnewayData:
     monoid: FOnewayData
         The inermediate data that can be combine for incremental computation.
     """
+    if get_columns(y)[0] is None:
+        if _is_pandas_series(y):
+            y = y.rename(_gen_name("target", get_columns(X)))
     Xy = ConcatFeatures().transform([X, y])
     X_by_y = GroupBy(by=[it[get_columns(y)[0]]]).transform(Xy)
 
@@ -168,7 +179,7 @@ def _f_oneway_lower(lifted):
     Parameters
     ----------
     lifted : FOnewayData
-        The result of `_to_monoid`.
+        The result of `to_monoid`.
 
     Returns
     -------
@@ -210,9 +221,9 @@ def _f_oneway_lower(lifted):
 class FClassif(ScoreMonoidFactory[FOnewayData]):
     """Compute the ANOVA F-value for the provided sample."""
 
-    def _to_monoid(self, v):
+    def to_monoid(self, v):
         X, y = v
         return _f_oneway_lift(X, y)
 
-    def _from_monoid(self, lifted):
+    def from_monoid(self, lifted):
         return _f_oneway_lower(lifted)

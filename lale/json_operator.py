@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ from typing import Any, Dict, Tuple, cast
 import jsonschema
 
 import lale.operators
+from lale.helpers import GenSym
 
 logger = logging.getLogger(__name__)
 
@@ -272,51 +273,39 @@ def _camelCase_to_snake(name):
     return re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
 
 
-class _GenSym:
-    def __init__(self, op: "lale.operators.Operator", cls2label: Dict[str, str]):
-        label2count: Dict[str, int] = {}
+def _init_gensym(op: "lale.operators.Operator", cls2label: Dict[str, str]) -> GenSym:
+    label2count: Dict[str, int] = {}
 
-        def populate_label2count(op: "lale.operators.Operator"):
-            if isinstance(op, lale.operators.IndividualOp):
-                label = cls2label.get(op.class_name(), op.name())
-            elif isinstance(op, lale.operators.BasePipeline):
-                for s in op.steps_list():
-                    populate_label2count(s)
-                label = "pipeline"
-            elif isinstance(op, lale.operators.OperatorChoice):
-                for s in op.steps_list():
-                    populate_label2count(s)
-                label = "choice"
-            else:
-                raise ValueError(f"Unexpected argument of type: {type(op)}")
-            label2count[label] = label2count.get(label, 0) + 1
-
-        populate_label2count(op)
-        non_unique_labels = {ll for ll, c in label2count.items() if c > 1}
-        snakes = {_camelCase_to_snake(ll) for ll in non_unique_labels}
-        self._names = (
-            {"lale", "make_pipeline", "make_union", "make_choice"}
-            | set(keyword.kwlist)
-            | non_unique_labels
-            | snakes
-        )
-
-    def __call__(self, prefix: str) -> str:
-        if prefix in self._names:
-            suffix = 0
-            while f"{prefix}_{suffix}" in self._names:
-                suffix += 1
-            result = f"{prefix}_{suffix}"
+    def populate_label2count(op: "lale.operators.Operator"):
+        if isinstance(op, lale.operators.IndividualOp):
+            label = cls2label.get(op.class_name(), op.name())
+        elif isinstance(op, lale.operators.BasePipeline):
+            for s in op.steps_list():
+                populate_label2count(s)
+            label = "pipeline"
+        elif isinstance(op, lale.operators.OperatorChoice):
+            for s in op.steps_list():
+                populate_label2count(s)
+            label = "choice"
         else:
-            result = prefix
-        self._names |= {result}
-        return result
+            raise ValueError(f"Unexpected argument of type: {type(op)}")
+        label2count[label] = label2count.get(label, 0) + 1
+
+    populate_label2count(op)
+    non_unique_labels = {ll for ll, c in label2count.items() if c > 1}
+    snakes = {_camelCase_to_snake(ll) for ll in non_unique_labels}
+    return GenSym(
+        {"lale", "make_pipeline", "make_union", "make_choice"}
+        | set(keyword.kwlist)
+        | non_unique_labels
+        | snakes
+    )
 
 
 def _hps_to_json_rec(
     hps,
     cls2label: Dict[str, str],
-    gensym: _GenSym,
+    gensym: GenSym,
     steps,
     add_custom_default: bool,
 ) -> Any:
@@ -421,7 +410,7 @@ def _top_schemas_to_hp_props(top_level_schemas) -> JSON_TYPE:
 def _op_to_json_rec(
     op: "lale.operators.Operator",
     cls2label: Dict[str, str],
-    gensym: _GenSym,
+    gensym: GenSym,
     add_custom_default: bool,
 ) -> Tuple[str, JSON_TYPE]:
     jsn: JSON_TYPE = {}
@@ -515,7 +504,7 @@ def to_json(
     from lale.settings import disable_hyperparams_schema_validation
 
     cls2label = _get_cls2label(call_depth + 1)
-    gensym = _GenSym(op, cls2label)
+    gensym = _init_gensym(op, cls2label)
     uid, jsn = _op_to_json_rec(op, cls2label, gensym, add_custom_default)
     if not disable_hyperparams_schema_validation:
         jsonschema.validate(jsn, SCHEMA, jsonschema.Draft4Validator)

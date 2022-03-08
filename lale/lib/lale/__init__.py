@@ -34,7 +34,7 @@ Transformers:
 * lale.lib.rasl. `Aggregate`_
 * lale.lib.rasl. `Alias`_
 * lale.lib.rasl. `Batching`_
-* lale.lib.lale. `ConcatFeatures`_
+* lale.lib.rasl. `ConcatFeatures`_
 * lale.lib.rasl. `Filter`_
 * lale.lib.rasl. `GroupBy`_
 * lale.lib.rasl. `Join`_
@@ -45,7 +45,7 @@ Transformers:
 * lale.lib.rasl. `Relational`_
 * lale.lib.lale. `SampleBasedVoting`_
 * lale.lib.rasl. `Scan`_
-* lale.lib.lale. `SplitXy`_
+* lale.lib.rasl. `SplitXy`_
 * lale.lib.lale. `Tee`_
 
 Estimators and transformers:
@@ -64,7 +64,7 @@ Estimators and transformers:
 .. _`TopKVotingClassifier`: lale.lib.lale.topk_voting_classifier.html
 .. _`SMAC`: lale.lib.lale.smac.html
 .. _`Batching`: lale.lib.rasl.batching.html
-.. _`ConcatFeatures`: lale.lib.lale.concat_features.html
+.. _`ConcatFeatures`: lale.lib.rasl.concat_features.html
 .. _`NoOp`: lale.lib.lale.no_op.html
 .. _`Project`: lale.lib.rasl.project.html
 .. _`SampleBasedVoting`: lale.lib.lale.sample_based_voting.html
@@ -76,7 +76,7 @@ Estimators and transformers:
 .. _`Join`: lale.lib.rasl.join.html
 .. _`Alias`: lale.lib.rasl.alias.html
 .. _`Scan`: lale.lib.rasl.scan.html
-.. _`SplitXy`: lale.lib.lale.split_xy.html
+.. _`SplitXy`: lale.lib.rasl.split_xy.html
 .. _`Relational`: lale.lib.rasl.relational.html
 .. _`Both`: lale.lib.lale.both.html
 .. _`IdentityWrapper`: lale.lib.lale.identity_wrapper.html
@@ -99,6 +99,7 @@ from lale.lib.rasl import (
     Aggregate,
     Alias,
     Batching,
+    ConcatFeatures,
     Filter,
     GroupBy,
     Join,
@@ -107,6 +108,7 @@ from lale.lib.rasl import (
     Project,
     Relational,
     Scan,
+    SplitXy,
     categorical,
     date_time,
     spark_explainer,
@@ -117,7 +119,6 @@ from .auto_pipeline import AutoPipeline
 
 # estimators and transformers
 from .both import Both
-from .concat_features import ConcatFeatures
 
 # functions
 from .grid_search_cv import GridSearchCV
@@ -130,6 +131,5 @@ from .optimize_last import OptimizeLast
 from .optimize_suffix import OptimizeSuffix
 from .sample_based_voting import SampleBasedVoting
 from .smac import SMAC
-from .split_xy import SplitXy
 from .tee import Tee
 from .topk_voting_classifier import TopKVotingClassifier

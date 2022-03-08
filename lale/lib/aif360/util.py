@@ -12,22 +12,36 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import functools
 import logging
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple, Union, cast
 
 import aif360.algorithms.postprocessing
 import aif360.datasets
+import aif360.metrics
 import numpy as np
 import pandas as pd
+import sklearn.metrics
+import sklearn.model_selection
 
 import lale.datasets.data_schemas
 import lale.datasets.openml
 import lale.lib.lale
-from lale.operators import TrainablePipeline
+import lale.lib.rasl
+from lale.datasets.data_schemas import add_schema_adjusting_n_rows
+from lale.expressions import astype, it, sum
+from lale.helpers import GenSym, _ensure_pandas
+from lale.lib.dataframe import get_columns
+from lale.lib.rasl import Aggregate, ConcatFeatures, Map
+from lale.lib.rasl.metrics import MetricMonoid, MetricMonoidFactory
+from lale.operators import TrainablePipeline, TrainedOperator
 from lale.type_checking import JSON_TYPE, validate_schema_directly
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.WARNING)
+
+
+_FAV_LABELS_TYPE = List[Union[int, float, str, List[Union[int, float, str]]]]
 
 
 def dataset_to_pandas(
@@ -288,7 +302,7 @@ class _PandasToDatasetConverter:
         return result
 
 
-def _ensure_str(str_or_int):
+def _ensure_str(str_or_int: Union[str, int]) -> str:
     return f"f{str_or_int}" if isinstance(str_or_int, int) else str_or_int
 
 
@@ -316,6 +330,11 @@ def _ndarray_to_dataframe(array) -> pd.DataFrame:
     if schema is not None:
         result = lale.datasets.data_schemas.add_schema(result, schema)
     return result
+
+
+#####################################################################
+# Mitigator base classes and common schemas
+#####################################################################
 
 
 class _BaseInEstimatorImpl:
@@ -633,3 +652,1251 @@ _numeric_output_transform_schema = {
     "type": "array",
     "items": {"type": "array", "items": {"type": "number"}},
 }
+
+
+#####################################################################
+# Metrics
+#####################################################################
+
+
+def _y_pred_series(
+    y_true: Union[pd.Series, np.ndarray, None],
+    y_pred: Union[pd.Series, np.ndarray],
+    X: Union[pd.DataFrame, np.ndarray],
+) -> pd.Series:
+    if isinstance(y_pred, pd.Series):
+        return y_pred
+    assert y_true is not None
+    return _ndarray_to_series(
+        y_pred,
+        y_true.name if isinstance(y_true, pd.Series) else _ensure_str(X.shape[1]),  # type: ignore
+        X.index if isinstance(X, pd.DataFrame) else None,  # type: ignore
+        y_pred.dtype,
+    )
+
+
+class _AIF360ScorerFactory:
+    _cached_pandas_to_dataset: Optional[_PandasToDatasetConverter]
+
+    def __init__(
+        self,
+        metric: str,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, True
+        )
+        if metric in ["disparate_impact", "statistical_parity_difference"]:
+            unfavorable_labels = None  # not used and may confound AIF360
+        if hasattr(aif360.metrics.BinaryLabelDatasetMetric, metric):
+            self.kind = "BinaryLabelDatasetMetric"
+        elif hasattr(aif360.metrics.ClassificationMetric, metric):
+            self.kind = "ClassificationMetric"
+        else:
+            raise ValueError(f"unknown metric {metric}")
+        self.metric = metric
+        self.fairness_info = {
+            "favorable_labels": favorable_labels,
+            "protected_attributes": protected_attributes,
+            "unfavorable_labels": unfavorable_labels,
+        }
+
+        from lale.lib.aif360 import ProtectedAttributesEncoder
+
+        self.prot_attr_enc = ProtectedAttributesEncoder(
+            **self.fairness_info,
+            remainder="drop",
+            return_X_y=True,
+        )
+        pas = protected_attributes
+        self.unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
+        self.privileged_groups = [{_ensure_str(pa["feature"]): 1 for pa in pas}]
+        self._cached_pandas_to_dataset = None
+
+    def _pandas_to_dataset(self) -> _PandasToDatasetConverter:
+        if self._cached_pandas_to_dataset is None:
+            self._cached_pandas_to_dataset = _PandasToDatasetConverter(
+                favorable_label=1,
+                unfavorable_label=0,
+                protected_attribute_names=list(self.privileged_groups[0].keys()),
+            )
+        return self._cached_pandas_to_dataset
+
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_pred is not None and X is not None
+        y_pred_orig = y_pred
+        y_pred = _y_pred_series(y_true, y_pred, X)
+        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        try:
+            dataset_pred = self._pandas_to_dataset().convert(encoded_X, y_pred)
+        except ValueError as e:
+            raise ValueError(
+                "The data has unexpected labels given the fairness info: "
+                f"favorable labels {self.fairness_info['favorable_labels']}, "
+                f"unfavorable labels {self.fairness_info['unfavorable_labels']}, "
+                f"unique values in y_pred {set(y_pred_orig)}."
+            ) from e
+        if self.kind == "BinaryLabelDatasetMetric":
+            fairness_metrics = aif360.metrics.BinaryLabelDatasetMetric(
+                dataset_pred, self.unprivileged_groups, self.privileged_groups
+            )
+        else:
+            assert self.kind == "ClassificationMetric"
+            assert y_pred is not None and y_true is not None
+            if not isinstance(y_true, pd.Series):
+                y_true = _ndarray_to_series(
+                    y_true, y_pred.name, y_pred.index, y_pred_orig.dtype  # type: ignore
+                )
+            _, y_true = self.prot_attr_enc.transform(X, y_true)
+            dataset_true = self._pandas_to_dataset().convert(encoded_X, y_true)
+            fairness_metrics = aif360.metrics.ClassificationMetric(
+                dataset_true,
+                dataset_pred,
+                self.unprivileged_groups,
+                self.privileged_groups,
+            )
+        method = getattr(fairness_metrics, self.metric)
+        result = method()
+        if np.isnan(result) or not np.isfinite(result):
+            if 0 == fairness_metrics.num_positives(privileged=True):
+                logger.warning("there are 0 positives in the privileged group")
+            if 0 == fairness_metrics.num_positives(privileged=False):
+                logger.warning("there are 0 positives in the unprivileged group")
+            if 0 == fairness_metrics.num_instances(privileged=True):
+                logger.warning("there are 0 instances in the privileged group")
+            if 0 == fairness_metrics.num_instances(privileged=False):
+                logger.warning("there are 0 instances in the unprivileged group")
+            logger.warning(
+                f"The metric {self.metric} is ill-defined and returns {result}. Check your fairness configuration. The set of predicted labels is {set(y_pred_orig)}."
+            )
+        return result
+
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        return self.score_data(y_true=y, y_pred=estimator.predict(X), X=X)
+
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        return self.score_estimator(estimator, X, y)
+
+
+_Batch_Xy = Tuple[pd.DataFrame, pd.Series]
+
+_Batch_yyX = Tuple[Optional[pd.Series], pd.Series, pd.DataFrame]
+
+
+class _DIorSPDData(MetricMonoid):
+    def __init__(
+        self, priv0_fav0: float, priv0_fav1: float, priv1_fav0: float, priv1_fav1: float
+    ):
+        self.priv0_fav0 = priv0_fav0
+        self.priv0_fav1 = priv0_fav1
+        self.priv1_fav0 = priv1_fav0
+        self.priv1_fav1 = priv1_fav1
+
+    def combine(self, other: "_DIorSPDData") -> "_DIorSPDData":
+        return _DIorSPDData(
+            priv0_fav0=self.priv0_fav0 + other.priv0_fav0,
+            priv0_fav1=self.priv0_fav1 + other.priv0_fav1,
+            priv1_fav0=self.priv1_fav0 + other.priv1_fav0,
+            priv1_fav1=self.priv1_fav1 + other.priv1_fav1,
+        )
+
+
+class _DIorSPDScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_DIorSPDData]):
+    def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
+        y_true, y_pred, X = batch
+        assert y_pred is not None and X is not None, batch
+        y_pred = _y_pred_series(y_true, y_pred, X)
+        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        gensym = GenSym(set(_ensure_str(n) for n in get_columns(encoded_X)))
+        y_pred_name = gensym("y_pred")
+        y_pred = pd.DataFrame({y_pred_name: y_pred})
+        pa_names = self.privileged_groups[0].keys()
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))
+        prd = it[y_pred_name]
+        map_op = Map(
+            columns={
+                "priv0_fav0": astype("int", priv0 & (prd == 0)),
+                "priv0_fav1": astype("int", priv0 & (prd == 1)),
+                "priv1_fav0": astype("int", priv1 & (prd == 0)),
+                "priv1_fav1": astype("int", priv1 & (prd == 1)),
+            }
+        )
+        agg_op = Aggregate(
+            columns={
+                "priv0_fav0": sum(it.priv0_fav0),
+                "priv0_fav1": sum(it.priv0_fav1),
+                "priv1_fav0": sum(it.priv1_fav0),
+                "priv1_fav1": sum(it.priv1_fav1),
+            }
+        )
+        pipeline = ConcatFeatures >> map_op >> agg_op
+        agg_df = _ensure_pandas(pipeline.transform([encoded_X, y_pred]))
+        return _DIorSPDData(
+            priv0_fav0=agg_df.at[0, "priv0_fav0"],
+            priv0_fav1=agg_df.at[0, "priv0_fav1"],
+            priv1_fav0=agg_df.at[0, "priv1_fav0"],
+            priv1_fav1=agg_df.at[0, "priv1_fav1"],
+        )
+
+
+class _AODorEODData(MetricMonoid):
+    def __init__(
+        self,
+        tru0_pred0_priv0: float,
+        tru0_pred0_priv1: float,
+        tru0_pred1_priv0: float,
+        tru0_pred1_priv1: float,
+        tru1_pred0_priv0: float,
+        tru1_pred0_priv1: float,
+        tru1_pred1_priv0: float,
+        tru1_pred1_priv1: float,
+    ):
+        self.tru0_pred0_priv0 = tru0_pred0_priv0
+        self.tru0_pred0_priv1 = tru0_pred0_priv1
+        self.tru0_pred1_priv0 = tru0_pred1_priv0
+        self.tru0_pred1_priv1 = tru0_pred1_priv1
+        self.tru1_pred0_priv0 = tru1_pred0_priv0
+        self.tru1_pred0_priv1 = tru1_pred0_priv1
+        self.tru1_pred1_priv0 = tru1_pred1_priv0
+        self.tru1_pred1_priv1 = tru1_pred1_priv1
+
+    def combine(self, other: "_AODorEODData") -> "_AODorEODData":
+        return _AODorEODData(
+            tru0_pred0_priv0=self.tru0_pred0_priv0 + other.tru0_pred0_priv0,
+            tru0_pred0_priv1=self.tru0_pred0_priv1 + other.tru0_pred0_priv1,
+            tru0_pred1_priv0=self.tru0_pred1_priv0 + other.tru0_pred1_priv0,
+            tru0_pred1_priv1=self.tru0_pred1_priv1 + other.tru0_pred1_priv1,
+            tru1_pred0_priv0=self.tru1_pred0_priv0 + other.tru1_pred0_priv0,
+            tru1_pred0_priv1=self.tru1_pred0_priv1 + other.tru1_pred0_priv1,
+            tru1_pred1_priv0=self.tru1_pred1_priv0 + other.tru1_pred1_priv0,
+            tru1_pred1_priv1=self.tru1_pred1_priv1 + other.tru1_pred1_priv1,
+        )
+
+
+class _AODorEODScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_AODorEODData]):
+    def to_monoid(self, batch: _Batch_yyX) -> _AODorEODData:
+        y_true, y_pred, X = batch
+        assert y_pred is not None and X is not None, batch
+        y_pred = _y_pred_series(y_true, y_pred, X)
+        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        gensym = GenSym(set(_ensure_str(n) for n in get_columns(encoded_X)))
+        y_true_name, y_pred_name = gensym("y_true"), gensym("y_pred")
+        y_pred = pd.DataFrame({y_pred_name: y_pred})
+        _, y_true = self.prot_attr_enc.transform(X, y_true)
+        y_true = pd.DataFrame({y_true_name: pd.Series(y_true, y_pred.index)})
+        pa_names = self.privileged_groups[0].keys()
+        priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))
+        priv1 = functools.reduce(lambda a, b: a & b, (it[pa] == 1 for pa in pa_names))
+        tru, prd = it[y_true_name], it[y_pred_name]
+        map_op = Map(
+            columns={
+                "tru0_pred0_priv0": astype("int", (tru == 0) & (prd == 0) & priv0),
+                "tru0_pred0_priv1": astype("int", (tru == 0) & (prd == 0) & priv1),
+                "tru0_pred1_priv0": astype("int", (tru == 0) & (prd == 1) & priv0),
+                "tru0_pred1_priv1": astype("int", (tru == 0) & (prd == 1) & priv1),
+                "tru1_pred0_priv0": astype("int", (tru == 1) & (prd == 0) & priv0),
+                "tru1_pred0_priv1": astype("int", (tru == 1) & (prd == 0) & priv1),
+                "tru1_pred1_priv0": astype("int", (tru == 1) & (prd == 1) & priv0),
+                "tru1_pred1_priv1": astype("int", (tru == 1) & (prd == 1) & priv1),
+            }
+        )
+        agg_op = Aggregate(
+            columns={
+                "tru0_pred0_priv0": sum(it.tru0_pred0_priv0),
+                "tru0_pred0_priv1": sum(it.tru0_pred0_priv1),
+                "tru0_pred1_priv0": sum(it.tru0_pred1_priv0),
+                "tru0_pred1_priv1": sum(it.tru0_pred1_priv1),
+                "tru1_pred0_priv0": sum(it.tru1_pred0_priv0),
+                "tru1_pred0_priv1": sum(it.tru1_pred0_priv1),
+                "tru1_pred1_priv0": sum(it.tru1_pred1_priv0),
+                "tru1_pred1_priv1": sum(it.tru1_pred1_priv1),
+            }
+        )
+        pipeline = ConcatFeatures >> map_op >> agg_op
+        agg_df = _ensure_pandas(pipeline.transform([encoded_X, y_true, y_pred]))
+        return _AODorEODData(
+            tru0_pred0_priv0=agg_df.at[0, "tru0_pred0_priv0"],
+            tru0_pred0_priv1=agg_df.at[0, "tru0_pred0_priv1"],
+            tru0_pred1_priv0=agg_df.at[0, "tru0_pred1_priv0"],
+            tru0_pred1_priv1=agg_df.at[0, "tru0_pred1_priv1"],
+            tru1_pred0_priv0=agg_df.at[0, "tru1_pred0_priv0"],
+            tru1_pred0_priv1=agg_df.at[0, "tru1_pred0_priv1"],
+            tru1_pred1_priv0=agg_df.at[0, "tru1_pred1_priv0"],
+            tru1_pred1_priv1=agg_df.at[0, "tru1_pred1_priv1"],
+        )
+
+
+_SCORER_DOCSTRING_ARGS = """
+
+    Parameters
+    ----------
+    favorable_labels : array of union
+
+      Label values which are considered favorable (i.e. "positive").
+
+      - string
+
+          Literal value
+
+      - *or* number
+
+          Numerical value
+
+      - *or* array of numbers, >= 2 items, <= 2 items
+
+          Numeric range [a,b] from a to b inclusive.
+
+    protected_attributes : array of dict
+
+      Features for which fairness is desired.
+
+      - feature : string or integer
+
+          Column name or column index.
+
+      - reference_group : array of union
+
+          Values or ranges that indicate being a member of the privileged group.
+
+          - string
+
+              Literal value
+
+          - *or* number
+
+              Numerical value
+
+          - *or* array of numbers, >= 2 items, <= 2 items
+
+              Numeric range [a,b] from a to b inclusive.
+
+      - monitored_group : union type, default None
+
+          Values or ranges that indicate being a member of the unprivileged group.
+
+          - None
+
+              If `monitored_group` is not explicitly specified, consider any values not captured by `reference_group` as monitored.
+
+          - *or* array of union
+
+            - string
+
+                Literal value
+
+            - *or* number
+
+                Numerical value
+
+            - *or* array of numbers, >= 2 items, <= 2 items
+
+                Numeric range [a,b] from a to b inclusive.
+
+    unfavorable_labels : union type, default None
+
+      Label values which are considered unfavorable (i.e. "negative").
+
+      - None
+
+          If `unfavorable_labels` is not explicitly specified, consider any labels not captured by `favorable_labels` as unfavorable.
+
+      - *or* array of union
+
+        - string
+
+            Literal value
+
+        - *or* number
+
+            Numerical value
+
+        - *or* array of numbers, >= 2 items, <= 2 items
+
+            Numeric range [a,b] from a to b inclusive."""
+
+_SCORER_DOCSTRING_RETURNS = """
+
+    Returns
+    -------
+    result : callable
+
+      Scorer that takes three arguments ``(estimator, X, y)`` and returns a
+      scalar number.  Furthermore, besides being callable, the returned object
+      also has two methods, ``score_data(y_true, y_pred, X)`` for evaluating
+      datasets and ``score_estimator(estimator, X, y)`` for evaluating
+      estimators.
+"""
+
+_SCORER_DOCSTRING = _SCORER_DOCSTRING_ARGS + _SCORER_DOCSTRING_RETURNS
+
+_BLENDED_SCORER_DOCSTRING = (
+    _SCORER_DOCSTRING_ARGS
+    + """
+
+    fairness_weight : number, >=0, <=1, default=0.5
+
+      At the default weight of 0.5, the two metrics contribute equally to the blended result. Above 0.5, fairness influences the combination more, and below 0.5, fairness influences the combination less. In the extreme, at 1, the outcome is only determined by fairness, and at 0, the outcome ignores fairness.
+"""
+    + _SCORER_DOCSTRING_RETURNS
+)
+
+
+class _AccuracyAndSymmDIData(MetricMonoid):
+    def __init__(
+        self,
+        accuracy_data: lale.lib.rasl.metrics._AccuracyData,
+        symm_di_data: _DIorSPDData,
+    ):
+        self.accuracy_data = accuracy_data
+        self.symm_di_data = symm_di_data
+
+    def combine(self, other: "_AccuracyAndSymmDIData") -> "_AccuracyAndSymmDIData":
+        return _AccuracyAndSymmDIData(
+            self.accuracy_data.combine(other.accuracy_data),
+            self.symm_di_data.combine(other.symm_di_data),
+        )
+
+
+class _AccuracyAndDisparateImpact(MetricMonoidFactory[_AccuracyAndSymmDIData]):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+        fairness_weight: float,
+    ):
+        if fairness_weight < 0.0 or fairness_weight > 1.0:
+            logger.warning(
+                f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
+            )
+            fairness_weight = 0.5
+        self.accuracy_scorer = lale.lib.rasl.get_scorer("accuracy")
+        self.symm_di_scorer = symmetric_disparate_impact(
+            favorable_labels, protected_attributes, unfavorable_labels
+        )
+        self.fairness_weight = fairness_weight
+
+    def _blend_metrics(self, accuracy: float, symm_di: float) -> float:
+        if accuracy < 0.0 or accuracy > 1.0:
+            logger.warning(f"invalid accuracy {accuracy}, setting it to zero")
+            accuracy = 0.0
+        if symm_di < 0.0 or symm_di > 1.0 or np.isinf(symm_di) or np.isnan(symm_di):
+            logger.warning(f"invalid symm_di {symm_di}, setting it to zero")
+            symm_di = 0.0
+        result = (1 - self.fairness_weight) * accuracy + self.fairness_weight * symm_di
+        if result < 0.0 or result > 1.0:
+            logger.warning(
+                f"unexpected result {result} for accuracy {accuracy} and symm_di {symm_di}"
+            )
+        return result
+
+    def to_monoid(self, batch: _Batch_yyX) -> _AccuracyAndSymmDIData:
+        return _AccuracyAndSymmDIData(
+            self.accuracy_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
+        )
+
+    def from_monoid(self, v: _AccuracyAndSymmDIData) -> float:
+        accuracy = self.accuracy_scorer.from_monoid(v.accuracy_data)
+        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+        return self._blend_metrics(accuracy, symm_di)
+
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_true is not None and y_pred is not None and X is not None
+        accuracy = self.accuracy_scorer.score_data(y_true, y_pred, X)
+        symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
+        return self._blend_metrics(accuracy, symm_di)
+
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        accuracy = self.accuracy_scorer.score_estimator(estimator, X, y)
+        symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
+        return self._blend_metrics(accuracy, symm_di)
+
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        return self.score_estimator(estimator, X, y)
+
+
+def accuracy_and_disparate_impact(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    fairness_weight: float = 0.5,
+) -> _AccuracyAndDisparateImpact:
+    """
+    Create a scikit-learn compatible blended scorer for `accuracy`_
+    and `symmetric disparate impact`_ given the fairness info.
+    The scorer is suitable for classification problems,
+    with higher resulting scores indicating better outcomes.
+    The result is a linear combination of accuracy and
+    symmetric disparate impact, and is between 0 and 1.
+    This metric can be used as the `scoring` argument
+    of an optimizer such as `Hyperopt`_, as shown in this `demo`_.
+
+    .. _`accuracy`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.accuracy_score.html
+    .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
+    .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt
+    .. _`demo`: https://nbviewer.jupyter.org/github/IBM/lale/blob/master/examples/demo_aif360.ipynb"""
+    return _AccuracyAndDisparateImpact(
+        favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
+    )
+
+
+accuracy_and_disparate_impact.__doc__ = (
+    str(accuracy_and_disparate_impact.__doc__) + _BLENDED_SCORER_DOCSTRING
+)
+
+
+class _AverageOddsDifference(_AODorEODScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "average_odds_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def from_monoid(self, v: _AODorEODData) -> float:
+        fpr_priv0 = v.tru0_pred1_priv0 / np.float64(
+            v.tru0_pred1_priv0 + v.tru0_pred0_priv0
+        )
+        fpr_priv1 = v.tru0_pred1_priv1 / np.float64(
+            v.tru0_pred1_priv1 + v.tru0_pred0_priv1
+        )
+        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        )
+        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        )
+        return 0.5 * float(fpr_priv0 - fpr_priv1 + tpr_priv0 - tpr_priv1)
+
+
+def average_odds_difference(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _AverageOddsDifference:
+    r"""
+    Create a scikit-learn compatible `average odds difference`_ scorer
+    given the fairness info. Average of difference in false positive
+    rate and true positive rate between unprivileged and privileged
+    groups.
+
+    .. math::
+        \tfrac{1}{2}\left[(\text{FPR}_{D = \text{unprivileged}} - \text{FPR}_{D = \text{privileged}}) + (\text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}})\right]
+
+    The ideal value of this metric is 0. A value of <0 implies higher
+    benefit for the privileged group and a value >0 implies higher
+    benefit for the unprivileged group. Fairness for this metric is
+    between -0.1 and 0.1.
+
+    .. _`average odds difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.average_odds_difference"""
+    return _AverageOddsDifference(
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
+    )
+
+
+average_odds_difference.__doc__ = (
+    str(average_odds_difference.__doc__) + _SCORER_DOCSTRING
+)
+
+
+class _DisparateImpact(_DIorSPDScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "disparate_impact",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def from_monoid(self, v: _DIorSPDData) -> float:
+        numerator = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+        denominator = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+        return float(numerator / denominator)
+
+
+def disparate_impact(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _DisparateImpact:
+    r"""
+    Create a scikit-learn compatible `disparate_impact`_ scorer given
+    the fairness info (`Feldman et al. 2015`_). Ratio of rate of
+    favorable outcome for the unprivileged group to that of the
+    privileged group.
+
+    .. math::
+        \frac{\text{Pr}(Y = \text{favorable} | D = \text{unprivileged})}
+        {\text{Pr}(Y = \text{favorable} | D = \text{privileged})}
+
+    In the case of multiple protected attributes,
+    `D=privileged` means all protected attributes of the sample have
+    corresponding privileged values in the reference group, and
+    `D=unprivileged` means all protected attributes of the sample have
+    corresponding unprivileged values in the monitored group.
+    The ideal value of this metric is 1. A value <1 implies a higher
+    benefit for the privileged group and a value >1 implies a higher
+    benefit for the unprivileged group. Fairness for this metric is
+    between 0.8 and 1.25.
+
+    .. _`disparate_impact`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.disparate_impact
+    .. _`Feldman et al. 2015`: https://doi.org/10.1145/2783258.2783311"""
+    return _DisparateImpact(favorable_labels, protected_attributes, unfavorable_labels)
+
+
+disparate_impact.__doc__ = str(disparate_impact.__doc__) + _SCORER_DOCSTRING
+
+
+class _EqualOpportunityDifference(_AODorEODScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "equal_opportunity_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def from_monoid(self, v) -> float:
+        tpr_priv0 = v.tru1_pred1_priv0 / np.float64(
+            v.tru1_pred1_priv0 + v.tru1_pred0_priv0
+        )
+        tpr_priv1 = v.tru1_pred1_priv1 / np.float64(
+            v.tru1_pred1_priv1 + v.tru1_pred0_priv1
+        )
+        return tpr_priv0 - tpr_priv1
+
+
+def equal_opportunity_difference(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _EqualOpportunityDifference:
+    r"""
+    Create a scikit-learn compatible `equal opportunity difference`_
+    scorer given the fairness info. Difference of true positive rates
+    between the unprivileged and the privileged groups. The true
+    positive rate is the ratio of true positives to the total number
+    of actual positives for a given group.
+
+    .. math::
+        \text{TPR}_{D = \text{unprivileged}} - \text{TPR}_{D = \text{privileged}}
+
+    The ideal value is 0. A value of <0 implies disparate benefit for the
+    privileged group and a value >0 implies disparate benefit for the
+    unprivileged group. Fairness for this metric is between -0.1 and 0.1.
+
+    .. _`equal opportunity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.equal_opportunity_difference"""
+    return _EqualOpportunityDifference(
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
+    )
+
+
+equal_opportunity_difference.__doc__ = (
+    str(equal_opportunity_difference.__doc__) + _SCORER_DOCSTRING
+)
+
+
+class _R2AndSymmDIData(MetricMonoid):
+    def __init__(
+        self,
+        r2_data: lale.lib.rasl.metrics._R2Data,
+        symm_di_data: _DIorSPDData,
+    ):
+        self.r2_data = r2_data
+        self.symm_di_data = symm_di_data
+
+    def combine(self, other: "_R2AndSymmDIData") -> "_R2AndSymmDIData":
+        return _R2AndSymmDIData(
+            self.r2_data.combine(other.r2_data),
+            self.symm_di_data.combine(other.symm_di_data),
+        )
+
+
+class _R2AndDisparateImpact(MetricMonoidFactory[_R2AndSymmDIData]):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+        fairness_weight: float,
+    ):
+        if fairness_weight < 0.0 or fairness_weight > 1.0:
+            logger.warning(
+                f"invalid fairness_weight {fairness_weight}, setting it to 0.5"
+            )
+            fairness_weight = 0.5
+        self.r2_scorer = lale.lib.rasl.get_scorer("r2")
+        self.symm_di_scorer = symmetric_disparate_impact(
+            favorable_labels, protected_attributes, unfavorable_labels
+        )
+        self.fairness_weight = fairness_weight
+
+    def _blend_metrics(self, r2: float, symm_di: float) -> float:
+        if r2 > 1.0:
+            logger.warning(f"invalid r2 {r2}, setting it to float min")
+            r2 = cast(float, np.finfo(np.float32).min)
+        if symm_di < 0.0 or symm_di > 1.0 or np.isinf(symm_di) or np.isnan(symm_di):
+            logger.warning(f"invalid symm_di {symm_di}, setting it to zero")
+            symm_di = 0.0
+        pos_r2 = 1 / (2.0 - r2)
+        result = (1 - self.fairness_weight) * pos_r2 + self.fairness_weight * symm_di
+        if result < 0.0 or result > 1.0:
+            logger.warning(
+                f"unexpected result {result} for r2 {r2} and symm_di {symm_di}"
+            )
+        return result
+
+    def to_monoid(self, batch: _Batch_yyX) -> _R2AndSymmDIData:
+        return _R2AndSymmDIData(
+            self.r2_scorer.to_monoid(batch), self.symm_di_scorer.to_monoid(batch)
+        )
+
+    def from_monoid(self, v: _R2AndSymmDIData) -> float:
+        r2 = self.r2_scorer.from_monoid(v.r2_data)
+        symm_di = self.symm_di_scorer.from_monoid(v.symm_di_data)
+        return self._blend_metrics(r2, symm_di)
+
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_true is not None and y_pred is not None and X is not None
+        r2 = self.r2_scorer.score_data(y_true, y_pred, X)
+        symm_di = self.symm_di_scorer.score_data(y_true, y_pred, X)
+        return self._blend_metrics(r2, symm_di)
+
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        r2 = self.r2_scorer.score_estimator(estimator, X, y)
+        symm_di = self.symm_di_scorer.score_estimator(estimator, X, y)
+        return self._blend_metrics(r2, symm_di)
+
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        return self.score_estimator(estimator, X, y)
+
+
+def r2_and_disparate_impact(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    fairness_weight: float = 0.5,
+) -> _R2AndDisparateImpact:
+    """
+    Create a scikit-learn compatible blended scorer for `R2 score`_
+    and `symmetric disparate impact`_ given the fairness info.
+    The scorer is suitable for regression problems,
+    with higher resulting scores indicating better outcomes.
+    It first scales R2, which might be negative, to be between 0 and 1.
+    Then, the result is a linear combination of the scaled R2 and
+    symmetric disparate impact, and is also between 0 and 1.
+    This metric can be used as the `scoring` argument
+    of an optimizer such as `Hyperopt`_.
+
+    .. _`R2 score`: https://scikit-learn.org/stable/modules/generated/sklearn.metrics.r2_score.html
+    .. _`symmetric disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.symmetric_disparate_impact
+    .. _`Hyperopt`: lale.lib.lale.hyperopt.html#lale.lib.lale.hyperopt.Hyperopt"""
+    return _R2AndDisparateImpact(
+        favorable_labels, protected_attributes, unfavorable_labels, fairness_weight
+    )
+
+
+r2_and_disparate_impact.__doc__ = (
+    str(r2_and_disparate_impact.__doc__) + _BLENDED_SCORER_DOCSTRING
+)
+
+
+class _StatisticalParityDifference(_DIorSPDScorerFactory):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        super().__init__(
+            "statistical_parity_difference",
+            favorable_labels,
+            protected_attributes,
+            unfavorable_labels,
+        )
+
+    def from_monoid(self, v: _DIorSPDData) -> float:
+        minuend = v.priv0_fav1 / np.float64(v.priv0_fav0 + v.priv0_fav1)
+        subtrahend = v.priv1_fav1 / np.float64(v.priv1_fav0 + v.priv1_fav1)
+        return float(minuend - subtrahend)
+
+
+def statistical_parity_difference(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _StatisticalParityDifference:
+    r"""
+    Create a scikit-learn compatible `statistical parity difference`_
+    scorer given the fairness info. Difference of the rate of
+    favorable outcomes received by the unprivileged group to the
+    privileged group.
+
+    .. math::
+        \text{Pr}(Y = \text{favorable} | D = \text{unprivileged})
+        - \text{Pr}(Y = \text{favorable} | D = \text{privileged})
+
+    The ideal value of this metric is 0. A value of <0 implies higher
+    benefit for the privileged group and a value >0 implies higher
+    benefit for the unprivileged group. Fairness for this metric is
+    between -0.1 and 0.1. For a discussion of potential issues with
+    this metric see (`Dwork et al. 2012`_).
+
+    .. _`statistical parity difference`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.BinaryLabelDatasetMetric.html#aif360.metrics.BinaryLabelDatasetMetric.statistical_parity_difference
+    .. _`Dwork et al. 2012`: https://doi.org/10.1145/2090236.2090255"""
+    return _StatisticalParityDifference(
+        favorable_labels,
+        protected_attributes,
+        unfavorable_labels,
+    )
+
+
+statistical_parity_difference.__doc__ = (
+    str(statistical_parity_difference.__doc__) + _SCORER_DOCSTRING
+)
+
+
+class _SymmetricDisparateImpact(MetricMonoidFactory[_DIorSPDData]):
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE],
+    ):
+        self.disparate_impact_scorer = disparate_impact(
+            favorable_labels, protected_attributes, unfavorable_labels
+        )
+
+    def _make_symmetric(self, disp_impact: float) -> float:
+        if np.isnan(disp_impact):  # empty privileged or unprivileged groups
+            return disp_impact
+        if disp_impact <= 1.0:
+            return disp_impact
+        return 1.0 / disp_impact
+
+    def to_monoid(self, batch: _Batch_yyX) -> _DIorSPDData:
+        return self.disparate_impact_scorer.to_monoid(batch)
+
+    def from_monoid(self, v: _DIorSPDData) -> float:
+        return self._make_symmetric(self.disparate_impact_scorer.from_monoid(v))
+
+    def score_data(
+        self,
+        y_true: Union[pd.Series, np.ndarray, None] = None,
+        y_pred: Union[pd.Series, np.ndarray, None] = None,
+        X: Union[pd.DataFrame, np.ndarray, None] = None,
+    ) -> float:
+        assert y_pred is not None and X is not None
+        disp_impact = self.disparate_impact_scorer.score_data(y_true, y_pred, X)
+        return self._make_symmetric(disp_impact)
+
+    def score_estimator(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        disp_impact = self.disparate_impact_scorer.score_estimator(estimator, X, y)
+        return self._make_symmetric(disp_impact)
+
+    def __call__(
+        self,
+        estimator: TrainedOperator,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray],
+    ) -> float:
+        return self.score_estimator(estimator, X, y)
+
+
+def symmetric_disparate_impact(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _SymmetricDisparateImpact:
+    """
+    Create a scikit-learn compatible scorer for symmetric `disparate impact`_ given the fairness info.
+    For disparate impact <= 1.0, return that value, otherwise return
+    its inverse.  The result is between 0 and 1.  The higher this
+    metric, the better, and the ideal value is 1.  A value <1 implies
+    that either the privileged group or the unprivileged group is
+    receiving a disparate benefit.
+
+    .. _`disparate impact`: lale.lib.aif360.util.html#lale.lib.aif360.util.disparate_impact"""
+    return _SymmetricDisparateImpact(
+        favorable_labels, protected_attributes, unfavorable_labels
+    )
+
+
+symmetric_disparate_impact.__doc__ = (
+    str(symmetric_disparate_impact.__doc__) + _SCORER_DOCSTRING
+)
+
+
+def theil_index(
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> _AIF360ScorerFactory:
+    r"""
+    Create a scikit-learn compatible `Theil index`_ scorer given the
+    fairness info (`Speicher et al. 2018`_). Generalized entropy of
+    benefit for all individuals in the dataset, with alpha=1. Measures
+    the inequality in benefit allocation for individuals.  With
+    :math:`b_i = \hat{y}_i - y_i + 1`:
+
+    .. math::
+        \mathcal{E}(\alpha) = \begin{cases}
+          \frac{1}{n \alpha (\alpha-1)}\sum_{i=1}^n\left[\left(\frac{b_i}{\mu}\right)^\alpha - 1\right],& \alpha \ne 0, 1,\\
+          \frac{1}{n}\sum_{i=1}^n\frac{b_{i}}{\mu}\ln\frac{b_{i}}{\mu},& \alpha=1,\\
+          -\frac{1}{n}\sum_{i=1}^n\ln\frac{b_{i}}{\mu},& \alpha=0.
+        \end{cases}
+
+    A value of 0 implies perfect fairness. Fairness is indicated by
+    lower scores, higher scores are problematic.
+
+    .. _`Theil index`: https://aif360.readthedocs.io/en/latest/modules/generated/aif360.metrics.ClassificationMetric.html#aif360.metrics.ClassificationMetric.theil_index
+    .. _`Speicher et al. 2018`: https://doi.org/10.1145/3219819.3220046"""
+    return _AIF360ScorerFactory(
+        "theil_index", favorable_labels, protected_attributes, unfavorable_labels
+    )
+
+
+theil_index.__doc__ = str(theil_index.__doc__) + _SCORER_DOCSTRING
+
+
+#####################################################################
+# Stratification
+#####################################################################
+
+
+def _column_for_stratification(
+    X: Union[pd.DataFrame, np.ndarray],
+    y: Union[pd.Series, np.ndarray],
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+) -> pd.Series:
+    from lale.lib.aif360 import ProtectedAttributesEncoder
+
+    prot_attr_enc = ProtectedAttributesEncoder(
+        favorable_labels=favorable_labels,
+        protected_attributes=protected_attributes,
+        unfavorable_labels=unfavorable_labels,
+        remainder="drop",
+        return_X_y=True,
+    )
+    encoded_X, encoded_y = prot_attr_enc.transform(X, y)
+    df = pd.concat([encoded_X, encoded_y], axis=1)
+
+    def label_for_stratification(row):
+        return "".join(["T" if v == 1 else "F" if v == 0 else "N" for v in row])
+
+    result = df.apply(label_for_stratification, axis=1)
+    result.name = "stratify"
+    return result
+
+
+def fair_stratified_train_test_split(
+    X,
+    y,
+    *arrays,
+    favorable_labels: _FAV_LABELS_TYPE,
+    protected_attributes: List[JSON_TYPE],
+    unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+    test_size: float = 0.25,
+    random_state=None,
+) -> Tuple:
+    """
+    Splits X and y into random train and test subsets stratified by
+    labels and protected attributes.
+
+    Behaves similar to the `train_test_split`_ function from scikit-learn.
+
+    .. _`train_test_split`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.train_test_split.html
+
+    Parameters
+    ----------
+    X : array
+
+      Features including protected attributes as numpy ndarray or pandas dataframe.
+
+    y : array
+
+      Labels as numpy ndarray or pandas series.
+
+    *arrays : array
+
+      Sequence of additional arrays with same length as X and y.
+
+    favorable_labels : array
+
+      Label values which are considered favorable (i.e. "positive").
+
+    protected_attributes : array
+
+      Features for which fairness is desired.
+
+    unfavorable_labels : array or None, default None
+
+      Label values which are considered unfavorable (i.e. "negative").
+
+    test_size : float or int, default=0.25
+
+      If float, should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the test split.
+      If int, represents the absolute number of test samples.
+
+    random_state : int, RandomState instance or None, default=None
+
+      Controls the shuffling applied to the data before applying the split.
+      Pass an integer for reproducible output across multiple function calls.
+
+      - None
+
+          RandomState used by numpy.random
+
+      - numpy.random.RandomState
+
+          Use the provided random state, only affecting other users of that same random state instance.
+
+      - integer
+
+          Explicit seed.
+
+    Returns
+    -------
+    result : tuple
+
+      - item 0: train_X
+
+      - item 1: test_X
+
+      - item 2: train_y
+
+      - item 3: test_y
+
+      - item 4+: Each argument in `*arrays`, if any, yields two items in the result, for the two splits of that array.
+    """
+    _validate_fairness_info(
+        favorable_labels, protected_attributes, unfavorable_labels, True
+    )
+    stratify = _column_for_stratification(
+        X, y, favorable_labels, protected_attributes, unfavorable_labels
+    )
+    (
+        train_X,
+        test_X,
+        train_y,
+        test_y,
+        *arrays_splits,
+    ) = sklearn.model_selection.train_test_split(
+        X, y, *arrays, test_size=test_size, random_state=random_state, stratify=stratify
+    )
+    if hasattr(X, "json_schema"):
+        train_X = add_schema_adjusting_n_rows(train_X, X.json_schema)
+        test_X = add_schema_adjusting_n_rows(test_X, X.json_schema)
+    if hasattr(y, "json_schema"):
+        train_y = add_schema_adjusting_n_rows(train_y, y.json_schema)
+        test_y = add_schema_adjusting_n_rows(test_y, y.json_schema)
+    return (train_X, test_X, train_y, test_y, *arrays_splits)
+
+
+class FairStratifiedKFold:
+    """
+    Stratified k-folds cross-validator by labels and protected attributes.
+
+    Behaves similar to the `StratifiedKFold`_ class from scikit-learn.
+    This cross-validation object can be passed to the `cv` argument of
+    the `auto_configure`_ method.
+
+    .. _`StratifiedKFold`: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.StratifiedKFold.html
+    .. _`auto_configure`: https://lale.readthedocs.io/en/latest/modules/lale.operators.html#lale.operators.PlannedOperator.auto_configure
+    """
+
+    def __init__(
+        self,
+        favorable_labels: _FAV_LABELS_TYPE,
+        protected_attributes: List[JSON_TYPE],
+        unfavorable_labels: Optional[_FAV_LABELS_TYPE] = None,
+        n_splits: int = 5,
+        shuffle: bool = False,
+        random_state=None,
+    ):
+        """
+        Parameters
+        ----------
+        favorable_labels : array
+
+          Label values which are considered favorable (i.e. "positive").
+
+        protected_attributes : array
+
+          Features for which fairness is desired.
+
+        unfavorable_labels : array or None, default None
+
+          Label values which are considered unfavorable (i.e. "negative").
+
+        n_splits : integer, optional, default 5
+
+          Number of folds. Must be at least 2.
+
+        shuffle : boolean, optional, default False
+
+          Whether to shuffle each class's samples before splitting into batches.
+
+        random_state : union type, not for optimizer, default None
+
+          When shuffle is True, random_state affects the ordering of the indices.
+
+          - None
+
+              RandomState used by np.random
+
+          - numpy.random.RandomState
+
+              Use the provided random state, only affecting other users of that same random state instance.
+
+          - integer
+
+              Explicit seed.
+        """
+        _validate_fairness_info(
+            favorable_labels, protected_attributes, unfavorable_labels, True
+        )
+        self._fairness_info = {
+            "favorable_labels": favorable_labels,
+            "protected_attributes": protected_attributes,
+            "unfavorable_labels": unfavorable_labels,
+        }
+        self._stratified_k_fold = sklearn.model_selection.StratifiedKFold(
+            n_splits=n_splits, shuffle=shuffle, random_state=random_state
+        )
+
+    def get_n_splits(self, X=None, y=None, groups=None) -> int:
+        """
+        The number of splitting iterations in the cross-validator.
+
+        Parameters
+        ----------
+        X : Any
+
+            Always ignored, exists for compatibility.
+
+        y : Any
+
+            Always ignored, exists for compatibility.
+
+        groups : Any
+
+            Always ignored, exists for compatibility.
+
+        Returns
+        -------
+        integer
+            The number of splits.
+        """
+        return self._stratified_k_fold.get_n_splits(X, y, groups)
+
+    def split(self, X, y, groups=None):
+        """
+        Generate indices to split data into training and test set.
+
+        X : array **of** items : array **of** items : Any
+
+            Training data, including columns with the protected attributes.
+
+        y : union type
+
+            Target class labels; the array is over samples.
+
+            - array **of** items : float
+
+            - array **of** items : string
+
+        groups : Any
+
+            Always ignored, exists for compatibility.
+
+        Yields
+        ------
+        result : tuple
+
+            - train
+
+                The training set indices for that split.
+
+            - test
+
+                The testing set indices for that split.
+        """
+        stratify = _column_for_stratification(X, y, **self._fairness_info)
+        result = self._stratified_k_fold.split(X, stratify, groups)
+        return result

@@ -24,11 +24,11 @@ from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import hashing_encoder
 
-from ._monoid import Monoid, MonoidableOperator
 from .map import Map
+from .monoid import Monoid, MonoidableOperator
 
 
-# Based on https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
+# From https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
 def get_obj_cols(df):
     """
     Returns names of 'object' columns in the DataFrame.
@@ -39,11 +39,8 @@ def get_obj_cols(df):
             if dt == "object" or is_category(dt):
                 obj_cols.append(df.columns.values[idx])
     elif _is_spark_df(df):
-        for idx, (col, dt) in enumerate(df.dtypes):
-            if dt == "string":
-                obj_cols.append(col)
-    else:
-        assert False
+        assert False, "Not yet implemented"
+
     return obj_cols
 
 
@@ -96,7 +93,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
     def feature_names(self):
         return getattr(self._monoid, "feature_names", None)
 
-    def _from_monoid(self, lifted):
+    def from_monoid(self, lifted):
         self._monoid = lifted
         self._transformer = None
 
@@ -106,9 +103,9 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         N = self._hyperparams["n_components"]
         columns_cat = {
             f"col_{i}": reduce(
-                Expr.__add__,  # type: ignore
+                Expr.__add__,
                 [
-                    ite(hash(hash_method, it[col_name]) % N == i, 1, 0)  # type: ignore
+                    ite(hash(hash_method, it[col_name]) % N == i, 1, 0)
                     for col_name in cols
                 ],
             )
@@ -118,7 +115,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         result = Map(columns={**columns_cat, **columns_num})
         return result
 
-    def _to_monoid(self, v):
+    def to_monoid(self, v):
         X, y = v
         if self._hyperparams["cols"] is None:
             self._hyperparams["cols"] = get_obj_cols(X)
@@ -126,7 +123,7 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         N = self._hyperparams["n_components"]
         feature_names_cat = [f"col_{i}" for i in range(N)]
         feature_names_num = [col for col in get_columns(X) if col not in cols]
-        feature_names = feature_names_cat + feature_names_num
+        feature_names = feature_names_cat + feature_names_num  # type: ignore
         n_samples_seen_ = count(X)
         return _HashingEncoderMonoid(
             n_samples_seen_=n_samples_seen_, feature_names=feature_names

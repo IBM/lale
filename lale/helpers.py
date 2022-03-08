@@ -29,6 +29,7 @@ from typing import (
     List,
     Mapping,
     Optional,
+    Set,
     Tuple,
     TypeVar,
     Union,
@@ -1162,3 +1163,21 @@ def _get_subscript_value(subscript_expr):
     else:
         subscript_value = subscript_expr.slice.value.s  # type: ignore
     return subscript_value
+
+
+class GenSym:
+    def __init__(self, names: Set[str]):
+        self._names = names
+
+    def __call__(self, prefix):
+        if prefix in self._names:
+            suffix = 0
+            while True:
+                result = f"{prefix}_{suffix}"
+                if result not in self._names:
+                    break
+                suffix += 1
+        else:
+            result = prefix
+        self._names |= {result}
+        return result

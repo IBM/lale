@@ -32,7 +32,9 @@ Transformers
 ============
 
 * lale.lib.rasl. `Batching`_
+* lale.lib.rasl. `ConcatFeatures`_
 * lale.lib.rasl. `Scan`_
+* lale.lib.rasl. `SplitXy`_
 
 Scikit-learn Operators
 ======================
@@ -57,9 +59,11 @@ Other Facilities
 
 * lale.lib.rasl. `Prio`_
 * lale.lib.rasl. `PrioBatch`_
+* lale.lib.rasl. `PrioResourceAware`_
 * lale.lib.rasl. `PrioStep`_
 * lale.lib.rasl. `accuracy_score`_
 * lale.lib.rasl. `cross_val_score`_
+* lale.lib.rasl. `cross_validate`_
 * lale.lib.rasl. `fit_with_batches`_
 * lale.lib.rasl. `get_scorer`_
 * lale.lib.rasl. `is_associative`_
@@ -78,7 +82,9 @@ Other Facilities
 .. _`Relational`: lale.lib.rasl.relational.html
 
 .. _`Batching`: lale.lib.rasl.batching.html
+.. _`ConcatFeatures`: lale.lib.rasl.concat_features.html
 .. _`Scan`: lale.lib.rasl.scan.html
+.. _`SplitXy`: lale.lib.rasl.split_xy.html
 
 .. _`MinMaxScaler`: lale.lib.rasl.min_max_scaler.html
 .. _`OneHotEncoder`: lale.lib.rasl.one_hot_encoder.html
@@ -94,9 +100,11 @@ Other Facilities
 
 .. _`Prio`: lale.lib.rasl.Prio.html
 .. _`PrioBatch`: lale.lib.rasl.PrioBatch.html
+.. _`PrioResourceAware`: lale.lib.rasl.PrioResourceAware.html
 .. _`PrioStep`: lale.lib.rasl.PrioStep.html
 .. _`accuracy_score`: lale.lib.rasl.accuracy_score.html
 .. _`cross_val_score`: lale.lib.rasl.cross_val_score.html
+.. _`cross_validate`: lale.lib.rasl.cross_validate.html
 .. _`fit_with_batches`: lale.lib.rasl.fit_with_batches.html
 .. _`get_scorer`: lale.lib.rasl.get_scorer.html
 .. _`is_associative`: lale.lib.rasl.is_associative.html
@@ -106,13 +114,13 @@ Other Facilities
 
 """
 
-from ._metrics import accuracy_score, get_scorer, r2_score
-from ._monoid import Monoid, MonoidableOperator, MonoidFactory
 from ._task_graphs import (
     Prio,
     PrioBatch,
+    PrioResourceAware,
     PrioStep,
     cross_val_score,
+    cross_validate,
     fit_with_batches,
     is_associative,
     is_incremental,
@@ -121,13 +129,16 @@ from ._task_graphs import (
 from .aggregate import Aggregate
 from .alias import Alias
 from .batching import Batching
+from .concat_features import ConcatFeatures
 from .filter import Filter
 from .functions import categorical, date_time
 from .group_by import GroupBy
 from .hashing_encoder import HashingEncoder
 from .join import Join
 from .map import Map
+from .metrics import accuracy_score, get_scorer, r2_score
 from .min_max_scaler import MinMaxScaler
+from .monoid import Monoid, MonoidableOperator, MonoidFactory
 from .one_hot_encoder import OneHotEncoder
 from .orderby import OrderBy
 from .ordinal_encoder import OrdinalEncoder
@@ -137,4 +148,5 @@ from .scan import Scan
 from .select_k_best import SelectKBest
 from .simple_imputer import SimpleImputer
 from .spark_explainer import SparkExplainer
+from .split_xy import SplitXy
 from .standard_scaler import StandardScaler

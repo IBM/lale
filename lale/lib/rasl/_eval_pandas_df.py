@@ -15,7 +15,6 @@
 import ast
 import collections
 import hashlib
-import importlib
 from typing import Any
 
 import numpy as np
@@ -76,6 +75,10 @@ class _PandasEvaluator(ast.NodeVisitor):
             self.result = v1 % v2  # type: ignore
         elif isinstance(node.op, ast.Pow):
             self.result = v1 ** v2  # type: ignore
+        elif isinstance(node.op, ast.BitAnd):
+            self.result = v1 & v2  # type: ignore
+        elif isinstance(node.op, ast.BitOr):
+            self.result = v1 | v2  # type: ignore
         else:
             raise ValueError(f"""Unimplemented operator {ast.dump(node.op)}""")
 
@@ -104,11 +107,10 @@ class _PandasEvaluator(ast.NodeVisitor):
             raise ValueError(f"Unimplemented operator {ast.dump(op)}")
 
     def visit_Call(self, node: ast.Call):
-        functions_module = importlib.import_module("lale.lib.rasl._eval_pandas_df")
         function_name = _ast_func_id(node.func)
         try:
-            map_func_to_be_called = getattr(functions_module, function_name)
-        except AttributeError:
+            map_func_to_be_called = globals()[function_name]
+        except KeyError:
             raise ValueError(f"""Unimplemented function {function_name}""")
         self.result = map_func_to_be_called(self.df, node)
 

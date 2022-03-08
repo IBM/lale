@@ -13,7 +13,21 @@
 # limitations under the License.
 
 import pandas as pd
-from category_encoders.hashing import HashingEncoder as SkHashingEncoder
+
+try:
+    from category_encoders.hashing import HashingEncoder as SkHashingEncoder
+except ImportError:
+
+    class SkHashingEncoder:  # type: ignore
+        def __init__(self, *args, **kargs):
+            raise ValueError("The package 'category_encoders' is not installed.")
+
+        def fit(self, X, y=None):
+            raise ValueError("The package 'category_encoders' is not installed.")
+
+        def transform(self, X):
+            raise ValueError("The package 'category_encoders' is not installed.")
+
 
 import lale.docstrings
 import lale.operators

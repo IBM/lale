@@ -2409,7 +2409,20 @@ class IndividualOp(Operator):
     def is_supervised(self, default_if_missing=True) -> bool:
         if self.has_method("fit"):
             schema_fit = self.input_schema_fit()
-            return lale.type_checking.is_subschema(schema_fit, _is_supervised_schema)
+            # first we try a fast path, since subschema checking can be a bit slow
+            if (
+                schema_fit is not None
+                and isinstance(schema_fit, dict)
+                and all(
+                    k not in schema_fit for k in ["all_of", "any_of", "one_of", "not"]
+                )
+            ):
+                req = schema_fit.get("required", None)
+                return req is not None and "y" in req
+            else:
+                return lale.type_checking.is_subschema(
+                    schema_fit, _is_supervised_schema
+                )
         return default_if_missing
 
     def is_classifier(self) -> bool:
@@ -3883,8 +3896,8 @@ class BasePipeline(Operator, Generic[OpType]):
     def export_to_sklearn_pipeline(self):
         from sklearn.pipeline import FeatureUnion, make_pipeline
 
-        from lale.lib.lale.concat_features import ConcatFeatures
         from lale.lib.lale.no_op import NoOp
+        from lale.lib.rasl.concat_features import ConcatFeatures
         from lale.lib.rasl.relational import Relational
 
         def convert_nested_objects(node):
@@ -4431,7 +4444,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         """
         estimator_only = True
         concat_features = False
-        from lale.lib.lale import ConcatFeatures
+        from lale.lib.rasl import ConcatFeatures
 
         for operator in self._steps[:-1]:
             if not operator.is_frozen_trained():
@@ -5431,7 +5444,7 @@ def make_union(*orig_steps: Union[Operator, Any]) -> PlannedPipeline:
 
 
 def make_union(*orig_steps):  # type: ignore
-    from lale.lib.lale import ConcatFeatures
+    from lale.lib.rasl import ConcatFeatures
 
     return make_union_no_concat(*orig_steps) >> ConcatFeatures()
 

@@ -821,6 +821,6 @@ def fetch(
     if astype == "spark-with-index":
         from lale.datasets import pandas2spark
 
-        X_train = pandas2spark(X_train, add_index=True)
-        X_test = pandas2spark(X_test, add_index=True)
+        X_train = pandas2spark(X_train, with_index=True)
+        X_test = pandas2spark(X_test, with_index=True)
     return (X_train, y_train), (X_test, y_test)

@@ -13,9 +13,18 @@
 # limitations under the License.
 
 import datetime
-from typing import Any
+from typing import Any, Callable, Dict, Generic, List, Optional, TypeVar
 
 import numpy as np
+
+from ..dataframe import (
+    column_index,
+    count,
+    get_columns,
+    make_series_concat,
+    make_series_distinct,
+    select_col,
+)
 
 try:
     import pyspark.sql.functions
@@ -27,9 +36,142 @@ except ImportError:
 
 from lale.helpers import _is_pandas_df, _is_spark_df
 
+from .monoid import Monoid, MonoidFactory
 
-class categorical:
-    """Creates a callable for projecting categorical columns with sklearn's ColumnTransformer or Lale's Project operator.
+
+class _column_distinct_count_data(Monoid):
+    def __init__(self, df, limit: Optional[int] = None):
+        self.limit = limit
+        self.df = make_series_distinct(df)
+
+    def __len__(self):
+        return count(self.df)
+
+    @property
+    def is_absorbing(self):
+        if self.limit is None:
+            return False
+        else:
+            return len(self) > self.limit
+
+    def combine(self, other):
+        if self.is_absorbing:
+            return self
+        elif other.is_absorbing:
+            return other
+        else:
+            c = make_series_concat(self.df, other.df)
+            return _column_distinct_count_data(c, limit=self.limit)
+
+
+# numpy or sparkdf or pandas
+_Batch = Any
+
+
+class count_distinct_column(MonoidFactory[_Batch, int, _column_distinct_count_data]):
+    """
+    Counts the number of distinct elements in a given column.  If a limit is specified,
+    then, once the limit is reached, the count may no longer be accurate
+    (but will always remain over the limit).
+    """
+
+    def __init__(self, col: column_index, limit: Optional[int] = None):
+        self._col = col
+        self._limit = limit
+
+    def to_monoid(self, df) -> _column_distinct_count_data:
+        c = select_col(df, self._col)
+        return _column_distinct_count_data(c, limit=self._limit)
+
+    def from_monoid(self, v: _column_distinct_count_data) -> int:
+        return len(v)
+
+
+class categorical_column(MonoidFactory[_Batch, bool, _column_distinct_count_data]):
+    """
+    Determines if a column should be considered categorical,
+    by seeing if there are more than threshold distinct values in it
+    """
+
+    def __init__(self, col: column_index, threshold: int = 5):
+        self._col = col
+        self._threshold = threshold
+
+    def to_monoid(self, df) -> _column_distinct_count_data:
+        c = select_col(df, self._col)
+        return _column_distinct_count_data(c, limit=self._threshold)
+
+    def from_monoid(self, v: _column_distinct_count_data) -> bool:
+        return not v.is_absorbing
+
+
+class make_categorical_column:
+    def __init__(self, threshold=5):
+        self._threshold = threshold
+
+    def __call__(self, col):
+        return categorical_column(col, threshold=self._threshold)
+
+
+_D = TypeVar("_D", bound=Monoid)
+
+
+class DictMonoid(Generic[_D], Monoid):
+    """
+    Given a monoid, this class lifts it to a dictionary pointwise
+    """
+
+    def __init__(self, m: Dict[Any, _D]):
+        self._m = m
+
+    def combine(self, other: "DictMonoid[_D]"):
+        r = {k: self._m[k].combine(other._m[k]) for k in self._m.keys()}
+        return DictMonoid(r)
+
+    @property
+    def is_absorbing(self):
+        return all(v.is_absorbing for v in self._m.values())
+
+
+class ColumnSelector(MonoidFactory[_Batch, List[column_index], _D]):
+    def __call__(self, df) -> List[column_index]:
+        return self.from_monoid(self.to_monoid(df))
+
+
+class ColumnMonoidFactory(ColumnSelector[DictMonoid[_D]]):
+    """
+    Given a MonoidFactory for deciding if a given column is valid,
+    This returns the list of valid columns
+    """
+
+    _makers: Optional[Dict[column_index, MonoidFactory[_Batch, bool, _D]]]
+
+    def __init__(
+        self, col_maker: Callable[[column_index], MonoidFactory[_Batch, bool, _D]]
+    ):
+        self._col_maker = col_maker
+        self._makers = None
+
+    def _get_makers(self, df):
+        makers = self._makers
+        if makers is None:
+            indices = get_columns(df)
+            makers = {k: self._col_maker(k) for k in indices}
+            self._makers = makers
+        return makers
+
+    def to_monoid(self, df):
+        makers = self._get_makers(df)
+        return DictMonoid({k: v.to_monoid(df) for k, v in makers.items()})
+
+    def from_monoid(self, d: DictMonoid[_D]) -> List[column_index]:
+        makers = self._makers
+        assert makers is not None
+        return [k for k, v in makers.items() if v.from_monoid(d._m[k])]
+
+
+class categorical(ColumnMonoidFactory):
+    """Creates a MonoidFactory (and callable) for projecting categorical columns with sklearn's ColumnTransformer or Lale's Project operator.
 
     Parameters
     ----------
@@ -44,28 +186,7 @@ class categorical:
         containing either string column names or integer column indices."""
 
     def __init__(self, max_values: int = 5):
-        self._max_values = max_values
-
-    def __repr__(self):
-        return f"lale.lib.rasl.categorical(max_values={self._max_values})"
-
-    def __call__(self, X):
-        def is_categorical(column_values):
-            unique_values = set()
-            for val in column_values:
-                if val not in unique_values:
-                    unique_values.add(val)
-                    if len(unique_values) > self._max_values:
-                        return False
-            return True
-
-        if _is_pandas_df(X):
-            result = [c for c in X.columns if is_categorical(X[c])]
-        elif isinstance(X, np.ndarray):
-            result = [c for c in range(X.shape[1]) if is_categorical(X[:, c])]
-        else:
-            raise TypeError(f"unexpected type {type(X)}")
-        return result
+        super().__init__(make_categorical_column(max_values))
 
 
 class date_time:

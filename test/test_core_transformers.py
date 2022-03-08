@@ -22,7 +22,7 @@ import pandas as pd
 import lale.lib.lale
 import lale.lib.sklearn
 import lale.type_checking
-from lale.datasets.data_schemas import add_table_name
+from lale.datasets.data_schemas import add_table_name, get_table_name
 from lale.lib.lale import ConcatFeatures
 from lale.lib.sklearn import (
     NMF,
@@ -373,8 +373,8 @@ class TestConcatFeatures(unittest.TestCase):
             B = [[14, 15], [24, 25], [34, 35]]
             A = pd.DataFrame(A, columns=["a", "b", "c"])
             B = pd.DataFrame(B, columns=["d", "e"])
-            A = pandas2spark(A, add_index=True)
-            B = pandas2spark(B, add_index=True, index_name="idx")
+            A = pandas2spark(A, with_index=True)
+            B = pandas2spark(B.rename_axis(index="idx"), with_index=True)
             A = add_table_name(A, "A")
             B = add_table_name(B, "B")
 
@@ -400,7 +400,7 @@ class TestConcatFeatures(unittest.TestCase):
             B = [[14, 15], [24, 25], [34, 35]]
             A = pd.DataFrame(A, columns=["a", "b", "c"])
             B = pd.DataFrame(B, columns=["d", "e"])
-            A = pandas2spark(A, add_index=True)
+            A = pandas2spark(A, with_index=True)
             A = add_table_name(A, "A")
             B = add_table_name(B, "B")
 
@@ -506,6 +506,23 @@ class TestConcatFeatures(unittest.TestCase):
         iris_data = load_iris()
         clf.fit(iris_data.data, iris_data.target)
         clf.predict(iris_data.data)
+
+    def test_name(self):
+        trainable_cf = ConcatFeatures()
+        A = [[11, 12, 13], [21, 22, 23], [31, 32, 33]]
+        B = [[14, 15], [24, 25], [34, 35]]
+        A = pd.DataFrame(A, columns=["a", "b", "c"])
+        B = pd.DataFrame(B, columns=["d", "e"])
+        A = add_table_name(A, "A")
+        B = add_table_name(B, "B")
+        trained_cf = trainable_cf.fit(X=[A, B])
+        transformed = trained_cf.transform([A, B])
+        self.assertEqual(get_table_name(transformed), None)
+        A = add_table_name(A, "AB")
+        B = add_table_name(B, "AB")
+        trained_cf = trainable_cf.fit(X=[A, B])
+        transformed = trained_cf.transform([A, B])
+        self.assertEqual(get_table_name(transformed), "AB")
 
 
 class TestTfidfVectorizer(unittest.TestCase):

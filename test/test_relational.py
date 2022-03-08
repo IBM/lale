@@ -85,6 +85,14 @@ from lale.lib.rasl import (
 from lale.lib.sklearn import PCA, KNeighborsClassifier, LogisticRegression
 
 
+def _set_index_name(df, name):
+    return add_table_name(df.rename_axis(index=name), get_table_name(df))
+
+
+def _set_index(df, name):
+    return add_table_name(df.set_index(name), get_table_name(df))
+
+
 # Testing '==' and '!=' operator with different types of expressions
 class TestExpressions(unittest.TestCase):
     def test_expr_1(self):
@@ -585,6 +593,7 @@ class TestAggregate(unittest.TestCase):
             )
             # self.assertEqual(result.loc[row.index[0], "mode_method_code"], 5, tgt)
             self.assertEqual(result.loc[row.index[0], "median_method_code"], 5, tgt)
+            self.assertEqual(result.index.name, "Retailer code", tgt)
 
     def test_products_onekey_grouped(self):
         pipeline = (
@@ -626,8 +635,7 @@ class TestAggregate(unittest.TestCase):
         )
         for tgt, datasets in self.tgt2datasets.items():
             result = pipeline.transform(datasets)
-            if tgt.startswith("spark"):
-                result = result.toPandas()
+            result = _ensure_pandas(result)
             self.assertEqual(result.shape, (5000, 5))
             row = result[(result["product"] == 70240) & (result["retailer"] == 1205)]
             self.assertEqual(row.loc[row.index[0], "product"], 70240, tgt)
@@ -637,6 +645,9 @@ class TestAggregate(unittest.TestCase):
             )
             self.assertEqual(row.loc[row.index[0], "max_usp"], 122.70, tgt)
             self.assertEqual(row.loc[row.index[0], "count_quantity"], 41, tgt)
+            self.assertEqual(
+                result.index.names, ["Product number", "Retailer code"], tgt
+            )
 
     def test_products_twokeys_grouped(self):
         pipeline = (
@@ -705,7 +716,7 @@ class TestJoin(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         table1 = {
@@ -975,13 +986,13 @@ class TestJoin(unittest.TestCase):
             join_type="inner",
         )
         df1 = pandas2spark(
-            self.tgt2datasets["pandas"]["df1"], add_index=True, index_name="idx"
+            _set_index_name(self.tgt2datasets["pandas"]["df1"], "idx"), with_index=True
         )
         df2 = pandas2spark(
-            self.tgt2datasets["pandas"]["df2"], add_index=True, index_name="idx"
+            _set_index_name(self.tgt2datasets["pandas"]["df2"], "idx"), with_index=True
         )
         df3 = pandas2spark(
-            self.tgt2datasets["pandas"]["df3"], add_index=True, index_name="idx"
+            _set_index_name(self.tgt2datasets["pandas"]["df3"], "idx"), with_index=True
         )
         transformed_df = trainable.transform([df1, df2, df3])
         transformed_df = _ensure_pandas(transformed_df)
@@ -994,7 +1005,10 @@ class TestJoin(unittest.TestCase):
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
+        df1 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
+            with_index=True,
+        )
         df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
         df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
         transformed_df = trainable.transform([df1, df2, df3])
@@ -1008,7 +1022,10 @@ class TestJoin(unittest.TestCase):
             pred=[it.main.train_id == it.info.TrainId, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
+        df1 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
+            with_index=True,
+        )
         df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"])
         df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"])
         transformed_df = trainable.transform([df1, df2, df3])
@@ -1022,13 +1039,21 @@ class TestJoin(unittest.TestCase):
             pred=[it.info.TrainId == it.main.train_id, it.info.TrainId == it.t1.tid],
             join_type="inner",
         )
-        df1 = pandas2spark(self.tgt2datasets["pandas"]["df1"], index_name="train_id")
-        df2 = pandas2spark(self.tgt2datasets["pandas"]["df2"], index_name="TrainId")
-        df3 = pandas2spark(self.tgt2datasets["pandas"]["df3"], index_name="tid")
+        df1 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df1"], "train_id"),
+            with_index=True,
+        )
+        df2 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df2"], "TrainId"),
+            with_index=True,
+        )
+        df3 = pandas2spark(
+            _set_index(self.tgt2datasets["pandas"]["df3"], "tid"), with_index=True
+        )
         transformed_df = trainable.transform([df1, df2, df3])
         transformed_df = _ensure_pandas(transformed_df)
         transformed_df = transformed_df.sort_values(by="TrainId").reset_index(drop=True)
-        self.assertEqual(transformed_df.shape, (3, 7))
+        self.assertEqual(transformed_df.shape, (3, 6))
         self.assertEqual(transformed_df["col5"][1], "Cold")
 
 
@@ -1044,7 +1069,7 @@ class TestMap(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         df = pd.DataFrame(
@@ -1849,7 +1874,7 @@ class TestMap(unittest.TestCase):
                         "date": replace(it.month, month_map),
                         "month_id": month(replace(it.month, month_map), "%Y-%m-%d"),
                         "next_month_id": identity(
-                            month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1  # type: ignore
+                            month(replace(it.month, month_map), "%Y-%m-%d") % 12 + 1
                         ),
                     }
                 )
@@ -1859,7 +1884,7 @@ class TestMap(unittest.TestCase):
                         "date": replace(it.month, month_map),
                         "month_id": month(replace(it.month, month_map), "y-M-d"),
                         "next_month_id": identity(
-                            month(replace(it.month, month_map), "y-M-d") % 12 + 1  # type: ignore
+                            month(replace(it.month, month_map), "y-M-d") % 12 + 1
                         ),
                     }
                 )
@@ -1998,7 +2023,7 @@ class TestMap(unittest.TestCase):
 
         def expr(X):
             ret = {}
-            cats = categorical()(_ensure_pandas(X))
+            cats = categorical()(X)
             for c in X.columns:
                 if c in cats:
                     ret["cat_" + c] = it[c]
@@ -2063,9 +2088,11 @@ class TestMap(unittest.TestCase):
         trained = Map(
             columns={
                 "height<=5": it.height <= 5,
-                "int(height<=5)": astype("int", it.height <= 5),  # type: ignore
+                "int(height<=5)": astype("int", it.height <= 5),
                 "4==height": 4 == it.height,
                 "height*10==weight": it.height * 10 == it.weight,
+                "height>3&<=5": (it.height > 3) & (it.height <= 5),
+                "height<=3|>5": (it.height <= 3) | (it.height > 5),
             }
         )
         for tgt, datasets in self.tgt2datasets.items():
@@ -2079,6 +2106,12 @@ class TestMap(unittest.TestCase):
             self.assertSeriesEqual(transformed_df["4==height"], 4 == df["height"], tgt)
             self.assertSeriesEqual(
                 transformed_df["height*10==weight"], df["height"] * 10 == df.weight, tgt
+            )
+            self.assertSeriesEqual(
+                transformed_df["height>3&<=5"], (df["height"] > 3) & (df["height"] <= 5)
+            )
+            self.assertSeriesEqual(
+                transformed_df["height<=3|>5"], (df["height"] <= 3) | (df["height"] > 5)
             )
 
 
@@ -2095,7 +2128,7 @@ class TestRelationalOperator(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         X, y = load_iris(as_frame=True, return_X_y=True)
@@ -2200,7 +2233,7 @@ class TestOrderBy(unittest.TestCase):
             cls.tgt2datasets["pandas"][name] = df
             cls.tgt2datasets["spark"][name] = pandas2spark(df)
             cls.tgt2datasets["spark-with-index"][name] = pandas2spark(
-                df, add_index=True
+                df, with_index=True
             )
 
         df = pd.DataFrame(
@@ -2284,73 +2317,41 @@ class TestOrderBy(unittest.TestCase):
 
 
 class TestSplitXy(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUp(cls):
         data = load_iris()
         X, y = data.data, data.target
-        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+        X_train, X_test, y_train, y_test = train_test_split(
             pd.DataFrame(X), pd.DataFrame(y)
         )
-        self.combined_df = pd.concat([self.X_train, self.y_train], axis=1)
-        self.combined_df.columns = [
+        combined_df = pd.concat([X_train, y_train], axis=1)
+        combined_df.columns = [
             "sepal_length",
             "sepal_width",
             "petal_length",
             "petal_width",
             "class",
         ]
+        spark_df = pandas2spark(combined_df)
+        cls.tgt2datasets = {
+            "pandas": combined_df,
+            "spark": spark_df,
+            "spark-with-index": SparkDataFrameWithIndex(spark_df),
+        }
 
     def test_split_transform(self):
         pipeline = PCA()
-        trainable = SplitXy(operator=pipeline, label_name="class")
-        trained = trainable.fit(self.combined_df)
-        _ = trained.transform(self.combined_df)
+        for _, df in self.tgt2datasets.items():
+            trainable = SplitXy(operator=pipeline, label_name="class")
+            trained = trainable.fit(df)
+            _ = trained.transform(df)
 
     def test_split_predict(self):
         pipeline = PCA() >> LogisticRegression(random_state=42)
-        trainable = SplitXy(operator=pipeline, label_name="class")
-        trained = trainable.fit(self.combined_df)
-        _ = trained.predict(self.X_test)
-
-
-@unittest.skip(
-    "skipping because we don't have any estimators that handle a Spark dataframe."
-)
-class TestSplitXySpark(unittest.TestCase):
-    def setUp(self):
-        if spark_installed:
-            conf = (
-                SparkConf()
-                .setMaster("local[2]")
-                .set("spark.driver.bindAddress", "127.0.0.1")
-            )
-            sc = SparkContext.getOrCreate(conf=conf)
-            self.sqlCtx = SQLContext(sc)
-            data = load_iris()
-            X, y = data.data, data.target
-            self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
-                pd.DataFrame(X), pd.DataFrame(y)
-            )
-            self.combined_df = pd.concat([self.X_train, self.y_train], axis=1)
-            self.combined_df.columns = [
-                "sepal_length",
-                "sepal_width",
-                "petal_length",
-                "petal_width",
-                "class",
-            ]
-            self.combined_df_spark = self.sqlCtx.createDataFrame(self.combined_df)
-
-    def test_split_spark_transform(self):
-        pipeline = PCA()
-        trainable = SplitXy(operator=pipeline, label_name="class")
-        trained = trainable.fit(self.combined_df_spark)
-        _ = trained.transform(self.combined_df_spark)
-
-    def test_split_spark_predict(self):
-        pipeline = PCA() >> LogisticRegression(random_state=42)
-        trainable = SplitXy(operator=pipeline, label_name="class")
-        trained = trainable.fit(self.combined_df)
-        _ = trained.predict(pd.DataFrame(self.X_test))
+        for _, df in self.tgt2datasets.items():
+            trainable = SplitXy(operator=pipeline, label_name="class")
+            trained = trainable.fit(df)
+            _ = trained.predict(df)
 
 
 class TestTrainTestSplit(unittest.TestCase):

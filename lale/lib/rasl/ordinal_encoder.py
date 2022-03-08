@@ -23,9 +23,9 @@ from lale.expressions import collect_set, it, replace
 from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import ordinal_encoder
 
-from ._monoid import Monoid, MonoidableOperator
 from .aggregate import Aggregate
 from .map import Map
+from .monoid import Monoid, MonoidableOperator
 
 
 class _OrdinalEncoderMonoid(Monoid):
@@ -84,7 +84,7 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
     def feature_names_in_(self):
         return getattr(self._monoid, "feature_names_in_", None)
 
-    def _from_monoid(self, lifted):
+    def from_monoid(self, lifted):
         self._monoid = lifted
         self.n_features_in_ = len(lifted.feature_names_in_)
         self._transformer = None
@@ -109,7 +109,7 @@ class _OrdinalEncoderImpl(MonoidableOperator[_OrdinalEncoderMonoid]):
         )
         return result
 
-    def _to_monoid(self, v):
+    def to_monoid(self, v):
         hyperparams = self._hyperparams
         X, _ = v
         n_samples_seen_ = count(X)
