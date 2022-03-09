@@ -1800,6 +1800,57 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
                 self.assertAlmostEqual(sk_s, rasl_s)
 
 
+class TestTaskGraphsSpark(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        X, y, _ = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        X = Project(columns=categorical()).fit(X).transform(X)
+        cls.tgt2datasets = {
+            "pandas": (X, y),
+            "spark": (pandas2spark(X), pandas2spark(y)),
+        }
+
+    @classmethod
+    def _make_sk_trainable(cls, final_est):
+        return sk_make_pipeline(
+            SkOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
+            SkMinMaxScaler(),
+            RandomForestClassifier(random_state=97),
+        )
+
+    @classmethod
+    def _make_rasl_trainable(cls, final_est):
+        return (
+            RaslOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+            >> RaslMinMaxScaler()
+            >> RandomForestClassifier(random_state=97)
+        )
+
+    def test_fit_batching(self):
+        pd_X, pd_y = self.tgt2datasets["pandas"]
+        sk_trainable = self._make_sk_trainable("sgd")
+        sk_trained = sk_trainable.fit(pd_X, pd_y)
+        unique_class_labels = list(pd_y.unique())
+        for tgt, (tgt_X, tgt_y) in self.tgt2datasets.items():
+            print(f"tgt {tgt}")
+            rasl_trained = fit_with_batches(
+                pipeline=self._make_rasl_trainable("sgd"),
+                batches=[(tgt_X, tgt_y)],
+                n_batches=1,
+                unique_class_labels=unique_class_labels,
+                max_resident=None,
+                prio=PrioBatch(),
+                incremental=False,
+                verbose=0,
+            )
+            _check_trained_ordinal_encoder(
+                self, sk_trained.steps[0][1], rasl_trained.steps[0][1].impl, tgt
+            )
+            _check_trained_min_max_scaler(
+                self, sk_trained.steps[1][1], rasl_trained.steps[1][1].impl, tgt
+            )
+
+
 class TestMetrics(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
