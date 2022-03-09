@@ -322,7 +322,7 @@ _hyperparams_schema = {
                 "max_evals",
                 "max_opt_time",
                 "max_eval_time",
-                "cv"
+                "cv",
             ],
             "relevantToOptimizer": [],
             "additionalProperties": False,
