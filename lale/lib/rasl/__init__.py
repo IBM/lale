@@ -52,7 +52,7 @@ Functions:
 
 * lale.lib.rasl. `categorical`_
 * lale.lib.rasl. `date_time`_
-* SparkExplainer. `spark_explainer`_
+* lale.lib.rasl. `SparkExplainer`_
 
 Other Facilities
 ================
@@ -96,7 +96,7 @@ Other Facilities
 
 .. _`categorical`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.categorical
 .. _`date_time`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.date_time
-.. _`spark_explainer`: lale.lib.rasl.spark_explainer.html
+.. _`SparkExplainer`: lale.lib.rasl.spark_explainer.html
 
 .. _`Prio`: lale.lib.rasl.Prio.html
 .. _`PrioBatch`: lale.lib.rasl.PrioBatch.html

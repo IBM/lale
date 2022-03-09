@@ -394,8 +394,8 @@ class Operator(metaclass=AbstractVisitorMeta):
         show_imports: bool = True,
         combinators: bool = True,
         customize_schema: bool = False,
-        astype: str = "lale",
-        ipython_display: Union[bool, str] = False,
+        astype: Union[Literal["lale"], Literal["sklearn"]] = "lale",
+        ipython_display: Union[bool, Literal["input"]] = False,
     ):
         """Returns the Python source code representation of the operator.
 

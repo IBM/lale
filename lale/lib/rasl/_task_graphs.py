@@ -27,7 +27,6 @@ import numpy as np
 import pandas as pd
 import sklearn.model_selection
 import sklearn.tree
-from pyspark.sql.dataframe import DataFrame as SparkDataFrame
 
 import lale.helpers
 import lale.json_operator
@@ -153,9 +152,19 @@ class _TrainTask(_Task):
         return self.trained
 
 
-_DataFrame = Union[pd.DataFrame, SparkDataFrame]
-_Series = Union[pd.Series, SparkDataFrame]
-_RawBatch = Union[Tuple[pd.DataFrame, pd.Series], Tuple[SparkDataFrame, SparkDataFrame]]
+if lale.helpers.spark_installed:
+    from pyspark.sql.dataframe import DataFrame as SparkDataFrame
+
+    _DataFrame = Union[pd.DataFrame, SparkDataFrame]
+    _Series = Union[pd.Series, SparkDataFrame]
+    _RawBatch = Union[
+        Tuple[pd.DataFrame, pd.Series],
+        Tuple[SparkDataFrame, SparkDataFrame],
+    ]
+else:
+    _DataFrame = pd.DataFrame  # type: ignore
+    _Series = pd.Series  # type: ignore
+    _RawBatch = Tuple[pd.DataFrame, pd.Series]  # type: ignore
 
 
 class _Batch:
@@ -830,16 +839,17 @@ def _to_suitable_format(
     y: _Series,
     operator: TrainableIndividualOp,
 ) -> _RawBatch:
-    assert (isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)) or (
-        isinstance(X, SparkDataFrame) and isinstance(y, SparkDataFrame)
-    ), (type(X), type(y))
-    if isinstance(X, SparkDataFrame):
-        can_do_spark = operator.class_name().startswith(
-            "lale.lib.rasl."
-        )  # TODO: use tags instead?
-        if not can_do_spark:
-            X = X.toPandas()
-            y = cast(pd.DataFrame, y.toPandas()).squeeze()
+    if lale.helpers.spark_installed:
+        assert (isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)) or (
+            isinstance(X, SparkDataFrame) and isinstance(y, SparkDataFrame)
+        ), (type(X), type(y))
+        if isinstance(X, SparkDataFrame):
+            can_handle_spark = operator.class_name().startswith(
+                "lale.lib.rasl."
+            )  # TODO: use tags instead?
+            if not can_handle_spark:
+                X = X.toPandas()
+                y = cast(pd.DataFrame, y.toPandas()).squeeze()
     return X, y
 
 
@@ -1085,10 +1095,10 @@ def mockup_data_loader(
 
 def _clear_tasks_dict(tasks: Dict[_MemoKey, _Task]):
     for task in tasks.values():
-        # preds form a cycle with succs
+        # preds form a garbage collection cycle with succs
         task.preds.clear()
         task.succs.clear()
-        # tasks form a cycle with batches
+        # tasks form a garbage collection cycle with batches
         if isinstance(task, _ApplyTask) and task.batch is not None:
             task.batch.task = None
             task.batch = None
