@@ -112,6 +112,7 @@ class _AutoPipelineImpl:
         max_evals=100,
         max_opt_time=600.0,
         max_eval_time=120.0,
+        cv=5
     ):
         self.prediction_type = prediction_type
         self.max_opt_time = max_opt_time
@@ -124,6 +125,7 @@ class _AutoPipelineImpl:
         self._scorer = sklearn.metrics.get_scorer(scoring)
         self.best_score = best_score
         self._summary = None
+        self.cv = cv
 
     def _try_and_add(self, name, trainable, X, y):
         assert name not in self._pipelines
@@ -133,7 +135,7 @@ class _AutoPipelineImpl:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             cv = sklearn.model_selection.check_cv(
-                cv=5, classifier=(self.prediction_type != "regression")
+                cv=self.cv, classifier=(self.prediction_type != "regression")
             )
             (
                 cv_score,
