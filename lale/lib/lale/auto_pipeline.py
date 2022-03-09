@@ -237,6 +237,7 @@ class _AutoPipelineImpl:
             max_eval_time=self.max_eval_time,
             verbose=self.verbose,
             show_progressbar=False,
+            cv=self.cv
         )
         trained = trainable.fit(X, y)
         # The static types are not currently smart enough to verify
