@@ -23,9 +23,11 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Type, Union, cast
 
 import graphviz
+import numpy as np
 import pandas as pd
 import sklearn.model_selection
 import sklearn.tree
+from pyspark.sql.dataframe import DataFrame as SparkDataFrame
 
 import lale.helpers
 import lale.json_operator
@@ -151,21 +153,28 @@ class _TrainTask(_Task):
         return self.trained
 
 
-_RawBatch = Tuple[pd.DataFrame, pd.Series]
+_DataFrame = Union[pd.DataFrame, SparkDataFrame]
+_Series = Union[pd.Series, SparkDataFrame]
+_RawBatch = Union[Tuple[pd.DataFrame, pd.Series], Tuple[SparkDataFrame, SparkDataFrame]]
 
 
 class _Batch:
-    X: Union[pd.DataFrame, pathlib.Path]
-    y: Union[pd.Series, pathlib.Path]
+    X: Union[_DataFrame, pathlib.Path]
+    y: Union[_Series, pathlib.Path]
 
-    def __init__(self, X: pd.DataFrame, y: pd.Series, task: Optional["_ApplyTask"]):
+    def __init__(self, X: _DataFrame, y: _Series, task: Optional["_ApplyTask"]):
         self.X = X
         self.y = y
         self.task = task
-        self.space = int(X.memory_usage().sum() + y.memory_usage())
+        if isinstance(X, pd.DataFrame) and isinstance(y, pd.Series):
+            space_X = int(cast(pd.DataFrame, X).memory_usage().sum())
+            space_y = cast(pd.Series, y).memory_usage()
+            self.space = space_X + space_y
+        else:
+            self.space = 1  # place-holder value for Spark
 
     def spill(self, spill_dir: pathlib.Path) -> None:
-        assert self.status == _BatchStatus.RESIDENT
+        assert isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series)
         name_X = spill_dir / f"X_{self}.pkl"
         name_y = spill_dir / f"y_{self}.pkl"
         cast(pd.DataFrame, self.X).to_pickle(name_X)
@@ -189,12 +198,14 @@ class _Batch:
 
     @property
     def Xy(self) -> _RawBatch:
-        assert isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series)
+        assert self.status == _BatchStatus.RESIDENT
         return self.X, self.y
 
     @property
     def status(self) -> _BatchStatus:
         if isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series):
+            return _BatchStatus.RESIDENT
+        if isinstance(self.X, SparkDataFrame) and isinstance(self.y, SparkDataFrame):
             return _BatchStatus.RESIDENT
         if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
             return _BatchStatus.SPILLED
@@ -814,6 +825,24 @@ class _BatchCache:
             assert pred.batch.status == _BatchStatus.RESIDENT
 
 
+def _to_suitable_format(
+    X: _DataFrame,
+    y: _Series,
+    operator: TrainableIndividualOp,
+) -> _RawBatch:
+    assert (isinstance(X, pd.DataFrame) and isinstance(y, pd.Series)) or (
+        isinstance(X, SparkDataFrame) and isinstance(y, SparkDataFrame)
+    ), (type(X), type(y))
+    if isinstance(X, SparkDataFrame):
+        can_do_spark = operator.class_name().startswith(
+            "lale.lib.rasl."
+        )  # TODO: use tags instead?
+        if not can_do_spark:
+            X = X.toPandas()
+            y = cast(pd.DataFrame, y.toPandas()).squeeze()
+    return X, y
+
+
 def _run_tasks_inner(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
@@ -913,19 +942,20 @@ def _run_tasks_inner(
             if len(apply_preds) == 1:
                 assert apply_preds[0].batch is not None
                 input_X, input_y = apply_preds[0].batch.Xy
+                input_X, input_y = _to_suitable_format(input_X, input_y, trained)
             else:
                 assert not any(pred.batch is None for pred in apply_preds)
                 input_X = [cast(_Batch, pred.batch).X for pred in apply_preds]
                 # The assumption is that input_y is not changed by the preds, so we can
                 # use it from any one of them.
-                input_y = cast(pd.Series, cast(_Batch, apply_preds[0].batch).y)
+                input_y = cast(_Series, cast(_Batch, apply_preds[0].batch).y)
             no_spill_set = cast(Set[_Batch], set(t.batch for t in apply_preds))
             cache.ensure_space(cache.estimate_space(task), no_spill_set)
             if operation is _Operation.TRANSFORM:
                 task.batch = _Batch(trained.transform(input_X), input_y, task)
             else:
                 y_pred = trained.predict(input_X)
-                if not isinstance(y_pred, pd.Series):
+                if isinstance(y_pred, np.ndarray):
                     y_pred = pd.Series(y_pred, input_y.index, input_y.dtype, "y_pred")
                 task.batch = _Batch(input_X, y_pred, task)
         elif operation is _Operation.FIT:
@@ -945,6 +975,7 @@ def _run_tasks_inner(
                     assert not is_incremental(trainable)
                     input_X = pd.concat([cast(_Batch, p.batch).X for p in apply_preds])
                     input_y = pd.concat([cast(_Batch, p.batch).y for p in apply_preds])
+                input_X, input_y = _to_suitable_format(input_X, input_y, trainable)
                 task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
@@ -958,6 +989,7 @@ def _run_tasks_inner(
             assert apply_pred.batch is not None
             cache.load_input_batches(task)
             input_X, input_y = apply_pred.batch.Xy
+            input_X, input_y = _to_suitable_format(input_X, input_y, trainee)
             if trainee.is_supervised():
                 task.trained = trainee.partial_fit(
                     input_X, input_y, classes=unique_class_labels
