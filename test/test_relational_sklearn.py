@@ -1,4 +1,4 @@
-# Copyright 2021 IBM Corporation
+# Copyright 2021-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1191,7 +1191,7 @@ class TestTaskGraphs(unittest.TestCase):
         unique_class_labels = list(train_y.unique())
         for n_batches in [1, 3]:
             for prio in [PrioStep(), PrioBatch()]:
-                batches = mockup_data_loader(train_X, train_y, n_batches)
+                batches = mockup_data_loader(train_X, train_y, n_batches, "pandas")
                 rasl_trainable = self._make_rasl_trainable("sgd")
                 rasl_trained = fit_with_batches(
                     pipeline=rasl_trainable,
@@ -1228,7 +1228,7 @@ class TestTaskGraphs(unittest.TestCase):
         )
         rasl_scores = rasl_cross_val_score(
             pipeline=self._make_rasl_trainable("rfc"),
-            batches=mockup_data_loader(train_X, train_y, 3),
+            batches=mockup_data_loader(train_X, train_y, 3, "pandas"),
             n_batches=3,
             n_folds=3,
             n_batches_per_fold=1,
@@ -1243,12 +1243,12 @@ class TestTaskGraphs(unittest.TestCase):
             self.assertAlmostEqual(sk_s, rasl_s)
 
     def test_cross_val_score_batching(self):
-        train_X, train_y, _ = self.creditg
+        X, y, _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
-            X=train_X,
-            y=train_y,
+            X=X,
+            y=y,
             scoring=make_scorer(sk_accuracy_score),
             cv=KFold(n_folds),
         )
@@ -1256,14 +1256,14 @@ class TestTaskGraphs(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=itertools.chain.from_iterable(
-                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
-                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                    mockup_data_loader(fX, fy, n_batches_per_fold, "pandas")
+                    for fX, fy in mockup_data_loader(X, y, n_folds, "pandas")
                 ),  # outer split over folds to match sklearn results exactly
                 n_batches=n_folds * n_batches_per_fold,
                 n_folds=n_folds,
                 n_batches_per_fold=n_batches_per_fold,
                 scoring=rasl_get_scorer("accuracy"),
-                unique_class_labels=list(train_y.unique()),
+                unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
                 same_fold=True,
@@ -1273,13 +1273,13 @@ class TestTaskGraphs(unittest.TestCase):
                 self.assertAlmostEqual(sk_s, rasl_s)
 
     def test_cross_val_score_disparate_impact(self):
-        train_X, train_y, fairness_info = self.creditg
+        X, y, fairness_info = self.creditg
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         n_folds = 3
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
-            X=train_X,
-            y=train_y,
+            X=X,
+            y=y,
             scoring=disparate_impact_scorer,
             cv=KFold(n_folds),
         )
@@ -1287,14 +1287,14 @@ class TestTaskGraphs(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=itertools.chain.from_iterable(
-                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
-                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                    mockup_data_loader(fX, fy, n_batches_per_fold, "pandas")
+                    for fX, fy in mockup_data_loader(X, y, n_folds, "pandas")
                 ),  # outer split over folds to match sklearn results exactly
                 n_batches=n_folds * n_batches_per_fold,
                 n_folds=n_folds,
                 n_batches_per_fold=n_batches_per_fold,
                 scoring=disparate_impact_scorer,
-                unique_class_labels=list(train_y.unique()),
+                unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
                 same_fold=True,
@@ -1316,7 +1316,7 @@ class TestTaskGraphs(unittest.TestCase):
         )
         rasl_scores = rasl_cross_validate(
             pipeline=self._make_rasl_trainable("rfc"),
-            batches=mockup_data_loader(train_X, train_y, 3),
+            batches=mockup_data_loader(train_X, train_y, 3, "pandas"),
             n_batches=3,
             n_folds=3,
             n_batches_per_fold=1,
@@ -1345,12 +1345,12 @@ class TestTaskGraphs(unittest.TestCase):
             )
 
     def test_cross_validate_batching(self):
-        train_X, train_y, _ = self.creditg
+        X, y, _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_validate(
             estimator=self._make_sk_trainable("rfc"),
-            X=train_X,
-            y=train_y,
+            X=X,
+            y=y,
             scoring=make_scorer(sk_accuracy_score),
             cv=KFold(n_folds),
             return_estimator=True,
@@ -1359,14 +1359,14 @@ class TestTaskGraphs(unittest.TestCase):
             rasl_scores = rasl_cross_validate(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=itertools.chain.from_iterable(
-                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
-                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                    mockup_data_loader(fX, fy, n_batches_per_fold, "pandas")
+                    for fX, fy in mockup_data_loader(X, y, n_folds, "pandas")
                 ),  # outer split over folds to match sklearn results exactly
                 n_batches=n_folds * n_batches_per_fold,
                 n_folds=n_folds,
                 n_batches_per_fold=n_batches_per_fold,
                 scoring=rasl_get_scorer("accuracy"),
-                unique_class_labels=list(train_y.unique()),
+                unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
                 same_fold=True,
@@ -1550,7 +1550,7 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
         )
         rasl_scores = rasl_cross_val_score(
             pipeline=self._make_rasl_trainable("rfc"),
-            batches=mockup_data_loader(train_X, train_y, 3),
+            batches=mockup_data_loader(train_X, train_y, 3, "pandas"),
             n_batches=3,
             n_folds=3,
             n_batches_per_fold=1,
@@ -1565,12 +1565,12 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
             self.assertAlmostEqual(sk_s, rasl_s)
 
     def test_cross_val_score_batching(self):
-        (train_X, train_y), _ = self.creditg
+        (X, y), _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
-            X=train_X,
-            y=train_y,
+            X=X,
+            y=y,
             scoring=make_scorer(sk_accuracy_score),
             cv=KFold(n_folds),
         )
@@ -1578,14 +1578,14 @@ class TestTaskGraphsWithConcat(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=itertools.chain.from_iterable(
-                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
-                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                    mockup_data_loader(fX, fy, n_batches_per_fold, "pandas")
+                    for fX, fy in mockup_data_loader(X, y, n_folds, "pandas")
                 ),  # outer split over folds to match sklearn results exactly
                 n_batches=n_folds * n_batches_per_fold,
                 n_folds=n_folds,
                 n_batches_per_fold=n_batches_per_fold,
                 scoring=rasl_get_scorer("accuracy"),
-                unique_class_labels=list(train_y.unique()),
+                unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
                 same_fold=True,
@@ -1755,7 +1755,7 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
         )
         rasl_scores = rasl_cross_val_score(
             pipeline=self._make_rasl_trainable("rfc"),
-            batches=mockup_data_loader(train_X, train_y, 3),
+            batches=mockup_data_loader(train_X, train_y, 3, "pandas"),
             n_batches=3,
             n_folds=3,
             n_batches_per_fold=1,
@@ -1770,12 +1770,12 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
             self.assertAlmostEqual(sk_s, rasl_s)
 
     def test_cross_val_score_batching(self):
-        (train_X, train_y), _ = self.creditg
+        (X, y), _ = self.creditg
         n_folds = 3
         sk_scores = sk_cross_val_score(
             estimator=self._make_sk_trainable("rfc"),
-            X=train_X,
-            y=train_y,
+            X=X,
+            y=y,
             scoring=make_scorer(sk_accuracy_score),
             cv=KFold(n_folds),
         )
@@ -1783,14 +1783,14 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
                 batches=itertools.chain.from_iterable(
-                    mockup_data_loader(fold_X, fold_y, n_batches_per_fold)
-                    for fold_X, fold_y in mockup_data_loader(train_X, train_y, n_folds)
+                    mockup_data_loader(fX, fy, n_batches_per_fold, "pandas")
+                    for fX, fy in mockup_data_loader(X, y, n_folds, "pandas")
                 ),  # outer split over folds to match sklearn results exactly
                 n_batches=n_folds * n_batches_per_fold,
                 n_folds=n_folds,
                 n_batches_per_fold=n_batches_per_fold,
                 scoring=rasl_get_scorer("accuracy"),
-                unique_class_labels=list(train_y.unique()),
+                unique_class_labels=list(y.unique()),
                 max_resident=None,
                 prio=PrioBatch(),
                 same_fold=True,
@@ -1798,6 +1798,134 @@ class TestTaskGraphsWithCategoricalConcat(unittest.TestCase):
             )
             for sk_s, rasl_s in zip(sk_scores, rasl_scores):
                 self.assertAlmostEqual(sk_s, rasl_s)
+
+
+class TestTaskGraphsSpark(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        X, y, _ = lale.lib.aif360.fetch_creditg_df(preprocess=False)
+        X = Project(columns=categorical()).fit(X).transform(X)
+        cls.creditg = X, y
+
+    @classmethod
+    def _make_sk_trainable(cls):
+        return sk_make_pipeline(
+            SkOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
+            SkMinMaxScaler(),
+            RandomForestClassifier(random_state=97),
+        )
+
+    @classmethod
+    def _make_rasl_trainable(cls):
+        return (
+            RaslOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+            >> RaslMinMaxScaler()
+            >> RandomForestClassifier(random_state=97)
+        )
+
+    def test_fit_with_batches(self):
+        train_X, train_y = self.creditg
+        sk_trainable = self._make_sk_trainable()
+        sk_trained = sk_trainable.fit(train_X, train_y)
+        unique_class_labels = list(train_y.unique())
+        for tgt, n_batches in itertools.product(["pandas", "spark"], [1, 3]):
+            rasl_trained = fit_with_batches(
+                pipeline=self._make_rasl_trainable(),
+                batches=mockup_data_loader(train_X, train_y, n_batches, tgt),
+                n_batches=n_batches,
+                unique_class_labels=unique_class_labels,
+                max_resident=None,
+                prio=PrioBatch(),
+                incremental=False,
+                verbose=0,
+            )
+            _check_trained_ordinal_encoder(
+                self, sk_trained.steps[0][1], rasl_trained.steps[0][1].impl, tgt
+            )
+            _check_trained_min_max_scaler(
+                self, sk_trained.steps[1][1], rasl_trained.steps[1][1].impl, tgt
+            )
+
+    def test_cross_val_score(self):
+        X, y = self.creditg
+        n_folds = 3
+        sk_scores = sk_cross_val_score(
+            estimator=self._make_sk_trainable(),
+            X=X,
+            y=y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(n_folds),
+        )
+        unique_class_labels = list(y.unique())
+        for tgt, n_batches_per_fold in itertools.product(["pandas", "spark"], [1, 3]):
+            rasl_scores = rasl_cross_val_score(
+                pipeline=self._make_rasl_trainable(),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fX, fy, n_batches_per_fold, tgt)
+                    for fX, fy in mockup_data_loader(X, y, n_folds, "pandas")
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=rasl_get_scorer("accuracy"),
+                unique_class_labels=unique_class_labels,
+                max_resident=None,
+                prio=PrioBatch(),
+                same_fold=True,
+                verbose=0,
+            )
+            for sk_s, rasl_s in zip(sk_scores, rasl_scores):
+                self.assertAlmostEqual(sk_s, rasl_s, msg=(tgt, n_batches_per_fold))
+
+    def test_cross_validate(self):
+        X, y = self.creditg
+        n_folds = 3
+        sk_scores = sk_cross_validate(
+            estimator=self._make_sk_trainable(),
+            X=X,
+            y=y,
+            scoring=make_scorer(sk_accuracy_score),
+            cv=KFold(n_folds),
+            return_estimator=True,
+        )
+        unique_class_labels = list(y.unique())
+        for tgt, n_batches_per_fold in itertools.product(["pandas", "spark"], [1, 3]):
+            rasl_scores = rasl_cross_validate(
+                pipeline=self._make_rasl_trainable(),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fX, fy, n_batches_per_fold, tgt)
+                    for fX, fy in mockup_data_loader(X, y, n_folds, "pandas")
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=rasl_get_scorer("accuracy"),
+                unique_class_labels=unique_class_labels,
+                max_resident=None,
+                prio=PrioBatch(),
+                same_fold=True,
+                return_estimator=True,
+                verbose=0,
+            )
+            for sk_s, rasl_s in zip(sk_scores["test_score"], rasl_scores["test_score"]):
+                self.assertAlmostEqual(
+                    cast(float, sk_s),
+                    cast(float, rasl_s),
+                    msg=(tgt, n_batches_per_fold),
+                )
+            for sk_e, rasl_e in zip(sk_scores["estimator"], rasl_scores["estimator"]):
+                _check_trained_ordinal_encoder(
+                    self,
+                    sk_e.steps[0][1],
+                    cast(TrainedPipeline, rasl_e).steps[0][1].impl,
+                    (tgt, n_batches_per_fold),
+                )
+                _check_trained_min_max_scaler(
+                    self,
+                    sk_e.steps[1][1],
+                    cast(TrainedPipeline, rasl_e).steps[1][1].impl,
+                    (tgt, n_batches_per_fold),
+                )
 
 
 class TestMetrics(unittest.TestCase):
@@ -1815,7 +1943,7 @@ class TestMetrics(unittest.TestCase):
         self.assertEqual(sk_score, rasl_accuracy_score(test_y, y_pred))
         rasl_scorer = rasl_get_scorer("accuracy")
         self.assertEqual(sk_score, rasl_scorer(est, test_X, test_y))
-        batches = mockup_data_loader(test_X, test_y, 3)
+        batches = mockup_data_loader(test_X, test_y, 3, "pandas")
         self.assertEqual(sk_score, rasl_scorer.score_estimator_batched(est, batches))
 
     def test_r2_score(self):
@@ -1826,7 +1954,7 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(sk_score, rasl_r2_score(test_y, y_pred))
         rasl_scorer = rasl_get_scorer("r2")
         self.assertAlmostEqual(sk_score, rasl_scorer(est, test_X, test_y))
-        batches = mockup_data_loader(test_X, test_y, 3)
+        batches = mockup_data_loader(test_X, test_y, 3, "pandas")
         self.assertAlmostEqual(
             sk_score, rasl_scorer.score_estimator_batched(est, batches)
         )
