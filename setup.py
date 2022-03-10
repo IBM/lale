@@ -49,7 +49,6 @@ else:
         "jsonschema",
         "jsonsubschema>=0.0.6",
         "scikit-learn",
-        "category-encoders",
         "scipy",
         "pandas",
         "decorator",
