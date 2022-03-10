@@ -105,19 +105,19 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         cols = self._hyperparams["cols"]
         hash_method = self._hyperparams["hash_method"]
         N = self._hyperparams["n_components"]
+        columns_hash = {
+            col_name: hash_mod(hash_method, it[col_name], N) for col_name in cols
+        }
         columns_cat = {
             f"col_{i}": reduce(
                 Expr.__add__,
-                [
-                    ite(hash_mod(hash_method, it[col_name], N) == i, 1, 0)
-                    for col_name in cols
-                ],
+                [ite(it[col_name] == i, 1, 0) for col_name in cols],
             )
             for i in range(N)
         }
-        columns_num = {col: it[col] for col in get_columns(X) if col not in cols}
-        result = Map(columns={**columns_cat, **columns_num})
-        return result
+        hash = Map(columns=columns_hash, remainder="passthrough")
+        encode = Map(columns=columns_cat, remainder="passthrough")
+        return hash >> encode
 
     def to_monoid(self, v):
         X, y = v
