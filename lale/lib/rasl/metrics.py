@@ -14,29 +14,43 @@
 
 import functools
 from abc import abstractmethod
-from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union
+from typing import Dict, Iterable, Optional, Tuple, TypeVar, Union, cast
 
 import numpy as np
 import pandas as pd
 
 from lale.expressions import astype, count, it, sum
-from lale.helpers import _ensure_pandas
+from lale.helpers import spark_installed
 from lale.operators import TrainedOperator
 
 from .aggregate import Aggregate
-from .concat_features import ConcatFeatures
 from .map import Map
 from .monoid import Monoid, MonoidFactory
 
 MetricMonoid = Monoid
 
-_Batch_Xy = Tuple[pd.DataFrame, pd.Series]
-
-_Batch_yyX = Tuple[
-    Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray], pd.DataFrame
-]
-
 _M = TypeVar("_M", bound=MetricMonoid)
+
+if spark_installed:
+    from pyspark.sql.dataframe import DataFrame as SparkDataFrame
+
+    _Batch_Xy = Union[
+        Tuple[pd.DataFrame, pd.Series],
+        Tuple[SparkDataFrame, SparkDataFrame],
+    ]
+
+    _Batch_yyX = Tuple[
+        Union[pd.Series, np.ndarray, SparkDataFrame],
+        Union[pd.Series, np.ndarray, SparkDataFrame],
+        Union[pd.DataFrame, SparkDataFrame],
+    ]
+
+else:
+    _Batch_Xy = Tuple[pd.DataFrame, pd.Series]  # type: ignore
+
+    _Batch_yyX = Tuple[  # type: ignore
+        Union[pd.Series, np.ndarray], Union[pd.Series, np.ndarray], pd.DataFrame
+    ]
 
 
 class MetricMonoidFactory(MonoidFactory[_Batch_yyX, float, _M]):
@@ -85,6 +99,24 @@ class _MetricMonoidMixin(MetricMonoidFactory[_M]):
         return self.score_data(y_true=y, y_pred=estimator.predict(X))
 
 
+def _make_dataframe_yy(batch):
+    def make_series_y(y):
+        if isinstance(y, np.ndarray):
+            series = pd.Series(y)
+        elif spark_installed and isinstance(y, SparkDataFrame):
+            series = cast(pd.DataFrame, y.toPandas()).squeeze()
+        else:
+            series = y
+        assert isinstance(series, pd.Series), type(series)
+        return series.reset_index(drop=True)
+
+    y_true, y_pred, _ = batch
+    result = pd.DataFrame(
+        {"y_true": make_series_y(y_true), "y_pred": make_series_y(y_pred)},
+    )
+    return result
+
+
 class _AccuracyData(MetricMonoid):
     def __init__(self, match: int, total: int):
         self.match = match
@@ -96,27 +128,13 @@ class _AccuracyData(MetricMonoid):
 
 class _Accuracy(_MetricMonoidMixin[_AccuracyData]):
     def __init__(self):
-        self._pipeline = (
-            ConcatFeatures
-            >> Map(columns={"match": astype("int", it.y_true == it.y_pred)})
-            >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
-        )
+        self._pipeline = Map(
+            columns={"match": astype("int", it.y_true == it.y_pred)}
+        ) >> Aggregate(columns={"match": sum(it.match), "total": count(it.match)})
 
     def to_monoid(self, batch: _Batch_yyX) -> _AccuracyData:
-        y_true, y_pred, _ = batch
-        assert y_true is not None and y_pred is not None
-        if isinstance(y_true, np.ndarray) and isinstance(y_pred, np.ndarray):
-            y_true = pd.Series(y_true, name="y_true")
-            y_pred = pd.Series(y_pred, name="y_pred")
-        elif isinstance(y_true, np.ndarray) and isinstance(y_pred, pd.Series):
-            y_true = pd.Series(y_true, y_pred.index, y_pred.dtype, "y_true")  # type: ignore
-        elif isinstance(y_true, pd.Series) and isinstance(y_pred, np.ndarray):
-            y_pred = pd.Series(y_pred, y_true.index, y_true.dtype, "y_pred")  # type: ignore
-        assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark
-        assert isinstance(y_pred, pd.Series), type(y_pred)  # TODO: Spark
-        y_true = pd.DataFrame({"y_true": y_true})
-        y_pred = pd.DataFrame({"y_pred": y_pred})
-        agg_df = _ensure_pandas(self._pipeline.transform([y_true, y_pred]))
+        input_df = _make_dataframe_yy(batch)
+        agg_df = self._pipeline.transform(input_df)
         return _AccuracyData(match=agg_df.at[0, "match"], total=agg_df.at[0, "total"])
 
     def from_monoid(self, v: _AccuracyData) -> float:
@@ -147,41 +165,25 @@ class _R2(_MetricMonoidMixin[_R2Data]):
     # https://en.wikipedia.org/wiki/Coefficient_of_determination
 
     def __init__(self):
-        self._pipeline = (
-            ConcatFeatures
-            >> Map(
-                columns={
-                    "y": it.y_true,  # observed values
-                    "f": it.y_pred,  # predicted values
-                    "y2": it.y_true * it.y_true,  # squares
-                    "e2": (it.y_true - it.y_pred) * (it.y_true - it.y_pred),
-                }
-            )
-            >> Aggregate(
-                columns={
-                    "n": count(it.y),
-                    "sum": sum(it.y),
-                    "sum_sq": sum(it.y2),
-                    "res_sum_sq": sum(it.e2),  # residual sum of squares
-                }
-            )
+        self._pipeline = Map(
+            columns={
+                "y": it.y_true,  # observed values
+                "f": it.y_pred,  # predicted values
+                "y2": it.y_true * it.y_true,  # squares
+                "e2": (it.y_true - it.y_pred) * (it.y_true - it.y_pred),
+            }
+        ) >> Aggregate(
+            columns={
+                "n": count(it.y),
+                "sum": sum(it.y),
+                "sum_sq": sum(it.y2),
+                "res_sum_sq": sum(it.e2),  # residual sum of squares
+            }
         )
 
     def to_monoid(self, batch: _Batch_yyX) -> _R2Data:
-        y_true, y_pred, _ = batch
-        assert y_true is not None and y_pred is not None
-        if isinstance(y_true, np.ndarray) and isinstance(y_pred, np.ndarray):
-            y_true = pd.Series(y_true, name="y_true")
-            y_pred = pd.Series(y_pred, name="y_pred")
-        elif isinstance(y_true, np.ndarray) and isinstance(y_pred, pd.Series):
-            y_true = pd.Series(y_true, y_pred.index, y_pred.dtype, "y_true")  # type: ignore
-        elif isinstance(y_true, pd.Series) and isinstance(y_pred, np.ndarray):
-            y_pred = pd.Series(y_pred, y_true.index, y_true.dtype, "y_pred")  # type: ignore
-        assert isinstance(y_true, pd.Series), type(y_true)  # TODO: Spark
-        assert isinstance(y_pred, pd.Series), type(y_pred)  # TODO: Spark
-        y_true = pd.DataFrame({"y_true": y_true})
-        y_pred = pd.DataFrame({"y_pred": y_pred})
-        agg_df = _ensure_pandas(self._pipeline.transform([y_true, y_pred]))
+        input_df = _make_dataframe_yy(batch)
+        agg_df = self._pipeline.transform(input_df)
         return _R2Data(
             n=agg_df.at[0, "n"],
             sum=agg_df.at[0, "sum"],

@@ -31,6 +31,7 @@ import sklearn.tree
 import lale.helpers
 import lale.json_operator
 import lale.pretty_print
+from lale.datasets import pandas2spark
 from lale.operators import (
     TrainableIndividualOp,
     TrainablePipeline,
@@ -981,11 +982,23 @@ def _run_tasks_inner(
                 cache.load_input_batches(task)
                 if len(task.preds) == 1:
                     input_X, input_y = cast(_Batch, apply_preds[0].batch).Xy
+                    input_X, input_y = _to_suitable_format(input_X, input_y, trainable)
                 else:
                     assert not is_incremental(trainable)
-                    input_X = pd.concat([cast(_Batch, p.batch).X for p in apply_preds])
-                    input_y = pd.concat([cast(_Batch, p.batch).y for p in apply_preds])
-                input_X, input_y = _to_suitable_format(input_X, input_y, trainable)
+                    Xs = (cast(_Batch, p.batch).X for p in apply_preds)
+                    ys = (cast(_Batch, p.batch).y for p in apply_preds)
+                    Xys = [_to_suitable_format(X, y, trainable) for X, y in zip(Xs, ys)]
+                    if all(isinstance(X, pd.DataFrame) for X, _ in Xys):
+                        input_X = pd.concat([X for X, _ in Xys])
+                        input_y = pd.concat([y for _, y in Xys])
+                    else:
+                        assert all(isinstance(X, SparkDataFrame) for X, _ in Xys)
+                        input_X = functools.reduce(
+                            lambda a, b: a.union(b), (X for X, _ in Xys)
+                        )
+                        input_y = functools.reduce(
+                            lambda a, b: a.union(b), (y for _, y in Xys)
+                        )
                 task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
@@ -1080,17 +1093,21 @@ def _run_tasks(
 
 
 def mockup_data_loader(
-    X: pd.DataFrame, y: pd.Series, n_splits: int
+    X: pd.DataFrame, y: pd.Series, n_splits: int, astype: str
 ) -> Iterable[_RawBatch]:
     if n_splits == 1:
         return [(X, y)]
     cv = sklearn.model_selection.KFold(n_splits)
     estimator = sklearn.tree.DecisionTreeClassifier()
-    result = (
+    pandas_gen = (
         lale.helpers.split_with_schemas(estimator, X, y, test, train)
         for train, test in cv.split(X, y)
     )  # generator expression returns object with __iter__() method
-    return result
+    if astype == "pandas":
+        return pandas_gen
+    elif astype == "spark":
+        return ((pandas2spark(X), pandas2spark(y)) for X, y in pandas_gen)
+    raise ValueError(f"expected astype in ['pandas', 'spark'], got {astype}")
 
 
 def _clear_tasks_dict(tasks: Dict[_MemoKey, _Task]):
