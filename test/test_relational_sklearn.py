@@ -574,7 +574,7 @@ def _check_trained_hashing_encoder(test, op1, op2, msg):
 class TestHasingEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas"]  # TODO: "spark", "spark-with-index"
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2creditg = cast(
             Dict[str, Any],
             {
