@@ -184,7 +184,7 @@ class _Batch:
             self.space = 1  # place-holder value for Spark
 
     def spill(self, spill_dir: pathlib.Path) -> None:
-        assert isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series)
+        #assert isinstance(self.X, pd.DataFrame) and isinstance(self.y, pd.Series)
         name_X = spill_dir / f"X_{self}.pkl"
         name_y = spill_dir / f"y_{self}.pkl"
         cast(pd.DataFrame, self.X).to_pickle(name_X)
@@ -219,6 +219,8 @@ class _Batch:
             return _BatchStatus.RESIDENT
         if isinstance(self.X, pathlib.Path) and isinstance(self.y, pathlib.Path):
             return _BatchStatus.SPILLED
+        if isinstance(self.X, np.ndarray) and isinstance(self.y, pd.Series):
+            return _BatchStatus.RESIDENT
         assert False, (type(self.X), type(self.y))
 
 

@@ -39,15 +39,36 @@ class _BatchingImpl:
     def fit(self, X, y=None, classes=None):
         if self.operator is None:
             raise ValueError("The pipeline object can't be None at the time of fit.")
-        data_loader = lale.helpers.create_data_loader(
-            X=X,
-            y=y,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=self.shuffle,
-        )
+        try:
+            from torch.utils.data import DataLoader
+        except ImportError:
+            raise ImportError("""Batching uses Pytorch for data loading. It is not
+            installed in the current environment, please install
+            the package and try again.""")
+        if isinstance(X, DataLoader):
+            assert y is None, "When X is a torch.utils.data.DataLoader, y should be None"
+            data_loader = X
+        else:
+            data_loader = lale.helpers.create_data_loader(
+                X=X,
+                y=y,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                shuffle=self.shuffle,
+            )
         if y is not None and classes is None:
             classes = np.unique(y)
+        rasl_trained = fit_with_batches(
+            pipeline=self.operator,
+            batches=batches,
+            n_batches=n_batches,
+            unique_class_labels=unique_class_labels,
+            max_resident=3 * math.ceil(train_data_space / n_batches),
+            prio=prio,
+            incremental=False,
+            verbose=0,
+        )
+
         self.operator = self.operator.fit_with_batches(
             data_loader,
             y=classes,
