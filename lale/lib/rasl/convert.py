@@ -18,7 +18,12 @@ import pandas as pd
 import lale.docstrings
 import lale.operators
 from lale.datasets import pandas2spark
-from lale.helpers import _is_spark_df
+from lale.datasets.data_schemas import (
+    SparkDataFrameWithIndex,
+    add_table_name,
+    get_table_name,
+)
+from lale.helpers import _is_spark_df, _is_spark_with_index
 
 
 def _convert(data, astype, X_or_y):
@@ -29,7 +34,15 @@ def _convert(data, astype, X_or_y):
             else:
                 result = data.toPandas().squeeze()
         elif astype == "spark":
-            result = data
+            if _is_spark_with_index(data):
+                result = data.drop_indexes()
+            else:
+                result = data
+        elif astype == "spark-with-index":
+            if _is_spark_with_index(data):
+                result = data
+            else:
+                result = SparkDataFrameWithIndex(data)
         else:
             assert False, astype
     elif isinstance(data, (pd.DataFrame, pd.Series)):
@@ -37,6 +50,8 @@ def _convert(data, astype, X_or_y):
             result = data
         elif astype == "spark":
             result = pandas2spark(data)
+        elif astype == "spark-with-index":
+            result = pandas2spark(data, with_index=True)
         else:
             assert False, astype
     elif isinstance(data, np.ndarray):
@@ -47,10 +62,13 @@ def _convert(data, astype, X_or_y):
                 result = pd.Series(data)
         elif astype == "spark":
             result = pandas2spark(pd.DataFrame(data))
+        elif astype == "spark-with-index":
+            result = pandas2spark(pd.DataFrame(data), with_index=True)
         else:
             assert False, astype
     else:
         raise TypeError(f"unexpected type {type(data)}")
+    result = add_table_name(result, get_table_name(data))
     return result
 
 
@@ -78,7 +96,7 @@ _hyperparams_schema = {
             "properties": {
                 "astype": {
                     "description": "Type to convert to.",
-                    "enum": ["pandas", "spark"],
+                    "enum": ["pandas", "spark", "spark-with-index"],
                     "default": "pandas",
                 },
             },

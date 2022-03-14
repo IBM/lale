@@ -118,8 +118,13 @@ if spark_installed:
             self.index_name = index_name
             self.index_names = index_names
 
+        def drop_indexes(self):
+            result = self.drop(*self.index_names)
+            result = add_table_name(result, get_table_name(self))
+            return result
+
         @property
-        def columns_without_index(self):
+        def columns_without_indexes(self):
             cols = list(self.columns)
             for name in self.index_names:
                 cols.remove(name)
