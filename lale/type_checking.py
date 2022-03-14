@@ -168,7 +168,7 @@ def validate_is_schema(value: Dict[str, Any]):
 def is_schema(value) -> bool:
     if isinstance(value, dict):
         try:
-            jsonschema.validate(value, _json_meta_schema())
+            _validator.validate(value)
         except jsonschema.ValidationError:
             return False
         return True
