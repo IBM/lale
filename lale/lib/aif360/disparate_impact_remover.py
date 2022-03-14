@@ -58,7 +58,7 @@ class _DisparateImpactRemoverImpl:
 
     def _prep_and_encode(self, X, y=None):
         prepared_X = self.redact_and_prep.transform(X, y)
-        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform_X_y(X, y)
         assert isinstance(encoded_X, pd.DataFrame), type(encoded_X)
         assert encoded_X.shape[1] == 1, encoded_X.columns
         if isinstance(prepared_X, pd.DataFrame):
@@ -95,7 +95,7 @@ class _DisparateImpactRemoverImpl:
         assert isinstance(trainable_redact_and_prep, lale.operators.TrainablePipeline)
         self.redact_and_prep = trainable_redact_and_prep.fit(X, y)
         self.prot_attr_enc = ProtectedAttributesEncoder(
-            **fairness_info, remainder="drop", return_X_y=True, combine="and"
+            **fairness_info, remainder="drop", combine="and"
         )
         encoded_X, sensitive_attribute = self._prep_and_encode(X, y)
         if isinstance(sensitive_attribute, str):

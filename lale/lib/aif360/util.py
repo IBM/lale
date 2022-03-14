@@ -362,7 +362,7 @@ class _BaseInEstimatorImpl:
 
     def _prep_and_encode(self, X, y=None):
         prepared_X = self.redact_and_prep.transform(X, y)
-        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform_X_y(X, y)
         combined_attribute_names = list(prepared_X.columns) + [
             name for name in encoded_X.columns if name not in prepared_X.columns
         ]
@@ -399,7 +399,6 @@ class _BaseInEstimatorImpl:
         self.prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,
             remainder="drop",
-            return_X_y=True,
         )
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         self.pandas_to_dataset = _PandasToDatasetConverter(
@@ -478,7 +477,6 @@ class _BasePostEstimatorImpl:
         self.prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,
             remainder="drop",
-            return_X_y=True,
         )
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         self.pandas_to_dataset = _PandasToDatasetConverter(
@@ -486,12 +484,12 @@ class _BasePostEstimatorImpl:
             unfavorable_label=0,
             protected_attribute_names=prot_attr_names,
         )
-        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform_X_y(X, y)
         self.y_dtype = encoded_y.dtype
         self.y_name = encoded_y.name
         predicted_y = self.redact_and_estim.predict(X)
         predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
-        _, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        _, predicted_y = self.prot_attr_enc.transform_X_y(X, predicted_y)
         predicted_probas = self.redact_and_estim.predict_proba(X)
         dataset_true = self.pandas_to_dataset.convert(encoded_X, encoded_y)
         dataset_pred = self.pandas_to_dataset.convert(
@@ -509,7 +507,7 @@ class _BasePostEstimatorImpl:
         predicted_y = self.redact_and_estim.predict(X)
         predicted_probas = self.redact_and_estim.predict_proba(X)
         predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
-        encoded_X, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        encoded_X, predicted_y = self.prot_attr_enc.transform_X_y(X, predicted_y)
         dataset_pred = self.pandas_to_dataset.convert(
             encoded_X, predicted_y, predicted_probas
         )
@@ -522,7 +520,7 @@ class _BasePostEstimatorImpl:
         predicted_y = self.redact_and_estim.predict(X)
         predicted_probas = self.redact_and_estim.predict_proba(X)
         predicted_y = _ndarray_to_series(predicted_y, self.y_name, X.index)
-        encoded_X, predicted_y = self.prot_attr_enc.transform(X, predicted_y)
+        encoded_X, predicted_y = self.prot_attr_enc.transform_X_y(X, predicted_y)
         dataset_pred = self.pandas_to_dataset.convert(
             encoded_X, predicted_y, predicted_probas
         )
@@ -708,7 +706,6 @@ class _AIF360ScorerFactory:
         self.prot_attr_enc = ProtectedAttributesEncoder(
             **self.fairness_info,
             remainder="drop",
-            return_X_y=True,
         )
         pas = protected_attributes
         self.unprivileged_groups = [{_ensure_str(pa["feature"]): 0 for pa in pas}]
@@ -733,7 +730,7 @@ class _AIF360ScorerFactory:
         assert y_pred is not None and X is not None
         y_pred_orig = y_pred
         y_pred = _y_pred_series(y_true, y_pred, X)
-        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        encoded_X, y_pred = self.prot_attr_enc.transform_X_y(X, y_pred)
         try:
             dataset_pred = self._pandas_to_dataset().convert(encoded_X, y_pred)
         except ValueError as e:
@@ -754,7 +751,7 @@ class _AIF360ScorerFactory:
                 y_true = _ndarray_to_series(
                     y_true, y_pred.name, y_pred.index, y_pred_orig.dtype  # type: ignore
                 )
-            _, y_true = self.prot_attr_enc.transform(X, y_true)
+            _, y_true = self.prot_attr_enc.transform_X_y(X, y_true)
             dataset_true = self._pandas_to_dataset().convert(encoded_X, y_true)
             fairness_metrics = aif360.metrics.ClassificationMetric(
                 dataset_true,
@@ -823,7 +820,7 @@ class _DIorSPDScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_DIorSPDDa
         y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
         y_pred = _y_pred_series(y_true, y_pred, X)
-        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        encoded_X, y_pred = self.prot_attr_enc.transform_X_y(X, y_pred)
         gensym = GenSym(set(_ensure_str(n) for n in get_columns(encoded_X)))
         y_pred_name = gensym("y_pred")
         y_pred = pd.DataFrame({y_pred_name: y_pred})
@@ -896,11 +893,11 @@ class _AODorEODScorerFactory(_AIF360ScorerFactory, MetricMonoidFactory[_AODorEOD
         y_true, y_pred, X = batch
         assert y_pred is not None and X is not None, batch
         y_pred = _y_pred_series(y_true, y_pred, X)
-        encoded_X, y_pred = self.prot_attr_enc.transform(X, y_pred)
+        encoded_X, y_pred = self.prot_attr_enc.transform_X_y(X, y_pred)
         gensym = GenSym(set(_ensure_str(n) for n in get_columns(encoded_X)))
         y_true_name, y_pred_name = gensym("y_true"), gensym("y_pred")
         y_pred = pd.DataFrame({y_pred_name: y_pred})
-        _, y_true = self.prot_attr_enc.transform(X, y_true)
+        _, y_true = self.prot_attr_enc.transform_X_y(X, y_true)
         y_true = pd.DataFrame({y_true_name: pd.Series(y_true, y_pred.index)})
         pa_names = self.privileged_groups[0].keys()
         priv0 = functools.reduce(lambda a, b: a & b, (it[pa] == 0 for pa in pa_names))
@@ -1651,9 +1648,8 @@ def _column_for_stratification(
         protected_attributes=protected_attributes,
         unfavorable_labels=unfavorable_labels,
         remainder="drop",
-        return_X_y=True,
     )
-    encoded_X, encoded_y = prot_attr_enc.transform(X, y)
+    encoded_X, encoded_y = prot_attr_enc.transform_X_y(X, y)
     df = pd.concat([encoded_X, encoded_y], axis=1)
 
     def label_for_stratification(row):

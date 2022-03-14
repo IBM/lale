@@ -58,9 +58,8 @@ class _ReweighingImpl:
         prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,
             remainder="drop",
-            return_X_y=True,
         )
-        encoded_X, encoded_y = prot_attr_enc.transform(X, y)
+        encoded_X, encoded_y = prot_attr_enc.transform_X_y(X, y)
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         pandas_to_dataset = _PandasToDatasetConverter(
             favorable_label=1,

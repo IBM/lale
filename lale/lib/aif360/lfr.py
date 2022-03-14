@@ -77,7 +77,7 @@ class _LFRImpl:
 
     def _prep_and_encode(self, X, y=None):
         prepared_X = self.redact1_and_prep.transform(X, y)
-        encoded_X, encoded_y = self.prot_attr_enc.transform(X, y)
+        encoded_X, encoded_y = self.prot_attr_enc.transform_X_y(X, y)
         combined_attribute_names = list(prepared_X.columns) + [
             name for name in encoded_X.columns if name not in prepared_X.columns
         ]
@@ -108,7 +108,6 @@ class _LFRImpl:
         self.prot_attr_enc = ProtectedAttributesEncoder(
             **fairness_info,
             remainder="drop",
-            return_X_y=True,
         )
         prot_attr_names = [pa["feature"] for pa in self.protected_attributes]
         self.pandas_to_dataset = _PandasToDatasetConverter(

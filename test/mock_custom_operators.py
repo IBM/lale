@@ -28,13 +28,19 @@ class _IncreaseRowsImpl:
         result = _IncreaseRowsImpl(self.n_rows)
         return result
 
+    def transform_X_y(self, X, y):
+        subset_X = X[0 : self.n_rows - 1]
+        output_X = np.concatenate((X, subset_X), axis=0)
+        if y is None:
+            output_y = None
+        else:
+            subset_y = y[0 : self.n_rows - 1]
+            output_y = np.concatenate((y, subset_y), axis=0)
+        return output_X, output_y
+
     def transform(self, X, y=None):
-        X_subset = X[0 : self.n_rows - 1]
-        X = np.concatenate((X, X_subset), axis=0)
-        if y is not None:
-            y_subset = y[0 : self.n_rows - 1]
-            y = np.concatenate((y, y_subset), axis=0)
-        return X, y
+        output_X, _ = self.transform_X_y(X, y)
+        return output_X
 
 
 _input_fit_schema = {
