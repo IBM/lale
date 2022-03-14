@@ -151,6 +151,7 @@ _JSON_META_SCHEMA_URL = "http://json-schema.org/draft-04/schema#"
 def _json_meta_schema() -> Dict[str, Any]:
     return jsonschema.Draft4Validator.META_SCHEMA
 
+_validator = jsonschema.Draft4Validator(_json_meta_schema())
 
 def validate_is_schema(value: Dict[str, Any]):
     # only checking hyperparams schema validation flag because it is likely to be true and this call is cheap.
@@ -161,7 +162,7 @@ def validate_is_schema(value: Dict[str, Any]):
 
     if "$schema" in value:
         assert value["$schema"] == _JSON_META_SCHEMA_URL
-    jsonschema.validate(value, _json_meta_schema())
+    _validator.validate(value)
 
 
 def is_schema(value) -> bool:
