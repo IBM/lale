@@ -25,7 +25,7 @@ from lale.expressions import min as agg_min
 from lale.helpers import _is_spark_df
 from lale.lib.dataframe import count, get_columns
 from lale.lib.rasl import Aggregate, Map
-from lale.lib.sklearn import min_max_scaler
+from lale.lib.sklearn import bagging_classifier
 from lale.schemas import Enum
 from lale.lib.sklearn import DecisionTreeClassifier
 from .monoid import Monoid, MonoidableOperator
@@ -34,96 +34,56 @@ from .monoid import Monoid, MonoidableOperator
 class _BaggingClassifierMonoid(Monoid):
     def __init__(
         self,
-        classifier
+        classifiers
     ):
-        self.classifier = classifier
+        self.classifiers = classifiers
 
     def combine(self, other):
-        data_min_ = np.minimum(self.data_min_, other.data_min_)
-        data_max_ = np.maximum(self.data_max_, other.data_max_)
-        n_samples_seen_ = self.n_samples_seen_ + other.n_samples_seen_
-        assert list(self.feature_names_in_) == list(self.feature_names_in_)
-        feature_names_in_ = self.feature_names_in_
-        return _MinMaxScalerMonoid(
-            data_min_=data_min_,
-            data_max_=data_max_,
-            n_samples_seen_=n_samples_seen_,
-            feature_names_in_=feature_names_in_,
+        return _BaggingClassifierMonoid(
+            classifiers=self.classifiers.extend(other.classifiers)
         )
 
-
-class _BaggingMonoidClassifierImpl(MonoidableOperator[_MinMaxScalerMonoid]):
+class _BaggingMonoidClassifierImpl(MonoidableOperator[_BaggingClassifierMonoid]):
     def __init__(self, base_estimator=None):
         if base_estimator is None:
             base_estimator = DecisionTreeClassifier()
         self._hyperparams = {"base_estimator": base_estimator}
 
     def predict(self, X):
-        return self.trained_estimator.predict(X)
+        if len(self.classifiers_list)==1:
+            return self.classifiers_list[0].predict(X)
+        else:
+            #TODO: Take a voting of the classifiers
+            pass
 
-    def from_monoid(self, v: _MinMaxScalerMonoid):
-        self._monoid = v
-        self.n_features_in_ = len(v.feature_names_in_)
-        self.data_range_ = v.data_max_ - v.data_min_
-        range_min, range_max = self._hyperparams["feature_range"]
-        self.scale_ = (range_max - range_min) / (v.data_max_ - v.data_min_)
-        self.min_ = range_min - v.data_min_ * self.scale_
-        self._transformer = None
-
-    def _build_transformer(self, X):
-        range_min, range_max = self._hyperparams["feature_range"]
-        ops = {}
-        dmin = self.data_min_
-        assert dmin is not None
-        dmax = self.data_max_
-        assert dmax is not None
-        for i, c in enumerate(get_columns(X)):
-            c_std = (it[c] - dmin[i]) / (dmax[i] - dmin[i])
-            c_scaled = c_std * (range_max - range_min) + range_min
-            ops.update({c: c_scaled})
-        return Map(columns=ops)
+    def from_monoid(self, v: _BaggingClassifierMonoid):
+        self.classifiers_list = v.classifiers
 
     def to_monoid(self, v) -> _BaggingClassifierMonoid:
-        X, _ = v
-        agg = {f"{c}_min": agg_min(it[c]) for c in get_columns(X)}
-        agg.update({f"{c}_max": agg_max(it[c]) for c in get_columns(X)})
-        aggregate = Aggregate(columns=agg)
-        data_min_max = aggregate.transform(X)
-        if _is_spark_df(X):
-            data_min_max = data_min_max.toPandas()
-        n = len(get_columns(X))
-        data_min_ = np.zeros(shape=(n))
-        data_max_ = np.zeros(shape=(n))
-        for i, c in enumerate(get_columns(X)):
-            data_min_[i] = data_min_max[f"{c}_min"]
-            data_max_[i] = data_min_max[f"{c}_max"]
-        data_min_ = np.array(data_min_)
-        data_max_ = np.array(data_max_)
-        n_samples_seen_ = count(X)
-        feature_names_in_ = get_columns(X)
-        return _MinMaxScalerMonoid(
-            data_min_=data_min_,
-            data_max_=data_max_,
-            n_samples_seen_=n_samples_seen_,
-            feature_names_in_=feature_names_in_,
+        X, y = v
+        trainable = self._hyperparams["base_estimator"]
+        trained_classifier = trainable.fit(X, y)
+        return _BaggingClassifierMonoid(
+            [trained_classifier]
         )
 
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "description": "Relational algebra implementation of MinMaxScaler.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.min_max_scaler.html",
+    "description": """Implementation of a homomorphic bagging classifier.
+    As proposed in https://izbicki.me/public/papers/icml2013-algebraic-classifiers.pdf""",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.bagging_monoid_classifier.html",
     "type": "object",
     "tags": {
         "pre": ["~categoricals"],
-        "op": ["transformer", "interpretable"],
+        "op": ["estimator"],
         "post": [],
     },
     "properties": {
-        "hyperparams": min_max_scaler._hyperparams_schema,
-        "input_fit": min_max_scaler._input_schema_fit,
-        "input_transform": min_max_scaler._input_transform_schema,
-        "output_transform": min_max_scaler._output_transform_schema,
+        "hyperparams": bagging_classifier._hyperparams_schema,
+        "input_fit": bagging_classifier._input_fit_schema,
+        "input_transform": bagging_classifier.schema_X_numbers,
+        "output_transform": bagging_classifier.schema_1D_cats,
     },
 }
 
