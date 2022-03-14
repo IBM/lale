@@ -331,7 +331,7 @@ def strip_schema(obj):
     return result
 
 
-def dtype_to_schema(typ) -> JSON_TYPE:
+def _dtype_to_schema(typ) -> JSON_TYPE:
     result: JSON_TYPE
     if typ is bool or np.issubdtype(typ, np.bool_):
         result = {"type": "boolean"}
@@ -345,24 +345,34 @@ def dtype_to_schema(typ) -> JSON_TYPE:
         result = {"type": "string"}
     elif isinstance(typ, np.dtype):
         if typ.fields:
-            props = {k: dtype_to_schema(t) for k, t in typ.fields.items()}
+            props = {k: _dtype_to_schema(t) for k, t in typ.fields.items()}
             result = {"type": "object", "properties": props}
         elif typ.shape:
-            result = shape_and_dtype_to_schema(typ.shape, typ.subdtype)
+            result = _shape_and_dtype_to_schema(typ.shape, typ.subdtype)
         elif np.issubdtype(typ, np.object_):
             result = {"type": "string"}
         else:
             assert False, f"unexpected dtype {typ}"
     else:
         assert False, f"unexpected non-dtype {typ}"
+    return result
+
+
+def dtype_to_schema(typ) -> JSON_TYPE:
+    result = _dtype_to_schema(typ)
     lale.type_checking.validate_is_schema(result)
     return result
 
 
-def shape_and_dtype_to_schema(shape, dtype) -> JSON_TYPE:
-    result = dtype_to_schema(dtype)
+def _shape_and_dtype_to_schema(shape, dtype) -> JSON_TYPE:
+    result = _dtype_to_schema(dtype)
     for dim in reversed(shape):
         result = {"type": "array", "minItems": dim, "maxItems": dim, "items": result}
+    return result
+
+
+def shape_and_dtype_to_schema(shape, dtype) -> JSON_TYPE:
+    result = _shape_and_dtype_to_schema(shape, dtype)
     lale.type_checking.validate_is_schema(result)
     return result
 
@@ -394,15 +404,23 @@ def is_list_tensor(obj) -> bool:
     return False
 
 
-def list_tensor_to_schema(ls) -> Optional[JSON_TYPE]:
+def _list_tensor_to_schema(ls) -> Optional[JSON_TYPE]:
     shape_and_dtype = list_tensor_to_shape_and_dtype(ls)
     if shape_and_dtype is None:
         return None
-    result = shape_and_dtype_to_schema(*shape_and_dtype)
+    result = _shape_and_dtype_to_schema(*shape_and_dtype)
     return result
 
 
-def ndarray_to_schema(array) -> JSON_TYPE:
+def list_tensor_to_schema(ls) -> Optional[JSON_TYPE]:
+    result = _list_tensor_to_schema(ls)
+    if result is None:
+        return None
+    lale.type_checking.validate_is_schema(result)
+    return result
+
+
+def _ndarray_to_schema(array) -> JSON_TYPE:
     assert isinstance(array, np.ndarray)
     if (
         isinstance(array, NDArrayWithSchema)
@@ -410,17 +428,29 @@ def ndarray_to_schema(array) -> JSON_TYPE:
         and array.json_schema is not None
     ):
         return array.json_schema
-    return shape_and_dtype_to_schema(array.shape, array.dtype)
+    return _shape_and_dtype_to_schema(array.shape, array.dtype)
 
 
-def csr_matrix_to_schema(matrix) -> JSON_TYPE:
+def ndarray_to_schema(array) -> JSON_TYPE:
+    result = _ndarray_to_schema(array)
+    lale.type_checking.validate_is_schema(result)
+    return result
+
+
+def _csr_matrix_to_schema(matrix) -> JSON_TYPE:
     assert isinstance(matrix, scipy.sparse.csr_matrix)
-    result = shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
+    result = _shape_and_dtype_to_schema(matrix.shape, matrix.dtype)
     result["isSparse"] = {}  # true schema
     return result
 
 
-def dataframe_to_schema(df) -> JSON_TYPE:
+def csr_matrix_to_schema(matrix) -> JSON_TYPE:
+    result = _csr_matrix_to_schema(matrix)
+    lale.type_checking.validate_is_schema(result)
+    return result
+
+
+def _dataframe_to_schema(df) -> JSON_TYPE:
     assert isinstance(df, pd.DataFrame)
     if (
         isinstance(df, DataFrameWithSchema)
@@ -431,7 +461,7 @@ def dataframe_to_schema(df) -> JSON_TYPE:
     n_rows, n_columns = df.shape
     assert n_columns == len(df.columns) and n_columns == len(df.dtypes)
     items = [
-        {"description": str(col), **dtype_to_schema(df.dtypes[col])}
+        {"description": str(col), **_dtype_to_schema(df.dtypes[col])}
         for col in df.columns
     ]
     result = {
@@ -445,11 +475,16 @@ def dataframe_to_schema(df) -> JSON_TYPE:
             "items": items,
         },
     }
+    return result
+
+
+def dataframe_to_schema(df) -> JSON_TYPE:
+    result = _dataframe_to_schema(df)
     lale.type_checking.validate_is_schema(result)
     return result
 
 
-def series_to_schema(series) -> JSON_TYPE:
+def _series_to_schema(series) -> JSON_TYPE:
     assert isinstance(series, pd.Series)
     if (
         isinstance(series, SeriesWithSchema)
@@ -462,13 +497,18 @@ def series_to_schema(series) -> JSON_TYPE:
         "type": "array",
         "minItems": n_rows,
         "maxItems": n_rows,
-        "items": {"description": str(series.name), **dtype_to_schema(series.dtype)},
+        "items": {"description": str(series.name), **_dtype_to_schema(series.dtype)},
     }
+    return result
+
+
+def series_to_schema(series) -> JSON_TYPE:
+    result = _series_to_schema(series)
     lale.type_checking.validate_is_schema(result)
     return result
 
 
-def torch_tensor_to_schema(tensor) -> JSON_TYPE:
+def _torch_tensor_to_schema(tensor) -> JSON_TYPE:
     assert torch_installed, """Your Python environment does not have torch installed. You can install it with
     pip install torch
 or with
@@ -489,6 +529,12 @@ or with
     return result
 
 
+def torch_tensor_to_schema(tensor) -> JSON_TYPE:
+    result = _torch_tensor_to_schema(tensor)
+    lale.type_checking.validate_is_schema(result)
+    return result
+
+
 def is_liac_arff(obj) -> bool:
     expected_types = {
         "description": str,
@@ -504,7 +550,7 @@ def is_liac_arff(obj) -> bool:
     return True
 
 
-def liac_arff_to_schema(larff) -> JSON_TYPE:
+def _liac_arff_to_schema(larff) -> JSON_TYPE:
     assert is_liac_arff(
         larff
     ), """Your Python environment might contain an 'arff' package different from 'liac-arff'. You can install it with
@@ -540,6 +586,11 @@ or with
             "items": items,
         },
     }
+    return result
+
+
+def liac_arff_to_schema(larff) -> JSON_TYPE:
+    result = _liac_arff_to_schema(larff)
     lale.type_checking.validate_is_schema(result)
     return result
 
@@ -549,24 +600,25 @@ def to_schema(obj) -> JSON_TYPE:
     if obj is None:
         result = {"enum": [None]}
     elif isinstance(obj, np.ndarray):
-        result = ndarray_to_schema(obj)
+        result = _ndarray_to_schema(obj)
     elif isinstance(obj, scipy.sparse.csr_matrix):
-        result = csr_matrix_to_schema(obj)
+        result = _csr_matrix_to_schema(obj)
     elif isinstance(obj, pd.DataFrame):
-        result = dataframe_to_schema(obj)
+        result = _dataframe_to_schema(obj)
     elif isinstance(obj, pd.Series):
-        result = series_to_schema(obj)
+        result = _series_to_schema(obj)
     elif torch_installed and isinstance(obj, torch.Tensor):
-        result = torch_tensor_to_schema(obj)
+        result = _torch_tensor_to_schema(obj)
     elif is_liac_arff(obj):
-        result = liac_arff_to_schema(obj)
+        result = _liac_arff_to_schema(obj)
     elif lale.type_checking.is_schema(obj):
-        result = obj  # Does not need to validate again the schema
+        result = obj
+        # Does not need to validate again the schema
         return result  # type: ignore
     elif isinstance(obj, list):
-        result = list_tensor_to_schema(obj)
+        result = _list_tensor_to_schema(obj)
     elif _is_spark_df(obj):
-        result = dataframe_to_schema(obj.toPandas())
+        result = _dataframe_to_schema(obj.toPandas())
     if result is None:
         raise ValueError(f"to_schema(obj), type {type(obj)}, value {obj}")
     lale.type_checking.validate_is_schema(result)
