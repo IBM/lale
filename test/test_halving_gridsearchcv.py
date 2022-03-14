@@ -92,7 +92,7 @@ class TestAutoConfigureClassification(unittest.TestCase):
 
         X, y = load_boston(return_X_y=True)
 
-        max_opt_time = 3.0
+        max_opt_time = 0.5
         hor = HalvingGridSearchCV(
             estimator=planned_pipeline,
             cv=3,
