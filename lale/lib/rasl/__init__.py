@@ -33,6 +33,7 @@ Transformers
 
 * lale.lib.rasl. `Batching`_
 * lale.lib.rasl. `ConcatFeatures`_
+* lale.lib.rasl. `Convert`_
 * lale.lib.rasl. `Scan`_
 * lale.lib.rasl. `SplitXy`_
 
@@ -83,6 +84,7 @@ Other Facilities
 
 .. _`Batching`: lale.lib.rasl.batching.html
 .. _`ConcatFeatures`: lale.lib.rasl.concat_features.html
+.. _`Convert`: lale.lib.rasl.convert.html
 .. _`Scan`: lale.lib.rasl.scan.html
 .. _`SplitXy`: lale.lib.rasl.split_xy.html
 
@@ -130,6 +132,7 @@ from .aggregate import Aggregate
 from .alias import Alias
 from .batching import Batching
 from .concat_features import ConcatFeatures
+from .convert import Convert
 from .filter import Filter
 from .functions import categorical, date_time
 from .group_by import GroupBy
