@@ -250,7 +250,14 @@ def fold_schema(X, y, cv=1, is_classifier=True):
 
 
 def cross_val_score_track_trials(
-    estimator, X, y=None, scoring=accuracy_score, cv=5, args_to_scorer=None
+    estimator,
+    X,
+    y=None,
+    scoring=accuracy_score,
+    cv=5,
+    args_to_scorer=None,
+    args_to_cv=None,
+    **fit_params,
 ):
     """
     Use the given estimator to perform fit and predict for splits defined by 'cv' and compute the given score on
@@ -273,6 +280,8 @@ def cross_val_score_track_trials(
         Note that any of the iterators from https://scikit-learn.org/stable/modules/cross_validation.html#cross-validation-iterators can be used here.
     args_to_scorer: A dictionary of additional keyword arguments to pass to the scorer.
                 Used for cases where the scorer has a signature such as ``scorer(estimator, X, y, **kwargs)``.
+    args_to_cv: A dictionary of additional keyword arguments to pass to the split method of cv.
+                This is only applicable when cv is not an integer.
     Returns
     -------
         cv_results: a list of scores corresponding to each cross validation fold
@@ -282,11 +291,13 @@ def cross_val_score_track_trials(
 
     if args_to_scorer is None:
         args_to_scorer = {}
+    if args_to_cv is None:
+        args_to_cv = {}
     scorer = check_scoring(estimator, scoring=scoring)
     cv_results: List[float] = []
     log_loss_results = []
     time_results = []
-    for train, test in cv.split(X, y):
+    for train, test in cv.split(X, y, **args_to_cv):
         X_train, y_train = split_with_schemas(estimator, X, y, train)
         X_test, y_test = split_with_schemas(estimator, X, y, test, train)
         start = time.time()
@@ -295,7 +306,7 @@ def cross_val_score_track_trials(
         #      with edges=None, so the resulting topology is incorrect.
         #  (2) For Lale individual operators, the fit() method already
         #      clones the impl object, so cloning again is redundant.
-        trained = estimator.fit(X_train, y_train)
+        trained = estimator.fit(X_train, y_train, **fit_params)
         score_value = scorer(trained, X_test, y_test, **args_to_scorer)
         execution_time = time.time() - start
         # not all estimators have predict probability
