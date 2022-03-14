@@ -37,7 +37,7 @@ def get_columns(df) -> List[column_index]:
     if _is_pandas_df(df):
         return df.columns
     if _is_spark_with_index(df):
-        return pd.Series(df.columns_without_index)
+        return pd.Series(df.columns_without_indexes)
     if _is_spark_df(df):
         return df.columns
     if isinstance(df, np.ndarray):
