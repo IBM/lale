@@ -561,7 +561,8 @@ def to_schema(obj) -> JSON_TYPE:
     elif is_liac_arff(obj):
         result = liac_arff_to_schema(obj)
     elif lale.type_checking.is_schema(obj):
-        result = obj
+        result = obj  # Does not need to validate again the schema
+        return result  # type: ignore
     elif isinstance(obj, list):
         result = list_tensor_to_schema(obj)
     elif _is_spark_df(obj):
