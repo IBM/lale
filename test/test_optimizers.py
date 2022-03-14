@@ -614,6 +614,34 @@ class TestHyperopt(unittest.TestCase):
             predictions_1 = hyperopt.predict(self.X_test)
             self.assertTrue(np.array_equal(predictions_1, predictions), alg)
 
+    def test_args_to_cv(self):
+        import pandas as pd
+        from sklearn.model_selection import GroupKFold
+
+        from lale.lib.lale import Hyperopt
+        from lale.lib.sklearn import OneHotEncoder, RandomForestClassifier
+
+        data = pd.DataFrame(
+            {
+                "x_0": ["a"] * 10 + ["b"] * 10,
+                "x_1": ["c"] * 18 + ["d"] * 2,
+                "y": [1, 1, 1, 1, 0, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0, 0],
+            }
+        )
+        train_y = data.pop("y")
+        train_x = data
+        group_cols = train_x["x_0"]
+        group_cols = [col_value[0] for col_value in group_cols.tolist()]
+        group_kfold = GroupKFold(n_splits=2)
+        pipeline = OneHotEncoder(handle_unknown="ignore") >> RandomForestClassifier()
+        optimizer = Hyperopt(
+            estimator=pipeline, cv=group_kfold, max_evals=1, verbose=True
+        )
+        trained_optimizer = optimizer.fit(
+            train_x, train_y, args_to_cv={"groups": group_cols}
+        )
+        trained_optimizer.predict(train_x)
+
 
 class TestAutoConfigureClassification(unittest.TestCase):
     def setUp(self):
