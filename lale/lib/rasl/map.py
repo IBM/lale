@@ -156,7 +156,7 @@ class _MapImpl:
             )
 
     def transform_pandas_df(self, X):
-        mapped_df = pd.DataFrame()
+        mapped_df = {}
         accessed_column_names = set()
 
         def get_map_function_output(column, new_column_name):
@@ -179,6 +179,7 @@ class _MapImpl:
                 get_map_function_output(column, new_column_name)
         else:
             raise ValueError("columns must be either a list or a dictionary.")
+        mapped_df = pd.DataFrame(mapped_df)
         if self.remainder == "passthrough":
             remainder_columns = [x for x in X.columns if x not in accessed_column_names]
             mapped_df[remainder_columns] = X[remainder_columns]
