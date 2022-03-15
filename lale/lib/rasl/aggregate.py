@@ -87,7 +87,7 @@ class _AggregateImpl:
         def eval_agg_pandas(old_col_name, agg_func_name):
             if agg_func_name == "collect_set":
                 agg_func_name = "unique"
-            if agg_func_name == "mode":
+            elif agg_func_name == "mode":
                 agg_func_name = (
                     lambda x: x.value_counts()
                     .sort_index(ascending=False)
