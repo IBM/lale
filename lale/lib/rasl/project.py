@@ -22,7 +22,7 @@ import lale.type_checking
 from lale.expressions import it
 from lale.lib.dataframe import column_index, get_columns
 from lale.lib.rasl import Map, Monoid, MonoidFactory
-from lale.type_checking import is_schema
+from lale.type_checking import is_schema, validate_is_schema
 
 
 def _columns_schema_to_list(X, schema) -> List[column_index]:
@@ -91,20 +91,37 @@ class _StaticMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]
         return v._v
 
 
-class _CallableMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
+class _DynamicMonoidFactory(MonoidFactory[Any, List[column_index], _StaticMonoid]):
+    pass
+
+
+class _CallableMonoidFactory(_DynamicMonoidFactory):
     def __init__(self, c):
         self._c = c
 
     def to_monoid(self, df):
         c = self._c
-        if callable(c):
+        if not isinstance(c, list):
+            assert callable(c)
             c = c(df)
             self._c = c
-        elif is_schema(c):
+
+        return _StaticMonoid(c)
+
+    def from_monoid(self, v):
+        return v._v
+
+
+class _SchemaMonoidFactory(_DynamicMonoidFactory):
+    def __init__(self, c):
+        self._c = c
+
+    def to_monoid(self, df):
+        c = self._c
+        if not isinstance(c, list):
+            assert isinstance(c, dict)
             c = _columns_schema_to_list(df, c)
             self._c = c
-        else:
-            assert isinstance(c, list)
 
         return _StaticMonoid(c)
 
@@ -133,8 +150,9 @@ def get_column_factory(columns, kind):
         return columns
     elif callable(columns):
         return _AllDataMonoidFactory(columns)
-    elif is_schema(columns):
-        return _CallableMonoidFactory(columns)
+    elif isinstance(columns, dict):
+        validate_is_schema(columns)
+        return _SchemaMonoidFactory(columns)
     else:
         raise TypeError(f"type {type(columns)}, columns {columns}")
 
@@ -261,18 +279,16 @@ class _ProjectImpl:
             known_drop_cols = False
             if keep_cols is None:
                 known_keep_cols = True
-            elif isinstance(keep_cols, _CallableMonoidFactory):
+            elif isinstance(keep_cols, _SchemaMonoidFactory):
                 kc = keep_cols._c
-                if is_schema(kc):
-                    keep_cols = kc
-                    known_keep_cols = True
+                keep_cols = kc
+                known_keep_cols = True
             if drop_cols is None:
                 known_drop_cols = True
-            elif isinstance(drop_cols, _CallableMonoidFactory):
+            elif isinstance(drop_cols, _SchemaMonoidFactory):
                 dc = drop_cols._c
-                if is_schema(dc):
-                    drop_cols = dc
-                    known_drop_cols = True
+                drop_cols = dc
+                known_drop_cols = True
             if known_keep_cols and known_drop_cols:
                 return self._transform_schema_schema(s_X, keep_cols, drop_cols)
             return s_X
