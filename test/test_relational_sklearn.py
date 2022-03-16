@@ -72,7 +72,6 @@ from lale.lib.rasl import r2_score as rasl_r2_score
 from lale.lib.rasl.bagging_monoid_classifier import BaggingMonoidClassifier
 from lale.lib.sklearn import (
     DecisionTreeClassifier,
-    FunctionTransformer,
     LogisticRegression,
     RandomForestClassifier,
     SGDClassifier,
