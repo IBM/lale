@@ -12,36 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import typing
-
-import numpy as np
+import pandas as pd
 
 import lale.docstrings
 import lale.operators
-from lale.datasets.data_schemas import forward_metadata
-from lale.expressions import it
-from lale.expressions import max as agg_max
-from lale.expressions import min as agg_min
-from lale.helpers import _is_spark_df
-from lale.lib.dataframe import count, get_columns
-from lale.lib.rasl import Aggregate, Map
-from lale.lib.sklearn import bagging_classifier
-from lale.schemas import Enum
-from lale.lib.sklearn import DecisionTreeClassifier
+from lale.lib._common_schemas import schema_estimator
+from lale.lib.sklearn import DecisionTreeClassifier, bagging_classifier
+
 from .monoid import Monoid, MonoidableOperator
 
 
 class _BaggingClassifierMonoid(Monoid):
-    def __init__(
-        self,
-        classifiers
-    ):
+    def __init__(self, classifiers):
         self.classifiers = classifiers
 
     def combine(self, other):
-        return _BaggingClassifierMonoid(
-            classifiers=self.classifiers.extend(other.classifiers)
-        )
+        # TODO, do we want to do a deepcopy instead?
+        orig_classifiers = self.classifiers
+        orig_classifiers.extend(other.classifiers)
+        return _BaggingClassifierMonoid(classifiers=orig_classifiers)
+
 
 class _BaggingMonoidClassifierImpl(MonoidableOperator[_BaggingClassifierMonoid]):
     def __init__(self, base_estimator=None):
@@ -50,23 +40,48 @@ class _BaggingMonoidClassifierImpl(MonoidableOperator[_BaggingClassifierMonoid])
         self._hyperparams = {"base_estimator": base_estimator}
 
     def predict(self, X):
-        if len(self.classifiers_list)==1:
+        if len(self.classifiers_list) == 1:
             return self.classifiers_list[0].predict(X)
         else:
-            #TODO: Take a voting of the classifiers
-            pass
+            # Take a voting of the classifiers
+            predictions_list = [
+                classifier.predict(X) for classifier in self.classifiers_list
+            ]
+            df = pd.DataFrame(predictions_list).transpose()
+            predictions = df.mode(axis=1)
+            if (
+                predictions.shape[1] > 1
+            ):  # When there are multiple modes, pick the first one
+                predictions = predictions.iloc[:, 0]
+            predictions = predictions.squeeze()  # converts a dataframe to series.
+            return predictions
 
     def from_monoid(self, v: _BaggingClassifierMonoid):
+        self._monoid = v
         self.classifiers_list = v.classifiers
 
     def to_monoid(self, v) -> _BaggingClassifierMonoid:
         X, y = v
         trainable = self._hyperparams["base_estimator"]
         trained_classifier = trainable.fit(X, y)
-        return _BaggingClassifierMonoid(
-            [trained_classifier]
-        )
+        return _BaggingClassifierMonoid([trained_classifier])
 
+
+_hyperparams_schema = {
+    "allOf": [
+        {
+            "type": "object",
+            "required": [
+                "base_estimator",
+            ],
+            "relevantToOptimizer": [],
+            "additionalProperties": False,
+            "properties": {
+                "base_estimator": schema_estimator,
+            },
+        }
+    ]
+}
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -80,12 +95,14 @@ _combined_schemas = {
         "post": [],
     },
     "properties": {
-        "hyperparams": bagging_classifier._hyperparams_schema,
+        "hyperparams": _hyperparams_schema,
         "input_fit": bagging_classifier._input_fit_schema,
-        "input_transform": bagging_classifier.schema_X_numbers,
-        "output_transform": bagging_classifier.schema_1D_cats,
+        "input_predict": bagging_classifier.schema_X_numbers,
+        "output_predict": bagging_classifier.schema_1D_cats,
     },
 }
 
-BaggingMonoidClassifier = lale.operators.make_operator(_BaggingMonoidClassifierImpl, _combined_schemas)
+BaggingMonoidClassifier = lale.operators.make_operator(
+    _BaggingMonoidClassifierImpl, _combined_schemas
+)
 lale.docstrings.set_docstrings(BaggingMonoidClassifier)

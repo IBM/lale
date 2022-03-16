@@ -40,6 +40,7 @@ from sklearn.preprocessing import StandardScaler as SkStandardScaler
 import lale.datasets
 import lale.datasets.openml
 import lale.lib.aif360
+import lale.type_checking
 from lale.datasets import pandas2spark
 from lale.datasets.data_schemas import (
     SparkDataFrameWithIndex,
@@ -68,7 +69,9 @@ from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
 from lale.lib.rasl import mockup_data_loader
 from lale.lib.rasl import r2_score as rasl_r2_score
+from lale.lib.rasl.bagging_monoid_classifier import BaggingMonoidClassifier
 from lale.lib.sklearn import (
+    DecisionTreeClassifier,
     FunctionTransformer,
     LogisticRegression,
     RandomForestClassifier,
@@ -1159,9 +1162,12 @@ class TestTaskGraphs(unittest.TestCase):
     @classmethod
     def _make_rasl_trainable(cls, final_est):
         if final_est == "sgd":
-            est = SGDClassifier(random_state=97)
+            # est = SGDClassifier(random_state=97)
+            est = BaggingMonoidClassifier()
         elif final_est == "rfc":
             est = RandomForestClassifier(random_state=97)
+        elif final_est == "bagging_monoid":
+            est = BaggingMonoidClassifier()
         else:
             assert False, final_est
         return (
@@ -1958,3 +1964,162 @@ class TestMetrics(unittest.TestCase):
         self.assertAlmostEqual(
             sk_score, rasl_scorer.score_estimator_batched(est, batches)
         )
+
+
+class TestBaggingMonoid(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.creditg = lale.datasets.openml.fetch(
+            "credit-g", "classification", preprocess=False, astype="pandas"
+        )
+
+    @classmethod
+    def _make_rasl_trainable(cls, final_est):
+        if final_est == "bagging_monoid":
+            est = BaggingMonoidClassifier(
+                base_estimator=DecisionTreeClassifier(
+                    random_state=97, max_features="auto"
+                )
+            )
+        else:
+            assert False, final_est
+        return (
+            RaslOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
+            >> RaslMinMaxScaler()
+            >> est
+        )
+
+    def test_classifier(self):
+        (X_train, y_train), (X_test, y_test) = self.creditg
+        import warnings
+
+        clf = BaggingMonoidClassifier()
+        # test_schemas_are_schemas
+        lale.type_checking.validate_is_schema(clf.input_schema_fit())
+        lale.type_checking.validate_is_schema(clf.input_schema_predict())
+        lale.type_checking.validate_is_schema(clf.output_schema_predict())
+        lale.type_checking.validate_is_schema(clf.hyperparam_schema())
+
+        # test_init_fit_predict
+        pipeline = self._make_rasl_trainable("bagging_monoid")
+
+        trained = pipeline.fit(X_train, y_train)
+        _ = trained.predict(X_test)
+
+        # test_with_hyperopt
+        from lale.lib.lale import Hyperopt
+
+        (X_train, y_train), (X_test, y_test) = lale.datasets.openml.fetch(
+            "credit-g", "classification", preprocess=True, astype="pandas"
+        )
+
+        hyperopt = Hyperopt(estimator=pipeline, max_evals=1, verbose=True)
+        trained = hyperopt.fit(X_train, y_train)
+        _ = trained.predict(X_test)
+        # test_cross_validation
+        from lale.helpers import cross_val_score
+
+        cv_results = cross_val_score(pipeline, X_train, y_train, cv=2)
+        self.assertEqual(len(cv_results), 2)
+
+        # test_with_gridsearchcv_auto_wrapped
+        from sklearn.metrics import accuracy_score, make_scorer
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            from lale.lib.lale import GridSearchCV
+
+            grid_search = GridSearchCV(
+                estimator=pipeline,
+                lale_num_samples=1,
+                lale_num_grids=1,
+                cv=2,
+                scoring=make_scorer(accuracy_score),
+            )
+            grid_search.fit(X_train, y_train)
+
+        # test_predict_on_trainable
+        trained = clf.fit(X_train, y_train)
+        clf.predict(X_train)
+
+        # test_to_json
+        clf.to_json()
+
+    def test_fit_batching(self):
+        (train_X, train_y), (test_X, test_y) = self.creditg
+        from sklearn.metrics import accuracy_score
+
+        train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
+        unique_class_labels = list(train_y.unique())
+        for n_batches in [1, 3]:
+            for prio in [PrioStep(), PrioBatch()]:
+                batches = mockup_data_loader(train_X, train_y, n_batches, "pandas")
+                rasl_trainable = self._make_rasl_trainable("bagging_monoid")
+                rasl_trained = fit_with_batches(
+                    pipeline=rasl_trainable,
+                    batches=batches,
+                    n_batches=n_batches,
+                    unique_class_labels=unique_class_labels,
+                    max_resident=3 * math.ceil(train_data_space / n_batches),
+                    prio=prio,
+                    incremental=False,
+                    verbose=0,
+                )
+                predictions = rasl_trained.predict(test_X)
+                rasl_acc = accuracy_score(test_y, predictions)
+                if n_batches == 1:
+                    from sklearn.tree import (
+                        DecisionTreeClassifier as SkDecisionTreeClassifier,
+                    )
+
+                    sk_pipeline = sk_make_pipeline(
+                        SkOrdinalEncoder(
+                            handle_unknown="use_encoded_value", unknown_value=-1
+                        ),
+                        SkMinMaxScaler(),
+                        SkDecisionTreeClassifier(random_state=97, max_features="auto"),
+                    )
+                    sk_pipeline.fit(train_X, train_y)
+                    predictions = sk_pipeline.predict(test_X)
+                    sk_acc = accuracy_score(test_y, predictions)
+                    self.assertEqual(rasl_acc, sk_acc)
+
+    def test_cross_val_score_no_batching(self):
+        (train_X, train_y), (_, _) = self.creditg
+        train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
+        _ = rasl_cross_val_score(
+            pipeline=self._make_rasl_trainable("bagging_monoid"),
+            batches=mockup_data_loader(train_X, train_y, 3, "pandas"),
+            n_batches=3,
+            n_folds=3,
+            n_batches_per_fold=1,
+            scoring=rasl_get_scorer("accuracy"),
+            unique_class_labels=list(train_y.unique()),
+            max_resident=3 * math.ceil(train_data_space / 3),
+            prio=PrioBatch(),
+            same_fold=True,
+            verbose=0,
+        )
+
+    def test_cross_val_score_batching(self):
+        (train_X, train_y), (_, _) = self.creditg
+        n_folds = 3
+        for n_batches_per_fold in [1, 3]:
+            _ = rasl_cross_val_score(
+                pipeline=self._make_rasl_trainable("bagging_monoid"),
+                batches=itertools.chain.from_iterable(
+                    mockup_data_loader(fX, fy, n_batches_per_fold, "pandas")
+                    for fX, fy in mockup_data_loader(
+                        train_X, train_y, n_folds, "pandas"
+                    )
+                ),  # outer split over folds to match sklearn results exactly
+                n_batches=n_folds * n_batches_per_fold,
+                n_folds=n_folds,
+                n_batches_per_fold=n_batches_per_fold,
+                scoring=rasl_get_scorer("accuracy"),
+                unique_class_labels=list(train_y.unique()),
+                max_resident=None,
+                prio=PrioBatch(),
+                same_fold=True,
+                verbose=0,
+            )
