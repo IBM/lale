@@ -1157,12 +1157,9 @@ class TestTaskGraphs(unittest.TestCase):
     @classmethod
     def _make_rasl_trainable(cls, final_est):
         if final_est == "sgd":
-            # est = SGDClassifier(random_state=97)
-            est = BaggingMonoidClassifier()
+            est = SGDClassifier(random_state=97)
         elif final_est == "rfc":
             est = RandomForestClassifier(random_state=97)
-        elif final_est == "bagging_monoid":
-            est = BaggingMonoidClassifier()
         else:
             assert False, final_est
         return (
