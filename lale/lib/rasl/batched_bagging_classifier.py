@@ -13,8 +13,10 @@
 # limitations under the License.
 
 import copy
-import pandas as pd
 import inspect
+
+import pandas as pd
+import sklearn.base
 
 import lale.docstrings
 import lale.operators
@@ -22,7 +24,7 @@ from lale.lib._common_schemas import schema_estimator
 from lale.lib.sklearn import DecisionTreeClassifier, bagging_classifier
 
 from .monoid import Monoid, MonoidableOperator
-import sklearn.base
+
 
 class _BatchedBaggingClassifierMonoid(Monoid):
     def __init__(self, classifiers):
@@ -33,7 +35,10 @@ class _BatchedBaggingClassifierMonoid(Monoid):
         orig_classifiers.extend(other.classifiers)
         return _BatchedBaggingClassifierMonoid(classifiers=orig_classifiers)
 
-class _BatchedBaggingClassifierImpl(MonoidableOperator[_BatchedBaggingClassifierMonoid]):
+
+class _BatchedBaggingClassifierImpl(
+    MonoidableOperator[_BatchedBaggingClassifierMonoid]
+):
     def __init__(self, base_estimator=None):
         if base_estimator is None:
             base_estimator = DecisionTreeClassifier()
