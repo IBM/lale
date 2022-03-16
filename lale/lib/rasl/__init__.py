@@ -51,7 +51,7 @@ Scikit-learn Operators
 Estimators
 ==========
 
-* lale.lib.rasl. `BaggingMonoidClassifier`_
+* lale.lib.rasl. `BatchedBaggingClassifier`_
 
 Functions:
 ==========
@@ -101,7 +101,7 @@ Other Facilities
 .. _`SimpleImputer`: lale.lib.rasl.simple_imputer.html
 .. _`StandardScaler`: lale.lib.rasl.standard_scaler.html
 
-.. _`BaggingMonoidClassifier`: lale.lib.rasl.bagging_monoid_classifier.html
+.. _`BaggingMonoidClassifier`: lale.lib.rasl.batched_bagging_classifier.html
 
 .. _`categorical`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.categorical
 .. _`date_time`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.date_time
@@ -137,7 +137,7 @@ from ._task_graphs import (
 )
 from .aggregate import Aggregate
 from .alias import Alias
-from .bagging_monoid_classifier import BaggingMonoidClassifier
+from .batched_bagging_classifier import BatchedBaggingClassifier
 from .batching import Batching
 from .concat_features import ConcatFeatures
 from .convert import Convert

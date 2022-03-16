@@ -51,7 +51,7 @@ from lale.datasets.data_schemas import (
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas, create_data_loader
-from lale.lib.rasl import ConcatFeatures, Convert
+from lale.lib.rasl import BatchedBaggingClassifier, ConcatFeatures, Convert
 from lale.lib.rasl import HashingEncoder as RaslHashingEncoder
 from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
@@ -69,7 +69,6 @@ from lale.lib.rasl import fit_with_batches
 from lale.lib.rasl import get_scorer as rasl_get_scorer
 from lale.lib.rasl import mockup_data_loader
 from lale.lib.rasl import r2_score as rasl_r2_score
-from lale.lib.rasl.bagging_monoid_classifier import BaggingMonoidClassifier
 from lale.lib.sklearn import (
     DecisionTreeClassifier,
     LogisticRegression,
@@ -1965,7 +1964,7 @@ class TestMetrics(unittest.TestCase):
         )
 
 
-class TestBaggingMonoid(unittest.TestCase):
+class TestBatchedBaggingClassifier(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.creditg = lale.datasets.openml.fetch(
@@ -1973,9 +1972,19 @@ class TestBaggingMonoid(unittest.TestCase):
         )
 
     @classmethod
+    def _make_sk_trainable(cls):
+        from sklearn.tree import DecisionTreeClassifier as SkDecisionTreeClassifier
+
+        return sk_make_pipeline(
+            SkOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
+            SkMinMaxScaler(),
+            SkDecisionTreeClassifier(random_state=97, max_features="auto"),
+        )
+
+    @classmethod
     def _make_rasl_trainable(cls, final_est):
         if final_est == "bagging_monoid":
-            est = BaggingMonoidClassifier(
+            est = BatchedBaggingClassifier(
                 base_estimator=DecisionTreeClassifier(
                     random_state=97, max_features="auto"
                 )
@@ -1992,7 +2001,7 @@ class TestBaggingMonoid(unittest.TestCase):
         (X_train, y_train), (X_test, y_test) = self.creditg
         import warnings
 
-        clf = BaggingMonoidClassifier()
+        clf = BatchedBaggingClassifier()
         # test_schemas_are_schemas
         lale.type_checking.validate_is_schema(clf.input_schema_fit())
         lale.type_checking.validate_is_schema(clf.input_schema_predict())
@@ -2008,7 +2017,7 @@ class TestBaggingMonoid(unittest.TestCase):
         # test_with_hyperopt
         from lale.lib.lale import Hyperopt
 
-        (X_train, y_train), (X_test, y_test) = lale.datasets.openml.fetch(
+        (X_train, y_train), (X_test, _) = lale.datasets.openml.fetch(
             "credit-g", "classification", preprocess=True, astype="pandas"
         )
 
@@ -2067,17 +2076,7 @@ class TestBaggingMonoid(unittest.TestCase):
                 predictions = rasl_trained.predict(test_X)
                 rasl_acc = accuracy_score(test_y, predictions)
                 if n_batches == 1:
-                    from sklearn.tree import (
-                        DecisionTreeClassifier as SkDecisionTreeClassifier,
-                    )
-
-                    sk_pipeline = sk_make_pipeline(
-                        SkOrdinalEncoder(
-                            handle_unknown="use_encoded_value", unknown_value=-1
-                        ),
-                        SkMinMaxScaler(),
-                        SkDecisionTreeClassifier(random_state=97, max_features="auto"),
-                    )
+                    sk_pipeline = self._make_sk_trainable()
                     sk_pipeline.fit(train_X, train_y)
                     predictions = sk_pipeline.predict(test_X)
                     sk_acc = accuracy_score(test_y, predictions)
