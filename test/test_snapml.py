@@ -112,6 +112,31 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 scorer = sklearn.metrics.make_scorer(metric)
                 _ = scorer(trained, self.test_X, self.test_y)
 
+    def test_batched_tree_ensemble_classifier(self):
+        import snapml
+
+        import lale.lib.snapml
+
+        #for params in [{}, snapml.BatchedTreeEnsembleClassifier().get_params()]:
+        for params in [{}]:
+            trainable = lale.lib.snapml.BatchedTreeEnsembleClassifier(**params)
+            trained = trainable.fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
+
+            trainable = lale.lib.snapml.BatchedTreeEnsembleClassifier(**params)
+            trained = trainable.partial_fit(self.train_X, self.train_y)
+            for metric in [
+                sklearn.metrics.accuracy_score,
+                sklearn.metrics.roc_auc_score,
+            ]:
+                scorer = sklearn.metrics.make_scorer(metric)
+                _ = scorer(trained, self.test_X, self.test_y)
+
 
 class TestSnapMLRegressors(unittest.TestCase):
     def setUp(self):
