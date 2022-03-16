@@ -19,6 +19,7 @@ import numpy as np
 import pandas as pd
 
 import lale.operators
+from lale.lib.rasl.convert import Convert
 from lale.operator_wrapper import wrap_imported_operators
 
 try:
@@ -68,7 +69,12 @@ from lale.expressions import (
     string_indexer,
     sum,
 )
-from lale.helpers import _ensure_pandas, _is_pandas_df, _is_spark_df
+from lale.helpers import (
+    _ensure_pandas,
+    _is_pandas_df,
+    _is_spark_df,
+    _is_spark_with_index,
+)
 from lale.lib.dataframe import get_columns
 from lale.lib.lale import ConcatFeatures, Hyperopt, SplitXy
 from lale.lib.rasl import (
@@ -2411,3 +2417,44 @@ class TestTrainTestSplit(unittest.TestCase):
                 main_table_df = df
         self.assertEqual(main_table_df.count(), 54)
         self.assertEqual(test_y.count(), 54)
+
+
+class TestConvert(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        targets = ["pandas", "spark", "spark-with-index"]
+        cls.tgt2datasets = {tgt: fetch_go_sales_dataset(tgt) for tgt in targets}
+
+    def _check(self, src, dst, tgt):
+        self.assertEqual(get_table_name(src), get_table_name(dst), tgt)
+        self.assertEqual(list(get_columns(src)), list(get_columns(dst)), tgt)
+        pd_src = _ensure_pandas(src)
+        pd_dst = _ensure_pandas(dst)
+        self.assertEqual(pd_src.shape, pd_dst.shape, tgt)
+
+    def test_to_pandas(self):
+        for tgt, datasets in self.tgt2datasets.items():
+            transformer = Convert(astype="pandas")
+            go_products = datasets[3]
+            self.assertEqual(get_table_name(go_products), "go_products", tgt)
+            transformed_df = transformer.transform(go_products)
+            self.assertTrue(_is_pandas_df(transformed_df), tgt)
+            self._check(go_products, transformed_df, tgt)
+
+    def test_to_spark(self):
+        for tgt, datasets in self.tgt2datasets.items():
+            transformer = Convert(astype="spark")
+            go_products = datasets[3]
+            self.assertEqual(get_table_name(go_products), "go_products", tgt)
+            transformed_df = transformer.transform(go_products)
+            self.assertTrue(_is_spark_df(transformed_df), tgt)
+            self._check(go_products, transformed_df, tgt)
+
+    def test_to_spark_with_index(self):
+        for tgt, datasets in self.tgt2datasets.items():
+            transformer = Convert(astype="spark-with-index")
+            go_products = datasets[3]
+            self.assertEqual(get_table_name(go_products), "go_products", tgt)
+            transformed_df = transformer.transform(go_products)
+            self.assertTrue(_is_spark_with_index(transformed_df), tgt)
+            self._check(go_products, transformed_df, tgt)

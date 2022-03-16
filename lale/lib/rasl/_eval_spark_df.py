@@ -28,12 +28,16 @@ try:
     from pyspark.sql.functions import hour as spark_hour  # noqa
     from pyspark.sql.functions import minute as spark_minute  # noqa
     from pyspark.sql.functions import month as spark_month  # noqa
+    from pyspark.sql.types import LongType
 
     from pyspark.sql.functions import (  # noqa; isort: skip
         dayofmonth,
         dayofweek,
         dayofyear,
         floor as spark_floor,
+        md5 as spark_md5,
+        udf as spark_udf,
+        when as spark_when,
     )
 
     spark_installed = True
@@ -138,6 +142,30 @@ def astype(call: ast.Call):
     column = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
     assert column is not None
     return column.astype(dtype)
+
+
+def ite(call: ast.Call):
+    cond = _eval_ast_expr_spark_df(call.args[0])  # type: ignore
+    v1 = ast.literal_eval(call.args[1])
+    v2 = ast.literal_eval(call.args[2])
+    return spark_when(cond, v1).otherwise(v2)  # type: ignore
+
+
+def hash(call: ast.Call):
+    hashing_method = ast.literal_eval(call.args[0])
+    column = _eval_ast_expr_spark_df(call.args[1])  # type: ignore
+    if hashing_method == "md5":
+        hash = spark_md5(column)  # type: ignore
+    else:
+        raise ValueError(f"Unimplementade hash function in Spark: {hashing_method}")
+    return hash
+
+
+def hash_mod(call: ast.Call):
+    h_column = hash(call)
+    N = ast.literal_eval(call.args[2])
+    int16_mod_N = spark_udf((lambda x: int(x, 16) % N), LongType())
+    return int16_mod_N(h_column)
 
 
 def replace(call: ast.Call):

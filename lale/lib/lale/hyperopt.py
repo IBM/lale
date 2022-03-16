@@ -162,6 +162,7 @@ class _HyperoptImpl:
                     cv=self.cv,
                     scoring=self.scoring,
                     args_to_scorer=self.args_to_scorer,
+                    **fit_params,
                 )
                 logger.debug(
                     "Successful trial of hyperopt with hyperparameters:{}".format(
@@ -177,6 +178,9 @@ class _HyperoptImpl:
                         y_train_part,
                         y_validation,
                     ) = train_test_split(X_train, y_train, test_size=0.20)
+                    # remove cv params from fit_params
+                    if "args_to_cv" in fit_params.keys():
+                        del fit_params["args_to_cv"]
                     start = time.time()
                     trained = trainable.fit(X_train_part, y_train_part, **fit_params)
                     scorer = check_scoring(trainable, scoring=self.scoring)

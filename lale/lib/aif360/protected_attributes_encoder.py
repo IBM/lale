@@ -1,4 +1,4 @@
-# Copyright 2020, 2021 IBM Corporation
+# Copyright 2020-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import warnings
 from typing import Any, Dict, List, Union
 
 import numpy as np
@@ -57,7 +59,7 @@ _hyperparams_schema = {
                     "default": "drop",
                 },
                 "return_X_y": {
-                    "description": "If True, return tuple with X and y; otherwise, return only X, not as a tuple.",
+                    "description": "Deprecated, use transform_X_y instead. If True, transform returns a tuple with X and y; otherwise, transform returns only X, not as a tuple.",
                     "type": "boolean",
                     "default": False,
                 },
@@ -233,8 +235,13 @@ class _ProtectedAttributesEncoderImpl:
         self.remainder = remainder
         self.return_X_y = return_X_y
         self.combine = combine
+        if return_X_y:
+            warnings.warn(
+                "Constructor argument return_X_y=True is deprecated, call method transform_X_y() instead.",
+                DeprecationWarning,
+            )
 
-    def transform(self, X: Union[np.ndarray, pd.DataFrame], y=None):
+    def _transform_X(self, X: Union[np.ndarray, pd.DataFrame]):
         X_pd: pd.DataFrame
         if isinstance(X, np.ndarray):
             X_pd = _ndarray_to_dataframe(X)
@@ -274,18 +281,19 @@ class _ProtectedAttributesEncoderImpl:
         s_X = lale.datasets.data_schemas.to_schema(X_pd)
         s_result = self.transform_schema(s_X)
         result_X = lale.datasets.data_schemas.add_schema(result_X, s_result)
-        if not self.return_X_y:
-            return result_X
+        return result_X
+
+    def _transform_y(self, result_X: pd.DataFrame, y):
         assert self.favorable_labels is not None
         if y is None:
             assert hasattr(self, "y_name"), "must call transform with non-None y first"
             result_y = pd.Series(
-                data=0.0, index=X_pd.index, dtype=np.float64, name=self.y_name
+                data=0.0, index=result_X.index, dtype=np.float64, name=self.y_name
             )
         else:
             if isinstance(y, np.ndarray):
-                self.y_name = _ensure_str(X_pd.shape[1])
-                series_y = _ndarray_to_series(y, self.y_name, X_pd.index, y.dtype)
+                self.y_name = _ensure_str(result_X.shape[1])
+                series_y = _ndarray_to_series(y, self.y_name, result_X.index, y.dtype)
             else:
                 series_y = y.squeeze() if isinstance(y, pd.DataFrame) else y
                 assert isinstance(series_y, pd.Series), type(series_y)
@@ -293,6 +301,19 @@ class _ProtectedAttributesEncoderImpl:
             result_y = series_y.apply(
                 lambda v: _group_flag(v, self.favorable_labels, self.unfavorable_labels)
             )
+        return result_y
+
+    def transform(self, X: Union[np.ndarray, pd.DataFrame], y=None):
+        result_X = self._transform_X(X)
+        if self.return_X_y:
+            result_y = self._transform_y(result_X, y)
+            return result_X, result_y
+        else:
+            return result_X
+
+    def transform_X_y(self, X: Union[np.ndarray, pd.DataFrame], y=None):
+        result_X = self._transform_X(X)
+        result_y = self._transform_y(result_X, y)
         return result_X, result_y
 
     def transform_schema(self, s_X):

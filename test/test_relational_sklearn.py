@@ -51,7 +51,7 @@ from lale.datasets.data_schemas import (
 from lale.datasets.multitable.fetch_datasets import fetch_go_sales_dataset
 from lale.expressions import it
 from lale.helpers import _ensure_pandas, create_data_loader
-from lale.lib.lale import ConcatFeatures
+from lale.lib.rasl import ConcatFeatures, Convert
 from lale.lib.rasl import HashingEncoder as RaslHashingEncoder
 from lale.lib.rasl import Map
 from lale.lib.rasl import MinMaxScaler as RaslMinMaxScaler
@@ -243,9 +243,7 @@ class TestPipeline(unittest.TestCase):
             X_train, X_test = (datasets["X_train"], datasets["X_test"])
             y_train = self.tgt2datasets["pandas"]["y_train"]
             pipeline = (
-                RaslMinMaxScaler()
-                >> FunctionTransformer(func=lambda X: _ensure_pandas(X))
-                >> LogisticRegression()
+                RaslMinMaxScaler() >> Convert(astype="pandas") >> LogisticRegression()
             )
             trained = pipeline.fit(X_train, y_train)
             _ = trained.predict(X_test)
@@ -445,7 +443,7 @@ class TestOrdinalEncoder(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
-        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
+        to_pd = Convert(astype="pandas")
         lr = LogisticRegression()
         encoder_args = {"handle_unknown": "use_encoded_value", "unknown_value": -1}
         sk_trainable = prefix >> SkOrdinalEncoder(**encoder_args) >> lr
@@ -556,7 +554,7 @@ class TestOneHotEncoder(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
-        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
+        to_pd = Convert(astype="pandas")
         lr = LogisticRegression()
         sk_trainable = prefix >> SkOneHotEncoder(sparse=False) >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
@@ -574,10 +572,10 @@ def _check_trained_hashing_encoder(test, op1, op2, msg):
     test.assertEqual(list(op1.feature_names), list(op2.feature_names), msg)
 
 
-class TestHasingEncoder(unittest.TestCase):
+class TestHashingEncoder(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        targets = ["pandas"]  # TODO: "spark", "spark-with-index"
+        targets = ["pandas", "spark", "spark-with-index"]
         cls.tgt2creditg = cast(
             Dict[str, Any],
             {
@@ -637,7 +635,7 @@ class TestHasingEncoder(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
         cat_columns = categorical()(train_X_pd)
         prefix = Map(columns={c: it[c] for c in cat_columns})
-        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
+        to_pd = Convert(astype="pandas")
         lr = LogisticRegression()
         sk_trainable = prefix >> SkHashingEncoder() >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
@@ -784,9 +782,7 @@ class TestSimpleImputer(unittest.TestCase):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2adult["pandas"]
         num_columns = ["age", "fnlwgt", "education-num"]
         prefix = Map(columns={c: it[c] for c in num_columns})
-        to_pd = FunctionTransformer(
-            func=lambda X: X if isinstance(X, pd.DataFrame) else X.toPandas()
-        )
+        to_pd = Convert(astype="pandas")
         lr = LogisticRegression()
         imputer_args = {"strategy": "mean"}
         sk_trainable = prefix >> SkSimpleImputer(**imputer_args) >> lr
@@ -1120,7 +1116,7 @@ class TestStandardScaler(unittest.TestCase):
 
     def test_predict(self):
         (train_X_pd, train_y_pd), (test_X_pd, test_y_pd) = self.tgt2creditg["pandas"]
-        to_pd = FunctionTransformer(func=lambda X: _ensure_pandas(X))
+        to_pd = Convert(astype="pandas")
         lr = LogisticRegression()
         sk_trainable = SkStandardScaler() >> lr
         sk_trained = sk_trainable.fit(train_X_pd, train_y_pd)
@@ -1225,13 +1221,14 @@ class TestTaskGraphs(unittest.TestCase):
     def test_cross_val_score_no_batching(self):
         train_X, train_y, _ = self.creditg
         train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
-        sk_scores = sk_cross_val_score(
-            estimator=self._make_sk_trainable("rfc"),
-            X=train_X,
-            y=train_y,
-            scoring=make_scorer(sk_accuracy_score),
-            cv=KFold(3),
-        )
+        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+            sk_scores = sk_cross_val_score(
+                estimator=self._make_sk_trainable("rfc"),
+                X=train_X,
+                y=train_y,
+                scoring=make_scorer(sk_accuracy_score),
+                cv=KFold(3),
+            )
         rasl_scores = rasl_cross_val_score(
             pipeline=self._make_rasl_trainable("rfc"),
             batches=mockup_data_loader(train_X, train_y, 3, "pandas"),
@@ -1251,13 +1248,14 @@ class TestTaskGraphs(unittest.TestCase):
     def test_cross_val_score_batching(self):
         X, y, _ = self.creditg
         n_folds = 3
-        sk_scores = sk_cross_val_score(
-            estimator=self._make_sk_trainable("rfc"),
-            X=X,
-            y=y,
-            scoring=make_scorer(sk_accuracy_score),
-            cv=KFold(n_folds),
-        )
+        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+            sk_scores = sk_cross_val_score(
+                estimator=self._make_sk_trainable("rfc"),
+                X=X,
+                y=y,
+                scoring=make_scorer(sk_accuracy_score),
+                cv=KFold(n_folds),
+            )
         for n_batches_per_fold in [1, 3]:
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
@@ -1282,13 +1280,14 @@ class TestTaskGraphs(unittest.TestCase):
         X, y, fairness_info = self.creditg
         disparate_impact_scorer = lale.lib.aif360.disparate_impact(**fairness_info)
         n_folds = 3
-        sk_scores = sk_cross_val_score(
-            estimator=self._make_sk_trainable("rfc"),
-            X=X,
-            y=y,
-            scoring=disparate_impact_scorer,
-            cv=KFold(n_folds),
-        )
+        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+            sk_scores = sk_cross_val_score(
+                estimator=self._make_sk_trainable("rfc"),
+                X=X,
+                y=y,
+                scoring=disparate_impact_scorer,
+                cv=KFold(n_folds),
+            )
         for n_batches_per_fold in [1, 3]:
             rasl_scores = rasl_cross_val_score(
                 pipeline=self._make_rasl_trainable("rfc"),
@@ -1312,14 +1311,15 @@ class TestTaskGraphs(unittest.TestCase):
     def test_cross_validate_no_batching(self):
         train_X, train_y, _ = self.creditg
         train_data_space = train_X.memory_usage().sum() + train_y.memory_usage()
-        sk_scores = sk_cross_validate(
-            estimator=self._make_sk_trainable("rfc"),
-            X=train_X,
-            y=train_y,
-            scoring=make_scorer(sk_accuracy_score),
-            cv=KFold(3),
-            return_estimator=True,
-        )
+        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+            sk_scores = sk_cross_validate(
+                estimator=self._make_sk_trainable("rfc"),
+                X=train_X,
+                y=train_y,
+                scoring=make_scorer(sk_accuracy_score),
+                cv=KFold(3),
+                return_estimator=True,
+            )
         rasl_scores = rasl_cross_validate(
             pipeline=self._make_rasl_trainable("rfc"),
             batches=mockup_data_loader(train_X, train_y, 3, "pandas"),
@@ -1353,14 +1353,15 @@ class TestTaskGraphs(unittest.TestCase):
     def test_cross_validate_batching(self):
         X, y, _ = self.creditg
         n_folds = 3
-        sk_scores = sk_cross_validate(
-            estimator=self._make_sk_trainable("rfc"),
-            X=X,
-            y=y,
-            scoring=make_scorer(sk_accuracy_score),
-            cv=KFold(n_folds),
-            return_estimator=True,
-        )
+        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+            sk_scores = sk_cross_validate(
+                estimator=self._make_sk_trainable("rfc"),
+                X=X,
+                y=y,
+                scoring=make_scorer(sk_accuracy_score),
+                cv=KFold(n_folds),
+                return_estimator=True,
+            )
         for n_batches_per_fold in [1, 3]:
             rasl_scores = rasl_cross_validate(
                 pipeline=self._make_rasl_trainable("rfc"),
@@ -1818,6 +1819,7 @@ class TestTaskGraphsSpark(unittest.TestCase):
         return sk_make_pipeline(
             SkOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1),
             SkMinMaxScaler(),
+            Convert(astype="pandas"),
             RandomForestClassifier(random_state=97),
         )
 
@@ -1826,6 +1828,7 @@ class TestTaskGraphsSpark(unittest.TestCase):
         return (
             RaslOrdinalEncoder(handle_unknown="use_encoded_value", unknown_value=-1)
             >> RaslMinMaxScaler()
+            >> Convert(astype="pandas")
             >> RandomForestClassifier(random_state=97)
         )
 
@@ -1855,13 +1858,14 @@ class TestTaskGraphsSpark(unittest.TestCase):
     def test_cross_val_score(self):
         X, y = self.creditg
         n_folds = 3
-        sk_scores = sk_cross_val_score(
-            estimator=self._make_sk_trainable(),
-            X=X,
-            y=y,
-            scoring=make_scorer(sk_accuracy_score),
-            cv=KFold(n_folds),
-        )
+        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+            sk_scores = sk_cross_val_score(
+                estimator=self._make_sk_trainable(),
+                X=X,
+                y=y,
+                scoring=make_scorer(sk_accuracy_score),
+                cv=KFold(n_folds),
+            )
         unique_class_labels = list(y.unique())
         for tgt, n_batches_per_fold in itertools.product(["pandas", "spark"], [1, 3]):
             rasl_scores = rasl_cross_val_score(
@@ -1886,14 +1890,15 @@ class TestTaskGraphsSpark(unittest.TestCase):
     def test_cross_validate(self):
         X, y = self.creditg
         n_folds = 3
-        sk_scores = sk_cross_validate(
-            estimator=self._make_sk_trainable(),
-            X=X,
-            y=y,
-            scoring=make_scorer(sk_accuracy_score),
-            cv=KFold(n_folds),
-            return_estimator=True,
-        )
+        with self.assertWarnsRegex(DeprecationWarning, "trainable operator"):
+            sk_scores = sk_cross_validate(
+                estimator=self._make_sk_trainable(),
+                X=X,
+                y=y,
+                scoring=make_scorer(sk_accuracy_score),
+                cv=KFold(n_folds),
+                return_estimator=True,
+            )
         unique_class_labels = list(y.unique())
         for tgt, n_batches_per_fold in itertools.product(["pandas", "spark"], [1, 3]):
             rasl_scores = rasl_cross_validate(
@@ -1913,24 +1918,22 @@ class TestTaskGraphsSpark(unittest.TestCase):
                 return_estimator=True,
                 verbose=0,
             )
+            msg = tgt, n_batches_per_fold
             for sk_s, rasl_s in zip(sk_scores["test_score"], rasl_scores["test_score"]):
-                self.assertAlmostEqual(
-                    cast(float, sk_s),
-                    cast(float, rasl_s),
-                    msg=(tgt, n_batches_per_fold),
-                )
+                self.assertAlmostEqual(cast(float, sk_s), cast(float, rasl_s), msg=msg)
             for sk_e, rasl_e in zip(sk_scores["estimator"], rasl_scores["estimator"]):
+                rasl_steps = cast(TrainedPipeline, rasl_e).steps
                 _check_trained_ordinal_encoder(
                     self,
                     sk_e.steps[0][1],
-                    cast(TrainedPipeline, rasl_e).steps[0][1].impl,
-                    (tgt, n_batches_per_fold),
+                    rasl_steps[0][1].impl,
+                    msg=msg,
                 )
                 _check_trained_min_max_scaler(
                     self,
                     sk_e.steps[1][1],
-                    cast(TrainedPipeline, rasl_e).steps[1][1].impl,
-                    (tgt, n_batches_per_fold),
+                    rasl_steps[1][1].impl,
+                    msg=msg,
                 )
 
 
