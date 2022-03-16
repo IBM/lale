@@ -22,25 +22,27 @@ import lale.datasets.data_schemas
 import lale.docstrings
 import lale.operators
 
+
 class _BatchedTreeEnsembleClassifierImpl:
     def __init__(
         self,
         base_ensemble=None,
         max_sub_ensembles=10,
         inner_lr_scaling=0.5,
-        outer_lr_scaling=0.5
+        outer_lr_scaling=0.5,
     ):
         assert (
             snapml_installed
         ), """Your Python environment does not have snapml installed. Install using: pip install snapml"""
         if base_ensemble is None:
             from snapml import SnapBoostingMachineClassifier
+
             base_ensemble = SnapBoostingMachineClassifier()
         self._hyperparams = {
             "base_ensemble": base_ensemble,
             "max_sub_ensembles": max_sub_ensembles,
             "inner_lr_scaling": inner_lr_scaling,
-            "outer_lr_scaling": outer_lr_scaling
+            "outer_lr_scaling": outer_lr_scaling,
         }
         self._wrapped_model = snapml.BatchedTreeEnsembleClassifier(**self._hyperparams)
 
@@ -75,7 +77,7 @@ _hyperparams_schema = {
             "relevantToOptimizer": [],
             "properties": {},
         }
-    ]
+    ],
 }
 
 _input_fit_schema = {

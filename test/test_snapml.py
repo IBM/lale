@@ -113,11 +113,10 @@ class TestSnapMLClassifiers(unittest.TestCase):
                 _ = scorer(trained, self.test_X, self.test_y)
 
     def test_batched_tree_ensemble_classifier(self):
-        import snapml
-
+        # import snapml
         import lale.lib.snapml
 
-        #for params in [{}, snapml.BatchedTreeEnsembleClassifier().get_params()]:
+        # for params in [{}, snapml.BatchedTreeEnsembleClassifier().get_params()]:
         for params in [{}]:
             trainable = lale.lib.snapml.BatchedTreeEnsembleClassifier(**params)
             trained = trainable.fit(self.train_X, self.train_y)
