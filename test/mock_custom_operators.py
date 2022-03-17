@@ -83,7 +83,7 @@ _hyperparam_schema_ir = {
             "type": "object",
             "additionalProperties": False,
             "relevantToOptimizer": [],
-            "properties": {"n_rows": {"type": "integer", "minimum": 0}},
+            "properties": {"n_rows": {"type": "integer", "minimum": 0, "default": 5}},
         }
     ],
 }
@@ -126,7 +126,7 @@ class _MyLRImpl:
         return self._wrapped_model.predict(X)
 
 
-_input_fit_schema = {
+_input_fit_schema_lr = {
     "type": "object",
     "required": ["X", "y"],
     "additionalProperties": False,
@@ -136,7 +136,7 @@ _input_fit_schema = {
     },
 }
 
-_input_predict_schema = {
+_input_predict_schema_lr = {
     "type": "object",
     "required": ["X"],
     "additionalProperties": False,
@@ -145,7 +145,7 @@ _input_predict_schema = {
     },
 }
 
-_output_predict_schema = {"type": "array", "items": {"type": "number"}}
+_output_predict_schema_lr = {"type": "array", "items": {"type": "number"}}
 
 _hyperparams_ranges = {
     "type": "object",
@@ -194,21 +194,21 @@ _hyperparams_constraints = {
     ]
 }
 
-_hyperparams_schema = {"allOf": [_hyperparams_ranges, _hyperparams_constraints]}
+_hyperparams_schema_lr = {"allOf": [_hyperparams_ranges, _hyperparams_constraints]}
 
-_combined_schemas = {
+_combined_schemas_lr = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator", "classifier"], "post": []},
     "properties": {
-        "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
-        "hyperparams": _hyperparams_schema,
+        "input_fit": _input_fit_schema_lr,
+        "input_predict": _input_predict_schema_lr,
+        "output_predict": _output_predict_schema_lr,
+        "hyperparams": _hyperparams_schema_lr,
     },
 }
 
-MyLR = lale.operators.make_operator(_MyLRImpl, _combined_schemas)
+MyLR = lale.operators.make_operator(_MyLRImpl, _combined_schemas_lr)
 
 
 class _CustomParamsCheckerOpImpl:
@@ -224,7 +224,7 @@ class _CustomParamsCheckerOpImpl:
         self._predict_params = predict_params
 
 
-_input_fit_schema = {
+_input_fit_schema_cp = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "type": "object",
     "required": ["X", "y"],
@@ -235,7 +235,7 @@ _input_fit_schema = {
     },
 }
 
-_input_predict_schema = {
+_input_predict_schema_cp = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Predict using the linear model",
     "type": "object",
@@ -246,19 +246,14 @@ _input_predict_schema = {
         }
     },
 }
-_output_predict_schema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
+
+_output_predict_schema_cp = {
     "description": "Returns predicted values.",
     "type": "array",
     "items": {"type": "number"},
 }
 
-# ,
-#  'type': 'array',
-#  'items': {'type': 'number'}
-
-_hyperparam_schema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
+_hyperparam_schema_cp = {
     "allOf": [
         {
             "description": "This first sub-object lists all constructor arguments with their "
@@ -271,19 +266,18 @@ _hyperparam_schema = {
     ],
 }
 
-_combined_schemas = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
+_combined_schemas_cp = {
     "description": "Combined schema for expected data and hyperparameters.",
     "type": "object",
     "tags": {"pre": [], "op": ["estimator"], "post": []},
     "properties": {
-        "hyperparams": _hyperparam_schema,
-        "input_fit": _input_fit_schema,
-        "input_predict": _input_predict_schema,
-        "output_predict": _output_predict_schema,
+        "hyperparams": _hyperparam_schema_cp,
+        "input_fit": _input_fit_schema_cp,
+        "input_predict": _input_predict_schema_cp,
+        "output_predict": _output_predict_schema_cp,
     },
 }
 
 CustomParamsCheckerOp = lale.operators.make_operator(
-    _CustomParamsCheckerOpImpl, _combined_schemas
+    _CustomParamsCheckerOpImpl, _combined_schemas_cp
 )
