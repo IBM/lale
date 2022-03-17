@@ -21,7 +21,7 @@ it as follows:
 
 .. code:: Bash
 
-    pip install lale[full]
+    pip install "lale[full]"
 
 Now you should be ready to start using Lale, for instance, in a
 Jupyter notebook.
@@ -43,7 +43,7 @@ For the **Lale Full** and **Lale Test** setup targets:
 
 .. code:: Bash
 
-    pip install .[full,test]
+    pip install ".[full,test]"
 
 Now, you are ready to run some tests. For a quick check, do the
 following in the ``lale`` directory:
