@@ -1678,13 +1678,13 @@ class IndividualOp(Operator):
 
         Parameters
         ----------
-        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
                 Type of the schema to be returned.
 
         Returns
         -------
         dict
-            The python object containing the json schema of the operator.
+            The Python object containing the JSON schema of the operator.
             For all the schemas currently present, this would be a dictionary.
         """
         props = self._schemas["properties"]
@@ -1699,7 +1699,7 @@ class IndividualOp(Operator):
 
         Parameters
         ----------
-        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_predict' or 'output_predict_proba' or 'output_decision_function' or 'input_score_samples' or 'output_score_samples'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function' or 'input_score_samples' or 'output_score_samples'
                 Type of the schema to be returned.
 
         Returns
@@ -1759,6 +1759,10 @@ class IndividualOp(Operator):
         """Input schema for the transform method."""
         return self.get_schema("input_transform")
 
+    def input_schema_transform_X_y(self) -> JSON_TYPE:
+        """Input schema for the transform_X_y method."""
+        return self.get_schema("input_transform_X_y")
+
     def input_schema_predict(self) -> JSON_TYPE:
         """Input schema for the predict method."""
         return self.get_schema("input_predict")
@@ -1790,6 +1794,10 @@ class IndividualOp(Operator):
     def output_schema_transform(self) -> JSON_TYPE:
         """Oputput schema for the transform method."""
         return self.get_schema("output_transform")
+
+    def output_schema_transform_X_y(self) -> JSON_TYPE:
+        """Oputput schema for the transform_X_y method."""
+        return self.get_schema("output_transform_X_y")
 
     def output_schema_predict(self) -> JSON_TYPE:
         """Output schema for the predict method."""
@@ -3085,10 +3093,12 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
     @if_delegate_has_method(delegate="_impl")
     def transform_X_y(self, X, y) -> Any:
-        X = self._validate_input_schema("X", X, "transform")
-        y = self._validate_input_schema("y", y, "transform")
+        X = self._validate_input_schema("X", X, "transform_X_y")
+        y = self._validate_input_schema("y", y, "transform_X_y")
         output_X, output_y = self._impl_instance().transform_X_y(X, y)
-        output_X = self._validate_output_schema(output_X, "transform")
+        output_X, output_y = self._validate_output_schema(
+            (output_X, output_y), "transform_X_y"
+        )
         return output_X, output_y
 
     def _predict(self, X, **predict_params):
@@ -4784,6 +4794,9 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         # self.is_transformer is kept in sync with the new assumptions.
         return self._predict_based_on_type("transform", "transform", X, y)
 
+    def transform_X_y(self, X, y=None) -> Any:
+        return self._predict_based_on_type("transform_X_y", "transform_X_y", X, y)
+
     def _predict_based_on_type(
         self, impl_method_name, operator_method_name, X=None, y=None, **kwargs
     ):
@@ -4825,6 +4838,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                             method_to_call_on_operator(input_X, input_y, **kwargs),
                             input_y,
                         )
+                    elif operator_method_name == "transform_X_y":
+                        output = method_to_call_on_operator(input_X, input_y, **kwargs)
                     else:
                         output = method_to_call_on_operator(input_X, **kwargs), input_y
                 else:
@@ -4862,6 +4877,8 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
             )  # So newest gets preference in case of collisions
             meta_outputs[operator] = meta_output_so_far
         result_X, result_y = outputs[self._steps[-1]]
+        if operator_method_name == "transform_X_y":
+            return result_X, result_y
         return result_X
 
     def predict_proba(self, X):
