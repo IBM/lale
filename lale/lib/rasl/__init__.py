@@ -48,6 +48,11 @@ Scikit-learn Operators
 * lale.lib.rasl. `SimpleImputer`_
 * lale.lib.rasl. `StandardScaler`_
 
+Estimators
+==========
+
+* lale.lib.rasl. `BatchedBaggingClassifier`_
+
 Functions:
 ==========
 
@@ -96,6 +101,8 @@ Other Facilities
 .. _`SimpleImputer`: lale.lib.rasl.simple_imputer.html
 .. _`StandardScaler`: lale.lib.rasl.standard_scaler.html
 
+.. _`BaggingMonoidClassifier`: lale.lib.rasl.batched_bagging_classifier.html
+
 .. _`categorical`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.categorical
 .. _`date_time`: lale.lib.rasl.functions.html#lale.lib.rasl.functions.date_time
 .. _`SparkExplainer`: lale.lib.rasl.spark_explainer.html
@@ -130,6 +137,7 @@ from ._task_graphs import (
 )
 from .aggregate import Aggregate
 from .alias import Alias
+from .batched_bagging_classifier import BatchedBaggingClassifier
 from .batching import Batching
 from .concat_features import ConcatFeatures
 from .convert import Convert
