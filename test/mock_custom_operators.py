@@ -1,4 +1,4 @@
-# Copyright 2019 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Any, Dict
-
 import numpy as np
 import sklearn.linear_model
 
@@ -24,92 +22,87 @@ class _IncreaseRowsImpl:
     def __init__(self, n_rows=5):
         self.n_rows = n_rows
 
-    def fit(self, X, y=None):
-        result = _IncreaseRowsImpl(self.n_rows)
-        return result
-
-    def transform_X_y(self, X, y):
-        subset_X = X[0 : self.n_rows - 1]
-        output_X = np.concatenate((X, subset_X), axis=0)
-        if y is None:
-            output_y = None
-        else:
-            subset_y = y[0 : self.n_rows - 1]
-            output_y = np.concatenate((y, subset_y), axis=0)
-        return output_X, output_y
-
     def transform(self, X, y=None):
-        output_X, _ = self.transform_X_y(X, y)
+        subset_X = X[0 : self.n_rows]
+        output_X = np.concatenate((X, subset_X), axis=0)
         return output_X
 
+    def transform_X_y(self, X, y):
+        output_X = self.transform(X)
+        subset_y = y[0 : self.n_rows]
+        output_y = np.concatenate((y, subset_y), axis=0)
+        return output_X, output_y
 
-_input_fit_schema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
+
+_input_transform_schema_ir = {
+    "type": "object",
+    "required": ["X"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "type": "array",
+            "items": {"type": "array", "items": {"type": "number"}},
+        },
+    },
+}
+
+_output_transform_schema_ir = {
+    "type": "array",
+    "items": {"type": "array", "items": {"type": "number"}},
+}
+
+_input_transform_X_y_schema_ir = {
     "type": "object",
     "required": ["X", "y"],
     "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "Features; the outer array is over samples.",
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
         },
-        "y": {
-            "description": "Target class labels; the array is over samples.",
-            "type": "array",
-            "items": {"type": "number"},
-        },
+        "y": {"type": "array", "items": {"type": "number"}},
     },
 }
 
-_input_transform_schema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
-    "type": "object",
-    "required": ["X", "y"],
-    "additionalProperties": False,
-    "properties": {
-        "X": {
-            "description": "Features; the outer array is over samples.",
+_output_transform_X_y_schema_ir = {
+    "type": "array",
+    "laleType": "tuple",
+    "items": [
+        {
+            "description": "X",
             "type": "array",
             "items": {"type": "array", "items": {"type": "number"}},
         },
-        "y": {},
-    },
+        {"description": "y", "type": "array", "items": {"type": "number"}},
+    ],
 }
 
-_output_transform_schema: Dict[str, Any] = {}
-# ,
-#  'type': 'array',
-#  'items': {'type': 'number'}
-
-_hyperparam_schema = {
-    "$schema": "http://json-schema.org/draft-04/schema#",
+_hyperparam_schema_ir = {
     "allOf": [
         {
-            "description": "This first sub-object lists all constructor arguments with their "
-            "types, one at a time, omitting cross-argument constraints.",
             "type": "object",
             "additionalProperties": False,
             "relevantToOptimizer": [],
-            "properties": {},
+            "properties": {"n_rows": {"type": "integer", "minimum": 0}},
         }
     ],
 }
 
-_combined_schemas = {
+_combined_schemas_ir = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Combined schema for expected data and hyperparameters.",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {
-        "hyperparams": _hyperparam_schema,
-        "input_fit": _input_fit_schema,
-        "input_transform": _input_transform_schema,
-        "output_transform": _output_transform_schema,
+        "hyperparams": _hyperparam_schema_ir,
+        "input_transform": _input_transform_schema_ir,
+        "output_transform": _output_transform_schema_ir,
+        "input_transform_X_y": _input_transform_X_y_schema_ir,
+        "output_transform_X_y": _output_transform_X_y_schema_ir,
     },
 }
 
-IncreaseRows = lale.operators.make_operator(_IncreaseRowsImpl, _combined_schemas)
+IncreaseRows = lale.operators.make_operator(_IncreaseRowsImpl, _combined_schemas_ir)
 
 
 class _MyLRImpl:

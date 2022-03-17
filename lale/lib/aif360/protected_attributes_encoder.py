@@ -159,6 +159,46 @@ _output_transform_schema = {
     ],
 }
 
+_input_transform_X_y_schema = {
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Features; the outer array is over samples.",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        },
+        "y": {
+            "description": "Target labels.",
+            "type": "array",
+            "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+        },
+    },
+}
+
+_output_transform_X_y_schema = {
+    "type": "array",
+    "laleType": "tuple",
+    "items": [
+        {
+            "description": "X",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+            },
+        },
+        {
+            "description": "y",
+            "type": "array",
+            "items": {"anyOf": [{"type": "number"}, {"type": "string"}]},
+        },
+    ],
+}
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
@@ -186,6 +226,8 @@ and mitigators, so you often do not need to use it directly yourself.
         "hyperparams": _hyperparams_schema,
         "input_transform": _input_transform_schema,
         "output_transform": _output_transform_schema,
+        "input_transform_X_y": _input_transform_X_y_schema,
+        "output_transform_X_y": _output_transform_X_y_schema,
     },
 }
 

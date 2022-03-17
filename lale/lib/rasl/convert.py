@@ -110,29 +110,65 @@ _input_transform_schema = {
     "additionalProperties": False,
     "properties": {
         "X": {
-            "description": "Input table or dataframe",
+            "description": "Input features as numpy, pandas, or PySpark.",
             "type": "array",
             "items": {"type": "array", "items": {"laleType": "Any"}},
-            "minItems": 1,
         }
     },
 }
 
 _output_transform_schema = {
-    "description": "Features; no restrictions on data type.",
-    "laleType": "Any",
+    "type": "array",
+    "items": {"type": "array", "items": {"laleType": "Any"}},
+}
+
+_input_transform_X_y_schema = {
+    "type": "object",
+    "required": ["X", "y"],
+    "additionalProperties": False,
+    "properties": {
+        "X": {
+            "description": "Input features as numpy, pandas, or PySpark.",
+            "type": "array",
+            "items": {"type": "array", "items": {"laleType": "Any"}},
+        },
+        "y": {
+            "description": "Input labels as numpy, pandas, or PySpark.",
+            "type": "array",
+            "items": {"laleType": "Any"},
+        },
+    },
+}
+
+_output_transform_X_y_schema = {
+    "type": "array",
+    "laleType": "tuple",
+    "items": [
+        {
+            "description": "X",
+            "type": "array",
+            "items": {"type": "array", "items": {"laleType": "Any"}},
+        },
+        {
+            "description": "y",
+            "type": "array",
+            "items": {"laleType": "Any"},
+        },
+    ],
 }
 
 _combined_schemas = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Convert data to different representation if necessary.",
-    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.filter.html",
+    "documentation_url": "https://lale.readthedocs.io/en/latest/modules/lale.lib.rasl.convert.html",
     "type": "object",
     "tags": {"pre": [], "op": ["transformer"], "post": []},
     "properties": {
         "hyperparams": _hyperparams_schema,
         "input_transform": _input_transform_schema,
         "output_transform": _output_transform_schema,
+        "input_transform_X_y": _input_transform_X_y_schema,
+        "output_transform_X_y": _output_transform_X_y_schema,
     },
 }
 
