@@ -22,6 +22,7 @@ Operators
 
 Classifiers:
 
+* lale.lib.snapml. `BatchedTreeEnsembleClassifier`_
 * lale.lib.snapml. `SnapBoostingMachineClassifier`_
 * lale.lib.snapml. `SnapDecisionTreeClassifier`_
 * lale.lib.snapml. `SnapLogisticRegression`_
@@ -35,6 +36,7 @@ Regressors:
 * lale.lib.snapml. `SnapLinearRegression`_
 * lale.lib.snapml. `SnapRandomForestRegressor`_
 
+.. _`BatchedTreeEnsembleClassifier`: lale.lib.snapml.batched_tree_ensemble_classifier.html
 .. _`SnapBoostingMachineClassifier`: lale.lib.snapml.snap_boosting_machine_classifier.html
 .. _`SnapBoostingMachineRegressor`: lale.lib.snapml.snap_boosting_machine_regressor.html
 .. _`SnapDecisionTreeClassifier`: lale.lib.snapml.snap_decision_tree_classifier.html
@@ -46,6 +48,7 @@ Regressors:
 .. _`SnapSVMClassifier`: lale.lib.snapml.snap_svm_classifier.html
 """
 
+from .batched_tree_ensemble_classifier import BatchedTreeEnsembleClassifier
 from .snap_boosting_machine_classifier import SnapBoostingMachineClassifier
 from .snap_boosting_machine_regressor import SnapBoostingMachineRegressor
 from .snap_decision_tree_classifier import SnapDecisionTreeClassifier
