@@ -362,6 +362,18 @@ to create an init method with the appropriate parameter list, an exception was r
         "output_transform",
     )
 
+    def transform_X_y(self, X, y):
+        pass
+
+    make_fun(
+        "transform_X_y",
+        transform_X_y,
+        "Transform the data and target.",
+        "The transform_X_y method is not available until this operator is trained.",
+        "input_transform_X_y",
+        "output_transform_X_y",
+    )
+
     def predict(self, X, **predict_params):
         pass
 
