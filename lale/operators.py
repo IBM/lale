@@ -2341,6 +2341,8 @@ class IndividualOp(Operator):
                 schema = self.input_schema_fit()
             elif method == "transform":
                 schema = self.input_schema_transform()
+            elif method == "transform_X_y":
+                schema = self.input_schema_transform_X_y()
             elif method == "predict":
                 schema = self.input_schema_predict()
             elif method == "predict_proba":
@@ -2379,6 +2381,8 @@ class IndividualOp(Operator):
 
         if method == "transform":
             schema = self.output_schema_transform()
+        elif method == "transform_X_y":
+            schema = self.output_schema_transform_X_y()
         elif method == "predict":
             schema = self.output_schema_predict()
         elif method == "predict_proba":
@@ -3093,6 +3097,21 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
 
     @if_delegate_has_method(delegate="_impl")
     def transform_X_y(self, X, y) -> Any:
+        """Transform the data and target.
+
+        Parameters
+        ----------
+        X :
+            Features; see input_transform schema of the operator.
+
+        y :
+            target; see input_transform schema of the operator.
+
+        Returns
+        -------
+        result :
+            Transformed features and target; see output_transform schema of the operator.
+        """
         X = self._validate_input_schema("X", X, "transform_X_y")
         y = self._validate_input_schema("y", y, "transform_X_y")
         output_X, output_y = self._impl_instance().transform_X_y(X, y)
