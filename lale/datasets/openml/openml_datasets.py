@@ -648,7 +648,7 @@ numeric_data_types_list = ["numeric", "integer", "real"]
 
 
 def fetch(
-    dataset_name, task_type, verbose=False, preprocess=True, test_size=0.33, astype=None
+        dataset_name, task_type, verbose=False, preprocess=True, test_size=0.33, astype=None, seed=0
 ):
     if verbose:
         print("Loading dataset:", dataset_name)
@@ -797,7 +797,7 @@ def fetch(
         y = pd.Series(y, name=target_col)
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=0
+        X, y, test_size=test_size, random_state=seed
     )
     if verbose:
         print(f"training set shapes: X {X_train.shape}, y {y_train.shape}")
