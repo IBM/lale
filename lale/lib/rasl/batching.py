@@ -17,6 +17,7 @@ import numpy as np
 import lale.docstrings
 import lale.helpers
 import lale.operators
+from lale.lib.rasl import PrioResourceAware, fit_with_batches
 
 
 class _BatchingImpl:
@@ -28,6 +29,8 @@ class _BatchingImpl:
         num_workers=0,
         inmemory=False,
         num_epochs=None,
+        max_resident=None,
+        verbose=0,
     ):
         self.operator = operator
         self.batch_size = batch_size
@@ -35,36 +38,68 @@ class _BatchingImpl:
         self.num_workers = num_workers
         self.inmemory = inmemory
         self.num_epochs = num_epochs
+        self.max_resident = max_resident
 
     def fit(self, X, y=None, classes=None):
         if self.operator is None:
             raise ValueError("The pipeline object can't be None at the time of fit.")
-        data_loader = lale.helpers.create_data_loader(
-            X=X,
-            y=y,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=self.shuffle,
-        )
+        try:
+            from torch.utils.data import DataLoader
+        except ImportError:
+            raise ImportError(
+                """Batching uses Pytorch for data loading. It is not
+            installed in the current environment, please install
+            the package and try again."""
+            )
+        if isinstance(X, DataLoader):
+            assert (
+                y is None
+            ), "When X is a torch.utils.data.DataLoader, y should be None"
+            data_loader = X
+        else:
+            data_loader = lale.helpers.create_data_loader(
+                X=X,
+                y=y,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                shuffle=self.shuffle,
+            )
         if y is not None and classes is None:
             classes = np.unique(y)
-        self.operator = self.operator.fit_with_batches(
-            data_loader,
-            y=classes,
-            serialize=self.inmemory,
-            num_epochs_batching=self.num_epochs,
-            shuffle=self.shuffle,
+        self.operator = fit_with_batches(
+            pipeline=self.operator,
+            batches=data_loader,  # type:ignore
+            n_batches=len(data_loader),
+            unique_class_labels=classes,
+            max_resident=self.max_resident,
+            prio=PrioResourceAware(),
+            incremental=False,
+            verbose=0,
         )
         return self
 
     def transform(self, X, y=None):
-        data_loader = lale.helpers.create_data_loader(
-            X=X,
-            y=y,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            shuffle=self.shuffle,
-        )
+        try:
+            from torch.utils.data import DataLoader
+        except ImportError:
+            raise ImportError(
+                """Batching uses Pytorch for data loading. It is not
+            installed in the current environment, please install
+            the package and try again."""
+            )
+        if isinstance(X, DataLoader):
+            assert (
+                y is None
+            ), "When X is a torch.utils.data.DataLoader, y should be None"
+            data_loader = X
+        else:
+            data_loader = lale.helpers.create_data_loader(
+                X=X,
+                y=y,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                shuffle=self.shuffle,
+            )
 
         op = self.operator
         assert op is not None
@@ -236,6 +271,16 @@ _hyperparams_schema = {
                     "anyOf": [{"type": "integer"}, {"enum": [None]}],
                     "default": None,
                     "description": "Number of epochs. If the operator has `num_epochs` as a parameter, that takes precedence.",
+                },
+                "max_resident": {
+                    "anyOf": [{"type": "integer"}, {"enum": [None]}],
+                    "default": None,
+                    "description": "Amount of memory to be used in bytes.",
+                },
+                "verbose": {
+                    "type": "integer",
+                    "default": 0,
+                    "description": "Verbosity level, higher values mean more information.",
                 },
             },
         }
