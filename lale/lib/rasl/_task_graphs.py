@@ -862,23 +862,6 @@ class _BatchCache:
             assert pred.batch is not None
             assert pred.batch.status == _BatchStatus.RESIDENT
 
-
-def _to_suitable_format(
-    X: _DataFrame,
-    y: _Series,
-    operator: TrainableIndividualOp,
-) -> _RawBatch:
-    if lale.helpers.spark_installed:
-        if isinstance(X, SparkDataFrame):
-            can_handle_spark = operator.class_name().startswith(
-                "lale.lib.rasl."
-            )  # TODO: use tags instead?
-            if not can_handle_spark:
-                X = X.toPandas()
-                y = cast(pd.DataFrame, y.toPandas()).squeeze()
-    return X, y
-
-
 def _run_tasks_inner(
     tasks: Dict[_MemoKey, _Task],
     pipeline: TrainablePipeline[TrainableIndividualOp],
@@ -978,7 +961,6 @@ def _run_tasks_inner(
             if len(apply_preds) == 1:
                 assert apply_preds[0].batch is not None
                 input_X, input_y = apply_preds[0].batch.Xy
-                input_X, input_y = _to_suitable_format(input_X, input_y, trained)
             else:
                 assert not any(pred.batch is None for pred in apply_preds)
                 input_X = [cast(_Batch, pred.batch).X for pred in apply_preds]
@@ -988,7 +970,11 @@ def _run_tasks_inner(
             no_spill_set = cast(Set[_Batch], set(t.batch for t in apply_preds))
             cache.ensure_space(cache.estimate_space(task), no_spill_set)
             if operation is _Operation.TRANSFORM:
-                task.batch = _Batch(trained.transform(input_X), input_y, task)
+                if trained.has_method("transform_X_y"):
+                    output_X, output_y = trained.transform_X_y(input_X, input_y)
+                else:
+                    output_X, output_y = trained.transform(input_X), input_y
+                task.batch = _Batch(output_X, output_y, task)
             else:
                 y_pred = trained.predict(input_X)
                 if isinstance(y_pred, np.ndarray):
@@ -1007,23 +993,17 @@ def _run_tasks_inner(
                 cache.load_input_batches(task)
                 if len(task.preds) == 1:
                     input_X, input_y = cast(_Batch, apply_preds[0].batch).Xy
-                    input_X, input_y = _to_suitable_format(input_X, input_y, trainable)
                 else:
                     assert not is_incremental(trainable)
-                    Xs = (cast(_Batch, p.batch).X for p in apply_preds)
-                    ys = (cast(_Batch, p.batch).y for p in apply_preds)
-                    Xys = [_to_suitable_format(X, y, trainable) for X, y in zip(Xs, ys)]
-                    if all(isinstance(X, pd.DataFrame) for X, _ in Xys):
-                        input_X = pd.concat([X for X, _ in Xys])
-                        input_y = pd.concat([y for _, y in Xys])
+                    list_X = [cast(_Batch, p.batch).X for p in apply_preds]
+                    list_y = [cast(_Batch, p.batch).y for p in apply_preds]
+                    if all(isinstance(X, pd.DataFrame) for X in list_X):
+                        input_X = pd.concat(list_X)
+                        input_y = pd.concat(list_y)
                     else:
-                        assert all(isinstance(X, SparkDataFrame) for X, _ in Xys)
-                        input_X = functools.reduce(
-                            lambda a, b: a.union(b), (X for X, _ in Xys)
-                        )
-                        input_y = functools.reduce(
-                            lambda a, b: a.union(b), (y for _, y in Xys)
-                        )
+                        assert all(isinstance(X, SparkDataFrame) for X in list_X)
+                        input_X = functools.reduce(lambda a, b: a.union(b), list_X)  # type: ignore
+                        input_y = functools.reduce(lambda a, b: a.union(b), list_y)  # type: ignore
                 task.trained = trainable.fit(input_X, input_y)
         elif operation is _Operation.PARTIAL_FIT:
             assert isinstance(task, _TrainTask)
@@ -1037,7 +1017,6 @@ def _run_tasks_inner(
             assert apply_pred.batch is not None
             cache.load_input_batches(task)
             input_X, input_y = apply_pred.batch.Xy
-            input_X, input_y = _to_suitable_format(input_X, input_y, trainee)
             if trainee.is_supervised():
                 task.trained = trainee.partial_fit(
                     input_X, input_y, classes=unique_class_labels

@@ -135,9 +135,15 @@ def hash(df: Any, call: ast.Call):
     def hash(v):
         hasher = hashlib.new(hashing_method)
         hasher.update(bytes(str(v), "utf-8"))
-        return int(hasher.hexdigest(), 16)
+        return hasher.hexdigest()
 
     return column.map(hash)
+
+
+def hash_mod(df: Any, call: ast.Call):
+    h_column = hash(df, call)
+    N = ast.literal_eval(call.args[2])
+    return h_column.map(lambda h: int(h, 16) % N)
 
 
 def replace(df: Any, call: ast.Call):

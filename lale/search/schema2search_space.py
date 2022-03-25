@@ -17,6 +17,7 @@ from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, Union
 
 import jsonschema
 
+import lale.type_checking
 from lale.operators import (
     Operator,
     OperatorChoice,
@@ -95,7 +96,7 @@ def get_default(schema) -> Optional[Any]:
     if d is not None:
         try:
             s = forOptimizer(schema)
-            jsonschema.validate(d, s, jsonschema.Draft4Validator)
+            lale.type_checking._validator.validate(d, s)
             return d
         except jsonschema.ValidationError:
             logger.debug(

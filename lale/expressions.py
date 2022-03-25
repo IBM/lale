@@ -533,6 +533,10 @@ def hash(hash_method: str, subject: Expr) -> Expr:
     return _make_call_expr("hash", hash_method, subject)
 
 
+def hash_mod(hash_method: str, subject: Expr, n: Expr) -> Expr:
+    return _make_call_expr("hash_mod", hash_method, subject, n)
+
+
 def sum(group: Expr) -> Expr:
     return _make_call_expr("sum", group)
 

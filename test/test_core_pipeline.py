@@ -707,16 +707,30 @@ class TestComposition(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = lale.operators.make_pipeline(tfm, tfm, clf)
 
-    def test_increase_num_rows(self):
+    def test_increase_num_rows_predict(self):
         from test.mock_custom_operators import IncreaseRows
 
         increase_rows = IncreaseRows()
         trainable = increase_rows >> LogisticRegression()
         iris = sklearn.datasets.load_iris()
         X, y = iris.data, iris.target
-
         trained = trainable.fit(X, y)
-        _ = trained.predict(X)
+        y_pred = trained.predict(X)
+        self.assertEqual(len(y_pred), len(y) + increase_rows.impl.n_rows)
+
+    def test_increase_num_rows_transform_X_y(self):
+        from test.mock_custom_operators import IncreaseRows
+
+        increase_rows_4 = IncreaseRows(n_rows=4)
+        increase_rows_2 = IncreaseRows(n_rows=2)
+        trainable = increase_rows_4 >> increase_rows_2
+        iris = sklearn.datasets.load_iris()
+        X, y = iris.data, iris.target
+        trained = trainable.fit(X, y)
+        output_X, output_y = trained.transform_X_y(X, y)
+        self.assertEqual(output_X.shape[0], X.shape[0] + 4 + 2)
+        self.assertEqual(output_X.shape[1], X.shape[1])
+        self.assertEqual(output_y.shape[0], y.shape[0] + 4 + 2)
 
     def test_remove_last1(self):
         pipeline = (

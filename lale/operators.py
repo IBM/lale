@@ -1,4 +1,4 @@
-# Copyright 2019, 2020, 2021 IBM Corporation
+# Copyright 2019-2022 IBM Corporation
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1678,13 +1678,13 @@ class IndividualOp(Operator):
 
         Parameters
         ----------
-        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function'
                 Type of the schema to be returned.
 
         Returns
         -------
         dict
-            The python object containing the json schema of the operator.
+            The Python object containing the JSON schema of the operator.
             For all the schemas currently present, this would be a dictionary.
         """
         props = self._schemas["properties"]
@@ -1699,7 +1699,7 @@ class IndividualOp(Operator):
 
         Parameters
         ----------
-        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_predict' or 'output_predict_proba' or 'output_decision_function' or 'input_score_samples' or 'output_score_samples'
+        schema_kind : string, 'hyperparams' or 'input_fit' or 'input_transform'  or 'input_transform_X_y' or 'input_predict' or 'input_predict_proba' or 'input_decision_function' or 'output_transform' or 'output_transform_X_y' or 'output_predict' or 'output_predict_proba' or 'output_decision_function' or 'input_score_samples' or 'output_score_samples'
                 Type of the schema to be returned.
 
         Returns
@@ -1759,6 +1759,10 @@ class IndividualOp(Operator):
         """Input schema for the transform method."""
         return self.get_schema("input_transform")
 
+    def input_schema_transform_X_y(self) -> JSON_TYPE:
+        """Input schema for the transform_X_y method."""
+        return self.get_schema("input_transform_X_y")
+
     def input_schema_predict(self) -> JSON_TYPE:
         """Input schema for the predict method."""
         return self.get_schema("input_predict")
@@ -1790,6 +1794,10 @@ class IndividualOp(Operator):
     def output_schema_transform(self) -> JSON_TYPE:
         """Oputput schema for the transform method."""
         return self.get_schema("output_transform")
+
+    def output_schema_transform_X_y(self) -> JSON_TYPE:
+        """Oputput schema for the transform_X_y method."""
+        return self.get_schema("output_transform_X_y")
 
     def output_schema_predict(self) -> JSON_TYPE:
         """Output schema for the predict method."""
@@ -2333,6 +2341,8 @@ class IndividualOp(Operator):
                 schema = self.input_schema_fit()
             elif method == "transform":
                 schema = self.input_schema_transform()
+            elif method == "transform_X_y":
+                schema = self.input_schema_transform_X_y()
             elif method == "predict":
                 schema = self.input_schema_predict()
             elif method == "predict_proba":
@@ -2371,6 +2381,8 @@ class IndividualOp(Operator):
 
         if method == "transform":
             schema = self.output_schema_transform()
+        elif method == "transform_X_y":
+            schema = self.output_schema_transform_X_y()
         elif method == "predict":
             schema = self.output_schema_predict()
         elif method == "predict_proba":
@@ -3082,6 +3094,31 @@ class TrainedIndividualOp(TrainableIndividualOp, TrainedOperator):
         result = self._validate_output_schema(raw_result, "transform")
         # logger.info("%s exit  transform %s", time.asctime(), self.name())
         return result
+
+    @if_delegate_has_method(delegate="_impl")
+    def transform_X_y(self, X, y) -> Any:
+        """Transform the data and target.
+
+        Parameters
+        ----------
+        X :
+            Features; see input_transform schema of the operator.
+
+        y :
+            target; see input_transform schema of the operator.
+
+        Returns
+        -------
+        result :
+            Transformed features and target; see output_transform schema of the operator.
+        """
+        X = self._validate_input_schema("X", X, "transform_X_y")
+        y = self._validate_input_schema("y", y, "transform_X_y")
+        output_X, output_y = self._impl_instance().transform_X_y(X, y)
+        output_X, output_y = self._validate_output_schema(
+            (output_X, output_y), "transform_X_y"
+        )
+        return output_X, output_y
 
     def _predict(self, X, **predict_params):
         X = self._validate_input_schema("X", X, "predict")
@@ -4108,7 +4145,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         y = lale.datasets.data_schemas.add_schema(y)
         self.validate_schema(X, y)
         trained_steps: List[TrainedIndividualOp] = []
-        outputs: Dict[Operator, Any] = {}
+        outputs: Dict[Operator, Tuple[Any, Any]] = {}
         meta_outputs: Dict[Operator, Any] = {}
         edges: List[Tuple[TrainableOpType, TrainableOpType]] = self.edges()
         trained_map: Dict[TrainableOpType, TrainedIndividualOp] = {}
@@ -4117,7 +4154,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
-                inputs = [X]
+                inputs = [(X, y)]
                 meta_data_inputs: Dict[Operator, Any] = {}
             else:
                 inputs = [outputs[pred] for pred in preds]
@@ -4131,45 +4168,43 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     for key in meta_outputs[pred]
                 }
             trainable = operator
+            assert isinstance(inputs, list) and len(inputs) >= 1
             if len(inputs) == 1:
-                inputs = inputs[0]
+                input_X, input_y = inputs[0]
+            else:
+                input_X = [iX for iX, _ in inputs]
+                input_y = next(iy for _, iy in inputs)
             if operator.has_method("set_meta_data"):
                 operator._impl_instance().set_meta_data(meta_data_inputs)
             meta_output: Dict[Operator, Any] = {}
             trained: TrainedOperator
-            if isinstance(
-                inputs, tuple
-            ):  # This is the case for transformers which return X and y, such as resamplers.
-                inputs, y = inputs
             if trainable.is_supervised():
-                trained = trainable.fit(X=inputs, y=y)
+                trained = trainable.fit(input_X, input_y)
             else:
-                trained = trainable.fit(X=inputs)
+                trained = trainable.fit(input_X)
             trained_map[operator] = trained
             trained_steps.append(trained)
             if (
                 trainable not in sink_nodes
             ):  # There is no need to transform/predict on the last node during fit
                 if trained.is_transformer():
-                    output = trained.transform(X=inputs, y=y)
+                    if input_y is not None and trained.has_method("transform_X_y"):
+                        output = trained.transform_X_y(input_X, input_y)
+                    else:
+                        output = trained.transform(input_X), input_y
                     if trained.has_method("get_transform_meta_output"):
                         meta_output = (
                             trained._impl_instance().get_transform_meta_output()
                         )
                 else:
-                    if trainable in sink_nodes:
-                        output = trained._predict(
-                            X=inputs
-                        )  # We don't support y for predict yet as there is no compelling case
+                    # This is ok because trainable pipelines steps
+                    # must only be individual operators
+                    if trained.has_method("predict_proba"):  # type: ignore
+                        output = trained.predict_proba(input_X), input_y
+                    elif trained.has_method("decision_function"):  # type: ignore
+                        output = trained.decision_function(input_X), input_y
                     else:
-                        # This is ok because trainable pipelines steps
-                        # must only be individual operators
-                        if trained.has_method("predict_proba"):  # type: ignore
-                            output = trained.predict_proba(X=inputs)
-                        elif trained.has_method("decision_function"):  # type: ignore
-                            output = trained.decision_function(X=inputs)
-                        else:
-                            output = trained._predict(X=inputs)
+                        output = trained._predict(input_X), input_y
                     if trained.has_method("get_predict_meta_output"):
                         meta_output = trained._impl_instance().get_predict_meta_output()
                 outputs[operator] = output
@@ -4184,7 +4219,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                 )  # So newest gets preference in case of collisions
                 meta_outputs[operator] = meta_output_so_far
 
-        trained_edges = [(trained_map[x], trained_map[y]) for (x, y) in edges]
+        trained_edges = [(trained_map[a], trained_map[b]) for a, b in edges]
 
         result: TrainedPipeline[TrainedIndividualOp] = TrainedPipeline(
             trained_steps, trained_edges, ordered=True, _lale_trained=True
@@ -4386,6 +4421,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                         batch_input = batch_input[0]
 
                     if operator.is_transformer():
+                        assert not operator.has_method("transform_X_y"), "TODO"
                         batch_output = operator.transform(batch_input, batch_y)
                     else:
                         # This is ok because trainable pipelines steps
@@ -4556,6 +4592,7 @@ class TrainablePipeline(PlannedPipeline[TrainableOpType], TrainableOperator):
                     batch_X = batch_data
                     batch_y = None
                 if trained.is_transformer():
+                    assert not trained.has_method("transform_X_y"), "TODO"
                     batch_output = trained.transform(batch_X, batch_y)
                 else:
                     if trainable in sink_nodes:
@@ -4776,6 +4813,9 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         # self.is_transformer is kept in sync with the new assumptions.
         return self._predict_based_on_type("transform", "transform", X, y)
 
+    def transform_X_y(self, X, y=None) -> Any:
+        return self._predict_based_on_type("transform_X_y", "transform_X_y", X, y)
+
     def _predict_based_on_type(
         self, impl_method_name, operator_method_name, X=None, y=None, **kwargs
     ):
@@ -4785,15 +4825,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
         for operator in self._steps:
             preds = self._preds[operator]
             if len(preds) == 0:
-                inputs = [X]
+                inputs = [(X, y)]
                 meta_data_inputs = {}
             else:
-                inputs = [
-                    outputs[pred][0]
-                    if isinstance(outputs[pred], tuple)
-                    else outputs[pred]
-                    for pred in preds
-                ]
+                inputs = [outputs[pred] for pred in preds]
                 # we create meta_data_inputs as a dictionary with metadata from all previous steps
                 # Note that if multiple previous steps generate the same key, it will retain only one of those.
 
@@ -4803,8 +4838,12 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     if meta_outputs[pred] is not None
                     for key in meta_outputs[pred]
                 }
+            assert isinstance(inputs, list) and len(inputs) >= 1
             if len(inputs) == 1:
-                inputs = inputs[0]
+                input_X, input_y = inputs[0]
+            else:
+                input_X = [iX for iX, _ in inputs]
+                input_y = next(iy for _, iy in inputs)
             if operator.has_method("set_meta_data"):
                 operator._impl_instance().set_meta_data(meta_data_inputs)
             meta_output = {}
@@ -4814,27 +4853,35 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 ):  # Since this is pipeline's predict, we should invoke predict from sink nodes
                     method_to_call_on_operator = getattr(operator, operator_method_name)
                     if operator_method_name == "score":
-                        output = method_to_call_on_operator(X=inputs, y=y, **kwargs)
+                        output = (
+                            method_to_call_on_operator(input_X, input_y, **kwargs),
+                            input_y,
+                        )
+                    elif operator_method_name == "transform_X_y":
+                        output = method_to_call_on_operator(input_X, input_y, **kwargs)
                     else:
-                        output = method_to_call_on_operator(X=inputs, **kwargs)
+                        output = method_to_call_on_operator(input_X, **kwargs), input_y
                 else:
                     raise AttributeError(
                         f"The sink node {type(operator.impl)} of the pipeline does not support {operator_method_name}"
                     )
             elif operator.is_transformer():
-                output = operator.transform(X=inputs, y=y)
+                if input_y is not None and operator.has_method("transform_X_y"):
+                    output = operator.transform_X_y(input_X, input_y)
+                else:
+                    output = operator.transform(input_X), input_y
                 if hasattr(operator._impl, "get_transform_meta_output"):
                     meta_output = operator._impl_instance().get_transform_meta_output()
             elif operator.has_method(
                 "predict_proba"
             ):  # For estimator as a transformer, use predict_proba if available
-                output = operator.predict_proba(X=inputs)
+                output = operator.predict_proba(input_X), input_y
             elif operator.has_method(
                 "decision_function"
             ):  # For estimator as a transformer, use decision_function if available
-                output = operator.decision_function(X=inputs)
+                output = operator.decision_function(input_X), input_y
             else:
-                output = operator._predict(X=inputs)
+                output = operator._predict(input_X), input_y
                 if operator.has_method("get_predict_meta_output"):
                     meta_output = operator._impl_instance().get_predict_meta_output()
             outputs[operator] = output
@@ -4848,8 +4895,10 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                 meta_output
             )  # So newest gets preference in case of collisions
             meta_outputs[operator] = meta_output_so_far
-        result = outputs[self._steps[-1]]
-        return result
+        result_X, result_y = outputs[self._steps[-1]]
+        if operator_method_name == "transform_X_y":
+            return result_X, result_y
+        return result_X
 
     def predict_proba(self, X):
         """Probability estimates for all classes.
@@ -4983,6 +5032,7 @@ class TrainedPipeline(TrainablePipeline[TrainedOpType], TrainedOperator):
                     inputs = inputs[0]
                 trained = operator
                 if trained.is_transformer():
+                    assert not trained.has_method("transform_X_y"), "TODO"
                     batch_output = trained.transform(inputs, batch_y)
                 else:
                     if trained in sink_nodes:

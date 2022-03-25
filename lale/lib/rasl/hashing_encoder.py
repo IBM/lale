@@ -19,7 +19,7 @@ import pandas as pd
 import lale.docstrings
 import lale.helpers
 import lale.operators
-from lale.expressions import Expr, hash, it, ite
+from lale.expressions import Expr, hash_mod, it, ite
 from lale.helpers import _is_pandas_df, _is_spark_df
 from lale.lib.dataframe import count, get_columns
 from lale.lib.sklearn import hashing_encoder
@@ -28,7 +28,7 @@ from .map import Map
 from .monoid import Monoid, MonoidableOperator
 
 
-# From https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
+# Based on https://github.com/scikit-learn-contrib/category_encoders/blob/master/category_encoders/utils.py
 def get_obj_cols(df):
     """
     Returns names of 'object' columns in the DataFrame.
@@ -39,7 +39,11 @@ def get_obj_cols(df):
             if dt == "object" or is_category(dt):
                 obj_cols.append(df.columns.values[idx])
     elif _is_spark_df(df):
-        assert False, "Not yet implemented"
+        for idx, (col, dt) in enumerate(df.dtypes):
+            if dt == "string":
+                obj_cols.append(col)
+    else:
+        assert False
 
     return obj_cols
 
@@ -101,19 +105,19 @@ class _HashingEncoderImpl(MonoidableOperator[_HashingEncoderMonoid]):
         cols = self._hyperparams["cols"]
         hash_method = self._hyperparams["hash_method"]
         N = self._hyperparams["n_components"]
+        columns_hash = {
+            col_name: hash_mod(hash_method, it[col_name], N) for col_name in cols
+        }
         columns_cat = {
             f"col_{i}": reduce(
                 Expr.__add__,
-                [
-                    ite(hash(hash_method, it[col_name]) % N == i, 1, 0)
-                    for col_name in cols
-                ],
+                [ite(it[col_name] == i, 1, 0) for col_name in cols],
             )
             for i in range(N)
         }
-        columns_num = {col: it[col] for col in get_columns(X) if col not in cols}
-        result = Map(columns={**columns_cat, **columns_num})
-        return result
+        hash = Map(columns=columns_hash, remainder="passthrough")
+        encode = Map(columns=columns_cat, remainder="passthrough")
+        return hash >> encode
 
     def to_monoid(self, v):
         X, y = v
