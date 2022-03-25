@@ -648,7 +648,7 @@ numeric_data_types_list = ["numeric", "integer", "real"]
 
 
 def fetch(
-        dataset_name, task_type, verbose=False, preprocess=True, test_size=0.33, astype=None, seed=0
+    dataset_name, task_type, verbose=False, preprocess=True, test_size=0.33, astype=None, seed=0
 ):
     if verbose:
         print("Loading dataset:", dataset_name)
